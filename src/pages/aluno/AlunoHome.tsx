@@ -1,5 +1,4 @@
 import { useBranding } from "@/contexts/BrandingProvider";
-import BottomNav from "@/components/BottomNav";
 import { Logo } from "@/components/Logo";
 import { Settings, Play, Zap } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
@@ -17,14 +16,14 @@ const AlunoHome = () => {
   const hero = tenant?.hero_url || heroDefault;
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <>
       {/* Hero */}
       <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden">
         <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background" />
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5">
           <Logo size={32} withText={false} />
-          <Link to={`/${slug}/admin`} className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center">
+          <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center">
             <Settings className="h-4 w-4 text-accent" />
           </Link>
         </div>
