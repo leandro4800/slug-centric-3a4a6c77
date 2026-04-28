@@ -54,8 +54,8 @@ const AdminPanel = () => {
     const { error } = await supabase.storage.from("branding").upload(path, file, { upsert: true });
     if (error) { toast.error(error.message); setUploading(null); return; }
     const { data: { publicUrl } } = supabase.storage.from("branding").getPublicUrl(path);
-    const field = kind === "hero" ? "hero_url" : "logo_url";
-    const { error: upErr } = await supabase.from("tenants").update({ [field]: publicUrl }).eq("id", tenant.id);
+    const patch = kind === "hero" ? { hero_url: publicUrl } : { logo_url: publicUrl };
+    const { error: upErr } = await supabase.from("tenants").update(patch).eq("id", tenant.id);
     if (upErr) toast.error(upErr.message);
     else { toast.success("Atualizado!"); await refresh(); }
     setUploading(null);
