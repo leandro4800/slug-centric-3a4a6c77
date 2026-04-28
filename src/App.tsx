@@ -9,7 +9,15 @@ import { RequireAuth } from "@/components/RequireAuth";
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import AlunoLayout from "./pages/aluno/AlunoLayout";
 import AlunoHome from "./pages/aluno/AlunoHome";
+import Treino from "./pages/aluno/Treino";
+import Dieta from "./pages/aluno/Dieta";
+import Evolucao from "./pages/aluno/Evolucao";
+import Clinica from "./pages/aluno/Clinica";
+import Comunidade from "./pages/aluno/Comunidade";
+import Perfil from "./pages/aluno/Perfil";
+import ControleCentral from "./pages/aluno/ControleCentral";
 import AdminPanel from "./pages/admin/AdminPanel";
 import NotFound from "./pages/NotFound";
 
@@ -23,16 +31,27 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            {/* Global / neutral */}
             <Route path="/" element={<BrandingProvider><Landing /></BrandingProvider>} />
             <Route path="/login" element={<BrandingProvider><Login /></BrandingProvider>} />
 
-            {/* Tenant-scoped */}
-            <Route path="/:slug/app/*" element={
-              <BrandingProvider>
-                <RequireAuth><AlunoHome /></RequireAuth>
-              </BrandingProvider>
-            } />
+            <Route
+              path="/:slug/app"
+              element={
+                <BrandingProvider>
+                  <RequireAuth><AlunoLayout /></RequireAuth>
+                </BrandingProvider>
+              }
+            >
+              <Route index element={<AlunoHome />} />
+              <Route path="treino" element={<Treino />} />
+              <Route path="dieta" element={<Dieta />} />
+              <Route path="evolucao" element={<Evolucao />} />
+              <Route path="clinica" element={<Clinica />} />
+              <Route path="comunidade" element={<Comunidade />} />
+              <Route path="perfil" element={<Perfil />} />
+              <Route path="controle" element={<ControleCentral />} />
+            </Route>
+
             <Route path="/:slug/admin/*" element={
               <BrandingProvider>
                 <RequireAuth><AdminPanel /></RequireAuth>

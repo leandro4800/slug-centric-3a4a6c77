@@ -95,8 +95,7 @@ const AlunoHome = () => {
         </div>
       </section>
 
-      <BottomNav />
-    </div>
+    </>
   );
 };
 
