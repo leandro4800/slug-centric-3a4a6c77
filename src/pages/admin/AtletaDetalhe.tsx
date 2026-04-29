@@ -286,20 +286,19 @@ const AtletaDetalhe = () => {
           </div>
         </div>
 
-        {/* Botões TREINO / DIETA */}
+        {/* Botões IMPORTAR TREINO / IMPORTAR DIETA — padrão Netflix */}
         <div className="grid grid-cols-2 gap-3">
           <Button
             className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
             onClick={() => navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}`)}
           >
-            <Dumbbell className="h-4 w-4 mr-2" /> Treino
+            <Upload className="h-4 w-4 mr-2" /> Importar Treino
           </Button>
           <Button
-            variant="outline"
-            className="h-14 border-primary/40 font-bold uppercase tracking-wider"
-            onClick={() => toast.info("Em breve: editor de dieta")}
+            className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
+            onClick={() => toast.info("Em breve: importador de dieta")}
           >
-            <Apple className="h-4 w-4 mr-2" /> Dieta
+            <Upload className="h-4 w-4 mr-2" /> Importar Dieta
           </Button>
         </div>
 
