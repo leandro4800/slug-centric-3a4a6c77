@@ -356,7 +356,7 @@ export const ExerciseCard = ({
           <button
             onClick={handleFinalizar}
             disabled={savingAll}
-            className="w-full py-3 rounded-lg bg-accent text-black font-display text-base flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2"
           >
             {savingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             FINALIZAR
