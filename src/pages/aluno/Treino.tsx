@@ -239,7 +239,7 @@ const Treino = () => {
 
       <div className="px-5">
         {isMock && (
-          <div className="bg-accent/10 border border-accent/30 rounded-xl px-4 py-3 text-center text-xs text-accent mb-4">
+          <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 text-center text-xs text-primary mb-4">
             ⚡ Prévia — seu treino personalizado será montado pelo coach
           </div>
         )}
@@ -249,7 +249,7 @@ const Treino = () => {
             href={spotifyLink}
             target="_blank"
             rel="noreferrer"
-            className="w-full bg-[hsl(142_70%_45%)] text-black font-display text-lg py-3 rounded-xl flex items-center justify-center gap-2 shadow-[0_0_30px_-5px_hsl(142_70%_45%/0.6)]"
+            className="w-full bg-primary text-primary-foreground font-display text-lg py-3 rounded-xl flex items-center justify-center gap-2 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.6)]"
           >
             <Music className="h-5 w-5" /> PLAYLIST DO TIME
           </a>
