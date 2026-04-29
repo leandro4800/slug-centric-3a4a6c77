@@ -9,7 +9,7 @@ const coaches = [
     name: "PIKACHU TEAM",
     specialty: "HIPERTROFIA & ESTÉTICA",
     bio: "Treinos cinematográficos pra quem quer crescer.",
-    video: "https://www.instagram.com/reel/DTvkfN3EhGx/embed",
+    video: "https://www.instagram.com/reel/DTvkfN3EhGx/",
     tag: "VERIFICADO",
   },
   {
@@ -131,13 +131,13 @@ const Landing = () => {
             >
               {/* Video Background */}
               {coach.video.includes('instagram.com') ? (
-                <iframe
-                  src={`${coach.video}?autoplay=1&mute=1`}
-                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none scale-[1.5]"
-                  frameBorder="0"
-                  scrolling="no"
-                  allowTransparency
-                />
+                <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+                  <iframe
+                    src={`https://www.social-embed.com/api/instagram/reel?url=${encodeURIComponent(coach.video)}&autoplay=true&muted=true`}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150%] h-[150%] object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                    frameBorder="0"
+                  />
+                </div>
               ) : (
                 <video 
                   src={coach.video} 
