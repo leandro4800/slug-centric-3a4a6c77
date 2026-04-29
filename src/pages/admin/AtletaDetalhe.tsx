@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Loader2,
   Download,
+  Upload,
   Apple,
   Dumbbell,
   FileText,
@@ -200,7 +201,7 @@ const AtletaDetalhe = () => {
         {/* Top bar */}
         <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between z-10">
           <button
-            onClick={() => navigate(`/${slug}/admin/atletas`)}
+            onClick={() => navigate(`/${slug}/admin`)}
             className="w-10 h-10 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
             aria-label="Voltar"
           >
@@ -285,20 +286,19 @@ const AtletaDetalhe = () => {
           </div>
         </div>
 
-        {/* Botões TREINO / DIETA */}
+        {/* Botões IMPORTAR TREINO / IMPORTAR DIETA — padrão Netflix */}
         <div className="grid grid-cols-2 gap-3">
           <Button
             className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
             onClick={() => navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}`)}
           >
-            <Dumbbell className="h-4 w-4 mr-2" /> Treino
+            <Upload className="h-4 w-4 mr-2" /> Importar Treino
           </Button>
           <Button
-            variant="outline"
-            className="h-14 border-primary/40 font-bold uppercase tracking-wider"
-            onClick={() => toast.info("Em breve: editor de dieta")}
+            className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
+            onClick={() => toast.info("Em breve: importador de dieta")}
           >
-            <Apple className="h-4 w-4 mr-2" /> Dieta
+            <Upload className="h-4 w-4 mr-2" /> Importar Dieta
           </Button>
         </div>
 

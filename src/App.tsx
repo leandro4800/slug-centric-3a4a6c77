@@ -61,6 +61,11 @@ const App = () => (
 
             <Route path="/:slug/admin" element={
               <BrandingProvider>
+                <RequireAuth><MeusAtletas /></RequireAuth>
+              </BrandingProvider>
+            } />
+            <Route path="/:slug/admin/aparencia" element={
+              <BrandingProvider>
                 <RequireAuth><AdminPanel /></RequireAuth>
               </BrandingProvider>
             } />
