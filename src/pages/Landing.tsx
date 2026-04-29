@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import { ArrowRight, Play, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Play, CheckCircle2, Mail, Lock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 const coaches = [
   {
@@ -37,6 +40,53 @@ const coaches = [
 
 const Landing = () => {
   const [showSimulador, setShowSimulador] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("simulator_email");
+    if (savedEmail) {
+      setIsUnlocked(true);
+    }
+  }, []);
+
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      toast({
+        title: "E-mail inválido",
+        description: "Por favor, insira um e-mail válido para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.from("leads").insert([{ email }]);
+      if (error && error.code !== "23505") { // Ignore unique constraint error
+        throw error;
+      }
+      
+      localStorage.setItem("simulator_email", email);
+      setIsUnlocked(true);
+      toast({
+        title: "Acesso Liberado!",
+        description: "Agora você pode simular a experiência do seu app.",
+      });
+    } catch (error) {
+      console.error("Error saving lead:", error);
+      toast({
+        title: "Erro ao liberar acesso",
+        description: "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary selection:text-white overflow-x-hidden">
@@ -264,34 +314,81 @@ const Landing = () => {
 
       {/* Simulador Modal Overlay */}
       {showSimulador && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
           <button 
             onClick={() => setShowSimulador(false)}
-            className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors text-4xl font-light"
+            className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors text-4xl font-light z-[110]"
           >
             ×
           </button>
-          <div className="relative w-[320px] h-[650px] bg-zinc-900 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-zinc-800 rounded-b-2xl z-20" />
-            <iframe 
-              src="/demo/app" 
-              className="w-full h-full border-none"
-              title="App Preview Full"
-            />
-          </div>
-          <div className="hidden lg:block ml-12 max-w-md">
-            <h2 className="text-4xl font-black uppercase mb-6 text-primary">MODO SIMULADOR</h2>
-            <p className="text-lg text-gray-300 mb-8">
-              Experimente a interface que seus alunos terão acesso. 
-              Navegue pelos treinos, dietas e veja como a experiência 
-              Alpha Coach transforma a consultoria online.
-            </p>
-            <div className="p-6 bg-white/5 rounded-xl border border-white/10">
-              <p className="text-sm text-gray-400 italic">
-                "O design focado em mobile garante que seu aluno 
-                tenha a melhor experiência direto no celular, 
-                onde quer que ele esteja treinando."
+          
+          <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl w-full">
+            <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[650px] bg-zinc-900 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden shrink-0">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-zinc-800 rounded-b-2xl z-20" />
+              {!isUnlocked ? (
+                <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
+                  <Lock className="h-12 w-12 text-primary mb-6 animate-pulse" />
+                  <h3 className="text-xl font-bold uppercase mb-4 tracking-tighter">Área Restrita</h3>
+                  <p className="text-sm text-gray-400 mb-8">
+                    Insira seu e-mail para desbloquear o simulador e ver como seu app ficará.
+                  </p>
+                  <form onSubmit={handleUnlock} className="w-full space-y-4">
+                    <Input 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 h-12"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-primary hover:bg-primary/90 h-12 font-bold uppercase"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Liberando..." : "Liberar Acesso"}
+                    </Button>
+                  </form>
+                </div>
+              ) : (
+                <iframe 
+                  src="/demo/app" 
+                  className="w-full h-full border-none"
+                  title="App Preview Full"
+                />
+              )}
+            </div>
+
+            <div className="max-w-md text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
+                Modo Simulador
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black uppercase mb-6 leading-[0.9]">
+                VEJA SEU APP EM <span className="text-primary text-glow-primary">AÇÃO.</span>
+              </h2>
+              <p className="text-base md:text-lg text-gray-300 mb-8 leading-relaxed">
+                Navegue pelas funcionalidades exclusivas: treinos cinematográficos, 
+                dieta personalizada e interface de alto nível.
               </p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <CheckCircle2 className="h-5 w-5 text-primary mb-3" />
+                  <h4 className="font-bold text-sm uppercase mb-1">Mobile First</h4>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Experiência Fluida</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <Mail className="h-5 w-5 text-primary mb-3" />
+                  <h4 className="font-bold text-sm uppercase mb-1">Sem Senha</h4>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Acesso Imediato</p>
+                </div>
+              </div>
+
+              {!isUnlocked && (
+                <p className="mt-8 text-xs text-gray-500 italic">
+                  * Ao informar seu email, você concorda com nossos termos de uso.
+                </p>
+              )}
             </div>
           </div>
         </div>
