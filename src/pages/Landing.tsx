@@ -38,6 +38,62 @@ const coaches = [
   },
 ];
 
+const videoLibrary = [
+  { title: "Agachamento livre", video: "/videos/alpha-treino.mp4" },
+  { title: "Refeição pré-treino", video: "/videos/alpha-nutricao.mp4" },
+  { title: "Evolução do aluno", video: "/videos/alpha-evolucao.mp4" },
+  { title: "Análise postural", video: "/videos/alpha-postural.mp4" },
+];
+
+const DemoAppScreen = ({ mode = "home" }: { mode?: "home" | "treino" | "stats" }) => (
+  <div className="h-full w-full overflow-hidden bg-zinc-950 text-white">
+    <div className="relative h-56 overflow-hidden bg-zinc-900">
+      <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
+      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
+      <div className="absolute left-5 right-5 bottom-5">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">Seu Coach Team</p>
+        <h3 className="mt-1 text-3xl font-black uppercase leading-none">Plano Elite</h3>
+      </div>
+    </div>
+
+    <div className="space-y-4 p-5">
+      <div className="grid grid-cols-3 gap-2">
+        {["Treino", "Dieta", "Check-in"].map((item) => (
+          <div key={item} className="rounded-lg border border-white/10 bg-zinc-900 p-3 text-center">
+            <p className="text-[9px] font-black uppercase tracking-wide text-white">{item}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-black uppercase">{mode === "stats" ? "Evolução" : "Treino de hoje"}</p>
+          <span className="rounded bg-primary px-2 py-1 text-[9px] font-black">AO VIVO</span>
+        </div>
+        <div className="space-y-2">
+          {["Supino inclinado", "Remada curvada", "Agachamento livre"].map((item, i) => (
+            <div key={item} className="flex items-center justify-between rounded-lg bg-zinc-950 p-3">
+              <span className="text-xs font-bold text-gray-200">{item}</span>
+              <span className="text-[10px] font-black text-primary">{i + 3}x12</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
+          <p className="text-2xl font-black text-primary">87%</p>
+          <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
+          <p className="text-2xl font-black text-primary">+4kg</p>
+          <p className="text-[10px] uppercase text-gray-400">Carga média</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const Landing = () => {
   const [showSimulador, setShowSimulador] = useState(false);
   const [email, setEmail] = useState("");
@@ -74,23 +130,27 @@ const Landing = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("leads").insert([{ email }]);
-      if (error && error.code !== "23505") { // Ignore unique constraint error
-        throw error;
+      const normalizedEmail = email.trim().toLowerCase();
+      const { error } = await supabase.from("leads").insert([{ email: normalizedEmail }]);
+      if (error && error.code !== "23505") {
+        console.warn("Lead capture skipped:", error.message);
       }
-      
-      localStorage.setItem("simulator_email", email);
+
+      localStorage.setItem("simulator_email", normalizedEmail);
       setIsUnlocked(true);
+      setShowSimulador(true);
       toast({
         title: "Acesso Liberado!",
         description: "Agora você pode simular a experiência do seu app.",
       });
     } catch (error) {
       console.error("Error saving lead:", error);
+      localStorage.setItem("simulator_email", email.trim().toLowerCase());
+      setIsUnlocked(true);
+      setShowSimulador(true);
       toast({
-        title: "Erro ao liberar acesso",
-        description: "Tente novamente em instantes.",
-        variant: "destructive",
+        title: "Acesso liberado",
+        description: "Não consegui salvar o lead agora, mas o simulador foi liberado.",
       });
     } finally {
       setIsLoading(false);
@@ -451,14 +511,15 @@ const Landing = () => {
           </div>
 
           <div className="relative">
-            <div className="relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 rounded-2xl p-8 shadow-2xl">
-              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5">
+            <div className="relative overflow-hidden bg-zinc-950 border border-primary/30 rounded-2xl p-8 shadow-2xl">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,hsl(var(--primary)/0.22),transparent_38%)]" />
+              <div className="relative flex items-center gap-2 mb-6 pb-4 border-b border-white/10">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <div className="w-3 h-3 rounded-full bg-white/70" />
+                <div className="w-3 h-3 rounded-full bg-primary" />
                 <span className="ml-4 text-xs text-gray-500 font-mono">alpha-coach.app/seunome</span>
               </div>
-              <div className="space-y-4">
+              <div className="relative space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center font-black text-white">SC</div>
                   <div className="flex-1">
@@ -468,17 +529,17 @@ const Landing = () => {
                   <div className="px-2 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded">PRO</div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="aspect-square bg-gradient-to-br from-primary/30 to-zinc-900 rounded-lg flex items-center justify-center">
+                  <div className="aspect-square bg-zinc-900 border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">TREINOS</p>
                   </div>
-                  <div className="aspect-square bg-gradient-to-br from-primary/50 to-zinc-900 rounded-lg flex items-center justify-center">
+                  <div className="aspect-square bg-zinc-900 border border-white/10 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">DIETA</p>
                   </div>
-                  <div className="aspect-square bg-gradient-to-br from-primary/70 to-zinc-900 rounded-lg flex items-center justify-center">
+                  <div className="aspect-square bg-zinc-900 border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">EVOLUÇÃO</p>
                   </div>
                 </div>
-                <div className="h-32 bg-gradient-to-br from-primary/30 to-zinc-900 rounded-lg flex flex-col items-center justify-center gap-2">
+                <div className="h-32 bg-zinc-900 border border-white/10 rounded-lg flex flex-col items-center justify-center gap-2">
                   <Smartphone className="h-10 w-10 text-primary" />
                   <p className="text-xs text-gray-300 font-semibold">App próprio com sua marca</p>
                 </div>
@@ -518,12 +579,7 @@ const Landing = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            {[
-              { title: "Agachamento livre", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" },
-              { title: "Refeição pré-treino", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" },
-              { title: "Evolução do aluno", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" },
-              { title: "Análise postural", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" },
-            ].map((item, i) => (
+            {videoLibrary.map((item, i) => (
               <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all cursor-pointer bg-zinc-900">
                 <video
                   src={item.video}
@@ -531,8 +587,10 @@ const Landing = () => {
                   muted
                   loop
                   playsInline
-                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                  preload="auto"
+                  className="absolute inset-0 w-full h-full object-cover opacity-95 group-hover:opacity-100 transition-opacity"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
                 <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-[9px] font-black rounded text-white z-10">HD</div>
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center">
@@ -657,21 +715,17 @@ const Landing = () => {
           
           <div className="relative flex justify-center">
             {/* Phone Stack Effect */}
-            <div className="relative">
-              {/* Back Phone */}
-              <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-zinc-900 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-40 rotate-[-10deg] hidden md:block">
-                <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" className="w-full h-full object-cover" alt="App UI 1" />
+              <div className="relative">
+                {/* Back Phone */}
+                <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[-10deg] hidden md:block">
+                  <DemoAppScreen mode="stats" />
               </div>
               
               {/* Main Phone */}
-              <div className="relative w-[300px] h-[600px] bg-zinc-900 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
+              <div className="relative w-[300px] h-[600px] bg-zinc-950 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-xl z-20" />
                 {isUnlocked ? (
-                  <iframe 
-                    src="/demo/app" 
-                    className="w-full h-full border-none"
-                    title="App Preview"
-                  />
+                  <DemoAppScreen mode="home" />
                 ) : (
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
                     <Lock className="h-10 w-10 text-primary mb-4" />
@@ -682,8 +736,8 @@ const Landing = () => {
               </div>
 
               {/* Front Phone */}
-              <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-zinc-900 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-40 rotate-[10deg] hidden md:block z-20">
-                <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4" className="w-full h-full object-cover" alt="App UI 2" />
+              <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[10deg] hidden md:block z-20">
+                <DemoAppScreen mode="treino" />
               </div>
             </div>
             {/* Decorative Elements */}
@@ -734,7 +788,7 @@ const Landing = () => {
           </button>
           
           <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl w-full">
-            <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[650px] bg-zinc-900 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden shrink-0">
+            <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[650px] bg-zinc-950 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden shrink-0">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-zinc-800 rounded-b-2xl z-20" />
               {!isUnlocked ? (
                 <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
@@ -762,11 +816,7 @@ const Landing = () => {
                   </form>
                 </div>
               ) : (
-                <iframe 
-                  src="/demo/app" 
-                  className="w-full h-full border-none"
-                  title="App Preview Full"
-                />
+                <DemoAppScreen mode="home" />
               )}
             </div>
 
