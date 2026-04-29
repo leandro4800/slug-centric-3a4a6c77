@@ -80,6 +80,11 @@ const Login = () => {
                 <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-glow h-11">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
                 </Button>
+                <div className="text-center">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                    Esqueceu a senha?
+                  </Link>
+                </div>
               </form>
             </TabsContent>
             <TabsContent value="signup">

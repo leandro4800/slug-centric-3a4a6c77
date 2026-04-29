@@ -1,7 +1,14 @@
-import { Play, Camera, LogOut } from "lucide-react";
+import { useState } from "react";
+import { Play, Camera, LogOut, KeyRound, Loader2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 
 const Perfil = () => {
@@ -11,7 +18,25 @@ const Perfil = () => {
   const hero = tenant?.hero_url || heroDefault;
   const nome = user?.user_metadata?.nome_completo || user?.email?.split("@")[0]?.toUpperCase() || "ATLETA";
 
+  const [pwOpen, setPwOpen] = useState(false);
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [saving, setSaving] = useState(false);
+
   const handleLogout = async () => { await signOut(); navigate("/login"); };
+
+  const handleChangePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPw.length < 6) return toast.error("A senha deve ter ao menos 6 caracteres.");
+    if (newPw !== confirmPw) return toast.error("As senhas não conferem.");
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({ password: newPw });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Senha alterada com sucesso!");
+    setPwOpen(false);
+    setNewPw(""); setConfirmPw("");
+  };
 
   return (
     <>
@@ -49,12 +74,21 @@ const Perfil = () => {
             </button>
           </div>
 
-          <button
-            onClick={handleLogout}
-            className="w-11 h-11 rounded-full bg-secondary/70 flex items-center justify-center mt-1"
-          >
-            <LogOut className="h-4 w-4" />
-          </button>
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => setPwOpen(true)}
+              className="flex-1 h-11 rounded-md bg-secondary/70 flex items-center justify-center gap-2 text-sm font-medium"
+            >
+              <KeyRound className="h-4 w-4" /> Trocar senha
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-11 h-11 rounded-md bg-secondary/70 flex items-center justify-center"
+              aria-label="Sair"
+            >
+              <LogOut className="h-4 w-4" />
+            </button>
+          </div>
         </div>
       </section>
 
@@ -67,6 +101,31 @@ const Perfil = () => {
           <NetflixCard label="NÍVEL" value="INTERMEDIÁRIO" />
         </div>
       </section>
+
+      <Dialog open={pwOpen} onOpenChange={setPwOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Trocar senha</DialogTitle>
+            <DialogDescription>Defina uma nova senha para sua conta.</DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <Label htmlFor="new-pw">Nova senha</Label>
+              <Input id="new-pw" type="password" minLength={6} required value={newPw} onChange={(e) => setNewPw(e.target.value)} />
+            </div>
+            <div>
+              <Label htmlFor="confirm-pw">Confirmar senha</Label>
+              <Input id="confirm-pw" type="password" minLength={6} required value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="ghost" onClick={() => setPwOpen(false)}>Cancelar</Button>
+              <Button type="submit" disabled={saving} className="bg-gradient-primary">
+                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

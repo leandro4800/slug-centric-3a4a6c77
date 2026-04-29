@@ -9,6 +9,8 @@ import { RequireAuth } from "@/components/RequireAuth";
 
 import Landing from "./pages/Landing";
 import Login from "./pages/Login";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import AlunoLayout from "./pages/aluno/AlunoLayout";
 import AlunoHome from "./pages/aluno/AlunoHome";
 import Treino from "./pages/aluno/Treino";
@@ -33,6 +35,8 @@ const App = () => (
           <Routes>
             <Route path="/" element={<BrandingProvider><Landing /></BrandingProvider>} />
             <Route path="/login" element={<BrandingProvider><Login /></BrandingProvider>} />
+            <Route path="/forgot-password" element={<BrandingProvider><ForgotPassword /></BrandingProvider>} />
+            <Route path="/reset-password" element={<BrandingProvider><ResetPassword /></BrandingProvider>} />
 
             <Route
               path="/:slug/app"
