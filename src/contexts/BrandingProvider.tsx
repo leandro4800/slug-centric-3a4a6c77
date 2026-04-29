@@ -9,6 +9,7 @@ export interface Tenant {
   tagline: string | null;
   logo_url: string | null;
   hero_url: string | null;
+  symbol_url: string | null;
   primary_hsl: string;
   accent_hsl: string;
 }
