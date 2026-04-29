@@ -22,6 +22,8 @@ import Perfil from "./pages/aluno/Perfil";
 import ControleCentral from "./pages/aluno/ControleCentral";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AdminMontarTreino from "./pages/admin/AdminMontarTreino";
+import MeusAtletas from "./pages/admin/MeusAtletas";
+import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
