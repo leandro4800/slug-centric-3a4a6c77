@@ -89,11 +89,18 @@ const AdminPanel = () => {
             <h1 className="font-display text-4xl mb-2">PAINEL DO COACH</h1>
             <p className="text-muted-foreground">Gestão do tenant <strong className="text-primary">{tenant?.slug}</strong></p>
           </div>
-          <Link to={`/${slug}/admin/montar-treino`}>
-            <Button className="bg-gradient-primary shadow-glow">
-              <Sparkles className="h-4 w-4 mr-2" /> Montar Treino com IA
-            </Button>
-          </Link>
+          <div className="flex gap-2 flex-wrap">
+            <Link to={`/${slug}/admin/atletas`}>
+              <Button variant="outline" className="border-primary/40">
+                <Users className="h-4 w-4 mr-2" /> Gerenciar Elenco
+              </Button>
+            </Link>
+            <Link to={`/${slug}/admin/montar-treino`}>
+              <Button className="bg-gradient-primary shadow-glow">
+                <Sparkles className="h-4 w-4 mr-2" /> Montar Treino com IA
+              </Button>
+            </Link>
+          </div>
         </div>
 
         <Tabs defaultValue="elenco">
