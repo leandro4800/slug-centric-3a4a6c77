@@ -45,13 +45,22 @@ const videoLibrary = [
   { title: "Análise postural", video: "/videos/alpha-postural.mp4" },
 ];
 
-const DemoAppScreen = ({ mode = "home" }: { mode?: "home" | "treino" | "stats" }) => (
-  <div className="h-full w-full overflow-hidden bg-zinc-950 text-white">
+interface DemoAppScreenProps {
+  mode?: "home" | "treino" | "stats";
+  brandName?: string;
+  brandColor?: string; // hex
+}
+
+const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor = "#E50914" }: DemoAppScreenProps) => (
+  <div
+    className="h-full w-full overflow-hidden bg-zinc-950 text-white"
+    style={{ ["--brand" as any]: brandColor }}
+  >
     <div className="relative h-56 overflow-hidden bg-zinc-900">
       <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
       <div className="absolute left-5 right-5 bottom-5">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">Seu Coach Team</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: brandColor }}>{brandName}</p>
         <h3 className="mt-1 text-3xl font-black uppercase leading-none">Plano Elite</h3>
       </div>
     </div>
@@ -65,16 +74,19 @@ const DemoAppScreen = ({ mode = "home" }: { mode?: "home" | "treino" | "stats" }
         ))}
       </div>
 
-      <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+      <div
+        className="rounded-xl border p-4"
+        style={{ borderColor: `${brandColor}55`, backgroundColor: `${brandColor}1A` }}
+      >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-black uppercase">{mode === "stats" ? "Evolução" : "Treino de hoje"}</p>
-          <span className="rounded bg-primary px-2 py-1 text-[9px] font-black">AO VIVO</span>
+          <span className="rounded px-2 py-1 text-[9px] font-black" style={{ backgroundColor: brandColor }}>AO VIVO</span>
         </div>
         <div className="space-y-2">
           {["Supino inclinado", "Remada curvada", "Agachamento livre"].map((item, i) => (
             <div key={item} className="flex items-center justify-between rounded-lg bg-zinc-950 p-3">
               <span className="text-xs font-bold text-gray-200">{item}</span>
-              <span className="text-[10px] font-black text-primary">{i + 3}x12</span>
+              <span className="text-[10px] font-black" style={{ color: brandColor }}>{i + 3}x12</span>
             </div>
           ))}
         </div>
@@ -82,17 +94,26 @@ const DemoAppScreen = ({ mode = "home" }: { mode?: "home" | "treino" | "stats" }
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
-          <p className="text-2xl font-black text-primary">87%</p>
+          <p className="text-2xl font-black" style={{ color: brandColor }}>87%</p>
           <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
-          <p className="text-2xl font-black text-primary">+4kg</p>
+          <p className="text-2xl font-black" style={{ color: brandColor }}>+4kg</p>
           <p className="text-[10px] uppercase text-gray-400">Carga média</p>
         </div>
       </div>
     </div>
   </div>
 );
+
+const BRAND_COLORS = [
+  { name: "Netflix", hex: "#E50914" },
+  { name: "Gold", hex: "#F5C518" },
+  { name: "Cyber", hex: "#00E5FF" },
+  { name: "Lime", hex: "#A3E635" },
+  { name: "Violet", hex: "#8B5CF6" },
+  { name: "Sunset", hex: "#FB923C" },
+];
 
 const Landing = () => {
   const [showSimulador, setShowSimulador] = useState(false);
@@ -101,6 +122,8 @@ const Landing = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [students, setStudents] = useState(80);
   const [price, setPrice] = useState(400);
+  const [brandName, setBrandName] = useState("Seu Coach Team");
+  const [brandColor, setBrandColor] = useState("#E50914");
   const { toast } = useToast();
 
   const grossRevenue = students * price;
@@ -816,39 +839,107 @@ const Landing = () => {
                   </form>
                 </div>
               ) : (
-                <DemoAppScreen mode="home" />
+                <DemoAppScreen mode="home" brandName={brandName} brandColor={brandColor} />
               )}
             </div>
 
-            <div className="max-w-md text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
-                Modo Simulador
+            <div className="max-w-md w-full text-center lg:text-left">
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border rounded-md"
+                style={{ borderColor: `${brandColor}55`, backgroundColor: `${brandColor}1A`, color: brandColor }}
+              >
+                {isUnlocked ? "Personalize ao vivo" : "Modo Simulador"}
               </div>
               <h2 className="text-3xl md:text-5xl font-black uppercase mb-6 leading-[0.9]">
-                VEJA SEU APP EM <span className="text-primary text-glow-primary">AÇÃO.</span>
+                {isUnlocked ? (
+                  <>SEU APP, <span className="text-glow-primary" style={{ color: brandColor }}>SUA MARCA.</span></>
+                ) : (
+                  <>VEJA SEU APP EM <span className="text-primary text-glow-primary">AÇÃO.</span></>
+                )}
               </h2>
-              <p className="text-base md:text-lg text-gray-300 mb-8 leading-relaxed">
-                Navegue pelas funcionalidades exclusivas: treinos cinematográficos, 
-                dieta personalizada e interface de alto nível.
-              </p>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <CheckCircle2 className="h-5 w-5 text-primary mb-3" />
-                  <h4 className="font-bold text-sm uppercase mb-1">Mobile First</h4>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Experiência Fluida</p>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <Mail className="h-5 w-5 text-primary mb-3" />
-                  <h4 className="font-bold text-sm uppercase mb-1">Sem Senha</h4>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Acesso Imediato</p>
-                </div>
-              </div>
 
-              {!isUnlocked && (
-                <p className="mt-8 text-xs text-gray-500 italic">
-                  * Ao informar seu email, você concorda com nossos termos de uso.
-                </p>
+              {!isUnlocked ? (
+                <>
+                  <p className="text-base md:text-lg text-gray-300 mb-8 leading-relaxed">
+                    Navegue pelas funcionalidades exclusivas: treinos cinematográficos,
+                    dieta personalizada e interface de alto nível.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                      <CheckCircle2 className="h-5 w-5 text-primary mb-3" />
+                      <h4 className="font-bold text-sm uppercase mb-1">Mobile First</h4>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wider">Experiência Fluida</p>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                      <Mail className="h-5 w-5 text-primary mb-3" />
+                      <h4 className="font-bold text-sm uppercase mb-1">Sem Senha</h4>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wider">Acesso Imediato</p>
+                    </div>
+                  </div>
+                  <p className="mt-8 text-xs text-gray-500 italic">
+                    * Ao informar seu email, você concorda com nossos termos de uso.
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-6">
+                  <p className="text-sm md:text-base text-gray-400 leading-relaxed">
+                    Mude o nome do seu time e a cor principal — veja o app reagir em tempo real ao lado.
+                  </p>
+
+                  <div className="space-y-2 text-left">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                      Nome do seu time
+                    </label>
+                    <Input
+                      value={brandName}
+                      onChange={(e) => setBrandName(e.target.value.slice(0, 28))}
+                      placeholder="Ex: Wolf Team"
+                      className="bg-white/5 border-white/10 text-white h-12 font-bold uppercase tracking-wider"
+                    />
+                  </div>
+
+                  <div className="space-y-3 text-left">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                      Cor da marca
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      {BRAND_COLORS.map((c) => (
+                        <button
+                          key={c.hex}
+                          type="button"
+                          onClick={() => setBrandColor(c.hex)}
+                          className={`h-10 w-10 rounded-full border-2 transition-transform hover:scale-110 ${
+                            brandColor === c.hex ? "border-white scale-110" : "border-white/20"
+                          }`}
+                          style={{ backgroundColor: c.hex }}
+                          aria-label={c.name}
+                          title={c.name}
+                        />
+                      ))}
+                      <label
+                        className="h-10 w-10 rounded-full border-2 border-dashed border-white/30 flex items-center justify-center cursor-pointer hover:border-white/60 transition-colors relative overflow-hidden"
+                        title="Cor personalizada"
+                      >
+                        <Palette className="h-4 w-4 text-white/70" />
+                        <input
+                          type="color"
+                          value={brandColor}
+                          onChange={(e) => setBrandColor(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </label>
+                    </div>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest">
+                      Selecionada: <span style={{ color: brandColor }}>{brandColor}</span>
+                    </p>
+                  </div>
+
+                  <Link to="/login" className="block">
+                    <Button className="w-full h-12 font-bold uppercase tracking-wider" style={{ backgroundColor: brandColor }}>
+                      Quero meu app assim
+                    </Button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>
