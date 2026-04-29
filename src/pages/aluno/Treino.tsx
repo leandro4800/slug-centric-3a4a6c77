@@ -15,6 +15,8 @@ interface CargaMap {
   [exercicio: string]: { carga_kg: number; repeticoes_feitas: number; data_treino: string };
 }
 
+type VideoRef = { yt: string | null; coach: string | null };
+
 const VOLUME_GROUPS = ["peito", "costas", "quadríceps", "quadriceps", "glúteo", "gluteo", "ombro", "bíceps", "biceps", "tríceps", "triceps"];
 const MIN_EXERCISES_PER_DAY = 4;
 
