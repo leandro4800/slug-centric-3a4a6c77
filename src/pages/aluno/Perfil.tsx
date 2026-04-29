@@ -101,7 +101,6 @@ const Perfil = () => {
           <NetflixCard label="NÍVEL" value="INTERMEDIÁRIO" />
         </div>
       </section>
-      </section>
 
       <Dialog open={pwOpen} onOpenChange={setPwOpen}>
         <DialogContent>
