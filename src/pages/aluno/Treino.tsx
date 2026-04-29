@@ -42,7 +42,15 @@ const Treino = () => {
   const [spotifyLink, setSpotifyLink] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!tenant) return;
+    // Mostra mock imediato mesmo sem tenant carregado — evita spinner infinito
+    if (!tenant) {
+      const mockEnriched = MOCK_TREINOS.map((m) => ({ ...m }));
+      setTreinos(mockEnriched);
+      setDiaAtual(mockEnriched[0].dia_semana);
+      setIsMock(true);
+      setLoading(false);
+      return;
+    }
 
     const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
       const { data } = await supabase
