@@ -9,7 +9,7 @@ const coaches = [
     name: "PIKACHU TEAM",
     specialty: "HIPERTROFIA & ESTÉTICA",
     bio: "Treinos cinematográficos pra quem quer crescer.",
-    video: "https://www.instagram.com/reel/DTvkfN3EhGx/?igsh=bmxrNDB1MG5ld3Uw",
+    video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4",
     tag: "VERIFICADO",
   },
   {
