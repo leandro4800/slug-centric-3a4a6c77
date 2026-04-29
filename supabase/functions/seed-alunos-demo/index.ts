@@ -78,6 +78,12 @@ Deno.serve(async (req) => {
         { onConflict: "aluno_id" } as any,
       );
 
+      // 4. Atribui role 'aluno'
+      await supabase.from("user_roles").upsert(
+        { user_id: userId, tenant_id: TENANT_ID, role: "aluno" },
+        { onConflict: "user_id,tenant_id,role" } as any,
+      );
+
       results.push({ email: a.email, id: userId, ok: true });
     } catch (e: any) {
       results.push({ email: a.email, error: e?.message || String(e) });
