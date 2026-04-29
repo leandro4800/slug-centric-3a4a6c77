@@ -126,39 +126,49 @@ const Treino = () => {
 
     const load = async () => {
       setLoading(true);
-      await loadSpotify();
-      const refMap = await loadVideoRefs();
+      let refMap: Record<string, string> = {};
+      try {
+        await loadSpotify();
+        refMap = await loadVideoRefs();
 
-      if (user) {
-        const { data } = await supabase
-          .from("treinos_prescritos")
-          .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url")
-          .eq("aluno_id", user.id)
-          .eq("tenant_id", tenant.id)
-          .order("dia_semana")
-          .order("ordem");
+        if (user) {
+          const { data, error } = await supabase
+            .from("treinos_prescritos")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url")
+            .eq("aluno_id", user.id)
+            .eq("tenant_id", tenant.id)
+            .order("dia_semana")
+            .order("ordem");
 
-        if (data && data.length > 0) {
-          const mapped: Treino[] = data.map((t) => ({
-            id: t.id,
-            dia_semana: t.dia_semana,
-            exercicio: t.exercicio,
-            series: t.series,
-            repeticoes: t.repeticoes,
-            observacao: t.observacao,
-            video_url: t.video_url || resolveVideo(t.exercicio, refMap),
-          }));
-          const filled = await autoFillVolume(mapped, refMap);
-          setTreinos(filled);
-          setDiaAtual(filled[0].dia_semana);
-          setIsMock(false);
-          await loadCargas();
-          setLoading(false);
-          return;
+          if (!error && data && data.length > 0) {
+            const mapped: Treino[] = data.map((t) => ({
+              id: t.id,
+              dia_semana: t.dia_semana,
+              exercicio: t.exercicio,
+              series: t.series,
+              repeticoes: t.repeticoes,
+              observacao: t.observacao,
+              video_url: t.video_url || resolveVideo(t.exercicio, refMap),
+            }));
+            let filled = mapped;
+            try {
+              filled = await autoFillVolume(mapped, refMap);
+            } catch (e) {
+              console.warn("autoFillVolume falhou, usando lista original", e);
+            }
+            setTreinos(filled);
+            setDiaAtual(filled[0].dia_semana);
+            setIsMock(false);
+            try { await loadCargas(); } catch (e) { console.warn("loadCargas falhou", e); }
+            setLoading(false);
+            return;
+          }
         }
+      } catch (e) {
+        console.warn("Falha ao carregar treino do banco, usando prévia mock", e);
       }
 
-      // fallback mock
+      // fallback mock (banco indisponível ou sem treino prescrito)
       const enriched = MOCK_TREINOS.map((m) => ({ ...m, video_url: resolveVideo(m.exercicio, refMap) }));
       setTreinos(enriched);
       setDiaAtual(enriched[0].dia_semana);
@@ -166,7 +176,13 @@ const Treino = () => {
       setLoading(false);
     };
 
-    void load();
+    void load().catch((e) => {
+      console.error("Erro fatal no load do treino", e);
+      setTreinos(MOCK_TREINOS);
+      setDiaAtual(MOCK_TREINOS[0].dia_semana);
+      setIsMock(true);
+      setLoading(false);
+    });
   }, [tenant, user]);
 
   const dias = [...new Set(treinos.map((t) => t.dia_semana))];
