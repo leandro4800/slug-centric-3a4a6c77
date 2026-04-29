@@ -14,6 +14,138 @@ export type Database = {
   }
   public: {
     Tables: {
+      biblioteca_exercicios: {
+        Row: {
+          contraindicacoes: string[] | null
+          created_at: string
+          equipamento: string | null
+          grupo_muscular: string
+          id: string
+          nivel: string | null
+          nome: string
+          repeticoes: string | null
+          series_trabalho: number | null
+          tecnica_intensidade: string | null
+          tenant_id: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          contraindicacoes?: string[] | null
+          created_at?: string
+          equipamento?: string | null
+          grupo_muscular: string
+          id?: string
+          nivel?: string | null
+          nome: string
+          repeticoes?: string | null
+          series_trabalho?: number | null
+          tecnica_intensidade?: string | null
+          tenant_id: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          contraindicacoes?: string[] | null
+          created_at?: string
+          equipamento?: string | null
+          grupo_muscular?: string
+          id?: string
+          nivel?: string | null
+          nome?: string
+          repeticoes?: string | null
+          series_trabalho?: number | null
+          tecnica_intensidade?: string | null
+          tenant_id?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_exercicios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      configuracoes_tenant: {
+        Row: {
+          chave: string
+          created_at: string
+          id: string
+          tenant_id: string
+          updated_at: string
+          valor: string | null
+        }
+        Insert: {
+          chave: string
+          created_at?: string
+          id?: string
+          tenant_id: string
+          updated_at?: string
+          valor?: string | null
+        }
+        Update: {
+          chave?: string
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          updated_at?: string
+          valor?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "configuracoes_tenant_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      historico_cargas: {
+        Row: {
+          carga_kg: number
+          created_at: string
+          data_treino: string
+          exercicio_nome: string
+          id: string
+          repeticoes_feitas: number
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          carga_kg?: number
+          created_at?: string
+          data_treino?: string
+          exercicio_nome: string
+          id?: string
+          repeticoes_feitas?: number
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          carga_kg?: number
+          created_at?: string
+          data_treino?: string
+          exercicio_nome?: string
+          id?: string
+          repeticoes_feitas?: number
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "historico_cargas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfis: {
         Row: {
           avatar_url: string | null
@@ -45,6 +177,103 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "perfis_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      perfis_treino: {
+        Row: {
+          altura_cm: number | null
+          aluno_id: string
+          bf_pct: number | null
+          created_at: string
+          frequencia_semanal: number | null
+          id: string
+          idade: number | null
+          lesoes: string[] | null
+          limitacoes: string[] | null
+          objetivo: string | null
+          peso_kg: number | null
+          sexo: string | null
+          tempo_treino: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          altura_cm?: number | null
+          aluno_id: string
+          bf_pct?: number | null
+          created_at?: string
+          frequencia_semanal?: number | null
+          id?: string
+          idade?: number | null
+          lesoes?: string[] | null
+          limitacoes?: string[] | null
+          objetivo?: string | null
+          peso_kg?: number | null
+          sexo?: string | null
+          tempo_treino?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          altura_cm?: number | null
+          aluno_id?: string
+          bf_pct?: number | null
+          created_at?: string
+          frequencia_semanal?: number | null
+          id?: string
+          idade?: number | null
+          lesoes?: string[] | null
+          limitacoes?: string[] | null
+          objetivo?: string | null
+          peso_kg?: number | null
+          sexo?: string | null
+          tempo_treino?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "perfis_treino_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      referencia_videos: {
+        Row: {
+          created_at: string
+          id: string
+          nome_exercicio: string
+          tenant_id: string
+          updated_at: string
+          url_video: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nome_exercicio: string
+          tenant_id: string
+          updated_at?: string
+          url_video: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nome_exercicio?: string
+          tenant_id?: string
+          updated_at?: string
+          url_video?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "referencia_videos_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -94,6 +323,59 @@ export type Database = {
         }
         Relationships: []
       }
+      treinos_prescritos: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          dia_semana: string
+          exercicio: string
+          id: string
+          observacao: string | null
+          ordem: number | null
+          repeticoes: string | null
+          series: string | null
+          tenant_id: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          dia_semana: string
+          exercicio: string
+          id?: string
+          observacao?: string | null
+          ordem?: number | null
+          repeticoes?: string | null
+          series?: string | null
+          tenant_id: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          dia_semana?: string
+          exercicio?: string
+          id?: string
+          observacao?: string | null
+          ordem?: number | null
+          repeticoes?: string | null
+          series?: string | null
+          tenant_id?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinos_prescritos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -131,6 +413,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_user_tenant: { Args: never; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
