@@ -278,6 +278,317 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Antes vs Depois */}
+      <section className="py-24 px-6 md:px-12 bg-black">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">A VIRADA DE CHAVE</h2>
+            <div className="h-1 w-20 bg-primary mx-auto" />
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-8 md:p-10 bg-zinc-950 border border-white/5 rounded-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-950/30 rounded-full blur-3xl" />
+              <div className="relative">
+                <span className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Antes do Alpha Coach</span>
+                <h3 className="text-2xl md:text-3xl font-black uppercase mb-8 text-gray-400">
+                  Planilhas, PDF e caos no WhatsApp
+                </h3>
+                <ul className="space-y-4">
+                  {[
+                    "Aluno perdido no grupo do WhatsApp",
+                    "Cobrar mensalidade no PIX um por um",
+                    "Treino em PDF que ninguém abre",
+                    "Vídeo de execução? Manda no privado.",
+                    "Zero controle de evolução",
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-500">
+                      <X className="h-5 w-5 text-red-900 flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            <div className="p-8 md:p-10 bg-gradient-to-br from-primary/10 to-zinc-950 border border-primary/30 rounded-2xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
+              <div className="relative">
+                <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Com Alpha Coach</span>
+                <h3 className="text-2xl md:text-3xl font-black uppercase mb-8 text-white">
+                  Organização total. Interface de cinema.
+                </h3>
+                <ul className="space-y-4">
+                  {[
+                    "App próprio com sua marca e seu domínio",
+                    "Pagamento automático via Stripe Connect",
+                    "Treinos com vídeo HD em alta qualidade",
+                    "Dr.IA pra responder dúvidas dos alunos 24h",
+                    "Dashboard de evolução em tempo real",
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-3 text-gray-200">
+                      <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Simulador de Lucros */}
+      <section className="py-24 px-6 md:px-12 bg-[#080808]">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
+              <TrendingUp className="h-3 w-3" />
+              Simulador de Lucros
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">
+              VEJA QUANTO VOCÊ PODE <span className="text-primary text-glow-primary">FATURAR</span>
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Deslize as barras e veja o quanto cai na sua conta — já com a taxa Alpha Coach descontada.
+            </p>
+          </div>
+
+          <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 md:p-10">
+            <div className="space-y-8 mb-10">
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-sm font-bold uppercase tracking-wider text-gray-300">Alunos ativos</label>
+                  <span className="text-2xl font-black text-primary">{students}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="1000"
+                  value={students}
+                  onChange={(e) => setStudents(Number(e.target.value))}
+                  className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="flex justify-between text-[10px] text-gray-600 mt-1 uppercase">
+                  <span>1</span><span>1.000</span>
+                </div>
+              </div>
+
+              <div>
+                <div className="flex justify-between items-center mb-3">
+                  <label className="text-sm font-bold uppercase tracking-wider text-gray-300">Mensalidade</label>
+                  <span className="text-2xl font-black text-primary">{formatBRL(price)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="100"
+                  max="2000"
+                  step="10"
+                  value={price}
+                  onChange={(e) => setPrice(Number(e.target.value))}
+                  className="w-full h-2 bg-zinc-800 rounded-lg appearance-none cursor-pointer accent-primary"
+                />
+                <div className="flex justify-between text-[10px] text-gray-600 mt-1 uppercase">
+                  <span>R$ 100</span><span>R$ 2.000</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="p-5 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Faturamento bruto / mês</p>
+                <p className="text-2xl font-black text-white">{formatBRL(grossRevenue)}</p>
+              </div>
+              <div className="p-5 bg-white/5 rounded-xl border border-white/5">
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Taxa Alpha Coach (10%)</p>
+                <p className="text-2xl font-black text-gray-400">-{formatBRL(fee)}</p>
+              </div>
+              <div className="p-5 bg-primary/10 rounded-xl border border-primary/30">
+                <p className="text-[10px] uppercase tracking-widest text-primary mb-2">Líquido na sua conta / mês</p>
+                <p className="text-2xl font-black text-primary text-glow-primary">{formatBRL(netRevenue)}</p>
+              </div>
+            </div>
+
+            <div className="text-center pt-4 border-t border-white/5">
+              <p className="text-sm text-gray-400">
+                Em 12 meses: <span className="text-white font-black text-lg ml-2">{formatBRL(yearlyNet)}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Sua marca, suas regras */}
+      <section className="py-24 px-6 md:px-12 bg-black">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
+              <Palette className="h-3 w-3" />
+              White Label
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black uppercase mb-4 leading-tight">
+              SUA MARCA, <br />
+              <span className="text-primary">SUAS REGRAS.</span>
+            </h2>
+            <p className="text-lg text-gray-400 mb-4">Esqueça apps genéricos.</p>
+            <p className="text-gray-400 mb-10 leading-relaxed">
+              Aqui o logo é seu, as cores são suas, o vídeo de fundo é seu — e o domínio também:{" "}
+              <span className="text-primary font-mono font-bold">seunome.alpha-coach.app</span>
+            </p>
+            <ul className="space-y-4">
+              {[
+                "Subdomínio personalizado incluso",
+                "Tema visual 100% editável (cores, fontes, vídeos)",
+                "Splash screen e ícone com sua marca",
+                "Página pública pra captar novos alunos",
+              ].map((item, i) => (
+                <li key={i} className="flex items-center gap-3 text-gray-300">
+                  <CheckCircle2 className="h-5 w-5 text-primary flex-shrink-0" />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="relative">
+            <div className="relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 rounded-2xl p-8 shadow-2xl">
+              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <span className="ml-4 text-xs text-gray-500 font-mono">seunome.alpha-coach.app</span>
+              </div>
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center font-black text-white">SC</div>
+                  <div>
+                    <p className="font-bold">SEU COACH TEAM</p>
+                    <p className="text-xs text-gray-500">Powered by Alpha Coach</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="aspect-square bg-primary/20 rounded-lg" />
+                  <div className="aspect-square bg-primary/40 rounded-lg" />
+                  <div className="aspect-square bg-primary/60 rounded-lg" />
+                </div>
+                <div className="h-32 bg-gradient-to-br from-primary/30 to-zinc-900 rounded-lg flex items-center justify-center">
+                  <Smartphone className="h-12 w-12 text-primary" />
+                </div>
+              </div>
+            </div>
+            <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/30 rounded-full blur-[100px]" />
+          </div>
+        </div>
+      </section>
+
+      {/* Originais Alpha Coach */}
+      <section className="py-24 px-6 md:px-12 bg-[#080808]">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
+              <Video className="h-3 w-3" />
+              Originais Alpha Coach
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">
+              TENHA SEUS PRÓPRIOS <br />
+              <span className="text-primary">VÍDEOS PERSONALIZADOS.</span>
+            </h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">
+              Tenha acesso à nossa biblioteca premium de vídeos de execução em HD. 
+              Monte treinos completos em minutos — sem precisar de câmera, microfone ou estúdio.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
+            {[
+              { title: "Agachamento livre", color: "from-primary/40 to-zinc-900" },
+              { title: "Refeição pré-treino", color: "from-orange-700/40 to-zinc-900" },
+              { title: "Evolução do aluno", color: "from-primary/40 to-zinc-900" },
+              { title: "Análise postural", color: "from-blue-700/40 to-zinc-900" },
+            ].map((item, i) => (
+              <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all cursor-pointer">
+                <div className={`absolute inset-0 bg-gradient-to-br ${item.color}`} />
+                <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-[9px] font-black rounded text-white">HD</div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center">
+                    <Play className="h-6 w-6 text-white fill-current ml-1" />
+                  </div>
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+                  <p className="font-bold text-sm uppercase">{item.title}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="grid md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {[
+              "+200 exercícios em HD prontos pra usar",
+              "Atualizações mensais na biblioteca",
+              "Você pode adicionar vídeos próprios também",
+              "Musculação, funcional, mobilidade, cardio",
+            ].map((item, i) => (
+              <div key={i} className="flex items-start gap-2 text-sm text-gray-300">
+                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                <span>{item}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Paz de espírito financeira */}
+      <section className="py-24 px-6 md:px-12 bg-black">
+        <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
+              <Wallet className="h-3 w-3" />
+              Pagamentos
+            </div>
+            <h2 className="text-3xl md:text-5xl font-black uppercase mb-4 leading-tight">
+              PAZ DE ESPÍRITO <br />
+              <span className="text-primary">FINANCEIRA.</span>
+            </h2>
+            <p className="text-lg text-white font-bold mb-4">Divisão automática de pagamentos.</p>
+            <p className="text-gray-400 leading-relaxed">
+              Você vende por R$ 200 e R$ 180 caem direto na sua conta. 
+              Sem cobrar aluno por WhatsApp, sem conferir comprovante de PIX, sem atraso.
+            </p>
+          </div>
+
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-6 bg-zinc-950 border border-white/10 rounded-xl">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Aluno paga no app</p>
+                <p className="text-3xl font-black text-white">R$ 200</p>
+              </div>
+              <Smartphone className="h-10 w-10 text-gray-700" />
+            </div>
+
+            <div className="flex justify-center">
+              <ArrowRight className="h-6 w-6 text-primary rotate-90" />
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-zinc-950/50 border border-white/5 rounded-xl">
+              <p className="text-[10px] uppercase tracking-widest text-gray-500">Taxa Alpha Coach</p>
+              <p className="text-xl font-bold text-gray-500">- R$ 20</p>
+            </div>
+
+            <div className="flex justify-center">
+              <ArrowRight className="h-6 w-6 text-primary rotate-90" />
+            </div>
+
+            <div className="flex items-center justify-between p-6 bg-gradient-to-br from-primary/20 to-zinc-950 border border-primary/40 rounded-xl">
+              <div>
+                <p className="text-[10px] uppercase tracking-widest text-primary mb-1">Cai na sua conta</p>
+                <p className="text-3xl font-black text-primary text-glow-primary">R$ 180</p>
+              </div>
+              <Wallet className="h-10 w-10 text-primary" />
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* App Preview / Simulador Section */}
       <section className="py-24 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid lg:grid-cols-2 gap-16 items-center">
