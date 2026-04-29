@@ -107,7 +107,33 @@ const AtletaDetalhe = () => {
     setSavingNivel(false);
   };
 
-  const subtitulo = useMemo(() => {
+  const handleUploadFoto = async (file: File) => {
+    if (!aluno) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${aluno.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = pub.publicUrl;
+      const { error: updErr } = await supabase
+        .from("perfis")
+        .update({ avatar_url: url })
+        .eq("id", aluno.id);
+      if (updErr) throw updErr;
+      setAluno({ ...aluno, avatar_url: url });
+      toast.success("Foto atualizada!");
+    } catch (e: any) {
+      toast.error(e?.message || "Falha no upload");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+
     if (!perfil) return "Sem dados de anamnese";
     const peso = perfil.peso_kg ? `${perfil.peso_kg}kg` : null;
     const bf = perfil.bf_pct ? `${perfil.bf_pct}%` : null;
