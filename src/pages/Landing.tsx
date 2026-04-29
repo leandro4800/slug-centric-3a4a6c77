@@ -788,7 +788,7 @@ const Landing = () => {
           </button>
           
           <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl w-full">
-            <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[650px] bg-zinc-900 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden shrink-0">
+            <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[650px] bg-zinc-950 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden shrink-0">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-zinc-800 rounded-b-2xl z-20" />
               {!isUnlocked ? (
                 <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
@@ -816,11 +816,7 @@ const Landing = () => {
                   </form>
                 </div>
               ) : (
-                <iframe 
-                  src="/demo/app" 
-                  className="w-full h-full border-none"
-                  title="App Preview Full"
-                />
+                <DemoAppScreen mode="home" />
               )}
             </div>
 
