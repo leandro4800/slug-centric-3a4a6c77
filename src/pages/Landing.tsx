@@ -715,21 +715,17 @@ const Landing = () => {
           
           <div className="relative flex justify-center">
             {/* Phone Stack Effect */}
-            <div className="relative">
-              {/* Back Phone */}
-              <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-zinc-900 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-40 rotate-[-10deg] hidden md:block">
-                <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" className="w-full h-full object-cover" alt="App UI 1" />
+              <div className="relative">
+                {/* Back Phone */}
+                <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[-10deg] hidden md:block">
+                  <DemoAppScreen mode="stats" />
               </div>
               
               {/* Main Phone */}
-              <div className="relative w-[300px] h-[600px] bg-zinc-900 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
+              <div className="relative w-[300px] h-[600px] bg-zinc-950 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-xl z-20" />
                 {isUnlocked ? (
-                  <iframe 
-                    src="/demo/app" 
-                    className="w-full h-full border-none"
-                    title="App Preview"
-                  />
+                  <DemoAppScreen mode="home" />
                 ) : (
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
                     <Lock className="h-10 w-10 text-primary mb-4" />
@@ -740,8 +736,8 @@ const Landing = () => {
               </div>
 
               {/* Front Phone */}
-              <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-zinc-900 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-40 rotate-[10deg] hidden md:block z-20">
-                <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4" className="w-full h-full object-cover" alt="App UI 2" />
+              <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[10deg] hidden md:block z-20">
+                <DemoAppScreen mode="treino" />
               </div>
             </div>
             {/* Decorative Elements */}
