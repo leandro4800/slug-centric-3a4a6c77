@@ -1,8 +1,11 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import { ArrowRight, Play, CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { ArrowRight, Play, CheckCircle2, Mail, Lock } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 const coaches = [
   {
@@ -37,6 +40,53 @@ const coaches = [
 
 const Landing = () => {
   const [showSimulador, setShowSimulador] = useState(false);
+  const [email, setEmail] = useState("");
+  const [isUnlocked, setIsUnlocked] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("simulator_email");
+    if (savedEmail) {
+      setIsUnlocked(true);
+    }
+  }, []);
+
+  const handleUnlock = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !email.includes("@")) {
+      toast({
+        title: "E-mail inválido",
+        description: "Por favor, insira um e-mail válido para continuar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.from("leads").insert([{ email }]);
+      if (error && error.code !== "23505") { // Ignore unique constraint error
+        throw error;
+      }
+      
+      localStorage.setItem("simulator_email", email);
+      setIsUnlocked(true);
+      toast({
+        title: "Acesso Liberado!",
+        description: "Agora você pode simular a experiência do seu app.",
+      });
+    } catch (error) {
+      console.error("Error saving lead:", error);
+      toast({
+        title: "Erro ao liberar acesso",
+        description: "Tente novamente em instantes.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary selection:text-white overflow-x-hidden">
@@ -51,11 +101,14 @@ const Landing = () => {
         </nav>
         <div className="flex items-center gap-3">
           <Link to="/login">
-            <Button variant="ghost" className="text-white hover:bg-white/10">Entrar</Button>
+            <Button variant="ghost" className="text-white hover:bg-white/10 hidden md:flex">Entrar</Button>
           </Link>
-          <Link to="/login">
-            <Button className="bg-primary hover:bg-primary/90 text-white px-6">CADASTRAR</Button>
-          </Link>
+          <Button 
+            onClick={() => setShowSimulador(true)}
+            className="bg-primary hover:bg-primary/90 text-white px-6 font-bold"
+          >
+            TESTAR AGORA
+          </Button>
         </div>
       </header>
 
@@ -183,6 +236,39 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Features Section */}
+      <section className="py-24 px-6 md:px-12 bg-[#080808]">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">MUDE O JOGO DA SUA CONSULTORIA</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Tudo o que você precisa para escalar seu negócio e oferecer uma experiência de elite.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <CheckCircle2 className="text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 uppercase">TREINOS CINEMATOGRÁFICOS</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">Vídeos em 4K com execuções perfeitas, cronômetro inteligente e histórico de cargas automático.</p>
+            </div>
+            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <CheckCircle2 className="text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 uppercase">DIETA POR IA</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">Cálculo de macros, sugestões de cardápios e lista de compras inteligente integrada ao perfil do aluno.</p>
+            </div>
+            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <CheckCircle2 className="text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 uppercase">PAGAMENTO AUTOMÁTICO</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">Receba pelo app via PIX ou Cartão com renovação recorrente. Gestão financeira completa e simples.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* App Preview / Simulador Section */}
       <section className="py-24 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid lg:grid-cols-2 gap-16 items-center">
@@ -206,24 +292,54 @@ const Landing = () => {
                 </li>
               ))}
             </ul>
-            <Button 
-              size="lg" 
-              onClick={() => setShowSimulador(true)}
-              className="bg-white text-black hover:bg-gray-200 text-base px-10 h-14 rounded-md font-bold uppercase tracking-wider"
-            >
-              Testar Simulador
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button 
+                size="lg" 
+                onClick={() => setShowSimulador(true)}
+                className="bg-white text-black hover:bg-gray-200 text-base px-10 h-14 rounded-md font-bold uppercase tracking-wider"
+              >
+                Testar Simulador
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-white/20 text-white hover:bg-white/10 text-base px-10 h-14 rounded-md font-bold uppercase tracking-wider"
+              >
+                Falar com consultor
+              </Button>
+            </div>
           </div>
           
           <div className="relative flex justify-center">
-            {/* Phone Frame */}
-            <div className="relative w-[300px] h-[600px] bg-zinc-900 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-xl z-20" />
-              <iframe 
-                src="/demo/app" 
-                className="w-full h-full border-none"
-                title="App Preview"
-              />
+            {/* Phone Stack Effect */}
+            <div className="relative">
+              {/* Back Phone */}
+              <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-zinc-900 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-40 rotate-[-10deg] hidden md:block">
+                <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" className="w-full h-full object-cover" alt="App UI 1" />
+              </div>
+              
+              {/* Main Phone */}
+              <div className="relative w-[300px] h-[600px] bg-zinc-900 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-xl z-20" />
+                {isUnlocked ? (
+                  <iframe 
+                    src="/demo/app" 
+                    className="w-full h-full border-none"
+                    title="App Preview"
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
+                    <Lock className="h-10 w-10 text-primary mb-4" />
+                    <p className="text-sm font-bold uppercase mb-6">Acesso Bloqueado</p>
+                    <Button onClick={() => setShowSimulador(true)} size="sm" className="bg-primary">Liberar com Email</Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Front Phone */}
+              <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-zinc-900 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-40 rotate-[10deg] hidden md:block z-20">
+                <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4" className="w-full h-full object-cover" alt="App UI 2" />
+              </div>
             </div>
             {/* Decorative Elements */}
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-[100px]" />
@@ -264,34 +380,81 @@ const Landing = () => {
 
       {/* Simulador Modal Overlay */}
       {showSimulador && (
-        <div className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
           <button 
             onClick={() => setShowSimulador(false)}
-            className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors text-4xl font-light"
+            className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors text-4xl font-light z-[110]"
           >
             ×
           </button>
-          <div className="relative w-[320px] h-[650px] bg-zinc-900 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden">
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-zinc-800 rounded-b-2xl z-20" />
-            <iframe 
-              src="/demo/app" 
-              className="w-full h-full border-none"
-              title="App Preview Full"
-            />
-          </div>
-          <div className="hidden lg:block ml-12 max-w-md">
-            <h2 className="text-4xl font-black uppercase mb-6 text-primary">MODO SIMULADOR</h2>
-            <p className="text-lg text-gray-300 mb-8">
-              Experimente a interface que seus alunos terão acesso. 
-              Navegue pelos treinos, dietas e veja como a experiência 
-              Alpha Coach transforma a consultoria online.
-            </p>
-            <div className="p-6 bg-white/5 rounded-xl border border-white/10">
-              <p className="text-sm text-gray-400 italic">
-                "O design focado em mobile garante que seu aluno 
-                tenha a melhor experiência direto no celular, 
-                onde quer que ele esteja treinando."
+          
+          <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl w-full">
+            <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[650px] bg-zinc-900 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden shrink-0">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-zinc-800 rounded-b-2xl z-20" />
+              {!isUnlocked ? (
+                <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
+                  <Lock className="h-12 w-12 text-primary mb-6 animate-pulse" />
+                  <h3 className="text-xl font-bold uppercase mb-4 tracking-tighter">Área Restrita</h3>
+                  <p className="text-sm text-gray-400 mb-8">
+                    Insira seu e-mail para desbloquear o simulador e ver como seu app ficará.
+                  </p>
+                  <form onSubmit={handleUnlock} className="w-full space-y-4">
+                    <Input 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      className="bg-white/5 border-white/10 text-white placeholder:text-gray-600 h-12"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                    />
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-primary hover:bg-primary/90 h-12 font-bold uppercase"
+                      disabled={isLoading}
+                    >
+                      {isLoading ? "Liberando..." : "Liberar Acesso"}
+                    </Button>
+                  </form>
+                </div>
+              ) : (
+                <iframe 
+                  src="/demo/app" 
+                  className="w-full h-full border-none"
+                  title="App Preview Full"
+                />
+              )}
+            </div>
+
+            <div className="max-w-md text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
+                Modo Simulador
+              </div>
+              <h2 className="text-3xl md:text-5xl font-black uppercase mb-6 leading-[0.9]">
+                VEJA SEU APP EM <span className="text-primary text-glow-primary">AÇÃO.</span>
+              </h2>
+              <p className="text-base md:text-lg text-gray-300 mb-8 leading-relaxed">
+                Navegue pelas funcionalidades exclusivas: treinos cinematográficos, 
+                dieta personalizada e interface de alto nível.
               </p>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <CheckCircle2 className="h-5 w-5 text-primary mb-3" />
+                  <h4 className="font-bold text-sm uppercase mb-1">Mobile First</h4>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Experiência Fluida</p>
+                </div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                  <Mail className="h-5 w-5 text-primary mb-3" />
+                  <h4 className="font-bold text-sm uppercase mb-1">Sem Senha</h4>
+                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Acesso Imediato</p>
+                </div>
+              </div>
+
+              {!isUnlocked && (
+                <p className="mt-8 text-xs text-gray-500 italic">
+                  * Ao informar seu email, você concorda com nossos termos de uso.
+                </p>
+              )}
             </div>
           </div>
         </div>
