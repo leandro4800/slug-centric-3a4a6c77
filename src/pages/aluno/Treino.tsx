@@ -44,7 +44,6 @@ const Treino = () => {
   useEffect(() => {
     if (!tenant) return;
 
-    type VideoRef = { yt: string | null; coach: string | null };
     const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
       const { data } = await supabase
         .from("referencia_videos")
