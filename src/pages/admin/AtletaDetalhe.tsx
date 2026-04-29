@@ -163,13 +163,39 @@ const AtletaDetalhe = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* HERO */}
-      <div className="relative h-[280px] md:h-[340px] w-full overflow-hidden">
+      <div className="relative h-[280px] md:h-[340px] w-full overflow-hidden group">
         <img
           src={heroImg}
           alt={aluno.nome_completo || ""}
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/20" />
+
+        {/* Botão editar foto */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void handleUploadFoto(f);
+            e.target.value = "";
+          }}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full bg-background/80 backdrop-blur border border-primary/40 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-background"
+          aria-label="Editar foto"
+        >
+          {uploading ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Camera className="h-3 w-3" />
+          )}
+          {uploading ? "Enviando..." : "Editar foto"}
+        </button>
 
         {/* Top bar */}
         <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between z-10">
