@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { DEMO_ATHLETES } from "@/lib/demoAthletes";
 import {
   Select,
   SelectContent,
@@ -91,7 +92,7 @@ const AtletaDetalhe = () => {
         .eq("aluno_id", atletaId!)
         .maybeSingle(),
     ]);
-    setAluno((a as Aluno) || null);
+    setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
     setLoading(false);
   };
