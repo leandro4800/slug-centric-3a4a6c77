@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import {
   Stethoscope,
   AlertTriangle,
   TrendingUp,
+  Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
@@ -67,6 +68,8 @@ const AtletaDetalhe = () => {
   const [loading, setLoading] = useState(true);
   const [nivel, setNivel] = useState<string>("intermediario");
   const [savingNivel, setSavingNivel] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!atletaId) return;
@@ -104,6 +107,32 @@ const AtletaDetalhe = () => {
     setSavingNivel(false);
   };
 
+  const handleUploadFoto = async (file: File) => {
+    if (!aluno) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${aluno.id}/${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, file, { upsert: true, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = pub.publicUrl;
+      const { error: updErr } = await supabase
+        .from("perfis")
+        .update({ avatar_url: url })
+        .eq("id", aluno.id);
+      if (updErr) throw updErr;
+      setAluno({ ...aluno, avatar_url: url });
+      toast.success("Foto atualizada!");
+    } catch (e: any) {
+      toast.error(e?.message || "Falha no upload");
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const subtitulo = useMemo(() => {
     if (!perfil) return "Sem dados de anamnese";
     const peso = perfil.peso_kg ? `${perfil.peso_kg}kg` : null;
@@ -134,13 +163,39 @@ const AtletaDetalhe = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* HERO */}
-      <div className="relative h-[280px] md:h-[340px] w-full overflow-hidden">
+      <div className="relative h-[280px] md:h-[340px] w-full overflow-hidden group">
         <img
           src={heroImg}
           alt={aluno.nome_completo || ""}
           className="absolute inset-0 w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/20" />
+
+        {/* Botão editar foto */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void handleUploadFoto(f);
+            e.target.value = "";
+          }}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+          className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full bg-background/80 backdrop-blur border border-primary/40 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-background"
+          aria-label="Editar foto"
+        >
+          {uploading ? (
+            <Loader2 className="h-3 w-3 animate-spin" />
+          ) : (
+            <Camera className="h-3 w-3" />
+          )}
+          {uploading ? "Enviando..." : "Editar foto"}
+        </button>
 
         {/* Top bar */}
         <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between z-10">
