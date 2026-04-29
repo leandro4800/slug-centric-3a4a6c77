@@ -23,10 +23,18 @@ const Login = () => {
     if (authLoading || !user) return;
     (async () => {
       const [{ data: perfil }, { data: roles }] = await Promise.all([
-        supabase.from("perfis").select("tenant_id, tenants(slug)").eq("id", user.id).maybeSingle(),
+        supabase.from("perfis").select("tenant_id").eq("id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
       ]);
-      const slug = (perfil?.tenants as any)?.slug || "demo";
+      let slug = "demo";
+      if (perfil?.tenant_id) {
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("slug")
+          .eq("id", perfil.tenant_id)
+          .maybeSingle();
+        slug = tenant?.slug || slug;
+      }
       const isCoach = roles?.some((r) => r.role === "coach" || r.role === "admin");
       navigate(`/${slug}/${isCoach ? "admin" : "app"}`, { replace: true });
     })();
