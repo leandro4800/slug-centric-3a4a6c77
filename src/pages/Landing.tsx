@@ -205,8 +205,19 @@ const Landing = () => {
       </header>
 
       {/* Hero */}
-      <section className="relative min-h-screen flex items-center pt-20">
-        <div className="absolute inset-0 z-0 overflow-hidden">
+      <section className="relative min-h-[90vh] md:min-h-screen flex items-center pt-20 overflow-hidden">
+        {/* Mobile Background (Athletes) - visible only on mobile, positioned before title in DOM logic */}
+        <div className="absolute inset-0 z-0 md:hidden">
+          <img 
+            src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" 
+            alt="Atletas" 
+            className="w-full h-[50vh] object-cover object-center"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-[#0a0a0a]" />
+        </div>
+
+        {/* Desktop Background - hidden on mobile */}
+        <div className="absolute inset-0 z-0 hidden md:block">
           <img 
             src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" 
             alt="Background" 
@@ -216,38 +227,35 @@ const Landing = () => {
               filter: "brightness(1.1) contrast(1.1)"
             }}
           />
-          {/* Mobile: overlay escuro moderado para manter claridade mas permitir leitura */}
-          <div className="absolute inset-0 bg-black/50 md:hidden" />
-          {/* Desktop: gradiente lateral mais suave à esquerda para maior claridade */}
-          <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 via-40% to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 via-40% to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full mt-[30vh] md:mt-0">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 mb-8 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
+            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 md:mb-8 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               Plataforma White-Label para Coaches
             </div>
             
-            <h1 className="text-4xl md:text-7xl font-black leading-[0.9] mb-8 tracking-tighter uppercase">
-              SEU APP DE <br />
-              <span className="text-primary text-glow-primary">CONSULTORIA</span> <br />
+            <h1 className="text-4xl md:text-7xl font-black leading-[0.9] mb-6 md:mb-8 tracking-tighter uppercase">
+              SEU APP DE <br className="hidden md:block" />
+              <span className="text-primary text-glow-primary">CONSULTORIA</span> <br className="hidden md:block" />
               EM MODO CINEMA.
             </h1>
             
-            <p className="text-lg md:text-xl text-gray-400 max-w-xl mb-12 leading-relaxed">
+            <p className="text-lg md:text-xl text-gray-400 max-w-xl mb-10 md:mb-12 leading-relaxed">
               Esqueça planilhas e WhatsApp. Tenha seu próprio aplicativo com treinos, 
               dieta, IA e pagamento automático — tudo com sua marca e seu domínio.
             </p>
             
-            <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white text-base px-8 h-14 rounded-md font-bold uppercase tracking-wider group">
+            <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+              <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white text-base px-8 h-14 rounded-md font-bold uppercase tracking-wider group">
                 <Play className="mr-2 h-4 w-4 fill-current" />
                 Quero minha franquia Alpha Coach
               </Button>
-              <a href="#coaches">
-                <Button size="lg" variant="outline" className="text-white border-white/20 bg-white/5 hover:bg-white/10 text-base px-8 h-14 rounded-md font-medium group">
+              <a href="#coaches" className="w-full sm:w-auto">
+                <Button size="lg" variant="outline" className="w-full text-white border-white/20 bg-white/5 hover:bg-white/10 text-base px-8 h-14 rounded-md font-medium group">
                   Ver coaches em destaque
                   <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
