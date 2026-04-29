@@ -19,6 +19,20 @@ const coaches = [
     video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4",
     tag: "VERIFICADO",
   },
+  {
+    name: "BADBOY TEAM",
+    specialty: "ESTÉTICA & PERFORMANCE",
+    bio: "Metodologia Badboy para resultados extremos.",
+    video: "https://player.vimeo.com/external/494252666.sd.mp4?s=7201fd1f99cf39925e01c9a101d36d2466085a67&profile_id=165&oauth2_token_id=57447761",
+    tag: "VERIFICADO",
+  },
+  {
+    name: "NUTRI SAMILA DIAS",
+    specialty: "NUTRIÇÃO ESPORTIVA",
+    bio: "Especialista em emagrecimento e saúde.",
+    video: "https://player.vimeo.com/external/494252666.sd.mp4?s=7201fd1f99cf39925e01c9a101d36d2466085a67&profile_id=165&oauth2_token_id=57447761",
+    tag: "VERIFICADO",
+  },
 ];
 
 const Landing = () => {
