@@ -511,14 +511,15 @@ const Landing = () => {
           </div>
 
           <div className="relative">
-            <div className="relative bg-gradient-to-br from-zinc-900 to-zinc-950 border border-white/10 rounded-2xl p-8 shadow-2xl">
-              <div className="flex items-center gap-2 mb-6 pb-4 border-b border-white/5">
+            <div className="relative overflow-hidden bg-zinc-950 border border-primary/30 rounded-2xl p-8 shadow-2xl">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,hsl(var(--primary)/0.22),transparent_38%)]" />
+              <div className="relative flex items-center gap-2 mb-6 pb-4 border-b border-white/10">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
-                <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <div className="w-3 h-3 rounded-full bg-white/70" />
+                <div className="w-3 h-3 rounded-full bg-primary" />
                 <span className="ml-4 text-xs text-gray-500 font-mono">alpha-coach.app/seunome</span>
               </div>
-              <div className="space-y-4">
+              <div className="relative space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center font-black text-white">SC</div>
                   <div className="flex-1">
@@ -528,17 +529,17 @@ const Landing = () => {
                   <div className="px-2 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded">PRO</div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="aspect-square bg-gradient-to-br from-primary/30 to-zinc-900 rounded-lg flex items-center justify-center">
+                  <div className="aspect-square bg-zinc-900 border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">TREINOS</p>
                   </div>
-                  <div className="aspect-square bg-gradient-to-br from-primary/50 to-zinc-900 rounded-lg flex items-center justify-center">
+                  <div className="aspect-square bg-zinc-900 border border-white/10 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">DIETA</p>
                   </div>
-                  <div className="aspect-square bg-gradient-to-br from-primary/70 to-zinc-900 rounded-lg flex items-center justify-center">
+                  <div className="aspect-square bg-zinc-900 border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">EVOLUÇÃO</p>
                   </div>
                 </div>
-                <div className="h-32 bg-gradient-to-br from-primary/30 to-zinc-900 rounded-lg flex flex-col items-center justify-center gap-2">
+                <div className="h-32 bg-zinc-900 border border-white/10 rounded-lg flex flex-col items-center justify-center gap-2">
                   <Smartphone className="h-10 w-10 text-primary" />
                   <p className="text-xs text-gray-300 font-semibold">App próprio com sua marca</p>
                 </div>
