@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import loginBg from "@/assets/login-anilhas-bg.jpg";
 
 const Login = () => {
   const navigate = useNavigate();
