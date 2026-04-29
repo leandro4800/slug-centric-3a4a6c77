@@ -80,6 +80,14 @@ const AtletaDetalhe = () => {
 
   const load = async () => {
     setLoading(true);
+    const demoAthlete = DEMO_ATHLETES.find((athlete) => athlete.id === atletaId);
+    if (slug === "demo" && demoAthlete) {
+      setAluno(demoAthlete as Aluno);
+      setPerfil(null);
+      setLoading(false);
+      return;
+    }
+
     const [{ data: a }, { data: pt }] = await Promise.all([
       supabase
         .from("perfis")
