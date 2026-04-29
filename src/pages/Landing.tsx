@@ -839,39 +839,107 @@ const Landing = () => {
                   </form>
                 </div>
               ) : (
-                <DemoAppScreen mode="home" />
+                <DemoAppScreen mode="home" brandName={brandName} brandColor={brandColor} />
               )}
             </div>
 
-            <div className="max-w-md text-center lg:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
-                Modo Simulador
+            <div className="max-w-md w-full text-center lg:text-left">
+              <div
+                className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border rounded-md"
+                style={{ borderColor: `${brandColor}55`, backgroundColor: `${brandColor}1A`, color: brandColor }}
+              >
+                {isUnlocked ? "Personalize ao vivo" : "Modo Simulador"}
               </div>
               <h2 className="text-3xl md:text-5xl font-black uppercase mb-6 leading-[0.9]">
-                VEJA SEU APP EM <span className="text-primary text-glow-primary">AÇÃO.</span>
+                {isUnlocked ? (
+                  <>SEU APP, <span className="text-glow-primary" style={{ color: brandColor }}>SUA MARCA.</span></>
+                ) : (
+                  <>VEJA SEU APP EM <span className="text-primary text-glow-primary">AÇÃO.</span></>
+                )}
               </h2>
-              <p className="text-base md:text-lg text-gray-300 mb-8 leading-relaxed">
-                Navegue pelas funcionalidades exclusivas: treinos cinematográficos, 
-                dieta personalizada e interface de alto nível.
-              </p>
-              
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <CheckCircle2 className="h-5 w-5 text-primary mb-3" />
-                  <h4 className="font-bold text-sm uppercase mb-1">Mobile First</h4>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Experiência Fluida</p>
-                </div>
-                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                  <Mail className="h-5 w-5 text-primary mb-3" />
-                  <h4 className="font-bold text-sm uppercase mb-1">Sem Senha</h4>
-                  <p className="text-[10px] text-gray-500 uppercase tracking-wider">Acesso Imediato</p>
-                </div>
-              </div>
 
-              {!isUnlocked && (
-                <p className="mt-8 text-xs text-gray-500 italic">
-                  * Ao informar seu email, você concorda com nossos termos de uso.
-                </p>
+              {!isUnlocked ? (
+                <>
+                  <p className="text-base md:text-lg text-gray-300 mb-8 leading-relaxed">
+                    Navegue pelas funcionalidades exclusivas: treinos cinematográficos,
+                    dieta personalizada e interface de alto nível.
+                  </p>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                      <CheckCircle2 className="h-5 w-5 text-primary mb-3" />
+                      <h4 className="font-bold text-sm uppercase mb-1">Mobile First</h4>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wider">Experiência Fluida</p>
+                    </div>
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                      <Mail className="h-5 w-5 text-primary mb-3" />
+                      <h4 className="font-bold text-sm uppercase mb-1">Sem Senha</h4>
+                      <p className="text-[10px] text-gray-500 uppercase tracking-wider">Acesso Imediato</p>
+                    </div>
+                  </div>
+                  <p className="mt-8 text-xs text-gray-500 italic">
+                    * Ao informar seu email, você concorda com nossos termos de uso.
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-6">
+                  <p className="text-sm md:text-base text-gray-400 leading-relaxed">
+                    Mude o nome do seu time e a cor principal — veja o app reagir em tempo real ao lado.
+                  </p>
+
+                  <div className="space-y-2 text-left">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                      Nome do seu time
+                    </label>
+                    <Input
+                      value={brandName}
+                      onChange={(e) => setBrandName(e.target.value.slice(0, 28))}
+                      placeholder="Ex: Wolf Team"
+                      className="bg-white/5 border-white/10 text-white h-12 font-bold uppercase tracking-wider"
+                    />
+                  </div>
+
+                  <div className="space-y-3 text-left">
+                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
+                      Cor da marca
+                    </label>
+                    <div className="flex flex-wrap gap-3">
+                      {BRAND_COLORS.map((c) => (
+                        <button
+                          key={c.hex}
+                          type="button"
+                          onClick={() => setBrandColor(c.hex)}
+                          className={`h-10 w-10 rounded-full border-2 transition-transform hover:scale-110 ${
+                            brandColor === c.hex ? "border-white scale-110" : "border-white/20"
+                          }`}
+                          style={{ backgroundColor: c.hex }}
+                          aria-label={c.name}
+                          title={c.name}
+                        />
+                      ))}
+                      <label
+                        className="h-10 w-10 rounded-full border-2 border-dashed border-white/30 flex items-center justify-center cursor-pointer hover:border-white/60 transition-colors relative overflow-hidden"
+                        title="Cor personalizada"
+                      >
+                        <Palette className="h-4 w-4 text-white/70" />
+                        <input
+                          type="color"
+                          value={brandColor}
+                          onChange={(e) => setBrandColor(e.target.value)}
+                          className="absolute inset-0 opacity-0 cursor-pointer"
+                        />
+                      </label>
+                    </div>
+                    <p className="text-[10px] text-gray-500 uppercase tracking-widest">
+                      Selecionada: <span style={{ color: brandColor }}>{brandColor}</span>
+                    </p>
+                  </div>
+
+                  <Link to="/login" className="block">
+                    <Button className="w-full h-12 font-bold uppercase tracking-wider" style={{ backgroundColor: brandColor }}>
+                      Quero meu app assim
+                    </Button>
+                  </Link>
+                </div>
               )}
             </div>
           </div>
