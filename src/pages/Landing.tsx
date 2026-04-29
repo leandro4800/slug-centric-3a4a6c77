@@ -233,6 +233,39 @@ const Landing = () => {
         </div>
       </section>
 
+      {/* Features Section */}
+      <section className="py-24 px-6 md:px-12 bg-[#080808]">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">MUDE O JOGO DA SUA CONSULTORIA</h2>
+            <p className="text-gray-400 max-w-2xl mx-auto">Tudo o que você precisa para escalar seu negócio e oferecer uma experiência de elite.</p>
+          </div>
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <CheckCircle2 className="text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 uppercase">TREINOS CINEMATOGRÁFICOS</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">Vídeos em 4K com execuções perfeitas, cronômetro inteligente e histórico de cargas automático.</p>
+            </div>
+            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <CheckCircle2 className="text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 uppercase">DIETA POR IA</h3>
+              <p className="text-gray-400 text-sm leading-relaxed">Cálculo de macros, sugestões de cardápios e lista de compras inteligente integrada ao perfil do aluno.</p>
+            </div>
+            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
+                <CheckCircle2 className="text-primary" />
+              </div>
+              <h3 className="text-xl font-bold mb-4 uppercase">PAGAMENTO AUTOMÁTICO</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">Receba pelo app via PIX ou Cartão com renovação recorrente. Gestão financeira completa e simples.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* App Preview / Simulador Section */}
       <section className="py-24 bg-[#050505]">
         <div className="max-w-7xl mx-auto px-6 md:px-12 grid lg:grid-cols-2 gap-16 items-center">
