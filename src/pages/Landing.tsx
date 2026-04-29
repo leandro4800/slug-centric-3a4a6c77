@@ -122,6 +122,8 @@ const Landing = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [students, setStudents] = useState(80);
   const [price, setPrice] = useState(400);
+  const [brandName, setBrandName] = useState("Seu Coach Team");
+  const [brandColor, setBrandColor] = useState("#E50914");
   const { toast } = useToast();
 
   const grossRevenue = students * price;
