@@ -28,6 +28,7 @@ export type Database = {
           tecnica_intensidade: string | null
           tenant_id: string
           updated_at: string
+          video_coach_url: string | null
           video_url: string | null
         }
         Insert: {
@@ -43,6 +44,7 @@ export type Database = {
           tecnica_intensidade?: string | null
           tenant_id: string
           updated_at?: string
+          video_coach_url?: string | null
           video_url?: string | null
         }
         Update: {
@@ -58,6 +60,7 @@ export type Database = {
           tecnica_intensidade?: string | null
           tenant_id?: string
           updated_at?: string
+          video_coach_url?: string | null
           video_url?: string | null
         }
         Relationships: [
@@ -254,6 +257,7 @@ export type Database = {
           tenant_id: string
           updated_at: string
           url_video: string
+          video_coach_url: string | null
         }
         Insert: {
           created_at?: string
@@ -262,6 +266,7 @@ export type Database = {
           tenant_id: string
           updated_at?: string
           url_video: string
+          video_coach_url?: string | null
         }
         Update: {
           created_at?: string
@@ -270,6 +275,7 @@ export type Database = {
           tenant_id?: string
           updated_at?: string
           url_video?: string
+          video_coach_url?: string | null
         }
         Relationships: [
           {
@@ -336,6 +342,7 @@ export type Database = {
           series: string | null
           tenant_id: string
           updated_at: string
+          video_coach_url: string | null
           video_url: string | null
         }
         Insert: {
@@ -350,6 +357,7 @@ export type Database = {
           series?: string | null
           tenant_id: string
           updated_at?: string
+          video_coach_url?: string | null
           video_url?: string | null
         }
         Update: {
@@ -364,6 +372,7 @@ export type Database = {
           series?: string | null
           tenant_id?: string
           updated_at?: string
+          video_coach_url?: string | null
           video_url?: string | null
         }
         Relationships: [

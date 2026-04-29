@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Play, Lightbulb, ChevronUp, Share2, Save, Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Youtube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -9,7 +9,10 @@ export interface ExerciseCardData {
   series: string | null;
   repeticoes: string | null;
   observacao: string | null;
+  /** Vídeo do YouTube de demonstração (referência técnica) */
   video_url?: string | null;
+  /** Vídeo gravado pelo coach (demo personalizada) */
+  video_coach_url?: string | null;
   is_extra?: boolean;
 }
 
@@ -35,6 +38,21 @@ const extractYouTubeId = (url: string | null | undefined): string | null => {
   return m ? m[1] : null;
 };
 
+const isDirectVideo = (url: string | null | undefined) =>
+  !!url && /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
+
+const fmtTime = (s: number) => {
+  const m = Math.floor(s / 60).toString().padStart(2, "0");
+  const r = (s % 60).toString().padStart(2, "0");
+  return `${m}:${r}`;
+};
+
+const parseSeries = (s: string | null) => {
+  if (!s) return 4;
+  const n = parseInt(String(s).match(/\d+/)?.[0] || "4");
+  return Math.min(Math.max(n, 1), 8);
+};
+
 export const ExerciseCard = ({
   data,
   isOpen,
@@ -44,43 +62,186 @@ export const ExerciseCard = ({
   tenantId,
   onCargaSaved,
 }: ExerciseCardProps) => {
-  const [carga, setCarga] = useState<string>(cargaAnterior?.carga_kg ? String(cargaAnterior.carga_kg) : "");
-  const [reps, setReps] = useState<string>(cargaAnterior?.repeticoes_feitas ? String(cargaAnterior.repeticoes_feitas) : "");
-  const [saving, setSaving] = useState(false);
-  const [showVideo, setShowVideo] = useState(false);
+  const totalSlots = parseSeries(data.series);
+  const [slots, setSlots] = useState(() =>
+    Array.from({ length: totalSlots }, () => ({
+      carga: cargaAnterior?.carga_kg ? String(cargaAnterior.carga_kg) : "",
+      reps: cargaAnterior?.repeticoes_feitas ? String(cargaAnterior.repeticoes_feitas) : "",
+      done: false,
+    }))
+  );
+  const [savingAll, setSavingAll] = useState(false);
+  const [showCoach, setShowCoach] = useState(false);
+  const [showYT, setShowYT] = useState(false);
 
-  const videoId = extractYouTubeId(data.video_url);
+  // Timer
+  const [running, setRunning] = useState(false);
+  const [seconds, setSeconds] = useState(0);
+  const intRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (running) {
+      intRef.current = window.setInterval(() => setSeconds((s) => s + 1), 1000);
+    } else if (intRef.current) {
+      window.clearInterval(intRef.current);
+    }
+    return () => {
+      if (intRef.current) window.clearInterval(intRef.current);
+    };
+  }, [running]);
 
-  const handleSave = async () => {
+  const ytId = extractYouTubeId(data.video_url);
+  const coachUrl = data.video_coach_url || null;
+  const coachIsYT = extractYouTubeId(coachUrl);
+  const coachIsDirect = isDirectVideo(coachUrl);
+
+  // Vídeo principal exibido no topo (preferimos coach se existir, senão YT)
+  const hasCoach = !!coachUrl;
+  const hasYT = !!ytId;
+
+  const updateSlot = (i: number, field: "carga" | "reps", val: string) =>
+    setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)));
+
+  const toggleDone = (i: number) =>
+    setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, done: !s.done } : s)));
+
+  const handleFinalizar = async () => {
     if (!userId || !tenantId) {
       toast.error("Você precisa estar logado.");
       return;
     }
-    const k = parseFloat(carga.replace(",", "."));
-    const r = parseInt(reps);
-    if (isNaN(k) || isNaN(r)) {
-      toast.error("Informe carga e repetições.");
+    const valid = slots
+      .map((s) => ({ k: parseFloat(s.carga.replace(",", ".")), r: parseInt(s.reps) }))
+      .filter((s) => !isNaN(s.k) && !isNaN(s.r));
+    if (valid.length === 0) {
+      toast.error("Preencha pelo menos uma série.");
       return;
     }
-    setSaving(true);
-    const { error } = await supabase.from("historico_cargas").insert({
+    setSavingAll(true);
+    const rows = valid.map((s) => ({
       tenant_id: tenantId,
       user_id: userId,
       exercicio_nome: data.exercicio,
-      carga_kg: k,
-      repeticoes_feitas: r,
-    });
-    setSaving(false);
+      carga_kg: s.k,
+      repeticoes_feitas: s.r,
+    }));
+    const { error } = await supabase.from("historico_cargas").insert(rows);
+    setSavingAll(false);
     if (error) {
       toast.error(error.message);
       return;
     }
-    toast.success("Carga registrada!");
-    onCargaSaved?.(data.exercicio, k, r);
+    const last = valid[valid.length - 1];
+    toast.success(`${valid.length} série(s) registrada(s)!`);
+    onCargaSaved?.(data.exercicio, last.k, last.r);
+    setRunning(false);
   };
 
   return (
     <div className="bg-card/50 border border-accent/30 rounded-xl overflow-hidden">
+      {/* Player grande no topo (sempre visível quando há vídeo) */}
+      {(hasCoach || hasYT) && (
+        <div className="relative aspect-video bg-black">
+          {/* COACH primeiro */}
+          {hasCoach && (showCoach || !hasYT) ? (
+            coachIsYT ? (
+              <iframe
+                src={`https://www.youtube.com/embed/${coachIsYT}?autoplay=1`}
+                title={`${data.exercicio} - Coach`}
+                className="absolute inset-0 w-full h-full"
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+              />
+            ) : coachIsDirect ? (
+              <video
+                src={coachUrl!}
+                controls
+                autoPlay
+                playsInline
+                className="absolute inset-0 w-full h-full object-contain bg-black"
+              />
+            ) : (
+              <a
+                href={coachUrl!}
+                target="_blank"
+                rel="noreferrer"
+                className="absolute inset-0 flex items-center justify-center text-sm text-accent underline"
+              >
+                Abrir vídeo do coach
+              </a>
+            )
+          ) : showYT && ytId ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+              title={data.exercicio}
+              className="absolute inset-0 w-full h-full"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+            />
+          ) : (
+            // Thumbnail / poster
+            <button
+              onClick={() => (hasCoach ? setShowCoach(true) : setShowYT(true))}
+              className="absolute inset-0 w-full h-full group"
+            >
+              {ytId && (
+                <img
+                  src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                  alt=""
+                  className="absolute inset-0 w-full h-full object-cover opacity-90"
+                />
+              )}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
+              <div className="absolute top-3 right-3 w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg">
+                <CheckCircle2 className="h-5 w-5 text-white" />
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-16 h-16 rounded-full bg-accent/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition">
+                  <Play className="h-7 w-7 fill-black text-black ml-1" />
+                </div>
+              </div>
+            </button>
+          )}
+
+          {/* Botões flutuantes inferiores */}
+          <div className="absolute bottom-2 left-2 flex gap-2 z-10">
+            <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
+              <Share2 className="h-4 w-4" />
+            </button>
+            <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
+              <Clock className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Tabs de fonte do vídeo (Coach / YouTube) */}
+          {hasCoach && hasYT && (
+            <div className="absolute bottom-2 right-2 z-10 flex gap-1.5 bg-background/70 backdrop-blur rounded-full p-1">
+              <button
+                onClick={() => { setShowCoach(true); setShowYT(false); }}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition ${
+                  showCoach || !showYT ? "bg-accent text-black" : "text-muted-foreground"
+                }`}
+              >
+                Coach
+              </button>
+              <button
+                onClick={() => { setShowYT(true); setShowCoach(false); }}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition ${
+                  showYT ? "bg-[#FF0000] text-white" : "text-muted-foreground"
+                }`}
+              >
+                <Youtube className="h-3 w-3" /> YouTube
+              </button>
+            </div>
+          )}
+          {!hasCoach && hasYT && (
+            <div className="absolute bottom-2 right-2 z-10 bg-background/70 backdrop-blur px-2 py-1 rounded text-[10px] flex items-center gap-1">
+              Assista no <span className="bg-[#FF0000] px-1.5 rounded text-white font-bold">YouTube</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Header do card (clicável para abrir o modo execução) */}
       <button onClick={onToggle} className="w-full p-4 text-left">
         <div className="flex items-start justify-between gap-3">
           <p className="font-display text-lg leading-tight">{data.exercicio.toUpperCase()}</p>
@@ -90,7 +251,7 @@ export const ExerciseCard = ({
             </span>
           )}
         </div>
-        <div className="flex gap-2 mt-2">
+        <div className="flex flex-wrap gap-2 mt-2">
           {data.series && data.repeticoes && (
             <span className="px-3 py-1 rounded-full bg-secondary text-xs">
               {data.series}x {data.repeticoes}
@@ -102,51 +263,16 @@ export const ExerciseCard = ({
             </span>
           )}
         </div>
+
+        {!isOpen && (
+          <div className="mt-3 w-full py-2.5 rounded-lg bg-accent text-black font-display text-sm flex items-center justify-center gap-2">
+            ▶ EXECUTAR
+          </div>
+        )}
       </button>
 
       {isOpen && (
         <div className="px-4 pb-4 space-y-3">
-          <button
-            onClick={onToggle}
-            className="w-full py-2.5 rounded-lg border border-accent/50 text-accent font-semibold text-sm flex items-center justify-center gap-2"
-          >
-            FECHAR <ChevronUp className="h-4 w-4" />
-          </button>
-
-          {videoId && (
-            <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-              {showVideo ? (
-                <iframe
-                  src={`https://www.youtube.com/embed/${videoId}?autoplay=1`}
-                  title={data.exercicio}
-                  className="absolute inset-0 w-full h-full"
-                  allow="autoplay; encrypted-media"
-                  allowFullScreen
-                />
-              ) : (
-                <button onClick={() => setShowVideo(true)} className="absolute inset-0 w-full h-full">
-                  <img
-                    src={`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`}
-                    alt=""
-                    className="absolute inset-0 w-full h-full object-cover"
-                  />
-                  <div className="absolute inset-0 bg-black/30" />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-16 h-12 rounded-lg bg-[#FF0000] flex items-center justify-center shadow-lg">
-                      <Play className="h-6 w-6 fill-white text-white" />
-                    </div>
-                  </div>
-                  <div className="absolute bottom-2 right-2 bg-background/70 px-2 py-1 rounded text-[10px] flex items-center gap-1">
-                    Assista no <span className="bg-[#FF0000] px-1.5 rounded text-white font-bold">YouTube</span>
-                  </div>
-                </button>
-              )}
-              <button className="absolute bottom-2 left-2 w-9 h-9 rounded-full bg-background/70 flex items-center justify-center z-10">
-                <Share2 className="h-4 w-4" />
-              </button>
-            </div>
-          )}
-
           {data.observacao && (
             <div className="bg-secondary/50 border border-border rounded-lg px-3 py-2.5 text-sm flex items-start gap-2">
               <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
@@ -154,39 +280,78 @@ export const ExerciseCard = ({
             </div>
           )}
 
-          {/* Registro de carga */}
-          <div className="grid grid-cols-2 gap-2">
-            <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Carga (kg)</label>
-              <input
-                type="number"
-                inputMode="decimal"
-                value={carga}
-                onChange={(e) => setCarga(e.target.value)}
-                placeholder="0"
-                className="w-full mt-1 bg-secondary/70 border border-border rounded-lg px-3 py-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Reps feitas</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                value={reps}
-                onChange={(e) => setReps(e.target.value)}
-                placeholder="0"
-                className="w-full mt-1 bg-secondary/70 border border-border rounded-lg px-3 py-2 text-sm"
-              />
+          {/* Iniciar exercício + timer */}
+          <div className="grid grid-cols-[auto_1fr] gap-2">
+            <button
+              onClick={() => setRunning((r) => !r)}
+              className="px-4 py-3 rounded-lg bg-primary text-primary-foreground font-display text-xs leading-tight flex items-center gap-2"
+            >
+              <Play className="h-4 w-4 fill-current" />
+              <span>{running ? "PAUSAR" : "INICIAR"}<br/>EXERCÍCIO</span>
+            </button>
+            <div className="rounded-lg border border-accent/30 bg-secondary/30 px-4 py-3 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Tempo atual</p>
+                <p className="font-mono text-2xl text-accent">{fmtTime(seconds)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Player</p>
+                <p className="text-xs font-bold">EXECUÇÃO DINÂMICA</p>
+              </div>
             </div>
           </div>
 
+          {/* Séries de trabalho */}
+          <div className="flex items-center justify-between pt-1">
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries de trabalho</p>
+            <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
+          </div>
+
+          <div className="space-y-2">
+            {slots.map((slot, i) => (
+              <div key={i} className="border border-border rounded-lg p-3 space-y-2 bg-background/40">
+                <button
+                  onClick={() => toggleDone(i)}
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+                >
+                  <CheckCircle2 className={`h-4 w-4 ${slot.done ? "text-emerald-500" : "text-muted-foreground"}`} />
+                  S{i + 1}
+                </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Carga (kg)</label>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      value={slot.carga}
+                      onChange={(e) => updateSlot(i, "carga", e.target.value)}
+                      placeholder="0"
+                      className="w-full mt-1 bg-secondary/70 border border-border rounded-lg px-3 py-2 text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Reps</label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      value={slot.reps}
+                      onChange={(e) => updateSlot(i, "reps", e.target.value)}
+                      placeholder="0"
+                      className="w-full mt-1 bg-secondary/70 border border-border rounded-lg px-3 py-2 text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2"
+            onClick={handleFinalizar}
+            disabled={savingAll}
+            className="w-full py-3 rounded-lg bg-accent text-black font-display text-base flex items-center justify-center gap-2"
           >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Registrar série
+            {savingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+            FINALIZAR
           </button>
         </div>
       )}

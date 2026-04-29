@@ -15,6 +15,8 @@ interface CargaMap {
   [exercicio: string]: { carga_kg: number; repeticoes_feitas: number; data_treino: string };
 }
 
+type VideoRef = { yt: string | null; coach: string | null };
+
 const VOLUME_GROUPS = ["peito", "costas", "quadríceps", "quadriceps", "glúteo", "gluteo", "ombro", "bíceps", "biceps", "tríceps", "triceps"];
 const MIN_EXERCISES_PER_DAY = 4;
 
@@ -42,22 +44,27 @@ const Treino = () => {
   useEffect(() => {
     if (!tenant) return;
 
-    const loadVideoRefs = async (): Promise<Record<string, string>> => {
+    const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
       const { data } = await supabase
         .from("referencia_videos")
-        .select("nome_exercicio, url_video")
+        .select("nome_exercicio, url_video, video_coach_url")
         .eq("tenant_id", tenant.id);
-      const map: Record<string, string> = {};
-      data?.forEach((r) => {
-        if (r.url_video) map[r.nome_exercicio.trim().toLowerCase()] = r.url_video;
+      const map: Record<string, VideoRef> = {};
+      data?.forEach((r: any) => {
+        map[r.nome_exercicio.trim().toLowerCase()] = {
+          yt: r.url_video || null,
+          coach: r.video_coach_url || null,
+        };
       });
       return map;
     };
 
-    const resolveVideo = (nome: string, refMap: Record<string, string>) =>
-      refMap[nome.trim().toLowerCase()] || null;
+    const resolveVideo = (nome: string, refMap: Record<string, VideoRef>) =>
+      refMap[nome.trim().toLowerCase()]?.yt || null;
+    const resolveCoach = (nome: string, refMap: Record<string, VideoRef>) =>
+      refMap[nome.trim().toLowerCase()]?.coach || null;
 
-    const autoFillVolume = async (list: Treino[], refMap: Record<string, string>): Promise<Treino[]> => {
+    const autoFillVolume = async (list: Treino[], refMap: Record<string, VideoRef>): Promise<Treino[]> => {
       const dias = [...new Set(list.map((t) => t.dia_semana))];
       const extras: Treino[] = [];
       for (const dia of dias) {
@@ -71,13 +78,13 @@ const Treino = () => {
         const grupo = matched.charAt(0).toUpperCase() + matched.slice(1);
         const { data: candidates } = await supabase
           .from("biblioteca_exercicios")
-          .select("nome, series_trabalho, repeticoes, tecnica_intensidade")
+          .select("nome, series_trabalho, repeticoes, tecnica_intensidade, video_url, video_coach_url")
           .eq("tenant_id", tenant.id)
           .ilike("grupo_muscular", `%${grupo}%`)
           .limit(20);
         if (!candidates) continue;
-        const filtered = candidates.filter((c) => !existing.has(c.nome.toLowerCase())).slice(0, needed);
-        for (const ex of filtered) {
+        const filtered = candidates.filter((c: any) => !existing.has(c.nome.toLowerCase())).slice(0, needed);
+        for (const ex of filtered as any[]) {
           extras.push({
             id: `extra-${dia}-${ex.nome}`,
             dia_semana: dia,
@@ -85,7 +92,8 @@ const Treino = () => {
             series: ex.series_trabalho ? String(ex.series_trabalho) : "3",
             repeticoes: ex.repeticoes || "10-12",
             observacao: ex.tecnica_intensidade || "Adicionado para volume ideal.",
-            video_url: resolveVideo(ex.nome, refMap),
+            video_url: ex.video_url || resolveVideo(ex.nome, refMap),
+            video_coach_url: ex.video_coach_url || resolveCoach(ex.nome, refMap),
             is_extra: true,
           });
         }
@@ -126,7 +134,7 @@ const Treino = () => {
 
     const load = async () => {
       setLoading(true);
-      let refMap: Record<string, string> = {};
+      let refMap: Record<string, VideoRef> = {};
       try {
         await loadSpotify();
         refMap = await loadVideoRefs();
@@ -134,14 +142,14 @@ const Treino = () => {
         if (user) {
           const { data, error } = await supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url, video_coach_url")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
             .order("dia_semana")
             .order("ordem");
 
           if (!error && data && data.length > 0) {
-            const mapped: Treino[] = data.map((t) => ({
+            const mapped: Treino[] = data.map((t: any) => ({
               id: t.id,
               dia_semana: t.dia_semana,
               exercicio: t.exercicio,
@@ -149,6 +157,7 @@ const Treino = () => {
               repeticoes: t.repeticoes,
               observacao: t.observacao,
               video_url: t.video_url || resolveVideo(t.exercicio, refMap),
+              video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
             }));
             let filled = mapped;
             try {
@@ -169,7 +178,11 @@ const Treino = () => {
       }
 
       // fallback mock (banco indisponível ou sem treino prescrito)
-      const enriched = MOCK_TREINOS.map((m) => ({ ...m, video_url: resolveVideo(m.exercicio, refMap) }));
+      const enriched = MOCK_TREINOS.map((m) => ({
+        ...m,
+        video_url: resolveVideo(m.exercicio, refMap),
+        video_coach_url: resolveCoach(m.exercicio, refMap),
+      }));
       setTreinos(enriched);
       setDiaAtual(enriched[0].dia_semana);
       setIsMock(true);
