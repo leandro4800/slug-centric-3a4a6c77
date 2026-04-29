@@ -433,7 +433,7 @@ const Landing = () => {
             <p className="text-lg text-gray-400 mb-4">Esqueça apps genéricos.</p>
             <p className="text-gray-400 mb-10 leading-relaxed">
               Aqui o logo é seu, as cores são suas, o vídeo de fundo é seu — e o domínio também:{" "}
-              <span className="text-primary font-mono font-bold">seunome.alpha-coach.app</span>
+              <span className="text-primary font-mono font-bold">alpha-coach.app/seunome</span>
             </p>
             <ul className="space-y-4">
               {[
@@ -456,23 +456,41 @@ const Landing = () => {
                 <div className="w-3 h-3 rounded-full bg-red-500" />
                 <div className="w-3 h-3 rounded-full bg-yellow-500" />
                 <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="ml-4 text-xs text-gray-500 font-mono">seunome.alpha-coach.app</span>
+                <span className="ml-4 text-xs text-gray-500 font-mono">alpha-coach.app/seunome</span>
               </div>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center font-black text-white">SC</div>
-                  <div>
-                    <p className="font-bold">SEU COACH TEAM</p>
+                  <div className="flex-1">
+                    <p className="font-bold uppercase tracking-wide">Seu Coach Team</p>
                     <p className="text-xs text-gray-500">Powered by Alpha Coach</p>
                   </div>
+                  <div className="px-2 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded">PRO</div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="aspect-square bg-primary/20 rounded-lg" />
-                  <div className="aspect-square bg-primary/40 rounded-lg" />
-                  <div className="aspect-square bg-primary/60 rounded-lg" />
+                  <div className="aspect-square bg-gradient-to-br from-primary/30 to-zinc-900 rounded-lg flex items-center justify-center">
+                    <p className="text-[9px] font-bold text-center px-1">TREINOS</p>
+                  </div>
+                  <div className="aspect-square bg-gradient-to-br from-primary/50 to-zinc-900 rounded-lg flex items-center justify-center">
+                    <p className="text-[9px] font-bold text-center px-1">DIETA</p>
+                  </div>
+                  <div className="aspect-square bg-gradient-to-br from-primary/70 to-zinc-900 rounded-lg flex items-center justify-center">
+                    <p className="text-[9px] font-bold text-center px-1">EVOLUÇÃO</p>
+                  </div>
                 </div>
-                <div className="h-32 bg-gradient-to-br from-primary/30 to-zinc-900 rounded-lg flex items-center justify-center">
-                  <Smartphone className="h-12 w-12 text-primary" />
+                <div className="h-32 bg-gradient-to-br from-primary/30 to-zinc-900 rounded-lg flex flex-col items-center justify-center gap-2">
+                  <Smartphone className="h-10 w-10 text-primary" />
+                  <p className="text-xs text-gray-300 font-semibold">App próprio com sua marca</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-2">
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-lg">
+                    <p className="text-2xl font-black text-primary">+128</p>
+                    <p className="text-[10px] text-gray-500 uppercase">Alunos ativos</p>
+                  </div>
+                  <div className="p-3 bg-black/40 border border-white/5 rounded-lg">
+                    <p className="text-2xl font-black text-primary">R$ 24k</p>
+                    <p className="text-[10px] text-gray-500 uppercase">Faturamento/mês</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -501,20 +519,27 @@ const Landing = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             {[
-              { title: "Agachamento livre", color: "from-primary/40 to-zinc-900" },
-              { title: "Refeição pré-treino", color: "from-orange-700/40 to-zinc-900" },
-              { title: "Evolução do aluno", color: "from-primary/40 to-zinc-900" },
-              { title: "Análise postural", color: "from-blue-700/40 to-zinc-900" },
+              { title: "Agachamento livre", video: "https://videos.pexels.com/video-files/4327115/4327115-uhd_2560_1440_25fps.mp4" },
+              { title: "Refeição pré-treino", video: "https://videos.pexels.com/video-files/3296279/3296279-uhd_2560_1440_25fps.mp4" },
+              { title: "Evolução do aluno", video: "https://videos.pexels.com/video-files/4367622/4367622-uhd_2732_1440_25fps.mp4" },
+              { title: "Análise postural", video: "https://videos.pexels.com/video-files/6516042/6516042-uhd_2560_1440_25fps.mp4" },
             ].map((item, i) => (
-              <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all cursor-pointer">
-                <div className={`absolute inset-0 bg-gradient-to-br ${item.color}`} />
-                <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-[9px] font-black rounded text-white">HD</div>
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+              <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all cursor-pointer bg-zinc-900">
+                <video
+                  src={item.video}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                />
+                <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-[9px] font-black rounded text-white z-10">HD</div>
+                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center">
                     <Play className="h-6 w-6 text-white fill-current ml-1" />
                   </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black to-transparent">
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/70 to-transparent z-10">
                   <p className="font-bold text-sm uppercase">{item.title}</p>
                 </div>
               </div>
