@@ -133,7 +133,7 @@ const AtletaDetalhe = () => {
     }
   };
 
-
+  const subtitulo = useMemo(() => {
     if (!perfil) return "Sem dados de anamnese";
     const peso = perfil.peso_kg ? `${perfil.peso_kg}kg` : null;
     const bf = perfil.bf_pct ? `${perfil.bf_pct}%` : null;
