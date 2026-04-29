@@ -38,6 +38,62 @@ const coaches = [
   },
 ];
 
+const videoLibrary = [
+  { title: "Agachamento livre", video: "/videos/alpha-treino.mp4" },
+  { title: "Refeição pré-treino", video: "/videos/alpha-nutricao.mp4" },
+  { title: "Evolução do aluno", video: "/videos/alpha-evolucao.mp4" },
+  { title: "Análise postural", video: "/videos/alpha-postural.mp4" },
+];
+
+const DemoAppScreen = ({ mode = "home" }: { mode?: "home" | "treino" | "stats" }) => (
+  <div className="h-full w-full overflow-hidden bg-zinc-950 text-white">
+    <div className="relative h-56 overflow-hidden bg-zinc-900">
+      <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
+      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
+      <div className="absolute left-5 right-5 bottom-5">
+        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">Seu Coach Team</p>
+        <h3 className="mt-1 text-3xl font-black uppercase leading-none">Plano Elite</h3>
+      </div>
+    </div>
+
+    <div className="space-y-4 p-5">
+      <div className="grid grid-cols-3 gap-2">
+        {["Treino", "Dieta", "Check-in"].map((item) => (
+          <div key={item} className="rounded-lg border border-white/10 bg-zinc-900 p-3 text-center">
+            <p className="text-[9px] font-black uppercase tracking-wide text-white">{item}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-black uppercase">{mode === "stats" ? "Evolução" : "Treino de hoje"}</p>
+          <span className="rounded bg-primary px-2 py-1 text-[9px] font-black">AO VIVO</span>
+        </div>
+        <div className="space-y-2">
+          {["Supino inclinado", "Remada curvada", "Agachamento livre"].map((item, i) => (
+            <div key={item} className="flex items-center justify-between rounded-lg bg-zinc-950 p-3">
+              <span className="text-xs font-bold text-gray-200">{item}</span>
+              <span className="text-[10px] font-black text-primary">{i + 3}x12</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
+          <p className="text-2xl font-black text-primary">87%</p>
+          <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
+        </div>
+        <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
+          <p className="text-2xl font-black text-primary">+4kg</p>
+          <p className="text-[10px] uppercase text-gray-400">Carga média</p>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const Landing = () => {
   const [showSimulador, setShowSimulador] = useState(false);
   const [email, setEmail] = useState("");
