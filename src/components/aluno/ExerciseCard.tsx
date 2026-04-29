@@ -273,7 +273,7 @@ export const ExerciseCard = ({
         </div>
 
         {!isOpen && (
-          <div className="mt-3 w-full py-2.5 rounded-lg bg-accent text-black font-display text-sm flex items-center justify-center gap-2">
+          <div className="mt-3 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-display text-sm flex items-center justify-center gap-2">
             ▶ EXECUTAR
           </div>
         )}
