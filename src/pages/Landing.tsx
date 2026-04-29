@@ -45,13 +45,22 @@ const videoLibrary = [
   { title: "Análise postural", video: "/videos/alpha-postural.mp4" },
 ];
 
-const DemoAppScreen = ({ mode = "home" }: { mode?: "home" | "treino" | "stats" }) => (
-  <div className="h-full w-full overflow-hidden bg-zinc-950 text-white">
+interface DemoAppScreenProps {
+  mode?: "home" | "treino" | "stats";
+  brandName?: string;
+  brandColor?: string; // hex
+}
+
+const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor = "#E50914" }: DemoAppScreenProps) => (
+  <div
+    className="h-full w-full overflow-hidden bg-zinc-950 text-white"
+    style={{ ["--brand" as any]: brandColor }}
+  >
     <div className="relative h-56 overflow-hidden bg-zinc-900">
       <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
       <div className="absolute left-5 right-5 bottom-5">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em] text-primary">Seu Coach Team</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: brandColor }}>{brandName}</p>
         <h3 className="mt-1 text-3xl font-black uppercase leading-none">Plano Elite</h3>
       </div>
     </div>
@@ -65,16 +74,19 @@ const DemoAppScreen = ({ mode = "home" }: { mode?: "home" | "treino" | "stats" }
         ))}
       </div>
 
-      <div className="rounded-xl border border-primary/30 bg-primary/10 p-4">
+      <div
+        className="rounded-xl border p-4"
+        style={{ borderColor: `${brandColor}55`, backgroundColor: `${brandColor}1A` }}
+      >
         <div className="mb-3 flex items-center justify-between">
           <p className="text-xs font-black uppercase">{mode === "stats" ? "Evolução" : "Treino de hoje"}</p>
-          <span className="rounded bg-primary px-2 py-1 text-[9px] font-black">AO VIVO</span>
+          <span className="rounded px-2 py-1 text-[9px] font-black" style={{ backgroundColor: brandColor }}>AO VIVO</span>
         </div>
         <div className="space-y-2">
           {["Supino inclinado", "Remada curvada", "Agachamento livre"].map((item, i) => (
             <div key={item} className="flex items-center justify-between rounded-lg bg-zinc-950 p-3">
               <span className="text-xs font-bold text-gray-200">{item}</span>
-              <span className="text-[10px] font-black text-primary">{i + 3}x12</span>
+              <span className="text-[10px] font-black" style={{ color: brandColor }}>{i + 3}x12</span>
             </div>
           ))}
         </div>
@@ -82,17 +94,26 @@ const DemoAppScreen = ({ mode = "home" }: { mode?: "home" | "treino" | "stats" }
 
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
-          <p className="text-2xl font-black text-primary">87%</p>
+          <p className="text-2xl font-black" style={{ color: brandColor }}>87%</p>
           <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
-          <p className="text-2xl font-black text-primary">+4kg</p>
+          <p className="text-2xl font-black" style={{ color: brandColor }}>+4kg</p>
           <p className="text-[10px] uppercase text-gray-400">Carga média</p>
         </div>
       </div>
     </div>
   </div>
 );
+
+const BRAND_COLORS = [
+  { name: "Netflix", hex: "#E50914" },
+  { name: "Gold", hex: "#F5C518" },
+  { name: "Cyber", hex: "#00E5FF" },
+  { name: "Lime", hex: "#A3E635" },
+  { name: "Violet", hex: "#8B5CF6" },
+  { name: "Sunset", hex: "#FB923C" },
+];
 
 const Landing = () => {
   const [showSimulador, setShowSimulador] = useState(false);
