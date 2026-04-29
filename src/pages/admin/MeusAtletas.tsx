@@ -48,9 +48,14 @@ const MeusAtletas = () => {
   const [q, setQ] = useState("");
 
   useEffect(() => {
+    if (!tenant && slug === "demo") {
+      setAlunos(DEMO_ATHLETES as unknown as Aluno[]);
+      setLoading(false);
+      return;
+    }
     if (!tenant) return;
     void load(tenant.id);
-  }, [tenant]);
+  }, [tenant, slug]);
 
   const load = async (tenantId: string) => {
     setLoading(true);
