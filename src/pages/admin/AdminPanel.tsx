@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Dumbbell, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 
@@ -84,8 +84,17 @@ const AdminPanel = () => {
       </header>
 
       <main className="max-w-6xl mx-auto p-6">
-        <h1 className="font-display text-4xl mb-2">PAINEL DO COACH</h1>
-        <p className="text-muted-foreground mb-8">Gestão do tenant <strong className="text-primary">{tenant?.slug}</strong></p>
+        <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
+          <div>
+            <h1 className="font-display text-4xl mb-2">PAINEL DO COACH</h1>
+            <p className="text-muted-foreground">Gestão do tenant <strong className="text-primary">{tenant?.slug}</strong></p>
+          </div>
+          <Link to={`/${slug}/admin/montar-treino`}>
+            <Button className="bg-gradient-primary shadow-glow">
+              <Sparkles className="h-4 w-4 mr-2" /> Montar Treino com IA
+            </Button>
+          </Link>
+        </div>
 
         <Tabs defaultValue="elenco">
           <TabsList className="mb-6">

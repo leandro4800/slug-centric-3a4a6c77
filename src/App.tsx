@@ -21,6 +21,7 @@ import Comunidade from "./pages/aluno/Comunidade";
 import Perfil from "./pages/aluno/Perfil";
 import ControleCentral from "./pages/aluno/ControleCentral";
 import AdminPanel from "./pages/admin/AdminPanel";
+import AdminMontarTreino from "./pages/admin/AdminMontarTreino";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -56,9 +57,14 @@ const App = () => (
               <Route path="controle" element={<ControleCentral />} />
             </Route>
 
-            <Route path="/:slug/admin/*" element={
+            <Route path="/:slug/admin" element={
               <BrandingProvider>
                 <RequireAuth><AdminPanel /></RequireAuth>
+              </BrandingProvider>
+            } />
+            <Route path="/:slug/admin/montar-treino" element={
+              <BrandingProvider>
+                <RequireAuth><AdminMontarTreino /></RequireAuth>
               </BrandingProvider>
             } />
 
