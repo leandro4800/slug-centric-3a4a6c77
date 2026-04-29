@@ -65,9 +65,13 @@ const Landing = () => {
           <img 
             src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" 
             alt="Background" 
-            className="w-full h-full object-cover opacity-40 mix-blend-luminosity scale-105"
+            className="w-full h-full object-cover opacity-80 scale-105"
+            style={{ objectPosition: "right center" }}
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
+          {/* Mobile: overlay escuro forte para legibilidade */}
+          <div className="absolute inset-0 bg-black/70 md:hidden" />
+          {/* Desktop: gradiente lateral mostra os atletas à direita */}
+          <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-black via-black/85 via-40% to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
         </div>
 
