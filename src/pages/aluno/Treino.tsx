@@ -132,68 +132,84 @@ const Treino = () => {
       if (data?.valor) setSpotifyLink(data.valor);
     };
 
+    // Timeout helper — evita ficar preso em retries do PostgREST quando o banco está em recovery
+    const withTimeout = <T,>(p: Promise<T>, ms = 4000): Promise<T> =>
+      Promise.race([
+        p,
+        new Promise<T>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
+      ]);
+
     const load = async () => {
-      setLoading(true);
-      let refMap: Record<string, VideoRef> = {};
-      try {
-        await loadSpotify();
-        refMap = await loadVideoRefs();
-
-        if (user) {
-          const { data, error } = await supabase
-            .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url, video_coach_url")
-            .eq("aluno_id", user.id)
-            .eq("tenant_id", tenant.id)
-            .order("dia_semana")
-            .order("ordem");
-
-          if (!error && data && data.length > 0) {
-            const mapped: Treino[] = data.map((t: any) => ({
-              id: t.id,
-              dia_semana: t.dia_semana,
-              exercicio: t.exercicio,
-              series: t.series,
-              repeticoes: t.repeticoes,
-              observacao: t.observacao,
-              video_url: t.video_url || resolveVideo(t.exercicio, refMap),
-              video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
-            }));
-            let filled = mapped;
-            try {
-              filled = await autoFillVolume(mapped, refMap);
-            } catch (e) {
-              console.warn("autoFillVolume falhou, usando lista original", e);
-            }
-            setTreinos(filled);
-            setDiaAtual(filled[0].dia_semana);
-            setIsMock(false);
-            try { await loadCargas(); } catch (e) { console.warn("loadCargas falhou", e); }
-            setLoading(false);
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn("Falha ao carregar treino do banco, usando prévia mock", e);
-      }
-
-      // fallback mock (banco indisponível ou sem treino prescrito)
-      const enriched = MOCK_TREINOS.map((m) => ({
-        ...m,
-        video_url: resolveVideo(m.exercicio, refMap),
-        video_coach_url: resolveCoach(m.exercicio, refMap),
-      }));
-      setTreinos(enriched);
-      setDiaAtual(enriched[0].dia_semana);
+      // 1) Render imediato com MOCK para o usuário ver a tela na hora
+      const mockEnriched = MOCK_TREINOS.map((m) => ({ ...m }));
+      setTreinos(mockEnriched);
+      setDiaAtual(mockEnriched[0].dia_semana);
       setIsMock(true);
       setLoading(false);
+
+      if (!user) return;
+
+      // 2) Em paralelo, busca tudo com timeout — se o banco está lento, ficamos no mock
+      const spotifyP = withTimeout(loadSpotify()).catch(() => null);
+      const refsP = withTimeout(loadVideoRefs()).catch(() => ({} as Record<string, VideoRef>));
+      const treinosP = withTimeout(
+        supabase
+          .from("treinos_prescritos")
+          .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url, video_coach_url")
+          .eq("aluno_id", user.id)
+          .eq("tenant_id", tenant.id)
+          .order("dia_semana")
+          .order("ordem")
+          .then((r) => r)
+      ).catch(() => null);
+      const cargasP = withTimeout(loadCargas()).catch(() => null);
+
+      const [, refMapRes, treinosRes] = await Promise.all([spotifyP, refsP, treinosP]);
+      void cargasP; // dispara em background, não bloqueia
+
+      const refMap: Record<string, VideoRef> = (refMapRes as any) || {};
+
+      if (treinosRes && !(treinosRes as any).error) {
+        const data = (treinosRes as any).data as any[] | null;
+        if (data && data.length > 0) {
+          const mapped: Treino[] = data.map((t: any) => ({
+            id: t.id,
+            dia_semana: t.dia_semana,
+            exercicio: t.exercicio,
+            series: t.series,
+            repeticoes: t.repeticoes,
+            observacao: t.observacao,
+            video_url: t.video_url || resolveVideo(t.exercicio, refMap),
+            video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
+          }));
+          // autoFillVolume também com timeout para não travar a tela
+          let filled = mapped;
+          try {
+            filled = await withTimeout(autoFillVolume(mapped, refMap), 4000);
+          } catch (e) {
+            console.warn("autoFillVolume pulado", e);
+          }
+          setTreinos(filled);
+          setDiaAtual(filled[0].dia_semana);
+          setIsMock(false);
+          return;
+        }
+      }
+
+      // Sem treino real disponível: enriquece o mock com vídeos se conseguimos buscar
+      if (Object.keys(refMap).length > 0) {
+        setTreinos((prev) =>
+          prev.map((m) => ({
+            ...m,
+            video_url: m.video_url || resolveVideo(m.exercicio, refMap),
+            video_coach_url: m.video_coach_url || resolveCoach(m.exercicio, refMap),
+          }))
+        );
+      }
     };
 
     void load().catch((e) => {
       console.error("Erro fatal no load do treino", e);
-      setTreinos(MOCK_TREINOS);
-      setDiaAtual(MOCK_TREINOS[0].dia_semana);
-      setIsMock(true);
       setLoading(false);
     });
   }, [tenant, user]);
