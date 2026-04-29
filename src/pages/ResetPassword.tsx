@@ -16,13 +16,32 @@ const ResetPassword = () => {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    // Supabase recovery link sets a session via hash; wait for it
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
-    supabase.auth.getSession().then(({ data }) => {
+
+    const init = async () => {
+      // Caso 1: link PKCE -> ?code=...
+      const url = new URL(window.location.href);
+      const code = url.searchParams.get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          toast.error("Link inválido ou expirado. Solicite um novo.");
+        } else {
+          setReady(true);
+          // limpa a query string para não reusar o code
+          window.history.replaceState({}, "", url.pathname);
+        }
+        return;
+      }
+
+      // Caso 2: link com hash (#access_token=...) — supabase processa sozinho
+      const { data } = await supabase.auth.getSession();
       if (data.session) setReady(true);
-    });
+    };
+
+    void init();
     return () => sub.subscription.unsubscribe();
   }, []);
 
