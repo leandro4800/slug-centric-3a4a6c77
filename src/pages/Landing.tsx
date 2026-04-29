@@ -130,14 +130,24 @@ const Landing = () => {
               className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
             >
               {/* Video Background */}
-              <video 
-                src={coach.video} 
-                autoPlay 
-                muted 
-                loop 
-                playsInline
-                className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-              />
+              {coach.video.includes('instagram.com') ? (
+                <iframe
+                  src={coach.video}
+                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none scale-[1.5]"
+                  frameBorder="0"
+                  scrolling="no"
+                  allowTransparency
+                />
+              ) : (
+                <video 
+                  src={coach.video} 
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                />
+              )}
               
               {/* Overlays */}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
