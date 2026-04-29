@@ -130,23 +130,27 @@ const Landing = () => {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("leads").insert([{ email }]);
-      if (error && error.code !== "23505") { // Ignore unique constraint error
-        throw error;
+      const normalizedEmail = email.trim().toLowerCase();
+      const { error } = await supabase.from("leads").insert([{ email: normalizedEmail }]);
+      if (error && error.code !== "23505") {
+        console.warn("Lead capture skipped:", error.message);
       }
-      
-      localStorage.setItem("simulator_email", email);
+
+      localStorage.setItem("simulator_email", normalizedEmail);
       setIsUnlocked(true);
+      setShowSimulador(true);
       toast({
         title: "Acesso Liberado!",
         description: "Agora você pode simular a experiência do seu app.",
       });
     } catch (error) {
       console.error("Error saving lead:", error);
+      localStorage.setItem("simulator_email", email.trim().toLowerCase());
+      setIsUnlocked(true);
+      setShowSimulador(true);
       toast({
-        title: "Erro ao liberar acesso",
-        description: "Tente novamente em instantes.",
-        variant: "destructive",
+        title: "Acesso liberado",
+        description: "Não consegui salvar o lead agora, mas o simulador foi liberado.",
       });
     } finally {
       setIsLoading(false);
