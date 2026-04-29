@@ -48,7 +48,7 @@ const ControleCentral = () => {
         </Link>
 
         <Link
-          to={`/${slug}/admin`}
+          to={`/${slug}/admin/aparencia`}
           className="block bg-card/40 border border-accent/30 rounded-2xl p-4 flex items-center gap-4"
         >
           <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center">
