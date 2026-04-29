@@ -201,7 +201,7 @@ const AtletaDetalhe = () => {
         {/* Top bar */}
         <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between z-10">
           <button
-            onClick={() => navigate(`/${slug}/admin/atletas`)}
+            onClick={() => navigate(`/${slug}/admin`)}
             className="w-10 h-10 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
             aria-label="Voltar"
           >
