@@ -31,4 +31,4 @@ export const DEMO_ATHLETES = [
   },
 ] as const;
 
-export const DEMO_ATHLETE_EMAILS = new Set(DEMO_ATHLETES.map((athlete) => athlete.email));
+export const DEMO_ATHLETE_EMAILS: Set<string> = new Set(DEMO_ATHLETES.map((athlete) => athlete.email));
