@@ -65,17 +65,17 @@ const Landing = () => {
           <img 
             src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" 
             alt="Background" 
-            className="w-full h-full object-cover opacity-80 scale-105 transition-all duration-700 hover:scale-110"
+            className="w-full h-full object-cover opacity-90 scale-105 transition-all duration-[10000ms] animate-slow-zoom"
             style={{ 
-              objectPosition: "calc(100% + 120px) center",
-              filter: "brightness(0.9) contrast(1.1)"
+              objectPosition: "calc(100% + 150px) center",
+              filter: "brightness(1.1) contrast(1.1)"
             }}
           />
-          {/* Mobile: overlay escuro forte para legibilidade */}
-          <div className="absolute inset-0 bg-black/70 md:hidden" />
-          {/* Desktop: gradiente lateral mostra os atletas à direita */}
-          <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-black via-black/85 via-30% to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
+          {/* Mobile: overlay escuro moderado para manter claridade mas permitir leitura */}
+          <div className="absolute inset-0 bg-black/50 md:hidden" />
+          {/* Desktop: gradiente lateral mais suave à esquerda para maior claridade */}
+          <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 via-40% to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
@@ -298,6 +298,14 @@ const Landing = () => {
         }
         .animate-pulse-slow {
           animation: pulse-slow 3s infinite ease-in-out;
+        }
+        @keyframes slow-zoom {
+          0% { transform: scale(1.05) translateX(0); }
+          50% { transform: scale(1.12) translateX(-10px); }
+          100% { transform: scale(1.05) translateX(0); }
+        }
+        .animate-slow-zoom {
+          animation: slow-zoom 20s infinite ease-in-out;
         }
       `}</style>
     </div>
