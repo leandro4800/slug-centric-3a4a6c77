@@ -119,7 +119,11 @@ const AdminPanel = () => {
               ) : (
                 <div className="divide-y divide-border">
                   {alunos.map((a) => (
-                    <div key={a.id} className="flex items-center gap-4 py-3">
+                    <Link
+                      key={a.id}
+                      to={`/${slug}/admin/atleta/${a.id}`}
+                      className="flex items-center gap-4 py-3 hover:bg-secondary/40 -mx-2 px-2 rounded transition-colors"
+                    >
                       {a.avatar_url ? (
                         <img src={a.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
                       ) : (
@@ -131,7 +135,7 @@ const AdminPanel = () => {
                         <p className="font-medium">{a.nome_completo || "Sem nome"}</p>
                         <p className="text-xs text-muted-foreground">{a.email}</p>
                       </div>
-                    </div>
+                    </Link>
                   ))}
                 </div>
               )}
