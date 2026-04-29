@@ -519,10 +519,10 @@ const Landing = () => {
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
             {[
-              { title: "Agachamento livre", video: "https://videos.pexels.com/video-files/4327115/4327115-uhd_2560_1440_25fps.mp4" },
-              { title: "Refeição pré-treino", video: "https://videos.pexels.com/video-files/3296279/3296279-uhd_2560_1440_25fps.mp4" },
-              { title: "Evolução do aluno", video: "https://videos.pexels.com/video-files/4367622/4367622-uhd_2732_1440_25fps.mp4" },
-              { title: "Análise postural", video: "https://videos.pexels.com/video-files/6516042/6516042-uhd_2560_1440_25fps.mp4" },
+              { title: "Agachamento livre", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" },
+              { title: "Refeição pré-treino", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" },
+              { title: "Evolução do aluno", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" },
+              { title: "Análise postural", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" },
             ].map((item, i) => (
               <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all cursor-pointer bg-zinc-900">
                 <video
