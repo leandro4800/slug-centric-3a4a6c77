@@ -69,6 +69,16 @@ const App = () => (
                 <RequireAuth><AdminMontarTreino /></RequireAuth>
               </BrandingProvider>
             } />
+            <Route path="/:slug/admin/atletas" element={
+              <BrandingProvider>
+                <RequireAuth><MeusAtletas /></RequireAuth>
+              </BrandingProvider>
+            } />
+            <Route path="/:slug/admin/atleta/:atletaId" element={
+              <BrandingProvider>
+                <RequireAuth><AtletaDetalhe /></RequireAuth>
+              </BrandingProvider>
+            } />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
