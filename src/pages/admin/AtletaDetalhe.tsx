@@ -13,6 +13,7 @@ import {
   ArrowLeft,
   Loader2,
   Download,
+  Upload,
   Apple,
   Dumbbell,
   FileText,
