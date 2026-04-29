@@ -53,11 +53,17 @@ const MeusAtletas = () => {
 
   const load = async (tenantId: string) => {
     setLoading(true);
-    const { data } = await supabase
+    console.log("[MeusAtletas] Loading profiles for tenant:", tenantId);
+    const { data, error } = await supabase
       .from("perfis")
       .select("id, nome_completo, email, avatar_url")
       .eq("tenant_id", tenantId)
       .order("nome_completo", { ascending: true });
+    
+    if (error) {
+      console.error("[MeusAtletas] Error loading profiles:", error);
+    }
+    
     setAlunos((data as Aluno[]) || []);
     setLoading(false);
   };
