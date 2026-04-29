@@ -61,17 +61,20 @@ const Landing = () => {
 
       {/* Hero */}
       <section className="relative min-h-screen flex items-center pt-20">
-        <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 z-0 overflow-hidden">
           <img 
             src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" 
             alt="Background" 
-            className="w-full h-full object-cover opacity-80 scale-105"
-            style={{ objectPosition: "85% center" }}
+            className="w-full h-full object-cover opacity-80 scale-105 transition-all duration-700 hover:scale-110"
+            style={{ 
+              objectPosition: "calc(100% + 120px) center",
+              filter: "brightness(0.9) contrast(1.1)"
+            }}
           />
           {/* Mobile: overlay escuro forte para legibilidade */}
           <div className="absolute inset-0 bg-black/70 md:hidden" />
           {/* Desktop: gradiente lateral mostra os atletas à direita */}
-          <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-black via-black/85 via-35% to-transparent" />
+          <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-black via-black/85 via-30% to-transparent" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent" />
         </div>
 
