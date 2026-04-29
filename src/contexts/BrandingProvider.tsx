@@ -31,11 +31,22 @@ export const useBranding = () => useContext(BrandingContext);
 const DEFAULT_PRIMARY = "0 84% 55%";
 const DEFAULT_ACCENT = "45 96% 56%";
 
-const applyVars = (tenant: Tenant | null) => {
+// Tema "Netflix" travado para o tenant demo:
+// vermelho #E50914 ≈ HSL(357 92% 47%) e texto branco
+const DEMO_PRIMARY = "357 92% 47%";
+const DEMO_ACCENT = "357 92% 47%";
+
+const applyVars = (tenant: Tenant | null, slug?: string) => {
   const root = document.documentElement;
-  root.style.setProperty("--primary", tenant?.primary_hsl || DEFAULT_PRIMARY);
-  root.style.setProperty("--ring", tenant?.primary_hsl || DEFAULT_PRIMARY);
-  root.style.setProperty("--accent", tenant?.accent_hsl || DEFAULT_ACCENT);
+  const isDemo = slug === "demo";
+  const primary = isDemo ? DEMO_PRIMARY : tenant?.primary_hsl || DEFAULT_PRIMARY;
+  const accent = isDemo ? DEMO_ACCENT : tenant?.accent_hsl || DEFAULT_ACCENT;
+  root.style.setProperty("--primary", primary);
+  root.style.setProperty("--primary-foreground", "0 0% 100%");
+  root.style.setProperty("--primary-glow", isDemo ? "357 92% 60%" : "0 90% 65%");
+  root.style.setProperty("--ring", primary);
+  root.style.setProperty("--accent", accent);
+  root.style.setProperty("--accent-foreground", "0 0% 100%");
   if (tenant?.hero_url) {
     root.style.setProperty("--hero-url", `url(${tenant.hero_url})`);
   } else {
@@ -63,7 +74,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
       .maybeSingle();
     if (error) console.warn("[Branding] erro:", error.message);
     setTenant(data);
-    applyVars(data);
+    applyVars(data, slug);
     setLoading(false);
   };
 
