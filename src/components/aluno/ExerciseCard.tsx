@@ -137,109 +137,117 @@ export const ExerciseCard = ({
   };
 
   return (
-    <div className="bg-card/50 border border-accent/30 rounded-xl overflow-hidden">
-      {/* Player grande no topo (sempre visível quando há vídeo) */}
-      {(hasCoach || hasYT) && (
-        <div className="relative aspect-video bg-black">
-          {/* COACH primeiro */}
-          {hasCoach && (showCoach || !hasYT) ? (
-            coachIsYT ? (
-              <iframe
-                src={`https://www.youtube.com/embed/${coachIsYT}?autoplay=1`}
-                title={`${data.exercicio} - Coach`}
-                className="absolute inset-0 w-full h-full"
-                allow="autoplay; encrypted-media"
-                allowFullScreen
-              />
-            ) : coachIsDirect ? (
-              <video
-                src={coachUrl!}
-                controls
-                autoPlay
-                playsInline
-                className="absolute inset-0 w-full h-full object-contain bg-black"
-              />
-            ) : (
-              <a
-                href={coachUrl!}
-                target="_blank"
-                rel="noreferrer"
-                className="absolute inset-0 flex items-center justify-center text-sm text-accent underline"
-              >
-                Abrir vídeo do coach
-              </a>
-            )
-          ) : showYT && ytId ? (
+    <div className="bg-card/50 border border-primary/30 rounded-xl overflow-hidden">
+      {/* Player grande no topo — sempre visível (com poster placeholder se não houver vídeo) */}
+      <div className="relative aspect-video bg-black">
+        {hasCoach && (showCoach || !showYT) ? (
+          coachIsYT ? (
             <iframe
-              src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
-              title={data.exercicio}
+              src={`https://www.youtube.com/embed/${coachIsYT}?autoplay=1`}
+              title={`${data.exercicio} - Coach`}
               className="absolute inset-0 w-full h-full"
               allow="autoplay; encrypted-media"
               allowFullScreen
             />
+          ) : coachIsDirect ? (
+            <video
+              src={coachUrl!}
+              controls
+              autoPlay
+              playsInline
+              className="absolute inset-0 w-full h-full object-contain bg-black"
+            />
           ) : (
-            // Thumbnail / poster
-            <button
-              onClick={() => (hasCoach ? setShowCoach(true) : setShowYT(true))}
-              className="absolute inset-0 w-full h-full group"
+            <a
+              href={coachUrl!}
+              target="_blank"
+              rel="noreferrer"
+              className="absolute inset-0 flex items-center justify-center text-sm text-primary underline"
             >
-              {ytId && (
-                <img
-                  src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
-                  alt=""
-                  className="absolute inset-0 w-full h-full object-cover opacity-90"
-                />
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
-              <div className="absolute top-3 right-3 w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg">
-                <CheckCircle2 className="h-5 w-5 text-white" />
+              Abrir vídeo do coach
+            </a>
+          )
+        ) : showYT && ytId ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
+            title={data.exercicio}
+            className="absolute inset-0 w-full h-full"
+            allow="autoplay; encrypted-media"
+            allowFullScreen
+          />
+        ) : (
+          // Poster (com thumb do YT se houver, ou placeholder escuro)
+          <button
+            onClick={() => {
+              if (hasCoach) setShowCoach(true);
+              else if (hasYT) setShowYT(true);
+            }}
+            disabled={!hasCoach && !hasYT}
+            className="absolute inset-0 w-full h-full group"
+          >
+            {ytId ? (
+              <img
+                src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover opacity-90"
+              />
+            ) : (
+              <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-black flex items-center justify-center">
+                <p className="text-xs text-muted-foreground uppercase tracking-widest">
+                  Vídeo em breve
+                </p>
               </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
+            <div className="absolute top-3 right-3 w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg">
+              <CheckCircle2 className="h-5 w-5 text-white" />
+            </div>
+            {(hasCoach || hasYT) && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-accent/90 flex items-center justify-center shadow-2xl group-hover:scale-110 transition">
-                  <Play className="h-7 w-7 fill-black text-black ml-1" />
+                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-2xl group-hover:scale-110 transition">
+                  <Play className="h-7 w-7 fill-white text-white ml-1" />
                 </div>
               </div>
-            </button>
-          )}
+            )}
+          </button>
+        )}
 
-          {/* Botões flutuantes inferiores */}
-          <div className="absolute bottom-2 left-2 flex gap-2 z-10">
-            <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
-              <Share2 className="h-4 w-4" />
-            </button>
-            <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
-              <Clock className="h-4 w-4" />
-            </button>
-          </div>
+        {/* Botões flutuantes inferiores */}
+        <div className="absolute bottom-2 left-2 flex gap-2 z-10">
+          <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
+            <Share2 className="h-4 w-4 text-white" />
+          </button>
+          <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
+            <Clock className="h-4 w-4 text-white" />
+          </button>
+        </div>
 
-          {/* Tabs de fonte do vídeo (Coach / YouTube) */}
-          {hasCoach && hasYT && (
-            <div className="absolute bottom-2 right-2 z-10 flex gap-1.5 bg-background/70 backdrop-blur rounded-full p-1">
+        {/* Tabs de fonte do vídeo (Coach / YouTube) — sempre visíveis quando há ao menos um */}
+        {(hasCoach || hasYT) && (
+          <div className="absolute bottom-2 right-2 z-10 flex gap-1.5 bg-background/70 backdrop-blur rounded-full p-1">
+            {hasCoach && (
               <button
                 onClick={() => { setShowCoach(true); setShowYT(false); }}
                 className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition ${
-                  showCoach || !showYT ? "bg-accent text-black" : "text-muted-foreground"
+                  showCoach || !showYT ? "bg-primary text-primary-foreground" : "text-muted-foreground"
                 }`}
               >
                 Coach
               </button>
+            )}
+            {hasYT && (
               <button
                 onClick={() => { setShowYT(true); setShowCoach(false); }}
                 className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition ${
-                  showYT ? "bg-[#FF0000] text-white" : "text-muted-foreground"
+                  showYT ? "bg-[#E50914] text-white" : "text-muted-foreground"
                 }`}
               >
                 <Youtube className="h-3 w-3" /> YouTube
               </button>
-            </div>
-          )}
-          {!hasCoach && hasYT && (
-            <div className="absolute bottom-2 right-2 z-10 bg-background/70 backdrop-blur px-2 py-1 rounded text-[10px] flex items-center gap-1">
-              Assista no <span className="bg-[#FF0000] px-1.5 rounded text-white font-bold">YouTube</span>
-            </div>
-          )}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Header do card (clicável para abrir o modo execução) */}
       <button onClick={onToggle} className="w-full p-4 text-left">
@@ -265,7 +273,7 @@ export const ExerciseCard = ({
         </div>
 
         {!isOpen && (
-          <div className="mt-3 w-full py-2.5 rounded-lg bg-accent text-black font-display text-sm flex items-center justify-center gap-2">
+          <div className="mt-3 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-display text-sm flex items-center justify-center gap-2">
             ▶ EXECUTAR
           </div>
         )}
@@ -348,7 +356,7 @@ export const ExerciseCard = ({
           <button
             onClick={handleFinalizar}
             disabled={savingAll}
-            className="w-full py-3 rounded-lg bg-accent text-black font-display text-base flex items-center justify-center gap-2"
+            className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2"
           >
             {savingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             FINALIZAR
