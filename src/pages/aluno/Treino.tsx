@@ -63,7 +63,7 @@ const Treino = () => {
     const resolveCoach = (nome: string, refMap: Record<string, VideoRef>) =>
       refMap[nome.trim().toLowerCase()]?.coach || null;
 
-    const autoFillVolume = async (list: Treino[], refMap: Record<string, string>): Promise<Treino[]> => {
+    const autoFillVolume = async (list: Treino[], refMap: Record<string, VideoRef>): Promise<Treino[]> => {
       const dias = [...new Set(list.map((t) => t.dia_semana))];
       const extras: Treino[] = [];
       for (const dia of dias) {
@@ -77,13 +77,13 @@ const Treino = () => {
         const grupo = matched.charAt(0).toUpperCase() + matched.slice(1);
         const { data: candidates } = await supabase
           .from("biblioteca_exercicios")
-          .select("nome, series_trabalho, repeticoes, tecnica_intensidade")
+          .select("nome, series_trabalho, repeticoes, tecnica_intensidade, video_url, video_coach_url")
           .eq("tenant_id", tenant.id)
           .ilike("grupo_muscular", `%${grupo}%`)
           .limit(20);
         if (!candidates) continue;
-        const filtered = candidates.filter((c) => !existing.has(c.nome.toLowerCase())).slice(0, needed);
-        for (const ex of filtered) {
+        const filtered = candidates.filter((c: any) => !existing.has(c.nome.toLowerCase())).slice(0, needed);
+        for (const ex of filtered as any[]) {
           extras.push({
             id: `extra-${dia}-${ex.nome}`,
             dia_semana: dia,
@@ -91,7 +91,8 @@ const Treino = () => {
             series: ex.series_trabalho ? String(ex.series_trabalho) : "3",
             repeticoes: ex.repeticoes || "10-12",
             observacao: ex.tecnica_intensidade || "Adicionado para volume ideal.",
-            video_url: resolveVideo(ex.nome, refMap),
+            video_url: ex.video_url || resolveVideo(ex.nome, refMap),
+            video_coach_url: ex.video_coach_url || resolveCoach(ex.nome, refMap),
             is_extra: true,
           });
         }
