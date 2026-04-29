@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      alunos: {
+        Row: {
+          created_at: string
+          id: string
+          nivel_experiencia: string | null
+          nome: string
+          objetivo: string | null
+          observacoes_medicas: string | null
+          profissional_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          nivel_experiencia?: string | null
+          nome: string
+          objetivo?: string | null
+          observacoes_medicas?: string | null
+          profissional_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nivel_experiencia?: string | null
+          nome?: string
+          objetivo?: string | null
+          observacoes_medicas?: string | null
+          profissional_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alunos_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alunos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biblioteca_exercicios: {
         Row: {
           contraindicacoes: string[] | null
@@ -69,6 +120,91 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_metodologia_pacho: {
+        Row: {
+          created_at: string
+          descricao_metodologia: string | null
+          grupo_muscular: string
+          id: string
+          nome_exercicio: string
+          profissional_id: string
+          tags: string[] | null
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao_metodologia?: string | null
+          grupo_muscular: string
+          id?: string
+          nome_exercicio: string
+          profissional_id: string
+          tags?: string[] | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao_metodologia?: string | null
+          grupo_muscular?: string
+          id?: string
+          nome_exercicio?: string
+          profissional_id?: string
+          tags?: string[] | null
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_metodologia_pacho_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      biblioteca_treinos_pacho: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          estrutura_json: Json | null
+          id: string
+          nome_template: string
+          objetivo_template: string | null
+          profissional_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          estrutura_json?: Json | null
+          id?: string
+          nome_template: string
+          objetivo_template?: string | null
+          profissional_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          estrutura_json?: Json | null
+          id?: string
+          nome_template?: string
+          objetivo_template?: string | null
+          profissional_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_treinos_pacho_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
             referencedColumns: ["id"]
           },
         ]
@@ -260,6 +396,44 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "perfis_treino_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profissionais: {
+        Row: {
+          bio: string | null
+          created_at: string
+          especialidade: string | null
+          id: string
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          especialidade?: string | null
+          id: string
+          nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          especialidade?: string | null
+          id?: string
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "profissionais_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
