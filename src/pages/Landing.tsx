@@ -132,7 +132,7 @@ const Landing = () => {
               {/* Video Background */}
               {coach.video.includes('instagram.com') ? (
                 <iframe
-                  src={coach.video}
+                  src={`${coach.video}?autoplay=1&mute=1`}
                   className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none scale-[1.5]"
                   frameBorder="0"
                   scrolling="no"
