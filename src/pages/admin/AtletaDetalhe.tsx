@@ -68,6 +68,8 @@ const AtletaDetalhe = () => {
   const [loading, setLoading] = useState(true);
   const [nivel, setNivel] = useState<string>("intermediario");
   const [savingNivel, setSavingNivel] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!atletaId) return;
