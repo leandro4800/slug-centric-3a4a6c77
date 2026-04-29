@@ -43,7 +43,16 @@ const Landing = () => {
   const [email, setEmail] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [students, setStudents] = useState(80);
+  const [price, setPrice] = useState(400);
   const { toast } = useToast();
+
+  const grossRevenue = students * price;
+  const fee = grossRevenue * 0.1;
+  const netRevenue = grossRevenue - fee;
+  const yearlyNet = netRevenue * 12;
+
+  const formatBRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("simulator_email");
