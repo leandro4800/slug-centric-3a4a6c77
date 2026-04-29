@@ -77,7 +77,7 @@ const MeusAtletas = () => {
       {/* Header */}
       <header className="px-5 pt-6 pb-4 flex items-center gap-3 sticky top-0 bg-background/95 backdrop-blur z-10">
         <button
-          onClick={() => navigate(`/${slug}/admin`)}
+          onClick={() => navigate(`/${slug}/app`)}
           className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
           aria-label="Voltar"
         >
