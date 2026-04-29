@@ -43,7 +43,7 @@ const AlunoHome = () => {
       <section className="px-5 -mt-2">
         <div className="bg-card/60 border border-accent/40 rounded-xl p-4 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center">
-            <Zap className="h-5 w-5 text-accent" />
+            <TenantSymbol size={28} />
           </div>
           <div>
             <p className="font-display text-lg text-accent">LINKS ÚTEIS</p>
@@ -64,7 +64,7 @@ const AlunoHome = () => {
               className="flex-shrink-0 w-40 h-56 rounded-xl bg-gradient-card border border-border relative overflow-hidden hover:border-primary/50 transition-all cursor-pointer group"
             >
               <div className="absolute top-3 left-3 w-8 h-8 rounded-md bg-background/70 flex items-center justify-center">
-                <Zap className="h-4 w-4 text-accent fill-accent" />
+                <TenantSymbol size={20} />
               </div>
               <div className="absolute inset-0 flex items-center justify-center text-5xl opacity-30 group-hover:scale-110 transition-transform">
                 {s.emoji}
