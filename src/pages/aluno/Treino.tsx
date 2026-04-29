@@ -153,14 +153,15 @@ const Treino = () => {
       const spotifyP = withTimeout(loadSpotify()).catch(() => null);
       const refsP = withTimeout(loadVideoRefs()).catch(() => ({} as Record<string, VideoRef>));
       const treinosP = withTimeout(
-        supabase
-          .from("treinos_prescritos")
-          .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url, video_coach_url")
-          .eq("aluno_id", user.id)
-          .eq("tenant_id", tenant.id)
-          .order("dia_semana")
-          .order("ordem")
-          .then((r) => r)
+        Promise.resolve(
+          supabase
+            .from("treinos_prescritos")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url, video_coach_url")
+            .eq("aluno_id", user.id)
+            .eq("tenant_id", tenant.id)
+            .order("dia_semana")
+            .order("ordem")
+        )
       ).catch(() => null);
       const cargasP = withTimeout(loadCargas()).catch(() => null);
 
