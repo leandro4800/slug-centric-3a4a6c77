@@ -20,6 +20,7 @@ import {
   Stethoscope,
   AlertTriangle,
   TrendingUp,
+  Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
