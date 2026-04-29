@@ -299,6 +299,14 @@ const Landing = () => {
         .animate-pulse-slow {
           animation: pulse-slow 3s infinite ease-in-out;
         }
+        @keyframes slow-zoom {
+          0% { transform: scale(1.05) translateX(0); }
+          50% { transform: scale(1.12) translateX(-10px); }
+          100% { transform: scale(1.05) translateX(0); }
+        }
+        .animate-slow-zoom {
+          animation: slow-zoom 20s infinite ease-in-out;
+        }
       `}</style>
     </div>
   );
