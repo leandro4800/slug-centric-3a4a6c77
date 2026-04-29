@@ -62,6 +62,7 @@ export type Database = {
           nome: string
           primary_hsl: string
           slug: string
+          symbol_url: string | null
           tagline: string | null
           updated_at: string
         }
@@ -74,6 +75,7 @@ export type Database = {
           nome: string
           primary_hsl?: string
           slug: string
+          symbol_url?: string | null
           tagline?: string | null
           updated_at?: string
         }
@@ -86,6 +88,7 @@ export type Database = {
           nome?: string
           primary_hsl?: string
           slug?: string
+          symbol_url?: string | null
           tagline?: string | null
           updated_at?: string
         }
