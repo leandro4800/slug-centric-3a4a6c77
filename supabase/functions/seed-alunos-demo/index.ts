@@ -5,7 +5,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const TENANT_ID = "305ebb8b-bb49-4cc0-a4d8-c4af5455f363"; // Demo Team
+const TENANT_SLUG = "demo";
 
 const ALUNOS = [
   { email: "samila.demo@coach.app", nome: "Samila Dias", sexo: "F", idade: 28, peso: 62.5, altura: 168, bf: 22, objetivo: "Hipertrofia" },
@@ -23,6 +23,21 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_URL")!,
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
+
+  // Resolve tenant by slug
+  const { data: tenant, error: tenantErr } = await supabase
+    .from("tenants")
+    .select("id")
+    .eq("slug", TENANT_SLUG)
+    .maybeSingle();
+
+  if (tenantErr || !tenant) {
+    return new Response(
+      JSON.stringify({ error: `Tenant '${TENANT_SLUG}' not found`, details: tenantErr?.message }),
+      { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+    );
+  }
+  const TENANT_ID = tenant.id;
 
   const results: any[] = [];
 
@@ -55,11 +70,13 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // 2. Atualiza tenant no perfil (trigger handle_new_user já cria o perfil)
+      // 2. Garante perfil + tenant (upsert caso o trigger não tenha corrido)
       await supabase
         .from("perfis")
-        .update({ tenant_id: TENANT_ID, nome_completo: a.nome })
-        .eq("id", userId);
+        .upsert(
+          { id: userId, email: a.email, nome_completo: a.nome, tenant_id: TENANT_ID },
+          { onConflict: "id" } as any,
+        );
 
       // 3. Upsert perfil de treino
       await supabase.from("perfis_treino").upsert(
