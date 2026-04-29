@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Search, Users, Mail } from "lucide-react";
@@ -53,18 +54,17 @@ const MeusAtletas = () => {
 
   const load = async (tenantId: string) => {
     setLoading(true);
-    console.log("[MeusAtletas] Loading profiles for tenant:", tenantId);
     const { data, error } = await supabase
       .from("perfis")
       .select("id, nome_completo, email, avatar_url")
       .eq("tenant_id", tenantId)
       .order("nome_completo", { ascending: true });
-    
-    if (error) {
-      console.error("[MeusAtletas] Error loading profiles:", error);
-    }
-    
-    setAlunos((data as Aluno[]) || []);
+
+    const atletasBanco = ((data as Aluno[]) || []).filter((a) => !DEMO_ATHLETE_EMAILS.has(a.email || ""));
+    const atletas = slug === "demo" ? [...DEMO_ATHLETES, ...atletasBanco] : atletasBanco;
+
+    if (error && slug !== "demo") console.error("[MeusAtletas] Error loading profiles:", error);
+    setAlunos(atletas as Aluno[]);
     setLoading(false);
   };
 
