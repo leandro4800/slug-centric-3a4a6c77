@@ -133,11 +133,9 @@ const Landing = () => {
               {coach.video.includes('instagram.com') ? (
                 <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
                   <iframe
-                    src={`https://www.instagram.com/reel/${coach.video.split('/reel/')[1].split('/')[0]}/embed/captioned/`}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                    src={`https://www.social-embed.com/api/instagram/reel?url=${encodeURIComponent(coach.video)}&autoplay=true&muted=true&loop=true`}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] h-[180%] object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
                     frameBorder="0"
-                    scrolling="no"
-                    allowTransparency
                   />
                 </div>
               ) : (
