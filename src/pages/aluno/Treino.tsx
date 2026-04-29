@@ -274,7 +274,7 @@ const Treino = () => {
 
         <div className="mt-6">
           <h2 className="font-display text-base flex items-center gap-2">
-            <span className="text-accent">▶</span> TREINO DE HOJE — {treinosDoDia.length} EXERCÍCIOS
+            <span className="text-primary">▶</span> TREINO DE HOJE — {treinosDoDia.length} EXERCÍCIOS
           </h2>
           <p className="text-xs text-muted-foreground mt-1">Toque em um exercício para abrir o modo execução</p>
         </div>
