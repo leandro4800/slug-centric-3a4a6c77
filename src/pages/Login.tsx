@@ -22,6 +22,11 @@ const Login = () => {
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
+      if (user.email === "alphacoachapp@gmail.com") {
+        navigate("/demo/admin", { replace: true });
+        return;
+      }
+
       const [{ data: perfil }, { data: roles }] = await Promise.all([
         supabase.from("perfis").select("tenant_id").eq("id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role").eq("user_id", user.id),
