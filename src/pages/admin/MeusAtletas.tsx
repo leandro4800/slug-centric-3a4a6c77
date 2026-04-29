@@ -59,6 +59,12 @@ const MeusAtletas = () => {
 
   const load = async (tenantId: string) => {
     setLoading(true);
+    if (slug === "demo") {
+      setAlunos(DEMO_ATHLETES as unknown as Aluno[]);
+      setLoading(false);
+      return;
+    }
+
     const { data, error } = await supabase
       .from("perfis")
       .select("id, nome_completo, email, avatar_url")
