@@ -101,11 +101,14 @@ const Landing = () => {
         </nav>
         <div className="flex items-center gap-3">
           <Link to="/login">
-            <Button variant="ghost" className="text-white hover:bg-white/10">Entrar</Button>
+            <Button variant="ghost" className="text-white hover:bg-white/10 hidden md:flex">Entrar</Button>
           </Link>
-          <Link to="/login">
-            <Button className="bg-primary hover:bg-primary/90 text-white px-6">CADASTRAR</Button>
-          </Link>
+          <Button 
+            onClick={() => setShowSimulador(true)}
+            className="bg-primary hover:bg-primary/90 text-white px-6 font-bold"
+          >
+            TESTAR AGORA
+          </Button>
         </div>
       </header>
 
