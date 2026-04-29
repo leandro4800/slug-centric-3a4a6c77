@@ -71,11 +71,19 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.15),transparent_60%)]" />
+    <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-black">
+      <div
+        className="absolute inset-0 bg-cover bg-center scale-110"
+        style={{ backgroundImage: `url(${loginBg})` }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.18),transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.85)_100%)]" />
+
       <div className="relative w-full max-w-md">
         <Link to="/" className="flex justify-center mb-8"><Logo /></Link>
-        <div className="bg-gradient-card border border-border rounded-2xl p-8 shadow-card">
+        <div className="relative bg-black/70 backdrop-blur-xl border border-primary/30 rounded-2xl p-8 shadow-[0_25px_80px_-15px_hsl(var(--primary)/0.45)] ring-1 ring-white/5">
+          <div className="absolute -inset-px rounded-2xl pointer-events-none bg-gradient-to-b from-primary/20 via-transparent to-transparent opacity-60" />
           <Tabs defaultValue="login">
             <TabsList className="grid grid-cols-2 w-full mb-6">
               <TabsTrigger value="login">Entrar</TabsTrigger>
