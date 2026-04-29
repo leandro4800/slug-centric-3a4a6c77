@@ -1,8 +1,9 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Settings, Play, Zap } from "lucide-react";
+import { Settings, Play } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import heroDefault from "@/assets/hero-default.jpg";
+import { TenantSymbol } from "@/components/TenantSymbol";
 
 const sections = [
   { title: "Meu Treino", emoji: "🏋️" },
