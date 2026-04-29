@@ -42,20 +42,26 @@ const Treino = () => {
   useEffect(() => {
     if (!tenant) return;
 
-    const loadVideoRefs = async (): Promise<Record<string, string>> => {
+    type VideoRef = { yt: string | null; coach: string | null };
+    const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
       const { data } = await supabase
         .from("referencia_videos")
-        .select("nome_exercicio, url_video")
+        .select("nome_exercicio, url_video, video_coach_url")
         .eq("tenant_id", tenant.id);
-      const map: Record<string, string> = {};
-      data?.forEach((r) => {
-        if (r.url_video) map[r.nome_exercicio.trim().toLowerCase()] = r.url_video;
+      const map: Record<string, VideoRef> = {};
+      data?.forEach((r: any) => {
+        map[r.nome_exercicio.trim().toLowerCase()] = {
+          yt: r.url_video || null,
+          coach: r.video_coach_url || null,
+        };
       });
       return map;
     };
 
-    const resolveVideo = (nome: string, refMap: Record<string, string>) =>
-      refMap[nome.trim().toLowerCase()] || null;
+    const resolveVideo = (nome: string, refMap: Record<string, VideoRef>) =>
+      refMap[nome.trim().toLowerCase()]?.yt || null;
+    const resolveCoach = (nome: string, refMap: Record<string, VideoRef>) =>
+      refMap[nome.trim().toLowerCase()]?.coach || null;
 
     const autoFillVolume = async (list: Treino[], refMap: Record<string, string>): Promise<Treino[]> => {
       const dias = [...new Set(list.map((t) => t.dia_semana))];
