@@ -579,12 +579,7 @@ const Landing = () => {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            {[
-              { title: "Agachamento livre", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" },
-              { title: "Refeição pré-treino", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4" },
-              { title: "Evolução do aluno", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4" },
-              { title: "Análise postural", video: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4" },
-            ].map((item, i) => (
+            {videoLibrary.map((item, i) => (
               <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all cursor-pointer bg-zinc-900">
                 <video
                   src={item.video}
@@ -592,8 +587,10 @@ const Landing = () => {
                   muted
                   loop
                   playsInline
-                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                  preload="auto"
+                  className="absolute inset-0 w-full h-full object-cover opacity-95 group-hover:opacity-100 transition-opacity"
                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
                 <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-[9px] font-black rounded text-white z-10">HD</div>
                 <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
                   <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center">
