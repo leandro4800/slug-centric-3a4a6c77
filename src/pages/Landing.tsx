@@ -6,13 +6,6 @@ import { useState } from "react";
 
 const coaches = [
   {
-    name: "BAD BOY TEAM",
-    specialty: "HIPERTROFIA",
-    bio: "Método Bad Boy — sem desculpa, sem atalho.",
-    video: "https://player.vimeo.com/external/517090025.sd.mp4?s=f5296068e1c6e1a9652a927d149021d7a36c968f&profile_id=165&oauth2_token_id=57447761",
-    tag: "VERIFICADO",
-  },
-  {
     name: "PIKACHU TEAM",
     specialty: "HIPERTROFIA & ESTÉTICA",
     bio: "Treinos cinematográficos pra quem quer crescer.",
@@ -23,13 +16,6 @@ const coaches = [
     name: "TEAM JACKSON",
     specialty: "HIPERTROFIA & EMAGRECIMENTO",
     bio: "Performance e estética com método Team Jackson.",
-    video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4",
-    tag: "VERIFICADO",
-  },
-  {
-    name: "NUTRI SAMILA DIAS",
-    specialty: "EMAGRECIMENTO",
-    bio: "Especialista em emagrecimento e saúde.",
     video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4",
     tag: "VERIFICADO",
   },
