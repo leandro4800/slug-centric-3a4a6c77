@@ -65,6 +65,20 @@ const AlunoHome = () => {
   const { tenant } = useBranding();
   const { slug } = useParams();
   const hero = tenant?.hero_url || heroDefault;
+  const [vlogs, setVlogs] = useState<VlogPost[]>([]);
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    void supabase
+      .from("vlog_posts")
+      .select("id, url, title, thumbnail_url, platform")
+      .eq("tenant_id", tenant.id)
+      .eq("visivel", true)
+      .order("posted_at", { ascending: false, nullsFirst: false })
+      .order("created_at", { ascending: false })
+      .limit(6)
+      .then(({ data }) => setVlogs((data as VlogPost[]) || []));
+  }, [tenant?.id]);
 
   return (
     <>
