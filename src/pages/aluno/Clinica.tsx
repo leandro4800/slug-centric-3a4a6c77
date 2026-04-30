@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Stethoscope, Upload, FlaskConical, Send, ChevronRight, Loader2, History } from "lucide-react";
+import { Stethoscope, Upload, FlaskConical, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import heroDefault from "@/assets/hero-default.jpg";
 import { supabase } from "@/integrations/supabase/client";
