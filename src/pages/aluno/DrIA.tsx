@@ -109,13 +109,27 @@ const DrIA = () => {
           <div className="space-y-4 animate-in fade-in slide-in-from-bottom-2 duration-500">
             <div 
               onClick={() => fileInputRef.current?.click()}
-              className="w-full bg-card/40 border-2 border-dashed border-accent/40 rounded-3xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-card/60 transition-colors"
+              onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+              onDrop={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const file = e.dataTransfer.files?.[0];
+                if (file && file.type === "application/pdf") {
+                  try {
+                    const result = await uploadExame(file);
+                    setCurrentAnalysis(result);
+                  } catch (err) {}
+                } else {
+                  toast.error("Por favor, envie um arquivo PDF.");
+                }
+              }}
+              className="w-full bg-card/40 border-2 border-dashed border-accent/40 rounded-3xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-card/60 transition-colors group"
             >
-              <div className="w-16 h-16 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center mb-4">
+              <div className="w-16 h-16 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                 <Upload className="h-8 w-8 text-accent" />
               </div>
               <h3 className="font-display text-xl uppercase mb-1">Analisar Exame</h3>
-              <p className="text-sm text-muted-foreground">Arraste ou selecione seu PDF (Max 10MB)</p>
+              <p className="text-sm text-muted-foreground">Arraste seu PDF aqui ou clique para selecionar (Max 10MB)</p>
             </div>
 
             <div className="bg-card/40 border border-border rounded-2xl p-5">
