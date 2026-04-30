@@ -7,14 +7,15 @@ interface Marker {
   nome: string
   valor: number
   unidade: string
-  status: "otimo" | "atencao" | "critico"
-  observacao: string
+  status: "Otimizado" | "Alerta" | "Critico" | "Subotimizado"
+  insight_clinico: string
 }
 
 interface AIResponse {
-  parecer_tecnico: string
-  score_performance: number
+  pontuacao_geral: number
+  resumo_executivo: string
   marcadores: Marker[]
+  conduta_sugerida: string[]
 }
 
 serve(async (req) => {
@@ -49,6 +50,10 @@ serve(async (req) => {
       })
     }
 
+    // Fetch Reference Data
+    const { data: refData } = await supabase.from('referencias_exames').select('*')
+    const { data: intelData } = await supabase.from('inteligencia_clinica').select('*')
+
     // Download PDF
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('exames_pdfs')
@@ -65,6 +70,24 @@ serve(async (req) => {
     const arrayBuffer = await fileData.arrayBuffer()
     const base64PDF = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
 
+    // Context for AI
+    const referenceContext = JSON.stringify(refData?.map(r => ({
+      codigo: r.codigo,
+      nome: r.nome,
+      unidade: r.unidade,
+      clinico_min: r.valor_minimo,
+      clinico_max: r.valor_maximo,
+      performance_min: r.valor_ouro_min,
+      performance_max: r.valor_ouro_max
+    })))
+
+    const intelligenceContext = JSON.stringify(intelData?.map(i => ({
+      biomarcador: i.biomarcador_codigo,
+      condicao: i.condicao,
+      interpretacao: i.interpretacao,
+      conduta: i.sugestao_conduta
+    })))
+
     // Call Lovable AI Gateway
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -77,21 +100,29 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Você é o "Dr. IA", um especialista em medicina esportiva e análise clínica de alta performance.
-Analise o PDF do exame laboratorial fornecido e extraia os marcadores solicitados.
-Para cada marcador, identifique o código (ex: vitamina_d, ferritina, hemoglobina, etc), o nome amigável, o valor numérico e a unidade.
-Forneça também um parecer técnico em markdown (3 a 5 parágrafos) focado em performance esportiva e um score geral de performance (0-100).
-Retorne os dados estritamente no formato JSON solicitado.`
+            content: `Você é o "Dr. IA", um especialista em medicina integrativa e performance humana. Sua missão é ler dados de OCR de exames de sangue e transformá-los em um relatório de biohacking e longevidade. Seja técnico, mas encorajador. Priorize a prevenção e a otimização, não apenas a ausência de doença.
+
+REGRAS DE ANÁLISE:
+1. PERFORMANCE (GOLD STANDARD): Use os ranges de PERFORMANCE (Performance Min/Max) como alvo. Se o valor estiver no range clínico mas fora do range de performance, status é "Subotimizado".
+2. STATUS: Otimizado (dentro do range performance), Alerta (range clínico mas fora performance), Critico (fora range clínico), Subotimizado (específico para quando está próximo da borda inferior/superior da performance mas ainda 'normal').
+3. LÓGICA SISTÊMICA: Use o contexto de inteligência clínica para correlações. (Ex: Vitamina D e Ferritina baixas juntas indicam comprometimento imunológico/energia).
+4. CÁLCULOS: Se encontrar Testosterona Total, SHBG e Albumina, calcule a Testosterona Livre estimada.
+
+DADOS DE REFERÊNCIA:
+${referenceContext}
+
+INTELIGÊNCIA CLÍNICA:
+${intelligenceContext}`
           },
           {
             role: 'user',
             content: [
               {
                 type: 'text',
-                text: 'Analise este exame laboratorial e extraia os principais marcadores de saúde e performance.'
+                text: 'Analise este exame laboratorial. Retorne um JSON estrito seguindo a estrutura: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos focando em Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico" }], "conduta_sugerida": ["ação 1", "ação 2"] }'
               },
               {
-                type: 'image_url', // Gemini gateway treats files as image_url or similar if it's base64 with data uri
+                type: 'image_url',
                 image_url: {
                   url: `data:application/pdf;base64,${base64PDF}`
                 }
@@ -99,112 +130,35 @@ Retorne os dados estritamente no formato JSON solicitado.`
             ]
           }
         ],
-        response_format: { type: 'json_object' },
-        tools: [
-          {
-            type: 'function',
-            function: {
-              name: 'save_analysis',
-              description: 'Salva a análise do exame laboratorial',
-              parameters: {
-                type: 'object',
-                properties: {
-                  parecer_tecnico: { type: 'string' },
-                  score_performance: { type: 'number' },
-                  marcadores: {
-                    type: 'array',
-                    items: {
-                      type: 'object',
-                      properties: {
-                        codigo: { type: 'string' },
-                        nome: { type: 'string' },
-                        valor: { type: 'number' },
-                        unidade: { type: 'string' },
-                        status: { type: 'string', enum: ['otimo', 'atencao', 'critico'] },
-                        observacao: { type: 'string' }
-                      },
-                      required: ['codigo', 'nome', 'valor', 'unidade', 'status', 'observacao']
-                    }
-                  }
-                },
-                required: ['parecer_tecnico', 'score_performance', 'marcadores']
-              }
-            }
-          }
-        ],
-        tool_choice: { type: 'function', function: { name: 'save_analysis' } }
+        response_format: { type: 'json_object' }
       })
     })
 
     if (!response.ok) {
       const errorText = await response.text()
       console.error('AI Gateway Error:', errorText)
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: 'Muitas requisições. Tente novamente em instantes.' }), { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: 'Créditos de IA insuficientes.' }), { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-      }
-      return new Response(JSON.stringify({ error: 'Erro ao processar análise com IA' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      return new Response(JSON.stringify({ error: 'Erro ao processar análise com IA' }), { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     const aiResult = await response.json()
-    const toolCall = aiResult.choices[0].message.tool_calls[0]
-    const analysisData: AIResponse = JSON.parse(toolCall.function.arguments)
-
-    // Cross-reference with references_exames and inteligencia_clinica
-    for (const marker of analysisData.marcadores) {
-      const { data: ref } = await supabase
-        .from('referencias_exames')
-        .select('*')
-        .eq('codigo', marker.codigo)
-        .single()
-
-      if (ref) {
-        // Evaluate status based on "ouro" range
-        if (marker.valor >= ref.valor_ouro_min && marker.valor <= ref.valor_ouro_max) {
-          marker.status = 'otimo'
-        } else if (marker.valor < ref.valor_minimo || marker.valor > ref.valor_maximo) {
-          marker.status = 'critico'
-        } else {
-          marker.status = 'atencao'
-        }
-
-        // Enrich with intelligence
-        if (marker.status !== 'otimo') {
-          const condicao = marker.valor < ref.valor_ouro_min ? 'baixa' : 'alta'
-          const { data: intel } = await supabase
-            .from('inteligencia_clinica')
-            .select('*')
-            .eq('biomarcador_codigo', marker.codigo)
-            .eq('condicao', condicao)
-            .maybeSingle()
-
-          if (intel) {
-            marker.observacao = `${intel.interpretacao} Sugestão: ${intel.sugestao_conduta}`
-          }
-        }
-      }
-    }
+    const analysisData: AIResponse = JSON.parse(aiResult.choices[0].message.content)
 
     // Save to analises_clinicas
     const { data: analise, error: analiseError } = await supabase
       .from('analises_clinicas')
       .insert({
         user_id: user.id,
-        parecer_ia: analysisData.parecer_tecnico,
-        score_performance: analysisData.score_performance,
+        parecer_ia: analysisData.resumo_executivo,
+        score_performance: analysisData.pontuacao_geral,
         url_arquivo: file_path,
         status: 'concluido',
-        dados_extraidos: analysisData
+        dados_extraidos: analysisData,
+        resumo_clinico: analysisData.conduta_sugerida.join('\n')
       })
       .select()
       .single()
 
-    if (analiseError) {
-      console.error('Error saving analysis:', analiseError)
-      throw analiseError
-    }
+    if (analiseError) throw analiseError
 
     // Save to exames_biomarcadores
     const biomarcadores = analysisData.marcadores.map(m => ({
@@ -215,22 +169,19 @@ Retorne os dados estritamente no formato JSON solicitado.`
       valor: m.valor,
       unidade: m.unidade,
       classificacao: m.status,
-      observacao: m.observacao
+      observacao: m.insight_clinico,
+      data_exame: new Date().toISOString().split('T')[0]
     }))
 
     const { error: biomarcadoresError } = await supabase
       .from('exames_biomarcadores')
       .insert(biomarcadores)
 
-    if (biomarcadoresError) {
-      console.error('Error saving biomarcadores:', biomarcadoresError)
-    }
+    if (biomarcadoresError) console.error('Error saving biomarcadores:', biomarcadoresError)
 
     return new Response(JSON.stringify({
       analise_id: analise.id,
-      parecer_tecnico: analysisData.parecer_tecnico,
-      score_performance: analysisData.score_performance,
-      marcadores: analysisData.marcadores
+      ...analysisData
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
