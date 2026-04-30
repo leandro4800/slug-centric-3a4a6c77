@@ -201,6 +201,10 @@ const AdminPanel = () => {
               </TabsContent>
             </Tabs>
           </TabsContent>
+
+          <TabsContent value="vlogs">
+            <VlogsAdmin />
+          </TabsContent>
         </Tabs>
       </main>
     </div>
