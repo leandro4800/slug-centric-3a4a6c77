@@ -1,0 +1,197 @@
+import { useEffect, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Check, ArrowLeft, Sparkles } from "lucide-react";
+import { formatBRL } from "@/lib/body-metrics";
+import { useToast } from "@/hooks/use-toast";
+
+interface Tenant {
+  id: string;
+  slug: string;
+  nome: string;
+  tagline: string | null;
+  bio: string | null;
+  foto_url: string | null;
+  hero_url: string | null;
+  especialidades: string[] | null;
+  status: string;
+  stripe_onboarding_completed: boolean;
+}
+interface Plano {
+  id: string;
+  nome: string;
+  descricao: string | null;
+  preco_centavos: number;
+  intervalo: "mensal" | "trimestral" | "anual";
+  ordem: number;
+}
+
+const intervaloLabel = { mensal: "/mês", trimestral: "/trimestre", anual: "/ano" };
+
+export default function TenantLanding() {
+  const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [planos, setPlanos] = useState<Plano[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  useEffect(() => {
+    void load();
+  }, [slug]);
+
+  const load = async () => {
+    if (!slug) return;
+    setLoading(true);
+    const { data: t } = await supabase.from("tenants").select("*").eq("slug", slug).maybeSingle();
+    setTenant(t as Tenant);
+    if (t) {
+      const { data: p } = await supabase
+        .from("planos")
+        .select("*")
+        .eq("tenant_id", t.id)
+        .eq("ativo", true)
+        .order("ordem");
+      setPlanos((p as Plano[]) ?? []);
+    }
+    setLoading(false);
+  };
+
+  const handleAssinar = async (plano_id: string) => {
+    setCheckoutLoading(plano_id);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+        body: { plano_id },
+      });
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+    } catch (e: any) {
+      toast({ title: "Erro no checkout", description: e.message, variant: "destructive" });
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center bg-background">Carregando...</div>;
+  }
+  if (!tenant || tenant.status !== "approved") {
+    return (
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-center">
+        <h1 className="font-display text-4xl uppercase">Coach indisponível</h1>
+        <Link to="/"><Button>Ver marketplace</Button></Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background text-foreground">
+      {/* Hero */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0">
+          {tenant.hero_url ? (
+            <img src={tenant.hero_url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-primary/30 to-zinc-950" />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/30" />
+        </div>
+
+        <div className="relative mx-auto max-w-5xl px-4 pt-6 md:px-8">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
+            <ArrowLeft className="h-4 w-4" /> Marketplace
+          </Link>
+        </div>
+
+        <div className="relative mx-auto max-w-5xl px-4 pb-16 pt-12 md:px-8 md:pb-24 md:pt-20">
+          {tenant.foto_url && (
+            <img
+              src={tenant.foto_url}
+              alt={tenant.nome}
+              className="mb-6 h-24 w-24 rounded-2xl border-2 border-primary/40 object-cover shadow-glow md:h-32 md:w-32"
+            />
+          )}
+          <Badge className="mb-4 bg-primary/20 text-primary border border-primary/40">
+            <Sparkles className="mr-1 h-3 w-3" /> Coach Verificado
+          </Badge>
+          <h1 className="font-display text-5xl uppercase tracking-tight md:text-7xl">{tenant.nome}</h1>
+          {tenant.tagline && <p className="mt-3 text-xl text-white/80 md:text-2xl">{tenant.tagline}</p>}
+          {tenant.especialidades && tenant.especialidades.length > 0 && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {tenant.especialidades.map((e) => (
+                <Badge key={e} variant="outline" className="border-white/30 bg-white/10 text-white">
+                  {e}
+                </Badge>
+              ))}
+            </div>
+          )}
+          {tenant.bio && (
+            <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">{tenant.bio}</p>
+          )}
+        </div>
+      </section>
+
+      {/* Planos */}
+      <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
+        <div className="mb-12 text-center">
+          <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
+          <p className="mt-3 text-muted-foreground">Acesso completo. Cancele quando quiser.</p>
+        </div>
+
+        {planos.length === 0 ? (
+          <div className="rounded-2xl border border-border/50 bg-card/40 p-12 text-center text-muted-foreground">
+            Este coach ainda não publicou planos.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+            {planos.map((p, i) => {
+              const destaque = i === 1 && planos.length >= 2;
+              return (
+                <div
+                  key={p.id}
+                  className={`relative overflow-hidden rounded-2xl border p-8 transition-all ${
+                    destaque
+                      ? "border-primary bg-gradient-to-b from-primary/10 to-card shadow-glow"
+                      : "border-border/50 bg-card hover:border-primary/40"
+                  }`}
+                >
+                  {destaque && (
+                    <Badge className="absolute right-4 top-4 bg-primary text-primary-foreground">
+                      Mais popular
+                    </Badge>
+                  )}
+                  <h3 className="font-display text-2xl uppercase">{p.nome}</h3>
+                  {p.descricao && <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>}
+                  <div className="my-6">
+                    <span className="font-display text-5xl">{formatBRL(p.preco_centavos)}</span>
+                    <span className="ml-1 text-muted-foreground">{intervaloLabel[p.intervalo]}</span>
+                  </div>
+                  <ul className="mb-8 space-y-2 text-sm">
+                    {["Treinos personalizados", "Dieta sob medida", "Acompanhamento contínuo", "App exclusivo"].map(
+                      (f) => (
+                        <li key={f} className="flex items-center gap-2">
+                          <Check className="h-4 w-4 text-primary" /> {f}
+                        </li>
+                      )
+                    )}
+                  </ul>
+                  <Button
+                    onClick={() => handleAssinar(p.id)}
+                    disabled={checkoutLoading === p.id}
+                    className={`w-full ${destaque ? "bg-primary hover:bg-primary/90" : ""}`}
+                    variant={destaque ? "default" : "outline"}
+                  >
+                    {checkoutLoading === p.id ? "Redirecionando..." : "Assinar agora"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
