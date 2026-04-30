@@ -209,7 +209,7 @@ const AlunoHome = () => {
                 className="aspect-video rounded-xl bg-gradient-card border border-border relative overflow-hidden cursor-pointer group"
               >
                 <img
-                  src={v.thumbnail_url || hero}
+                  src={v.thumbnail_url || tenant?.hero_url || heroDefault}
                   alt={v.title || ""}
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
