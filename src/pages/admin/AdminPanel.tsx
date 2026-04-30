@@ -25,15 +25,11 @@ const AdminPanel = () => {
   const [uploading, setUploading] = useState<"hero" | "logo" | null>(null);
   const [nome, setNome] = useState("");
   const [tagline, setTagline] = useState("");
-  const [primary, setPrimary] = useState("");
-  const [accent, setAccent] = useState("");
 
   useEffect(() => {
     if (!tenant) return;
     setNome(tenant.nome);
     setTagline(tenant.tagline || "");
-    setPrimary(tenant.primary_hsl);
-    setAccent(tenant.accent_hsl);
     void loadAlunos(tenant.id);
   }, [tenant]);
 
