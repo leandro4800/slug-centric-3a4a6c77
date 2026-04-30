@@ -198,9 +198,25 @@ export default function AdminCoaches() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 md:px-8">
-          <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Voltar
-          </Link>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-4 w-4" /> Voltar
+              </button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sair do painel admin?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Você voltará para a página inicial. Deseja continuar?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => navigate("/")}>Sair</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <h1 className="font-display text-xl uppercase">Admin AlphaCoach</h1>
         </div>
       </header>
