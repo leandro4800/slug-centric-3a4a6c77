@@ -114,12 +114,17 @@ const Clinica = () => {
         onChange={handleFileChange}
       />
 
-      <div className="relative h-52">
-        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
-        <div className="absolute bottom-4 left-5 right-5">
-          <p className="text-xs text-accent font-semibold tracking-wider">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
-          <h1 className="font-display text-3xl mt-1 leading-tight">CENTRO DE ANÁLISE<br />METABÓLICA</h1>
+      <div className="relative h-56">
+        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/40" />
+        <div className="absolute bottom-5 left-5 right-5">
+          <p className="text-[11px] text-accent font-bold tracking-[0.25em] uppercase drop-shadow-lg">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
+          <h1 className="font-display text-4xl mt-1.5 leading-[0.95] drop-shadow-2xl">CENTRO DE ANÁLISE<br />METABÓLICA</h1>
+          <div className="flex items-center gap-2 mt-2">
+            <div className="h-1 w-10 bg-accent rounded-full" />
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Dr. IA — Performance & Longevidade</p>
+          </div>
         </div>
       </div>
 
@@ -180,13 +185,13 @@ const Clinica = () => {
               <button
                 key={a.title}
                 onClick={a.onClick}
-                className={`w-full bg-card/40 ${a.dashed ? "border-dashed" : ""} border border-accent/40 rounded-2xl p-4 flex items-center gap-4 text-left hover:bg-card/60 transition-colors`}
+                className={`w-full bg-gradient-to-br from-card/80 to-card/30 ${a.dashed ? "border-dashed border-2" : "border"} border-accent/40 rounded-2xl p-4 flex items-center gap-4 text-left hover:from-card hover:to-card/50 hover:scale-[1.01] hover:border-accent/70 transition-all duration-300 shadow-[0_8px_24px_-12px_hsl(0_0%_0%/0.6)]`}
               >
-                <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--accent)/0.5)]">
                   <a.icon className="h-5 w-5 text-accent" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-display text-base uppercase leading-tight">{a.title}</p>
+                  <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{a.sub}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-accent" />
@@ -224,8 +229,11 @@ const Clinica = () => {
             </button>
             <AnalysisResults 
               score={currentAnalysis.score_performance}
-              parecer={currentAnalysis.parecer_tecnico}
+              parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
               marcadores={currentAnalysis.marcadores}
+              conduta={currentAnalysis.conduta_sugerida}
+              sugestoes_medicamentos={currentAnalysis.sugestoes_medicamentos}
+              aviso_medico={currentAnalysis.aviso_medico}
             />
           </div>
         ) : (
@@ -246,30 +254,35 @@ const Clinica = () => {
                 </button>
               </div>
             ) : (
-              analyses?.map((analise) => (
+              analyses?.map((analise: any) => (
                 <button
                   key={analise.id}
                   onClick={() => setCurrentAnalysis({
                     score_performance: analise.score_performance,
                     parecer_tecnico: analise.parecer_ia,
+                    conduta_sugerida: analise.dados_extraidos?.conduta_sugerida ?? (analise.resumo_clinico ? analise.resumo_clinico.split('\n') : []),
+                    sugestoes_medicamentos: analise.dados_extraidos?.sugestoes_medicamentos,
+                    aviso_medico: analise.dados_extraidos?.aviso_medico,
                     marcadores: analise.exames_biomarcadores.map((b: any) => ({
+                      codigo: b.codigo,
                       nome: b.nome,
                       valor: b.valor,
                       unidade: b.unidade,
                       status: b.classificacao,
-                      observacao: b.observacao
+                      insight_clinico: b.observacao,
+                      sugestao_medicamento: (analise.dados_extraidos?.marcadores ?? []).find((m: any) => m.codigo === b.codigo)?.sugestao_medicamento
                     }))
                   })}
-                  className="w-full bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4 text-left"
+                  className="w-full bg-gradient-to-br from-card/80 to-card/30 border border-border rounded-2xl p-4 flex items-center gap-4 text-left hover:scale-[1.01] hover:border-accent/40 transition-all duration-300 shadow-[0_8px_24px_-12px_hsl(0_0%_0%/0.6)]"
                 >
-                  <div className="w-12 h-12 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center font-bold text-accent">
-                    {analise.score_performance}%
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-accent/30 to-accent/5 border border-accent/40 flex items-center justify-center font-bold text-accent font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--accent)/0.5)]">
+                    {analise.score_performance}
                   </div>
-                  <div className="flex-1">
-                    <p className="font-display text-base">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
-                    <p className="text-xs text-muted-foreground">{analise.exames_biomarcadores.length} Marcadores detectados</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display text-base uppercase tracking-wide">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground">{analise.exames_biomarcadores.length} marcadores detectados</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-accent" />
+                  <ChevronRight className="h-4 w-4 text-accent shrink-0" />
                 </button>
               ))
             )}

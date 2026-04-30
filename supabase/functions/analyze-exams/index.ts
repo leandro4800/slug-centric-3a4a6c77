@@ -9,6 +9,7 @@ interface Marker {
   unidade: string
   status: "Otimizado" | "Alerta" | "Critico" | "Subotimizado"
   insight_clinico: string
+  sugestao_medicamento?: string
 }
 
 interface AIResponse {
@@ -16,6 +17,8 @@ interface AIResponse {
   resumo_executivo: string
   marcadores: Marker[]
   conduta_sugerida: string[]
+  sugestoes_medicamentos?: string[]
+  aviso_medico?: string
 }
 
 serve(async (req) => {
@@ -110,9 +113,15 @@ serve(async (req) => {
 
 REGRAS DE ANÁLISE:
 1. PERFORMANCE (GOLD STANDARD): Use os ranges de PERFORMANCE (Performance Min/Max) como alvo. Se o valor estiver no range clínico mas fora do range de performance, status é "Subotimizado".
-2. STATUS: Otimizado (dentro do range performance), Alerta (range clínico mas fora performance), Critico (fora range clínico), Subotimizado (específico para quando está próximo da borda inferior/superior da performance mas ainda 'normal').
-3. LÓGICA SISTÊMICA: Use o contexto de inteligência clínica para correlações. (Ex: Vitamina D e Ferritina baixas juntas indicam comprometimento imunológico/energia).
+2. STATUS: Otimizado (dentro do range performance), Alerta (range clínico mas fora performance), Critico (fora range clínico), Subotimizado (próximo da borda da performance mas ainda 'normal').
+3. LÓGICA SISTÊMICA: Use o contexto de inteligência clínica para correlações.
 4. CÁLCULOS: Se encontrar Testosterona Total, SHBG e Albumina, calcule a Testosterona Livre estimada.
+
+REGRAS DE SUGESTÃO DE MEDICAMENTOS / SUPLEMENTAÇÃO:
+- Quando um marcador estiver "Alerta", "Critico" ou "Subotimizado", inclua em "sugestao_medicamento" do marcador uma sugestão GENÉRICA de classe terapêutica ou suplemento (ex.: "Reposição de Vitamina D3 5.000UI/dia", "Considerar suplementação de Ômega-3 EPA/DHA 2g/dia", "Avaliar uso de estatina de baixa potência").
+- NUNCA prescreva. Sempre escreva no tom de "sugestão para discussão com seu médico".
+- Em "sugestoes_medicamentos" (array no nível raiz) liste de forma consolidada as principais sugestões priorizadas.
+- SEMPRE preencha "aviso_medico" com um disclaimer claro orientando o usuário a procurar um médico antes de iniciar qualquer medicamento ou suplemento. Esta análise é educativa e não substitui consulta médica.
 
 DADOS DE REFERÊNCIA:
 ${referenceContext}
@@ -125,7 +134,7 @@ ${intelligenceContext}`
             content: [
               {
                 type: 'text',
-                text: 'Analise este exame laboratorial. Retorne um JSON estrito seguindo a estrutura: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos focando em Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico" }], "conduta_sugerida": ["ação 1", "ação 2"] }'
+                text: 'Analise este exame laboratorial. Retorne um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "sugestão genérica de medicamento/suplemento OU vazio se Otimizado" }], "conduta_sugerida": ["ação 1", "ação 2"], "sugestoes_medicamentos": ["sugestão consolidada 1", "..."], "aviso_medico": "texto orientando consulta médica obrigatória antes de qualquer uso de medicamento" }'
               },
               {
                 type: 'image_url',
