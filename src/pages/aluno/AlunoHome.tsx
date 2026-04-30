@@ -64,8 +64,12 @@ const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) =
 const AlunoHome = () => {
   const { tenant } = useBranding();
   const { slug } = useParams();
-  const hero = tenant?.hero_url || heroDefault;
   const [vlogs, setVlogs] = useState<VlogPost[]>([]);
+
+  const featured = vlogs[0];
+  const ytId = featured ? (featured.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/)?.[1] ?? null) : null;
+  const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -80,27 +84,65 @@ const AlunoHome = () => {
       .then(({ data }) => setVlogs((data as VlogPost[]) || []));
   }, [tenant?.id]);
 
+  const handlePlay = () => {
+    if (!featured) return;
+    if (ytId) {
+      setPlaying(true);
+    } else {
+      window.open(featured.url, "_blank", "noopener");
+    }
+  };
+
   return (
     <>
       {/* Hero */}
-      <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden">
-        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background" />
-        <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5">
+      <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden bg-background">
+        {playing && ytId ? (
+          <iframe
+            src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
+            title={featured?.title || "Vlog"}
+            allow="autoplay; encrypted-media; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 w-full h-full"
+          />
+        ) : (
+          <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        )}
+        {!playing && (
+          <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background" />
+        )}
+        <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5 z-10">
           <Logo size={32} withText={false} />
-          <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center">
-            <Settings className="h-4 w-4 text-accent" />
-          </Link>
+          <div className="flex items-center gap-2">
+            {playing && (
+              <button
+                onClick={() => setPlaying(false)}
+                className="px-3 h-9 rounded-full bg-background/80 border border-border text-xs font-semibold backdrop-blur"
+              >
+                Fechar
+              </button>
+            )}
+            <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center">
+              <Settings className="h-4 w-4 text-accent" />
+            </Link>
+          </div>
         </div>
-        <div className="absolute bottom-8 left-0 right-0 px-5">
-          <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "AlphaCoach"}</p>
-          <h1 className="font-display text-5xl text-foreground mb-5 leading-none">
-            {tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
-          </h1>
-          <button className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold px-6 py-3 rounded-md hover:opacity-90 transition">
-            <Play className="h-4 w-4 fill-current" /> REPRODUZIR
-          </button>
-        </div>
+        {!playing && (
+          <div className="absolute bottom-8 left-0 right-0 px-5">
+            <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "AlphaCoach"}</p>
+            <h1 className="font-display text-5xl text-foreground mb-5 leading-none">
+              {featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
+            </h1>
+            <button
+              onClick={handlePlay}
+              disabled={!featured}
+              className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold px-6 py-3 rounded-md hover:opacity-90 transition disabled:opacity-60"
+              title={featured ? "Reproduzir último vlog" : "Sem vlog publicado"}
+            >
+              <Play className="h-4 w-4 fill-current" /> REPRODUZIR
+            </button>
+          </div>
+        )}
       </section>
 
       {/* Links úteis */}
@@ -167,7 +209,7 @@ const AlunoHome = () => {
                 className="aspect-video rounded-xl bg-gradient-card border border-border relative overflow-hidden cursor-pointer group"
               >
                 <img
-                  src={v.thumbnail_url || hero}
+                  src={v.thumbnail_url || tenant?.hero_url || heroDefault}
                   alt={v.title || ""}
                   loading="lazy"
                   className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
