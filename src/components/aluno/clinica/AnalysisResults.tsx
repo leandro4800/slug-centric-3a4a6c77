@@ -1,7 +1,8 @@
 import { MarkerCard } from "./MarkerCard";
-import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface Marker {
+  codigo: string;
   nome: string;
   valor: number;
   unidade: string;
@@ -16,30 +17,63 @@ interface AnalysisResultsProps {
 }
 
 export const AnalysisResults = ({ score, parecer, marcadores }: AnalysisResultsProps) => {
+  // Color based on score
+  const getScoreColor = (s: number) => {
+    if (s >= 80) return "text-green-500";
+    if (s >= 50) return "text-accent"; // Amarelo/Dourado do app
+    return "text-red-500";
+  };
+
+  const scoreColor = getScoreColor(score);
+
   return (
-    <div className="space-y-6">
-      <div className="bg-card/40 border border-border rounded-2xl p-5">
-        <div className="flex justify-between items-end mb-4">
-          <h3 className="font-display text-lg">SCORE DE PERFORMANCE</h3>
-          <span className="text-3xl font-bold text-accent">{score}%</span>
+    <div className="space-y-6 animate-in fade-in duration-700">
+      <div className="bg-card/40 border border-border rounded-3xl p-6 flex flex-col items-center text-center relative overflow-hidden">
+        {/* Background glow */}
+        <div className={cn("absolute inset-0 blur-[60px] opacity-10 rounded-full", scoreColor.replace("text-", "bg-"))} />
+        
+        <h3 className="font-display text-lg uppercase mb-6 tracking-widest relative z-10">Score de Performance</h3>
+        
+        <div className="relative w-40 h-40 mb-6 z-10">
+          <svg className="w-full h-full -rotate-90">
+            <circle
+              cx="80"
+              cy="80"
+              r="74"
+              className="fill-none stroke-secondary stroke-[10]"
+            />
+            <circle
+              cx="80"
+              cy="80"
+              r="74"
+              className={cn("fill-none stroke-[10] transition-all duration-1000", scoreColor.replace("text-", "stroke-"))}
+              strokeDasharray={465}
+              strokeDashoffset={465 - (465 * score) / 100}
+              strokeLinecap="round"
+            />
+          </svg>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
+            <span className={cn("text-5xl font-bold font-display", scoreColor)}>{score}</span>
+            <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter -mt-1">Pontos</span>
+          </div>
         </div>
-        <Progress value={score} className="h-3" />
-        <p className="text-xs text-muted-foreground mt-3">
-          Este score reflete sua proximidade com os níveis ideais ("ouro") para performance esportiva, baseados no cruzamento de dados científicos.
+
+        <p className="text-sm text-muted-foreground max-w-xs relative z-10 italic">
+          "Seu corpo está {score}% próximo do potencial máximo de performance atlética baseado nos biomarcadores analisados."
         </p>
       </div>
 
-      <div className="bg-card/40 border border-border rounded-2xl p-5">
-        <h3 className="font-display text-lg mb-4">PARECER TÉCNICO DR. IA</h3>
-        <div className="prose prose-invert prose-sm max-w-none text-muted-foreground">
+      <div className="bg-card/40 border border-border rounded-3xl p-6">
+        <h3 className="font-display text-lg mb-4 uppercase tracking-wider text-accent border-b border-accent/10 pb-2">Parecer Técnico Dr. IA</h3>
+        <div className="prose prose-invert prose-sm max-w-none text-muted-foreground leading-relaxed">
           {parecer.split('\n').map((para, i) => (
-            <p key={i}>{para}</p>
+            para.trim() ? <p key={i} className="mb-4 last:mb-0">{para}</p> : null
           ))}
         </div>
       </div>
 
       <div className="space-y-4">
-        <h3 className="font-display text-lg px-1">BIOMARCADORES DETECTADOS</h3>
+        <h3 className="font-display text-lg px-1 uppercase tracking-wider">Biomarcadores</h3>
         <div className="grid grid-cols-1 gap-3">
           {marcadores.map((m, i) => (
             <MarkerCard key={i} {...m} />
@@ -49,3 +83,4 @@ export const AnalysisResults = ({ score, parecer, marcadores }: AnalysisResultsP
     </div>
   );
 };
+

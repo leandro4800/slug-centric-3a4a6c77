@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Settings, Play, Volume2, VolumeX } from "lucide-react";
+import { Settings, Play, Volume2, VolumeX, Stethoscope, ChevronRight } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -170,14 +170,28 @@ const AlunoHome = () => {
         )}
       </section>
 
-      {/* Links úteis */}
-      <section className="px-5 -mt-2">
-        <div className="bg-card/60 border border-accent/40 rounded-xl p-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center">
+      {/* Dr. IA Prompt */}
+      <section className="px-5 -mt-2 space-y-3">
+        <Link 
+          to={`/${slug}/app/dr-ia`}
+          className="bg-card/60 border border-accent/40 rounded-2xl p-4 flex items-center gap-4 hover:bg-accent/5 transition-colors group"
+        >
+          <div className="w-12 h-12 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+            <Stethoscope className="h-6 w-6 text-accent" />
+          </div>
+          <div className="flex-1">
+            <p className="font-display text-lg text-accent leading-tight uppercase">Dr. IA</p>
+            <p className="text-xs text-muted-foreground">Seu médico esportivo de bolso</p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-accent/50" />
+        </Link>
+
+        <div className="bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-lg bg-secondary/50 border border-border flex items-center justify-center">
             <TenantSymbol size={28} />
           </div>
           <div>
-            <p className="font-display text-lg text-accent">LINKS ÚTEIS</p>
+            <p className="font-display text-lg text-foreground/80 leading-tight uppercase">Links Úteis</p>
             <p className="text-xs text-muted-foreground">Parceiros & cupons exclusivos</p>
           </div>
         </div>
