@@ -114,12 +114,17 @@ const Clinica = () => {
         onChange={handleFileChange}
       />
 
-      <div className="relative h-52">
-        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover opacity-50" />
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/60 to-background" />
-        <div className="absolute bottom-4 left-5 right-5">
-          <p className="text-xs text-accent font-semibold tracking-wider">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
-          <h1 className="font-display text-3xl mt-1 leading-tight">CENTRO DE ANÁLISE<br />METABÓLICA</h1>
+      <div className="relative h-56">
+        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/40" />
+        <div className="absolute bottom-5 left-5 right-5">
+          <p className="text-[11px] text-accent font-bold tracking-[0.25em] uppercase drop-shadow-lg">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
+          <h1 className="font-display text-4xl mt-1.5 leading-[0.95] drop-shadow-2xl">CENTRO DE ANÁLISE<br />METABÓLICA</h1>
+          <div className="flex items-center gap-2 mt-2">
+            <div className="h-1 w-10 bg-accent rounded-full" />
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Dr. IA — Performance & Longevidade</p>
+          </div>
         </div>
       </div>
 
@@ -180,13 +185,13 @@ const Clinica = () => {
               <button
                 key={a.title}
                 onClick={a.onClick}
-                className={`w-full bg-card/40 ${a.dashed ? "border-dashed" : ""} border border-accent/40 rounded-2xl p-4 flex items-center gap-4 text-left hover:bg-card/60 transition-colors`}
+                className={`w-full bg-gradient-to-br from-card/80 to-card/30 ${a.dashed ? "border-dashed border-2" : "border"} border-accent/40 rounded-2xl p-4 flex items-center gap-4 text-left hover:from-card hover:to-card/50 hover:scale-[1.01] hover:border-accent/70 transition-all duration-300 shadow-[0_8px_24px_-12px_hsl(0_0%_0%/0.6)]`}
               >
-                <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--accent)/0.5)]">
                   <a.icon className="h-5 w-5 text-accent" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-display text-base uppercase leading-tight">{a.title}</p>
+                  <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
                   <p className="text-xs text-muted-foreground mt-0.5">{a.sub}</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-accent" />
