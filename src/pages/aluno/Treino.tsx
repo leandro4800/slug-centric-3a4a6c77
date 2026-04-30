@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { PageHeader } from "@/components/aluno/PageHeader";
+import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 
 interface Treino extends ExerciseCardData {
@@ -247,8 +248,8 @@ const Treino = () => {
 
       <div className="px-5">
         {isMock && (
-          <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 text-center text-xs text-primary mb-4">
-            ⚡ Prévia — seu treino personalizado será montado pelo coach
+          <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-xs text-primary mb-4">
+            <TenantSymbol size={16} /> Prévia — seu treino personalizado será montado pelo coach
           </div>
         )}
 

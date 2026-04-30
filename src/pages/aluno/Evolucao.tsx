@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TrendingUp, Brain, Plus, Instagram } from "lucide-react";
 import { PageHeader } from "@/components/aluno/PageHeader";
+import { TenantSymbol } from "@/components/TenantSymbol";
 import { useBranding } from "@/contexts/BrandingProvider";
 
 const Evolucao = () => {
@@ -11,8 +12,8 @@ const Evolucao = () => {
     <>
       <PageHeader icon={TrendingUp} title="EVOLUÇÃO…" subtitle={tenant?.nome || "MEU TIME"} />
       <div className="px-5">
-        <div className="bg-accent/10 border border-accent/30 rounded-xl px-4 py-3 text-center text-xs text-accent mb-5">
-          ⚡ Clique no botão + para registrar sua primeira métrica ou foto
+        <div className="bg-accent/10 border border-accent/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-xs text-accent mb-5">
+          <TenantSymbol size={16} /> Clique no botão + para registrar sua primeira métrica ou foto
         </div>
 
         <div className="bg-card/40 border border-accent/30 rounded-2xl p-5">

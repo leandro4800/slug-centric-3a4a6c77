@@ -1,5 +1,6 @@
 import { Utensils, Play, Coffee, Sun, Apple, Moon } from "lucide-react";
 import { PageHeader } from "@/components/aluno/PageHeader";
+import { TenantSymbol } from "@/components/TenantSymbol";
 
 const macros = [
   { label: "CALORIAS", value: "522", unit: "kcal", color: "text-accent", border: "border-accent/40" },
@@ -19,12 +20,12 @@ const Dieta = () => (
   <>
     <PageHeader icon={Utensils} title="MINHA DIE…" subtitle={undefined} />
     <div className="px-5">
-      <div className="bg-accent/10 border border-accent/30 rounded-xl px-4 py-3 text-center text-xs text-accent mb-5">
-        ⚡ Prévia — Sua dieta personalizada será montada pelo coach
+      <div className="bg-accent/10 border border-accent/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-xs text-accent mb-5">
+        <TenantSymbol size={16} /> Prévia — Sua dieta personalizada será montada pelo coach
       </div>
 
       <h2 className="font-display text-base flex items-center gap-2 mb-3">
-        <span className="text-accent">⚡</span> RESUMO NUTRICIONAL DO DIA
+        <TenantSymbol size={18} /> RESUMO NUTRICIONAL DO DIA
       </h2>
 
       <div className="grid grid-cols-4 gap-2">
