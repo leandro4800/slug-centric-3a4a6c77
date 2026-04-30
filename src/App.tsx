@@ -24,6 +24,7 @@ import Clinica from "./pages/aluno/Clinica";
 import Comunidade from "./pages/aluno/Comunidade";
 import Perfil from "./pages/aluno/Perfil";
 import ControleCentral from "./pages/aluno/ControleCentral";
+import DrIA from "./pages/aluno/DrIA";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AdminMontarTreino from "./pages/admin/AdminMontarTreino";
 import MeusAtletas from "./pages/admin/MeusAtletas";
