@@ -14,28 +14,13 @@ const DrIA = () => {
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenant } = useBranding();
-  const { uploadExame, isAnalyzing } = useDrIA();
+  const { uploadExame, isAnalyzing, listarAnalises } = useDrIA();
   const hero = tenant?.hero_url || heroDefault;
 
   // Fetch past analyses
   const { data: analyses, isLoading: isLoadingAnalyses } = useQuery({
     queryKey: ["analises_clinicas"],
-    queryFn: async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return [];
-
-      const { data, error } = await supabase
-        .from("analises_clinicas")
-        .select(`
-          *,
-          exames_biomarcadores (*)
-        `)
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
-
-      if (error) throw error;
-      return data;
-    }
+    queryFn: listarAnalises
   });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
