@@ -61,10 +61,10 @@ const AdminPanel = () => {
   const handleSaveAppearance = async () => {
     if (!tenant) return;
     const { error } = await supabase.from("tenants").update({
-      nome, tagline, primary_hsl: primary, accent_hsl: accent,
+      nome, tagline,
     }).eq("id", tenant.id);
     if (error) toast.error(error.message);
-    else { toast.success("Aparência salva!"); await refresh(); }
+    else { toast.success("Textos salvos!"); await refresh(); }
   };
 
   const handleLogout = async () => { await signOut(); navigate("/login"); };
