@@ -783,6 +783,7 @@ export type Database = {
           stripe_onboarding_completed: boolean
           symbol_url: string | null
           tagline: string | null
+          theme_overrides: Json
           updated_at: string
         }
         Insert: {
@@ -803,6 +804,7 @@ export type Database = {
           stripe_onboarding_completed?: boolean
           symbol_url?: string | null
           tagline?: string | null
+          theme_overrides?: Json
           updated_at?: string
         }
         Update: {
@@ -823,6 +825,7 @@ export type Database = {
           stripe_onboarding_completed?: boolean
           symbol_url?: string | null
           tagline?: string | null
+          theme_overrides?: Json
           updated_at?: string
         }
         Relationships: []
