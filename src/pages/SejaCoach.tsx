@@ -18,6 +18,7 @@ export default function SejaCoach() {
 
   const [step, setStep] = useState<"signup" | "form" | "stripe" | "pending">("signup");
   const [busy, setBusy] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // signup
   const [email, setEmail] = useState("");
