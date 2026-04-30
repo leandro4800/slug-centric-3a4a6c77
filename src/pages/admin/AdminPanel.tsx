@@ -10,6 +10,17 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard } from "lucide-react";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import heroDefault from "@/assets/hero-default.jpg";
 import { IdentidadeVisual } from "@/components/admin/IdentidadeVisual";
 import { VlogsAdmin } from "@/components/admin/VlogsAdmin";
@@ -74,7 +85,23 @@ const AdminPanel = () => {
     <div className="min-h-screen bg-background">
       <header className="border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10">
         <div className="flex items-center gap-4">
-          <Link to={`/${slug}/app`}><Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button></Link>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Sair do painel admin?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Você voltará para a área do aluno. Deseja continuar?
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={() => navigate(`/${slug}/app`)}>Sair</AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
           <Logo size={32} />
           <span className="text-xs px-2 py-1 rounded bg-primary/15 text-primary uppercase tracking-wider">Admin</span>
         </div>
