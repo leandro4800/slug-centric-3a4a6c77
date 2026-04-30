@@ -67,7 +67,7 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta }: Analysi
       <div className="bg-card/40 border border-border rounded-3xl p-6">
         <h3 className="font-display text-lg mb-4 uppercase tracking-wider text-accent border-b border-accent/10 pb-2">Resumo Executivo</h3>
         <div className="prose prose-invert prose-sm max-w-none text-muted-foreground leading-relaxed">
-          {parecer.split('\n').map((para, i) => (
+          {(parecer ?? "").split('\n').map((para, i) => (
             para.trim() ? <p key={i} className="mb-4 last:mb-0">{para}</p> : null
           ))}
         </div>
@@ -92,7 +92,7 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta }: Analysi
       <div className="space-y-4">
         <h3 className="font-display text-lg px-1 uppercase tracking-wider">Biomarcadores</h3>
         <div className="grid grid-cols-1 gap-3">
-          {marcadores.map((m, i) => (
+          {(marcadores ?? []).map((m, i) => (
             <MarkerCard key={i} {...m} observacao={m.insight_clinico} />
           ))}
         </div>
