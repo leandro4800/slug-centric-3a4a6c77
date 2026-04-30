@@ -14,9 +14,10 @@ interface AnalysisResultsProps {
   score: number;
   parecer: string;
   marcadores: Marker[];
+  conduta?: string[];
 }
 
-export const AnalysisResults = ({ score, parecer, marcadores }: AnalysisResultsProps) => {
+export const AnalysisResults = ({ score, parecer, marcadores, conduta }: AnalysisResultsProps) => {
   // Color based on score
   const getScoreColor = (s: number) => {
     if (s >= 80) return "text-green-500";
