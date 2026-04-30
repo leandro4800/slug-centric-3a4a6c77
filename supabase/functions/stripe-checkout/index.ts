@@ -45,8 +45,10 @@ Deno.serve(async (req) => {
     // @ts-ignore
     const t = plano.tenants;
     if (t.status !== "approved") throw new Error("tenant not approved");
-    if (!t.stripe_account_id || !t.stripe_onboarding_completed) {
-      throw new Error("coach has not completed Stripe onboarding");
+    const skipStripeConnect = !t.stripe_account_id || !t.stripe_onboarding_completed;
+    
+    if (skipStripeConnect) {
+      console.log("Skipping Stripe Connect for tenant:", t.slug);
     }
     if (!plano.stripe_price_id) throw new Error("plano has no stripe_price_id");
 
@@ -61,12 +63,11 @@ Deno.serve(async (req) => {
       success_url: `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${t.slug}`,
       cancel_url: `${origin}/${t.slug}`,
       subscription_data: {
-        application_fee_percent: PLATFORM_FEE_PCT,
-        // on_behalf_of faz com que a cobrança seja "em nome do" coach,
-        // portanto as TAXAS DO STRIPE saem da conta do coach (não da plataforma).
-        // A plataforma recebe apenas os 10% líquidos via application_fee_percent.
-        on_behalf_of: t.stripe_account_id,
-        transfer_data: { destination: t.stripe_account_id },
+        ...(skipStripeConnect ? {} : {
+          application_fee_percent: PLATFORM_FEE_PCT,
+          on_behalf_of: t.stripe_account_id,
+          transfer_data: { destination: t.stripe_account_id },
+        }),
         metadata: {
           plano_id,
           tenant_id: t.id,
