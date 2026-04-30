@@ -63,12 +63,11 @@ Deno.serve(async (req) => {
       success_url: `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${t.slug}`,
       cancel_url: `${origin}/${t.slug}`,
       subscription_data: {
-        application_fee_percent: PLATFORM_FEE_PCT,
-        // on_behalf_of faz com que a cobrança seja "em nome do" coach,
-        // portanto as TAXAS DO STRIPE saem da conta do coach (não da plataforma).
-        // A plataforma recebe apenas os 10% líquidos via application_fee_percent.
-        on_behalf_of: t.stripe_account_id,
-        transfer_data: { destination: t.stripe_account_id },
+        ...(skipStripeConnect ? {} : {
+          application_fee_percent: PLATFORM_FEE_PCT,
+          on_behalf_of: t.stripe_account_id,
+          transfer_data: { destination: t.stripe_account_id },
+        }),
         metadata: {
           plano_id,
           tenant_id: t.id,
