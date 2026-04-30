@@ -16,21 +16,20 @@ const ControleCentral = () => {
   const { tenant } = useBranding();
   const { user } = useAuth();
   const [playlist, setPlaylist] = useState("https://open.spotify.com/playlist/1kdeP");
-  const [canAdmin, setCanAdmin] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
     const check = async () => {
-      if (!user) return setCanAdmin(false);
+      if (!user) return setIsSuperAdmin(false);
       const { data: roles } = await supabase
         .from("user_roles")
-        .select("role, tenant_id")
-        .eq("user_id", user.id);
-      const isSuper = roles?.some((r: any) => r.role === "admin");
-      const isCoach = roles?.some((r: any) => r.role === "coach" && (!tenant || r.tenant_id === tenant.id));
-      setCanAdmin(Boolean(isSuper || isCoach));
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin");
+      setIsSuperAdmin(Boolean(roles && roles.length > 0));
     };
     void check();
-  }, [user, tenant]);
+  }, [user]);
 
   return (
     <div className="px-5 pt-6 pb-32">
@@ -41,15 +40,15 @@ const ControleCentral = () => {
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
 
-      {canAdmin && (
+      {isSuperAdmin && (
         <Link
-          to={`/${slug}/admin`}
+          to="/admin/coaches"
           className="mt-4 flex items-center gap-3 bg-gradient-to-r from-primary to-primary/70 text-primary-foreground rounded-2xl px-4 py-3 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.6)]"
         >
           <LayoutDashboard className="h-5 w-5" />
           <div className="flex-1">
-            <p className="font-display text-base leading-tight">VOLTAR AO PAINEL DO COACH</p>
-            <p className="text-[10px] uppercase tracking-widest opacity-80">Modo administrador</p>
+            <p className="font-display text-base leading-tight">VOLTAR AO PAINEL ADMIN</p>
+            <p className="text-[10px] uppercase tracking-widest opacity-80">Super admin AlphaCoach</p>
           </div>
           <span>→</span>
         </Link>
