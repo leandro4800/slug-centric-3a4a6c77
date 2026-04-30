@@ -168,6 +168,7 @@ const DrIA = () => {
               score={currentAnalysis.score_performance}
               parecer={currentAnalysis.parecer_tecnico}
               marcadores={currentAnalysis.marcadores}
+              conduta={currentAnalysis.conduta_sugerida}
             />
           </div>
         ) : tab === "clinica" ? (
