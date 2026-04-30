@@ -21,12 +21,11 @@ const ControleCentral = () => {
   useEffect(() => {
     const check = async () => {
       if (!user) return setIsSuperAdmin(false);
-      const { data: roles } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", user.id)
-        .eq("role", "admin");
-      setIsSuperAdmin(Boolean(roles && roles.length > 0));
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      setIsSuperAdmin(Boolean(data));
     };
     void check();
   }, [user]);
@@ -65,15 +64,17 @@ const ControleCentral = () => {
 
       <div className="space-y-4 mt-6">
         <Link
-          to={`/${slug}/admin`}
+          to={isSuperAdmin ? "/admin/coaches" : `/${slug}/admin`}
           className="block bg-card/40 border border-accent/30 rounded-2xl p-4 flex items-center gap-4"
         >
           <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center">
-            <Users className="h-5 w-5 text-accent" />
+            {isSuperAdmin ? <LayoutDashboard className="h-5 w-5 text-accent" /> : <Users className="h-5 w-5 text-accent" />}
           </div>
           <div className="flex-1">
-            <p className="font-display text-lg text-accent">GERENCIAR ELENCO</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Atletas da equipe</p>
+            <p className="font-display text-lg text-accent">{isSuperAdmin ? "PAINEL ADMIN" : "GERENCIAR ELENCO"}</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">
+              {isSuperAdmin ? "Controle de coaches e tenants" : "Atletas da equipe"}
+            </p>
           </div>
           <span className="text-accent">→</span>
         </Link>
