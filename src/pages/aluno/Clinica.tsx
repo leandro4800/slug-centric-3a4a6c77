@@ -229,8 +229,11 @@ const Clinica = () => {
             </button>
             <AnalysisResults 
               score={currentAnalysis.score_performance}
-              parecer={currentAnalysis.parecer_tecnico}
+              parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
               marcadores={currentAnalysis.marcadores}
+              conduta={currentAnalysis.conduta_sugerida}
+              sugestoes_medicamentos={currentAnalysis.sugestoes_medicamentos}
+              aviso_medico={currentAnalysis.aviso_medico}
             />
           </div>
         ) : (
@@ -251,30 +254,35 @@ const Clinica = () => {
                 </button>
               </div>
             ) : (
-              analyses?.map((analise) => (
+              analyses?.map((analise: any) => (
                 <button
                   key={analise.id}
                   onClick={() => setCurrentAnalysis({
                     score_performance: analise.score_performance,
                     parecer_tecnico: analise.parecer_ia,
+                    conduta_sugerida: analise.dados_extraidos?.conduta_sugerida ?? (analise.resumo_clinico ? analise.resumo_clinico.split('\n') : []),
+                    sugestoes_medicamentos: analise.dados_extraidos?.sugestoes_medicamentos,
+                    aviso_medico: analise.dados_extraidos?.aviso_medico,
                     marcadores: analise.exames_biomarcadores.map((b: any) => ({
+                      codigo: b.codigo,
                       nome: b.nome,
                       valor: b.valor,
                       unidade: b.unidade,
                       status: b.classificacao,
-                      observacao: b.observacao
+                      insight_clinico: b.observacao,
+                      sugestao_medicamento: (analise.dados_extraidos?.marcadores ?? []).find((m: any) => m.codigo === b.codigo)?.sugestao_medicamento
                     }))
                   })}
-                  className="w-full bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4 text-left"
+                  className="w-full bg-gradient-to-br from-card/80 to-card/30 border border-border rounded-2xl p-4 flex items-center gap-4 text-left hover:scale-[1.01] hover:border-accent/40 transition-all duration-300 shadow-[0_8px_24px_-12px_hsl(0_0%_0%/0.6)]"
                 >
-                  <div className="w-12 h-12 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center font-bold text-accent">
-                    {analise.score_performance}%
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-accent/30 to-accent/5 border border-accent/40 flex items-center justify-center font-bold text-accent font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--accent)/0.5)]">
+                    {analise.score_performance}
                   </div>
-                  <div className="flex-1">
-                    <p className="font-display text-base">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
-                    <p className="text-xs text-muted-foreground">{analise.exames_biomarcadores.length} Marcadores detectados</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-display text-base uppercase tracking-wide">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
+                    <p className="text-xs text-muted-foreground">{analise.exames_biomarcadores.length} marcadores detectados</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-accent" />
+                  <ChevronRight className="h-4 w-4 text-accent shrink-0" />
                 </button>
               ))
             )}
