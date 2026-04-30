@@ -5,7 +5,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Check, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, X, Loader2, ExternalLink, Users, Sparkles, Copy } from "lucide-react";
 
 interface PendingTenant {
   id: string;
@@ -73,6 +73,30 @@ export default function AdminCoaches() {
     void load();
   };
 
+  const [seeding, setSeeding] = useState<string | null>(null);
+
+  const seedAlunos = async (slug: string) => {
+    setSeeding(slug);
+    const { error } = await supabase.functions.invoke("seed-alunos-demo", {
+      body: { slug },
+    });
+    setSeeding(null);
+    if (error) {
+      toast({ title: "Erro ao popular alunos", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: `Alunos demo criados em /${slug}`,
+      description: `Login: samila.${slug}@coach.app · Senha: Demo@1234`,
+    });
+  };
+
+  const copyCreds = (slug: string) => {
+    const text = `Email: samila.${slug.replace(/[^a-z0-9]/gi, "").toLowerCase()}@coach.app\nSenha: Demo@1234`;
+    navigator.clipboard.writeText(text);
+    toast({ title: "Credenciais copiadas", description: "Cole numa janela anônima para entrar como aluno." });
+  };
+
   if (isLoading || !isAdmin) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="h-6 w-6 animate-spin" /></div>;
 
   const pendentes = tenants.filter((t) => t.status === "pending");
@@ -125,6 +149,37 @@ export default function AdminCoaches() {
           )}
         </div>
       </div>
+
+      {t.status === "approved" && (
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-border/40 pt-4">
+          <Link to={`/${t.slug}/admin`}>
+            <Button size="sm" variant="outline" className="border-primary/40">
+              <Sparkles className="mr-1 h-3 w-3" /> Painel do Coach
+            </Button>
+          </Link>
+          <Link to={`/${t.slug}`} target="_blank">
+            <Button size="sm" variant="outline">
+              <ExternalLink className="mr-1 h-3 w-3" /> Landing
+            </Button>
+          </Link>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => seedAlunos(t.slug)}
+            disabled={seeding === t.slug}
+          >
+            {seeding === t.slug ? (
+              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+            ) : (
+              <Users className="mr-1 h-3 w-3" />
+            )}
+            Popular alunos demo
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => copyCreds(t.slug)}>
+            <Copy className="mr-1 h-3 w-3" /> Credenciais aluno
+          </Button>
+        </div>
+      )}
     </div>
   );
 

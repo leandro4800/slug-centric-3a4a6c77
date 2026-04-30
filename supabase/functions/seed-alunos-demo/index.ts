@@ -5,16 +5,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const TENANT_SLUG = "demo";
-
-const ALUNOS = [
-  { email: "samila.demo@coach.app", nome: "Samila Dias", sexo: "F", idade: 28, peso: 62.5, altura: 168, bf: 22, objetivo: "Hipertrofia" },
-  { email: "marcus.demo@coach.app", nome: "Marcus Silva", sexo: "M", idade: 32, peso: 84, altura: 178, bf: 18, objetivo: "Força" },
-  { email: "jonas.demo@coach.app", nome: "Jonas Toek", sexo: "M", idade: 24, peso: 75, altura: 175, bf: 14, objetivo: "Definição" },
-  { email: "execution.demo@coach.app", nome: "Execution Mode", sexo: "M", idade: 29, peso: 88, altura: 182, bf: 12, objetivo: "Performance" },
-];
+const DEFAULT_SLUG = "demo";
 
 const SENHA = "Demo@1234";
+
+// Gera 4 alunos com prefixo único por tenant para evitar conflito de e-mail
+function buildAlunos(slug: string) {
+  const p = slug.toLowerCase().replace(/[^a-z0-9]/g, "");
+  return [
+    { email: `samila.${p}@coach.app`,    nome: "Samila Dias",    sexo: "F", idade: 28, peso: 62.5, altura: 168, bf: 22, objetivo: "Hipertrofia" },
+    { email: `marcus.${p}@coach.app`,    nome: "Marcus Silva",   sexo: "M", idade: 32, peso: 84,   altura: 178, bf: 18, objetivo: "Força" },
+    { email: `jonas.${p}@coach.app`,     nome: "Jonas Toek",     sexo: "M", idade: 24, peso: 75,   altura: 175, bf: 14, objetivo: "Definição" },
+    { email: `execution.${p}@coach.app`, nome: "Execution Mode", sexo: "M", idade: 29, peso: 88,   altura: 182, bf: 12, objetivo: "Performance" },
+  ];
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -24,16 +28,29 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  // Slug pode vir via body { slug } ou querystring ?slug=
+  let slug = DEFAULT_SLUG;
+  try {
+    const url = new URL(req.url);
+    slug = url.searchParams.get("slug") || slug;
+    if (req.method === "POST") {
+      const body = await req.json().catch(() => ({}));
+      if (body?.slug) slug = body.slug;
+    }
+  } catch (_) { /* ignore */ }
+
+  const ALUNOS = buildAlunos(slug);
+
   // Resolve tenant by slug
   const { data: tenant, error: tenantErr } = await supabase
     .from("tenants")
     .select("id")
-    .eq("slug", TENANT_SLUG)
+    .eq("slug", slug)
     .maybeSingle();
 
   if (tenantErr || !tenant) {
     return new Response(
-      JSON.stringify({ error: `Tenant '${TENANT_SLUG}' not found`, details: tenantErr?.message }),
+      JSON.stringify({ error: `Tenant '${slug}' not found`, details: tenantErr?.message }),
       { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   }
