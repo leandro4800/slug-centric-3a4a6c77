@@ -7,7 +7,7 @@ interface Marker {
   valor: number;
   unidade: string;
   status: "Otimizado" | "Alerta" | "Critico" | "Subotimizado";
-  observacao?: string;
+  insight_clinico?: string;
 }
 
 interface AnalysisResultsProps {
