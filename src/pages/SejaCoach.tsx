@@ -309,6 +309,22 @@ export default function SejaCoach() {
                   </>
                 )}
               </Button>
+              {isAdmin && (
+                <Button 
+                  variant="ghost" 
+                  onClick={async () => {
+                    if (!tenantId) return;
+                    setBusy(true);
+                    await supabase.from("tenants").update({ stripe_onboarding_completed: true }).eq("id", tenantId);
+                    setStep("pending");
+                    setBusy(false);
+                    toast({ title: "Stripe ignorado (Admin)" });
+                  }}
+                  className="w-full text-xs text-muted-foreground"
+                >
+                  Pular Stripe (Apenas Admin)
+                </Button>
+              )}
               <Button variant="outline" onClick={() => tenantId && syncStripe(tenantId)} className="w-full">
                 Já completei — verificar status
               </Button>
