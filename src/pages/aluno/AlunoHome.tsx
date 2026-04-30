@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Settings, Play, Volume2, VolumeX } from "lucide-react";
+import { Settings, Play, Volume2, VolumeX, Stethoscope, ChevronRight } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
