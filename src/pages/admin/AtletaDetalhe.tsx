@@ -173,13 +173,21 @@ const AtletaDetalhe = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* HERO */}
-      <div className="relative h-[280px] md:h-[340px] w-full overflow-hidden group">
+      <div className="relative h-[70vh] min-h-[460px] md:h-[600px] md:min-h-0 w-full overflow-hidden group bg-secondary/30">
+        {/* Imagem de fundo borrada para preencher laterais sem cortar */}
+        <img
+          src={heroImg}
+          alt=""
+          aria-hidden
+          className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
+        />
+        {/* Imagem principal sem corte */}
         <img
           src={heroImg}
           alt={aluno.nome_completo || ""}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-contain object-center"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-background/20" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-background/10 pointer-events-none" />
 
         {/* Botão editar foto */}
         <input
