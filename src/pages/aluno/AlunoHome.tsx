@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Settings, Play } from "lucide-react";
+import { Settings, Play, Volume2, VolumeX } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -69,7 +69,8 @@ const AlunoHome = () => {
   const featured = vlogs[0];
   const ytId = featured ? (featured.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/)?.[1] ?? null) : null;
   const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
-  const [playing, setPlaying] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -87,36 +88,60 @@ const AlunoHome = () => {
   const handlePlay = () => {
     if (!featured) return;
     if (ytId) {
-      setPlaying(true);
+      setExpanded(true);
+      setMuted(false);
     } else {
       window.open(featured.url, "_blank", "noopener");
     }
   };
 
+  // Auto-play silencioso de fundo (YouTube)
+  const ytAutoSrc = ytId
+    ? `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&controls=${expanded ? 1 : 0}&loop=1&playlist=${ytId}&playsinline=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3${expanded ? "" : "&disablekb=1"}`
+    : null;
+
   return (
     <>
       {/* Hero */}
       <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden bg-background">
-        {playing && ytId ? (
-          <iframe
-            src={`https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0`}
-            title={featured?.title || "Vlog"}
-            allow="autoplay; encrypted-media; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 w-full h-full"
-          />
+        {ytAutoSrc ? (
+          <>
+            <iframe
+              key={`${ytId}-${muted}-${expanded}`}
+              src={ytAutoSrc}
+              title={featured?.title || "Vlog"}
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowFullScreen
+              className="absolute inset-0 w-full h-full pointer-events-none"
+              style={expanded ? { pointerEvents: "auto" } : undefined}
+            />
+            {/* máscara para esconder UI do YT quando não-expandido */}
+            {!expanded && (
+              <div className="absolute inset-0 pointer-events-none" />
+            )}
+          </>
         ) : (
           <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         )}
-        {!playing && (
-          <div className="absolute inset-0 bg-gradient-to-b from-background/30 via-background/40 to-background" />
+        {!expanded && (
+          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/30 to-background pointer-events-none" />
         )}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5 z-10">
           <Logo size={32} withText={false} />
           <div className="flex items-center gap-2">
-            {playing && (
+            {ytAutoSrc && !expanded && (
               <button
-                onClick={() => setPlaying(false)}
+                onClick={() => setMuted((m) => !m)}
+                className="w-10 h-10 rounded-full bg-background/70 border border-border flex items-center justify-center backdrop-blur"
+                title={muted ? "Ativar som" : "Silenciar"}
+                aria-label={muted ? "Ativar som" : "Silenciar"}
+              >
+                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-accent" />}
+              </button>
+            )}
+            {expanded && (
+              <button
+                onClick={() => { setExpanded(false); setMuted(true); }}
                 className="px-3 h-9 rounded-full bg-background/80 border border-border text-xs font-semibold backdrop-blur"
               >
                 Fechar
@@ -127,10 +152,10 @@ const AlunoHome = () => {
             </Link>
           </div>
         </div>
-        {!playing && (
-          <div className="absolute bottom-8 left-0 right-0 px-5">
+        {!expanded && (
+          <div className="absolute bottom-8 left-0 right-0 px-5 z-10">
             <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "AlphaCoach"}</p>
-            <h1 className="font-display text-5xl text-foreground mb-5 leading-none">
+            <h1 className="font-display text-5xl text-foreground mb-5 leading-none drop-shadow-lg">
               {featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
             </h1>
             <button
