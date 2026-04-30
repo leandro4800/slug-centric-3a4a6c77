@@ -93,7 +93,7 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta }: Analysi
         <h3 className="font-display text-lg px-1 uppercase tracking-wider">Biomarcadores</h3>
         <div className="grid grid-cols-1 gap-3">
           {marcadores.map((m, i) => (
-            <MarkerCard key={i} {...m} />
+            <MarkerCard key={i} {...m} observacao={m.insight_clinico} />
           ))}
         </div>
       </div>
