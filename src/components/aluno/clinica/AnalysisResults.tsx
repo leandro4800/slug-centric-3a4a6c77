@@ -6,7 +6,7 @@ interface Marker {
   nome: string;
   valor: number;
   unidade: string;
-  status: "otimo" | "atencao" | "critico";
+  status: "Otimizado" | "Alerta" | "Critico" | "Subotimizado";
   observacao?: string;
 }
 
