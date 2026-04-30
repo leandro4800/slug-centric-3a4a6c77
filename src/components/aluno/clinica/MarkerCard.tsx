@@ -11,30 +11,37 @@ interface MarkerCardProps {
 
 export const MarkerCard = ({ nome, valor, unidade, status, observacao }: MarkerCardProps) => {
   const statusConfig = {
-    otimo: {
+    Otimizado: {
       icon: CheckCircle2,
       color: "text-green-500",
       bg: "bg-green-500/10",
       border: "border-green-500/30",
-      label: "ÓTIMO"
+      label: "OTIMIZADO"
     },
-    atencao: {
+    Alerta: {
       icon: Info,
       color: "text-amber-500",
       bg: "bg-amber-500/10",
       border: "border-amber-500/30",
-      label: "ATENÇÃO"
+      label: "ALERTA"
     },
-    critico: {
+    Critico: {
       icon: AlertCircle,
       color: "text-red-500",
       bg: "bg-red-500/10",
       border: "border-red-500/30",
       label: "CRÍTICO"
+    },
+    Subotimizado: {
+      icon: Info,
+      color: "text-blue-500",
+      bg: "bg-blue-500/10",
+      border: "border-blue-500/30",
+      label: "SUBOTIMIZADO"
     }
   };
 
-  const config = statusConfig[status] || statusConfig.atencao;
+  const config = statusConfig[status] || statusConfig.Alerta;
   const Icon = config.icon;
 
   return (
