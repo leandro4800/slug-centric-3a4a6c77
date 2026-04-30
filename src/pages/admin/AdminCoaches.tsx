@@ -149,6 +149,37 @@ export default function AdminCoaches() {
           )}
         </div>
       </div>
+
+      {t.status === "approved" && (
+        <div className="mt-4 flex flex-wrap gap-2 border-t border-border/40 pt-4">
+          <Link to={`/${t.slug}/admin`}>
+            <Button size="sm" variant="outline" className="border-primary/40">
+              <Sparkles className="mr-1 h-3 w-3" /> Painel do Coach
+            </Button>
+          </Link>
+          <Link to={`/${t.slug}`} target="_blank">
+            <Button size="sm" variant="outline">
+              <ExternalLink className="mr-1 h-3 w-3" /> Landing
+            </Button>
+          </Link>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => seedAlunos(t.slug)}
+            disabled={seeding === t.slug}
+          >
+            {seeding === t.slug ? (
+              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+            ) : (
+              <Users className="mr-1 h-3 w-3" />
+            )}
+            Popular alunos demo
+          </Button>
+          <Button size="sm" variant="outline" onClick={() => copyCreds(t.slug)}>
+            <Copy className="mr-1 h-3 w-3" /> Credenciais aluno
+          </Button>
+        </div>
+      )}
     </div>
   );
 
