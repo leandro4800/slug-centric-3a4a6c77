@@ -154,18 +154,40 @@ const AlunoHome = () => {
         <h2 className="font-display text-lg mb-4 flex items-center gap-2">
           <span className="text-accent">▶</span> VLOGS DO COACH
         </h2>
-        <div className="grid grid-cols-2 gap-3">
-          {[1, 2].map((i) => (
-            <div key={i} className="aspect-video rounded-xl bg-gradient-card border border-border relative overflow-hidden cursor-pointer group">
-              <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition" />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-12 h-12 rounded-full bg-accent/90 flex items-center justify-center">
-                  <Play className="h-5 w-5 text-accent-foreground fill-current" />
+        {vlogs.length === 0 ? (
+          <p className="text-xs text-muted-foreground">Nenhum vlog publicado ainda.</p>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {vlogs.map((v) => (
+              <a
+                key={v.id}
+                href={v.url}
+                target="_blank"
+                rel="noreferrer"
+                className="aspect-video rounded-xl bg-gradient-card border border-border relative overflow-hidden cursor-pointer group"
+              >
+                <img
+                  src={v.thumbnail_url || hero}
+                  alt={v.title || ""}
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-accent/90 flex items-center justify-center">
+                    <Play className="h-5 w-5 text-accent-foreground fill-current" />
+                  </div>
                 </div>
-              </div>
-            </div>
-          ))}
-        </div>
+                {v.title && (
+                  <p className="absolute bottom-2 left-2 right-2 text-xs font-semibold line-clamp-2">{v.title}</p>
+                )}
+                <div className="absolute top-2 right-2 bg-background/70 backdrop-blur rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wider">
+                  {v.platform}
+                </div>
+              </a>
+            ))}
+          </div>
+        )}
       </section>
 
     </>
