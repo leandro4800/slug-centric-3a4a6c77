@@ -785,6 +785,7 @@ export type Database = {
           tagline: string | null
           theme_overrides: Json
           updated_at: string
+          vlog_webhook_secret: string
         }
         Insert: {
           accent_hsl?: string
@@ -806,6 +807,7 @@ export type Database = {
           tagline?: string | null
           theme_overrides?: Json
           updated_at?: string
+          vlog_webhook_secret?: string
         }
         Update: {
           accent_hsl?: string
@@ -827,6 +829,7 @@ export type Database = {
           tagline?: string | null
           theme_overrides?: Json
           updated_at?: string
+          vlog_webhook_secret?: string
         }
         Relationships: []
       }
@@ -918,6 +921,68 @@ export type Database = {
           },
         ]
       }
+      vlog_posts: {
+        Row: {
+          author: string | null
+          created_at: string
+          description: string | null
+          external_id: string | null
+          id: string
+          ordem: number
+          platform: Database["public"]["Enums"]["vlog_platform"]
+          posted_at: string | null
+          source: string
+          tenant_id: string
+          thumbnail_url: string | null
+          title: string | null
+          updated_at: string
+          url: string
+          visivel: boolean
+        }
+        Insert: {
+          author?: string | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          id?: string
+          ordem?: number
+          platform?: Database["public"]["Enums"]["vlog_platform"]
+          posted_at?: string | null
+          source?: string
+          tenant_id: string
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          url: string
+          visivel?: boolean
+        }
+        Update: {
+          author?: string | null
+          created_at?: string
+          description?: string | null
+          external_id?: string | null
+          id?: string
+          ordem?: number
+          platform?: Database["public"]["Enums"]["vlog_platform"]
+          posted_at?: string | null
+          source?: string
+          tenant_id?: string
+          thumbnail_url?: string | null
+          title?: string | null
+          updated_at?: string
+          url?: string
+          visivel?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vlog_posts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -944,6 +1009,7 @@ export type Database = {
         | "unpaid"
       plano_intervalo: "mensal" | "trimestral" | "anual"
       tenant_status: "pending" | "approved" | "rejected" | "suspended"
+      vlog_platform: "youtube" | "instagram" | "tiktok" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1082,6 +1148,7 @@ export const Constants = {
       ],
       plano_intervalo: ["mensal", "trimestral", "anual"],
       tenant_status: ["pending", "approved", "rejected", "suspended"],
+      vlog_platform: ["youtube", "instagram", "tiktok", "other"],
     },
   },
 } as const
