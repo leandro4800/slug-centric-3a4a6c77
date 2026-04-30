@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TrendingUp, Brain, Plus, Instagram } from "lucide-react";
 import { PageHeader } from "@/components/aluno/PageHeader";
+import { TenantSymbol } from "@/components/TenantSymbol";
 import { useBranding } from "@/contexts/BrandingProvider";
 
 const Evolucao = () => {
