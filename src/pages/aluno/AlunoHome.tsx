@@ -64,8 +64,12 @@ const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) =
 const AlunoHome = () => {
   const { tenant } = useBranding();
   const { slug } = useParams();
-  const hero = tenant?.hero_url || heroDefault;
   const [vlogs, setVlogs] = useState<VlogPost[]>([]);
+
+  const featured = vlogs[0];
+  const ytId = featured ? (featured.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/)?.[1] ?? null) : null;
+  const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
+  const [playing, setPlaying] = useState(false);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -79,6 +83,15 @@ const AlunoHome = () => {
       .limit(6)
       .then(({ data }) => setVlogs((data as VlogPost[]) || []));
   }, [tenant?.id]);
+
+  const handlePlay = () => {
+    if (!featured) return;
+    if (ytId) {
+      setPlaying(true);
+    } else {
+      window.open(featured.url, "_blank", "noopener");
+    }
+  };
 
   return (
     <>
