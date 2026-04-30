@@ -6,17 +6,18 @@ interface Marker {
   nome: string;
   valor: number;
   unidade: string;
-  status: "otimo" | "atencao" | "critico";
-  observacao?: string;
+  status: "Otimizado" | "Alerta" | "Critico" | "Subotimizado";
+  insight_clinico?: string;
 }
 
 interface AnalysisResultsProps {
   score: number;
   parecer: string;
   marcadores: Marker[];
+  conduta?: string[];
 }
 
-export const AnalysisResults = ({ score, parecer, marcadores }: AnalysisResultsProps) => {
+export const AnalysisResults = ({ score, parecer, marcadores, conduta }: AnalysisResultsProps) => {
   // Color based on score
   const getScoreColor = (s: number) => {
     if (s >= 80) return "text-green-500";
@@ -64,7 +65,7 @@ export const AnalysisResults = ({ score, parecer, marcadores }: AnalysisResultsP
       </div>
 
       <div className="bg-card/40 border border-border rounded-3xl p-6">
-        <h3 className="font-display text-lg mb-4 uppercase tracking-wider text-accent border-b border-accent/10 pb-2">Parecer Técnico Dr. IA</h3>
+        <h3 className="font-display text-lg mb-4 uppercase tracking-wider text-accent border-b border-accent/10 pb-2">Resumo Executivo</h3>
         <div className="prose prose-invert prose-sm max-w-none text-muted-foreground leading-relaxed">
           {parecer.split('\n').map((para, i) => (
             para.trim() ? <p key={i} className="mb-4 last:mb-0">{para}</p> : null
@@ -72,11 +73,27 @@ export const AnalysisResults = ({ score, parecer, marcadores }: AnalysisResultsP
         </div>
       </div>
 
+      <div className="bg-card/40 border border-border rounded-3xl p-6">
+        <h3 className="font-display text-lg mb-4 uppercase tracking-wider text-accent border-b border-accent/10 pb-2">Conduta Sugerida</h3>
+        <ul className="space-y-3">
+          {conduta && conduta.length > 0 ? (
+            conduta.map((item, i) => (
+              <li key={i} className="flex gap-3 text-sm text-muted-foreground items-start">
+                <span className="text-accent font-bold mt-1 shrink-0">•</span>
+                <span>{item}</span>
+              </li>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground italic">Consulte o resumo executivo para as recomendações.</p>
+          )}
+        </ul>
+      </div>
+
       <div className="space-y-4">
         <h3 className="font-display text-lg px-1 uppercase tracking-wider">Biomarcadores</h3>
         <div className="grid grid-cols-1 gap-3">
           {marcadores.map((m, i) => (
-            <MarkerCard key={i} {...m} />
+            <MarkerCard key={i} {...m} observacao={m.insight_clinico} />
           ))}
         </div>
       </div>

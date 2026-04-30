@@ -168,6 +168,7 @@ const DrIA = () => {
               score={currentAnalysis.score_performance}
               parecer={currentAnalysis.parecer_tecnico}
               marcadores={currentAnalysis.marcadores}
+              conduta={currentAnalysis.conduta_sugerida}
             />
           </div>
         ) : tab === "clinica" ? (
@@ -194,13 +195,14 @@ const DrIA = () => {
                   onClick={() => setCurrentAnalysis({
                     score_performance: analise.score_performance,
                     parecer_tecnico: analise.parecer_ia,
+                    conduta_sugerida: analise.resumo_clinico ? analise.resumo_clinico.split('\n') : [],
                     marcadores: analise.exames_biomarcadores.map((b: any) => ({
                       codigo: b.codigo,
                       nome: b.nome,
                       valor: b.valor,
                       unidade: b.unidade,
                       status: b.classificacao,
-                      observacao: b.observacao
+                      insight_clinico: b.observacao
                     }))
                   })}
                   className="w-full bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4 text-left"
