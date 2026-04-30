@@ -65,6 +65,226 @@ export type Database = {
           },
         ]
       }
+      anamnese_aluno: {
+        Row: {
+          agua_litros: number | null
+          alcool: string | null
+          alimentos_ama: string | null
+          alimentos_evita: string | null
+          aluno_id: string
+          anos_treino: number | null
+          cirurgias: string | null
+          created_at: string
+          disponibilidade_dias: string[] | null
+          doencas: string[] | null
+          historico_familiar: string | null
+          horas_sono: number | null
+          id: string
+          lesoes_atuais: string | null
+          medicamentos: string | null
+          modalidades_anteriores: string[] | null
+          nivel_estresse: number | null
+          qualidade_sono: number | null
+          refeicoes_dia: number | null
+          restricoes_alimentares: string[] | null
+          suplementos: string[] | null
+          tabagismo: boolean | null
+          tempo_recuperacao: string | null
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          agua_litros?: number | null
+          alcool?: string | null
+          alimentos_ama?: string | null
+          alimentos_evita?: string | null
+          aluno_id: string
+          anos_treino?: number | null
+          cirurgias?: string | null
+          created_at?: string
+          disponibilidade_dias?: string[] | null
+          doencas?: string[] | null
+          historico_familiar?: string | null
+          horas_sono?: number | null
+          id?: string
+          lesoes_atuais?: string | null
+          medicamentos?: string | null
+          modalidades_anteriores?: string[] | null
+          nivel_estresse?: number | null
+          qualidade_sono?: number | null
+          refeicoes_dia?: number | null
+          restricoes_alimentares?: string[] | null
+          suplementos?: string[] | null
+          tabagismo?: boolean | null
+          tempo_recuperacao?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          agua_litros?: number | null
+          alcool?: string | null
+          alimentos_ama?: string | null
+          alimentos_evita?: string | null
+          aluno_id?: string
+          anos_treino?: number | null
+          cirurgias?: string | null
+          created_at?: string
+          disponibilidade_dias?: string[] | null
+          doencas?: string[] | null
+          historico_familiar?: string | null
+          horas_sono?: number | null
+          id?: string
+          lesoes_atuais?: string | null
+          medicamentos?: string | null
+          modalidades_anteriores?: string[] | null
+          nivel_estresse?: number | null
+          qualidade_sono?: number | null
+          refeicoes_dia?: number | null
+          restricoes_alimentares?: string[] | null
+          suplementos?: string[] | null
+          tabagismo?: boolean | null
+          tempo_recuperacao?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "anamnese_aluno_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assinaturas: {
+        Row: {
+          aluno_id: string
+          cancelada_em: string | null
+          created_at: string
+          current_period_end: string | null
+          id: string
+          plano_id: string | null
+          status: Database["public"]["Enums"]["assinatura_status"]
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          cancelada_em?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plano_id?: string | null
+          status?: Database["public"]["Enums"]["assinatura_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          cancelada_em?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          id?: string
+          plano_id?: string | null
+          status?: Database["public"]["Enums"]["assinatura_status"]
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinaturas_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinaturas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      avaliacoes_fisicas: {
+        Row: {
+          altura_cm: number
+          aluno_id: string
+          bf_pct_calculado: number | null
+          cintura_cm: number | null
+          created_at: string
+          data: string
+          foto_costas_url: string | null
+          foto_frente_url: string | null
+          foto_lado_url: string | null
+          id: string
+          imc: number | null
+          massa_gorda_kg: number | null
+          massa_magra_kg: number | null
+          observacoes: string | null
+          pescoco_cm: number | null
+          peso_kg: number
+          quadril_cm: number | null
+          tenant_id: string | null
+        }
+        Insert: {
+          altura_cm: number
+          aluno_id: string
+          bf_pct_calculado?: number | null
+          cintura_cm?: number | null
+          created_at?: string
+          data?: string
+          foto_costas_url?: string | null
+          foto_frente_url?: string | null
+          foto_lado_url?: string | null
+          id?: string
+          imc?: number | null
+          massa_gorda_kg?: number | null
+          massa_magra_kg?: number | null
+          observacoes?: string | null
+          pescoco_cm?: number | null
+          peso_kg: number
+          quadril_cm?: number | null
+          tenant_id?: string | null
+        }
+        Update: {
+          altura_cm?: number
+          aluno_id?: string
+          bf_pct_calculado?: number | null
+          cintura_cm?: number | null
+          created_at?: string
+          data?: string
+          foto_costas_url?: string | null
+          foto_frente_url?: string | null
+          foto_lado_url?: string | null
+          id?: string
+          imc?: number | null
+          massa_gorda_kg?: number | null
+          massa_magra_kg?: number | null
+          observacoes?: string | null
+          pescoco_cm?: number | null
+          peso_kg?: number
+          quadril_cm?: number | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacoes_fisicas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biblioteca_exercicios: {
         Row: {
           contraindicacoes: string[] | null
@@ -307,27 +527,39 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          data_nascimento: string | null
           email: string | null
           id: string
           nome_completo: string | null
+          onboarding_completo: boolean
+          sexo: string | null
+          telefone: string | null
           tenant_id: string | null
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          data_nascimento?: string | null
           email?: string | null
           id: string
           nome_completo?: string | null
+          onboarding_completo?: boolean
+          sexo?: string | null
+          telefone?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          data_nascimento?: string | null
           email?: string | null
           id?: string
           nome_completo?: string | null
+          onboarding_completo?: boolean
+          sexo?: string | null
+          telefone?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -396,6 +628,59 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "perfis_treino_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      planos: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          descricao: string | null
+          id: string
+          intervalo: Database["public"]["Enums"]["plano_intervalo"]
+          nome: string
+          ordem: number
+          preco_centavos: number
+          stripe_price_id: string | null
+          stripe_product_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          intervalo?: Database["public"]["Enums"]["plano_intervalo"]
+          nome: string
+          ordem?: number
+          preco_centavos: number
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          intervalo?: Database["public"]["Enums"]["plano_intervalo"]
+          nome?: string
+          ordem?: number
+          preco_centavos?: number
+          stripe_price_id?: string | null
+          stripe_product_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "planos_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -482,39 +767,60 @@ export type Database = {
       tenants: {
         Row: {
           accent_hsl: string
+          bio: string | null
           created_at: string
+          especialidades: string[] | null
+          foto_url: string | null
           hero_url: string | null
           id: string
           logo_url: string | null
           nome: string
+          owner_user_id: string | null
           primary_hsl: string
           slug: string
+          status: Database["public"]["Enums"]["tenant_status"]
+          stripe_account_id: string | null
+          stripe_onboarding_completed: boolean
           symbol_url: string | null
           tagline: string | null
           updated_at: string
         }
         Insert: {
           accent_hsl?: string
+          bio?: string | null
           created_at?: string
+          especialidades?: string[] | null
+          foto_url?: string | null
           hero_url?: string | null
           id?: string
           logo_url?: string | null
           nome: string
+          owner_user_id?: string | null
           primary_hsl?: string
           slug: string
+          status?: Database["public"]["Enums"]["tenant_status"]
+          stripe_account_id?: string | null
+          stripe_onboarding_completed?: boolean
           symbol_url?: string | null
           tagline?: string | null
           updated_at?: string
         }
         Update: {
           accent_hsl?: string
+          bio?: string | null
           created_at?: string
+          especialidades?: string[] | null
+          foto_url?: string | null
           hero_url?: string | null
           id?: string
           logo_url?: string | null
           nome?: string
+          owner_user_id?: string | null
           primary_hsl?: string
           slug?: string
+          status?: Database["public"]["Enums"]["tenant_status"]
+          stripe_account_id?: string | null
+          stripe_onboarding_completed?: boolean
           symbol_url?: string | null
           tagline?: string | null
           updated_at?: string
@@ -626,6 +932,15 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "coach" | "aluno"
+      assinatura_status:
+        | "active"
+        | "canceled"
+        | "past_due"
+        | "trialing"
+        | "incomplete"
+        | "unpaid"
+      plano_intervalo: "mensal" | "trimestral" | "anual"
+      tenant_status: "pending" | "approved" | "rejected" | "suspended"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -754,6 +1069,16 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "coach", "aluno"],
+      assinatura_status: [
+        "active",
+        "canceled",
+        "past_due",
+        "trialing",
+        "incomplete",
+        "unpaid",
+      ],
+      plano_intervalo: ["mensal", "trimestral", "anual"],
+      tenant_status: ["pending", "approved", "rejected", "suspended"],
     },
   },
 } as const
