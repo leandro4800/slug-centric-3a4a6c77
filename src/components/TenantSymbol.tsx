@@ -13,6 +13,7 @@ interface TenantSymbolProps {
  */
 export const TenantSymbol = ({ size = 24, className = "", alt = "Símbolo" }: TenantSymbolProps) => {
   const { tenant } = useBranding();
+  const isDefault = !tenant?.symbol_url;
   const src = tenant?.symbol_url || wolfDefault;
   return (
     <img
@@ -22,7 +23,12 @@ export const TenantSymbol = ({ size = 24, className = "", alt = "Símbolo" }: Te
       height={size}
       loading="lazy"
       className={`object-contain ${className}`}
-      style={{ width: size, height: size }}
+      style={{
+        width: size,
+        height: size,
+        // Lobo padrão renderizado em preto sólido
+        filter: isDefault ? "brightness(0) saturate(100%)" : undefined,
+      }}
     />
   );
 };
