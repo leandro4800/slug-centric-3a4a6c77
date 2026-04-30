@@ -18,6 +18,7 @@ export default function SejaCoach() {
 
   const [step, setStep] = useState<"signup" | "form" | "stripe" | "pending">("signup");
   const [busy, setBusy] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   // signup
   const [email, setEmail] = useState("");
@@ -41,22 +42,42 @@ export default function SejaCoach() {
 
   const loadExisting = async () => {
     if (!user) return;
+
+    // Check if user is admin
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "admin");
+    const userIsAdmin = !!roles && roles.length > 0;
+    setIsAdmin(userIsAdmin);
+
     const { data } = await supabase
       .from("tenants")
       .select("id, slug, status, stripe_onboarding_completed, stripe_account_id")
       .eq("owner_user_id", user.id)
       .maybeSingle();
+
     if (data) {
       setTenantId(data.id);
       setSlug(data.slug);
-      if (data.stripe_account_id && !data.stripe_onboarding_completed) setStep("stripe");
-      else if (data.stripe_onboarding_completed && data.status === "pending") setStep("pending");
-      else if (data.status === "approved") {
+      
+      // If admin, they can bypass stripe onboarding if they want
+      if (data.status === "approved") {
         navigate(`/${data.slug}/admin`);
-      } else setStep("form");
+      } else if (data.stripe_onboarding_completed) {
+        setStep("pending");
+      } else if (data.stripe_account_id && !userIsAdmin) {
+        setStep("stripe");
+      } else {
+        // If it's an admin and not approved yet, we can either show stripe or allow skipping
+        // Let's keep showing stripe but maybe add a skip button or just set step to stripe
+        setStep("stripe");
+      }
     } else {
       setStep("form");
     }
+
     if (params.get("completed") === "1" && data?.stripe_account_id) {
       void syncStripe(data.id);
     }
@@ -288,6 +309,22 @@ export default function SejaCoach() {
                   </>
                 )}
               </Button>
+              {isAdmin && (
+                <Button 
+                  variant="ghost" 
+                  onClick={async () => {
+                    if (!tenantId) return;
+                    setBusy(true);
+                    await supabase.from("tenants").update({ stripe_onboarding_completed: true }).eq("id", tenantId);
+                    setStep("pending");
+                    setBusy(false);
+                    toast({ title: "Stripe ignorado (Admin)" });
+                  }}
+                  className="w-full text-xs text-muted-foreground"
+                >
+                  Pular Stripe (Apenas Admin)
+                </Button>
+              )}
               <Button variant="outline" onClick={() => tenantId && syncStripe(tenantId)} className="w-full">
                 Já completei — verificar status
               </Button>
