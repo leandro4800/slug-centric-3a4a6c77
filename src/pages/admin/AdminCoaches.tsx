@@ -73,6 +73,30 @@ export default function AdminCoaches() {
     void load();
   };
 
+  const [seeding, setSeeding] = useState<string | null>(null);
+
+  const seedAlunos = async (slug: string) => {
+    setSeeding(slug);
+    const { error } = await supabase.functions.invoke("seed-alunos-demo", {
+      body: { slug },
+    });
+    setSeeding(null);
+    if (error) {
+      toast({ title: "Erro ao popular alunos", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({
+      title: `Alunos demo criados em /${slug}`,
+      description: `Login: samila.${slug}@coach.app · Senha: Demo@1234`,
+    });
+  };
+
+  const copyCreds = (slug: string) => {
+    const text = `Email: samila.${slug.replace(/[^a-z0-9]/gi, "").toLowerCase()}@coach.app\nSenha: Demo@1234`;
+    navigator.clipboard.writeText(text);
+    toast({ title: "Credenciais copiadas", description: "Cole numa janela anônima para entrar como aluno." });
+  };
+
   if (isLoading || !isAdmin) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="h-6 w-6 animate-spin" /></div>;
 
   const pendentes = tenants.filter((t) => t.status === "pending");
