@@ -1,7 +1,9 @@
-import { useState } from "react";
-import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 const parceiros = [
   { nome: "GROWTH", tag: "PIKACHU" },
@@ -12,7 +14,23 @@ const ControleCentral = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
   const { tenant } = useBranding();
+  const { user } = useAuth();
   const [playlist, setPlaylist] = useState("https://open.spotify.com/playlist/1kdeP");
+  const [canAdmin, setCanAdmin] = useState(false);
+
+  useEffect(() => {
+    const check = async () => {
+      if (!user) return setCanAdmin(false);
+      const { data: roles } = await supabase
+        .from("user_roles")
+        .select("role, tenant_id")
+        .eq("user_id", user.id);
+      const isSuper = roles?.some((r: any) => r.role === "admin");
+      const isCoach = roles?.some((r: any) => r.role === "coach" && (!tenant || r.tenant_id === tenant.id));
+      setCanAdmin(Boolean(isSuper || isCoach));
+    };
+    void check();
+  }, [user, tenant]);
 
   return (
     <div className="px-5 pt-6 pb-32">
@@ -22,6 +40,20 @@ const ControleCentral = () => {
       >
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
+
+      {canAdmin && (
+        <Link
+          to={`/${slug}/admin`}
+          className="mt-4 flex items-center gap-3 bg-gradient-to-r from-primary to-primary/70 text-primary-foreground rounded-2xl px-4 py-3 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.6)]"
+        >
+          <LayoutDashboard className="h-5 w-5" />
+          <div className="flex-1">
+            <p className="font-display text-base leading-tight">VOLTAR AO PAINEL DO COACH</p>
+            <p className="text-[10px] uppercase tracking-widest opacity-80">Modo administrador</p>
+          </div>
+          <span>→</span>
+        </Link>
+      )}
 
       <div className="flex items-center gap-2 mt-6 text-accent">
         <Clapperboard className="h-4 w-4" />
