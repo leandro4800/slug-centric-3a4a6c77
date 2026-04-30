@@ -76,11 +76,16 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta }: Analysi
       <div className="bg-card/40 border border-border rounded-3xl p-6">
         <h3 className="font-display text-lg mb-4 uppercase tracking-wider text-accent border-b border-accent/10 pb-2">Conduta Sugerida</h3>
         <ul className="space-y-3">
-          {parecer.includes('\n') ? (
-            <div className="text-sm text-muted-foreground">
-              {/* Fallback space for suggested conduct if not passed separately yet */}
-            </div>
-          ) : null}
+          {conduta && conduta.length > 0 ? (
+            conduta.map((item, i) => (
+              <li key={i} className="flex gap-3 text-sm text-muted-foreground items-start">
+                <span className="text-accent font-bold mt-1 shrink-0">•</span>
+                <span>{item}</span>
+              </li>
+            ))
+          ) : (
+            <p className="text-sm text-muted-foreground italic">Consulte o resumo executivo para as recomendações.</p>
+          )}
         </ul>
       </div>
 
