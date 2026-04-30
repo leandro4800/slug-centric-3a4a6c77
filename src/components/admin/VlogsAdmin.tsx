@@ -71,21 +71,46 @@ export const VlogsAdmin = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant?.id]);
 
+  const fetchOEmbed = async (platform: string, link: string): Promise<{ title?: string; thumbnail_url?: string; author_name?: string } | null> => {
+    try {
+      let endpoint: string | null = null;
+      if (platform === "youtube") endpoint = `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(link)}`;
+      else if (platform === "tiktok") endpoint = `https://www.tiktok.com/oembed?url=${encodeURIComponent(link)}`;
+      if (!endpoint) return null;
+      const r = await fetch(endpoint);
+      if (!r.ok) return null;
+      return await r.json();
+    } catch {
+      return null;
+    }
+  };
+
   const handleAdd = async () => {
     if (!tenant || !url.trim()) return;
     setBusy(true);
-    const platform = detectPlatform(url);
-    let thumb: string | null = null;
-    const ytMatch = url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
-    if (ytMatch) thumb = `https://i.ytimg.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+    const cleanUrl = url.trim();
+    const platform = detectPlatform(cleanUrl);
+
+    // Auto-enriquecimento: busca título + thumb via oEmbed (YouTube/TikTok)
+    const oe = await fetchOEmbed(platform, cleanUrl);
+    let thumb: string | null = oe?.thumbnail_url || null;
+    let autoTitle: string | null = oe?.title || null;
+    const author: string | null = oe?.author_name || null;
+
+    // Fallback YouTube: thumb direta pelo ID
+    if (!thumb && platform === "youtube") {
+      const ytMatch = cleanUrl.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+      if (ytMatch) thumb = `https://i.ytimg.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+    }
 
     const { error } = await supabase.from("vlog_posts").upsert(
       {
         tenant_id: tenant.id,
-        url: url.trim(),
+        url: cleanUrl,
         platform,
-        title: title.trim() || null,
+        title: title.trim() || autoTitle || null,
         thumbnail_url: thumb,
+        author,
         source: "manual",
         posted_at: new Date().toISOString(),
         visivel: true,
