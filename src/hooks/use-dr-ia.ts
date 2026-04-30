@@ -54,6 +54,23 @@ export const useDrIA = () => {
     }
   };
 
+  const listarAnalises = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+
+    const { data, error } = await supabase
+      .from("analises_clinicas")
+      .select(`
+        *,
+        exames_biomarcadores (*)
+      `)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) throw error;
+    return data;
+  };
+
   const getHistoricoMarcador = async (codigo: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return [];
@@ -63,7 +80,7 @@ export const useDrIA = () => {
       .select("*")
       .eq("user_id", user.id)
       .eq("codigo", codigo)
-      .order("data_exame", { ascending: true });
+      .order("created_at", { ascending: true });
 
     if (error) throw error;
     return data;
@@ -71,7 +88,9 @@ export const useDrIA = () => {
 
   return {
     uploadExame,
+    listarAnalises,
     getHistoricoMarcador,
     isAnalyzing
   };
 };
+
