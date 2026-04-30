@@ -1,5 +1,6 @@
 import { Utensils, Play, Coffee, Sun, Apple, Moon } from "lucide-react";
 import { PageHeader } from "@/components/aluno/PageHeader";
+import { TenantSymbol } from "@/components/TenantSymbol";
 
 const macros = [
   { label: "CALORIAS", value: "522", unit: "kcal", color: "text-accent", border: "border-accent/40" },
