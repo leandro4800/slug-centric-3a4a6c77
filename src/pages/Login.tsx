@@ -19,19 +19,47 @@ const Login = () => {
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Redirect logged-in user to their tenant
+  // Redirect logged-in user
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
-      if (user.email === "alphacoachapp@gmail.com") {
-        navigate("/demo/admin", { replace: true });
+      const [{ data: perfil }, { data: roles }] = await Promise.all([
+        supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
+        supabase.from("user_roles").select("role, tenant_id").eq("user_id", user.id),
+      ]);
+
+      const isAdmin = roles?.some((r) => r.role === "admin");
+      const isCoach = roles?.some((r) => r.role === "coach");
+
+      // Super admin AlphaCoach
+      if (isAdmin && !isCoach) {
+        navigate("/admin/coaches", { replace: true });
         return;
       }
 
-      const [{ data: perfil }, { data: roles }] = await Promise.all([
-        supabase.from("perfis").select("tenant_id").eq("id", user.id).maybeSingle(),
-        supabase.from("user_roles").select("role").eq("user_id", user.id),
-      ]);
+      // Coach: vai para o painel do próprio tenant
+      if (isCoach) {
+        const coachRole = roles?.find((r) => r.role === "coach");
+        let slug: string | null = null;
+        if (coachRole?.tenant_id) {
+          const { data: t } = await supabase
+            .from("tenants")
+            .select("slug")
+            .eq("id", coachRole.tenant_id)
+            .maybeSingle();
+          slug = t?.slug ?? null;
+        }
+        navigate(slug ? `/${slug}/admin` : "/seja-coach", { replace: true });
+        return;
+      }
+
+      // Aluno: precisa onboarding completo
+      if (!perfil?.onboarding_completo) {
+        navigate("/onboarding", { replace: true });
+        return;
+      }
+
+      // Aluno OK: vai pro tenant
       let slug = "demo";
       if (perfil?.tenant_id) {
         const { data: tenant } = await supabase
@@ -41,8 +69,7 @@ const Login = () => {
           .maybeSingle();
         slug = tenant?.slug || slug;
       }
-      const isCoach = roles?.some((r) => r.role === "coach" || r.role === "admin");
-      navigate(`/${slug}/${isCoach ? "admin" : "app"}`, { replace: true });
+      navigate(`/${slug}/app`, { replace: true });
     })();
   }, [user, authLoading, navigate]);
 
