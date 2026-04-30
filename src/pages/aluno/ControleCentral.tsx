@@ -40,15 +40,15 @@ const ControleCentral = () => {
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
 
-      {canAdmin && (
+      {isSuperAdmin && (
         <Link
-          to={`/${slug}/admin`}
+          to="/admin/coaches"
           className="mt-4 flex items-center gap-3 bg-gradient-to-r from-primary to-primary/70 text-primary-foreground rounded-2xl px-4 py-3 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.6)]"
         >
           <LayoutDashboard className="h-5 w-5" />
           <div className="flex-1">
-            <p className="font-display text-base leading-tight">VOLTAR AO PAINEL DO COACH</p>
-            <p className="text-[10px] uppercase tracking-widest opacity-80">Modo administrador</p>
+            <p className="font-display text-base leading-tight">VOLTAR AO PAINEL ADMIN</p>
+            <p className="text-[10px] uppercase tracking-widest opacity-80">Super admin AlphaCoach</p>
           </div>
           <span>→</span>
         </Link>
