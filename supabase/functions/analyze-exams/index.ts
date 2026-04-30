@@ -68,7 +68,13 @@ serve(async (req) => {
     }
 
     const arrayBuffer = await fileData.arrayBuffer()
-    const base64PDF = btoa(String.fromCharCode(...new Uint8Array(arrayBuffer)))
+    const bytes = new Uint8Array(arrayBuffer)
+    let binary = ''
+    const chunkSize = 0x8000
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
+    }
+    const base64PDF = btoa(binary)
 
     // Context for AI
     const referenceContext = JSON.stringify(refData?.map(r => ({
