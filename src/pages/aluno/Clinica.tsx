@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Stethoscope, Upload, FlaskConical, Send, ChevronRight, Loader2, History } from "lucide-react";
+import { Stethoscope, Upload, FlaskConical, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import heroDefault from "@/assets/hero-default.jpg";
 import { supabase } from "@/integrations/supabase/client";
@@ -147,15 +147,30 @@ const Clinica = () => {
         </div>
 
         {isAnalyzing ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="relative">
-              <div className="absolute inset-0 blur-xl bg-accent/20 rounded-full animate-pulse" />
-              <Loader2 className="h-12 w-12 text-accent animate-spin relative" />
+          <div className="py-16 flex flex-col items-center justify-center text-center space-y-6">
+            <div className="relative w-32 h-40">
+              <div className="absolute inset-0 bg-card border-2 border-accent/40 rounded-lg shadow-lg overflow-hidden">
+                <FileText className="absolute inset-0 m-auto h-16 w-16 text-accent/30" strokeWidth={1} />
+                <div className="absolute inset-x-3 top-3 space-y-1.5">
+                  <div className="h-1 bg-accent/20 rounded w-3/4" />
+                  <div className="h-1 bg-accent/20 rounded w-full" />
+                  <div className="h-1 bg-accent/20 rounded w-2/3" />
+                </div>
+                <div className="absolute inset-x-3 bottom-3 space-y-1.5">
+                  <div className="h-1 bg-accent/20 rounded w-full" />
+                  <div className="h-1 bg-accent/20 rounded w-1/2" />
+                </div>
+                <div className="absolute inset-x-0 h-0.5 bg-accent shadow-[0_0_12px_2px_hsl(var(--accent))] animate-scan" />
+                <div className="absolute inset-x-0 h-8 bg-gradient-to-b from-accent/30 to-transparent animate-scan" />
+              </div>
+              <div className="absolute -top-3 -right-3 bg-accent text-accent-foreground rounded-full p-2 shadow-lg animate-pulse">
+                <ScanLine className="h-4 w-4" />
+              </div>
             </div>
             <div>
               <h3 className="font-display text-xl">DR. IA ESTÁ ANALISANDO...</h3>
-              <p className="text-sm text-muted-foreground mt-2 max-w-[250px] mx-auto">
-                Extraindo biomarcadores e cruzando com dados de performance. Isso pode levar alguns segundos.
+              <p className="text-sm text-muted-foreground mt-2 max-w-[280px] mx-auto">
+                Escaneando o documento, extraindo biomarcadores e cruzando com dados de performance.
               </p>
             </div>
           </div>
