@@ -65,6 +65,54 @@ export type Database = {
           },
         ]
       }
+      analises_clinicas: {
+        Row: {
+          created_at: string
+          dados_extraidos: Json
+          id: string
+          nome_arquivo: string | null
+          parecer_ia: string | null
+          resumo_clinico: string | null
+          score_performance: number | null
+          status: string
+          texto_extraido: string | null
+          titulo: string | null
+          updated_at: string
+          url_arquivo: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dados_extraidos?: Json
+          id?: string
+          nome_arquivo?: string | null
+          parecer_ia?: string | null
+          resumo_clinico?: string | null
+          score_performance?: number | null
+          status?: string
+          texto_extraido?: string | null
+          titulo?: string | null
+          updated_at?: string
+          url_arquivo?: string | null
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          dados_extraidos?: Json
+          id?: string
+          nome_arquivo?: string | null
+          parecer_ia?: string | null
+          resumo_clinico?: string | null
+          score_performance?: number | null
+          status?: string
+          texto_extraido?: string | null
+          titulo?: string | null
+          updated_at?: string
+          url_arquivo?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       anamnese_aluno: {
         Row: {
           agua_litros: number | null
@@ -464,6 +512,59 @@ export type Database = {
           },
         ]
       }
+      exames_biomarcadores: {
+        Row: {
+          analise_id: string | null
+          classificacao: string | null
+          codigo: string | null
+          created_at: string
+          data_exame: string | null
+          id: string
+          nome: string
+          observacao: string | null
+          unidade: string | null
+          user_id: string
+          valor: number | null
+          valor_referencia: string | null
+        }
+        Insert: {
+          analise_id?: string | null
+          classificacao?: string | null
+          codigo?: string | null
+          created_at?: string
+          data_exame?: string | null
+          id?: string
+          nome: string
+          observacao?: string | null
+          unidade?: string | null
+          user_id?: string
+          valor?: number | null
+          valor_referencia?: string | null
+        }
+        Update: {
+          analise_id?: string | null
+          classificacao?: string | null
+          codigo?: string | null
+          created_at?: string
+          data_exame?: string | null
+          id?: string
+          nome?: string
+          observacao?: string | null
+          unidade?: string | null
+          user_id?: string
+          valor?: number | null
+          valor_referencia?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exames_biomarcadores_analise_id_fkey"
+            columns: ["analise_id"]
+            isOneToOne: false
+            referencedRelation: "analises_clinicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       historico_cargas: {
         Row: {
           carga_kg: number
@@ -504,6 +605,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      inteligencia_clinica: {
+        Row: {
+          biomarcador_codigo: string
+          condicao: string
+          created_at: string
+          id: string
+          interpretacao: string | null
+          possiveis_causas: string | null
+          prioridade: string | null
+          sugestao_conduta: string | null
+        }
+        Insert: {
+          biomarcador_codigo: string
+          condicao: string
+          created_at?: string
+          id?: string
+          interpretacao?: string | null
+          possiveis_causas?: string | null
+          prioridade?: string | null
+          sugestao_conduta?: string | null
+        }
+        Update: {
+          biomarcador_codigo?: string
+          condicao?: string
+          created_at?: string
+          id?: string
+          interpretacao?: string | null
+          possiveis_causas?: string | null
+          prioridade?: string | null
+          sugestao_conduta?: string | null
+        }
+        Relationships: []
       }
       leads: {
         Row: {
@@ -763,6 +897,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      referencias_exames: {
+        Row: {
+          categoria: string | null
+          codigo: string
+          created_at: string
+          descricao: string | null
+          id: string
+          importancia: string | null
+          nome: string
+          unidade: string | null
+          valor_maximo: number | null
+          valor_minimo: number | null
+          valor_ouro_max: number | null
+          valor_ouro_min: number | null
+        }
+        Insert: {
+          categoria?: string | null
+          codigo: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          importancia?: string | null
+          nome: string
+          unidade?: string | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+          valor_ouro_max?: number | null
+          valor_ouro_min?: number | null
+        }
+        Update: {
+          categoria?: string | null
+          codigo?: string
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          importancia?: string | null
+          nome?: string
+          unidade?: string | null
+          valor_maximo?: number | null
+          valor_minimo?: number | null
+          valor_ouro_max?: number | null
+          valor_ouro_min?: number | null
+        }
+        Relationships: []
       }
       tenants: {
         Row: {
