@@ -140,61 +140,64 @@ const AdminPanel = () => {
           </TabsContent>
 
           <TabsContent value="aparencia">
-            <div className="grid lg:grid-cols-2 gap-6">
-              {/* Hero upload */}
-              <div className="bg-gradient-card border border-border rounded-2xl p-6 shadow-card">
-                <h3 className="font-display text-xl mb-4">IMAGEM DE FUNDO</h3>
-                <div className="aspect-video rounded-xl overflow-hidden border border-border mb-4 relative">
-                  <img src={tenant?.hero_url || heroDefault} alt="" className="w-full h-full object-cover" />
-                </div>
-                <label className="block">
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "hero")} />
-                  <Button asChild className="w-full bg-gradient-primary" disabled={uploading === "hero"}>
-                    <span>{uploading === "hero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Trocar imagem de fundo</>}</span>
-                  </Button>
-                </label>
-              </div>
+            <Tabs defaultValue="visual">
+              <TabsList className="mb-4">
+                <TabsTrigger value="visual"><Sparkles className="h-3 w-3 mr-1" /> Identidade Visual</TabsTrigger>
+                <TabsTrigger value="midia"><ImagePlus className="h-3 w-3 mr-1" /> Imagens & Textos</TabsTrigger>
+              </TabsList>
 
-              {/* Logo & cores */}
-              <div className="bg-gradient-card border border-border rounded-2xl p-6 shadow-card space-y-5">
-                <h3 className="font-display text-xl">IDENTIDADE</h3>
-                <div>
-                  <Label>Logo</Label>
-                  <div className="flex items-center gap-3 mt-2">
-                    {tenant?.logo_url ? (
-                      <img src={tenant.logo_url} alt="" className="w-14 h-14 rounded-lg object-cover border border-border" />
-                    ) : (
-                      <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center"><ImagePlus className="h-5 w-5 text-muted-foreground" /></div>
-                    )}
-                    <label className="flex-1">
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
-                      <Button asChild variant="outline" className="w-full" disabled={uploading === "logo"}>
-                        <span>{uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar logo"}</span>
+              <TabsContent value="visual">
+                <IdentidadeVisual />
+              </TabsContent>
+
+              <TabsContent value="midia">
+                <div className="grid lg:grid-cols-2 gap-6">
+                  {/* Hero upload */}
+                  <div className="bg-gradient-card border border-border rounded-2xl p-6 shadow-card">
+                    <h3 className="font-display text-xl mb-4">IMAGEM DE FUNDO</h3>
+                    <div className="aspect-video rounded-xl overflow-hidden border border-border mb-4 relative">
+                      <img src={tenant?.hero_url || heroDefault} alt="" className="w-full h-full object-cover" />
+                    </div>
+                    <label className="block">
+                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "hero")} />
+                      <Button asChild className="w-full bg-gradient-primary" disabled={uploading === "hero"}>
+                        <span>{uploading === "hero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Trocar imagem de fundo</>}</span>
                       </Button>
                     </label>
                   </div>
-                </div>
-                <div>
-                  <Label>Nome do time</Label>
-                  <Input value={nome} onChange={(e) => setNome(e.target.value)} />
-                </div>
-                <div>
-                  <Label>Tagline</Label>
-                  <Input value={tagline} onChange={(e) => setTagline(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Cor primária (HSL)</Label>
-                    <Input value={primary} onChange={(e) => setPrimary(e.target.value)} placeholder="0 84% 55%" />
+
+                  {/* Logo & textos */}
+                  <div className="bg-gradient-card border border-border rounded-2xl p-6 shadow-card space-y-5">
+                    <h3 className="font-display text-xl">LOGO & TEXTOS</h3>
+                    <div>
+                      <Label>Logo</Label>
+                      <div className="flex items-center gap-3 mt-2">
+                        {tenant?.logo_url ? (
+                          <img src={tenant.logo_url} alt="" className="w-14 h-14 rounded-lg object-cover border border-border" />
+                        ) : (
+                          <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center"><ImagePlus className="h-5 w-5 text-muted-foreground" /></div>
+                        )}
+                        <label className="flex-1">
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
+                          <Button asChild variant="outline" className="w-full" disabled={uploading === "logo"}>
+                            <span>{uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar logo"}</span>
+                          </Button>
+                        </label>
+                      </div>
+                    </div>
+                    <div>
+                      <Label>Nome do time</Label>
+                      <Input value={nome} onChange={(e) => setNome(e.target.value)} />
+                    </div>
+                    <div>
+                      <Label>Tagline</Label>
+                      <Input value={tagline} onChange={(e) => setTagline(e.target.value)} />
+                    </div>
+                    <Button onClick={handleSaveAppearance} className="w-full bg-gradient-primary shadow-glow">Salvar textos</Button>
                   </div>
-                  <div>
-                    <Label>Cor accent (HSL)</Label>
-                    <Input value={accent} onChange={(e) => setAccent(e.target.value)} placeholder="45 96% 56%" />
-                  </div>
                 </div>
-                <Button onClick={handleSaveAppearance} className="w-full bg-gradient-primary shadow-glow">Salvar aparência</Button>
-              </div>
-            </div>
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
