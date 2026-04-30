@@ -2,13 +2,22 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
 import { Settings, Play } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import heroDefault from "@/assets/hero-default.jpg";
 import cardTreino from "@/assets/card-treino.jpg";
 import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
 import cardClinica from "@/assets/card-clinica.jpg";
 import { TenantSymbol } from "@/components/TenantSymbol";
+
+interface VlogPost {
+  id: string;
+  url: string;
+  title: string | null;
+  thumbnail_url: string | null;
+  platform: string;
+}
 
 const sections = [
   { title: "Meu Treino", to: "treino", img: cardTreino },
