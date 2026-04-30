@@ -2,6 +2,16 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
+export type ThemeOverrides = Partial<{
+  primary: string;
+  primary_glow: string;
+  accent: string;
+  background: string;
+  card: string;
+  foreground: string;
+  border: string;
+}>;
+
 export interface Tenant {
   id: string;
   slug: string;
@@ -12,42 +22,59 @@ export interface Tenant {
   symbol_url: string | null;
   primary_hsl: string;
   accent_hsl: string;
+  theme_overrides: ThemeOverrides | null;
 }
 
 interface BrandingContextValue {
   tenant: Tenant | null;
   loading: boolean;
   refresh: () => Promise<void>;
+  // Preview ao vivo (não persiste): aplica overrides instantâneos
+  applyPreview: (overrides: ThemeOverrides) => void;
+  clearPreview: () => void;
 }
 
 const BrandingContext = createContext<BrandingContextValue>({
   tenant: null,
   loading: true,
   refresh: async () => {},
+  applyPreview: () => {},
+  clearPreview: () => {},
 });
 
 export const useBranding = () => useContext(BrandingContext);
 
-// Tema "Netflix" padrão para TODOS os tenants:
-// vermelho #E50914 ≈ HSL(357 92% 47%), branco e preto.
-const NETFLIX_PRIMARY = "357 92% 47%";
-const NETFLIX_PRIMARY_GLOW = "357 92% 60%";
-const NETFLIX_ACCENT = "357 92% 47%";
+// Defaults Netflix
+const DEFAULTS = {
+  primary: "357 92% 47%",
+  primary_glow: "357 92% 60%",
+  accent: "357 92% 47%",
+  background: "0 0% 4%",
+  card: "0 0% 7%",
+  foreground: "0 0% 98%",
+  border: "0 0% 16%",
+};
 
-const applyVars = (tenant: Tenant | null, _slug?: string) => {
+const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
+  primary: ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring"],
+  primary_glow: ["--primary-glow"],
+  accent: ["--accent"],
+  background: ["--background"],
+  card: ["--card", "--popover"],
+  foreground: ["--foreground", "--card-foreground", "--popover-foreground"],
+  border: ["--border", "--sidebar-border"],
+};
+
+export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl?: string | null) => {
   const root = document.documentElement;
-  // Força padrão Netflix em toda a aplicação, ignorando cores customizadas do tenant
-  root.style.setProperty("--primary", NETFLIX_PRIMARY);
-  root.style.setProperty("--primary-foreground", "0 0% 100%");
-  root.style.setProperty("--primary-glow", NETFLIX_PRIMARY_GLOW);
-  root.style.setProperty("--ring", NETFLIX_PRIMARY);
-  root.style.setProperty("--accent", NETFLIX_ACCENT);
-  root.style.setProperty("--accent-foreground", "0 0% 100%");
-  if (tenant?.hero_url) {
-    root.style.setProperty("--hero-url", `url(${tenant.hero_url})`);
-  } else {
-    root.style.removeProperty("--hero-url");
-  }
+  const merged = { ...DEFAULTS, ...(overrides || {}) };
+  (Object.keys(merged) as (keyof typeof DEFAULTS)[]).forEach((k) => {
+    const value = merged[k];
+    if (!value) return;
+    TOKEN_TO_VAR[k].forEach((v) => root.style.setProperty(v, value));
+  });
+  if (heroUrl) root.style.setProperty("--hero-url", `url(${heroUrl})`);
+  else root.style.removeProperty("--hero-url");
 };
 
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
@@ -57,7 +84,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
   const load = async () => {
     if (!slug) {
-      applyVars(null);
+      applyTheme(null);
       setTenant(null);
       setLoading(false);
       return;
@@ -69,19 +96,26 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
       .eq("slug", slug)
       .maybeSingle();
     if (error) console.warn("[Branding] erro:", error.message);
-    setTenant(data);
-    applyVars(data, slug);
+    const t = data as Tenant | null;
+    setTenant(t);
+    applyTheme(t?.theme_overrides as ThemeOverrides | null, t?.hero_url);
     setLoading(false);
   };
 
+  const applyPreview = (overrides: ThemeOverrides) => {
+    const merged = { ...(tenant?.theme_overrides || {}), ...overrides };
+    applyTheme(merged, tenant?.hero_url);
+  };
+  const clearPreview = () => applyTheme(tenant?.theme_overrides as ThemeOverrides | null, tenant?.hero_url);
+
   useEffect(() => {
     void load();
-    return () => applyVars(null);
+    return () => applyTheme(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   return (
-    <BrandingContext.Provider value={{ tenant, loading, refresh: load }}>
+    <BrandingContext.Provider value={{ tenant, loading, refresh: load, applyPreview, clearPreview }}>
       {children}
     </BrandingContext.Provider>
   );

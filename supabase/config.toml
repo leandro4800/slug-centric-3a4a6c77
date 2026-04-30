@@ -11,3 +11,6 @@ verify_jwt = false
 
 [functions.stripe-checkout]
 verify_jwt = false
+
+[functions.theme-ai]
+verify_jwt = true
