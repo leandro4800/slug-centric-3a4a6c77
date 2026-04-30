@@ -23,7 +23,6 @@ const sections = [
   { title: "Meu Treino", to: "treino", img: cardTreino },
   { title: "Minha Dieta", to: "dieta", img: cardDieta },
   { title: "Minha Evolução", to: "evolucao", img: cardEvolucao },
-  { title: "Dr. IA", to: "dr-ia", img: cardClinica },
   { title: "Clínica", to: "clinica", img: cardClinica },
 ];
 
