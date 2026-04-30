@@ -107,7 +107,8 @@ export default function AdminCoaches() {
             <Button
               size="sm"
               onClick={() => setStatus(t.id, "approved")}
-              disabled={!t.stripe_onboarding_completed}
+              // Admins can approve even without stripe if they want to
+              disabled={false}
               className="bg-emerald-600 hover:bg-emerald-700"
             >
               <Check className="mr-1 h-4 w-4" /> Aprovar
