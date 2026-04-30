@@ -105,6 +105,7 @@ const AdminPanel = () => {
           <TabsList className="mb-6">
             <TabsTrigger value="elenco"><Users className="h-4 w-4 mr-2" /> Elenco</TabsTrigger>
             <TabsTrigger value="aparencia"><Palette className="h-4 w-4 mr-2" /> Aparência</TabsTrigger>
+            <TabsTrigger value="vlogs"><Clapperboard className="h-4 w-4 mr-2" /> Vlogs</TabsTrigger>
           </TabsList>
 
           <TabsContent value="elenco">
