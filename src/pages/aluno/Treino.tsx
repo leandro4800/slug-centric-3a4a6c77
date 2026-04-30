@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { PageHeader } from "@/components/aluno/PageHeader";
+import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 
 interface Treino extends ExerciseCardData {
