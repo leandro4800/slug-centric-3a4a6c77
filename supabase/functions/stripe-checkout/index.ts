@@ -45,8 +45,10 @@ Deno.serve(async (req) => {
     // @ts-ignore
     const t = plano.tenants;
     if (t.status !== "approved") throw new Error("tenant not approved");
-    if (!t.stripe_account_id || !t.stripe_onboarding_completed) {
-      throw new Error("coach has not completed Stripe onboarding");
+    const skipStripeConnect = !t.stripe_account_id || !t.stripe_onboarding_completed;
+    
+    if (skipStripeConnect) {
+      console.log("Skipping Stripe Connect for tenant:", t.slug);
     }
     if (!plano.stripe_price_id) throw new Error("plano has no stripe_price_id");
 
