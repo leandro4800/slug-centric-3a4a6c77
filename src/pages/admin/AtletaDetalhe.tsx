@@ -86,6 +86,7 @@ const AtletaDetalhe = () => {
   const [protocolResult, setProtocolResult] = useState<string | null>(null);
   const [isGeneratingProtocol, setIsGeneratingProtocol] = useState(false);
   const [showProtocolDialog, setShowProtocolDialog] = useState(false);
+  const [open7Dobras, setOpen7Dobras] = useState(false);
 
   useEffect(() => {
     if (!atletaId) return;
