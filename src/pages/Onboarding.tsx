@@ -322,7 +322,48 @@ export default function Onboarding() {
               </section>
 
               <section className="space-y-3">
-                <h3 className="font-display text-lg uppercase text-primary">Treino</h3>
+                <h3 className="font-display text-lg uppercase text-primary">Treino & Experiência</h3>
+                <div>
+                  <Label>Nível de Experiência</Label>
+                  <Select value={nivelExperiencia} onValueChange={setNivelExperiencia}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Iniciante">Iniciante</SelectItem>
+                      <SelectItem value="Intermediário">Intermediário</SelectItem>
+                      <SelectItem value="Avançado">Avançado</SelectItem>
+                      <SelectItem value="Atleta de Alto Nível">Atleta de Alto Nível</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {["Intermediário", "Avançado", "Atleta de Alto Nível"].includes(nivelExperiencia) && (
+                  <div className="space-y-3 border-l-2 border-primary/20 pl-4 pt-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        checked={fazUsoErgogenicos} 
+                        onCheckedChange={(v) => setFazUsoErgogenicos(!!v)} 
+                        id="hormonios" 
+                      />
+                      <Label htmlFor="hormonios" className="leading-tight cursor-pointer">
+                        Você faz uso ou pretende fazer uso de recursos ergogênicos/hormônios?
+                      </Label>
+                    </div>
+                    
+                    {fazUsoErgogenicos && (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <Label>Liste o que usa ou qual é o seu objetivo com o uso</Label>
+                        <Textarea 
+                          value={detalhesErgogenicos} 
+                          onChange={(e) => setDetalhesErgogenicos(e.target.value)} 
+                          placeholder="Ex: Ciclo de durateston 250mg/semana, ou Objetivo de ganho de massa bruto..."
+                          rows={3}
+                          className="mt-1 bg-background/50"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div>
                   <Label>Anos de treino</Label>
                   <Input type="number" value={anosTreino} onChange={(e) => setAnosTreino(e.target.value)} step={0.5} min={0} />
