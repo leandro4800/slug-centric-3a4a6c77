@@ -305,7 +305,12 @@ const Landing = () => {
   const handleSearchCoach = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchCoach) {
-      navigate(`/marketplace?q=${encodeURIComponent(searchCoach)}`);
+      const featuredSection = document.getElementById('coaches-featured');
+      if (featuredSection) {
+        featuredSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigate(`/marketplace?q=${encodeURIComponent(searchCoach)}`);
+      }
     }
   };
 
