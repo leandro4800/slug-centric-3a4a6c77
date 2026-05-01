@@ -14,6 +14,9 @@ const coaches = [
     bio: "Treinos cinematográficos pra quem quer crescer.",
     video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4",
     tag: "VERIFICADO",
+    cidade: "Serra",
+    estado: "ES",
+    slug: "pikachu-team"
   },
   {
     name: "TEAM JACKSON",
@@ -21,6 +24,9 @@ const coaches = [
     bio: "Performance e estética com método Team Jackson.",
     video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4",
     tag: "VERIFICADO",
+    cidade: "Serra",
+    estado: "ES",
+    slug: "team-jackson"
   },
   {
     name: "BADBOY TEAM",
@@ -28,6 +34,9 @@ const coaches = [
     bio: "Metodologia Badboy para resultados extremos.",
     video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4",
     tag: "VERIFICADO",
+    cidade: "São Paulo",
+    estado: "SP",
+    slug: "badboy-team"
   },
   {
     name: "NUTRI SAMILA DIAS",
@@ -35,6 +44,9 @@ const coaches = [
     bio: "Especialista em emagrecimento e saúde.",
     video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4",
     tag: "VERIFICADO",
+    cidade: "Serra",
+    estado: "ES",
+    slug: "samila-dias"
   },
 ];
 
