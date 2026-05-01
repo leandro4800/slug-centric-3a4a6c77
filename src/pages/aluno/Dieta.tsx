@@ -270,7 +270,7 @@ const Dieta = () => {
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
                       <span className="text-[8px] font-bold tracking-[0.2em] text-muted-foreground uppercase ml-1">Total</span>
                       <span className="font-display text-2xl leading-none my-0.5 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
-                        {totalDia.kcal}
+                        {totalDia.kcal.toLocaleString('pt-BR')}
                       </span>
                       <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">kcal</span>
                     </div>
