@@ -8,6 +8,7 @@ import { BrandingProvider } from "@/contexts/BrandingProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 
+import Landing from "./pages/Landing";
 import Marketplace from "./pages/Marketplace";
 import TenantLanding from "./pages/TenantLanding";
 import SejaCoach from "./pages/SejaCoach";
@@ -47,7 +48,8 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Marketplace público */}
-            <Route path="/" element={<BrandingProvider><Marketplace /></BrandingProvider>} />
+            <Route path="/" element={<BrandingProvider><Landing /></BrandingProvider>} />
+            <Route path="/marketplace" element={<BrandingProvider><Marketplace /></BrandingProvider>} />
             <Route path="/seja-coach" element={<BrandingProvider><SejaCoach /></BrandingProvider>} />
             <Route path="/login" element={<BrandingProvider><Login /></BrandingProvider>} />
             <Route path="/forgot-password" element={<BrandingProvider><ForgotPassword /></BrandingProvider>} />
