@@ -88,6 +88,7 @@ const App = () => (
               <Route path="dr-ia" element={<DrIA />} />
               <Route path="comunidade" element={<Comunidade />} />
               <Route path="perfil" element={<Perfil />} />
+              <Route path="anamnese" element={<Anamnese />} />
               <Route path="controle" element={<ControleCentral />} />
             </Route>
 
