@@ -29,6 +29,15 @@ export default function Marketplace() {
   const [q, setQ] = useState(searchParams.get("q") || "");
   const [region, setRegion] = useState(searchParams.get("region") || "");
 
+  const stateMap: Record<string, string> = {
+    "acre": "AC", "alagoas": "AL", "amapa": "AP", "amazonas": "AM", "bahia": "BA", "ceara": "CE",
+    "distrito federal": "DF", "espirito santo": "ES", "goias": "GO", "maranhao": "MA", "mato grosso": "MT",
+    "mato grosso do sul": "MS", "minas gerais": "MG", "para": "PA", "paraiba": "PB", "parana": "PR",
+    "pernambuco": "PE", "piaui": "PI", "rio de janeiro": "RJ", "rio grande do norte": "RN",
+    "rio grande do sul": "RS", "rondonia": "RO", "roraima": "RR", "santa catarina": "SC",
+    "sao paulo": "SP", "sergipe": "SE", "tocantins": "TO"
+  };
+
   useEffect(() => {
     void load();
   }, []);
@@ -46,13 +55,20 @@ export default function Marketplace() {
 
   const filtered = coaches.filter(
     (c) => {
-      const queryMatch = !q || 
-        c.nome.toLowerCase().includes(q.toLowerCase()) ||
-        (c.especialidades ?? []).some((e) => e.toLowerCase().includes(q.toLowerCase()));
+      const qLower = q.toLowerCase().trim();
+      const regionLower = region.toLowerCase().trim();
       
-      const regionMatch = !region ||
-        (c.cidade?.toLowerCase().includes(region.toLowerCase())) ||
-        (c.estado?.toLowerCase().includes(region.toLowerCase()));
+      const queryMatch = !qLower || 
+        c.nome.toLowerCase().includes(qLower) ||
+        (c.especialidades ?? []).some((e) => e.toLowerCase().includes(qLower));
+      
+      // Handle state mapping for region search
+      const stateAbbreviation = stateMap[regionLower] || regionLower;
+      
+      const regionMatch = !regionLower ||
+        (c.cidade?.toLowerCase().includes(regionLower)) ||
+        (c.estado?.toLowerCase().includes(regionLower)) ||
+        (c.estado?.toLowerCase() === stateAbbreviation.toLowerCase());
 
       return queryMatch && regionMatch;
     }
