@@ -107,6 +107,7 @@ const AtletaDetalhe = () => {
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [perfil, setPerfil] = useState<PerfilTreino | null>(null);
+  const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
   const [loading, setLoading] = useState(true);
   const [nivel, setNivel] = useState<string>("intermediario");
   const [savingNivel, setSavingNivel] = useState(false);
