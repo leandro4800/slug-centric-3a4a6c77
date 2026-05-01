@@ -172,12 +172,27 @@ export default function Marketplace() {
                   )}
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/40 to-transparent" />
                   <div className="absolute bottom-0 left-0 right-0 p-5">
-                    <h3 className="font-display text-2xl uppercase text-white">{c.nome}</h3>
-                    {c.tagline && <p className="mt-1 text-sm text-white/70">{c.tagline}</p>}
+                    <div className="flex items-center gap-2 mb-1">
+                      <h3 className="font-display text-2xl uppercase text-white leading-none">{c.nome}</h3>
+                      {c.permite_aula_avulsa && (
+                        <Badge className="bg-primary text-[10px] font-black uppercase px-1.5 py-0 h-4">Aula Avulsa</Badge>
+                      )}
+                    </div>
+                    {c.tagline && <p className="mt-1 text-sm text-white/70 line-clamp-1">{c.tagline}</p>}
+                    
+                    <div className="mt-2 flex items-center gap-2 text-xs text-white/60">
+                      {c.cidade && (
+                        <div className="flex items-center gap-1">
+                          <MapPin size={12} />
+                          {c.cidade}{c.estado ? `, ${c.estado}` : ''}
+                        </div>
+                      )}
+                    </div>
+
                     {c.especialidades && c.especialidades.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-1">
-                        {c.especialidades.slice(0, 3).map((e) => (
-                          <Badge key={e} variant="outline" className="border-primary/40 bg-primary/10 text-xs text-white">
+                        {c.especialidades.slice(0, 2).map((e) => (
+                          <Badge key={e} variant="outline" className="border-primary/40 bg-primary/10 text-[10px] text-white py-0">
                             {e}
                           </Badge>
                         ))}
@@ -186,7 +201,16 @@ export default function Marketplace() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between p-4">
-                  <span className="text-sm text-muted-foreground">Ver planos</span>
+                  <div className="flex flex-col">
+                    <span className="text-xs text-muted-foreground uppercase font-black tracking-widest">Consultoria</span>
+                    <span className="text-sm font-bold">Ver planos</span>
+                  </div>
+                  {c.permite_aula_avulsa && c.preco_aula_avulsa && (
+                    <div className="flex flex-col items-end border-l border-border/50 pl-4">
+                      <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Aula Avulsa</span>
+                      <span className="text-sm font-bold text-primary">R$ {c.preco_aula_avulsa}</span>
+                    </div>
+                  )}
                   <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
                 </div>
               </Link>
