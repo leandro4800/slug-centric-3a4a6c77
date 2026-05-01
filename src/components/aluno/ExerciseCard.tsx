@@ -292,7 +292,7 @@ export const ExerciseCard = ({
             )}
             {data.detalhes_execucao && (
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 space-y-1">
-                <p className="text-[10px] uppercase font-bold text-primary tracking-widest">Execução Metodologia Pacho</p>
+                <p className="text-[10px] uppercase font-bold text-primary tracking-widest">Metodologia AlphaCoach</p>
                 <p className="text-xs text-foreground/90 leading-relaxed">{data.detalhes_execucao}</p>
               </div>
             )}
