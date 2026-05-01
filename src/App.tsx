@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { BrandingProvider } from "@/contexts/BrandingProvider";
 import { RequireAuth } from "@/components/RequireAuth";
+import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 
 import Marketplace from "./pages/Marketplace";
 import TenantLanding from "./pages/TenantLanding";
@@ -67,7 +68,11 @@ const App = () => (
               path="/:slug/app"
               element={
                 <BrandingProvider>
-                  <RequireAuth><AlunoLayout /></RequireAuth>
+                  <RequireAuth>
+                    <SubscriptionGuard>
+                      <AlunoLayout />
+                    </SubscriptionGuard>
+                  </RequireAuth>
                 </BrandingProvider>
               }
             >

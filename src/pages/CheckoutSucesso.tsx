@@ -81,9 +81,9 @@ export default function CheckoutSucesso() {
       <div className="w-full max-w-md rounded-2xl border border-border/50 bg-card p-8">
         <div className="mb-6 text-center">
           <CheckCircle2 className="mx-auto h-16 w-16 text-primary" />
-          <h1 className="mt-4 font-display text-3xl uppercase">Pagamento confirmado!</h1>
+          <h1 className="mt-4 font-display text-3xl uppercase">Acesso Liberado!</h1>
           <p className="mt-2 text-muted-foreground">
-            {mode === "signup" ? "Crie sua conta" : "Entre"} para acessar seu treino.
+            Seus 30 dias grátis começaram. {mode === "signup" ? "Crie sua conta" : "Entre"} para acessar seu treino.
           </p>
         </div>
 

@@ -138,7 +138,7 @@ export default function TenantLanding() {
       <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
         <div className="mb-12 text-center">
           <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
-          <p className="mt-3 text-muted-foreground">Acesso completo. Cancele quando quiser.</p>
+          <p className="mt-3 text-muted-foreground">Experimente por 30 dias grátis. Cancele quando quiser.</p>
         </div>
 
         {planos.length === 0 ? (
@@ -184,7 +184,7 @@ export default function TenantLanding() {
                     className={`w-full ${destaque ? "bg-primary hover:bg-primary/90" : ""}`}
                     variant={destaque ? "default" : "outline"}
                   >
-                    {checkoutLoading === p.id ? "Redirecionando..." : "Assinar agora"}
+                    {checkoutLoading === p.id ? "Redirecionando..." : "Testar 30 dias grátis"}
                   </Button>
                 </div>
               );
