@@ -26,6 +26,7 @@ import {
   Sparkles,
   ShieldAlert,
 } from "lucide-react";
+import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
 import { 
   Dialog, 
   DialogContent, 
