@@ -150,7 +150,29 @@ export default function TenantLanding() {
             Este coach ainda não publicou planos.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {tenant.permite_aula_avulsa && (
+              <div className="relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-card p-8 flex flex-col">
+                <Badge className="absolute right-4 top-4 bg-primary text-primary-foreground">Aula Presencial</Badge>
+                <h3 className="font-display text-2xl uppercase">Aula Avulsa</h3>
+                <p className="mt-2 text-sm text-muted-foreground">Treino presencial único para correção de técnica e performance.</p>
+                <div className="my-6">
+                  <span className="font-display text-5xl">R$ {tenant.preco_aula_avulsa}</span>
+                  <span className="ml-1 text-muted-foreground">/aula</span>
+                </div>
+                <ul className="mb-8 space-y-2 text-sm flex-1">
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Correção de técnica</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Intensidade máxima</li>
+                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Suporte pós-treino</li>
+                </ul>
+                <Button 
+                  onClick={() => toast({ title: "Agendamento", description: "O coach entrará em contato para agendar o horário após o pagamento." })}
+                  className="w-full bg-primary hover:bg-primary/90"
+                >
+                  Agendar Aula
+                </Button>
+              </div>
+            )}
             {planos.map((p, i) => {
               const destaque = i === 1 && planos.length >= 2;
               return (
