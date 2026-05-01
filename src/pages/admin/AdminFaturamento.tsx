@@ -289,13 +289,13 @@ const AdminFaturamento = () => {
               </div>
               <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-4 italic">Alunos Ativos</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-6xl font-black text-white">0</span>
-                <span className="text-white/40 text-sm font-bold flex items-center"><TrendingUp className="h-3 w-3 mr-1" />+0%</span>
+                <span className="text-6xl font-black text-white">{activeStudents}</span>
+                <span className="text-white/40 text-sm font-bold flex items-center"><TrendingUp className="h-3 w-3 mr-1" />Demo</span>
               </div>
               <div className="mt-6 h-1 w-full bg-white/10 rounded-none overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
-                  animate={{ width: "30%" }}
+                  animate={{ width: "80%" }}
                   className="h-full bg-red-600" 
                 />
               </div>
