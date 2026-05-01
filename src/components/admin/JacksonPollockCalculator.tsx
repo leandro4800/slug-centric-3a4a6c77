@@ -17,9 +17,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Ruler } from "lucide-react";
+import { Loader2, Ruler, Info } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface Props {
   open: boolean;
@@ -134,157 +135,181 @@ export default function JacksonPollockCalculator({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-card border-border">
-        <DialogHeader className="border-b border-border/50 pb-4">
-          <div className="flex items-center gap-2 text-primary">
-            <Ruler className="h-5 w-5" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.3em]">
-              Jackson & Pollock
+      <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto bg-[#0a0a0a] border-none text-white p-0 shadow-2xl">
+        {/* Netflix Style Header */}
+        <div className="sticky top-0 z-20 bg-gradient-to-b from-black to-transparent p-8 pb-4">
+          <div className="flex items-center gap-2 text-primary mb-2">
+            <motion.div
+              initial={{ rotate: -180, opacity: 0 }}
+              animate={{ rotate: 0, opacity: 1 }}
+              transition={{ duration: 0.8 }}
+            >
+              <Ruler className="h-6 w-6" />
+            </motion.div>
+            <span className="text-[10px] font-bold uppercase tracking-[0.5em] text-white/60">
+              ESTATÍSTICAS VITAIS
             </span>
           </div>
-          <DialogTitle className="font-display text-2xl uppercase tracking-tight text-primary">
-            Protocolo 7 Dobras
-          </DialogTitle>
-          <DialogDescription className="text-xs uppercase tracking-wider text-muted-foreground">
-            Insira as medidas em milímetros (mm)
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="py-4 space-y-5">
-          {/* Dados base */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Idade
-              </Label>
-              <Input
-                type="number"
-                inputMode="numeric"
-                value={idade}
-                onChange={(e) => setIdade(e.target.value)}
-                className="bg-input border-border"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Peso (kg)
-              </Label>
-              <Input
-                type="number"
-                inputMode="decimal"
-                value={peso}
-                onChange={(e) => setPeso(e.target.value)}
-                className="bg-input border-border"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Sexo
-              </Label>
-              <Select value={sexo} onValueChange={(v) => setSexo(v as Sexo)}>
-                <SelectTrigger className="bg-input border-border">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="M">Masculino</SelectItem>
-                  <SelectItem value="F">Feminino</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* 7 dobras */}
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-2">
-              Dobras Cutâneas (mm)
-            </p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {DOBRAS.map((d) => (
-                <div key={d.key} className="space-y-1.5">
-                  <Label className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    {d.label}
-                  </Label>
-                  <Input
-                    type="number"
-                    inputMode="decimal"
-                    step="0.1"
-                    value={dobras[d.key]}
-                    onChange={(e) =>
-                      setDobras((prev) => ({ ...prev, [d.key]: e.target.value }))
-                    }
-                    className="bg-input border-border"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Resultado */}
-          <div className="rounded-xl border border-primary/30 bg-background p-5">
-            <p className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground mb-3">
-              Resultado
-            </p>
-            {calc ? (
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    BF %
-                  </p>
-                  <p className="font-display text-3xl font-bold text-primary">
-                    {calc.bf.toFixed(1)}
-                    <span className="text-base text-muted-foreground">%</span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Massa Magra
-                  </p>
-                  <p className="font-display text-3xl font-bold text-primary">
-                    {calc.massaMagra.toFixed(1)}
-                    <span className="text-base text-muted-foreground">kg</span>
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                    Massa Gorda
-                  </p>
-                  <p className="font-display text-3xl font-bold text-primary">
-                    {calc.massaGorda.toFixed(1)}
-                    <span className="text-base text-muted-foreground">kg</span>
-                  </p>
-                </div>
-                <div className="col-span-3 text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Soma das 7 dobras: {calc.soma.toFixed(1)} mm
-                </div>
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                Preencha todas as dobras + idade e peso para calcular.
-              </p>
-            )}
-          </div>
+          <motion.h1 
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            className="font-display text-4xl md:text-5xl uppercase tracking-tighter"
+          >
+            Protocolo <span className="text-primary">7 Dobras</span>
+          </motion.h1>
+          <p className="text-sm text-white/40 uppercase tracking-widest mt-2">
+            Jackson & Pollock · Bioestatística de Competição
+          </p>
         </div>
 
-        <DialogFooter className="border-t border-border/50 pt-4 gap-2">
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="flex-1 uppercase text-[10px] font-bold tracking-widest"
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || !calc}
-            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 uppercase text-[10px] font-bold tracking-widest"
-          >
-            {saving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              "Calcular e Salvar"
-            )}
-          </Button>
-        </DialogFooter>
+        <div className="px-8 pb-8 grid md:grid-cols-[1fr_320px] gap-8">
+          <div className="space-y-8">
+            {/* Seção 1: Dados Base */}
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-white/60 flex items-center gap-2">
+                <span className="w-1 h-4 bg-primary rounded-full" />
+                DADOS DO ATLETA
+              </h2>
+              <div className="grid grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest text-white/40">Idade</Label>
+                  <Input
+                    type="number"
+                    value={idade}
+                    onChange={(e) => setIdade(e.target.value)}
+                    className="h-12 bg-white/5 border-white/10 focus:border-primary/50 text-xl font-bold rounded-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest text-white/40">Peso (kg)</Label>
+                  <Input
+                    type="number"
+                    value={peso}
+                    onChange={(e) => setPeso(e.target.value)}
+                    className="h-12 bg-white/5 border-white/10 focus:border-primary/50 text-xl font-bold rounded-none"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-[10px] uppercase tracking-widest text-white/40">Sexo</Label>
+                  <Select value={sexo} onValueChange={(v) => setSexo(v as Sexo)}>
+                    <SelectTrigger className="h-12 bg-white/5 border-white/10 focus:border-primary/50 text-sm font-bold rounded-none uppercase">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-900 border-zinc-800 text-white">
+                      <SelectItem value="M">Masculino</SelectItem>
+                      <SelectItem value="F">Feminino</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </section>
+
+            {/* Seção 2: Dobras */}
+            <section className="space-y-4">
+              <h2 className="text-xs font-bold uppercase tracking-widest text-white/60 flex items-center gap-2">
+                <span className="w-1 h-4 bg-primary rounded-full" />
+                MEDIÇÕES DE ADIPÔMETRO (mm)
+              </h2>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {DOBRAS.map((d, index) => (
+                  <motion.div 
+                    key={d.key}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="space-y-2"
+                  >
+                    <Label className="text-[10px] uppercase tracking-widest text-white/40 leading-none">{d.label}</Label>
+                    <Input
+                      type="number"
+                      step="0.1"
+                      value={dobras[d.key]}
+                      onChange={(e) => setDobras((prev) => ({ ...prev, [d.key]: e.target.value }))}
+                      className="h-12 bg-white/5 border-white/10 focus:border-primary/50 text-xl font-bold rounded-none text-primary"
+                    />
+                  </motion.div>
+                ))}
+              </div>
+            </section>
+          </div>
+
+          {/* Lateral: Resultados (Style Sidebar) */}
+          <aside className="space-y-6">
+            <div className="bg-white/5 border border-white/10 p-6 rounded-none space-y-8 min-h-[400px] flex flex-col">
+              <h2 className="text-center text-xs font-bold uppercase tracking-[0.3em] text-white/40">PROJEÇÃO FINAL</h2>
+              
+              <AnimatePresence mode="wait">
+                {calc ? (
+                  <motion.div 
+                    key="results"
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    className="space-y-8 flex-1 flex flex-col justify-center"
+                  >
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase tracking-widest text-white/40 mb-1">Gordura Corporal</p>
+                      <p className="text-6xl font-display font-bold text-primary tabular-nums tracking-tighter">
+                        {calc.bf.toFixed(1)}<span className="text-2xl text-white/20 ml-1">%</span>
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="text-center p-3 bg-white/5 border border-white/5">
+                        <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1">Massa Magra</p>
+                        <p className="text-xl font-bold text-white tabular-nums">{calc.massaMagra.toFixed(1)}kg</p>
+                      </div>
+                      <div className="text-center p-3 bg-white/5 border border-white/5">
+                        <p className="text-[9px] uppercase tracking-widest text-white/40 mb-1">Massa Gorda</p>
+                        <p className="text-xl font-bold text-white tabular-nums">{calc.massaGorda.toFixed(1)}kg</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-white/10">
+                      <div className="flex justify-between text-[10px] uppercase tracking-widest text-white/40">
+                        <span>Soma das Dobras</span>
+                        <span className="text-white font-bold">{calc.soma.toFixed(1)} mm</span>
+                      </div>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <motion.div 
+                    key="empty"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="flex-1 flex flex-col items-center justify-center text-center px-4"
+                  >
+                    <Info className="h-12 w-12 text-white/10 mb-4" />
+                    <p className="text-xs uppercase tracking-widest text-white/40 leading-relaxed">
+                      Aguardando medições para processar o perfil físico do atleta
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              <div className="space-y-3 pt-6">
+                <Button
+                  onClick={handleSave}
+                  disabled={saving || !calc}
+                  className="w-full h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-widest text-xs rounded-none shadow-[0_0_20px_rgba(var(--primary-rgb),0.3)]"
+                >
+                  {saving ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    "SALVAR PROTOCOLO"
+                  )}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={() => onOpenChange(false)}
+                  className="w-full h-10 text-white/40 hover:text-white hover:bg-white/5 font-bold uppercase tracking-widest text-[10px] rounded-none"
+                >
+                  CANCELAR
+                </Button>
+              </div>
+            </div>
+          </aside>
+        </div>
       </DialogContent>
     </Dialog>
   );

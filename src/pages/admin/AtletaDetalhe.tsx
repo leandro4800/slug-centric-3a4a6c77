@@ -27,6 +27,7 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
+import { SevenDobrasIntro } from "@/components/admin/SevenDobrasIntro";
 import { 
   Dialog, 
   DialogContent, 
@@ -105,6 +106,7 @@ const AtletaDetalhe = () => {
   const [isGeneratingProtocol, setIsGeneratingProtocol] = useState(false);
   const [showProtocolDialog, setShowProtocolDialog] = useState(false);
   const [open7Dobras, setOpen7Dobras] = useState(false);
+  const [show7DobrasIntro, setShow7DobrasIntro] = useState(false);
 
   useEffect(() => {
     if (!atletaId) return;
@@ -239,14 +241,12 @@ const AtletaDetalhe = () => {
     <div className="min-h-screen bg-background">
       {/* HERO */}
       <div className="relative h-[70vh] min-h-[460px] md:h-[600px] md:min-h-0 w-full overflow-hidden group bg-secondary/30">
-        {/* Imagem de fundo borrada para preencher laterais sem cortar */}
         <img
           src={heroImg}
           alt=""
           aria-hidden
           className="absolute inset-0 w-full h-full object-cover scale-110 blur-2xl opacity-40"
         />
-        {/* Imagem principal sem corte */}
         <img
           src={heroImg}
           alt={aluno.nome_completo || ""}
@@ -254,7 +254,6 @@ const AtletaDetalhe = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-background/10 pointer-events-none" />
 
-        {/* Botão editar foto */}
         <input
           ref={fileInputRef}
           type="file"
@@ -270,7 +269,6 @@ const AtletaDetalhe = () => {
           onClick={() => fileInputRef.current?.click()}
           disabled={uploading}
           className="absolute bottom-4 right-4 z-20 flex items-center gap-1.5 px-3 py-2 rounded-full bg-background/80 backdrop-blur border border-primary/40 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-background"
-          aria-label="Editar foto"
         >
           {uploading ? (
             <Loader2 className="h-3 w-3 animate-spin" />
@@ -280,12 +278,10 @@ const AtletaDetalhe = () => {
           {uploading ? "Enviando..." : "Editar foto"}
         </button>
 
-        {/* Top bar */}
         <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between z-10">
           <button
             onClick={() => navigate(`/${slug}/admin`)}
             className="w-10 h-10 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
-            aria-label="Voltar"
           >
             <ArrowLeft className="h-4 w-4" />
           </button>
@@ -307,7 +303,6 @@ const AtletaDetalhe = () => {
           </div>
         </div>
 
-        {/* Nome + email + alerta */}
         <div className="absolute bottom-0 inset-x-0 p-5 z-10">
           <h1 className="font-display text-3xl md:text-4xl uppercase tracking-tight text-foreground">
             {aluno.nome_completo || "Sem nome"}
@@ -325,7 +320,6 @@ const AtletaDetalhe = () => {
       </div>
 
       <main className="px-5 pb-16 -mt-2 space-y-5">
-        {/* Card NÍVEL + RESTRIÇÕES */}
         <div className="rounded-2xl border border-border bg-secondary/40 p-5 space-y-4">
           <div>
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground mb-1">
@@ -368,7 +362,6 @@ const AtletaDetalhe = () => {
           </div>
         </div>
 
-        {/* Botões IMPORTAR TREINO / IMPORTAR DIETA — padrão Netflix */}
         <div className="grid grid-cols-2 gap-3">
           <Button
             className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
@@ -384,7 +377,6 @@ const AtletaDetalhe = () => {
           </Button>
         </div>
 
-        {/* Lista de ações */}
         <div className="space-y-2">
           <button
             onClick={handleGenerateProtocol}
@@ -417,7 +409,7 @@ const AtletaDetalhe = () => {
           </button>
 
           <button
-            onClick={() => setOpen7Dobras(true)}
+            onClick={() => setShow7DobrasIntro(true)}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
           >
             <Ruler className="h-4 w-4 text-primary" />
@@ -442,7 +434,6 @@ const AtletaDetalhe = () => {
           </button>
         </div>
 
-        {/* Evolução de peso (placeholder) */}
         <div className="rounded-2xl border border-border bg-secondary/40 p-5">
           <div className="flex items-center gap-2 mb-3">
             <TrendingUp className="h-4 w-4 text-primary" />
@@ -470,12 +461,10 @@ const AtletaDetalhe = () => {
               Análise baseada no perfil de {aluno.nome_completo}
             </DialogDescription>
           </DialogHeader>
-
           <div className="py-6 space-y-6">
             {protocolResult && (
               <div className="prose prose-invert prose-sm max-w-none">
                 <div className="whitespace-pre-wrap font-sans leading-relaxed text-foreground/90">
-                  {/* Destacar disclaimer inicial */}
                   <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6 flex gap-3">
                     <ShieldAlert className="h-5 w-5 text-destructive shrink-0" />
                     <p className="text-[10px] text-destructive font-bold uppercase leading-normal">
@@ -483,13 +472,11 @@ const AtletaDetalhe = () => {
                       DEVE SER AVALIADO POR UM MÉDICO ENDOCRINOLOGISTA.
                     </p>
                   </div>
-
                   {protocolResult}
                 </div>
               </div>
             )}
           </div>
-
           <DialogFooter className="flex-col sm:flex-row gap-2 border-t border-border/50 pt-4">
             <Button 
               variant="outline" 
@@ -521,6 +508,17 @@ const AtletaDetalhe = () => {
         sexoInicial={perfil?.sexo ?? null}
         alturaInicial={perfil?.altura_cm ?? null}
       />
+
+      {show7DobrasIntro && (
+        <SevenDobrasIntro
+          name={aluno.nome_completo || ""}
+          avatarUrl={aluno.avatar_url}
+          onComplete={() => {
+            setShow7DobrasIntro(false);
+            setOpen7Dobras(true);
+          }}
+        />
+      )}
     </div>
   );
 };
