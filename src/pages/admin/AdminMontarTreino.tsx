@@ -49,8 +49,18 @@ const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" 
   return "Iniciante";
 };
 
-const sugerirDivisoes = (frequencia: number, sexo: string | null): string[] => {
+const sugerirDivisoes = (frequencia: number, sexo: string | null, nivel: string): string[] => {
   const fem = sexo?.toLowerCase().startsWith("f");
+  
+  if (nivel === "Atleta de Alto Nível" || nivel === "Avançado") {
+    if (frequencia >= 5) {
+      return ["Quadríceps", "Costas (Largura)", "Peito/Ombro", "Posterior/Glúteo", "Costas (Espessura)/Braços"];
+    }
+    if (frequencia === 4) {
+      return ["Membros Inferiores (Foco Quad)", "Peito/Ombro", "Costas/Trapézio", "Membros Inferiores (Foco Post)"];
+    }
+  }
+
   if (frequencia <= 3) return fem ? ["Glúteo/Posterior", "Peito/Tríceps", "Costas/Bíceps"] : ["Push", "Pull", "Legs"];
   if (frequencia === 4) return fem
     ? ["Glúteo/Posterior", "Peito/Ombro", "Glúteo/Quadríceps", "Costas/Braço"]
