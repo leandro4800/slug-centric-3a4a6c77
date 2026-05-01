@@ -17,6 +17,7 @@ interface DietRequest {
   idade?: number;
   sexo?: string;
   nivel_atividade?: number; // 1.2 - 1.9
+  nivel?: string; // "iniciante" | "intermediario" | "avancado" | "alto_nivel"
 }
 
 serve(async (req) => {
