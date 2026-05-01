@@ -76,6 +76,15 @@ const Perfil = () => {
 
           <div className="flex gap-2 pt-1">
             <button
+              onClick={() => navigate(`/${slug}/app/anamnese`)}
+              className="flex-1 h-11 rounded-md bg-accent text-accent-foreground flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider shadow-glow"
+            >
+              <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
+            </button>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
               onClick={() => setPwOpen(true)}
               className="flex-1 h-11 rounded-md bg-secondary/70 flex items-center justify-center gap-2 text-sm font-medium"
             >
