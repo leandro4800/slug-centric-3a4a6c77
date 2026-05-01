@@ -290,8 +290,9 @@ const Dieta = () => {
                     loading="lazy"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                   />
-                  {/* Gradiente preto da esquerda para a direita */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+                  {/* Escurecimento global + gradiente suave da esquerda para legibilidade do texto */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/40 to-black/10" />
+                  <div className="absolute inset-0 bg-black/20" />
                   <div className="absolute inset-0 p-4 flex flex-col justify-between">
                     {/* Topo: badge com ícone amarelo de talheres */}
                     <div className="flex items-center gap-2">
