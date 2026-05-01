@@ -161,12 +161,24 @@ const Landing = () => {
   const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
   const [screen4, setScreen4] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4");
+  const [coaches, setCoaches] = useState<CoachData[]>(defaultCoaches);
   
   // Aluno state
   const [hasCoachLink, setHasCoachLink] = useState<boolean | null>(null);
   const [coachLink, setCoachLink] = useState("");
   const [searchCoach, setSearchCoach] = useState("");
   const [searchRegion, setSearchRegion] = useState("");
+
+  const stateMap: Record<string, string> = {
+    "acre": "AC", "alagoas": "AL", "amapa": "AP", "amazonas": "AM", "bahia": "BA", "ceara": "CE",
+    "distrito federal": "DF", "espirito santo": "ES", "espírito santo": "ES", "goias": "GO", "goiás": "GO",
+    "maranhao": "MA", "maranhão": "MA", "mato grosso": "MT", "mato grosso do sul": "MS", 
+    "minas gerais": "MG", "para": "PA", "pará": "PA", "paraiba": "PB", "paraíba": "PB", 
+    "parana": "PR", "paraná": "PR", "pernambuco": "PE", "piaui": "PI", "piauí": "PI", 
+    "rio de janeiro": "RJ", "rio grande do norte": "RN", "rio grande do sul": "RS", 
+    "rondonia": "RO", "rondônia": "RO", "roraima": "RR", "santa catarina": "SC",
+    "sao paulo": "SP", "são paulo": "SP", "sergipe": "SE", "tocantins": "TO"
+  };
   
   const { toast } = useToast();
   const navigate = useNavigate();
