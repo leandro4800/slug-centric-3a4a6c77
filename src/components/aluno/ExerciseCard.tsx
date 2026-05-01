@@ -8,6 +8,8 @@ export interface ExerciseCardData {
   exercicio: string;
   series: string | null;
   repeticoes: string | null;
+  cadencia?: string | null;
+  detalhes_execucao?: string | null;
   observacao: string | null;
   /** Vídeo do YouTube de demonstração (referência técnica) */
   video_url?: string | null;
