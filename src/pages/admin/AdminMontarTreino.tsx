@@ -124,6 +124,8 @@ const AdminMontarTreino = () => {
           series: e.series || "",
           repeticoes: e.repeticoes || "",
           observacao: e.observacao || "",
+          cadencia: e.cadencia || "",
+          detalhes_execucao: e.detalhes_execucao || "",
         })));
       } else {
         setExercicios([]);
