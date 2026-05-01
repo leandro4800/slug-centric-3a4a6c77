@@ -36,6 +36,7 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
+import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
 import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 
@@ -118,6 +119,9 @@ const AtletaDetalhe = () => {
   const [showProtocolDialog, setShowProtocolDialog] = useState(false);
   const [open7Dobras, setOpen7Dobras] = useState(false);
   const [show7DobrasIntro, setShow7DobrasIntro] = useState(false);
+  const [anamnese, setAnamnese] = useState<any>(null);
+  const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
+  const [loadingAnamnese, setLoadingAnamnese] = useState(false);
 
   useEffect(() => {
     if (!atletaId) return;
@@ -135,7 +139,7 @@ const AtletaDetalhe = () => {
       return;
     }
 
-    const [{ data: a }, { data: pt }, { data: ass }] = await Promise.all([
+    const [{ data: a }, { data: pt }, { data: ass }, { data: ana }] = await Promise.all([
       supabase
         .from("perfis")
         .select("id, nome_completo, email, avatar_url, tenant_id")
@@ -159,10 +163,16 @@ const AtletaDetalhe = () => {
         `)
         .eq("aluno_id", atletaId!)
         .maybeSingle(),
+      supabase
+        .from("anamnese_aluno")
+        .select("*")
+        .eq("aluno_id", atletaId!)
+        .maybeSingle(),
     ]);
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
     setAssinatura((ass as any) || null);
+    setAnamnese(ana);
     setNivel(TEMPO_TO_NIVEL((pt as PerfilTreino | null)?.tempo_treino));
     setLoading(false);
   };
@@ -425,7 +435,10 @@ const AtletaDetalhe = () => {
           </button>
 
           <button
-            onClick={() => toast.info("Anamnese completa em breve")}
+            onClick={() => {
+              if (anamnese) setShowAnamneseDialog(true);
+              else toast.error("Este atleta ainda não preencheu a anamnese.");
+            }}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
           >
             <FileText className="h-4 w-4 text-primary" />
@@ -586,6 +599,36 @@ const AtletaDetalhe = () => {
           }}
         />
       )}
+      <Dialog open={showAnamneseDialog} onOpenChange={setShowAnamneseDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-card border-border shadow-2xl">
+          <DialogHeader className="pb-4 border-b border-border/50">
+            <div className="flex items-center gap-2 text-primary mb-1">
+              <FileText className="h-5 w-5" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em]">FICHA TÉCNICA</span>
+            </div>
+            <DialogTitle className="font-display text-2xl uppercase tracking-tight">
+              Anamnese Completa
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs uppercase tracking-wider">
+              Dados de saúde e hábitos de {aluno.nome_completo}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-6">
+            {anamnese ? (
+              <AnamneseDetails data={anamnese} />
+            ) : (
+              <p className="text-center text-muted-foreground py-10">Dados não encontrados.</p>
+            )}
+          </div>
+
+          <DialogFooter className="border-t border-border/50 pt-4">
+            <Button variant="ghost" onClick={() => setShowAnamneseDialog(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

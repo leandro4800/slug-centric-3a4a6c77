@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2 } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -14,6 +14,7 @@ import heroDefault from "@/assets/hero-default.jpg";
 const Perfil = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { slug } = useParams();
   const { tenant } = useBranding();
   const hero = tenant?.hero_url || heroDefault;
   const nome = user?.user_metadata?.nome_completo || user?.email?.split("@")[0]?.toUpperCase() || "ATLETA";
@@ -71,6 +72,15 @@ const Perfil = () => {
             </button>
             <button className="bg-secondary/80 text-foreground font-semibold px-6 py-3 rounded-md flex items-center gap-2 flex-1 justify-center">
               <Camera className="h-4 w-4" /> Trocar Foto
+            </button>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            <button
+              onClick={() => navigate(`/${slug}/app/anamnese`)}
+              className="flex-1 h-11 rounded-md bg-accent text-accent-foreground flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider shadow-glow"
+            >
+              <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
             </button>
           </div>
 
