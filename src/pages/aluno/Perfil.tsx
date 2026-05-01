@@ -14,6 +14,7 @@ import heroDefault from "@/assets/hero-default.jpg";
 const Perfil = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { slug } = useParams();
   const { tenant } = useBranding();
   const hero = tenant?.hero_url || heroDefault;
   const nome = user?.user_metadata?.nome_completo || user?.email?.split("@")[0]?.toUpperCase() || "ATLETA";
