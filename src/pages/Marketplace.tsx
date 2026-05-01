@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Search, Sparkles } from "lucide-react";
+import { ArrowRight, Search, Sparkles, MapPin, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface CoachCard {
@@ -16,12 +16,18 @@ interface CoachCard {
   foto_url: string | null;
   hero_url: string | null;
   especialidades: string[] | null;
+  cidade: string | null;
+  estado: string | null;
+  permite_aula_avulsa: boolean | null;
+  preco_aula_avulsa: number | null;
 }
 
 export default function Marketplace() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [coaches, setCoaches] = useState<CoachCard[]>([]);
   const [loading, setLoading] = useState(true);
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(searchParams.get("q") || "");
+  const [region, setRegion] = useState(searchParams.get("region") || "");
 
   useEffect(() => {
     void load();
@@ -31,18 +37,25 @@ export default function Marketplace() {
     setLoading(true);
     const { data } = await supabase
       .from("tenants")
-      .select("id, slug, nome, tagline, bio, foto_url, hero_url, especialidades")
+      .select("id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, cidade, estado, permite_aula_avulsa, preco_aula_avulsa")
       .eq("status", "approved")
       .order("nome");
-    setCoaches((data as CoachCard[]) ?? []);
+    setCoaches((data as any[]) ?? []);
     setLoading(false);
   };
 
   const filtered = coaches.filter(
-    (c) =>
-      !q ||
-      c.nome.toLowerCase().includes(q.toLowerCase()) ||
-      (c.especialidades ?? []).some((e) => e.toLowerCase().includes(q.toLowerCase()))
+    (c) => {
+      const queryMatch = !q || 
+        c.nome.toLowerCase().includes(q.toLowerCase()) ||
+        (c.especialidades ?? []).some((e) => e.toLowerCase().includes(q.toLowerCase()));
+      
+      const regionMatch = !region ||
+        (c.cidade?.toLowerCase().includes(region.toLowerCase())) ||
+        (c.estado?.toLowerCase().includes(region.toLowerCase()));
+
+      return queryMatch && regionMatch;
+    }
   );
 
   return (
