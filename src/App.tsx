@@ -67,7 +67,11 @@ const App = () => (
               path="/:slug/app"
               element={
                 <BrandingProvider>
-                  <RequireAuth><AlunoLayout /></RequireAuth>
+                  <RequireAuth>
+                    <SubscriptionGuard>
+                      <AlunoLayout />
+                    </SubscriptionGuard>
+                  </RequireAuth>
                 </BrandingProvider>
               }
             >
