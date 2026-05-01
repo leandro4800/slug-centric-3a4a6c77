@@ -1,7 +1,7 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone } from "lucide-react";
+import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -125,6 +125,7 @@ const BRAND_COLORS = [
 ];
 
 const Landing = () => {
+  const [mode, setMode] = useState<"choice" | "aluno" | "coach" | null>(null);
   const [showSimulador, setShowSimulador] = useState(false);
   const [email, setEmail] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -137,7 +138,15 @@ const Landing = () => {
   const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
   const [screen4, setScreen4] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4");
+  
+  // Aluno state
+  const [hasCoachLink, setHasCoachLink] = useState<boolean | null>(null);
+  const [coachLink, setCoachLink] = useState("");
+  const [searchCoach, setSearchCoach] = useState("");
+  const [searchRegion, setSearchRegion] = useState("");
+  
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const grossRevenue = students * price;
   const fee = grossRevenue * 0.1;
@@ -193,6 +202,31 @@ const Landing = () => {
     }
   };
 
+  const handleCoachLinkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (coachLink) {
+      // If it's a full URL, try to extract the slug
+      const slug = coachLink.split("/").pop();
+      if (slug) {
+        navigate(`/${slug}`);
+      }
+    }
+  };
+
+  const handleSearchCoach = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchCoach) {
+      navigate(`/marketplace?q=${encodeURIComponent(searchCoach)}`);
+    }
+  };
+
+  const handleSearchRegion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchRegion) {
+      navigate(`/marketplace?region=${encodeURIComponent(searchRegion)}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary selection:text-white overflow-x-hidden">
       {/* Nav */}
@@ -217,9 +251,9 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero */}
+      {/* Hero / Choice Section */}
       <section className="relative min-h-[90vh] md:min-h-screen flex items-center pt-20 overflow-hidden">
-        {/* Mobile Background (Athletes) - visible only on mobile, positioned before title in DOM logic */}
+        {/* Mobile Background (Athletes) */}
         <div className="absolute inset-0 z-0 md:hidden">
           <img 
             src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" 
@@ -229,7 +263,7 @@ const Landing = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-[#0a0a0a]" />
         </div>
 
-        {/* Desktop Background - hidden on mobile */}
+        {/* Desktop Background */}
         <div className="absolute inset-0 z-0 hidden md:block">
           <img 
             src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777443275624_movv45_WhatsApp_Image_2026-04-24_at_13.32.23.jpeg" 
@@ -245,38 +279,173 @@ const Landing = () => {
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full mt-[30vh] md:mt-0">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 md:mb-8 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              Plataforma White-Label para Coaches
+          {!mode ? (
+            <div className="max-w-4xl mx-auto text-center">
+              <h1 className="text-4xl md:text-7xl font-black leading-[0.9] mb-12 tracking-tighter uppercase">
+                BEM-VINDO AO <br />
+                <span className="text-primary text-glow-primary text-8xl md:text-9xl">ALPHA COACH</span>
+              </h1>
+              
+              <div className="grid md:grid-cols-2 gap-8 mt-12">
+                <button 
+                  onClick={() => setMode("aluno")}
+                  className="group relative p-8 bg-zinc-900/80 border-2 border-white/10 rounded-2xl hover:border-primary transition-all text-left overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <UserRound size={120} />
+                  </div>
+                  <Users className="mb-4 text-primary h-12 w-12" />
+                  <h3 className="text-3xl font-black uppercase mb-2">Sou Aluno</h3>
+                  <p className="text-gray-400 mb-6 font-medium">Quero treinar, evoluir e encontrar os melhores coaches.</p>
+                  <div className="flex items-center text-primary font-bold uppercase tracking-wider group-hover:translate-x-2 transition-transform">
+                    Acessar agora <ArrowRight className="ml-2 h-5 w-5" />
+                  </div>
+                </button>
+
+                <button 
+                  onClick={() => setMode("coach")}
+                  className="group relative p-8 bg-zinc-900/80 border-2 border-white/10 rounded-2xl hover:border-primary transition-all text-left overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                    <TrendingUp size={120} />
+                  </div>
+                  <Smartphone className="mb-4 text-primary h-12 w-12" />
+                  <h3 className="text-3xl font-black uppercase mb-2">Sou Coach</h3>
+                  <p className="text-gray-400 mb-6 font-medium">Quero digitalizar minha consultoria e escalar meus resultados.</p>
+                  <div className="flex items-center text-primary font-bold uppercase tracking-wider group-hover:translate-x-2 transition-transform">
+                    Criar meu App <ArrowRight className="ml-2 h-5 w-5" />
+                  </div>
+                </button>
+              </div>
             </div>
-            
-            <h1 className="text-4xl md:text-7xl font-black leading-[0.9] mb-6 md:mb-8 tracking-tighter uppercase">
-              SEU APP DE <br className="hidden md:block" />
-              <span className="text-primary text-glow-primary">CONSULTORIA</span> <br className="hidden md:block" />
-              EM MODO CINEMA.
-            </h1>
-            
-            <p className="text-lg md:text-xl text-gray-400 max-w-xl mb-10 md:mb-12 leading-relaxed">
-              Esqueça planilhas e WhatsApp. Tenha seu próprio aplicativo com treinos, 
-              dieta, IA e pagamento automático — tudo com sua marca e seu domínio.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row flex-wrap gap-4">
-              <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white text-base px-8 h-14 rounded-md font-bold uppercase tracking-wider group">
-                <Play className="mr-2 h-4 w-4 fill-current" />
-                Quero minha franquia Alpha Coach
-              </Button>
-              <a href="#coaches" className="w-full sm:w-auto">
-                <Button size="lg" variant="outline" className="w-full text-white border-white/20 bg-white/5 hover:bg-white/10 text-base px-8 h-14 rounded-md font-medium group">
-                  Ver coaches em destaque
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </a>
+          ) : mode === "aluno" ? (
+            <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <button onClick={() => setMode(null)} className="text-primary font-bold uppercase tracking-wider mb-8 flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <ArrowRight className="h-4 w-4 rotate-180" /> Voltar
+              </button>
+              
+              <h2 className="text-4xl md:text-6xl font-black leading-[0.9] mb-8 tracking-tighter uppercase">
+                ENCONTRE SEU <span className="text-primary">COACH</span>
+              </h2>
+
+              {hasCoachLink === null ? (
+                <div className="space-y-6">
+                  <p className="text-xl text-gray-400 mb-8 font-medium">Você já possui o link direto do seu coach?</p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Button onClick={() => setHasCoachLink(true)} size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 px-8 rounded-xl text-lg uppercase">
+                      Sim, eu tenho o link
+                    </Button>
+                    <Button onClick={() => setHasCoachLink(false)} size="lg" variant="outline" className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold h-16 px-8 rounded-xl text-lg uppercase">
+                      Não, quero procurar um
+                    </Button>
+                  </div>
+                </div>
+              ) : hasCoachLink === true ? (
+                <form onSubmit={handleCoachLinkSubmit} className="space-y-6 animate-in zoom-in-95 duration-300">
+                  <p className="text-xl text-gray-400 font-medium">Cole o link do seu coach abaixo para acessar diretamente:</p>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <Input 
+                      value={coachLink}
+                      onChange={(e) => setCoachLink(e.target.value)}
+                      placeholder="alphacoach.app/seucoach" 
+                      className="h-16 bg-zinc-900/50 border-white/10 text-xl font-bold"
+                      autoFocus
+                    />
+                    <Button type="submit" size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 px-8 rounded-xl uppercase">
+                      Acessar Coach
+                    </Button>
+                  </div>
+                  <button onClick={() => setHasCoachLink(false)} className="text-sm text-gray-400 hover:text-white transition-colors uppercase font-bold tracking-widest">
+                    Ainda não tenho um coach
+                  </button>
+                </form>
+              ) : (
+                <div className="space-y-10 animate-in zoom-in-95 duration-300">
+                  <div className="space-y-4">
+                    <p className="text-xl text-gray-400 font-medium uppercase tracking-widest text-xs font-black">Procurar por nome</p>
+                    <form onSubmit={handleSearchCoach} className="flex flex-col sm:flex-row gap-4">
+                      <div className="relative flex-1">
+                        <SearchIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Input 
+                          value={searchCoach}
+                          onChange={(e) => setSearchCoach(e.target.value)}
+                          placeholder="Nome do coach ou equipe..." 
+                          className="h-16 pl-12 bg-zinc-900/50 border-white/10 text-xl font-bold"
+                        />
+                      </div>
+                      <Button type="submit" size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 px-8 rounded-xl uppercase">
+                        Buscar
+                      </Button>
+                    </form>
+                  </div>
+
+                  <div className="space-y-4">
+                    <p className="text-xl text-gray-400 font-medium uppercase tracking-widest text-xs font-black">Marketplace: Encontrar por região (Aulas avulsas)</p>
+                    <form onSubmit={handleSearchRegion} className="flex flex-col sm:flex-row gap-4">
+                      <div className="relative flex-1">
+                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 h-5 w-5" />
+                        <Input 
+                          value={searchRegion}
+                          onChange={(e) => setSearchRegion(e.target.value)}
+                          placeholder="Cidade ou estado..." 
+                          className="h-16 pl-12 bg-zinc-900/50 border-white/10 text-xl font-bold"
+                        />
+                      </div>
+                      <Button type="submit" size="lg" variant="outline" className="border-primary/50 text-primary hover:bg-primary/10 font-bold h-16 px-8 rounded-xl uppercase">
+                        Ver no Mapa
+                      </Button>
+                    </form>
+                  </div>
+                  
+                  <Link to="/marketplace">
+                    <Button variant="link" className="text-white p-0 h-auto text-sm font-black uppercase tracking-widest opacity-60 hover:opacity-100 transition-opacity">
+                      Ver todos os coaches em destaque <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                </div>
+              )}
             </div>
-          </div>
+          ) : (
+            <div className="max-w-3xl animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <button onClick={() => setMode(null)} className="text-primary font-bold uppercase tracking-wider mb-8 flex items-center gap-2 hover:opacity-80 transition-opacity">
+                <ArrowRight className="h-4 w-4 rotate-180" /> Voltar
+              </button>
+
+              <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 md:mb-8 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                Plataforma White-Label para Coaches
+              </div>
+              
+              <h1 className="text-4xl md:text-7xl font-black leading-[0.9] mb-6 md:mb-8 tracking-tighter uppercase">
+                SEU APP DE <br className="hidden md:block" />
+                <span className="text-primary text-glow-primary">CONSULTORIA</span> <br className="hidden md:block" />
+                EM MODO CINEMA.
+              </h1>
+              
+              <p className="text-lg md:text-xl text-gray-400 max-w-xl mb-10 md:mb-12 leading-relaxed font-medium">
+                Esqueça planilhas e WhatsApp. Tenha seu próprio aplicativo com treinos, 
+                dieta, IA e pagamento automático — tudo com sua marca e seu domínio.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row flex-wrap gap-4">
+                <Link to="/seja-coach" className="w-full sm:w-auto">
+                  <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white text-base px-8 h-14 rounded-md font-bold uppercase tracking-wider group">
+                    <Play className="mr-2 h-4 w-4 fill-current" />
+                    Quero minha franquia Alpha Coach
+                  </Button>
+                </Link>
+                <a href="#coaches" className="w-full sm:w-auto">
+                  <Button size="lg" variant="outline" className="w-full text-white border-white/20 bg-white/5 hover:bg-white/10 text-base px-8 h-14 rounded-md font-medium group uppercase font-bold tracking-wider">
+                    Ver coaches em destaque
+                    <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </Button>
+                </a>
+              </div>
+            </div>
+          )}
         </div>
       </section>
+
 
       {/* Coaches Section */}
       <section id="coaches" className="py-24 px-6 md:px-12 max-w-7xl mx-auto">

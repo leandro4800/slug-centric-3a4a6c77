@@ -1261,14 +1261,18 @@ export type Database = {
         Row: {
           accent_hsl: string
           bio: string | null
+          cidade: string | null
           created_at: string
           especialidades: string[] | null
+          estado: string | null
           foto_url: string | null
           hero_url: string | null
           id: string
           logo_url: string | null
           nome: string
           owner_user_id: string | null
+          permite_aula_avulsa: boolean | null
+          preco_aula_avulsa: number | null
           primary_hsl: string
           slug: string
           status: Database["public"]["Enums"]["tenant_status"]
@@ -1283,14 +1287,18 @@ export type Database = {
         Insert: {
           accent_hsl?: string
           bio?: string | null
+          cidade?: string | null
           created_at?: string
           especialidades?: string[] | null
+          estado?: string | null
           foto_url?: string | null
           hero_url?: string | null
           id?: string
           logo_url?: string | null
           nome: string
           owner_user_id?: string | null
+          permite_aula_avulsa?: boolean | null
+          preco_aula_avulsa?: number | null
           primary_hsl?: string
           slug: string
           status?: Database["public"]["Enums"]["tenant_status"]
@@ -1305,14 +1313,18 @@ export type Database = {
         Update: {
           accent_hsl?: string
           bio?: string | null
+          cidade?: string | null
           created_at?: string
           especialidades?: string[] | null
+          estado?: string | null
           foto_url?: string | null
           hero_url?: string | null
           id?: string
           logo_url?: string | null
           nome?: string
           owner_user_id?: string | null
+          permite_aula_avulsa?: boolean | null
+          preco_aula_avulsa?: number | null
           primary_hsl?: string
           slug?: string
           status?: Database["public"]["Enums"]["tenant_status"]
