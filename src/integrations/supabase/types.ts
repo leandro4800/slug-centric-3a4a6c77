@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      alimentos_taco: {
+        Row: {
+          carboidrato_g: number | null
+          categoria: string | null
+          created_at: string | null
+          energia_kcal: number | null
+          fibra_g: number | null
+          id: string
+          lipideos_g: number | null
+          nome: string
+          proteina_g: number | null
+        }
+        Insert: {
+          carboidrato_g?: number | null
+          categoria?: string | null
+          created_at?: string | null
+          energia_kcal?: number | null
+          fibra_g?: number | null
+          id?: string
+          lipideos_g?: number | null
+          nome: string
+          proteina_g?: number | null
+        }
+        Update: {
+          carboidrato_g?: number | null
+          categoria?: string | null
+          created_at?: string | null
+          energia_kcal?: number | null
+          fibra_g?: number | null
+          id?: string
+          lipideos_g?: number | null
+          nome?: string
+          proteina_g?: number | null
+        }
+        Relationships: []
+      }
       alunos: {
         Row: {
           created_at: string
@@ -521,6 +557,50 @@ export type Database = {
           },
         ]
       }
+      dietas: {
+        Row: {
+          analise_id: string | null
+          created_at: string | null
+          id: string
+          kcal_alvo: number | null
+          macros_alvo: Json | null
+          objetivo: string | null
+          observacoes_clinicas: string | null
+          tmb_estimada: number | null
+          user_id: string
+        }
+        Insert: {
+          analise_id?: string | null
+          created_at?: string | null
+          id?: string
+          kcal_alvo?: number | null
+          macros_alvo?: Json | null
+          objetivo?: string | null
+          observacoes_clinicas?: string | null
+          tmb_estimada?: number | null
+          user_id: string
+        }
+        Update: {
+          analise_id?: string | null
+          created_at?: string | null
+          id?: string
+          kcal_alvo?: number | null
+          macros_alvo?: Json | null
+          objetivo?: string | null
+          observacoes_clinicas?: string | null
+          tmb_estimada?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dietas_analise_id_fkey"
+            columns: ["analise_id"]
+            isOneToOne: false
+            referencedRelation: "analises_clinicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exames_biomarcadores: {
         Row: {
           analise_id: string | null
@@ -647,6 +727,48 @@ export type Database = {
           sugestao_conduta?: string | null
         }
         Relationships: []
+      }
+      itens_refeicao: {
+        Row: {
+          alimento_id: string | null
+          created_at: string | null
+          id: string
+          quantidade_g: number | null
+          refeicao_id: string | null
+          substituicoes: string | null
+        }
+        Insert: {
+          alimento_id?: string | null
+          created_at?: string | null
+          id?: string
+          quantidade_g?: number | null
+          refeicao_id?: string | null
+          substituicoes?: string | null
+        }
+        Update: {
+          alimento_id?: string | null
+          created_at?: string | null
+          id?: string
+          quantidade_g?: number | null
+          refeicao_id?: string | null
+          substituicoes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "itens_refeicao_alimento_id_fkey"
+            columns: ["alimento_id"]
+            isOneToOne: false
+            referencedRelation: "alimentos_taco"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "itens_refeicao_refeicao_id_fkey"
+            columns: ["refeicao_id"]
+            isOneToOne: false
+            referencedRelation: "refeicoes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -865,6 +987,38 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      refeicoes: {
+        Row: {
+          dieta_id: string | null
+          horario: string | null
+          id: string
+          nome: string
+          ordem: number | null
+        }
+        Insert: {
+          dieta_id?: string | null
+          horario?: string | null
+          id?: string
+          nome: string
+          ordem?: number | null
+        }
+        Update: {
+          dieta_id?: string | null
+          horario?: string | null
+          id?: string
+          nome?: string
+          ordem?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refeicoes_dieta_id_fkey"
+            columns: ["dieta_id"]
+            isOneToOne: false
+            referencedRelation: "dietas"
             referencedColumns: ["id"]
           },
         ]
