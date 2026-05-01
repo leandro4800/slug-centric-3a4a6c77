@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2 } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
