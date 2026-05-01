@@ -1,0 +1,10 @@
+INSERT INTO tenants (nome, slug, tagline, bio, cidade, estado, status, owner_user_id, especialidades, hero_url) VALUES 
+('PIKACHU TEAM', 'pikachu-team', 'HIPERTROFIA & ESTÉTICA', 'Treinos cinematográficos pra quem quer crescer.', 'Serra', 'ES', 'approved', '757a6538-bccb-4a23-b098-4b69cb4d1b1a', ARRAY['Hipertrofia', 'Estética'], 'https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4'),
+('TEAM JACKSON', 'team-jackson', 'HIPERTROFIA & EMAGRECIMENTO', 'Performance e estética com método Team Jackson.', 'Serra', 'ES', 'approved', '757a6538-bccb-4a23-b098-4b69cb4d1b1a', ARRAY['Hipertrofia', 'Emagrecimento'], 'https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4'),
+('BADBOY TEAM', 'badboy-team', 'ESTÉTICA & PERFORMANCE', 'Metodologia Badboy para resultados extremos.', 'São Paulo', 'SP', 'approved', '757a6538-bccb-4a23-b098-4b69cb4d1b1a', ARRAY['Estética', 'Performance'], 'https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4'),
+('NUTRI SAMILA DIAS', 'samila-dias', 'NUTRIÇÃO ESPORTIVA', 'Especialista em emagrecimento e saúde.', 'Serra', 'ES', 'approved', '757a6538-bccb-4a23-b098-4b69cb4d1b1a', ARRAY['Nutrição Esportiva', 'Saúde'], 'https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4')
+ON CONFLICT (slug) DO UPDATE SET 
+cidade = EXCLUDED.cidade, 
+estado = EXCLUDED.estado, 
+status = 'approved',
+hero_url = EXCLUDED.hero_url;
