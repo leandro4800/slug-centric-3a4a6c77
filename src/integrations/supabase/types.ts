@@ -467,6 +467,59 @@ export type Database = {
           },
         ]
       }
+      biblioteca_metodologia: {
+        Row: {
+          created_at: string | null
+          dia_nome: string | null
+          dia_ordem: number | null
+          divisao_nome: string | null
+          exercicio_nome: string
+          grupo_muscular: string | null
+          id: string
+          nivel: string | null
+          ordem_no_dia: number | null
+          repeticoes: string | null
+          series: number | null
+          tecnica_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dia_nome?: string | null
+          dia_ordem?: number | null
+          divisao_nome?: string | null
+          exercicio_nome: string
+          grupo_muscular?: string | null
+          id?: string
+          nivel?: string | null
+          ordem_no_dia?: number | null
+          repeticoes?: string | null
+          series?: number | null
+          tecnica_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dia_nome?: string | null
+          dia_ordem?: number | null
+          divisao_nome?: string | null
+          exercicio_nome?: string
+          grupo_muscular?: string | null
+          id?: string
+          nivel?: string | null
+          ordem_no_dia?: number | null
+          repeticoes?: string | null
+          series?: number | null
+          tecnica_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_metodologia_tecnica_id_fkey"
+            columns: ["tecnica_id"]
+            isOneToOne: false
+            referencedRelation: "dicionario_tecnicas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       biblioteca_metodologia_pacho: {
         Row: {
           created_at: string
@@ -586,6 +639,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      dicionario_tecnicas: {
+        Row: {
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          video_explicativo: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          video_explicativo?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          video_explicativo?: string | null
+        }
+        Relationships: []
       }
       dietas: {
         Row: {
@@ -1214,8 +1291,11 @@ export type Database = {
           id: string
           observacao: string | null
           ordem: number | null
+          ordem_execucao: number | null
           repeticoes: string | null
           series: string | null
+          status: string | null
+          tecnica_id: string | null
           tenant_id: string
           updated_at: string
           video_coach_url: string | null
@@ -1229,8 +1309,11 @@ export type Database = {
           id?: string
           observacao?: string | null
           ordem?: number | null
+          ordem_execucao?: number | null
           repeticoes?: string | null
           series?: string | null
+          status?: string | null
+          tecnica_id?: string | null
           tenant_id: string
           updated_at?: string
           video_coach_url?: string | null
@@ -1244,14 +1327,24 @@ export type Database = {
           id?: string
           observacao?: string | null
           ordem?: number | null
+          ordem_execucao?: number | null
           repeticoes?: string | null
           series?: string | null
+          status?: string | null
+          tecnica_id?: string | null
           tenant_id?: string
           updated_at?: string
           video_coach_url?: string | null
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "treinos_prescritos_tecnica_id_fkey"
+            columns: ["tecnica_id"]
+            isOneToOne: false
+            referencedRelation: "dicionario_tecnicas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "treinos_prescritos_tenant_id_fkey"
             columns: ["tenant_id"]
