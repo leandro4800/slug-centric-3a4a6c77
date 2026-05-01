@@ -17,3 +17,6 @@ verify_jwt = true
 
 [functions.vlog-ingest]
 verify_jwt = false
+
+[functions.gerar-dieta]
+verify_jwt = true
