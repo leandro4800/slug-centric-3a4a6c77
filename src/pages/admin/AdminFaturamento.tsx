@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import { DEMO_ATHLETES } from "@/lib/demoAthletes";
+import alphaLogo from "@/assets/alphacoach-logo.jpeg";
 
 const AdminFaturamento = () => {
   const navigate = useNavigate();
