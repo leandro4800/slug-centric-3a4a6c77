@@ -145,8 +145,8 @@ const AdminMontarTreino = () => {
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
   const divisoes = useMemo(
-    () => sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo),
-    [perfil.frequencia_semanal, perfil.sexo]
+    () => sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo, nivel),
+    [perfil.frequencia_semanal, perfil.sexo, nivel]
   );
 
   const salvarPerfil = async () => {
