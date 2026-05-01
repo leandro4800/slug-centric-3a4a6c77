@@ -109,6 +109,9 @@ const App = () => (
             <Route path="/:slug/admin/planos" element={
               <BrandingProvider><RequireAuth><AdminPlanos /></RequireAuth></BrandingProvider>
             } />
+            <Route path="/:slug/admin/faturamento" element={
+              <BrandingProvider><RequireAuth><AdminFaturamento /></RequireAuth></BrandingProvider>
+            } />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
