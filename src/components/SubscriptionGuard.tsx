@@ -18,7 +18,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
   useEffect(() => {
     if (authLoading || !user || !slug) return;
 
-    const checkSubscription = async () => {
+    const checkSubscriptionAndCompletion = async () => {
       setLoading(true);
       
       // 1. Check if user is the coach of this tenant
@@ -43,11 +43,36 @@ export const SubscriptionGuard = ({ children }: Props) => {
         .in("status", ["active", "trialing"])
         .maybeSingle();
 
-      setStatus(sub?.status || "inactive");
+      const subscriptionStatus = sub?.status || "inactive";
+      setStatus(subscriptionStatus);
+
+      // 3. Check for profile/onboarding completion
+      if (subscriptionStatus === "active" || subscriptionStatus === "trialing") {
+        const { data: profile } = await supabase
+          .from("perfis")
+          .select("onboarding_completo")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        const { count: anamneseCount } = await supabase
+          .from("anamnese_aluno")
+          .select("id", { count: 'exact', head: true })
+          .eq("aluno_id", user.id);
+
+        const { count: avaliacaoCount } = await supabase
+          .from("avaliacoes_fisicas")
+          .select("id", { count: 'exact', head: true })
+          .eq("aluno_id", user.id);
+
+        if (!profile?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
+          setStatus("incomplete");
+        }
+      }
+
       setLoading(false);
     };
 
-    void checkSubscription();
+    void checkSubscriptionAndCompletion();
   }, [user, authLoading, slug]);
 
   if (authLoading || loading) {
@@ -59,6 +84,10 @@ export const SubscriptionGuard = ({ children }: Props) => {
   }
 
   if (isCoach) return <>{children}</>;
+
+  if (status === "incomplete") {
+    return <Navigate to="/onboarding" replace />;
+  }
 
   if (status !== "active" && status !== "trialing") {
     return <Navigate to={`/${slug}`} replace />;

@@ -78,7 +78,18 @@ export default function Onboarding() {
       .select("nome_completo, tenant_id, onboarding_completo")
       .eq("id", user.id)
       .maybeSingle();
-    if (perfil?.onboarding_completo) {
+
+    const { count: anamneseCount } = await supabase
+      .from("anamnese_aluno")
+      .select("id", { count: 'exact', head: true })
+      .eq("aluno_id", user.id);
+
+    const { count: avaliacaoCount } = await supabase
+      .from("avaliacoes_fisicas")
+      .select("id", { count: 'exact', head: true })
+      .eq("aluno_id", user.id);
+
+    if (perfil?.onboarding_completo && anamneseCount && avaliacaoCount) {
       const { data: t } = perfil.tenant_id
         ? await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle()
         : { data: null };
