@@ -206,13 +206,13 @@ const AdminFaturamento = () => {
           >
             <p className="text-xs uppercase tracking-[0.3em] text-white/40 font-bold italic">Saldo Disponível</p>
             <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white">
-              R$ 0,00
+              {formatBRL(totalNet)}
             </h1>
             <div className="flex items-center gap-2 pt-2">
               <Badge variant="outline" className="bg-red-600/20 text-red-600 border-red-600/40 uppercase text-[10px] tracking-widest font-bold px-3 py-1 rounded-none border-l-4">
                 PLATAFORMA ATIVA
               </Badge>
-              <p className="text-xs text-white/40">R$ 0,00 bloqueado</p>
+              <p className="text-xs text-white/40">{formatBRL(totalCommission)} retidos (10%)</p>
             </div>
           </motion.div>
           
