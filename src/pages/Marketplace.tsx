@@ -62,13 +62,30 @@ export default function Marketplace() {
         c.nome.toLowerCase().includes(qLower) ||
         (c.especialidades ?? []).some((e) => e.toLowerCase().includes(qLower));
       
-      // Handle state mapping for region search
-      const stateAbbreviation = stateMap[regionLower] || regionLower;
+      // Enhanced region filtering
+      let regionMatch = !regionLower;
       
-      const regionMatch = !regionLower ||
-        (c.cidade?.toLowerCase().includes(regionLower)) ||
-        (c.estado?.toLowerCase().includes(regionLower)) ||
-        (c.estado?.toLowerCase() === stateAbbreviation.toLowerCase());
+      if (regionLower) {
+        const terms = regionLower.split(/[\s,.-]+/).filter(t => t.length > 0);
+        
+        regionMatch = terms.every(term => {
+          const termStateAbbr = stateMap[term] || term;
+          return (
+            c.cidade?.toLowerCase().includes(term) ||
+            c.estado?.toLowerCase().includes(term) ||
+            c.estado?.toLowerCase() === termStateAbbr.toLowerCase()
+          );
+        });
+
+        // Also check if the whole string matches state name or city
+        const stateAbbrFromFull = stateMap[regionLower];
+        if (!regionMatch && (stateAbbrFromFull || regionLower.length > 2)) {
+          regionMatch = 
+            (c.cidade?.toLowerCase().includes(regionLower)) ||
+            (c.estado?.toLowerCase().includes(regionLower)) ||
+            (c.estado?.toLowerCase() === stateAbbrFromFull?.toLowerCase());
+        }
+      }
 
       return queryMatch && regionMatch;
     }
