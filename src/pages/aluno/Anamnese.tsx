@@ -162,21 +162,21 @@ export default function Anamnese() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-lg border-b border-border">
-        <div className="px-5 py-4 flex items-center justify-between">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2">
-            <ArrowLeft className="h-6 w-6" />
-          </button>
-          <h1 className="font-display text-xl uppercase tracking-tight">Anamnese Completa</h1>
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center gap-2 text-primary font-bold text-sm uppercase"
-          >
-            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Salvar
-          </button>
-        </div>
+      <PageHeader 
+        icon={ClipboardCheck} 
+        title="Anamnese" 
+        subtitle="Complete seu perfil de saúde"
+      />
+
+      <div className="px-5 mb-6">
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-wider shadow-glow flex items-center justify-center gap-2"
+        >
+          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          Salvar Anamnese
+        </button>
       </div>
 
       <main className="px-5 py-6 space-y-8 max-w-2xl mx-auto">
