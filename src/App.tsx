@@ -32,6 +32,7 @@ import MeusAtletas from "./pages/admin/MeusAtletas";
 import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
 import AdminCoaches from "./pages/admin/AdminCoaches";
 import AdminPlanos from "./pages/admin/AdminPlanos";
+import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
