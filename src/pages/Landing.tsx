@@ -350,7 +350,7 @@ const Landing = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full mt-[30vh] md:mt-0">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full mt-[50vh] md:mt-[40vh]">
           {!mode ? (
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-7xl font-black leading-[0.9] mb-12 tracking-tighter uppercase">
