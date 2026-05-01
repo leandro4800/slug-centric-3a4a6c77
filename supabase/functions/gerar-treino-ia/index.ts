@@ -27,6 +27,13 @@ serve(async (req) => {
 Para cada exercício use estrutura: Warm-up sets (2 leves), Feeder sets (1-2 médias), Work sets (até a falha técnica).
 NUNCA prescreva exercícios contraindicados pelas lesões/limitações do aluno.
 Cardio: LISS para perda de gordura; cardio leve (zona 2, 20-30min) para ganho de massa.
+
+AJUSTE O VOLUME E INTENSIDADE CONFORME O NÍVEL DO ALUNO:
+- Iniciante: 4-5 exercícios/dia, 2-3 work sets, foco em técnica e amplitude, sem técnicas avançadas.
+- Intermediário: 5-6 exercícios/dia, 3 work sets, introduzir drop-sets ocasionais e progressão de carga.
+- Avançado: 6-7 exercícios/dia, 3-4 work sets, técnicas de intensidade (rest-pause, drop, FST-7) frequentes.
+- Atleta de Alto Nível (competidor/fisiculturista): 7-8 exercícios/dia, 4 work sets, periodização de pico, divisões altamente especializadas, alto volume de isoladores, técnicas de intensidade combinadas, ênfase em pontos fracos e simetria competitiva.
+
 Responda SEMPRE chamando a função montar_treino com a estrutura completa.`;
 
     const userPrompt = `Monte o treino para o aluno:
