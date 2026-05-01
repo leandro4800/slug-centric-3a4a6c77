@@ -714,7 +714,6 @@ const Landing = () => {
         </div>
       </section>
 
-
       {/* Paz de espírito financeira */}
       <section className="py-24 px-6 md:px-12 bg-black">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
