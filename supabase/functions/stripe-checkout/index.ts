@@ -84,6 +84,7 @@ Deno.serve(async (req) => {
     const sessionParams: any = {
       mode,
       payment_method_types: ["card"],
+      allow_promotion_codes: true,
       line_items,
       customer_email: customerEmail || undefined,
       success_url: `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${tenant_to_use.slug}`,
