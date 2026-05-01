@@ -1,6 +1,7 @@
 // Edge function: gera treino prescrito via Lovable AI
-// Recebe: { perfil, biblioteca, frequencia, divisoes }
-// Retorna: { dias: [{ dia: "Treino A", exercicios: [{nome, series, repeticoes, observacao}] }], cardio: string }
+// Especializada na Metodologia Fabrício Pacholok
+// Recebe: { perfil, biblioteca, divisoes }
+// Retorna: { dias: [{ dia: "Treino A", exercicios: [{nome, series, repeticoes, cadencia, detalhes_execucao, observacao}] }], cardio: string }
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
@@ -23,42 +24,56 @@ serve(async (req) => {
     const lesoes = (perfil?.lesoes || []).join(", ") || "nenhuma";
     const limitacoes = (perfil?.limitacoes || []).join(", ") || "nenhuma";
 
-    const systemPrompt = `Você é um coach especialista em musculação que segue a Metodologia Pacho.
-Para cada exercício use estrutura: Warm-up sets (2 leves), Feeder sets (1-2 médias), Work sets (até a falha técnica).
-NUNCA prescreva exercícios contraindicados pelas lesões/limitações do aluno.
-Cardio: LISS para perda de gordura; cardio leve (zona 2, 20-30min) para ganho de massa.
+    // Preparação para futura integração com a tabela biblioteca_metodologia_pacho
+    // Por enquanto, usamos a biblioteca geral enviada pelo frontend
+    
+    const systemPrompt = `Você é um treinador de elite especialista na Metodologia Fabrício Pacholok. 
+Sua missão é prescrever treinos com extrema precisão técnica, focando em:
+1. FALHA MUSCULAR E PROGRESSÃO DE CARGA (Progressive Overload): Cada série deve ter um propósito claro (Warm-up, Feeder ou Work set).
+2. BIOMECÂNICA AVANÇADA: Otimize a seleção de exercícios para máxima eficiência mecânica e segurança, respeitando as limitações do aluno.
+3. TÉCNICAS DE INTENSIDADE: Use Rest-Pause, Drop-set, FST-7 e Cluster Sets estrategicamente.
+   - Proibido para alunos de nível Iniciante ou Intermediário.
+   - Obrigatório para Avançados e Atletas de Alto Nível.
+4. DIVISÃO SETORIZADA: Para alunos avançados/atletas, separe grupos musculares grandes (ex: Treino focado em Quadríceps em um dia, Posterior de Coxa em outro; Costas com ênfase em largura vs. espessura).
+5. DETALHAMENTO EXTREMO: Para cada exercício, você DEVE fornecer:
+   - CADÊNCIA: Exemplo: 4-0-2-0 (4s excêntrica, 0s transição, 2s concêntrica, 0s pico).
+   - DETALHES DE EXECUÇÃO: Instruções técnicas profundas (ex: "alongamento máximo na fase excêntrica", "pico de contração de 2 segundos no topo", "manter escápulas aduzidas").
 
-AJUSTE O VOLUME E INTENSIDADE CONFORME O NÍVEL DO ALUNO:
-- Iniciante: 4-5 exercícios/dia, 2-3 work sets, foco em técnica e amplitude, sem técnicas avançadas.
-- Intermediário: 5-6 exercícios/dia, 3 work sets, introduzir drop-sets ocasionais e progressão de carga.
-- Avançado: 6-7 exercícios/dia, 3-4 work sets, técnicas de intensidade (rest-pause, drop, FST-7) frequentes.
-- Atleta de Alto Nível (competidor/fisiculturista): 7-8 exercícios/dia, 4 work sets, periodização de pico, divisões altamente especializadas, alto volume de isoladores, técnicas de intensidade combinadas, ênfase em pontos fracos e simetria competitiva.
+ESTRUTURA DE SÉRIES (Padrão Pacho):
+- Warm-up sets: 2 séries leves para aquecimento e lubrificação articular.
+- Feeder sets: 1-2 séries com carga progressiva para preparar o sistema nervoso (sem falha).
+- Work sets: As séries principais levadas até a falha técnica ou absoluta.
 
-Responda SEMPRE chamando a função montar_treino com a estrutura completa.`;
+NÍVEIS DE PRESCRIÇÃO:
+- Iniciante: 4-5 exercícios, volume moderado, foco em padrão de movimento, sem técnicas avançadas.
+- Intermediário: 5-6 exercícios, foco em progressão de carga, técnicas básicas de intensidade ocasionalmente.
+- Avançado: 6-7 exercícios, divisão altamente setorizada, técnicas avançadas em quase todos os grupos.
+- Atleta de Alto Nível: 7-8 exercícios, volume e intensidade máximos, FST-7, Cluster Sets, foco em pontos fracos e detalhes estéticos competitivos.
+
+Responda SEMPRE chamando a função montar_treino com riqueza de detalhes em cada campo.`;
 
     const userPrompt = `Monte o treino para o aluno:
 - Sexo: ${perfil?.sexo || "não informado"}
 - Idade: ${perfil?.idade || "?"}
-- Peso: ${perfil?.peso_kg || "?"}kg / Altura: ${perfil?.altura_cm || "?"}cm / BF: ${perfil?.bf_pct || "?"}%
+- Nível: ${perfil?.tempo_treino || "Iniciante"}
 - Objetivo: ${perfil?.objetivo || "hipertrofia"}
 - Frequência semanal: ${perfil?.frequencia_semanal || 4}x
-- Tempo de treino: ${perfil?.tempo_treino || "intermediário"}
 - Lesões: ${lesoes}
 - Limitações: ${limitacoes}
 
 Divisão sugerida: ${divisoes?.join(", ") || "ABC"}
 
-Use APENAS exercícios desta biblioteca (id, nome, grupo, contraindicacoes):
+Use exercícios desta biblioteca (id, nome, grupo, contraindicacoes):
 ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}] contra: ${(e.contraindicacoes || []).join("/") || "—"}`).join("\n")}
 
-Cada dia deve ter 5-7 exercícios. Inclua observações de execução curtas (Pacho).`;
+Prescreva o cardio adequado ao objetivo (Pacho style).`;
 
     const tools = [
       {
         type: "function",
         function: {
           name: "montar_treino",
-          description: "Retorna a prescrição estruturada do treino completo.",
+          description: "Retorna a prescrição estruturada do treino completo seguindo a Metodologia Pacho.",
           parameters: {
             type: "object",
             properties: {
@@ -67,18 +82,20 @@ Cada dia deve ter 5-7 exercícios. Inclua observações de execução curtas (Pa
                 items: {
                   type: "object",
                   properties: {
-                    dia: { type: "string", description: "Ex: Treino A" },
+                    dia: { type: "string", description: "Ex: Treino A - Quadríceps" },
                     exercicios: {
                       type: "array",
                       items: {
                         type: "object",
                         properties: {
                           nome: { type: "string" },
-                          series: { type: "string" },
-                          repeticoes: { type: "string" },
-                          observacao: { type: "string" },
+                          series: { type: "string", description: "Ex: 2 Warm-up + 1 Feeder + 3 Work sets" },
+                          repeticoes: { type: "string", description: "Ex: 8-12 + Drop-set" },
+                          cadencia: { type: "string", description: "Tempo de execução (ex: 3-1-2-0)" },
+                          detalhes_execucao: { type: "string", description: "Instruções biomecânicas e de intensidade ricas em detalhes" },
+                          observacao: { type: "string", description: "Informações adicionais curtas" },
                         },
-                        required: ["nome", "series", "repeticoes", "observacao"],
+                        required: ["nome", "series", "repeticoes", "cadencia", "detalhes_execucao", "observacao"],
                         additionalProperties: false,
                       },
                     },

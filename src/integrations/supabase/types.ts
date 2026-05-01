@@ -1285,7 +1285,9 @@ export type Database = {
       treinos_prescritos: {
         Row: {
           aluno_id: string
+          cadencia: string | null
           created_at: string
+          detalhes_execucao: string | null
           dia_semana: string
           exercicio: string
           id: string
@@ -1303,7 +1305,9 @@ export type Database = {
         }
         Insert: {
           aluno_id: string
+          cadencia?: string | null
           created_at?: string
+          detalhes_execucao?: string | null
           dia_semana: string
           exercicio: string
           id?: string
@@ -1321,7 +1325,9 @@ export type Database = {
         }
         Update: {
           aluno_id?: string
+          cadencia?: string | null
           created_at?: string
+          detalhes_execucao?: string | null
           dia_semana?: string
           exercicio?: string
           id?: string

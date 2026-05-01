@@ -8,6 +8,8 @@ export interface ExerciseCardData {
   exercicio: string;
   series: string | null;
   repeticoes: string | null;
+  cadencia?: string | null;
+  detalhes_execucao?: string | null;
   observacao: string | null;
   /** Vídeo do YouTube de demonstração (referência técnica) */
   video_url?: string | null;
@@ -280,13 +282,27 @@ export const ExerciseCard = ({
       </button>
 
       {isOpen && (
-        <div className="px-4 pb-4 space-y-3">
-          {data.observacao && (
-            <div className="bg-secondary/50 border border-border rounded-lg px-3 py-2.5 text-sm flex items-start gap-2">
-              <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
-              <span className="italic text-muted-foreground">{data.observacao}</span>
-            </div>
-          )}
+        <div className="px-4 pb-4 space-y-4">
+          {/* Detalhes Pacho */}
+          <div className="space-y-2">
+            {data.cadencia && (
+              <div className="flex items-center gap-2 text-xs font-bold text-accent bg-accent/10 px-3 py-1.5 rounded-full w-fit">
+                <Clock className="h-3 w-3" /> CADÊNCIA: {data.cadencia}
+              </div>
+            )}
+            {data.detalhes_execucao && (
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 space-y-1">
+                <p className="text-[10px] uppercase font-bold text-primary tracking-widest">Execução Metodologia Pacho</p>
+                <p className="text-xs text-foreground/90 leading-relaxed">{data.detalhes_execucao}</p>
+              </div>
+            )}
+            {data.observacao && (
+              <div className="bg-secondary/50 border border-border rounded-lg px-3 py-2.5 text-sm flex items-start gap-2">
+                <Lightbulb className="h-4 w-4 text-accent shrink-0 mt-0.5" />
+                <span className="italic text-muted-foreground">{data.observacao}</span>
+              </div>
+            )}
+          </div>
 
           {/* Iniciar exercício + timer */}
           <div className="grid grid-cols-[auto_1fr] gap-2">

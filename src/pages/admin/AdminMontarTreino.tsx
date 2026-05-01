@@ -35,6 +35,8 @@ interface ExercicioPrescrito {
   exercicio: string;
   series: string;
   repeticoes: string;
+  cadencia?: string;
+  detalhes_execucao?: string;
   observacao: string;
 }
 
@@ -47,8 +49,18 @@ const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" 
   return "Iniciante";
 };
 
-const sugerirDivisoes = (frequencia: number, sexo: string | null): string[] => {
+const sugerirDivisoes = (frequencia: number, sexo: string | null, nivel: string): string[] => {
   const fem = sexo?.toLowerCase().startsWith("f");
+  
+  if (nivel === "Atleta de Alto Nível" || nivel === "Avançado") {
+    if (frequencia >= 5) {
+      return ["Quadríceps", "Costas (Largura)", "Peito/Ombro", "Posterior/Glúteo", "Costas (Espessura)/Braços"];
+    }
+    if (frequencia === 4) {
+      return ["Membros Inferiores (Foco Quad)", "Peito/Ombro", "Costas/Trapézio", "Membros Inferiores (Foco Post)"];
+    }
+  }
+
   if (frequencia <= 3) return fem ? ["Glúteo/Posterior", "Peito/Tríceps", "Costas/Bíceps"] : ["Push", "Pull", "Legs"];
   if (frequencia === 4) return fem
     ? ["Glúteo/Posterior", "Peito/Ombro", "Glúteo/Quadríceps", "Costas/Braço"]
@@ -109,7 +121,7 @@ const AdminMontarTreino = () => {
       }
       const { data: tp } = await supabase
         .from("treinos_prescritos")
-        .select("dia_semana, ordem, exercicio, series, repeticoes, observacao")
+        .select("dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
         .eq("aluno_id", alunoId)
         .eq("tenant_id", tenant.id)
         .order("dia_semana")
@@ -122,6 +134,8 @@ const AdminMontarTreino = () => {
           series: e.series || "",
           repeticoes: e.repeticoes || "",
           observacao: e.observacao || "",
+          cadencia: e.cadencia || "",
+          detalhes_execucao: e.detalhes_execucao || "",
         })));
       } else {
         setExercicios([]);
@@ -131,8 +145,8 @@ const AdminMontarTreino = () => {
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
   const divisoes = useMemo(
-    () => sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo),
-    [perfil.frequencia_semanal, perfil.sexo]
+    () => sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo, nivel),
+    [perfil.frequencia_semanal, perfil.sexo, nivel]
   );
 
   const salvarPerfil = async () => {
@@ -172,6 +186,8 @@ const AdminMontarTreino = () => {
             exercicio: e.nome,
             series: e.series,
             repeticoes: e.repeticoes,
+            cadencia: e.cadencia,
+            detalhes_execucao: e.detalhes_execucao,
             observacao: e.observacao,
           });
         });
@@ -199,6 +215,8 @@ const AdminMontarTreino = () => {
         exercicio: e.exercicio,
         series: e.series,
         repeticoes: e.repeticoes,
+        cadencia: e.cadencia,
+        detalhes_execucao: e.detalhes_execucao,
         observacao: e.observacao,
       }));
       const { error } = await supabase.from("treinos_prescritos").insert(rows);
@@ -362,12 +380,22 @@ const AdminMontarTreino = () => {
                     .map((e, globalIdx) => ({ e, globalIdx }))
                     .filter(({ e }) => e.dia_semana === dia)
                     .map(({ e, globalIdx }) => (
-                      <div key={globalIdx} className="grid grid-cols-12 gap-2 items-start">
-                        <Input className="col-span-5" placeholder="Exercício" value={e.exercicio} onChange={(ev) => updateEx(globalIdx, { exercicio: ev.target.value })} />
-                        <Input className="col-span-1" placeholder="Sx" value={e.series} onChange={(ev) => updateEx(globalIdx, { series: ev.target.value })} />
-                        <Input className="col-span-2" placeholder="Reps" value={e.repeticoes} onChange={(ev) => updateEx(globalIdx, { repeticoes: ev.target.value })} />
-                        <Textarea className="col-span-3 min-h-[40px]" placeholder="Observação" value={e.observacao} onChange={(ev) => updateEx(globalIdx, { observacao: ev.target.value })} />
-                        <Button size="icon" variant="ghost" className="col-span-1" onClick={() => removeEx(globalIdx)}>
+                      <div key={globalIdx} className="grid grid-cols-12 gap-2 items-start border-b border-border/50 pb-4 last:border-0 last:pb-0">
+                        <div className="col-span-5 space-y-2">
+                          <Input placeholder="Exercício" value={e.exercicio} onChange={(ev) => updateEx(globalIdx, { exercicio: ev.target.value })} />
+                          <Input className="text-xs h-8" placeholder="Cadência (ex: 4-0-2-0)" value={e.cadencia} onChange={(ev) => updateEx(globalIdx, { cadencia: ev.target.value })} />
+                        </div>
+                        <div className="col-span-1">
+                          <Input placeholder="Sx" value={e.series} onChange={(ev) => updateEx(globalIdx, { series: ev.target.value })} />
+                        </div>
+                        <div className="col-span-2">
+                          <Input placeholder="Reps" value={e.repeticoes} onChange={(ev) => updateEx(globalIdx, { repeticoes: ev.target.value })} />
+                        </div>
+                        <div className="col-span-3 space-y-2">
+                          <Textarea className="min-h-[40px] text-xs" placeholder="Detalhes de Execução (Pacho style)" value={e.detalhes_execucao} onChange={(ev) => updateEx(globalIdx, { detalhes_execucao: ev.target.value })} />
+                          <Textarea className="min-h-[40px] text-xs" placeholder="Observação" value={e.observacao} onChange={(ev) => updateEx(globalIdx, { observacao: ev.target.value })} />
+                        </div>
+                        <Button size="icon" variant="ghost" className="col-span-1 self-center" onClick={() => removeEx(globalIdx)}>
                           <Trash2 className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>

@@ -94,8 +94,9 @@ serve(async (req) => {
 
     const deficienciasTxt = (biomarcadores || []).map(b => `${b.nome}: ${b.valor} ${b.unidade} (${b.classificacao})`).join(", ") || "Nenhuma alteração relevante";
 
-    const systemPrompt = `Você é DR. IA NUTRI, nutricionista esportivo especializado em fisiculturismo.
-Crie um plano alimentar usando EXCLUSIVAMENTE os alimentos da tabela TACO fornecida (use os IDs exatos).
+    const systemPrompt = `Você é DR. IA NUTRI, nutricionista esportivo de elite especializado na Metodologia Fabrício Pacholok.
+Crie um plano alimentar com precisão milimétrica, focado em performance e estética competitiva.
+Use EXCLUSIVAMENTE os alimentos da tabela TACO fornecida (use os IDs exatos).
 
 REGRAS:
 1. Distribua em ${numRefeicoes} refeições balanceadas atingindo as metas de macros.
@@ -104,10 +105,10 @@ REGRAS:
 4. Retorne APENAS JSON válido, sem markdown.
 
 NÍVEL DO ATLETA: ${nivel.toUpperCase()}
-- Iniciante: refeições simples, opções práticas, baixa variedade.
-- Intermediário: variedade moderada, timing pré/pós-treino.
-- Avançado: timing nutricional preciso, ciclagem de carbo nos dias de treino, fontes magras de proteína em todas as refeições.
-- Atleta de Alto Nível: precisão milimétrica, pré/intra/pós-treino estruturado, refeição extra noturna com caseína/proteína de digestão lenta, sódio/potássio balanceados para performance competitiva.
+- Iniciante: Reeições simples e nutritivas, foco em aderência e consistência básica.
+- Intermediário: Variedade moderada, introdução de timing nutricional estratégico (pré/pós-treino).
+- Avançado: Timing nutricional preciso, ciclagem de carboidratos, fontes proteicas magras em todas as refeições para máxima síntese proteica.
+- Atleta de Alto Nível (Metodologia Pacho): Precisão absoluta, controle de sódio e potássio para densidade muscular, refeições pré/intra/pós-treino meticulosamente estruturadas, uso de alimentos de fácil digestão em horários estratégicos e suplementação de suporte à performance.
 
 FORMATO OBRIGATÓRIO:
 {

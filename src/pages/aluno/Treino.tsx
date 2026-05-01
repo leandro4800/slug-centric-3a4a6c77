@@ -165,7 +165,7 @@ const Treino = () => {
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, video_url, video_coach_url")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
             .order("dia_semana")
@@ -189,6 +189,8 @@ const Treino = () => {
             series: t.series,
             repeticoes: t.repeticoes,
             observacao: t.observacao,
+            cadencia: t.cadencia,
+            detalhes_execucao: t.detalhes_execucao,
             video_url: t.video_url || resolveVideo(t.exercicio, refMap),
             video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
           }));
