@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play } from "lucide-react";
+import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 import heroDefault from "@/assets/hero-default.jpg";
 
