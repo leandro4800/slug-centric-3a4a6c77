@@ -499,11 +499,16 @@ const AdminFaturamento = () => {
           {/* RELATÓRIOS */}
           {activePanel === "relatorios" && (
             <div className="py-4 space-y-3">
-              {["Relatório Mensal", "Relatório Anual", "Imposto de Renda", "Extrato Detalhado"].map((r) => (
-                <button key={r} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 p-4 transition-colors group">
+              {([
+                { key: "mensal", label: "Relatório Mensal" },
+                { key: "anual", label: "Relatório Anual" },
+                { key: "ir", label: "Imposto de Renda" },
+                { key: "extrato", label: "Extrato Detalhado" },
+              ] as const).map((r) => (
+                <button key={r.key} onClick={() => setActiveReport(r.key)} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 p-4 transition-colors group">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-red-600" />
-                    <span className="font-bold text-sm uppercase tracking-tight">{r}</span>
+                    <span className="font-bold text-sm uppercase tracking-tight">{r.label}</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-white/40 group-hover:text-red-600" />
                 </button>
