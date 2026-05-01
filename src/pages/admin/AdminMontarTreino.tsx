@@ -205,6 +205,8 @@ const AdminMontarTreino = () => {
         exercicio: e.exercicio,
         series: e.series,
         repeticoes: e.repeticoes,
+        cadencia: e.cadencia,
+        detalhes_execucao: e.detalhes_execucao,
         observacao: e.observacao,
       }));
       const { error } = await supabase.from("treinos_prescritos").insert(rows);
