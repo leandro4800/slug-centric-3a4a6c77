@@ -251,8 +251,8 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Coaches Section */}
-      <section id="coaches" className="py-24 px-6 md:px-12 max-w-7xl mx-auto pt-32">
+      {/* Coaches Section (TOP) */}
+      <section id="coaches-top" className="py-24 px-6 md:px-12 max-w-7xl mx-auto pt-32">
         <div className="flex items-end justify-between mb-12">
           <div>
             <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight mb-4">
@@ -350,7 +350,7 @@ const Landing = () => {
           <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full mt-[65vh] md:mt-[55vh]">
+        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full mt-[50vh] md:mt-[40vh]">
           {!mode ? (
             <div className="max-w-4xl mx-auto text-center">
               <h1 className="text-4xl md:text-7xl font-black leading-[0.9] mb-12 tracking-tighter uppercase">
@@ -517,6 +517,8 @@ const Landing = () => {
           )}
         </div>
       </section>
+
+
 
 
 
