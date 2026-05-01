@@ -125,7 +125,21 @@ const Dieta = () => {
   const gerar = async () => {
     setGenerating(true);
     try {
-      const { error } = await supabase.functions.invoke("gerar-dieta", { body: form });
+      // Busca o nível do atleta (perfis_treino.tempo_treino) para personalizar dieta
+      let nivel = "intermediario";
+      if (user?.id) {
+        const { data: pt } = await supabase
+          .from("perfis_treino")
+          .select("tempo_treino")
+          .eq("aluno_id", user.id)
+          .maybeSingle();
+        const t = (pt?.tempo_treino || "").toLowerCase();
+        if (t.includes("alto")) nivel = "alto_nivel";
+        else if (t.includes("avan")) nivel = "avancado";
+        else if (t.includes("inici")) nivel = "iniciante";
+        else if (t.includes("inter")) nivel = "intermediario";
+      }
+      const { error } = await supabase.functions.invoke("gerar-dieta", { body: { ...form, nivel } });
       if (error) throw error;
       toast.success("Dieta gerada pelo Dr. IA!");
       setOpen(false);

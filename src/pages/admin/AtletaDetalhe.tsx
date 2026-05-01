@@ -64,7 +64,25 @@ const NIVEIS = [
   { value: "iniciante", label: "INICIANTE" },
   { value: "intermediario", label: "INTERMEDIÁRIO" },
   { value: "avancado", label: "AVANÇADO" },
+  { value: "alto_nivel", label: "ATLETA DE ALTO NÍVEL" },
 ];
+
+const NIVEL_TO_TEMPO: Record<string, string> = {
+  iniciante: "Iniciante",
+  intermediario: "Intermediário",
+  avancado: "Avançado",
+  alto_nivel: "Atleta de Alto Nível",
+};
+
+const TEMPO_TO_NIVEL = (t: string | null | undefined): string => {
+  if (!t) return "intermediario";
+  const s = t.toLowerCase();
+  if (s.includes("alto")) return "alto_nivel";
+  if (s.includes("avan")) return "avancado";
+  if (s.includes("inter")) return "intermediario";
+  if (s.includes("inici")) return "iniciante";
+  return "intermediario";
+};
 
 const RESTRICOES = [
   { code: "2.1", label: "ABCD Push/Pull/Legs" },
@@ -117,6 +135,7 @@ const AtletaDetalhe = () => {
     ]);
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
+    setNivel(TEMPO_TO_NIVEL((pt as PerfilTreino | null)?.tempo_treino));
     setLoading(false);
   };
 
@@ -127,8 +146,19 @@ const AtletaDetalhe = () => {
       return;
     }
     setSavingNivel(true);
-    // Salva como observação no perfis_treino se existir, ou apenas notifica
-    toast.success(`Nível definido: ${value.toUpperCase()}`);
+    const tempo = NIVEL_TO_TEMPO[value] || "Intermediário";
+    const { error } = await supabase
+      .from("perfis_treino")
+      .upsert(
+        { aluno_id: aluno.id, tenant_id: aluno.tenant_id, tempo_treino: tempo },
+        { onConflict: "aluno_id" }
+      );
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setPerfil((p) => (p ? { ...p, tempo_treino: tempo } : p));
+      toast.success(`Nível salvo: ${value.replace("_", " ").toUpperCase()}`);
+    }
     setSavingNivel(false);
   };
 

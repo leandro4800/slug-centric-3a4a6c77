@@ -17,6 +17,7 @@ interface DietRequest {
   idade?: number;
   sexo?: string;
   nivel_atividade?: number; // 1.2 - 1.9
+  nivel?: string; // "iniciante" | "intermediario" | "avancado" | "alto_nivel"
 }
 
 serve(async (req) => {
@@ -37,17 +38,31 @@ serve(async (req) => {
     const idade = Number(body.idade) || 28;
     const sexo = (body.sexo || "M").toUpperCase();
     const fa = Number(body.nivel_atividade) || 1.55;
+    const nivel = (body.nivel || "intermediario").toLowerCase();
+
+    // Multiplicador de proteína por nível
+    const protPorKg = nivel.includes("alto") ? 2.6
+      : nivel.includes("avan") ? 2.3
+      : nivel.includes("inter") ? 2.0
+      : 1.6;
+
+    // Refeições por nível
+    const numRefeicoes = nivel.includes("alto") ? "6 a 7"
+      : nivel.includes("avan") ? "5 a 6"
+      : "4 a 5";
 
     // 1. TMB (Mifflin-St Jeor)
     const tmb = sexo === "M"
       ? 10 * peso + 6.25 * altura - 5 * idade + 5
       : 10 * peso + 6.25 * altura - 5 * idade - 161;
     const gcd = tmb * fa;
-    const ajuste = objetivo === "cutting" ? -400 : objetivo === "hipertrofia" ? 350 : 0;
+    const ajusteBase = objetivo === "cutting" ? -400 : objetivo === "hipertrofia" ? 350 : 0;
+    // Atleta de alto nível em hipertrofia precisa de mais superávit
+    const ajuste = nivel.includes("alto") && objetivo === "hipertrofia" ? ajusteBase + 200 : ajusteBase;
     const kcalAlvo = Math.round(gcd + ajuste);
 
     // Macros
-    const proteinaG = Math.round(peso * 2.0);
+    const proteinaG = Math.round(peso * protPorKg);
     const gorduraG = Math.round((kcalAlvo * 0.25) / 9);
     const carboG = Math.round((kcalAlvo - proteinaG * 4 - gorduraG * 9) / 4);
 
@@ -83,10 +98,16 @@ serve(async (req) => {
 Crie um plano alimentar usando EXCLUSIVAMENTE os alimentos da tabela TACO fornecida (use os IDs exatos).
 
 REGRAS:
-1. Distribua em 5 a 6 refeições balanceadas atingindo as metas de macros.
+1. Distribua em ${numRefeicoes} refeições balanceadas atingindo as metas de macros.
 2. Quantidades em GRAMAS realistas.
 3. Se houver deficiência clínica (ex: Vitamina D baixa, Anemia/Ferro baixo, Magnésio), priorize alimentos ricos no nutriente em falta e mencione no campo "observacoes_clinicas".
 4. Retorne APENAS JSON válido, sem markdown.
+
+NÍVEL DO ATLETA: ${nivel.toUpperCase()}
+- Iniciante: refeições simples, opções práticas, baixa variedade.
+- Intermediário: variedade moderada, timing pré/pós-treino.
+- Avançado: timing nutricional preciso, ciclagem de carbo nos dias de treino, fontes magras de proteína em todas as refeições.
+- Atleta de Alto Nível: precisão milimétrica, pré/intra/pós-treino estruturado, refeição extra noturna com caseína/proteína de digestão lenta, sódio/potássio balanceados para performance competitiva.
 
 FORMATO OBRIGATÓRIO:
 {
