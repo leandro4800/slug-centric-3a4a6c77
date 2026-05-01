@@ -37,11 +37,19 @@ const AdminPanel = () => {
   const [uploading, setUploading] = useState<"hero" | "logo" | null>(null);
   const [nome, setNome] = useState("");
   const [tagline, setTagline] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+  const [permiteAulaAvulsa, setPermiteAulaAvulsa] = useState(false);
+  const [precoAulaAvulsa, setPrecoAulaAvulsa] = useState("");
 
   useEffect(() => {
     if (!tenant) return;
     setNome(tenant.nome);
     setTagline(tenant.tagline || "");
+    setCidade(tenant.cidade || "");
+    setEstado(tenant.estado || "");
+    setPermiteAulaAvulsa(tenant.permite_aula_avulsa || false);
+    setPrecoAulaAvulsa(tenant.preco_aula_avulsa?.toString() || "");
     void loadAlunos(tenant.id);
   }, [tenant]);
 
