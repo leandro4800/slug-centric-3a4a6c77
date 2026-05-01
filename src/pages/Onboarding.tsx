@@ -46,6 +46,9 @@ export default function Onboarding() {
   const [aguaLitros, setAguaLitros] = useState("2");
   const [anosTreino, setAnosTreino] = useState("0");
   const [diasDisponiveis, setDiasDisponiveis] = useState<string[]>([]);
+  const [nivelExperiencia, setNivelExperiencia] = useState("Iniciante");
+  const [fazUsoErgogenicos, setFazUsoErgogenicos] = useState(false);
+  const [detalhesErgogenicos, setDetalhesErgogenicos] = useState("");
 
   // Step 3 — Avaliação
   const [pesoKg, setPesoKg] = useState("");
