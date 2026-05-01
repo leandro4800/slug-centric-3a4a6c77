@@ -29,6 +29,17 @@ export default function Marketplace() {
   const [q, setQ] = useState(searchParams.get("q") || "");
   const [region, setRegion] = useState(searchParams.get("region") || "");
 
+  const stateMap: Record<string, string> = {
+    "acre": "AC", "alagoas": "AL", "amapa": "AP", "amazonas": "AM", "bahia": "BA", "ceara": "CE",
+    "distrito federal": "DF", "espirito santo": "ES", "espírito santo": "ES", "goias": "GO", "goiás": "GO",
+    "maranhao": "MA", "maranhão": "MA", "mato grosso": "MT", "mato grosso do sul": "MS", 
+    "minas gerais": "MG", "para": "PA", "pará": "PA", "paraiba": "PB", "paraíba": "PB", 
+    "parana": "PR", "paraná": "PR", "pernambuco": "PE", "piaui": "PI", "piauí": "PI", 
+    "rio de janeiro": "RJ", "rio grande do norte": "RN", "rio grande do sul": "RS", 
+    "rondonia": "RO", "rondônia": "RO", "roraima": "RR", "santa catarina": "SC",
+    "sao paulo": "SP", "são paulo": "SP", "sergipe": "SE", "tocantins": "TO"
+  };
+
   useEffect(() => {
     void load();
   }, []);
@@ -46,13 +57,37 @@ export default function Marketplace() {
 
   const filtered = coaches.filter(
     (c) => {
-      const queryMatch = !q || 
-        c.nome.toLowerCase().includes(q.toLowerCase()) ||
-        (c.especialidades ?? []).some((e) => e.toLowerCase().includes(q.toLowerCase()));
+      const qLower = q.toLowerCase().trim();
+      const regionLower = region.toLowerCase().trim();
       
-      const regionMatch = !region ||
-        (c.cidade?.toLowerCase().includes(region.toLowerCase())) ||
-        (c.estado?.toLowerCase().includes(region.toLowerCase()));
+      const queryMatch = !qLower || 
+        c.nome.toLowerCase().includes(qLower) ||
+        (c.especialidades ?? []).some((e) => e.toLowerCase().includes(qLower));
+      
+      // Enhanced region filtering
+      let regionMatch = !regionLower;
+      
+      if (regionLower) {
+        const terms = regionLower.split(/[\s,.-]+/).filter(t => t.length > 0);
+        
+        regionMatch = terms.every(term => {
+          const termStateAbbr = stateMap[term] || term;
+          return (
+            c.cidade?.toLowerCase().includes(term) ||
+            c.estado?.toLowerCase().includes(term) ||
+            c.estado?.toLowerCase() === termStateAbbr.toLowerCase()
+          );
+        });
+
+        // Also check if the whole string matches state name or city
+        const stateAbbrFromFull = stateMap[regionLower];
+        if (!regionMatch && (stateAbbrFromFull || regionLower.length > 2)) {
+          regionMatch = 
+            (c.cidade?.toLowerCase().includes(regionLower)) ||
+            (c.estado?.toLowerCase().includes(regionLower)) ||
+            (c.estado?.toLowerCase() === stateAbbrFromFull?.toLowerCase());
+        }
+      }
 
       return queryMatch && regionMatch;
     }

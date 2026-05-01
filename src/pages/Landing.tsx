@@ -7,7 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 
-const coaches = [
+interface CoachData {
+  name: string;
+  specialty: string;
+  bio: string;
+  video: string;
+  tag: string;
+  cidade: string;
+  estado: string;
+  slug: string;
+}
+
+const defaultCoaches: CoachData[] = [
   {
     name: "PIKACHU TEAM",
     specialty: "HIPERTROFIA & ESTÉTICA",
@@ -150,12 +161,24 @@ const Landing = () => {
   const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
   const [screen4, setScreen4] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4");
+  const [coaches, setCoaches] = useState<CoachData[]>(defaultCoaches);
   
   // Aluno state
   const [hasCoachLink, setHasCoachLink] = useState<boolean | null>(null);
   const [coachLink, setCoachLink] = useState("");
   const [searchCoach, setSearchCoach] = useState("");
   const [searchRegion, setSearchRegion] = useState("");
+
+  const stateMap: Record<string, string> = {
+    "acre": "AC", "alagoas": "AL", "amapa": "AP", "amazonas": "AM", "bahia": "BA", "ceara": "CE",
+    "distrito federal": "DF", "espirito santo": "ES", "espírito santo": "ES", "goias": "GO", "goiás": "GO",
+    "maranhao": "MA", "maranhão": "MA", "mato grosso": "MT", "mato grosso do sul": "MS", 
+    "minas gerais": "MG", "para": "PA", "pará": "PA", "paraiba": "PB", "paraíba": "PB", 
+    "parana": "PR", "paraná": "PR", "pernambuco": "PE", "piaui": "PI", "piauí": "PI", 
+    "rio de janeiro": "RJ", "rio grande do norte": "RN", "rio grande do sul": "RS", 
+    "rondonia": "RO", "rondônia": "RO", "roraima": "RR", "santa catarina": "SC",
+    "sao paulo": "SP", "são paulo": "SP", "sergipe": "SE", "tocantins": "TO"
+  };
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -168,11 +191,65 @@ const Landing = () => {
   const formatBRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
   useEffect(() => {
+    const loadCoaches = async () => {
+      const { data } = await supabase
+        .from("tenants")
+        .select("nome, tagline, bio, hero_url, foto_url, especialidades, cidade, estado, slug")
+        .eq("status", "approved")
+        .limit(8);
+      
+      if (data && data.length > 0) {
+        const mapped = data.map(d => ({
+          name: d.nome,
+          specialty: (d.especialidades && d.especialidades.length > 0) ? d.especialidades[0] : (d.tagline || ""),
+          bio: d.bio || "",
+          video: d.hero_url || d.foto_url || "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4",
+          tag: "VERIFICADO",
+          cidade: d.cidade || "",
+          estado: d.estado || "",
+          slug: d.slug
+        }));
+        setCoaches(mapped);
+      }
+    };
+
+    void loadCoaches();
+
     const savedEmail = localStorage.getItem("simulator_email");
     if (savedEmail) {
       setIsUnlocked(true);
     }
   }, []);
+
+  const filteredCoaches = coaches.filter(c => {
+    const qLower = searchCoach.toLowerCase().trim();
+    const regionLower = searchRegion.toLowerCase().trim();
+    
+    const queryMatch = !qLower || 
+      c.name.toLowerCase().includes(qLower) ||
+      c.specialty.toLowerCase().includes(qLower);
+    
+    let regionMatch = !regionLower;
+    if (regionLower) {
+      const stateAbbrFromFull = stateMap[regionLower];
+      const terms = regionLower.split(/[\s,.-]+/).filter(t => t.length > 0);
+      
+      regionMatch = terms.every(term => {
+        const termStateAbbr = stateMap[term] || term;
+        return (
+          c.cidade?.toLowerCase().includes(term) ||
+          c.estado?.toLowerCase().includes(term) ||
+          c.estado?.toLowerCase() === termStateAbbr.toLowerCase()
+        );
+      }) || (
+        c.cidade?.toLowerCase().includes(regionLower) ||
+        c.estado?.toLowerCase().includes(regionLower) ||
+        c.estado?.toLowerCase() === stateAbbrFromFull?.toLowerCase()
+      );
+    }
+    
+    return queryMatch && regionMatch;
+  });
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,14 +305,24 @@ const Landing = () => {
   const handleSearchCoach = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchCoach) {
-      navigate(`/marketplace?q=${encodeURIComponent(searchCoach)}`);
+      const featuredSection = document.getElementById('coaches-featured');
+      if (featuredSection) {
+        featuredSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigate(`/marketplace?q=${encodeURIComponent(searchCoach)}`);
+      }
     }
   };
 
   const handleSearchRegion = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchRegion) {
-      navigate(`/marketplace?region=${encodeURIComponent(searchRegion)}`);
+      const featuredSection = document.getElementById('coaches-featured');
+      if (featuredSection) {
+        featuredSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigate(`/marketplace?region=${encodeURIComponent(searchRegion)}`);
+      }
     }
   };
 
@@ -509,7 +596,18 @@ const Landing = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {coaches.map((coach, i) => (
+          {filteredCoaches.length === 0 ? (
+            <div className="col-span-full py-20 text-center bg-zinc-900/30 rounded-2xl border border-white/5">
+              <p className="text-gray-500 font-bold uppercase tracking-widest">Nenhum coach encontrado nesta região.</p>
+              <Button 
+                variant="link" 
+                onClick={() => {setSearchRegion(""); setSearchCoach("");}}
+                className="text-primary mt-2"
+              >
+                Limpar filtros
+              </Button>
+            </div>
+          ) : filteredCoaches.map((coach, i) => (
             <div 
               key={i} 
               className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
