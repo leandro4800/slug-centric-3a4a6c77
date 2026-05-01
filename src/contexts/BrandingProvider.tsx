@@ -23,6 +23,10 @@ export interface Tenant {
   primary_hsl: string;
   accent_hsl: string;
   theme_overrides: ThemeOverrides | null;
+  cidade: string | null;
+  estado: string | null;
+  permite_aula_avulsa: boolean | null;
+  preco_aula_avulsa: number | null;
 }
 
 interface BrandingContextValue {
