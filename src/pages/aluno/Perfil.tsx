@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
