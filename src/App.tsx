@@ -48,7 +48,8 @@ const App = () => (
         <AuthProvider>
           <Routes>
             {/* Marketplace público */}
-            <Route path="/" element={<BrandingProvider><Marketplace /></BrandingProvider>} />
+            <Route path="/" element={<BrandingProvider><Landing /></BrandingProvider>} />
+            <Route path="/marketplace" element={<BrandingProvider><Marketplace /></BrandingProvider>} />
             <Route path="/seja-coach" element={<BrandingProvider><SejaCoach /></BrandingProvider>} />
             <Route path="/login" element={<BrandingProvider><Login /></BrandingProvider>} />
             <Route path="/forgot-password" element={<BrandingProvider><ForgotPassword /></BrandingProvider>} />
