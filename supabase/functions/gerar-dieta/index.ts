@@ -94,8 +94,9 @@ serve(async (req) => {
 
     const deficienciasTxt = (biomarcadores || []).map(b => `${b.nome}: ${b.valor} ${b.unidade} (${b.classificacao})`).join(", ") || "Nenhuma alteração relevante";
 
-    const systemPrompt = `Você é DR. IA NUTRI, nutricionista esportivo especializado em fisiculturismo.
-Crie um plano alimentar usando EXCLUSIVAMENTE os alimentos da tabela TACO fornecida (use os IDs exatos).
+    const systemPrompt = `Você é DR. IA NUTRI, nutricionista esportivo de elite especializado na Metodologia Fabrício Pacholok.
+Crie um plano alimentar com precisão milimétrica, focado em performance e estética competitiva.
+Use EXCLUSIVAMENTE os alimentos da tabela TACO fornecida (use os IDs exatos).
 
 REGRAS:
 1. Distribua em ${numRefeicoes} refeições balanceadas atingindo as metas de macros.
