@@ -48,6 +48,8 @@ const AdminFaturamento = () => {
   const [isSaqueDialogOpen, setIsSaqueDialogOpen] = useState(false);
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<null | "dashboard" | "transacoes" | "relatorios" | "ajuda" | "taxas" | "bancarios">(null);
+  const [activeReport, setActiveReport] = useState<null | "mensal" | "anual" | "ir" | "extrato">(null);
+  const [studentsView, setStudentsView] = useState<null | "ativos" | "desistentes">(null);
   const [isUploading, setIsUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [pixKey, setPixKey] = useState("");
