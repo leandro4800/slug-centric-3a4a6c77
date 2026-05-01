@@ -119,6 +119,9 @@ const AtletaDetalhe = () => {
   const [showProtocolDialog, setShowProtocolDialog] = useState(false);
   const [open7Dobras, setOpen7Dobras] = useState(false);
   const [show7DobrasIntro, setShow7DobrasIntro] = useState(false);
+  const [anamnese, setAnamnese] = useState<any>(null);
+  const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
+  const [loadingAnamnese, setLoadingAnamnese] = useState(false);
 
   useEffect(() => {
     if (!atletaId) return;
