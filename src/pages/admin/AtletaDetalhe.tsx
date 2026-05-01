@@ -130,11 +130,12 @@ const AtletaDetalhe = () => {
     if (slug === "demo" && demoAthlete) {
       setAluno(demoAthlete as Aluno);
       setPerfil(null);
+      setAssinatura(null);
       setLoading(false);
       return;
     }
 
-    const [{ data: a }, { data: pt }] = await Promise.all([
+    const [{ data: a }, { data: pt }, { data: ass }] = await Promise.all([
       supabase
         .from("perfis")
         .select("id, nome_completo, email, avatar_url, tenant_id")
@@ -145,9 +146,23 @@ const AtletaDetalhe = () => {
         .select("*")
         .eq("aluno_id", atletaId!)
         .maybeSingle(),
+      supabase
+        .from("assinaturas")
+        .select(`
+          id,
+          status,
+          plano:planos (
+            nome,
+            preco_centavos,
+            intervalo
+          )
+        `)
+        .eq("aluno_id", atletaId!)
+        .maybeSingle(),
     ]);
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
+    setAssinatura((ass as any) || null);
     setNivel(TEMPO_TO_NIVEL((pt as PerfilTreino | null)?.tempo_treino));
     setLoading(false);
   };
