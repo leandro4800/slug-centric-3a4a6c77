@@ -622,51 +622,38 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-4 gap-12 items-start">
+          <div className="grid lg:grid-cols-5 gap-10 items-start">
             {/* Simulator Controls */}
-            <div className="lg:col-span-1 space-y-6 bg-zinc-950/50 p-6 md:p-8 rounded-2xl border border-white/10 lg:sticky lg:top-24">
-              <h3 className="text-xs font-black uppercase tracking-widest text-white border-b border-white/10 pb-4 mb-6">Painel de Configuração</h3>
+            <div className="lg:col-span-1 space-y-4 bg-zinc-950/50 p-6 rounded-2xl border border-white/10 lg:sticky lg:top-24">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/10 pb-3 mb-4">Configuração</h3>
               
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Vídeo/Imagem da Tela 1</label>
-                  <Input 
-                    value={screen1}
-                    onChange={(e) => setScreen1(e.target.value)}
-                    placeholder="URL da mídia..."
-                    className="bg-zinc-900 border-white/10 text-white focus:border-primary text-xs h-10"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Vídeo/Imagem da Tela 2</label>
-                  <Input 
-                    value={screen2}
-                    onChange={(e) => setScreen2(e.target.value)}
-                    placeholder="URL da mídia..."
-                    className="bg-zinc-900 border-white/10 text-white focus:border-primary text-xs h-10"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Vídeo/Imagem da Tela 3</label>
-                  <Input 
-                    value={screen3}
-                    onChange={(e) => setScreen3(e.target.value)}
-                    placeholder="URL da mídia..."
-                    className="bg-zinc-900 border-white/10 text-white focus:border-primary text-xs h-10"
-                  />
-                </div>
+              <div className="space-y-4">
+                {[
+                  { id: 1, val: screen1, set: setScreen1 },
+                  { id: 2, val: screen2, set: setScreen2 },
+                  { id: 3, val: screen3, set: setScreen3 },
+                  { id: 4, val: screen4, set: setScreen4 },
+                ].map((s) => (
+                  <div key={s.id}>
+                    <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 mb-1.5">Tela 0{s.id}</label>
+                    <Input 
+                      value={s.val}
+                      onChange={(e) => s.set(e.target.value)}
+                      placeholder="URL da mídia..."
+                      className="bg-zinc-900 border-white/10 text-white focus:border-primary text-[10px] h-9"
+                    />
+                  </div>
+                ))}
 
                 <div className="pt-2">
                   <Button 
                     onClick={() => {
                       toast({
-                        title: "Visualização atualizada!",
-                        description: "As telas do app foram configuradas com suas mídias.",
+                        title: "App Atualizado",
+                        description: "As 4 telas foram configuradas com sucesso.",
                       });
                     }}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-wider h-11 text-xs"
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-wider h-10 text-[10px]"
                   >
                     ATUALIZAR APP
                   </Button>
@@ -674,39 +661,39 @@ const Landing = () => {
               </div>
             </div>
 
-            {/* Device Previews - 3 Phones */}
-            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
+            {/* Device Previews - 4 Phones */}
+            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 justify-items-center">
               {[
                 { url: screen1, label: "Treino" },
                 { url: screen2, label: "Nutrição" },
-                { url: screen3, label: "Comunidade" }
+                { url: screen3, label: "Check-in" },
+                { url: screen4, label: "Comunidade" }
               ].map((screen, idx) => (
-                <div key={idx} className="relative group w-full max-w-[260px]">
-                  <div className="absolute -inset-1 bg-primary/20 rounded-[3rem] blur-xl opacity-0 group-hover:opacity-100 transition duration-1000"></div>
-                  <div className="relative aspect-[9/18.5] w-full bg-zinc-950 rounded-[2.8rem] border-[6px] border-zinc-900 shadow-2xl overflow-hidden ring-1 ring-white/10">
+                <div key={idx} className="relative group w-full max-w-[240px]">
+                  <div className="absolute -inset-1 bg-primary/20 rounded-[2.5rem] blur-lg opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+                  <div className="relative aspect-[9/19] w-full bg-zinc-950 rounded-[2.5rem] border-[5px] border-zinc-900 shadow-2xl overflow-hidden ring-1 ring-white/10">
                     {/* Notch */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-zinc-900 rounded-b-xl z-20" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-900 rounded-b-lg z-20" />
                     
                     <div className="h-full w-full relative z-10 bg-zinc-900">
                       {renderScreenMedia(screen.url)}
                     </div>
                     
                     {/* UI Overlay */}
-                    <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-                    <div className="absolute bottom-8 left-0 right-0 px-6 z-30">
-                      <div className="flex items-center gap-2 mb-1">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white">{screen.label}</p>
+                    <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+                    <div className="absolute bottom-6 left-0 right-0 px-5 z-30">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <div className="w-1 h-1 rounded-full bg-primary" />
+                        <p className="text-[9px] font-black uppercase tracking-widest text-white">{screen.label}</p>
                       </div>
-                      <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-0.5 w-full bg-white/10 rounded-full overflow-hidden">
                         <div className="h-full bg-primary w-1/3" />
                       </div>
                     </div>
                   </div>
                   
-                  {/* Badge */}
-                  <div className="mt-6 text-center">
-                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">Screen 0{idx + 1}</p>
+                  <div className="mt-4 text-center">
+                    <p className="text-[9px] font-bold text-gray-600 uppercase tracking-[0.3em]">Screen 0{idx + 1}</p>
                   </div>
                 </div>
               ))}
