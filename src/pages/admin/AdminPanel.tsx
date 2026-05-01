@@ -81,10 +81,15 @@ const AdminPanel = () => {
   const handleSaveAppearance = async () => {
     if (!tenant) return;
     const { error } = await supabase.from("tenants").update({
-      nome, tagline,
+      nome, 
+      tagline,
+      cidade,
+      estado,
+      permite_aula_avulsa: permiteAulaAvulsa,
+      preco_aula_avulsa: precoAulaAvulsa ? parseFloat(precoAulaAvulsa) : null,
     }).eq("id", tenant.id);
     if (error) toast.error(error.message);
-    else { toast.success("Textos salvos!"); await refresh(); }
+    else { toast.success("Dados salvos!"); await refresh(); }
   };
 
   const handleLogout = async () => { await signOut(); navigate("/login"); };
