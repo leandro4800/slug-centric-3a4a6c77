@@ -135,6 +135,7 @@ const AtletaDetalhe = () => {
     ]);
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
+    setNivel(TEMPO_TO_NIVEL((pt as PerfilTreino | null)?.tempo_treino));
     setLoading(false);
   };
 
@@ -145,8 +146,19 @@ const AtletaDetalhe = () => {
       return;
     }
     setSavingNivel(true);
-    // Salva como observação no perfis_treino se existir, ou apenas notifica
-    toast.success(`Nível definido: ${value.toUpperCase()}`);
+    const tempo = NIVEL_TO_TEMPO[value] || "Intermediário";
+    const { error } = await supabase
+      .from("perfis_treino")
+      .upsert(
+        { aluno_id: aluno.id, tenant_id: aluno.tenant_id, tempo_treino: tempo },
+        { onConflict: "aluno_id" }
+      );
+    if (error) {
+      toast.error(error.message);
+    } else {
+      setPerfil((p) => (p ? { ...p, tempo_treino: tempo } : p));
+      toast.success(`Nível salvo: ${value.replace("_", " ").toUpperCase()}`);
+    }
     setSavingNivel(false);
   };
 
