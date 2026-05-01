@@ -153,22 +153,23 @@ const AdminFaturamento = () => {
   };
 
   const menuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", badge: null, onClick: () => {} },
-    { icon: ArrowLeftRight, label: "Transações", badge: null, onClick: () => {} },
+    { icon: LayoutDashboard, label: "Dashboard", badge: null, onClick: () => setActivePanel("dashboard") },
+    { icon: ArrowLeftRight, label: "Transações", badge: null, onClick: () => setActivePanel("transacoes") },
     { 
       icon: HandCoins, 
       label: "Saques", 
       badge: null, 
       onClick: () => setIsSaqueDialogOpen(true) 
     },
-    { icon: FileText, label: "Relatórios", badge: null, onClick: () => {} },
-    { icon: HelpCircle, label: "Central de ajuda", badge: null, onClick: () => {} },
-    { icon: Percent, label: "Taxas e prazos", badge: null, onClick: () => {} },
+    { icon: FileText, label: "Relatórios", badge: null, onClick: () => setActivePanel("relatorios") },
+    { icon: HelpCircle, label: "Central de ajuda", badge: null, onClick: () => setActivePanel("ajuda") },
+    { icon: Percent, label: "Taxas e prazos", badge: null, onClick: () => setActivePanel("taxas") },
     { 
       icon: Landmark, 
       label: "Dados bancários", 
       badge: "Pendente", 
-      badgeColor: "bg-red-600/20 text-red-500 border-red-600/30" 
+      badgeColor: "bg-red-600/20 text-red-500 border-red-600/30",
+      onClick: () => setActivePanel("bancarios")
     },
     { 
       icon: UserCheck, 
