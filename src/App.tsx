@@ -8,6 +8,7 @@ import { BrandingProvider } from "@/contexts/BrandingProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 
+import Landing from "./pages/Landing";
 import Marketplace from "./pages/Marketplace";
 import TenantLanding from "./pages/TenantLanding";
 import SejaCoach from "./pages/SejaCoach";
