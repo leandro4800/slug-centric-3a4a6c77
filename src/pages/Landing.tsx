@@ -7,7 +7,18 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 
-const coaches = [
+interface CoachData {
+  name: string;
+  specialty: string;
+  bio: string;
+  video: string;
+  tag: string;
+  cidade: string;
+  estado: string;
+  slug: string;
+}
+
+const defaultCoaches: CoachData[] = [
   {
     name: "PIKACHU TEAM",
     specialty: "HIPERTROFIA & ESTÉTICA",
