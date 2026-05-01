@@ -435,7 +435,10 @@ const AtletaDetalhe = () => {
           </button>
 
           <button
-            onClick={() => toast.info("Anamnese completa em breve")}
+            onClick={() => {
+              if (anamnese) setShowAnamneseDialog(true);
+              else toast.error("Este atleta ainda não preencheu a anamnese.");
+            }}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
           >
             <FileText className="h-4 w-4 text-primary" />
