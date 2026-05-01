@@ -83,7 +83,7 @@ export default function CheckoutSucesso() {
           <CheckCircle2 className="mx-auto h-16 w-16 text-primary" />
           <h1 className="mt-4 font-display text-3xl uppercase">Acesso Liberado!</h1>
           <p className="mt-2 text-muted-foreground">
-            {mode === "signup" ? "Crie sua conta" : "Entre"} para acessar seu treino.
+            Seus 30 dias grátis começaram. {mode === "signup" ? "Crie sua conta" : "Entre"} para acessar seu treino.
           </p>
         </div>
 
