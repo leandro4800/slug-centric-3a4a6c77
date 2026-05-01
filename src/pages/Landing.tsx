@@ -191,11 +191,65 @@ const Landing = () => {
   const formatBRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
   useEffect(() => {
+    const loadCoaches = async () => {
+      const { data } = await supabase
+        .from("tenants")
+        .select("nome, tagline, bio, hero_url, foto_url, especialidades, cidade, estado, slug")
+        .eq("status", "approved")
+        .limit(8);
+      
+      if (data && data.length > 0) {
+        const mapped = data.map(d => ({
+          name: d.nome,
+          specialty: (d.especialidades && d.especialidades.length > 0) ? d.especialidades[0] : (d.tagline || ""),
+          bio: d.bio || "",
+          video: d.hero_url || d.foto_url || "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4",
+          tag: "VERIFICADO",
+          cidade: d.cidade || "",
+          estado: d.estado || "",
+          slug: d.slug
+        }));
+        setCoaches(mapped);
+      }
+    };
+
+    void loadCoaches();
+
     const savedEmail = localStorage.getItem("simulator_email");
     if (savedEmail) {
       setIsUnlocked(true);
     }
   }, []);
+
+  const filteredCoaches = coaches.filter(c => {
+    const qLower = searchCoach.toLowerCase().trim();
+    const regionLower = searchRegion.toLowerCase().trim();
+    
+    const queryMatch = !qLower || 
+      c.name.toLowerCase().includes(qLower) ||
+      c.specialty.toLowerCase().includes(qLower);
+    
+    let regionMatch = !regionLower;
+    if (regionLower) {
+      const stateAbbrFromFull = stateMap[regionLower];
+      const terms = regionLower.split(/[\s,.-]+/).filter(t => t.length > 0);
+      
+      regionMatch = terms.every(term => {
+        const termStateAbbr = stateMap[term] || term;
+        return (
+          c.cidade?.toLowerCase().includes(term) ||
+          c.estado?.toLowerCase().includes(term) ||
+          c.estado?.toLowerCase() === termStateAbbr.toLowerCase()
+        );
+      }) || (
+        c.cidade?.toLowerCase().includes(regionLower) ||
+        c.estado?.toLowerCase().includes(regionLower) ||
+        c.estado?.toLowerCase() === stateAbbrFromFull?.toLowerCase()
+      );
+    }
+    
+    return queryMatch && regionMatch;
+  });
 
   const handleUnlock = async (e: React.FormEvent) => {
     e.preventDefault();
