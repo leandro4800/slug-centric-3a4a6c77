@@ -590,6 +590,170 @@ const AdminFaturamento = () => {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* REPORT DETAIL DIALOG */}
+      <Dialog open={!!activeReport} onOpenChange={(o) => !o && setActiveReport(null)}>
+        <DialogContent className="bg-black border-white/10 text-white sm:max-w-2xl rounded-none max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-2">
+              <FileText className="h-6 w-6 text-red-600" />
+              {activeReport === "mensal" && "Relatório Mensal"}
+              {activeReport === "anual" && "Relatório Anual"}
+              {activeReport === "ir" && "Imposto de Renda"}
+              {activeReport === "extrato" && "Extrato Detalhado"}
+            </DialogTitle>
+            <DialogDescription className="text-white/60 pt-2 text-xs uppercase tracking-wider">
+              Período de referência · {new Date().toLocaleDateString("pt-BR")}
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeReport === "mensal" && (
+            <div className="py-4 space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white/5 border-l-4 border-red-600 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Bruto do Mês</p>
+                  <p className="text-2xl font-black mt-1">{formatBRL(totalGross)}</p>
+                </div>
+                <div className="bg-white/5 border-l-4 border-white/30 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Comissão</p>
+                  <p className="text-2xl font-black mt-1 text-red-600">-{formatBRL(totalCommission)}</p>
+                </div>
+                <div className="bg-white/5 border-l-4 border-red-600 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido</p>
+                  <p className="text-2xl font-black mt-1">{formatBRL(totalNet)}</p>
+                </div>
+              </div>
+              <div className="bg-white/5 p-4 space-y-2 text-sm">
+                <div className="flex justify-between"><span className="text-white/60">Novos alunos</span><span className="font-black">{activeStudents}</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Cancelamentos</span><span className="font-black">0</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Reembolsos</span><span className="font-black">{formatBRL(0)}</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Mensalidades pagas</span><span className="font-black">{activeStudents}</span></div>
+              </div>
+              <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar PDF</Button>
+            </div>
+          )}
+
+          {activeReport === "anual" && (
+            <div className="py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 border-l-4 border-red-600 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Faturamento Anual</p>
+                  <p className="text-2xl font-black mt-1">{formatBRL(totalGross * 12)}</p>
+                </div>
+                <div className="bg-white/5 border-l-4 border-red-600 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido Anual</p>
+                  <p className="text-2xl font-black mt-1">{formatBRL(totalNet * 12)}</p>
+                </div>
+              </div>
+              <div className="bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">Por mês</p>
+                <div className="space-y-1">
+                  {["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map((m) => (
+                    <div key={m} className="flex justify-between text-sm border-b border-white/5 py-1">
+                      <span className="text-white/60">{m}</span>
+                      <span className="font-bold">{formatBRL(totalNet)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar PDF</Button>
+            </div>
+          )}
+
+          {activeReport === "ir" && (
+            <div className="py-4 space-y-4">
+              <div className="bg-white/5 border-l-4 border-red-600 p-5">
+                <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Rendimentos Tributáveis ({new Date().getFullYear()})</p>
+                <p className="text-4xl font-black mt-2">{formatBRL(totalNet * 12)}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="bg-white/5 p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">CNPJ Pagadora</p>
+                  <p className="font-black mt-1">00.000.000/0001-00</p>
+                </div>
+                <div className="bg-white/5 p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">IRRF Retido</p>
+                  <p className="font-black mt-1">{formatBRL(0)}</p>
+                </div>
+              </div>
+              <p className="text-[11px] text-white/50 leading-relaxed">Informe estes valores na ficha “Rendimentos Recebidos de Pessoa Jurídica” da sua declaração anual.</p>
+              <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar Informe de Rendimentos</Button>
+            </div>
+          )}
+
+          {activeReport === "extrato" && (
+            <div className="py-4 space-y-2">
+              {DEMO_ATHLETES.map((a, i) => (
+                <div key={a.id} className="flex items-center gap-3 bg-white/5 border-l-2 border-red-600 p-3">
+                  <div className="w-10 h-10 rounded-full bg-red-600/20 flex items-center justify-center font-black text-red-600">{a.nome_completo[0]}</div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{a.nome_completo}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-white/40">Crédito Mensalidade · {new Date(Date.now() - i * 86400000 * 3).toLocaleDateString("pt-BR")}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-emerald-500">+{formatBRL(PLAN_VALUE)}</p>
+                    <p className="text-[9px] uppercase tracking-widest text-red-600">-{formatBRL(PLAN_VALUE * COMMISSION_RATE)} taxa</p>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-between bg-white/5 border-l-4 border-red-600 p-4 mt-3">
+                <span className="font-black uppercase tracking-widest text-sm">Saldo Final</span>
+                <span className="font-black text-xl">{formatBRL(totalNet)}</span>
+              </div>
+              <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto mt-2">Exportar CSV</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* STUDENTS LIST DIALOG */}
+      <Dialog open={!!studentsView} onOpenChange={(o) => !o && setStudentsView(null)}>
+        <DialogContent className="bg-black border-white/10 text-white sm:max-w-2xl rounded-none max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-2">
+              {studentsView === "ativos" ? (
+                <><TrendingUp className="h-6 w-6 text-red-600" /> Alunos Ativos</>
+              ) : (
+                <><TrendingDown className="h-6 w-6 text-red-600" /> Desistentes</>
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-white/60 pt-2 text-xs uppercase tracking-wider">
+              {studentsView === "ativos"
+                ? `${activeStudents} aluno(s) com assinatura ativa`
+                : "Nenhum desistente no período"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {studentsView === "ativos" && (
+            <div className="py-4 space-y-2">
+              {DEMO_ATHLETES.map((a) => (
+                <div key={a.id} className="flex items-center gap-3 bg-white/5 border-l-2 border-emerald-500 p-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center font-black text-emerald-500">
+                    {a.nome_completo[0]}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{a.nome_completo}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-white/40">{a.email}</p>
+                  </div>
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 uppercase text-[9px] font-black tracking-widest rounded-none">
+                    Ativo
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {studentsView === "desistentes" && (
+            <div className="py-10 text-center space-y-3">
+              <div className="w-16 h-16 mx-auto rounded-full bg-white/5 flex items-center justify-center">
+                <XCircle className="h-8 w-8 text-white/30" />
+              </div>
+              <p className="font-black uppercase tracking-widest text-sm text-white/60">Nenhum desistente</p>
+              <p className="text-xs text-white/40 max-w-sm mx-auto">Quando um aluno cancelar a assinatura ou tiver o acesso bloqueado, ele aparecerá aqui.</p>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
