@@ -64,11 +64,16 @@ export default function TenantLanding() {
     setLoading(false);
   };
 
-  const handleAssinar = async (plano_id: string) => {
-    setCheckoutLoading(plano_id);
+  const handleCheckout = async (plano_id?: string, type: 'subscription' | 'aula_avulsa' = 'subscription') => {
+    const loadingKey = type === 'aula_avulsa' ? 'aula_avulsa' : plano_id!;
+    setCheckoutLoading(loadingKey);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-checkout", {
-        body: { plano_id },
+        body: { 
+          plano_id, 
+          tenant_id: tenant?.id,
+          type 
+        },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
@@ -166,10 +171,11 @@ export default function TenantLanding() {
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Suporte pós-treino</li>
                 </ul>
                 <Button 
-                  onClick={() => toast({ title: "Agendamento", description: "O coach entrará em contato para agendar o horário após o pagamento." })}
+                  onClick={() => handleCheckout(undefined, 'aula_avulsa')}
+                  disabled={checkoutLoading === 'aula_avulsa'}
                   className="w-full bg-primary hover:bg-primary/90"
                 >
-                  Agendar Aula
+                  {checkoutLoading === 'aula_avulsa' ? "Redirecionando..." : "Agendar Aula"}
                 </Button>
               </div>
             )}
@@ -205,7 +211,7 @@ export default function TenantLanding() {
                     )}
                   </ul>
                   <Button
-                    onClick={() => handleAssinar(p.id)}
+                    onClick={() => handleCheckout(p.id)}
                     disabled={checkoutLoading === p.id}
                     className={`w-full ${destaque ? "bg-primary hover:bg-primary/90" : ""}`}
                     variant={destaque ? "default" : "outline"}

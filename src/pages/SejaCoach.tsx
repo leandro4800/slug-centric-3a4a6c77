@@ -30,6 +30,8 @@ export default function SejaCoach() {
   const [tagline, setTagline] = useState("");
   const [bio, setBio] = useState("");
   const [especialidades, setEspecialidades] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
 
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [stripeStatus, setStripeStatus] = useState<{ completed: boolean } | null>(null);
@@ -129,6 +131,8 @@ export default function SejaCoach() {
           tagline,
           bio,
           especialidades: especArr,
+          cidade,
+          estado: estado.toUpperCase(),
           owner_user_id: user.id,
           status: "pending",
         })
@@ -277,6 +281,16 @@ export default function SejaCoach() {
                   onChange={(e) => setEspecialidades(e.target.value)}
                   placeholder="Hipertrofia, Emagrecimento, Performance"
                 />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Cidade</Label>
+                  <Input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex: Serra" required />
+                </div>
+                <div>
+                  <Label>Estado (UF)</Label>
+                  <Input value={estado} onChange={(e) => setEstado(e.target.value)} placeholder="Ex: ES" maxLength={2} required />
+                </div>
               </div>
               <div>
                 <Label>Bio</Label>
