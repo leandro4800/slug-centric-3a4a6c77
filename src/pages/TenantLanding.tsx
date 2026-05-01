@@ -184,7 +184,7 @@ export default function TenantLanding() {
                     className={`w-full ${destaque ? "bg-primary hover:bg-primary/90" : ""}`}
                     variant={destaque ? "default" : "outline"}
                   >
-                    {checkoutLoading === p.id ? "Redirecionando..." : "Assinar agora"}
+                    {checkoutLoading === p.id ? "Redirecionando..." : "Testar 30 dias grátis"}
                   </Button>
                 </div>
               );
