@@ -93,6 +93,21 @@ const ControleCentral = () => {
           <span className="text-accent">→</span>
         </Link>
 
+        <Link
+          to={`/${slug}/admin/faturamento`}
+          className="block bg-card/40 border border-accent/30 rounded-2xl p-4 flex items-center gap-4"
+        >
+          <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center">
+            <Wallet className="h-5 w-5 text-accent" />
+          </div>
+          <div className="flex-1">
+            <p className="font-display text-lg text-accent">FATURAMENTO</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Gestão financeira e saques</p>
+          </div>
+          <span className="text-accent">→</span>
+        </Link>
+
+
         <button className="w-full bg-accent text-accent-foreground font-display text-lg py-4 rounded-2xl flex items-center justify-center gap-3 shadow-[0_0_40px_-5px_hsl(var(--accent)/0.6)]">
           <Plus className="h-5 w-5" /> LANÇAR NOVO EPISÓDIO
         </button>
