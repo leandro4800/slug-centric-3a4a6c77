@@ -61,6 +61,16 @@ interface PerfilTreino {
   idade: number | null;
 }
 
+interface Assinatura {
+  id: string;
+  status: string;
+  plano: {
+    nome: string;
+    preco_centavos: number;
+    intervalo: string;
+  };
+}
+
 const NIVEIS = [
   { value: "iniciante", label: "INICIANTE" },
   { value: "intermediario", label: "INTERMEDIÁRIO" },
