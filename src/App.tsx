@@ -32,6 +32,7 @@ import MeusAtletas from "./pages/admin/MeusAtletas";
 import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
 import AdminCoaches from "./pages/admin/AdminCoaches";
 import AdminPlanos from "./pages/admin/AdminPlanos";
+import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -59,6 +60,8 @@ const App = () => (
 
             {/* Admin AlphaCoach (super admin) */}
             <Route path="/admin/coaches" element={<BrandingProvider><RequireAuth><AdminCoaches /></RequireAuth></BrandingProvider>} />
+            <Route path="/admin/faturamento" element={<BrandingProvider><RequireAuth><AdminFaturamento /></RequireAuth></BrandingProvider>} />
+
 
             {/* Landing pública do tenant */}
             <Route path="/:slug" element={<BrandingProvider><TenantLanding /></BrandingProvider>} />
@@ -105,6 +108,9 @@ const App = () => (
             } />
             <Route path="/:slug/admin/planos" element={
               <BrandingProvider><RequireAuth><AdminPlanos /></RequireAuth></BrandingProvider>
+            } />
+            <Route path="/:slug/admin/faturamento" element={
+              <BrandingProvider><RequireAuth><AdminFaturamento /></RequireAuth></BrandingProvider>
             } />
 
             <Route path="*" element={<NotFound />} />
