@@ -251,76 +251,6 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Coaches Section (TOP) */}
-      <section id="coaches-top" className="py-24 px-6 md:px-12 max-w-7xl mx-auto pt-32">
-        <div className="flex items-end justify-between mb-12">
-          <div>
-            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight mb-4">
-              COACHES EM DESTAQUE
-            </h2>
-            <div className="h-1 w-20 bg-primary" />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {coaches.map((coach, i) => (
-            <div 
-              key={i} 
-              className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
-            >
-              {/* Video Background */}
-              {coach.video.includes('instagram.com') ? (
-                <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
-                  <iframe
-                    src={`https://www.social-embed.com/api/instagram/reel?url=${encodeURIComponent(coach.video)}&autoplay=true&muted=true&loop=true`}
-                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] h-[180%] object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-                    frameBorder="0"
-                  />
-                </div>
-              ) : (
-                <video 
-                  src={coach.video} 
-                  autoPlay 
-                  muted 
-                  loop 
-                  playsInline
-                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
-                />
-              )}
-              
-              {/* Overlays */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500" />
-              
-              {/* Content */}
-              <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                <div className="flex items-center gap-1.5 mb-2">
-                  <div className="px-2 py-0.5 bg-primary text-[9px] font-black rounded-sm flex items-center gap-1">
-                    <CheckCircle2 className="h-2.5 w-2.5" />
-                    {coach.tag}
-                  </div>
-                </div>
-                
-                <h3 className="text-xl font-black uppercase mb-1 group-hover:text-primary transition-colors">
-                  {coach.name}
-                </h3>
-                <p className="text-[10px] font-bold text-primary mb-3 tracking-widest uppercase">
-                  {coach.specialty}
-                </p>
-                
-                <div className="max-h-0 group-hover:max-h-20 overflow-hidden transition-all duration-500">
-                  <p className="text-sm text-gray-300 line-clamp-2">
-                    {coach.bio}
-                  </p>
-                  <Button variant="link" className="text-white p-0 h-auto mt-4 text-xs font-bold uppercase tracking-tighter">
-                    Conhecer o app <ArrowRight className="ml-1 h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
 
 
       {/* Hero / Choice Section */}
@@ -554,6 +484,78 @@ const Landing = () => {
           </div>
         </div>
       </section>
+
+      {/* Coaches Section (BELOW FEATURES) */}
+      <section id="coaches-featured" className="py-24 px-6 md:px-12 max-w-7xl mx-auto">
+        <div className="flex items-end justify-between mb-12">
+          <div>
+            <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tight mb-4">
+              COACHES EM DESTAQUE
+            </h2>
+            <div className="h-1 w-20 bg-primary" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {coaches.map((coach, i) => (
+            <div 
+              key={i} 
+              className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
+            >
+              {/* Video Background */}
+              {coach.video.includes('instagram.com') ? (
+                <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
+                  <iframe
+                    src={`https://www.social-embed.com/api/instagram/reel?url=${encodeURIComponent(coach.video)}&autoplay=true&muted=true&loop=true`}
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[180%] h-[180%] object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                    frameBorder="0"
+                  />
+                </div>
+              ) : (
+                <video 
+                  src={coach.video} 
+                  autoPlay 
+                  muted 
+                  loop 
+                  playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                />
+              )}
+              
+              {/* Overlays */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500" />
+              
+              {/* Content */}
+              <div className="absolute inset-0 p-6 flex flex-col justify-end">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <div className="px-2 py-0.5 bg-primary text-[9px] font-black rounded-sm flex items-center gap-1">
+                    <CheckCircle2 className="h-2.5 w-2.5" />
+                    {coach.tag}
+                  </div>
+                </div>
+                
+                <h3 className="text-xl font-black uppercase mb-1 group-hover:text-primary transition-colors">
+                  {coach.name}
+                </h3>
+                <p className="text-[10px] font-bold text-primary mb-3 tracking-widest uppercase">
+                  {coach.specialty}
+                </p>
+                
+                <div className="max-h-0 group-hover:max-h-20 overflow-hidden transition-all duration-500">
+                  <p className="text-sm text-gray-300 line-clamp-2">
+                    {coach.bio}
+                  </p>
+                  <Button variant="link" className="text-white p-0 h-auto mt-4 text-xs font-bold uppercase tracking-tighter">
+                    Conhecer o app <ArrowRight className="ml-1 h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
 
       {/* Antes vs Depois */}
       <section className="py-24 px-6 md:px-12 bg-black">
