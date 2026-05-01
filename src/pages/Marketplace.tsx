@@ -96,14 +96,39 @@ export default function Marketplace() {
             Treinadores verificados, planos sob medida, IA pra acelerar seu resultado. Cinematográfico como Netflix.
           </p>
 
-          <div className="mx-auto mt-8 flex max-w-xl items-center gap-2 rounded-full border border-border bg-card/60 p-2 backdrop-blur-md">
-            <Search className="ml-3 h-5 w-5 text-muted-foreground" />
-            <Input
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
-              placeholder="Buscar por nome ou especialidade..."
-              className="border-0 bg-transparent focus-visible:ring-0"
-            />
+          <div className="mx-auto mt-8 flex flex-col md:flex-row max-w-3xl items-center gap-4">
+            <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-card/60 p-2 backdrop-blur-md w-full">
+              <Search className="ml-3 h-5 w-5 text-muted-foreground" />
+              <Input
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  setSearchParams(prev => {
+                    if (e.target.value) prev.set("q", e.target.value);
+                    else prev.delete("q");
+                    return prev;
+                  });
+                }}
+                placeholder="Buscar por nome ou especialidade..."
+                className="border-0 bg-transparent focus-visible:ring-0"
+              />
+            </div>
+            <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-card/60 p-2 backdrop-blur-md w-full">
+              <MapPin className="ml-3 h-5 w-5 text-muted-foreground" />
+              <Input
+                value={region}
+                onChange={(e) => {
+                  setRegion(e.target.value);
+                  setSearchParams(prev => {
+                    if (e.target.value) prev.set("region", e.target.value);
+                    else prev.delete("region");
+                    return prev;
+                  });
+                }}
+                placeholder="Cidade ou Estado..."
+                className="border-0 bg-transparent focus-visible:ring-0"
+              />
+            </div>
           </div>
         </div>
       </section>
