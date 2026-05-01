@@ -234,38 +234,85 @@ const Dieta = () => {
           </div>
         ) : (
           <>
-            {/* Resumo + Pizza + cards laterais */}
+            {/* Resumo + Pizza + cards laterais — estilo Netflix cinematográfico */}
             <div className="grid grid-cols-5 gap-3 mb-5">
-              <div className="col-span-2 bg-card/40 border border-border rounded-2xl p-3">
-                <div className="aspect-square">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={pieData} dataKey="value" innerRadius="55%" outerRadius="90%" paddingAngle={2} stroke="none">
-                        {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
-                      </Pie>
-                    </PieChart>
-                  </ResponsiveContainer>
+              {/* Painel pizza com hero image de fundo */}
+              <div className="col-span-2 relative rounded-2xl overflow-hidden border border-border group">
+                <img
+                  src={imgMacroHero}
+                  alt="Plano alimentar"
+                  loading="lazy"
+                  className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,hsl(var(--background))_75%)]" />
+                <div className="relative p-3">
+                  <div className="aspect-square">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie data={pieData} dataKey="value" innerRadius="55%" outerRadius="90%" paddingAngle={2} stroke="none">
+                          {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-center font-display text-2xl leading-none mt-1 drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)]">{totalDia.kcal}</p>
+                  <p className="text-center text-[10px] text-muted-foreground tracking-widest uppercase">kcal · meta {dieta.kcal_alvo}</p>
                 </div>
-                <p className="text-center font-display text-lg leading-none mt-1">{totalDia.kcal}</p>
-                <p className="text-center text-[10px] text-muted-foreground">kcal / meta {dieta.kcal_alvo}</p>
               </div>
+
+              {/* Cards macros estilo Netflix com imagens cinematográficas */}
               <div className="col-span-3 grid grid-cols-1 gap-2">
                 {[
-                  { l: "PROTEÍNA", v: totalDia.p, alvo: dieta.macros_alvo?.proteina_g, hsl: COLOR_PROT },
-                  { l: "CARBO",    v: totalDia.c, alvo: dieta.macros_alvo?.carboidrato_g, hsl: COLOR_CARB },
-                  { l: "GORDURA",  v: totalDia.g, alvo: dieta.macros_alvo?.lipideos_g, hsl: COLOR_FAT },
-                ].map(m => (
-                  <div
-                    key={m.l}
-                    className="bg-card/40 border rounded-xl px-3 py-2 flex items-center justify-between"
-                    style={{ borderColor: `hsl(${m.hsl} / 0.4)` }}
-                  >
-                    <span className="text-[10px] font-bold tracking-wider" style={{ color: `hsl(${m.hsl})` }}>{m.l}</span>
-                    <span className="font-display text-lg" style={{ color: `hsl(${m.hsl})` }}>
-                      {m.v}<span className="text-xs text-muted-foreground">/{m.alvo || "-"}g</span>
-                    </span>
-                  </div>
-                ))}
+                  { l: "PROTEÍNA", v: totalDia.p, alvo: dieta.macros_alvo?.proteina_g, hsl: COLOR_PROT, img: imgMacroProtein },
+                  { l: "CARBO",    v: totalDia.c, alvo: dieta.macros_alvo?.carboidrato_g, hsl: COLOR_CARB, img: imgMacroCarbs },
+                  { l: "GORDURA",  v: totalDia.g, alvo: dieta.macros_alvo?.lipideos_g, hsl: COLOR_FAT, img: imgMacroFats },
+                ].map(m => {
+                  const pct = m.alvo ? Math.min(100, Math.round((m.v / m.alvo) * 100)) : 0;
+                  return (
+                    <div
+                      key={m.l}
+                      className="relative rounded-xl overflow-hidden border group cursor-pointer transition-all hover:scale-[1.015]"
+                      style={{ borderColor: `hsl(${m.hsl} / 0.5)`, boxShadow: `0 0 20px hsl(${m.hsl} / 0.08)` }}
+                    >
+                      {/* Imagem de fundo */}
+                      <img
+                        src={m.img}
+                        alt={m.l}
+                        loading="lazy"
+                        className="absolute inset-0 w-full h-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-110 transition-all duration-700"
+                      />
+                      {/* Gradiente lateral cor do macro -> transparente */}
+                      <div
+                        className="absolute inset-0"
+                        style={{
+                          background: `linear-gradient(90deg, hsl(${m.hsl} / 0.85) 0%, hsl(${m.hsl} / 0.35) 35%, hsl(0 0% 0% / 0.2) 60%, hsl(0 0% 0% / 0.7) 100%)`,
+                        }}
+                      />
+                      {/* Vinheta inferior */}
+                      <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/70 to-transparent" />
+
+                      <div className="relative px-4 py-3 flex items-center justify-between min-h-[72px]">
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] font-bold tracking-[0.2em] text-white drop-shadow-md">{m.l}</span>
+                          <span className="text-[10px] text-white/70 uppercase tracking-wider">{pct}% da meta</span>
+                        </div>
+                        <div className="flex items-baseline gap-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                          <span className="font-display text-2xl text-white">{m.v}</span>
+                          <span className="text-xs text-white/80">/ {m.alvo || "-"}g</span>
+                        </div>
+                      </div>
+
+                      {/* Barra de progresso na borda inferior */}
+                      <div className="relative h-[3px] bg-black/40">
+                        <div
+                          className="h-full transition-all duration-700"
+                          style={{ width: `${pct}%`, background: `hsl(${m.hsl})`, boxShadow: `0 0 10px hsl(${m.hsl})` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
