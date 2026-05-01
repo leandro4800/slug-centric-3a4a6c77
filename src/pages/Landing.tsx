@@ -766,17 +766,17 @@ const Landing = () => {
           
           <div className="relative flex justify-center">
             {/* Phone Stack Effect */}
-              <div className="relative">
-                {/* Back Phone */}
-                <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[-10deg] hidden md:block">
-                  <DemoAppScreen mode="stats" />
+            <div className="relative">
+              {/* Back Phone */}
+              <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[-10deg] hidden md:block">
+                <DemoAppScreen mode="stats" brandName={brandName} brandColor={brandColor} />
               </div>
               
               {/* Main Phone */}
               <div className="relative w-[300px] h-[600px] bg-zinc-950 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-xl z-20" />
                 {isUnlocked ? (
-                  <DemoAppScreen mode="home" />
+                  <DemoAppScreen mode="home" brandName={brandName} brandColor={brandColor} />
                 ) : (
                   <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
                     <Lock className="h-10 w-10 text-primary mb-4" />
@@ -788,7 +788,7 @@ const Landing = () => {
 
               {/* Front Phone */}
               <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[10deg] hidden md:block z-20">
-                <DemoAppScreen mode="treino" />
+                <DemoAppScreen mode="treino" brandName={brandName} brandColor={brandColor} />
               </div>
             </div>
             {/* Decorative Elements */}
