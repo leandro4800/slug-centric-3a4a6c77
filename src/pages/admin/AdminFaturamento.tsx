@@ -763,6 +763,7 @@ const AdminFaturamento = () => {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };
