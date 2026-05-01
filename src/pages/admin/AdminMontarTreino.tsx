@@ -111,7 +111,7 @@ const AdminMontarTreino = () => {
       }
       const { data: tp } = await supabase
         .from("treinos_prescritos")
-        .select("dia_semana, ordem, exercicio, series, repeticoes, observacao")
+        .select("dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
         .eq("aluno_id", alunoId)
         .eq("tenant_id", tenant.id)
         .order("dia_semana")
