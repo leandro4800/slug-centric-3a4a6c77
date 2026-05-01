@@ -140,9 +140,17 @@ export default function Onboarding() {
           agua_litros: Number(aguaLitros),
           anos_treino: Number(anosTreino),
           disponibilidade_dias: diasDisponiveis,
+          nivel_experiencia: nivelExperiencia,
+          faz_uso_ergogenicos: fazUsoErgogenicos,
+          detalhes_ergogenicos: detalhesErgogenicos,
         },
         { onConflict: "aluno_id" }
       );
+
+      // Também atualiza na tabela alunos para compatibilidade
+      await supabase.from("alunos").update({
+        nivel_experiencia: nivelExperiencia,
+      }).eq("id", user.id);
 
       // 3. Salva avaliação física
       await supabase.from("avaliacoes_fisicas").insert({

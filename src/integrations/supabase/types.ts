@@ -123,8 +123,10 @@ export type Database = {
           anos_treino: number | null
           cirurgias: string | null
           created_at: string
+          detalhes_ergogenicos: string | null
           disponibilidade_dias: string[] | null
           doencas: string[] | null
+          faz_uso_ergogenicos: boolean | null
           historico_familiar: string | null
           horas_sono: number | null
           id: string
@@ -132,6 +134,7 @@ export type Database = {
           medicamentos: string | null
           modalidades_anteriores: string[] | null
           nivel_estresse: number | null
+          nivel_experiencia: string | null
           qualidade_sono: number | null
           refeicoes_dia: number | null
           restricoes_alimentares: string[] | null
@@ -150,8 +153,10 @@ export type Database = {
           anos_treino?: number | null
           cirurgias?: string | null
           created_at?: string
+          detalhes_ergogenicos?: string | null
           disponibilidade_dias?: string[] | null
           doencas?: string[] | null
+          faz_uso_ergogenicos?: boolean | null
           historico_familiar?: string | null
           horas_sono?: number | null
           id?: string
@@ -159,6 +164,7 @@ export type Database = {
           medicamentos?: string | null
           modalidades_anteriores?: string[] | null
           nivel_estresse?: number | null
+          nivel_experiencia?: string | null
           qualidade_sono?: number | null
           refeicoes_dia?: number | null
           restricoes_alimentares?: string[] | null
@@ -177,8 +183,10 @@ export type Database = {
           anos_treino?: number | null
           cirurgias?: string | null
           created_at?: string
+          detalhes_ergogenicos?: string | null
           disponibilidade_dias?: string[] | null
           doencas?: string[] | null
+          faz_uso_ergogenicos?: boolean | null
           historico_familiar?: string | null
           horas_sono?: number | null
           id?: string
@@ -186,6 +194,7 @@ export type Database = {
           medicamentos?: string | null
           modalidades_anteriores?: string[] | null
           nivel_estresse?: number | null
+          nivel_experiencia?: string | null
           qualidade_sono?: number | null
           refeicoes_dia?: number | null
           restricoes_alimentares?: string[] | null
