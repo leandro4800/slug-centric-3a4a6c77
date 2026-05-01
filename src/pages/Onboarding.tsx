@@ -199,14 +199,36 @@ export default function Onboarding() {
   if (isLoading) return <div className="flex h-screen items-center justify-center bg-black">Carregando...</div>;
 
   const bgImage = tenant?.hero_url || heroDefault;
+  const isVideo = isDirectVideo(bgImage) || extractYouTubeId(bgImage);
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 overflow-hidden bg-black selection:bg-primary selection:text-white">
       {/* Background Layer */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 blur-[2px] opacity-40 transition-all duration-1000"
-        style={{ backgroundImage: `url(${bgImage})` }}
-      />
+      {isVideo ? (
+        <div className="absolute inset-0 w-full h-full overflow-hidden opacity-40 blur-[2px] scale-110 transition-all duration-1000">
+          {extractYouTubeId(bgImage) ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${extractYouTubeId(bgImage)}?autoplay=1&mute=1&loop=1&playlist=${extractYouTubeId(bgImage)}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              allow="autoplay; encrypted-media"
+            />
+          ) : (
+            <video
+              src={bgImage}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+        </div>
+      ) : (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 blur-[2px] opacity-40 transition-all duration-1000"
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
+      )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,transparent_0%,rgba(0,0,0,0.8)_100%)]" />
 
