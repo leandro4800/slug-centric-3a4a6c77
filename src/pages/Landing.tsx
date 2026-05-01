@@ -586,7 +586,18 @@ const Landing = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {coaches.map((coach, i) => (
+          {filteredCoaches.length === 0 ? (
+            <div className="col-span-full py-20 text-center bg-zinc-900/30 rounded-2xl border border-white/5">
+              <p className="text-gray-500 font-bold uppercase tracking-widest">Nenhum coach encontrado nesta região.</p>
+              <Button 
+                variant="link" 
+                onClick={() => {setSearchRegion(""); setSearchCoach("");}}
+                className="text-primary mt-2"
+              >
+                Limpar filtros
+              </Button>
+            </div>
+          ) : filteredCoaches.map((coach, i) => (
             <div 
               key={i} 
               className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
