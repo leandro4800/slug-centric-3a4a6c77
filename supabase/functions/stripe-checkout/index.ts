@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
       success_url: `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${t.slug}`,
       cancel_url: `${origin}/${t.slug}`,
       subscription_data: {
+        trial_period_days: 30,
         ...(skipStripeConnect ? {} : {
           application_fee_percent: PLATFORM_FEE_PCT,
           on_behalf_of: t.stripe_account_id,
