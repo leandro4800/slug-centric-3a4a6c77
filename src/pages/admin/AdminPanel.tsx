@@ -244,7 +244,42 @@ const AdminPanel = () => {
                       <Label>Tagline</Label>
                       <Input value={tagline} onChange={(e) => setTagline(e.target.value)} />
                     </div>
-                    <Button onClick={handleSaveAppearance} className="w-full bg-gradient-primary shadow-glow">Salvar textos</Button>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <Label>Cidade</Label>
+                        <Input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex: São Paulo" />
+                      </div>
+                      <div>
+                        <Label>Estado (UF)</Label>
+                        <Input value={estado} onChange={(e) => setEstado(e.target.value)} placeholder="Ex: SP" maxLength={2} />
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t border-border">
+                      <h4 className="font-display text-sm mb-3 uppercase tracking-wider text-primary">Aulas Avulsas</h4>
+                      <div className="flex items-center gap-3 mb-4">
+                        <input 
+                          type="checkbox" 
+                          id="aula-avulsa" 
+                          checked={permiteAulaAvulsa} 
+                          onChange={(e) => setPermiteAulaAvulsa(e.target.checked)}
+                          className="w-4 h-4 accent-primary"
+                        />
+                        <Label htmlFor="aula-avulsa" className="cursor-pointer">Permitir venda de aula avulsa no marketplace</Label>
+                      </div>
+                      {permiteAulaAvulsa && (
+                        <div>
+                          <Label>Preço da Aula Avulsa (R$)</Label>
+                          <Input 
+                            type="number" 
+                            value={precoAulaAvulsa} 
+                            onChange={(e) => setPrecoAulaAvulsa(e.target.value)} 
+                            placeholder="Ex: 150.00"
+                          />
+                          <p className="text-[10px] text-muted-foreground mt-1 uppercase">A plataforma retém 10% de taxa sobre este valor.</p>
+                        </div>
+                      )}
+                    </div>
+                    <Button onClick={handleSaveAppearance} className="w-full bg-gradient-primary shadow-glow">Salvar configurações</Button>
                   </div>
                 </div>
               </TabsContent>
