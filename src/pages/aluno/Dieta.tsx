@@ -237,49 +237,52 @@ const Dieta = () => {
             {/* Resumo + Pizza + cards laterais — estilo Netflix cinematográfico */}
             <div className="grid grid-cols-5 gap-3 mb-5">
               {/* Painel pizza com hero image de fundo */}
-              <div className="col-span-2 relative rounded-2xl overflow-hidden border border-border group">
-                <img
-                  src={imgMacroHero}
-                  alt="Plano alimentar"
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,hsl(var(--background))_75%)]" />
-                <div className="relative p-2 flex flex-col items-center justify-center h-full">
-                  <div className="relative aspect-square w-full max-w-[160px]">
+              <div className="col-span-2 relative rounded-2xl overflow-hidden border border-border bg-gradient-to-br from-card to-background">
+                <div className="relative p-4 flex flex-col items-center justify-center h-full">
+                  <div className="relative w-full aspect-square max-w-[180px] mx-auto">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie 
-                          data={pieData} 
-                          dataKey="value" 
-                          innerRadius="70%" 
-                          outerRadius="100%" 
-                          paddingAngle={5} 
-                          cornerRadius={40} 
-                          stroke="none"
+                        <Pie
+                          data={pieData}
+                          dataKey="value"
+                          innerRadius="68%"
+                          outerRadius="95%"
+                          paddingAngle={3}
+                          stroke="hsl(var(--background))"
+                          strokeWidth={2}
                           startAngle={90}
                           endAngle={-270}
+                          isAnimationActive={false}
                         >
-                          {pieData.map((e, i) => <Cell key={i} fill={e.color} className="drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]" />)}
+                          {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
-                    
-                    {/* Texto centralizado estilo Apple Watch / Fitness */}
+
+                    {/* Texto central */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                      <span className="text-[8px] font-bold tracking-[0.2em] text-muted-foreground uppercase ml-1">Total</span>
-                      <span className="font-display text-2xl leading-none my-0.5 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                      <span className="font-display text-3xl leading-none text-foreground">
                         {totalDia.kcal.toLocaleString('pt-BR')}
                       </span>
-                      <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">kcal</span>
+                      <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-[0.2em] mt-1">kcal</span>
                     </div>
                   </div>
-                  <div className="mt-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
-                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                    <span className="text-[9px] text-muted-foreground font-bold tracking-tighter uppercase">
-                      Meta: {dieta.kcal_alvo} kcal
-                    </span>
+
+                  {/* Legenda */}
+                  <div className="mt-4 w-full space-y-1.5">
+                    {pieData.map((p) => (
+                      <div key={p.name} className="flex items-center justify-between text-[10px]">
+                        <div className="flex items-center gap-1.5">
+                          <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
+                          <span className="text-muted-foreground uppercase tracking-wider font-semibold">{p.name}</span>
+                        </div>
+                        <span className="text-foreground font-bold">{Math.round(p.value)} kcal</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-3 text-[9px] text-muted-foreground uppercase tracking-widest">
+                    Meta: {dieta.kcal_alvo} kcal
                   </div>
                 </div>
               </div>
