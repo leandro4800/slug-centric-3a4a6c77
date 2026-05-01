@@ -3,6 +3,7 @@ import { Logo } from "@/components/Logo";
 import { Settings, Play, Volume2, VolumeX, Stethoscope, ChevronRight } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
+import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import heroDefault from "@/assets/hero-default.jpg";
 import cardTreino from "@/assets/card-treino.jpg";
@@ -67,7 +68,12 @@ const AlunoHome = () => {
   const [vlogs, setVlogs] = useState<VlogPost[]>([]);
 
   const featured = vlogs[0];
-  const ytId = featured ? (featured.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/)?.[1] ?? null) : null;
+  const ytId = featured ? extractYouTubeId(featured.url) : (isDirectVideo(tenant?.hero_url) || extractYouTubeId(tenant?.hero_url) ? null : extractYouTubeId(tenant?.hero_url));
+  
+  // Se não houver vlog, mas houver um vídeo de hero do tenant
+  const tenantHeroVideoId = !featured ? extractYouTubeId(tenant?.hero_url) : null;
+  const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
+
   const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
   const [expanded, setExpanded] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -104,17 +110,28 @@ const AlunoHome = () => {
     <>
       {/* Hero */}
       <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden bg-background">
-        {ytAutoSrc ? (
+        {ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl ? (
           <>
-            <iframe
-              key={`${ytId}-${muted}-${expanded}`}
-              src={ytAutoSrc}
-              title={featured?.title || "Vlog"}
-              allow="autoplay; encrypted-media; picture-in-picture"
-              allowFullScreen
-              className="absolute inset-0 w-full h-full pointer-events-none"
-              style={expanded ? { pointerEvents: "auto" } : undefined}
-            />
+            {ytAutoSrc || tenantHeroVideoId ? (
+              <iframe
+                key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
+                src={ytAutoSrc || `https://www.youtube.com/embed/${tenantHeroVideoId}?autoplay=1&mute=1&loop=1&playlist=${tenantHeroVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+                title={featured?.title || tenant?.nome || "Hero Video"}
+                allow="autoplay; encrypted-media; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full pointer-events-none"
+                style={expanded ? { pointerEvents: "auto" } : undefined}
+              />
+            ) : (
+              <video
+                src={tenantHeroDirectUrl!}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="absolute inset-0 w-full h-full object-cover"
+              />
+            )}
             {/* máscara para esconder UI do YT quando não-expandido */}
             {!expanded && (
               <div className="absolute inset-0 pointer-events-none" />

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,8 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { Logo } from "@/components/Logo";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, Play } from "lucide-react";
+import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
+import heroDefault from "@/assets/hero-default.jpg";
 
 type Sexo = "M" | "F";
 
@@ -19,6 +23,7 @@ const dias = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
 export default function Onboarding() {
   const { user, isLoading } = useAuth();
+  const { tenant } = useBranding();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
@@ -192,39 +197,98 @@ export default function Onboarding() {
     }
   };
 
-  if (isLoading) return <div className="flex h-screen items-center justify-center bg-background">Carregando...</div>;
+  if (isLoading) return <div className="flex h-screen items-center justify-center bg-black">Carregando...</div>;
+
+  const bgImage = tenant?.hero_url || heroDefault;
+  const isVideo = isDirectVideo(bgImage) || extractYouTubeId(bgImage);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="mx-auto max-w-2xl px-4 py-8 md:px-8">
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 overflow-hidden bg-black selection:bg-primary selection:text-white">
+      {/* Background Layer */}
+      {isVideo ? (
+        <div className="absolute inset-0 w-full h-full overflow-hidden opacity-40 blur-[2px] scale-110 transition-all duration-1000">
+          {extractYouTubeId(bgImage) ? (
+            <iframe
+              src={`https://www.youtube.com/embed/${extractYouTubeId(bgImage)}?autoplay=1&mute=1&loop=1&playlist=${extractYouTubeId(bgImage)}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+              allow="autoplay; encrypted-media"
+            />
+          ) : (
+            <video
+              src={bgImage}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          )}
+        </div>
+      ) : (
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat scale-110 blur-[2px] opacity-40 transition-all duration-1000"
+          style={{ backgroundImage: `url(${bgImage})` }}
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/40 to-black" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,transparent_0%,rgba(0,0,0,0.8)_100%)]" />
+
+      <div className="relative w-full max-w-2xl py-8 z-10">
+        <div className="flex justify-center mb-8 animate-in fade-in zoom-in duration-700">
+          <Logo withText={true} />
+        </div>
+
         {/* Stepper */}
-        <div className="mb-8">
-          <div className="mb-2 flex items-center gap-2 text-xs text-muted-foreground">
-            Etapa {step} de 3
+        <div className="mb-8 px-4 md:px-0">
+          <div className="mb-2 flex items-center justify-between text-[10px] uppercase tracking-[0.2em] text-primary font-bold">
+            <span>ETAPA {step} DE 3</span>
+            <span className="text-muted-foreground/60">{Math.round((step / 3) * 100)}% CONCLUÍDO</span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-1.5">
             {[1, 2, 3].map((n) => (
               <div
                 key={n}
-                className={`h-1.5 flex-1 rounded-full transition-colors ${
-                  step >= n ? "bg-primary" : "bg-border"
+                className={`h-1 flex-1 rounded-full transition-all duration-500 ${
+                  step >= n ? "bg-primary shadow-[0_0_10px_rgba(var(--primary-rgb),0.5)]" : "bg-white/10"
                 }`}
               />
             ))}
           </div>
-          <h1 className="mt-4 font-display text-3xl uppercase md:text-4xl">
+          <h1 className="mt-6 font-display text-4xl uppercase md:text-5xl tracking-tight text-white drop-shadow-2xl">
             {step === 1 && "Seu perfil"}
             {step === 2 && "Anamnese"}
             {step === 3 && "Avaliação física"}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-2 text-sm text-muted-foreground/80 font-medium">
             {step === 1 && "Pra começarmos, conte um pouco sobre você."}
             {step === 2 && "Nos ajude a entender sua saúde, hábitos e rotina."}
             {step === 3 && "Suas medidas atuais. Calculamos seu % de gordura na hora."}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border/50 bg-card p-6 md:p-8">
+        <div className="glass-card rounded-3xl border border-white/10 bg-black/60 backdrop-blur-2xl p-6 md:p-10 shadow-2xl ring-1 ring-white/10 animate-in slide-in-from-bottom-4 duration-700">
+          <style>
+            {`
+              .glass-card input, .glass-card textarea, .glass-card select, .glass-card button[role="combobox"] {
+                background-color: rgba(255, 255, 255, 0.05) !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+                color: white !important;
+              }
+              .glass-card input:focus, .glass-card textarea:focus {
+                border-color: hsl(var(--primary) / 0.5) !important;
+                background-color: rgba(255, 255, 255, 0.08) !important;
+              }
+              .glass-card label {
+                color: rgba(255, 255, 255, 0.6) !important;
+                text-transform: uppercase;
+                font-size: 0.7rem;
+                letter-spacing: 0.1em;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+                display: block;
+              }
+            `}
+          </style>
           {/* STEP 1 */}
           {step === 1 && (
             <div className="space-y-4">
@@ -446,21 +510,22 @@ export default function Onboarding() {
         </div>
 
         {/* Nav */}
-        <div className="mt-6 flex items-center justify-between">
+        <div className="mt-8 flex items-center justify-between px-4 md:px-0">
           <Button
-            variant="outline"
+            variant="ghost"
             onClick={() => setStep((s) => Math.max(1, s - 1))}
             disabled={step === 1 || busy}
+            className="text-white hover:bg-white/10 disabled:opacity-30 h-12 px-6 rounded-xl"
           >
-            <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+            <ArrowLeft className="mr-2 h-5 w-5" /> Voltar
           </Button>
           {step < 3 ? (
-            <Button onClick={() => setStep((s) => s + 1)} className="bg-primary hover:bg-primary/90">
-              Continuar <ArrowRight className="ml-2 h-4 w-4" />
+            <Button onClick={() => setStep((s) => s + 1)} className="bg-gradient-primary shadow-glow hover:scale-[1.02] transition-transform h-12 px-8 rounded-xl font-bold text-base uppercase tracking-wider">
+              Continuar <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           ) : (
-            <Button onClick={handleFinish} disabled={busy || !pesoKg || !alturaCm} className="bg-primary hover:bg-primary/90">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Concluir <CheckCircle2 className="ml-2 h-4 w-4" /></>}
+            <Button onClick={handleFinish} disabled={busy || !pesoKg || !alturaCm} className="bg-gradient-primary shadow-glow hover:scale-[1.02] transition-transform h-12 px-8 rounded-xl font-bold text-base uppercase tracking-wider">
+              {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <>Concluir <CheckCircle2 className="ml-2 h-5 w-5" /></>}
             </Button>
           )}
         </div>
