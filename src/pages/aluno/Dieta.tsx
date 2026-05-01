@@ -12,6 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import imgBreakfast from "@/assets/meal-breakfast.jpg";
+import imgLunch from "@/assets/meal-lunch.jpg";
+import imgSnack from "@/assets/meal-snack.jpg";
+import imgDinner from "@/assets/meal-dinner.jpg";
+import imgPre from "@/assets/meal-pre.jpg";
+import imgPost from "@/assets/meal-post.jpg";
+import imgSupper from "@/assets/meal-supper.jpg";
 
 type Alimento = { id: string; nome: string; energia_kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number };
 type Item = { id: string; quantidade_g: number; substituicoes: string | null; alimento: Alimento | null };
@@ -44,18 +51,17 @@ const calcMacros = (itens: Item[]) => {
   return { kcal: Math.round(kcal), p: Math.round(p), c: Math.round(c), g: Math.round(g) };
 };
 
-// Imagem cinematográfica por refeição (via Unsplash)
+// Imagem cinematográfica por refeição (assets locais)
 const imgFor = (nome: string) => {
   const n = (nome || "").toLowerCase();
-  let q = "healthy,food,dark";
-  if (n.includes("café") || n.includes("cafe") || n.includes("manhã")) q = "breakfast,eggs,coffee,dark";
-  else if (n.includes("almoço") || n.includes("almoco")) q = "grilled,chicken,rice,dark";
-  else if (n.includes("lanche")) q = "snack,fruit,smoothie,dark";
-  else if (n.includes("jantar")) q = "salmon,vegetables,dinner,dark";
-  else if (n.includes("ceia") || n.includes("noite")) q = "yogurt,nuts,dark";
-  else if (n.includes("pré") || n.includes("pre")) q = "banana,oats,dark";
-  else if (n.includes("pós") || n.includes("pos")) q = "protein,shake,dark";
-  return `https://source.unsplash.com/800x450/?${q}`;
+  if (n.includes("pós") || n.includes("pos-treino") || n.includes("pos treino")) return imgPost;
+  if (n.includes("pré") || n.includes("pre-treino") || n.includes("pre treino")) return imgPre;
+  if (n.includes("ceia") || n.includes("noite")) return imgSupper;
+  if (n.includes("jantar")) return imgDinner;
+  if (n.includes("almoço") || n.includes("almoco")) return imgLunch;
+  if (n.includes("café") || n.includes("cafe") || n.includes("manhã") || n.includes("manha")) return imgBreakfast;
+  if (n.includes("lanche")) return imgSnack;
+  return imgBreakfast;
 };
 
 const Dieta = () => {
