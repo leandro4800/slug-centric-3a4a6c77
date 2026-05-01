@@ -48,6 +48,8 @@ const AdminFaturamento = () => {
   const [isSaqueDialogOpen, setIsSaqueDialogOpen] = useState(false);
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
   const [activePanel, setActivePanel] = useState<null | "dashboard" | "transacoes" | "relatorios" | "ajuda" | "taxas" | "bancarios">(null);
+  const [activeReport, setActiveReport] = useState<null | "mensal" | "anual" | "ir" | "extrato">(null);
+  const [studentsView, setStudentsView] = useState<null | "ativos" | "desistentes">(null);
   const [isUploading, setIsUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [pixKey, setPixKey] = useState("");
@@ -283,7 +285,7 @@ const AdminFaturamento = () => {
         <section className="space-y-4 pt-4">
           <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-red-600 pl-3">Análise de Performance</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-            <div className="min-w-[280px] bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden">
+            <button onClick={() => setStudentsView("ativos")} className="min-w-[280px] text-left bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden hover:border-red-600/50 transition-colors">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <TrendingUp className="h-24 w-24 text-white" />
               </div>
@@ -299,9 +301,10 @@ const AdminFaturamento = () => {
                   className="h-full bg-red-600" 
                 />
               </div>
-            </div>
+              <p className="text-[10px] uppercase tracking-widest text-red-600 font-black mt-3">Ver lista →</p>
+            </button>
 
-            <div className="min-w-[280px] bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden">
+            <button onClick={() => setStudentsView("desistentes")} className="min-w-[280px] text-left bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden hover:border-red-600/50 transition-colors">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <TrendingDown className="h-24 w-24 text-red-600" />
               </div>
@@ -317,7 +320,8 @@ const AdminFaturamento = () => {
                    className="h-full bg-red-600" 
                 />
               </div>
-            </div>
+              <p className="text-[10px] uppercase tracking-widest text-red-600 font-black mt-3">Ver lista →</p>
+            </button>
           </div>
         </section>
       </main>
@@ -495,11 +499,16 @@ const AdminFaturamento = () => {
           {/* RELATÓRIOS */}
           {activePanel === "relatorios" && (
             <div className="py-4 space-y-3">
-              {["Relatório Mensal", "Relatório Anual", "Imposto de Renda", "Extrato Detalhado"].map((r) => (
-                <button key={r} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 p-4 transition-colors group">
+              {([
+                { key: "mensal", label: "Relatório Mensal" },
+                { key: "anual", label: "Relatório Anual" },
+                { key: "ir", label: "Imposto de Renda" },
+                { key: "extrato", label: "Extrato Detalhado" },
+              ] as const).map((r) => (
+                <button key={r.key} onClick={() => setActiveReport(r.key)} className="w-full flex items-center justify-between bg-white/5 hover:bg-white/10 border border-white/10 p-4 transition-colors group">
                   <div className="flex items-center gap-3">
                     <FileText className="h-5 w-5 text-red-600" />
-                    <span className="font-bold text-sm uppercase tracking-tight">{r}</span>
+                    <span className="font-bold text-sm uppercase tracking-tight">{r.label}</span>
                   </div>
                   <ChevronRight className="h-4 w-4 text-white/40 group-hover:text-red-600" />
                 </button>
@@ -577,6 +586,170 @@ const AdminFaturamento = () => {
               <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto">
                 Salvar Dados Bancários
               </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* REPORT DETAIL DIALOG */}
+      <Dialog open={!!activeReport} onOpenChange={(o) => !o && setActiveReport(null)}>
+        <DialogContent className="bg-black border-white/10 text-white sm:max-w-2xl rounded-none max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-2">
+              <FileText className="h-6 w-6 text-red-600" />
+              {activeReport === "mensal" && "Relatório Mensal"}
+              {activeReport === "anual" && "Relatório Anual"}
+              {activeReport === "ir" && "Imposto de Renda"}
+              {activeReport === "extrato" && "Extrato Detalhado"}
+            </DialogTitle>
+            <DialogDescription className="text-white/60 pt-2 text-xs uppercase tracking-wider">
+              Período de referência · {new Date().toLocaleDateString("pt-BR")}
+            </DialogDescription>
+          </DialogHeader>
+
+          {activeReport === "mensal" && (
+            <div className="py-4 space-y-4">
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-white/5 border-l-4 border-red-600 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Bruto do Mês</p>
+                  <p className="text-2xl font-black mt-1">{formatBRL(totalGross)}</p>
+                </div>
+                <div className="bg-white/5 border-l-4 border-white/30 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Comissão</p>
+                  <p className="text-2xl font-black mt-1 text-red-600">-{formatBRL(totalCommission)}</p>
+                </div>
+                <div className="bg-white/5 border-l-4 border-red-600 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido</p>
+                  <p className="text-2xl font-black mt-1">{formatBRL(totalNet)}</p>
+                </div>
+              </div>
+              <div className="bg-white/5 p-4 space-y-2 text-sm">
+                <div className="flex justify-between"><span className="text-white/60">Novos alunos</span><span className="font-black">{activeStudents}</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Cancelamentos</span><span className="font-black">0</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Reembolsos</span><span className="font-black">{formatBRL(0)}</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Mensalidades pagas</span><span className="font-black">{activeStudents}</span></div>
+              </div>
+              <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar PDF</Button>
+            </div>
+          )}
+
+          {activeReport === "anual" && (
+            <div className="py-4 space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white/5 border-l-4 border-red-600 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Faturamento Anual</p>
+                  <p className="text-2xl font-black mt-1">{formatBRL(totalGross * 12)}</p>
+                </div>
+                <div className="bg-white/5 border-l-4 border-red-600 p-4">
+                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido Anual</p>
+                  <p className="text-2xl font-black mt-1">{formatBRL(totalNet * 12)}</p>
+                </div>
+              </div>
+              <div className="bg-white/5 p-4">
+                <p className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">Por mês</p>
+                <div className="space-y-1">
+                  {["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map((m) => (
+                    <div key={m} className="flex justify-between text-sm border-b border-white/5 py-1">
+                      <span className="text-white/60">{m}</span>
+                      <span className="font-bold">{formatBRL(totalNet)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar PDF</Button>
+            </div>
+          )}
+
+          {activeReport === "ir" && (
+            <div className="py-4 space-y-4">
+              <div className="bg-white/5 border-l-4 border-red-600 p-5">
+                <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Rendimentos Tributáveis ({new Date().getFullYear()})</p>
+                <p className="text-4xl font-black mt-2">{formatBRL(totalNet * 12)}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div className="bg-white/5 p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">CNPJ Pagadora</p>
+                  <p className="font-black mt-1">00.000.000/0001-00</p>
+                </div>
+                <div className="bg-white/5 p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">IRRF Retido</p>
+                  <p className="font-black mt-1">{formatBRL(0)}</p>
+                </div>
+              </div>
+              <p className="text-[11px] text-white/50 leading-relaxed">Informe estes valores na ficha “Rendimentos Recebidos de Pessoa Jurídica” da sua declaração anual.</p>
+              <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar Informe de Rendimentos</Button>
+            </div>
+          )}
+
+          {activeReport === "extrato" && (
+            <div className="py-4 space-y-2">
+              {DEMO_ATHLETES.map((a, i) => (
+                <div key={a.id} className="flex items-center gap-3 bg-white/5 border-l-2 border-red-600 p-3">
+                  <div className="w-10 h-10 rounded-full bg-red-600/20 flex items-center justify-center font-black text-red-600">{a.nome_completo[0]}</div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{a.nome_completo}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-white/40">Crédito Mensalidade · {new Date(Date.now() - i * 86400000 * 3).toLocaleDateString("pt-BR")}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-black text-emerald-500">+{formatBRL(PLAN_VALUE)}</p>
+                    <p className="text-[9px] uppercase tracking-widest text-red-600">-{formatBRL(PLAN_VALUE * COMMISSION_RATE)} taxa</p>
+                  </div>
+                </div>
+              ))}
+              <div className="flex justify-between bg-white/5 border-l-4 border-red-600 p-4 mt-3">
+                <span className="font-black uppercase tracking-widest text-sm">Saldo Final</span>
+                <span className="font-black text-xl">{formatBRL(totalNet)}</span>
+              </div>
+              <Button className="w-full bg-red-600 hover:bg-red-700 font-black uppercase tracking-widest rounded-none py-6 h-auto mt-2">Exportar CSV</Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* STUDENTS LIST DIALOG */}
+      <Dialog open={!!studentsView} onOpenChange={(o) => !o && setStudentsView(null)}>
+        <DialogContent className="bg-black border-white/10 text-white sm:max-w-2xl rounded-none max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-2">
+              {studentsView === "ativos" ? (
+                <><TrendingUp className="h-6 w-6 text-red-600" /> Alunos Ativos</>
+              ) : (
+                <><TrendingDown className="h-6 w-6 text-red-600" /> Desistentes</>
+              )}
+            </DialogTitle>
+            <DialogDescription className="text-white/60 pt-2 text-xs uppercase tracking-wider">
+              {studentsView === "ativos"
+                ? `${activeStudents} aluno(s) com assinatura ativa`
+                : "Nenhum desistente no período"}
+            </DialogDescription>
+          </DialogHeader>
+
+          {studentsView === "ativos" && (
+            <div className="py-4 space-y-2">
+              {DEMO_ATHLETES.map((a) => (
+                <div key={a.id} className="flex items-center gap-3 bg-white/5 border-l-2 border-emerald-500 p-3">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center font-black text-emerald-500">
+                    {a.nome_completo[0]}
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-bold text-sm">{a.nome_completo}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-white/40">{a.email}</p>
+                  </div>
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 uppercase text-[9px] font-black tracking-widest rounded-none">
+                    Ativo
+                  </Badge>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {studentsView === "desistentes" && (
+            <div className="py-10 text-center space-y-3">
+              <div className="w-16 h-16 mx-auto rounded-full bg-white/5 flex items-center justify-center">
+                <XCircle className="h-8 w-8 text-white/30" />
+              </div>
+              <p className="font-black uppercase tracking-widest text-sm text-white/60">Nenhum desistente</p>
+              <p className="text-xs text-white/40 max-w-sm mx-auto">Quando um aluno cancelar a assinatura ou tiver o acesso bloqueado, ele aparecerá aqui.</p>
             </div>
           )}
         </DialogContent>
