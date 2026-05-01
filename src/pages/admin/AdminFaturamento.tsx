@@ -37,6 +37,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import { DEMO_ATHLETES } from "@/lib/demoAthletes";
+import alphaLogo from "@/assets/alphacoach-logo.jpeg";
 
 const AdminFaturamento = () => {
   const navigate = useNavigate();
@@ -183,7 +184,15 @@ const AdminFaturamento = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white font-sans selection:bg-red-600 selection:text-white">
+    <div className="relative min-h-screen bg-black text-white font-sans selection:bg-red-600 selection:text-white">
+      {/* Logo de fundo Alpha Coach */}
+      <div
+        aria-hidden
+        className="pointer-events-none fixed inset-0 z-0 bg-no-repeat bg-center bg-contain opacity-[0.06]"
+        style={{ backgroundImage: `url(${alphaLogo})` }}
+      />
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      <div className="relative z-10">
       {/* Netflix-style Header Banner */}
       <div className="relative h-[40vh] w-full overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 via-black/60 to-black z-0" />
@@ -754,6 +763,7 @@ const AdminFaturamento = () => {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </div>
   );
 };
