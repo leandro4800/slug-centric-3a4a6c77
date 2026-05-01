@@ -294,6 +294,7 @@ const AdminMontarTreino = () => {
                     <option value="Iniciante">Iniciante (&lt; 1 ano)</option>
                     <option value="Intermediário">Intermediário (1-3 anos)</option>
                     <option value="Avançado">Avançado (3+ anos)</option>
+                    <option value="Atleta de Alto Nível">Atleta de Alto Nível (competidor)</option>
                   </select>
                 </div>
               </div>
