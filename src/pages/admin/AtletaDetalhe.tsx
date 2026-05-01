@@ -23,7 +23,17 @@ import {
   AlertTriangle,
   TrendingUp,
   Camera,
+  Sparkles,
+  ShieldAlert,
 } from "lucide-react";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 
@@ -72,6 +82,9 @@ const AtletaDetalhe = () => {
   const [savingNivel, setSavingNivel] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [protocolResult, setProtocolResult] = useState<string | null>(null);
+  const [isGeneratingProtocol, setIsGeneratingProtocol] = useState(false);
+  const [showProtocolDialog, setShowProtocolDialog] = useState(false);
 
   useEffect(() => {
     if (!atletaId) return;
@@ -140,6 +153,26 @@ const AtletaDetalhe = () => {
       toast.error(e?.message || "Falha no upload");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleGenerateProtocol = async () => {
+    if (!aluno) return;
+    setIsGeneratingProtocol(true);
+    try {
+      const { data, error } = await (supabase.functions as any).invoke("generate-hormone-protocol", {
+        body: { alunoId: aluno.id, tenantId: aluno.tenant_id },
+      });
+
+      if (error) throw error;
+      setProtocolResult(data.protocol);
+      setShowProtocolDialog(true);
+      toast.success("Protocolo gerado pelo DR. IA!");
+    } catch (e: any) {
+      console.error(e);
+      toast.error(e.message || "Falha ao gerar protocolo");
+    } finally {
+      setIsGeneratingProtocol(false);
     }
   };
 
@@ -322,6 +355,26 @@ const AtletaDetalhe = () => {
         {/* Lista de ações */}
         <div className="space-y-2">
           <button
+            onClick={handleGenerateProtocol}
+            disabled={isGeneratingProtocol}
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
+          >
+            {isGeneratingProtocol ? (
+              <Loader2 className="h-4 w-4 text-primary animate-spin" />
+            ) : (
+              <Sparkles className="h-4 w-4 text-primary" />
+            )}
+            <span className="flex-1">
+              <span className="block text-xs font-bold uppercase tracking-wider text-primary">
+                Gerar Sugestão de Ciclo (DR. IA)
+              </span>
+              <span className="block text-[10px] text-muted-foreground tracking-wider uppercase mt-0.5">
+                Baseado no livro de Dudu Haluch
+              </span>
+            </span>
+          </button>
+
+          <button
             onClick={() => toast.info("Anamnese completa em breve")}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
           >
@@ -370,6 +423,61 @@ const AtletaDetalhe = () => {
           </div>
         </div>
       </main>
+
+      <Dialog open={showProtocolDialog} onOpenChange={setShowProtocolDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-card border-border shadow-2xl">
+          <DialogHeader className="pb-4 border-b border-border/50">
+            <div className="flex items-center gap-2 text-primary mb-1">
+              <Sparkles className="h-5 w-5" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em]">IA GENERATIVA</span>
+            </div>
+            <DialogTitle className="font-display text-2xl uppercase tracking-tight">
+              Sugestão de Ciclo & TPC
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs uppercase tracking-wider">
+              Análise baseada no perfil de {aluno.nome_completo}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-6 space-y-6">
+            {protocolResult && (
+              <div className="prose prose-invert prose-sm max-w-none">
+                <div className="whitespace-pre-wrap font-sans leading-relaxed text-foreground/90">
+                  {/* Destacar disclaimer inicial */}
+                  <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4 mb-6 flex gap-3">
+                    <ShieldAlert className="h-5 w-5 text-destructive shrink-0" />
+                    <p className="text-[10px] text-destructive font-bold uppercase leading-normal">
+                      AVISO: ESTA É APENAS UMA SUGESTÃO EDUCACIONAL. O USO DE ESTEROIDES APRESENTA GRAVES RISCOS. 
+                      DEVE SER AVALIADO POR UM MÉDICO ENDOCRINOLOGISTA.
+                    </p>
+                  </div>
+
+                  {protocolResult}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="flex-col sm:flex-row gap-2 border-t border-border/50 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={() => setShowProtocolDialog(false)}
+              className="flex-1 uppercase text-[10px] font-bold tracking-widest"
+            >
+              Fechar
+            </Button>
+            <Button 
+              className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 uppercase text-[10px] font-bold tracking-widest"
+              onClick={() => {
+                navigator.clipboard.writeText(protocolResult || "");
+                toast.success("Copiado para a área de transferência!");
+              }}
+            >
+              Copiar Sugestão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

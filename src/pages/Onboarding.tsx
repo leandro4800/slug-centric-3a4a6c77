@@ -46,6 +46,9 @@ export default function Onboarding() {
   const [aguaLitros, setAguaLitros] = useState("2");
   const [anosTreino, setAnosTreino] = useState("0");
   const [diasDisponiveis, setDiasDisponiveis] = useState<string[]>([]);
+  const [nivelExperiencia, setNivelExperiencia] = useState("Iniciante");
+  const [fazUsoErgogenicos, setFazUsoErgogenicos] = useState(false);
+  const [detalhesErgogenicos, setDetalhesErgogenicos] = useState("");
 
   // Step 3 — Avaliação
   const [pesoKg, setPesoKg] = useState("");
@@ -140,9 +143,17 @@ export default function Onboarding() {
           agua_litros: Number(aguaLitros),
           anos_treino: Number(anosTreino),
           disponibilidade_dias: diasDisponiveis,
+          nivel_experiencia: nivelExperiencia,
+          faz_uso_ergogenicos: fazUsoErgogenicos,
+          detalhes_ergogenicos: detalhesErgogenicos,
         },
         { onConflict: "aluno_id" }
       );
+
+      // Também atualiza na tabela alunos para compatibilidade
+      await supabase.from("alunos").update({
+        nivel_experiencia: nivelExperiencia,
+      }).eq("id", user.id);
 
       // 3. Salva avaliação física
       await supabase.from("avaliacoes_fisicas").insert({
@@ -311,7 +322,48 @@ export default function Onboarding() {
               </section>
 
               <section className="space-y-3">
-                <h3 className="font-display text-lg uppercase text-primary">Treino</h3>
+                <h3 className="font-display text-lg uppercase text-primary">Treino & Experiência</h3>
+                <div>
+                  <Label>Nível de Experiência</Label>
+                  <Select value={nivelExperiencia} onValueChange={setNivelExperiencia}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Iniciante">Iniciante</SelectItem>
+                      <SelectItem value="Intermediário">Intermediário</SelectItem>
+                      <SelectItem value="Avançado">Avançado</SelectItem>
+                      <SelectItem value="Atleta de Alto Nível">Atleta de Alto Nível</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {["Intermediário", "Avançado", "Atleta de Alto Nível"].includes(nivelExperiencia) && (
+                  <div className="space-y-3 border-l-2 border-primary/20 pl-4 pt-2">
+                    <div className="flex items-center gap-2">
+                      <Checkbox 
+                        checked={fazUsoErgogenicos} 
+                        onCheckedChange={(v) => setFazUsoErgogenicos(!!v)} 
+                        id="hormonios" 
+                      />
+                      <Label htmlFor="hormonios" className="leading-tight cursor-pointer">
+                        Você faz uso ou pretende fazer uso de recursos ergogênicos/hormônios?
+                      </Label>
+                    </div>
+                    
+                    {fazUsoErgogenicos && (
+                      <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                        <Label>Liste o que usa ou qual é o seu objetivo com o uso</Label>
+                        <Textarea 
+                          value={detalhesErgogenicos} 
+                          onChange={(e) => setDetalhesErgogenicos(e.target.value)} 
+                          placeholder="Ex: Ciclo de durateston 250mg/semana, ou Objetivo de ganho de massa bruto..."
+                          rows={3}
+                          className="mt-1 bg-background/50"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div>
                   <Label>Anos de treino</Label>
                   <Input type="number" value={anosTreino} onChange={(e) => setAnosTreino(e.target.value)} step={0.5} min={0} />
