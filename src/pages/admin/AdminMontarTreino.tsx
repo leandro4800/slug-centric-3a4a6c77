@@ -35,6 +35,8 @@ interface ExercicioPrescrito {
   exercicio: string;
   series: string;
   repeticoes: string;
+  cadencia?: string;
+  detalhes_execucao?: string;
   observacao: string;
 }
 
