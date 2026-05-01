@@ -266,7 +266,29 @@ export default function Onboarding() {
           </p>
         </div>
 
-        <div className="glass-card rounded-3xl border border-white/10 bg-black/40 backdrop-blur-2xl p-6 md:p-10 shadow-2xl ring-1 ring-white/5 animate-in slide-in-from-bottom-4 duration-700">
+        <div className="glass-card rounded-3xl border border-white/10 bg-black/60 backdrop-blur-2xl p-6 md:p-10 shadow-2xl ring-1 ring-white/10 animate-in slide-in-from-bottom-4 duration-700">
+          <style>
+            {`
+              .glass-card input, .glass-card textarea, .glass-card select, .glass-card button[role="combobox"] {
+                background-color: rgba(255, 255, 255, 0.05) !important;
+                border-color: rgba(255, 255, 255, 0.1) !important;
+                color: white !important;
+              }
+              .glass-card input:focus, .glass-card textarea:focus {
+                border-color: hsl(var(--primary) / 0.5) !important;
+                background-color: rgba(255, 255, 255, 0.08) !important;
+              }
+              .glass-card label {
+                color: rgba(255, 255, 255, 0.6) !important;
+                text-transform: uppercase;
+                font-size: 0.7rem;
+                letter-spacing: 0.1em;
+                font-weight: 700;
+                margin-bottom: 0.5rem;
+                display: block;
+              }
+            `}
+          </style>
           {/* STEP 1 */}
           {step === 1 && (
             <div className="space-y-4">
