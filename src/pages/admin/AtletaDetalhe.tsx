@@ -599,6 +599,36 @@ const AtletaDetalhe = () => {
           }}
         />
       )}
+      <Dialog open={showAnamneseDialog} onOpenChange={setShowAnamneseDialog}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto bg-card border-border shadow-2xl">
+          <DialogHeader className="pb-4 border-b border-border/50">
+            <div className="flex items-center gap-2 text-primary mb-1">
+              <FileText className="h-5 w-5" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em]">FICHA TÉCNICA</span>
+            </div>
+            <DialogTitle className="font-display text-2xl uppercase tracking-tight">
+              Anamnese Completa
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs uppercase tracking-wider">
+              Dados de saúde e hábitos de {aluno.nome_completo}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-6">
+            {anamnese ? (
+              <AnamneseDetails data={anamnese} />
+            ) : (
+              <p className="text-center text-muted-foreground py-10">Dados não encontrados.</p>
+            )}
+          </div>
+
+          <DialogFooter className="border-t border-border/50 pt-4">
+            <Button variant="ghost" onClick={() => setShowAnamneseDialog(false)}>
+              Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
