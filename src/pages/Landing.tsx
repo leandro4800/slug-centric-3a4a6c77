@@ -106,6 +106,15 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
   </div>
 );
 
+const renderScreenMedia = (url: string) => {
+  if (!url) return <div className="h-full w-full bg-zinc-900 flex items-center justify-center text-zinc-700 text-[10px] uppercase font-black">Sem mídia</div>;
+  const isVideo = url.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/) || url.includes('video') || url.includes('.mp4');
+  if (isVideo) {
+    return <video src={url} autoPlay muted loop playsInline className="h-full w-full object-cover" />;
+  }
+  return <img src={url} alt="App Screen" className="h-full w-full object-cover" />;
+};
+
 const BRAND_COLORS = [
   { name: "Netflix", hex: "#E50914" },
   { name: "Gold", hex: "#F5C518" },
@@ -124,6 +133,9 @@ const Landing = () => {
   const [price, setPrice] = useState(400);
   const [brandName, setBrandName] = useState("Seu Coach Team");
   const [brandColor, setBrandColor] = useState("#E50914");
+  const [screen1, setScreen1] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4");
+  const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
+  const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
   const { toast } = useToast();
 
   const grossRevenue = students * price;
@@ -591,81 +603,112 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Originais Alpha Coach */}
+      {/* Telas Personalizadas Section */}
       <section className="py-24 px-6 md:px-12 bg-[#080808]">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
               <Video className="h-3 w-3" />
-              Originais Alpha Coach
+              App Personalizado
             </div>
             <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">
-              EXPERIMENTE A <br />
-              <span className="text-primary text-glow-primary">EVOLUÇÃO DO SEU APP.</span>
+              TENHA SEUS PRÓPRIOS <br />
+              <span className="text-primary text-glow-primary">VÍDEOS PERSONALIZADOS.</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Veja como sua marca se comporta na prática. Escolha seu nome, 
-              suas cores e simule a experiência real que seu aluno terá no seu aplicativo exclusivo.
+              Configure as telas do seu aplicativo com seus próprios vídeos e imagens. 
+              Visualize em tempo real como seu conteúdo exclusivo aparecerá para seus alunos.
             </p>
           </div>
 
-          <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
+          <div className="grid lg:grid-cols-4 gap-12 items-start">
             {/* Simulator Controls */}
-            <div className="w-full max-w-md space-y-8 bg-zinc-950/50 p-8 rounded-2xl border border-white/10">
+            <div className="lg:col-span-1 space-y-6 bg-zinc-950/50 p-6 md:p-8 rounded-2xl border border-white/10 lg:sticky lg:top-24">
+              <h3 className="text-xs font-black uppercase tracking-widest text-white border-b border-white/10 pb-4 mb-6">Painel de Configuração</h3>
+              
               <div className="space-y-6">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-3">Nome da sua Equipe</label>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Vídeo/Imagem da Tela 1</label>
                   <Input 
-                    value={brandName}
-                    onChange={(e) => setBrandName(e.target.value)}
-                    placeholder="Ex: Team Fenix"
-                    className="bg-zinc-900 border-white/10 text-white focus:border-primary h-12"
+                    value={screen1}
+                    onChange={(e) => setScreen1(e.target.value)}
+                    placeholder="URL da mídia..."
+                    className="bg-zinc-900 border-white/10 text-white focus:border-primary text-xs h-10"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-3">Cor da sua Marca</label>
-                  <div className="grid grid-cols-6 gap-2">
-                    {BRAND_COLORS.map((color) => (
-                      <button
-                        key={color.hex}
-                        onClick={() => setBrandColor(color.hex)}
-                        className={`aspect-square rounded-full border-2 transition-all ${brandColor === color.hex ? 'scale-110 border-white' : 'border-transparent'}`}
-                        style={{ backgroundColor: color.hex }}
-                        title={color.name}
-                      />
-                    ))}
-                  </div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Vídeo/Imagem da Tela 2</label>
+                  <Input 
+                    value={screen2}
+                    onChange={(e) => setScreen2(e.target.value)}
+                    placeholder="URL da mídia..."
+                    className="bg-zinc-900 border-white/10 text-white focus:border-primary text-xs h-10"
+                  />
                 </div>
 
-                <div className="pt-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2">Vídeo/Imagem da Tela 3</label>
+                  <Input 
+                    value={screen3}
+                    onChange={(e) => setScreen3(e.target.value)}
+                    placeholder="URL da mídia..."
+                    className="bg-zinc-900 border-white/10 text-white focus:border-primary text-xs h-10"
+                  />
+                </div>
+
+                <div className="pt-2">
                   <Button 
-                    onClick={() => setShowSimulador(true)}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-black py-6 h-auto text-lg"
+                    onClick={() => {
+                      toast({
+                        title: "Visualização atualizada!",
+                        description: "As telas do app foram configuradas com suas mídias.",
+                      });
+                    }}
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-wider h-11 text-xs"
                   >
-                    CONFIGURAR TELAS DO APP
+                    ATUALIZAR APP
                   </Button>
                 </div>
               </div>
             </div>
 
-            {/* Device Preview */}
-            <div className="relative group">
-              <div className="absolute -inset-1 bg-primary/20 rounded-[3rem] blur-xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
-              <div className="relative w-[300px] h-[600px] bg-zinc-950 rounded-[3rem] border-8 border-zinc-900 shadow-2xl overflow-hidden ring-1 ring-white/10">
-                <DemoAppScreen 
-                  brandName={brandName}
-                  brandColor={brandColor}
-                />
-              </div>
-              
-              {/* Floating badges */}
-              <div className="absolute -right-8 top-20 bg-zinc-900/90 border border-white/10 p-3 rounded-xl backdrop-blur-md animate-bounce-slow">
-                <p className="text-[10px] font-black uppercase text-primary">Branding Ativo</p>
-              </div>
-              <div className="absolute -left-8 bottom-40 bg-zinc-900/90 border border-white/10 p-3 rounded-xl backdrop-blur-md animate-bounce-slow delay-700">
-                <p className="text-[10px] font-black uppercase text-white">Interface Cinema</p>
-              </div>
+            {/* Device Previews - 3 Phones */}
+            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-8 justify-items-center">
+              {[
+                { url: screen1, label: "Treino" },
+                { url: screen2, label: "Nutrição" },
+                { url: screen3, label: "Comunidade" }
+              ].map((screen, idx) => (
+                <div key={idx} className="relative group w-full max-w-[260px]">
+                  <div className="absolute -inset-1 bg-primary/20 rounded-[3rem] blur-xl opacity-0 group-hover:opacity-100 transition duration-1000"></div>
+                  <div className="relative aspect-[9/18.5] w-full bg-zinc-950 rounded-[2.8rem] border-[6px] border-zinc-900 shadow-2xl overflow-hidden ring-1 ring-white/10">
+                    {/* Notch */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-20 h-5 bg-zinc-900 rounded-b-xl z-20" />
+                    
+                    <div className="h-full w-full relative z-10 bg-zinc-900">
+                      {renderScreenMedia(screen.url)}
+                    </div>
+                    
+                    {/* UI Overlay */}
+                    <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                    <div className="absolute bottom-8 left-0 right-0 px-6 z-30">
+                      <div className="flex items-center gap-2 mb-1">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white">{screen.label}</p>
+                      </div>
+                      <div className="h-1 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div className="h-full bg-primary w-1/3" />
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Badge */}
+                  <div className="mt-6 text-center">
+                    <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.3em]">Screen 0{idx + 1}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
