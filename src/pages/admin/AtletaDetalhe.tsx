@@ -387,7 +387,7 @@ const AtletaDetalhe = () => {
           </button>
 
           <button
-            onClick={() => toast.info("Protocolo 7 dobras em breve")}
+            onClick={() => setOpen7Dobras(true)}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
           >
             <Ruler className="h-4 w-4 text-primary" />
