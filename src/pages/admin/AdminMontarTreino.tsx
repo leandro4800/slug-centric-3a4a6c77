@@ -176,6 +176,8 @@ const AdminMontarTreino = () => {
             exercicio: e.nome,
             series: e.series,
             repeticoes: e.repeticoes,
+            cadencia: e.cadencia,
+            detalhes_execucao: e.detalhes_execucao,
             observacao: e.observacao,
           });
         });
