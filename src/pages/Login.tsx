@@ -54,7 +54,17 @@ const Login = () => {
       }
 
       // Aluno: precisa onboarding completo
-      if (!perfil?.onboarding_completo) {
+      const { count: anamneseCount } = await supabase
+        .from("anamnese_aluno")
+        .select("id", { count: 'exact', head: true })
+        .eq("aluno_id", user.id);
+
+      const { count: avaliacaoCount } = await supabase
+        .from("avaliacoes_fisicas")
+        .select("id", { count: 'exact', head: true })
+        .eq("aluno_id", user.id);
+
+      if (!perfil?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
         navigate("/onboarding", { replace: true });
         return;
       }
