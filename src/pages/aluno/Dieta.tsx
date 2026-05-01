@@ -319,7 +319,10 @@ const Dieta = () => {
 
       {/* Modal de detalhes da refeição */}
       <Dialog open={!!selectedRef} onOpenChange={(o) => !o && setSelectedRef(null)}>
-        <DialogContent className="max-w-lg p-0 overflow-hidden gap-0 bg-card border-border">
+        <DialogContent
+          overlayClassName="bg-background/90 backdrop-blur-sm"
+          className="max-w-lg p-0 overflow-hidden gap-0 bg-card border-border shadow-2xl"
+        >
           {selectedRef && (
             <>
               <div className="relative h-48 -mt-px">
