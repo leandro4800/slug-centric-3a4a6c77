@@ -671,22 +671,6 @@ const Landing = () => {
         </div>
       </section>
 
-          <div className="grid md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-            {[
-              "+200 exercícios em HD prontos pra usar",
-              "Atualizações mensais na biblioteca",
-              "Você pode adicionar vídeos próprios também",
-              "Musculação, funcional, mobilidade, cardio",
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-2 text-sm text-gray-300">
-                <CheckCircle2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Paz de espírito financeira */}
       <section className="py-24 px-6 md:px-12 bg-black">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
