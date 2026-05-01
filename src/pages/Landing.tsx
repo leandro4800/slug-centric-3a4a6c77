@@ -106,6 +106,15 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
   </div>
 );
 
+const renderScreenMedia = (url: string) => {
+  if (!url) return <div className="h-full w-full bg-zinc-900 flex items-center justify-center text-zinc-700 text-[10px] uppercase font-black">Sem mídia</div>;
+  const isVideo = url.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/) || url.includes('video') || url.includes('.mp4');
+  if (isVideo) {
+    return <video src={url} autoPlay muted loop playsInline className="h-full w-full object-cover" />;
+  }
+  return <img src={url} alt="App Screen" className="h-full w-full object-cover" />;
+};
+
 const BRAND_COLORS = [
   { name: "Netflix", hex: "#E50914" },
   { name: "Gold", hex: "#F5C518" },
