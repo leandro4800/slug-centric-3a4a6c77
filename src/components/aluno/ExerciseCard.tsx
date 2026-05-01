@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Youtube } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 
 export interface ExerciseCardData {
   id: string;
@@ -34,14 +35,6 @@ interface ExerciseCardProps {
   onCargaSaved?: (nome: string, carga: number, reps: number) => void;
 }
 
-const extractYouTubeId = (url: string | null | undefined): string | null => {
-  if (!url) return null;
-  const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([\w-]{11})/);
-  return m ? m[1] : null;
-};
-
-const isDirectVideo = (url: string | null | undefined) =>
-  !!url && /\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url);
 
 const fmtTime = (s: number) => {
   const m = Math.floor(s / 60).toString().padStart(2, "0");
