@@ -60,6 +60,8 @@ const App = () => (
 
             {/* Admin AlphaCoach (super admin) */}
             <Route path="/admin/coaches" element={<BrandingProvider><RequireAuth><AdminCoaches /></RequireAuth></BrandingProvider>} />
+            <Route path="/admin/faturamento" element={<BrandingProvider><RequireAuth><AdminFaturamento /></RequireAuth></BrandingProvider>} />
+
 
             {/* Landing pública do tenant */}
             <Route path="/:slug" element={<BrandingProvider><TenantLanding /></BrandingProvider>} />
