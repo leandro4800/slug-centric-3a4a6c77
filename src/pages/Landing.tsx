@@ -540,11 +540,17 @@ const Landing = () => {
               
               {/* Content */}
               <div className="absolute inset-0 p-6 flex flex-col justify-end">
-                <div className="flex items-center gap-1.5 mb-2">
+                <div className="flex flex-wrap items-center gap-1.5 mb-2">
                   <div className="px-2 py-0.5 bg-primary text-[9px] font-black rounded-sm flex items-center gap-1">
                     <CheckCircle2 className="h-2.5 w-2.5" />
                     {coach.tag}
                   </div>
+                  {coach.cidade && (
+                    <div className="px-2 py-0.5 bg-white/10 text-[9px] font-black rounded-sm flex items-center gap-1 uppercase">
+                      <MapPin className="h-2.5 w-2.5 text-primary" />
+                      {coach.cidade}, {coach.estado}
+                    </div>
+                  )}
                 </div>
                 
                 <h3 className="text-xl font-black uppercase mb-1 group-hover:text-primary transition-colors">
