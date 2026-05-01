@@ -600,40 +600,76 @@ const Landing = () => {
               Originais Alpha Coach
             </div>
             <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">
-              TENHA SEUS PRÓPRIOS <br />
-              <span className="text-primary">VÍDEOS PERSONALIZADOS.</span>
+              EXPERIMENTE A <br />
+              <span className="text-primary text-glow-primary">EVOLUÇÃO DO SEU APP.</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Tenha acesso à nossa biblioteca premium de vídeos de execução em HD. 
-              Monte treinos completos em minutos — sem precisar de câmera, microfone ou estúdio.
+              Veja como sua marca se comporta na prática. Escolha seu nome, 
+              suas cores e simule a experiência real que seu aluno terá no seu aplicativo exclusivo.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-12">
-            {videoLibrary.map((item, i) => (
-              <div key={i} className="group relative aspect-[3/4] rounded-xl overflow-hidden border border-white/10 hover:border-primary/50 transition-all cursor-pointer bg-zinc-900">
-                <video
-                  src={item.video}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="auto"
-                  className="absolute inset-0 w-full h-full object-cover opacity-95 group-hover:opacity-100 transition-opacity"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/10" />
-                <div className="absolute top-3 right-3 px-2 py-1 bg-primary text-[9px] font-black rounded text-white z-10">HD</div>
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                  <div className="w-14 h-14 bg-primary rounded-full flex items-center justify-center">
-                    <Play className="h-6 w-6 text-white fill-current ml-1" />
+          <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
+            {/* Simulator Controls */}
+            <div className="w-full max-w-md space-y-8 bg-zinc-950/50 p-8 rounded-2xl border border-white/10">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-3">Nome da sua Equipe</label>
+                  <Input 
+                    value={brandName}
+                    onChange={(e) => setBrandName(e.target.value)}
+                    placeholder="Ex: Team Fenix"
+                    className="bg-zinc-900 border-white/10 text-white focus:border-primary h-12"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-black uppercase tracking-[0.2em] text-gray-500 mb-3">Cor da sua Marca</label>
+                  <div className="grid grid-cols-6 gap-2">
+                    {BRAND_COLORS.map((color) => (
+                      <button
+                        key={color.hex}
+                        onClick={() => setBrandColor(color.hex)}
+                        className={`aspect-square rounded-full border-2 transition-all ${brandColor === color.hex ? 'scale-110 border-white' : 'border-transparent'}`}
+                        style={{ backgroundColor: color.hex }}
+                        title={color.name}
+                      />
+                    ))}
                   </div>
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black via-black/70 to-transparent z-10">
-                  <p className="font-bold text-sm uppercase">{item.title}</p>
+
+                <div className="pt-4">
+                  <Button 
+                    onClick={() => setShowSimulador(true)}
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-black py-6 h-auto text-lg"
+                  >
+                    CONFIGURAR TELAS DO APP
+                  </Button>
                 </div>
               </div>
-            ))}
+            </div>
+
+            {/* Device Preview */}
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-primary/20 rounded-[3rem] blur-xl opacity-50 group-hover:opacity-100 transition duration-1000"></div>
+              <div className="relative w-[300px] h-[600px] bg-zinc-950 rounded-[3rem] border-8 border-zinc-900 shadow-2xl overflow-hidden ring-1 ring-white/10">
+                <DemoAppScreen 
+                  brandName={brandName}
+                  brandColor={brandColor}
+                />
+              </div>
+              
+              {/* Floating badges */}
+              <div className="absolute -right-8 top-20 bg-zinc-900/90 border border-white/10 p-3 rounded-xl backdrop-blur-md animate-bounce-slow">
+                <p className="text-[10px] font-black uppercase text-primary">Branding Ativo</p>
+              </div>
+              <div className="absolute -left-8 bottom-40 bg-zinc-900/90 border border-white/10 p-3 rounded-xl backdrop-blur-md animate-bounce-slow delay-700">
+                <p className="text-[10px] font-black uppercase text-white">Interface Cinema</p>
+              </div>
+            </div>
           </div>
+        </div>
+      </section>
 
           <div className="grid md:grid-cols-4 gap-4 max-w-4xl mx-auto">
             {[
