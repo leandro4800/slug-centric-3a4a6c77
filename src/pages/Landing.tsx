@@ -125,6 +125,7 @@ const BRAND_COLORS = [
 ];
 
 const Landing = () => {
+  const [mode, setMode] = useState<"choice" | "aluno" | "coach" | null>(null);
   const [showSimulador, setShowSimulador] = useState(false);
   const [email, setEmail] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
@@ -137,7 +138,15 @@ const Landing = () => {
   const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
   const [screen4, setScreen4] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4");
+  
+  // Aluno state
+  const [hasCoachLink, setHasCoachLink] = useState<boolean | null>(null);
+  const [coachLink, setCoachLink] = useState("");
+  const [searchCoach, setSearchCoach] = useState("");
+  const [searchRegion, setSearchRegion] = useState("");
+  
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const grossRevenue = students * price;
   const fee = grossRevenue * 0.1;
@@ -190,6 +199,31 @@ const Landing = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleCoachLinkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (coachLink) {
+      // If it's a full URL, try to extract the slug
+      const slug = coachLink.split("/").pop();
+      if (slug) {
+        navigate(`/${slug}`);
+      }
+    }
+  };
+
+  const handleSearchCoach = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchCoach) {
+      navigate(`/marketplace?q=${encodeURIComponent(searchCoach)}`);
+    }
+  };
+
+  const handleSearchRegion = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchRegion) {
+      navigate(`/marketplace?region=${encodeURIComponent(searchRegion)}`);
     }
   };
 
