@@ -1065,8 +1065,10 @@ export type Database = {
           bio: string | null
           created_at: string
           especialidade: string | null
+          foto_identidade_url: string | null
           id: string
           nome: string
+          status_identidade: string | null
           tenant_id: string
           updated_at: string
         }
@@ -1074,8 +1076,10 @@ export type Database = {
           bio?: string | null
           created_at?: string
           especialidade?: string | null
+          foto_identidade_url?: string | null
           id: string
           nome: string
+          status_identidade?: string | null
           tenant_id: string
           updated_at?: string
         }
@@ -1083,8 +1087,10 @@ export type Database = {
           bio?: string | null
           created_at?: string
           especialidade?: string | null
+          foto_identidade_url?: string | null
           id?: string
           nome?: string
+          status_identidade?: string | null
           tenant_id?: string
           updated_at?: string
         }
@@ -1212,6 +1218,44 @@ export type Database = {
           valor_ouro_min?: number | null
         }
         Relationships: []
+      }
+      saques: {
+        Row: {
+          chave_pix: string
+          created_at: string
+          id: string
+          profissional_id: string
+          status: string
+          updated_at: string
+          valor_centavos: number
+        }
+        Insert: {
+          chave_pix: string
+          created_at?: string
+          id?: string
+          profissional_id: string
+          status?: string
+          updated_at?: string
+          valor_centavos: number
+        }
+        Update: {
+          chave_pix?: string
+          created_at?: string
+          id?: string
+          profissional_id?: string
+          status?: string
+          updated_at?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saques_profissional_id_fkey"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "profissionais"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       tenants: {
         Row: {
