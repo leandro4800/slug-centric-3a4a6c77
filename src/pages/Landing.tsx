@@ -312,7 +312,12 @@ const Landing = () => {
   const handleSearchRegion = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchRegion) {
-      navigate(`/marketplace?region=${encodeURIComponent(searchRegion)}`);
+      const featuredSection = document.getElementById('coaches-featured');
+      if (featuredSection) {
+        featuredSection.scrollIntoView({ behavior: 'smooth' });
+      } else {
+        navigate(`/marketplace?region=${encodeURIComponent(searchRegion)}`);
+      }
     }
   };
 
