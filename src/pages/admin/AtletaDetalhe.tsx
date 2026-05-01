@@ -480,6 +480,17 @@ const AtletaDetalhe = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <JacksonPollockCalculator
+        open={open7Dobras}
+        onOpenChange={setOpen7Dobras}
+        alunoId={aluno.id}
+        tenantId={aluno.tenant_id}
+        pesoInicial={perfil?.peso_kg ?? null}
+        idadeInicial={perfil?.idade ?? null}
+        sexoInicial={perfil?.sexo ?? null}
+        alturaInicial={perfil?.altura_cm ?? null}
+      />
     </div>
   );
 };
