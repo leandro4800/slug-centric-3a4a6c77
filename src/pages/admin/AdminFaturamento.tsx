@@ -35,7 +35,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 
 const AdminFaturamento = () => {
   const navigate = useNavigate();
@@ -62,7 +62,7 @@ const AdminFaturamento = () => {
         .from("profissionais")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       setProfile(data);
     }
   };
@@ -134,7 +134,6 @@ const AdminFaturamento = () => {
       return;
     }
 
-    // Process logic here
     toast({
       title: "Solicitação enviada",
       description: "Seu pedido de saque está em processamento.",
@@ -164,8 +163,8 @@ const AdminFaturamento = () => {
       icon: UserCheck, 
       label: "Identidade", 
       badge: profile?.status_identidade === "aprovado" ? "Verificado" : profile?.status_identidade === "em_analise" ? "Em análise" : "Pendente",
-      badgeColor: profile?.status_identidade === "aprovado" ? "bg-emerald-500/20 text-emerald-500 border-emerald-500/30" : "bg-red-600/20 text-red-500 border-red-600/30",
-      onClick: () => profile?.status_identidade === "pendente" && setIsVerifyDialogOpen(true)
+      badgeColor: profile?.status_identidade === "aprovado" ? "bg-white/20 text-white border-white/30" : "bg-red-600/20 text-red-500 border-red-600/30",
+      onClick: () => (profile?.status_identidade === "pendente" || !profile?.status_identidade) && setIsVerifyDialogOpen(true)
     },
   ];
 
@@ -173,7 +172,6 @@ const AdminFaturamento = () => {
     <div className="min-h-screen bg-black text-white font-sans selection:bg-red-600 selection:text-white">
       {/* Netflix-style Header Banner */}
       <div className="relative h-[40vh] w-full overflow-hidden">
-        {/* Abstract Background for Netflix feel */}
         <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 via-black/60 to-black z-0" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-600/10 via-transparent to-transparent opacity-50" />
         
@@ -184,7 +182,7 @@ const AdminFaturamento = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="text-red-600 font-black text-2xl tracking-tighter">PACHO <span className="text-white">FINANCE</span></div>
+          <div className="text-red-600 font-black text-2xl tracking-tighter uppercase italic">PACHO <span className="text-white">FINANCE</span></div>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-900 border border-white/20" />
         </header>
 
@@ -194,76 +192,73 @@ const AdminFaturamento = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-1"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-white/40 font-bold">Saldo Total Disponível</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/40 font-bold italic">Saldo Disponível</p>
             <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white">
               R$ 0,00
             </h1>
             <div className="flex items-center gap-2 pt-2">
-              <Badge variant="outline" className="bg-red-600/10 text-red-500 border-red-600/30 uppercase text-[10px] tracking-widest font-bold px-3 py-1">
-                Premium Coach
+              <Badge variant="outline" className="bg-red-600/20 text-red-600 border-red-600/40 uppercase text-[10px] tracking-widest font-bold px-3 py-1 rounded-none border-l-4">
+                PLATAFORMA ATIVA
               </Badge>
-              <p className="text-xs text-white/40">R$ 0,00 pendente</p>
+              <p className="text-xs text-white/40">R$ 0,00 bloqueado</p>
             </div>
           </motion.div>
           
           <div className="flex gap-3 mt-8">
             <Button 
               onClick={() => setIsSaqueDialogOpen(true)}
-              className="bg-white text-black hover:bg-white/90 font-bold px-8 py-6 h-auto rounded-md flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
+              className="bg-red-600 text-white hover:bg-red-700 font-bold px-8 py-6 h-auto rounded-none flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
             >
-              <HandCoins className="h-5 w-5 fill-current" />
+              <HandCoins className="h-5 w-5" />
               Solicitar Saque
             </Button>
             <Button 
               variant="outline"
-              className="bg-white/10 border-white/20 text-white hover:bg-white/20 font-bold px-8 py-6 h-auto rounded-md flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
+              className="bg-white/5 border-white/10 text-white hover:bg-white/10 font-bold px-8 py-6 h-auto rounded-none flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
             >
               <ArrowLeftRight className="h-5 w-5" />
-              Histórico
+              Transações
             </Button>
           </div>
         </main>
       </div>
 
       <main className="px-5 pb-12 space-y-10 max-w-4xl mx-auto -mt-4 relative z-10">
-        {/* Warning Alert if pending verification */}
         {profile?.status_identidade !== "aprovado" && (
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-red-600/10 border-l-4 border-red-600 p-5 flex gap-4 items-center rounded-r-xl"
+            className="bg-red-600/10 border-l-4 border-red-600 p-5 flex gap-4 items-center"
           >
             <AlertCircle className="h-8 w-8 text-red-600 shrink-0" />
             <div className="space-y-1">
-              <p className="font-bold text-sm uppercase tracking-wider">Verificação Necessária</p>
+              <p className="font-bold text-sm uppercase tracking-wider text-white">Verificação de Identidade</p>
               <p className="text-xs text-white/60 leading-relaxed">
                 {profile?.status_identidade === "em_analise" 
-                  ? "Sua identidade está sendo analisada. Você poderá solicitar saques em breve."
-                  : "Para o seu 1º saque, precisamos confirmar sua identidade. Clique em Saque para começar."}
+                  ? "Seus documentos estão em análise. Aguarde até 24h."
+                  : "Para o seu 1º saque, é necessário enviar uma foto da sua identidade."}
               </p>
             </div>
           </motion.div>
         )}
 
-        {/* Section: Navegação */}
         <section className="space-y-4">
-          <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-red-600 pl-3">Menu Financeiro</h2>
+          <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-red-600 pl-3">Gestão e Serviços</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {menuItems.map((item, idx) => (
               <motion.button
                 key={idx}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -5, backgroundColor: "rgba(255, 255, 255, 0.08)" }}
                 onClick={item.onClick}
-                className="flex flex-col items-start gap-4 p-5 rounded-lg bg-white/5 border border-white/5 hover:border-red-600/50 hover:bg-white/10 transition-all group text-left relative overflow-hidden"
+                className="flex flex-col items-start gap-4 p-5 bg-white/5 border border-white/5 hover:border-red-600/30 transition-all group text-left relative overflow-hidden"
               >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-red-600/5 rounded-full -mr-12 -mt-12 group-hover:bg-red-600/10 transition-colors" />
-                <div className="w-12 h-12 rounded-lg bg-black flex items-center justify-center border border-white/10 group-hover:border-red-600/50 transition-colors">
+                <div className="w-12 h-12 rounded-none bg-black flex items-center justify-center border border-white/10 group-hover:border-red-600/50 transition-colors">
                   <item.icon className="h-6 w-6 text-red-600" />
                 </div>
                 <div className="space-y-1 z-10">
-                  <p className="font-bold text-sm text-white/90">{item.label}</p>
+                  <p className="font-bold text-sm text-white/90 uppercase tracking-tight">{item.label}</p>
                   {item.badge && (
-                    <Badge variant="outline" className={`${item.badgeColor} text-[8px] uppercase tracking-widest px-1.5 h-4 border-none p-0`}>
+                    <Badge variant="outline" className={`${item.badgeColor} text-[8px] uppercase tracking-widest px-1.5 h-4 border-none p-0 font-black`}>
                       {item.badge}
                     </Badge>
                   )}
@@ -273,35 +268,42 @@ const AdminFaturamento = () => {
           </div>
         </section>
 
-        {/* Section: Métricas (Netflix Cards) */}
         <section className="space-y-4 pt-4">
-          <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-red-600 pl-3">Métricas de Alunos</h2>
+          <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-red-600 pl-3">Análise de Performance</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-            <div className="min-w-[280px] bg-emerald-950/20 border border-emerald-500/20 rounded-xl p-6 relative group overflow-hidden">
+            <div className="min-w-[280px] bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <TrendingUp className="h-24 w-24 text-emerald-500" />
+                <TrendingUp className="h-24 w-24 text-white" />
               </div>
-              <p className="text-xs uppercase tracking-widest text-emerald-500 font-bold mb-4">Alunos Ativos</p>
+              <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-4 italic">Alunos Ativos</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-6xl font-black text-white">0</span>
-                <span className="text-emerald-500 text-sm font-bold flex items-center"><TrendingUp className="h-3 w-3 mr-1" />+0%</span>
+                <span className="text-white/40 text-sm font-bold flex items-center"><TrendingUp className="h-3 w-3 mr-1" />+0%</span>
               </div>
-              <div className="mt-6 h-1 w-full bg-emerald-500/10 rounded-full overflow-hidden">
-                <div className="h-full bg-emerald-500 w-0 transition-all duration-1000" />
+              <div className="mt-6 h-1 w-full bg-white/10 rounded-none overflow-hidden">
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "30%" }}
+                  className="h-full bg-red-600" 
+                />
               </div>
             </div>
 
-            <div className="min-w-[280px] bg-red-950/20 border border-red-500/20 rounded-xl p-6 relative group overflow-hidden">
+            <div className="min-w-[280px] bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                <TrendingDown className="h-24 w-24 text-red-500" />
+                <TrendingDown className="h-24 w-24 text-red-600" />
               </div>
-              <p className="text-xs uppercase tracking-widest text-red-500 font-bold mb-4">Alunos Desistentes</p>
+              <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-4 italic">Desistentes</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-6xl font-black text-white">0</span>
-                <span className="text-red-500 text-sm font-bold flex items-center"><TrendingDown className="h-3 w-3 mr-1" />-0%</span>
+                <span className="text-red-600 text-sm font-bold flex items-center"><TrendingDown className="h-3 w-3 mr-1" />-0%</span>
               </div>
-              <div className="mt-6 h-1 w-full bg-red-500/10 rounded-full overflow-hidden">
-                <div className="h-full bg-red-500 w-0 transition-all duration-1000" />
+              <div className="mt-6 h-1 w-full bg-white/10 rounded-none overflow-hidden">
+                <motion.div 
+                   initial={{ width: 0 }}
+                   animate={{ width: "10%" }}
+                   className="h-full bg-red-600" 
+                />
               </div>
             </div>
           </div>
@@ -310,31 +312,31 @@ const AdminFaturamento = () => {
 
       {/* Verification Dialog */}
       <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
-        <DialogContent className="bg-[#0A0A0A] border-white/10 text-white sm:max-w-md">
+        <DialogContent className="bg-black border-white/10 text-white sm:max-w-md rounded-none">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-2">
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2 italic">
               <UserCheck className="h-6 w-6 text-red-600" />
-              Confirmar Identidade
+              Validar Identidade
             </DialogTitle>
-            <DialogDescription className="text-white/60 pt-2">
-              Para liberar seu primeiro saque, precisamos de uma foto do seu documento de identidade (RG ou CNH).
+            <DialogDescription className="text-white/60 pt-2 text-xs uppercase tracking-wider">
+              Segurança em conformidade com as normas financeiras.
             </DialogDescription>
           </DialogHeader>
           <div className="py-6 space-y-6">
             <div 
-              className={`border-2 border-dashed rounded-xl p-8 flex flex-col items-center justify-center gap-4 transition-all ${file ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-white/10 hover:border-red-600/50 hover:bg-white/5'}`}
+              className={`border-2 border-dashed rounded-none p-8 flex flex-col items-center justify-center gap-4 transition-all ${file ? 'border-red-600/50 bg-red-600/5' : 'border-white/10 hover:border-red-600/50 hover:bg-white/5'}`}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => {
                 e.preventDefault();
                 if (e.dataTransfer.files?.[0]) setFile(e.dataTransfer.files[0]);
               }}
             >
-              <div className={`w-16 h-16 rounded-full flex items-center justify-center ${file ? 'bg-emerald-500/20 text-emerald-500' : 'bg-red-600/10 text-red-600'}`}>
+              <div className={`w-16 h-16 flex items-center justify-center ${file ? 'bg-red-600/20 text-red-600' : 'bg-white/5 text-white/20'}`}>
                 {file ? <CheckCircle2 className="h-8 w-8" /> : <Camera className="h-8 w-8" />}
               </div>
               <div className="text-center">
-                <p className="font-bold text-sm">{file ? file.name : "Clique ou arraste sua foto"}</p>
-                <p className="text-xs text-white/40 mt-1">Formatos aceitos: JPG, PNG, PDF</p>
+                <p className="font-bold text-sm uppercase tracking-tight">{file ? file.name : "Toque para enviar foto"}</p>
+                <p className="text-[10px] text-white/40 mt-1 uppercase">RG, CNH ou Passaporte</p>
               </div>
               <Input 
                 type="file" 
@@ -346,33 +348,20 @@ const AdminFaturamento = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="border-white/20 bg-transparent hover:bg-white/10 font-bold"
+                className="border-white/20 bg-transparent hover:bg-white/10 font-black rounded-none uppercase text-[10px] tracking-widest"
                 onClick={() => document.getElementById('id-upload')?.click()}
               >
-                Selecionar Arquivo
+                Escolher Arquivo
               </Button>
             </div>
-            
-            <div className="bg-white/5 p-4 rounded-lg flex gap-3 items-start">
-              <AlertCircle className="h-5 w-5 text-white/40 shrink-0" />
-              <p className="text-[10px] text-white/40 uppercase tracking-widest leading-relaxed font-bold">
-                Sua foto será analisada em até 24h úteis. Seus dados estão protegidos por criptografia de ponta a ponta.
-              </p>
-            </div>
           </div>
-          <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => setIsVerifyDialogOpen(false)} className="font-bold text-white hover:bg-white/5">Cancelar</Button>
+          <DialogFooter className="gap-2 sm:justify-center">
             <Button 
-              className="bg-red-600 text-white hover:bg-red-700 font-bold px-8" 
+              className="bg-red-600 text-white hover:bg-red-700 font-black px-12 py-6 h-auto rounded-none uppercase tracking-widest w-full" 
               onClick={handleUploadIdentity}
               disabled={isUploading || !file}
             >
-              {isUploading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Enviando...
-                </>
-              ) : "Enviar para Análise"}
+              {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar Agora"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -380,60 +369,49 @@ const AdminFaturamento = () => {
 
       {/* Withdraw Dialog */}
       <Dialog open={isSaqueDialogOpen} onOpenChange={setIsSaqueDialogOpen}>
-        <DialogContent className="bg-[#0A0A0A] border-white/10 text-white sm:max-w-md">
+        <DialogContent className="bg-black border-white/10 text-white sm:max-w-md rounded-none">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tight flex items-center gap-2 text-red-600">
+            <DialogTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2 text-red-600 italic">
               <HandCoins className="h-6 w-6" />
               Solicitar Saque
             </DialogTitle>
-            <DialogDescription className="text-white/60 pt-2">
-              O valor mínimo para saque é R$ 50,00.
+            <DialogDescription className="text-white/60 pt-2 text-xs uppercase tracking-wider">
+              Transferência via PIX (Pagamento Instantâneo)
             </DialogDescription>
           </DialogHeader>
           <div className="py-6 space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="amount" className="text-xs uppercase tracking-widest text-white/40 font-bold">Valor do Saque</Label>
+                <Label htmlFor="amount" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">Quanto deseja sacar?</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-white/40">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-white/20 text-xl">R$</span>
                   <Input 
                     id="amount" 
                     placeholder="0,00" 
-                    className="bg-white/5 border-white/10 pl-10 h-12 text-lg font-black"
+                    className="bg-white/5 border-white/10 pl-12 h-16 text-3xl font-black rounded-none border-l-4 border-l-red-600 focus-visible:ring-red-600"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pix" className="text-xs uppercase tracking-widest text-white/40 font-bold">Chave PIX (CPF ou Email)</Label>
+                <Label htmlFor="pix" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">Sua Chave PIX</Label>
                 <Input 
                   id="pix" 
-                  placeholder="Seu PIX para recebimento" 
-                  className="bg-white/5 border-white/10 h-12 font-medium"
+                  placeholder="CPF, E-mail ou Celular" 
+                  className="bg-white/5 border-white/10 h-12 font-bold rounded-none focus-visible:ring-red-600"
                   value={pixKey}
                   onChange={(e) => setPixKey(e.target.value)}
                 />
               </div>
             </div>
-
-            <div className="bg-emerald-500/10 p-4 rounded-lg flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center">
-                  <Percent className="h-4 w-4 text-emerald-500" />
-                </div>
-                <p className="text-xs font-bold uppercase tracking-widest text-emerald-500">Taxa de Saque</p>
-              </div>
-              <p className="font-black text-white">R$ 0,00</p>
-            </div>
           </div>
-          <DialogFooter className="gap-2">
-            <Button variant="ghost" onClick={() => setIsSaqueDialogOpen(false)} className="font-bold text-white hover:bg-white/5">Cancelar</Button>
+          <DialogFooter className="gap-2 sm:justify-center">
             <Button 
-              className="bg-white text-black hover:bg-white/90 font-bold px-8" 
+              className="bg-white text-black hover:bg-white/90 font-black px-12 py-6 h-auto rounded-none uppercase tracking-widest w-full" 
               onClick={handleSaqueRequest}
             >
-              Confirmar Saque
+              Confirmar Solicitação
             </Button>
           </DialogFooter>
         </DialogContent>
