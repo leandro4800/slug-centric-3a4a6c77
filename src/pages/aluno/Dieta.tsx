@@ -275,7 +275,7 @@ const Dieta = () => {
                 <button
                   key={r.id}
                   onClick={() => setSelectedRef(r)}
-                  className="group relative w-full h-32 rounded-xl overflow-hidden border border-border hover:border-primary/60 transition-all text-left"
+                  className="group relative w-full h-32 rounded-xl overflow-hidden bg-black ring-1 ring-white/5 hover:ring-primary/60 transition-all text-left"
                 >
                   <img
                     src={imgFor(r.nome)}
@@ -284,19 +284,24 @@ const Dieta = () => {
                     loading="lazy"
                     onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-background/10" />
-                  <div className="absolute inset-0 p-4 flex items-center justify-between">
-                    <div className="flex flex-col gap-1.5">
-                      <Badge className="w-fit bg-primary/90 text-primary-foreground border-0 text-[10px] gap-1">
-                        <Clock className="h-3 w-3" /> {r.horario || "—"}
-                      </Badge>
-                      <h3 className="font-display italic text-xl tracking-wide text-foreground drop-shadow-lg">
-                        {r.nome.toUpperCase()}
-                      </h3>
+                  {/* Gradiente preto da esquerda para a direita */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent" />
+                  <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                    {/* Topo: badge com ícone amarelo de talheres */}
+                    <div className="flex items-center gap-2">
+                      <div className="h-6 w-6 rounded-full bg-black/60 backdrop-blur flex items-center justify-center ring-1 ring-white/10">
+                        <Utensils className="h-3 w-3" style={{ color: `hsl(${COLOR_CARB})` }} />
+                      </div>
+                      <span className="text-xs font-bold text-white tracking-wide">{r.horario || "—"}</span>
                     </div>
-                    <div className="h-10 w-10 rounded-full bg-foreground/90 text-background flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-xl">
-                      <Play className="h-4 w-4 fill-current ml-0.5" />
-                    </div>
+                    {/* Base: título em itálico */}
+                    <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                      {r.nome.toUpperCase()}
+                    </h3>
+                  </div>
+                  {/* Play cinza no canto inferior direito */}
+                  <div className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/15 backdrop-blur-md ring-1 ring-white/20 flex items-center justify-center group-hover:bg-primary group-hover:ring-primary transition-colors">
+                    <Play className="h-4 w-4 text-white fill-white ml-0.5" />
                   </div>
                 </button>
               ))}
