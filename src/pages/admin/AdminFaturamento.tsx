@@ -36,6 +36,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
+import { DEMO_ATHLETES } from "@/lib/demoAthletes";
 
 const AdminFaturamento = () => {
   const navigate = useNavigate();
@@ -46,10 +47,20 @@ const AdminFaturamento = () => {
   const [profile, setProfile] = useState<any>(null);
   const [isSaqueDialogOpen, setIsSaqueDialogOpen] = useState(false);
   const [isVerifyDialogOpen, setIsVerifyDialogOpen] = useState(false);
+  const [activePanel, setActivePanel] = useState<null | "dashboard" | "transacoes" | "relatorios" | "ajuda" | "taxas" | "bancarios">(null);
   const [isUploading, setIsUploading] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [pixKey, setPixKey] = useState("");
   const [amount, setAmount] = useState("");
+
+  // Fictional financial data based on demo athletes (for preview/demo only)
+  const PLAN_VALUE = 19700; // R$ 197,00 em centavos
+  const COMMISSION_RATE = 0.10;
+  const activeStudents = DEMO_ATHLETES.length; // 4 demo
+  const totalGross = activeStudents * PLAN_VALUE;
+  const totalCommission = totalGross * COMMISSION_RATE;
+  const totalNet = totalGross - totalCommission;
+  const formatBRL = (cents: number) => (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
   useEffect(() => {
     fetchProfile();
