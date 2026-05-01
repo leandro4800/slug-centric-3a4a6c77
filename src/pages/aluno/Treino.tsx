@@ -189,6 +189,8 @@ const Treino = () => {
             series: t.series,
             repeticoes: t.repeticoes,
             observacao: t.observacao,
+            cadencia: t.cadencia,
+            detalhes_execucao: t.detalhes_execucao,
             video_url: t.video_url || resolveVideo(t.exercicio, refMap),
             video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
           }));
