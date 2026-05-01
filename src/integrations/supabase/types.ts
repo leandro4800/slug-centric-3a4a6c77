@@ -315,17 +315,27 @@ export type Database = {
           cintura_cm: number | null
           created_at: string
           data: string
+          dobra_abdominal: number | null
+          dobra_axilar_media: number | null
+          dobra_coxa: number | null
+          dobra_peitoral: number | null
+          dobra_subescapular: number | null
+          dobra_suprailiaca: number | null
+          dobra_triceps: number | null
           foto_costas_url: string | null
           foto_frente_url: string | null
           foto_lado_url: string | null
           id: string
+          idade: number | null
           imc: number | null
           massa_gorda_kg: number | null
           massa_magra_kg: number | null
+          metodo: string | null
           observacoes: string | null
           pescoco_cm: number | null
           peso_kg: number
           quadril_cm: number | null
+          sexo: string | null
           tenant_id: string | null
         }
         Insert: {
@@ -335,17 +345,27 @@ export type Database = {
           cintura_cm?: number | null
           created_at?: string
           data?: string
+          dobra_abdominal?: number | null
+          dobra_axilar_media?: number | null
+          dobra_coxa?: number | null
+          dobra_peitoral?: number | null
+          dobra_subescapular?: number | null
+          dobra_suprailiaca?: number | null
+          dobra_triceps?: number | null
           foto_costas_url?: string | null
           foto_frente_url?: string | null
           foto_lado_url?: string | null
           id?: string
+          idade?: number | null
           imc?: number | null
           massa_gorda_kg?: number | null
           massa_magra_kg?: number | null
+          metodo?: string | null
           observacoes?: string | null
           pescoco_cm?: number | null
           peso_kg: number
           quadril_cm?: number | null
+          sexo?: string | null
           tenant_id?: string | null
         }
         Update: {
@@ -355,17 +375,27 @@ export type Database = {
           cintura_cm?: number | null
           created_at?: string
           data?: string
+          dobra_abdominal?: number | null
+          dobra_axilar_media?: number | null
+          dobra_coxa?: number | null
+          dobra_peitoral?: number | null
+          dobra_subescapular?: number | null
+          dobra_suprailiaca?: number | null
+          dobra_triceps?: number | null
           foto_costas_url?: string | null
           foto_frente_url?: string | null
           foto_lado_url?: string | null
           id?: string
+          idade?: number | null
           imc?: number | null
           massa_gorda_kg?: number | null
           massa_magra_kg?: number | null
+          metodo?: string | null
           observacoes?: string | null
           pescoco_cm?: number | null
           peso_kg?: number
           quadril_cm?: number | null
+          sexo?: string | null
           tenant_id?: string | null
         }
         Relationships: [
