@@ -98,10 +98,16 @@ serve(async (req) => {
 Crie um plano alimentar usando EXCLUSIVAMENTE os alimentos da tabela TACO fornecida (use os IDs exatos).
 
 REGRAS:
-1. Distribua em 5 a 6 refeições balanceadas atingindo as metas de macros.
+1. Distribua em ${numRefeicoes} refeições balanceadas atingindo as metas de macros.
 2. Quantidades em GRAMAS realistas.
 3. Se houver deficiência clínica (ex: Vitamina D baixa, Anemia/Ferro baixo, Magnésio), priorize alimentos ricos no nutriente em falta e mencione no campo "observacoes_clinicas".
 4. Retorne APENAS JSON válido, sem markdown.
+
+NÍVEL DO ATLETA: ${nivel.toUpperCase()}
+- Iniciante: refeições simples, opções práticas, baixa variedade.
+- Intermediário: variedade moderada, timing pré/pós-treino.
+- Avançado: timing nutricional preciso, ciclagem de carbo nos dias de treino, fontes magras de proteína em todas as refeições.
+- Atleta de Alto Nível: precisão milimétrica, pré/intra/pós-treino estruturado, refeição extra noturna com caseína/proteína de digestão lenta, sódio/potássio balanceados para performance competitiva.
 
 FORMATO OBRIGATÓRIO:
 {
