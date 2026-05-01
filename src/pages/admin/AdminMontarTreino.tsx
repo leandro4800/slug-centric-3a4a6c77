@@ -38,9 +38,10 @@ interface ExercicioPrescrito {
   observacao: string;
 }
 
-const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" | "Avançado" => {
+const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" | "Avançado" | "Atleta de Alto Nível" => {
   if (!tempo) return "Iniciante";
   const t = tempo.toLowerCase();
+  if (t.includes("alto")) return "Atleta de Alto Nível";
   if (t.includes("avan") || t.includes("3 a") || t.includes("4 a") || t.includes("5+")) return "Avançado";
   if (t.includes("inter") || t.includes("1 a") || t.includes("2 a")) return "Intermediário";
   return "Iniciante";
