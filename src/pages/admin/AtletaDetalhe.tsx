@@ -36,6 +36,7 @@ import {
   DialogDescription,
   DialogFooter
 } from "@/components/ui/dialog";
+import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
 import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 
