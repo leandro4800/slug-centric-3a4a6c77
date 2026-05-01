@@ -246,18 +246,41 @@ const Dieta = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/30" />
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_30%,hsl(var(--background))_75%)]" />
-                <div className="relative p-3">
-                  <div className="aspect-square">
+                <div className="relative p-2 flex flex-col items-center justify-center h-full">
+                  <div className="relative aspect-square w-full max-w-[160px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
-                        <Pie data={pieData} dataKey="value" innerRadius="55%" outerRadius="90%" paddingAngle={2} stroke="none">
-                          {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                        <Pie 
+                          data={pieData} 
+                          dataKey="value" 
+                          innerRadius="70%" 
+                          outerRadius="100%" 
+                          paddingAngle={5} 
+                          cornerRadius={40} 
+                          stroke="none"
+                          startAngle={90}
+                          endAngle={-270}
+                        >
+                          {pieData.map((e, i) => <Cell key={i} fill={e.color} className="drop-shadow-[0_0_8px_rgba(0,0,0,0.5)]" />)}
                         </Pie>
                       </PieChart>
                     </ResponsiveContainer>
+                    
+                    {/* Texto centralizado estilo Apple Watch / Fitness */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
+                      <span className="text-[8px] font-bold tracking-[0.2em] text-muted-foreground uppercase ml-1">Total</span>
+                      <span className="font-display text-2xl leading-none my-0.5 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
+                        {totalDia.kcal}
+                      </span>
+                      <span className="text-[9px] text-muted-foreground font-medium uppercase tracking-wider">kcal</span>
+                    </div>
                   </div>
-                  <p className="text-center font-display text-2xl leading-none mt-1 drop-shadow-[0_0_12px_hsl(var(--primary)/0.6)]">{totalDia.kcal}</p>
-                  <p className="text-center text-[10px] text-muted-foreground tracking-widest uppercase">kcal · meta {dieta.kcal_alvo}</p>
+                  <div className="mt-3 flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-white/5 border border-white/10">
+                    <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+                    <span className="text-[9px] text-muted-foreground font-bold tracking-tighter uppercase">
+                      Meta: {dieta.kcal_alvo} kcal
+                    </span>
+                  </div>
                 </div>
               </div>
 
