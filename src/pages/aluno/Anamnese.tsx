@@ -111,34 +111,38 @@ export default function Anamnese() {
     if (!user) return;
     setSaving(true);
     try {
+      const anamneseData = {
+        aluno_id: user.id,
+        tenant_id: tenant?.id,
+        doencas: form.doencas.split(",").map(s => s.trim()).filter(Boolean),
+        medicamentos: form.medicamentos,
+        lesoes_atuais: form.lesoes_atuais,
+        qualidade_sono: form.qualidade_sono[0],
+        horas_sono: form.horas_sono[0],
+        nivel_estresse: form.nivel_estresse[0],
+        tabagismo: form.tabagismo,
+        alcool: form.alcool,
+        suplementos: form.suplementos.split(",").map(s => s.trim()).filter(Boolean),
+        restricoes_alimentares: form.restricoes_alimentares.split(",").map(s => s.trim()).filter(Boolean),
+        refeicoes_dia: Number(form.refeicoes_dia),
+        agua_litros: Number(form.agua_litros),
+        anos_treino: Number(form.anos_treino),
+        disponibilidade_dias: form.disponibilidade_dias,
+        nivel_experiencia: form.nivel_experiencia,
+        faz_uso_ergogenicos: form.faz_uso_ergogenicos,
+        detalhes_ergogenicos: form.detalhes_ergogenicos,
+        historico_familiar: form.historico_familiar,
+        cirurgias: form.cirurgias,
+        alimentos_ama: form.alimentos_ama,
+        alimentos_evita: form.alimentos_evita,
+        modalidades_anteriores: form.modalidades_anteriores.split(",").map(s => s.trim()).filter(Boolean),
+        tempo_recuperacao: form.tempo_recuperacao,
+      };
+
+      console.log("Salvando anamnese:", anamneseData);
+
       const { error } = await supabase.from("anamnese_aluno").upsert(
-        {
-          aluno_id: user.id,
-          tenant_id: tenant?.id,
-          doencas: form.doencas.split(",").map(s => s.trim()).filter(Boolean),
-          medicamentos: form.medicamentos,
-          lesoes_atuais: form.lesoes_atuais,
-          qualidade_sono: form.qualidade_sono[0],
-          horas_sono: form.horas_sono[0],
-          nivel_estresse: form.nivel_estresse[0],
-          tabagismo: form.tabagismo,
-          alcool: form.alcool,
-          suplementos: form.suplementos.split(",").map(s => s.trim()).filter(Boolean),
-          restricoes_alimentares: form.restricoes_alimentares.split(",").map(s => s.trim()).filter(Boolean),
-          refeicoes_dia: Number(form.refeicoes_dia),
-          agua_litros: Number(form.agua_litros),
-          anos_treino: Number(form.anos_treino),
-          disponibilidade_dias: form.disponibilidade_dias,
-          nivel_experiencia: form.nivel_experiencia,
-          faz_uso_ergogenicos: form.faz_uso_ergogenicos,
-          detalhes_ergogenicos: form.detalhes_ergogenicos,
-          historico_familiar: form.historico_familiar,
-          cirurgias: form.cirurgias,
-          alimentos_ama: form.alimentos_ama,
-          alimentos_evita: form.alimentos_evita,
-          modalidades_anteriores: form.modalidades_anteriores.split(",").map(s => s.trim()).filter(Boolean),
-          tempo_recuperacao: form.tempo_recuperacao,
-        },
+        anamneseData,
         { onConflict: "aluno_id" }
       );
 
