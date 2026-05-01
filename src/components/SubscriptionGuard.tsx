@@ -85,6 +85,10 @@ export const SubscriptionGuard = ({ children }: Props) => {
 
   if (isCoach) return <>{children}</>;
 
+  if (status === "incomplete") {
+    return <Navigate to="/onboarding" replace />;
+  }
+
   if (status !== "active" && status !== "trialing") {
     return <Navigate to={`/${slug}`} replace />;
   }
