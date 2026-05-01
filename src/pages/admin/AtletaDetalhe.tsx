@@ -72,6 +72,9 @@ const AtletaDetalhe = () => {
   const [savingNivel, setSavingNivel] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [protocolResult, setProtocolResult] = useState<string | null>(null);
+  const [isGeneratingProtocol, setIsGeneratingProtocol] = useState(false);
+  const [showProtocolDialog, setShowProtocolDialog] = useState(false);
 
   useEffect(() => {
     if (!atletaId) return;
