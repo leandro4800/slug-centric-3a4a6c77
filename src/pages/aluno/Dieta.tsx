@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Utensils, Sparkles, Loader2, RefreshCcw, AlertCircle, Activity } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { Utensils, Sparkles, Loader2, RefreshCcw, AlertCircle, Activity, Play, Clock, X } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { TenantSymbol } from "@/components/TenantSymbol";
@@ -26,6 +26,11 @@ type Dieta = {
   refeicoes: Refeicao[];
 };
 
+// Cores fixas dos macros (estilo Netflix/semáforo)
+const COLOR_PROT = "142 71% 45%";   // verde
+const COLOR_CARB = "45 100% 51%";   // amarelo
+const COLOR_FAT  = "0 84% 55%";     // vermelho
+
 const calcMacros = (itens: Item[]) => {
   let kcal = 0, p = 0, c = 0, g = 0;
   itens.forEach(i => {
@@ -39,12 +44,27 @@ const calcMacros = (itens: Item[]) => {
   return { kcal: Math.round(kcal), p: Math.round(p), c: Math.round(c), g: Math.round(g) };
 };
 
+// Imagem cinematográfica por refeição (via Unsplash)
+const imgFor = (nome: string) => {
+  const n = (nome || "").toLowerCase();
+  let q = "healthy,food,dark";
+  if (n.includes("café") || n.includes("cafe") || n.includes("manhã")) q = "breakfast,eggs,coffee,dark";
+  else if (n.includes("almoço") || n.includes("almoco")) q = "grilled,chicken,rice,dark";
+  else if (n.includes("lanche")) q = "snack,fruit,smoothie,dark";
+  else if (n.includes("jantar")) q = "salmon,vegetables,dinner,dark";
+  else if (n.includes("ceia") || n.includes("noite")) q = "yogurt,nuts,dark";
+  else if (n.includes("pré") || n.includes("pre")) q = "banana,oats,dark";
+  else if (n.includes("pós") || n.includes("pos")) q = "protein,shake,dark";
+  return `https://source.unsplash.com/800x450/?${q}`;
+};
+
 const Dieta = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dieta, setDieta] = useState<Dieta | null>(null);
   const [open, setOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [selectedRef, setSelectedRef] = useState<Refeicao | null>(null);
   const [form, setForm] = useState({ objetivo: "hipertrofia", peso_kg: 75, altura_cm: 175, idade: 28, sexo: "M", nivel_atividade: 1.55 });
 
   const carregar = async () => {
@@ -113,35 +133,36 @@ const Dieta = () => {
   }, { kcal: 0, p: 0, c: 0, g: 0 }) : { kcal: 0, p: 0, c: 0, g: 0 };
 
   const pieData = [
-    { name: "Proteína", value: totalDia.p * 4, color: "hsl(142 70% 55%)" },
-    { name: "Carbo", value: totalDia.c * 4, color: "hsl(var(--accent))" },
-    { name: "Gordura", value: totalDia.g * 9, color: "hsl(0 80% 60%)" },
+    { name: "Proteína", value: totalDia.p * 4, color: `hsl(${COLOR_PROT})` },
+    { name: "Carbo",    value: totalDia.c * 4, color: `hsl(${COLOR_CARB})` },
+    { name: "Gordura",  value: totalDia.g * 9, color: `hsl(${COLOR_FAT})` },
   ];
 
   const badge = dieta?.macros_alvo?.badge;
+  const selectedMacros = useMemo(() => selectedRef ? calcMacros(selectedRef.itens) : null, [selectedRef]);
 
   return (
     <>
       <PageHeader icon={Utensils} title="MINHA DIETA" subtitle={dieta?.objetivo || undefined} />
       <div className="px-5 pb-10">
         {/* Hero / CTA */}
-        <div className="relative overflow-hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/20 via-background to-background p-5 mb-5">
+        <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/20 via-background to-background p-5 mb-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 text-xs text-accent mb-1">
+              <div className="flex items-center gap-2 text-xs text-primary mb-1">
                 <Sparkles className="h-3.5 w-3.5" /> DR. IA NUTRI
               </div>
               <h2 className="font-display text-xl leading-tight">Plano alimentar personalizado</h2>
               <p className="text-xs text-muted-foreground mt-1">Baseado nos seus exames clínicos e objetivo</p>
               {badge && (
-                <Badge variant="outline" className="mt-3 border-accent/50 text-accent bg-accent/10">
+                <Badge variant="outline" className="mt-3 border-primary/50 text-primary bg-primary/10">
                   <Activity className="h-3 w-3 mr-1" /> Ajustada para {badge}
                 </Badge>
               )}
             </div>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button size="sm" className="shrink-0 bg-accent text-accent-foreground hover:bg-accent/90">
+                <Button size="sm" className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
                   {dieta ? <><RefreshCcw className="h-3.5 w-3.5 mr-1" />Refazer</> : <><Sparkles className="h-3.5 w-3.5 mr-1" />Gerar</>}
                 </Button>
               </DialogTrigger>
@@ -184,7 +205,7 @@ const Dieta = () => {
                       </SelectContent>
                     </Select>
                   </div>
-                  <Button onClick={gerar} disabled={generating} className="w-full bg-accent text-accent-foreground">
+                  <Button onClick={gerar} disabled={generating} className="w-full bg-primary text-primary-foreground">
                     {generating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Gerando...</> : <><Sparkles className="h-4 w-4 mr-2" />Gerar Dieta</>}
                   </Button>
                   <p className="text-[10px] text-muted-foreground flex gap-1"><AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />Sugestão educacional. Consulte seu nutricionista.</p>
@@ -203,13 +224,13 @@ const Dieta = () => {
           </div>
         ) : (
           <>
-            {/* Resumo + Pizza */}
+            {/* Resumo + Pizza + cards laterais */}
             <div className="grid grid-cols-5 gap-3 mb-5">
               <div className="col-span-2 bg-card/40 border border-border rounded-2xl p-3">
                 <div className="aspect-square">
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
-                      <Pie data={pieData} dataKey="value" innerRadius="55%" outerRadius="90%" paddingAngle={2}>
+                      <Pie data={pieData} dataKey="value" innerRadius="55%" outerRadius="90%" paddingAngle={2} stroke="none">
                         {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                       </Pie>
                     </PieChart>
@@ -220,64 +241,150 @@ const Dieta = () => {
               </div>
               <div className="col-span-3 grid grid-cols-1 gap-2">
                 {[
-                  { l: "PROTEÍNA", v: totalDia.p, alvo: dieta.macros_alvo?.proteina_g, c: "text-[hsl(142_70%_55%)]", b: "border-[hsl(142_70%_55%)]/40" },
-                  { l: "CARBO", v: totalDia.c, alvo: dieta.macros_alvo?.carboidrato_g, c: "text-accent", b: "border-accent/40" },
-                  { l: "GORDURA", v: totalDia.g, alvo: dieta.macros_alvo?.lipideos_g, c: "text-[hsl(0_80%_60%)]", b: "border-[hsl(0_80%_60%)]/40" },
+                  { l: "PROTEÍNA", v: totalDia.p, alvo: dieta.macros_alvo?.proteina_g, hsl: COLOR_PROT },
+                  { l: "CARBO",    v: totalDia.c, alvo: dieta.macros_alvo?.carboidrato_g, hsl: COLOR_CARB },
+                  { l: "GORDURA",  v: totalDia.g, alvo: dieta.macros_alvo?.lipideos_g, hsl: COLOR_FAT },
                 ].map(m => (
-                  <div key={m.l} className={`bg-card/40 border ${m.b} rounded-xl px-3 py-2 flex items-center justify-between`}>
-                    <span className={`text-[10px] font-bold ${m.c}`}>{m.l}</span>
-                    <span className={`font-display text-lg ${m.c}`}>{m.v}<span className="text-xs text-muted-foreground">/{m.alvo || "-"}g</span></span>
+                  <div
+                    key={m.l}
+                    className="bg-card/40 border rounded-xl px-3 py-2 flex items-center justify-between"
+                    style={{ borderColor: `hsl(${m.hsl} / 0.4)` }}
+                  >
+                    <span className="text-[10px] font-bold tracking-wider" style={{ color: `hsl(${m.hsl})` }}>{m.l}</span>
+                    <span className="font-display text-lg" style={{ color: `hsl(${m.hsl})` }}>
+                      {m.v}<span className="text-xs text-muted-foreground">/{m.alvo || "-"}g</span>
+                    </span>
                   </div>
                 ))}
               </div>
             </div>
 
             {dieta.observacoes_clinicas && (
-              <div className="bg-accent/10 border border-accent/30 rounded-xl px-3 py-2 text-xs text-accent flex gap-2 mb-5">
+              <div className="bg-primary/10 border border-primary/30 rounded-xl px-3 py-2 text-xs text-primary flex gap-2 mb-5">
                 <TenantSymbol size={14} /> {dieta.observacoes_clinicas}
               </div>
             )}
 
             <h2 className="font-display text-base flex items-center gap-2 mb-3">
-              <span className="text-accent">▶</span> REFEIÇÕES DO DIA
+              <span className="text-primary">▶</span> REFEIÇÕES DIÁRIAS
             </h2>
+
+            {/* Cards de refeição estilo Netflix */}
             <div className="space-y-3">
-              {dieta.refeicoes.map(r => {
-                const m = calcMacros(r.itens);
-                return (
-                  <div key={r.id} className="bg-card/40 border border-border rounded-2xl overflow-hidden">
-                    <div className="flex items-center justify-between p-4 border-b border-border bg-gradient-to-r from-accent/10 to-transparent">
-                      <div>
-                        <div className="text-[11px] text-accent font-semibold">{r.horario || ""}</div>
-                        <div className="font-display italic text-lg tracking-wide">{r.nome.toUpperCase()}</div>
-                      </div>
-                      <div className="text-right">
-                        <div className="font-display text-xl">{m.kcal}<span className="text-xs text-muted-foreground"> kcal</span></div>
-                        <div className="text-[10px] text-muted-foreground">P {m.p}g · C {m.c}g · G {m.g}g</div>
-                      </div>
+              {dieta.refeicoes.map(r => (
+                <button
+                  key={r.id}
+                  onClick={() => setSelectedRef(r)}
+                  className="group relative w-full h-32 rounded-xl overflow-hidden border border-border hover:border-primary/60 transition-all text-left"
+                >
+                  <img
+                    src={imgFor(r.nome)}
+                    alt={r.nome}
+                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    loading="lazy"
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-r from-background via-background/60 to-background/10" />
+                  <div className="absolute inset-0 p-4 flex items-center justify-between">
+                    <div className="flex flex-col gap-1.5">
+                      <Badge className="w-fit bg-primary/90 text-primary-foreground border-0 text-[10px] gap-1">
+                        <Clock className="h-3 w-3" /> {r.horario || "—"}
+                      </Badge>
+                      <h3 className="font-display italic text-xl tracking-wide text-foreground drop-shadow-lg">
+                        {r.nome.toUpperCase()}
+                      </h3>
                     </div>
-                    <div className="divide-y divide-border/50">
-                      {r.itens.map(it => (
-                        <div key={it.id} className="px-4 py-3 flex items-center justify-between gap-3">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">{it.alimento?.nome || "—"}</p>
-                            <p className="text-[11px] text-muted-foreground">{it.quantidade_g}g {it.substituicoes ? `· ${it.substituicoes}` : ""}</p>
-                          </div>
-                          {it.substituicoes && (
-                            <Button size="sm" variant="ghost" className="text-[10px] h-7 px-2 text-accent" onClick={() => toast.info(it.substituicoes!, { duration: 6000 })}>
-                              <RefreshCcw className="h-3 w-3 mr-1" /> Substituir
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+                    <div className="h-10 w-10 rounded-full bg-foreground/90 text-background flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors shadow-xl">
+                      <Play className="h-4 w-4 fill-current ml-0.5" />
                     </div>
                   </div>
-                );
-              })}
+                </button>
+              ))}
             </div>
           </>
         )}
       </div>
+
+      {/* Modal de detalhes da refeição */}
+      <Dialog open={!!selectedRef} onOpenChange={(o) => !o && setSelectedRef(null)}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden gap-0 bg-card border-border">
+          {selectedRef && (
+            <>
+              <div className="relative h-48 -mt-px">
+                <img
+                  src={imgFor(selectedRef.nome)}
+                  alt={selectedRef.nome}
+                  className="absolute inset-0 w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+                <button
+                  onClick={() => setSelectedRef(null)}
+                  className="absolute top-3 right-3 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+                <div className="absolute bottom-3 left-4 right-4">
+                  <Badge className="bg-primary text-primary-foreground border-0 text-[10px] mb-2 gap-1">
+                    <Clock className="h-3 w-3" /> {selectedRef.horario || "—"}
+                  </Badge>
+                  <h2 className="font-display italic text-2xl tracking-wide drop-shadow-lg">
+                    {selectedRef.nome.toUpperCase()}
+                  </h2>
+                </div>
+              </div>
+
+              <div className="p-5 space-y-4">
+                {selectedMacros && (
+                  <div className="grid grid-cols-4 gap-2">
+                    <div className="bg-background/60 border border-border rounded-lg p-2 text-center">
+                      <div className="text-[9px] text-muted-foreground font-bold tracking-wider">KCAL</div>
+                      <div className="font-display text-xl">{selectedMacros.kcal}</div>
+                    </div>
+                    {[
+                      { l: "PROT", v: selectedMacros.p, hsl: COLOR_PROT },
+                      { l: "CARB", v: selectedMacros.c, hsl: COLOR_CARB },
+                      { l: "GORD", v: selectedMacros.g, hsl: COLOR_FAT },
+                    ].map(m => (
+                      <div
+                        key={m.l}
+                        className="bg-background/60 border rounded-lg p-2 text-center"
+                        style={{ borderColor: `hsl(${m.hsl} / 0.4)` }}
+                      >
+                        <div className="text-[9px] font-bold tracking-wider" style={{ color: `hsl(${m.hsl})` }}>{m.l}</div>
+                        <div className="font-display text-xl" style={{ color: `hsl(${m.hsl})` }}>{m.v}<span className="text-[10px] text-muted-foreground">g</span></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <div>
+                  <h3 className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">ALIMENTOS</h3>
+                  <div className="divide-y divide-border/50 border border-border rounded-lg overflow-hidden">
+                    {selectedRef.itens.map(it => (
+                      <div key={it.id} className="px-3 py-2.5 flex items-center justify-between gap-3 bg-background/40">
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{it.alimento?.nome || "—"}</p>
+                          <p className="text-[11px] text-muted-foreground">{it.quantidade_g}g {it.substituicoes ? `· ${it.substituicoes}` : ""}</p>
+                        </div>
+                        {it.substituicoes && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-[10px] h-7 px-2 text-primary hover:text-primary hover:bg-primary/10"
+                            onClick={() => toast.info(it.substituicoes!, { duration: 6000 })}
+                          >
+                            <RefreshCcw className="h-3 w-3 mr-1" /> Substituir
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
