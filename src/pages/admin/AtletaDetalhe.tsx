@@ -61,6 +61,16 @@ interface PerfilTreino {
   idade: number | null;
 }
 
+interface Assinatura {
+  id: string;
+  status: string;
+  plano: {
+    nome: string;
+    preco_centavos: number;
+    intervalo: string;
+  };
+}
+
 const NIVEIS = [
   { value: "iniciante", label: "INICIANTE" },
   { value: "intermediario", label: "INTERMEDIÁRIO" },
@@ -97,6 +107,7 @@ const AtletaDetalhe = () => {
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [perfil, setPerfil] = useState<PerfilTreino | null>(null);
+  const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
   const [loading, setLoading] = useState(true);
   const [nivel, setNivel] = useState<string>("intermediario");
   const [savingNivel, setSavingNivel] = useState(false);
@@ -119,11 +130,12 @@ const AtletaDetalhe = () => {
     if (slug === "demo" && demoAthlete) {
       setAluno(demoAthlete as Aluno);
       setPerfil(null);
+      setAssinatura(null);
       setLoading(false);
       return;
     }
 
-    const [{ data: a }, { data: pt }] = await Promise.all([
+    const [{ data: a }, { data: pt }, { data: ass }] = await Promise.all([
       supabase
         .from("perfis")
         .select("id, nome_completo, email, avatar_url, tenant_id")
@@ -134,9 +146,23 @@ const AtletaDetalhe = () => {
         .select("*")
         .eq("aluno_id", atletaId!)
         .maybeSingle(),
+      supabase
+        .from("assinaturas")
+        .select(`
+          id,
+          status,
+          plano:planos (
+            nome,
+            preco_centavos,
+            intervalo
+          )
+        `)
+        .eq("aluno_id", atletaId!)
+        .maybeSingle(),
     ]);
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
+    setAssinatura((ass as any) || null);
     setNivel(TEMPO_TO_NIVEL((pt as PerfilTreino | null)?.tempo_treino));
     setLoading(false);
   };
@@ -432,6 +458,47 @@ const AtletaDetalhe = () => {
               Ver último parecer clínico
             </span>
           </button>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-secondary/40 p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-primary" />
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Plano & Assinatura
+              </p>
+            </div>
+            {assinatura && (
+              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                assinatura.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+              }`}>
+                {assinatura.status === 'active' ? 'Ativo' : assinatura.status}
+              </span>
+            )}
+          </div>
+          
+          {assinatura ? (
+            <div>
+              <p className="font-display text-lg uppercase text-foreground leading-tight">
+                {assinatura.plano.nome}
+              </p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
+                R$ {(assinatura.plano.preco_centavos / 100).toFixed(2)} · {assinatura.plano.intervalo}
+              </p>
+            </div>
+          ) : (
+            <div className="text-center py-2">
+              <p className="text-xs text-muted-foreground mb-3">Nenhum plano vinculado a este atleta.</p>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-[10px] font-bold uppercase tracking-wider h-8 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={() => navigate(`/${slug}/admin/planos`)}
+              >
+                Vincular Plano
+              </Button>
+            </div>
+          )}
         </div>
 
         <div className="rounded-2xl border border-border bg-secondary/40 p-5">
