@@ -105,10 +105,10 @@ REGRAS:
 4. Retorne APENAS JSON válido, sem markdown.
 
 NÍVEL DO ATLETA: ${nivel.toUpperCase()}
-- Iniciante: refeições simples, opções práticas, baixa variedade.
-- Intermediário: variedade moderada, timing pré/pós-treino.
-- Avançado: timing nutricional preciso, ciclagem de carbo nos dias de treino, fontes magras de proteína em todas as refeições.
-- Atleta de Alto Nível: precisão milimétrica, pré/intra/pós-treino estruturado, refeição extra noturna com caseína/proteína de digestão lenta, sódio/potássio balanceados para performance competitiva.
+- Iniciante: Reeições simples e nutritivas, foco em aderência e consistência básica.
+- Intermediário: Variedade moderada, introdução de timing nutricional estratégico (pré/pós-treino).
+- Avançado: Timing nutricional preciso, ciclagem de carboidratos, fontes proteicas magras em todas as refeições para máxima síntese proteica.
+- Atleta de Alto Nível (Metodologia Pacho): Precisão absoluta, controle de sódio e potássio para densidade muscular, refeições pré/intra/pós-treino meticulosamente estruturadas, uso de alimentos de fácil digestão em horários estratégicos e suplementação de suporte à performance.
 
 FORMATO OBRIGATÓRIO:
 {
