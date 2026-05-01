@@ -285,7 +285,7 @@ const AdminFaturamento = () => {
         <section className="space-y-4 pt-4">
           <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-red-600 pl-3">Análise de Performance</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-            <div className="min-w-[280px] bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden">
+            <button onClick={() => setStudentsView("ativos")} className="min-w-[280px] text-left bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden hover:border-red-600/50 transition-colors">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <TrendingUp className="h-24 w-24 text-white" />
               </div>
@@ -301,9 +301,10 @@ const AdminFaturamento = () => {
                   className="h-full bg-red-600" 
                 />
               </div>
-            </div>
+              <p className="text-[10px] uppercase tracking-widest text-red-600 font-black mt-3">Ver lista →</p>
+            </button>
 
-            <div className="min-w-[280px] bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden">
+            <button onClick={() => setStudentsView("desistentes")} className="min-w-[280px] text-left bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden hover:border-red-600/50 transition-colors">
               <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                 <TrendingDown className="h-24 w-24 text-red-600" />
               </div>
@@ -319,7 +320,8 @@ const AdminFaturamento = () => {
                    className="h-full bg-red-600" 
                 />
               </div>
-            </div>
+              <p className="text-[10px] uppercase tracking-widest text-red-600 font-black mt-3">Ver lista →</p>
+            </button>
           </div>
         </section>
       </main>
