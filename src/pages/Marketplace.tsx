@@ -31,11 +31,13 @@ export default function Marketplace() {
 
   const stateMap: Record<string, string> = {
     "acre": "AC", "alagoas": "AL", "amapa": "AP", "amazonas": "AM", "bahia": "BA", "ceara": "CE",
-    "distrito federal": "DF", "espirito santo": "ES", "goias": "GO", "maranhao": "MA", "mato grosso": "MT",
-    "mato grosso do sul": "MS", "minas gerais": "MG", "para": "PA", "paraiba": "PB", "parana": "PR",
-    "pernambuco": "PE", "piaui": "PI", "rio de janeiro": "RJ", "rio grande do norte": "RN",
-    "rio grande do sul": "RS", "rondonia": "RO", "roraima": "RR", "santa catarina": "SC",
-    "sao paulo": "SP", "sergipe": "SE", "tocantins": "TO"
+    "distrito federal": "DF", "espirito santo": "ES", "espírito santo": "ES", "goias": "GO", "goiás": "GO",
+    "maranhao": "MA", "maranhão": "MA", "mato grosso": "MT", "mato grosso do sul": "MS", 
+    "minas gerais": "MG", "para": "PA", "pará": "PA", "paraiba": "PB", "paraíba": "PB", 
+    "parana": "PR", "paraná": "PR", "pernambuco": "PE", "piaui": "PI", "piauí": "PI", 
+    "rio de janeiro": "RJ", "rio grande do norte": "RN", "rio grande do sul": "RS", 
+    "rondonia": "RO", "rondônia": "RO", "roraima": "RR", "santa catarina": "SC",
+    "sao paulo": "SP", "são paulo": "SP", "sergipe": "SE", "tocantins": "TO"
   };
 
   useEffect(() => {
