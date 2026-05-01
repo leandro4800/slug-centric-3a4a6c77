@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, Wallet } from "lucide-react";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -118,6 +118,15 @@ const AdminPanel = () => {
             <Link to={`/${slug}/admin/atletas`}>
               <Button variant="outline" className="border-primary/40">
                 <Users className="h-4 w-4 mr-2" /> Gerenciar Elenco
+              </Button>
+            </Link>
+            <Link to={`/${slug}/admin/faturamento`}>
+              <Button variant="outline" className="border-primary/40 h-auto py-1.5 px-4 flex flex-col items-start gap-0.5">
+                <div className="flex items-center gap-2">
+                  <Wallet className="h-4 w-4 text-primary" />
+                  <span className="font-display text-sm tracking-tight">FATURAMENTO</span>
+                </div>
+                <span className="text-[9px] text-muted-foreground font-normal uppercase tracking-wider">Gestão financeira e saques</span>
               </Button>
             </Link>
             <Link to={`/${slug}/admin/montar-treino`}>
