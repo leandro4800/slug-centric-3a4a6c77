@@ -64,11 +64,16 @@ export default function TenantLanding() {
     setLoading(false);
   };
 
-  const handleAssinar = async (plano_id: string) => {
-    setCheckoutLoading(plano_id);
+  const handleCheckout = async (plano_id?: string, type: 'subscription' | 'aula_avulsa' = 'subscription') => {
+    const loadingKey = type === 'aula_avulsa' ? 'aula_avulsa' : plano_id!;
+    setCheckoutLoading(loadingKey);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-checkout", {
-        body: { plano_id },
+        body: { 
+          plano_id, 
+          tenant_id: tenant?.id,
+          type 
+        },
       });
       if (error) throw error;
       if (data?.url) window.location.href = data.url;
