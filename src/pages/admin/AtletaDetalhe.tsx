@@ -230,6 +230,48 @@ const AtletaDetalhe = () => {
     }
   };
 
+  const handleImportFile = async (file: File) => {
+    if (!aluno) return;
+    setImporting(true);
+    const toastId = toast.loading(`Processando ${importType} com IA...`);
+    
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(file);
+      });
+      
+      const base64 = await base64Promise;
+      
+      const { data, error } = await supabase.functions.invoke("import-with-ai", {
+        body: { 
+          file: base64, 
+          fileType: file.type,
+          importType,
+          alunoId: aluno.id,
+          tenantId: aluno.tenant_id
+        },
+      });
+
+      if (error) throw error;
+      
+      if (importType === "treino") {
+        toast.success("Treino importado com sucesso!", { id: toastId });
+        navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}`);
+      } else {
+        toast.success("Dieta importada com sucesso!", { id: toastId });
+        // Refresh page to show data if needed, or navigate to diet page if it existed
+        void load();
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Falha ao importar: ${e.message}`, { id: toastId });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleGenerateProtocol = async () => {
     if (!aluno) return;
     setIsGeneratingProtocol(true);
