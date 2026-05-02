@@ -346,13 +346,15 @@ const Landing = () => {
         </nav>
         <div className="flex items-center gap-3">
           <Link to="/login">
-            <Button variant="ghost" className="text-white hover:bg-white/10 hidden md:flex font-bold uppercase tracking-wider">Entrar</Button>
+            <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">
+              {user ? "Acessar App" : "Entrar"}
+            </Button>
           </Link>
           <Button 
             onClick={() => setShowSimulador(true)}
-            className="px-6 font-black uppercase tracking-widest"
+            className="px-6 font-black uppercase tracking-widest hidden sm:flex"
           >
-            TESTAR AGORA
+            {user ? "Dashboard" : "Testar Agora"}
           </Button>
         </div>
       </header>

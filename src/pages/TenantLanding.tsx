@@ -75,7 +75,7 @@ export default function TenantLanding() {
         
         setHasSubscription(!!sub);
         if (sub) {
-          navigate(`/${slug}/app`);
+          navigate(`/${slug}/app`, { replace: true });
           return;
         }
       }

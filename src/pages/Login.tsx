@@ -23,6 +23,15 @@ const Login = () => {
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
+      // Priority 1: Check if there's a redirect in state (from RequireAuth)
+      const locationState = window.history.state?.usr;
+      const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
+      
+      if (redirectPath && redirectPath !== "/login") {
+        navigate(redirectPath, { replace: true });
+        return;
+      }
+
       const [{ data: perfil }, { data: roles }, { data: ownedTenant }] = await Promise.all([
         supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role, tenant_id").eq("user_id", user.id),
