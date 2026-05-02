@@ -160,7 +160,7 @@ const AdminMontarTreino = () => {
     else toast.success("Perfil salvo.");
   };
 
-  const gerarComIA = useCallback(async () => {
+  const gerarComIA = useCallback(async (customPrompt?: string) => {
     if (!alunoId || !tenant) {
       toast.error("Selecione um aluno.");
       return;
@@ -173,8 +173,11 @@ const AdminMontarTreino = () => {
         .select("nome, grupo_muscular, contraindicacoes")
         .eq("tenant_id", tenant.id);
 
+      const promptFromUrl = searchParams.get("prompt");
+      const activePrompt = customPrompt || promptFromUrl || "";
+
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil, biblioteca: biblioteca || [], divisoes },
+        body: { perfil, biblioteca: biblioteca || [], divisoes, prompt: activePrompt },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
