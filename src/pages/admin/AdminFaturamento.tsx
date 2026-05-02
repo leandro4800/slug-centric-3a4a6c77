@@ -186,28 +186,19 @@ const AdminFaturamento = () => {
 
   return (
     <div className="relative min-h-screen bg-black text-white font-sans selection:bg-primary selection:text-white">
-      {/* Logo de fundo Alpha Coach */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 bg-no-repeat bg-center bg-contain opacity-[0.06]"
-        style={{ backgroundImage: `url(${alphaLogo})` }}
-      />
-      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-b from-black via-black/90 to-black" />
       <div className="relative z-10">
-      {/* Netflix-style Header Banner */}
-      <div className="relative h-[40vh] w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-black/60 to-black z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
-        
+      {/* Header */}
+      <div className="relative w-full pb-8">
         <header className="relative z-10 px-5 pt-6 flex items-center justify-between max-w-4xl mx-auto w-full">
           <AdminBackButton 
-            className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all hover:scale-105" 
+            className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all hover:scale-105 flex items-center justify-center" 
           />
           <div className="text-primary font-black text-2xl tracking-tighter uppercase italic">ALPHA <span className="text-white">FINANCE</span></div>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-glow border border-white/20" />
         </header>
 
-        <main className="relative z-10 px-5 pt-12 max-w-4xl mx-auto w-full">
+        <main className="relative z-10 px-5 pt-8 max-w-4xl mx-auto w-full">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
