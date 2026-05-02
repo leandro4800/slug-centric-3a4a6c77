@@ -22,6 +22,7 @@ const Evolucao = () => {
   const [chartData, setChartData] = useState<any[]>([]);
   const [beforeUrl, setBeforeUrl] = useState("https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop&q=60");
   const [afterUrl, setAfterUrl] = useState("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=60");
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (user) {
