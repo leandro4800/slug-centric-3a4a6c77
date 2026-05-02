@@ -76,10 +76,10 @@ interface DemoAppScreenProps {
 
 const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor = "#E50914" }: DemoAppScreenProps) => (
   <div
-    className="h-full w-full overflow-hidden bg-zinc-950 text-white"
+    className="h-full w-full overflow-hidden bg-background text-foreground"
     style={{ ["--brand" as any]: brandColor }}
   >
-    <div className="relative h-56 overflow-hidden bg-zinc-900">
+    <div className="relative h-56 overflow-hidden bg-secondary">>
       <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
       <div className="absolute left-5 right-5 bottom-5">
@@ -91,7 +91,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
     <div className="space-y-4 p-5">
       <div className="grid grid-cols-3 gap-2">
         {["Treino", "Dieta", "Check-in"].map((item) => (
-          <div key={item} className="rounded-lg border border-white/10 bg-zinc-900 p-3 text-center">
+          <div key={item} className="rounded-none border border-white/10 bg-secondary/50 p-3 text-center">
             <p className="text-[9px] font-black uppercase tracking-wide text-white">{item}</p>
           </div>
         ))}
@@ -116,7 +116,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
+        <div className="rounded-none border border-white/10 bg-secondary/50 p-4">
           <p className="text-2xl font-black" style={{ color: brandColor }}>87%</p>
           <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
         </div>
