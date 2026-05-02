@@ -1257,6 +1257,69 @@ export type Database = {
           },
         ]
       }
+      templates_treino: {
+        Row: {
+          ativo: boolean
+          codigo: string
+          conteudo_completo: string | null
+          created_at: string
+          created_by: string | null
+          divisao: string | null
+          enfase: string | null
+          fonte_arquivo: string
+          frequencia_semanal: number | null
+          id: string
+          nivel: string
+          objetivo: string | null
+          publico: string
+          resumo: string | null
+          tags: string[] | null
+          tenant_id: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          codigo: string
+          conteudo_completo?: string | null
+          created_at?: string
+          created_by?: string | null
+          divisao?: string | null
+          enfase?: string | null
+          fonte_arquivo: string
+          frequencia_semanal?: number | null
+          id?: string
+          nivel?: string
+          objetivo?: string | null
+          publico?: string
+          resumo?: string | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          codigo?: string
+          conteudo_completo?: string | null
+          created_at?: string
+          created_by?: string | null
+          divisao?: string | null
+          enfase?: string | null
+          fonte_arquivo?: string
+          frequencia_semanal?: number | null
+          id?: string
+          nivel?: string
+          objetivo?: string | null
+          publico?: string
+          resumo?: string | null
+          tags?: string[] | null
+          tenant_id?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           accent_hsl: string
@@ -1515,6 +1578,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      buscar_templates_treino: {
+        Args: {
+          p_divisao?: string
+          p_enfase?: string
+          p_frequencia?: number
+          p_limit?: number
+          p_nivel?: string
+          p_publico?: string
+          p_tenant_id?: string
+        }
+        Returns: {
+          codigo: string
+          conteudo_completo: string
+          divisao: string
+          enfase: string
+          fonte_arquivo: string
+          frequencia_semanal: number
+          id: string
+          nivel: string
+          publico: string
+          resumo: string
+          score: number
+          titulo: string
+        }[]
+      }
       current_user_tenant: { Args: never; Returns: string }
       has_role: {
         Args: {
