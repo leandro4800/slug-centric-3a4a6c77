@@ -74,6 +74,51 @@ const Dieta = () => {
   const [dieta, setDieta] = useState<Dieta | null>(null);
   const [selectedRef, setSelectedRef] = useState<Refeicao | null>(null);
 
+  const carregar = async () => {
+    if (!user) return;
+    setLoading(true);
+    const { data: dietas } = await supabase
+      .from("dietas")
+      .select("*")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+    const d = dietas?.[0];
+    if (!d) { setDieta(null); setLoading(false); return; }
+
+    const { data: refs } = await supabase
+      .from("refeicoes")
+      .select("*")
+      .eq("dieta_id", d.id)
+      .order("ordem", { ascending: true });
+
+    const refIds = (refs || []).map(r => r.id);
+    const { data: itens } = refIds.length
+      ? await supabase
+          .from("itens_refeicao")
+          .select("id, quantidade_g, substituicoes, refeicao_id, alimento:alimentos_taco(id, nome, energia_kcal, proteina_g, carboidrato_g, lipideos_g)")
+          .in("refeicao_id", refIds)
+      : { data: [] as any[] };
+
+    const refeicoes: Refeicao[] = (refs || []).map(r => ({
+      id: r.id,
+      nome: r.nome,
+      horario: r.horario,
+      ordem: r.ordem,
+      itens: (itens || []).filter((i: any) => i.refeicao_id === r.id).map((i: any) => ({
+        id: i.id,
+        quantidade_g: Number(i.quantidade_g),
+        substituicoes: i.substituicoes,
+        alimento: i.alimento,
+      })),
+    }));
+
+    setDieta({ ...d, refeicoes } as Dieta);
+    setLoading(false);
+  };
+
+  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [user]);
+
   const totalDia = dieta ? dieta.refeicoes.reduce((acc, r) => {
     const m = calcMacros(r.itens);
     return { kcal: acc.kcal + m.kcal, p: acc.p + m.p, c: acc.c + m.c, g: acc.g + m.g };
