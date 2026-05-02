@@ -200,12 +200,9 @@ const AdminFaturamento = () => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
         
         <header className="relative z-10 px-5 pt-6 flex items-center justify-between max-w-4xl mx-auto w-full">
-          <button
-            onClick={() => navigate(-1)}
-            className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center border border-white/10 hover:bg-white/20 transition-all hover:scale-105"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
+          <AdminBackButton 
+            className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all hover:scale-105" 
+          />
           <div className="text-primary font-black text-2xl tracking-tighter uppercase italic">ALPHA <span className="text-white">FINANCE</span></div>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-glow border border-white/20" />
         </header>
