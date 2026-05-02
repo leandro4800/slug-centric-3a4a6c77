@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon } from "lucide-react";
@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/hooks/use-auth";
 
 interface CoachData {
   name: string;
@@ -148,6 +149,7 @@ const BRAND_COLORS = [
 ];
 
 const Landing = () => {
+  const { user, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<"choice" | "aluno" | "coach" | null>(null);
   const [showSimulador, setShowSimulador] = useState(false);
   const [email, setEmail] = useState("");
@@ -189,6 +191,12 @@ const Landing = () => {
   const yearlyNet = netRevenue * 12;
 
   const formatBRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/login", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
 
   useEffect(() => {
     const loadCoaches = async () => {
