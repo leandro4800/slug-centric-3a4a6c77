@@ -26,6 +26,40 @@ const CompararEvolucao = () => {
   const [depois, setDepois] = useState<any>(null);
   
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [analise, setAnalise] = useState<string>("");
+  const [analisando, setAnalisando] = useState(false);
+
+  const gerarAnalise = async () => {
+    if (!antesId || !depoisId) {
+      toast.error("Selecione os dois check-ins");
+      return;
+    }
+    if (antesId === depoisId) {
+      toast.error("Selecione check-ins diferentes");
+      return;
+    }
+    setAnalisando(true);
+    setAnalise("");
+    try {
+      const { data, error } = await supabase.functions.invoke("analise-evolucao", {
+        body: { antes_id: antesId, depois_id: depoisId },
+      });
+      if (error) {
+        const msg = (error as any)?.context?.status === 429
+          ? "Limite atingido, tente em instantes."
+          : (error as any)?.context?.status === 402
+          ? "Créditos de IA insuficientes."
+          : error.message;
+        throw new Error(msg);
+      }
+      if (data?.error) throw new Error(data.error);
+      setAnalise(data?.analise || "");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar análise");
+    } finally {
+      setAnalisando(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
