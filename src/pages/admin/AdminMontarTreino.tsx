@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles, Save, ArrowLeft, Trash2, Plus } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 
 interface Aluno {
@@ -247,9 +248,8 @@ const AdminMontarTreino = () => {
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
         <div className="flex items-center gap-3">
-          <Link to={`/${slug}/admin`}>
-            <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
-          </Link>
+          <AdminBackButton 
+          />
           <h1 className="font-display text-2xl">MONTAR TREINO</h1>
           <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-black tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">IA Pacho</span>
         </div>

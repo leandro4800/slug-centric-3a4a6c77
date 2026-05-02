@@ -6,6 +6,7 @@ import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Search, Users, Mail } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 
 interface Aluno {
   id: string;
@@ -93,13 +94,9 @@ const MeusAtletas = () => {
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
       <header className="px-5 pt-6 pb-4 flex items-center gap-3 sticky top-0 bg-black/95 backdrop-blur z-10 border-b border-white/10">
-        <button
-          onClick={() => navigate(`/${slug}/app`)}
-          className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"
-          aria-label="Voltar"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
+        <AdminBackButton 
+          className="w-10 h-10 rounded-full bg-secondary"
+        />
         <div className="w-11 h-11 rounded-full bg-primary/15 border border-primary/40 flex items-center justify-center">
           <Users className="h-5 w-5 text-primary" />
         </div>

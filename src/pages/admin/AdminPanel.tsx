@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, Wallet } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -98,27 +99,41 @@ const AdminPanel = () => {
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
         <div className="flex items-center gap-4">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Sair do painel admin?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Você voltará para a área do aluno. Deseja continuar?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => navigate(`/${slug}/app`)}>Sair</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <AdminBackButton 
+            to={`/${slug}/app`} 
+            confirmExit 
+            exitMessage="Você voltará para a área do aluno. Deseja continuar?" 
+          />
           <Logo size={32} />
           <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-black tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
         </div>
-        <Button variant="ghost" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Sair</Button>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost">
+              <LogOut className="h-4 w-4 mr-2" /> Sair
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-black border-white/10 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Encerrar sessão?</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                Você será desconectado do aplicativo. Deseja continuar?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleLogout}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                Sair
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </header>
 
       <main className="max-w-6xl mx-auto p-6">

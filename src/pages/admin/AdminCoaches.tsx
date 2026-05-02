@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Check, X, Loader2, ExternalLink, Users, Sparkles, Copy } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -207,25 +208,14 @@ export default function AdminCoaches() {
     <div className="min-h-screen bg-background text-foreground">
       <header className="border-b border-border/50">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 md:px-8">
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-                <ArrowLeft className="h-4 w-4" /> Voltar
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Sair do painel admin?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Você voltará para a página inicial. Deseja continuar?
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => navigate("/")}>Sair</AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
+          <AdminBackButton 
+            to="/" 
+            showLabel 
+            confirmExit 
+            exitMessage="Você voltará para a página inicial. Deseja continuar?"
+            className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto"
+            size="default"
+          />
           <h1 className="font-display text-xl uppercase">Admin AlphaCoach</h1>
         </div>
       </header>

@@ -26,6 +26,7 @@ import {
   Sparkles,
   ShieldAlert,
 } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
 import { SevenDobrasIntro } from "@/components/admin/SevenDobrasIntro";
 import { 
@@ -315,12 +316,9 @@ const AtletaDetalhe = () => {
         </button>
 
         <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between z-10">
-          <button
-            onClick={() => navigate(`/${slug}/admin`)}
-            className="w-10 h-10 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </button>
+          <AdminBackButton 
+            className="w-10 h-10 rounded-full bg-background/70 backdrop-blur"
+          />
           <div className="flex gap-2">
             <Button
               size="sm"
