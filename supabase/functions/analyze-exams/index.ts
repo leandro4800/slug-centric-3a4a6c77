@@ -175,6 +175,18 @@ ${intelligenceContext}`
 
     if (analiseError) throw analiseError
 
+    // Detect critical risk for dashboard alert
+    const isHematocritCritical = analysisData.marcadores.some(m => m.codigo === 'hematocrito' && m.valor > 52);
+    const isTGPCritical = analysisData.marcadores.some(m => m.codigo === 'tgp_alt' && m.valor > (refData?.find(r => r.codigo === 'tgp_alt')?.valor_maximo * 3 || 135));
+
+    if (isHematocritCritical || isTGPCritical) {
+      const motivo = isHematocritCritical ? "Hematócrito > 52% (Risco Cardiovascular)" : "TGP > 3x Limite (Estresse Hepático)";
+      await supabase
+        .from('analises_clinicas')
+        .update({ alerta_critico: true, motivo_alerta: motivo })
+        .eq('id', analise.id);
+    }
+
     // Save to exames_biomarcadores
     const biomarcadores = analysisData.marcadores.map(m => ({
       analise_id: analise.id,
