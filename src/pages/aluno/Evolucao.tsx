@@ -28,34 +28,43 @@ const Evolucao = () => {
     if (user) {
       fetchEvolucao();
     }
-  }, [user, tab]);
+  }, [user, tab, refreshKey]);
 
   const fetchEvolucao = async () => {
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('evolucao_checkins')
       .select('*')
       .eq('user_id', user?.id)
       .order('data_checkin', { ascending: true });
 
     if (data && data.length > 0) {
-      const formatted = data.map(c => ({
-        date: new Date(c.data_checkin).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-        value: tab === "PESO" ? Number(c.peso_kg) : Number(c.bf_percentual)
-      }));
+      const formatted = data
+        .filter(c => (tab === "PESO" ? c.peso_kg != null : c.bf_percentual != null))
+        .map(c => ({
+          date: new Date(c.data_checkin).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+          value: tab === "PESO" ? Number(c.peso_kg) : Number(c.bf_percentual)
+        }));
       setChartData(formatted);
 
-      // Carregar fotos para o slider
-      const lastCheckin = data[data.length - 1];
-      const firstCheckin = data[0];
+      // Carregar fotos para o slider — usa primeiro/último com qualquer foto disponível
+      const withPhotos = data.filter(c => c.foto_frente_url || c.foto_costas_url || c.foto_lado_url);
+      const firstCheckin = withPhotos[0];
+      const lastCheckin = withPhotos[withPhotos.length - 1];
 
-      if (firstCheckin.foto_frente_url) {
-        const { data: fData } = await supabase.storage.from('evolucao-fotos').createSignedUrl(firstCheckin.foto_frente_url, 3600);
+      const pickPath = (c: any) => c?.foto_frente_url || c?.foto_lado_url || c?.foto_costas_url;
+      const firstPath = pickPath(firstCheckin);
+      const lastPath = pickPath(lastCheckin);
+
+      if (firstPath) {
+        const { data: fData } = await supabase.storage.from('evolucao-fotos').createSignedUrl(firstPath, 3600);
         if (fData?.signedUrl) setBeforeUrl(fData.signedUrl);
       }
-      if (lastCheckin.foto_frente_url) {
-        const { data: lData } = await supabase.storage.from('evolucao-fotos').createSignedUrl(lastCheckin.foto_frente_url, 3600);
+      if (lastPath) {
+        const { data: lData } = await supabase.storage.from('evolucao-fotos').createSignedUrl(lastPath, 3600);
         if (lData?.signedUrl) setAfterUrl(lData.signedUrl);
       }
+    } else {
+      setChartData([]);
     }
   };
 
