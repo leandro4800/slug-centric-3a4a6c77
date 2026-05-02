@@ -149,12 +149,12 @@ const AdminPanel = () => {
               </Button>
             </Link>
             <Link to={`/${slug}/admin/faturamento`}>
-              <Button variant="outline" className="border-primary/40 h-auto py-1.5 px-4 flex flex-col items-start gap-0.5">
+              <Button variant="outline" className="border-primary/40 h-auto py-2 px-4 flex flex-col items-start gap-0.5 bg-black/60 hover:bg-black/80">
                 <div className="flex items-center gap-2">
                   <Wallet className="h-4 w-4 text-primary" />
-                  <span className="font-display text-sm tracking-tight">FATURAMENTO</span>
+                  <span className="font-display text-base tracking-wide">FATURAMENTO</span>
                 </div>
-                <span className="text-[9px] text-muted-foreground font-normal uppercase tracking-wider">Gestão financeira e saques</span>
+                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Gestão financeira e saques</span>
               </Button>
             </Link>
             <Link to={`/${slug}/admin/base-conhecimento`}>
