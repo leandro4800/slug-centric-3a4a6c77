@@ -211,8 +211,8 @@ export const VlogsAdmin = () => {
       </div>
 
       {/* Manual add */}
-      <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-        <h3 className="font-display text-xl mb-4">ADICIONAR LINK MANUAL</h3>
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
         <div className="grid md:grid-cols-[2fr_1.5fr_auto] gap-3 items-end">
           <div>
             <Label>URL (YouTube, Instagram, TikTok…)</Label>
