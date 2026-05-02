@@ -607,42 +607,68 @@ const AtletaDetalhe = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              className={`h-14 font-display text-sm uppercase tracking-wider ${
+                canGenerate 
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                  : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
+              }`}
+              disabled={!canGenerate}
+              onClick={() => {
+                if (canGenerate) {
+                  setPromptType("treino");
+                  setIaPrompt("");
+                  setShowPromptDialog(true);
+                } else {
+                  toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
+                }
+              }}
+            >
+              <Dumbbell className="h-5 w-5 mr-2" />
+              Montar Treino
+            </Button>
+            <Button
+              className={`h-14 font-display text-sm uppercase tracking-wider ${
+                canGenerate 
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                  : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
+              }`}
+              disabled={!canGenerate}
+              onClick={() => {
+                if (canGenerate) {
+                  setPromptType("dieta");
+                  setIaPrompt("");
+                  setShowPromptDialog(true);
+                } else {
+                  toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
+                }
+              }}
+            >
+              <Apple className="h-5 w-5 mr-2" />
+              Montar Dieta
+            </Button>
+          </div>
+
           <Button
-            className={`h-14 font-display text-sm uppercase tracking-wider ${
-              canGenerate 
-                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
+            variant="outline"
+            className={`w-full h-14 font-display text-sm uppercase tracking-wider border-primary/30 text-primary hover:bg-primary/5 ${
+              !canGenerate ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={!canGenerate}
             onClick={() => {
               if (canGenerate) {
-                navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}&auto=true`);
+                setPromptType("ambos");
+                setIaPrompt("");
+                setShowPromptDialog(true);
               } else {
                 toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
               }
             }}
           >
-            <Dumbbell className="h-5 w-5 mr-2" />
-            Montar Treino
-          </Button>
-          <Button
-            className={`h-14 font-display text-sm uppercase tracking-wider ${
-              canGenerate 
-                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
-            }`}
-            disabled={!canGenerate}
-            onClick={() => {
-              if (canGenerate) {
-                navigate(`/${slug}/admin/montar-dieta?aluno=${aluno.id}&auto=true`);
-              } else {
-                toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
-              }
-            }}
-          >
-            <Apple className="h-5 w-5 mr-2" />
-            Montar Dieta
+            <Sparkles className="h-5 w-5 mr-2 text-primary" />
+            Gerar Protocolo Completo (IA)
           </Button>
         </div>
       </main>
