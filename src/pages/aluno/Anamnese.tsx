@@ -66,6 +66,7 @@ export default function Anamnese() {
 
       if (error) throw error;
       if (data) {
+        setExistingRecord(data);
         setForm({
           doencas: (data.doencas as string[])?.join(", ") || "",
           medicamentos: data.medicamentos || "",
