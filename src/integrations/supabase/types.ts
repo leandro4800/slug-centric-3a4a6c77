@@ -729,6 +729,54 @@ export type Database = {
           },
         ]
       }
+      evolucao_checkins: {
+        Row: {
+          bf_percentual: number | null
+          created_at: string | null
+          data_checkin: string
+          dobras: Json | null
+          foto_costas_url: string | null
+          foto_frente_url: string | null
+          foto_lado_url: string | null
+          id: string
+          massa_gorda_kg: number | null
+          massa_magra_kg: number | null
+          observacoes: string | null
+          peso_kg: number | null
+          user_id: string
+        }
+        Insert: {
+          bf_percentual?: number | null
+          created_at?: string | null
+          data_checkin?: string
+          dobras?: Json | null
+          foto_costas_url?: string | null
+          foto_frente_url?: string | null
+          foto_lado_url?: string | null
+          id?: string
+          massa_gorda_kg?: number | null
+          massa_magra_kg?: number | null
+          observacoes?: string | null
+          peso_kg?: number | null
+          user_id: string
+        }
+        Update: {
+          bf_percentual?: number | null
+          created_at?: string | null
+          data_checkin?: string
+          dobras?: Json | null
+          foto_costas_url?: string | null
+          foto_frente_url?: string | null
+          foto_lado_url?: string | null
+          id?: string
+          massa_gorda_kg?: number | null
+          massa_magra_kg?: number | null
+          observacoes?: string | null
+          peso_kg?: number | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       evolucao_fotos: {
         Row: {
           data_foto: string | null
