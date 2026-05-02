@@ -8,6 +8,8 @@ interface EvolutionChartProps {
 
 export const EvolutionChart = ({ data, type }: EvolutionChartProps) => {
   const { tenant } = useBranding();
+  // No Contexto o primary costuma estar em theme_overrides ou usamos uma cor padrão que respeita o CSS variable
+  const strokeColor = "hsl(var(--primary))";
   
   if (!data || data.length === 0) {
     return (
@@ -39,7 +41,7 @@ export const EvolutionChart = ({ data, type }: EvolutionChartProps) => {
           <Tooltip 
             contentStyle={{ 
               backgroundColor: '#111', 
-              border: '1px solid #c82c2a',
+              border: '1px solid hsl(var(--primary))',
               borderRadius: '0px',
               fontSize: '10px'
             }}
@@ -47,9 +49,9 @@ export const EvolutionChart = ({ data, type }: EvolutionChartProps) => {
           <Line 
             type="monotone" 
             dataKey="value" 
-            stroke={tenant?.primary_color || "#c82c2a"} 
+            stroke={strokeColor} 
             strokeWidth={3}
-            dot={{ r: 4, fill: tenant?.primary_color || "#c82c2a", strokeWidth: 0 }}
+            dot={{ r: 4, fill: strokeColor, strokeWidth: 0 }}
             activeDot={{ r: 6, strokeWidth: 0 }}
           />
         </LineChart>
