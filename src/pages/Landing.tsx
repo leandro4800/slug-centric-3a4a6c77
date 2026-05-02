@@ -74,12 +74,12 @@ interface DemoAppScreenProps {
   brandColor?: string; // hex
 }
 
-const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor = "#E50914" }: DemoAppScreenProps) => (
+const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor = "#E00000" }: DemoAppScreenProps) => (
   <div
     className="h-full w-full overflow-hidden bg-background text-foreground"
     style={{ ["--brand" as any]: brandColor }}
   >
-    <div className="relative h-56 overflow-hidden bg-secondary">
+    <div className="relative h-56 overflow-hidden bg-card">
       <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
       <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
       <div className="absolute left-5 right-5 bottom-5">
@@ -91,7 +91,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
     <div className="space-y-4 p-5">
       <div className="grid grid-cols-3 gap-2">
         {["Treino", "Dieta", "Check-in"].map((item) => (
-          <div key={item} className="rounded-none border border-white/10 bg-secondary/50 p-3 text-center">
+          <div key={item} className="rounded-none border border-white/10 bg-card/50 p-3 text-center">
             <p className="text-[9px] font-black uppercase tracking-wide text-white">{item}</p>
           </div>
         ))}
@@ -120,7 +120,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
           <p className="text-2xl font-black" style={{ color: brandColor }}>87%</p>
           <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-secondary p-4">
+        <div className="rounded-xl border border-white/10 bg-card p-4">
           <p className="text-2xl font-black" style={{ color: brandColor }}>+4kg</p>
           <p className="text-[10px] uppercase text-gray-400">Carga média</p>
         </div>
@@ -156,7 +156,7 @@ const Landing = () => {
   const [students, setStudents] = useState(80);
   const [price, setPrice] = useState(400);
   const [brandName, setBrandName] = useState("Seu Coach Team");
-  const [brandColor, setBrandColor] = useState("#5E2129");
+  const [brandColor, setBrandColor] = useState("#E00000");
   const [screen1, setScreen1] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4");
   const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
