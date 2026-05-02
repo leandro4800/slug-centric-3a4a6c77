@@ -184,58 +184,7 @@ const Dieta = () => {
                 </Badge>
               )}
             </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
-                  {dieta ? <><RefreshCcw className="h-3.5 w-3.5 mr-1" />Refazer</> : <><Sparkles className="h-3.5 w-3.5 mr-1" />Gerar</>}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader><DialogTitle className="font-display">Gerar plano com Dr. IA</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label className="text-xs">Peso (kg)</Label><Input type="number" value={form.peso_kg} onChange={e => setForm({ ...form, peso_kg: Number(e.target.value) })} /></div>
-                    <div><Label className="text-xs">Altura (cm)</Label><Input type="number" value={form.altura_cm} onChange={e => setForm({ ...form, altura_cm: Number(e.target.value) })} /></div>
-                    <div><Label className="text-xs">Idade</Label><Input type="number" value={form.idade} onChange={e => setForm({ ...form, idade: Number(e.target.value) })} /></div>
-                    <div>
-                      <Label className="text-xs">Sexo</Label>
-                      <Select value={form.sexo} onValueChange={v => setForm({ ...form, sexo: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="M">Masculino</SelectItem><SelectItem value="F">Feminino</SelectItem></SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Objetivo</Label>
-                    <Select value={form.objetivo} onValueChange={v => setForm({ ...form, objetivo: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hipertrofia">Hipertrofia (superávit)</SelectItem>
-                        <SelectItem value="cutting">Cutting (déficit)</SelectItem>
-                        <SelectItem value="manutencao">Manutenção</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Nível de atividade</Label>
-                    <Select value={String(form.nivel_atividade)} onValueChange={v => setForm({ ...form, nivel_atividade: Number(v) })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1.2">Sedentário</SelectItem>
-                        <SelectItem value="1.375">Leve</SelectItem>
-                        <SelectItem value="1.55">Moderado</SelectItem>
-                        <SelectItem value="1.725">Intenso</SelectItem>
-                        <SelectItem value="1.9">Atleta</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={gerar} disabled={generating} className="w-full bg-primary text-primary-foreground">
-                    {generating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Gerando...</> : <><Sparkles className="h-4 w-4 mr-2" />Gerar Dieta</>}
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground flex gap-1"><AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />Sugestão educacional. Consulte seu nutricionista.</p>
-                </div>
-              </DialogContent>
-            </Dialog>
+            {/* Botão de geração removido - exclusivo do coach */}
           </div>
         </div>
 
