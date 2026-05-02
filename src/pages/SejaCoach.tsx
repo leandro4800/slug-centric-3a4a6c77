@@ -56,32 +56,41 @@ export default function SejaCoach() {
 
     const { data } = await supabase
       .from("tenants")
-      .select("id, slug, status, stripe_onboarding_completed, stripe_account_id")
+      .select("id, slug, status")
       .eq("owner_user_id", user.id)
       .maybeSingle();
+
+    let stripeAccountId: string | null = null;
+    let stripeOnboardingCompleted = false;
+    if (data?.id) {
+      const { data: priv } = await supabase
+        .from("tenants_private" as any)
+        .select("stripe_account_id, stripe_onboarding_completed")
+        .eq("tenant_id", data.id)
+        .maybeSingle();
+      stripeAccountId = (priv as any)?.stripe_account_id ?? null;
+      stripeOnboardingCompleted = !!(priv as any)?.stripe_onboarding_completed;
+    }
 
     if (data) {
       setTenantId(data.id);
       setSlug(data.slug);
       
-      // If admin, they can bypass stripe onboarding if they want
       if (data.status === "approved") {
         navigate(`/${data.slug}/admin`);
-      } else if (data.stripe_onboarding_completed) {
+      } else if (stripeOnboardingCompleted) {
         setStep("pending");
-      } else if (data.stripe_account_id && !userIsAdmin) {
+      } else if (stripeAccountId && !userIsAdmin) {
         setStep("stripe");
       } else {
-        // If it's an admin and not approved yet, we can either show stripe or allow skipping
-        // Let's keep showing stripe but maybe add a skip button or just set step to stripe
         setStep("stripe");
       }
     } else {
       setStep("form");
     }
 
-    if (params.get("completed") === "1" && data?.stripe_account_id) {
-      void syncStripe(data.id);
+    if (params.get("completed") === "1" && stripeAccountId) {
+      void syncStripe(data!.id);
     }
   };
 
