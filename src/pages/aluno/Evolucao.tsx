@@ -7,6 +7,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { EvolutionChart } from "@/components/aluno/evolucao/EvolutionChart";
 import { BeforeAfterSlider } from "@/components/aluno/evolucao/BeforeAfterSlider";
 import { CheckInModal } from "@/components/aluno/evolucao/CheckInModal";
+import { HistoricoCheckins } from "@/components/aluno/evolucao/HistoricoCheckins";
 import { InstagramCardGenerator } from "@/components/aluno/evolucao/InstagramCardGenerator";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
