@@ -234,11 +234,12 @@ export const ExerciseCard = ({
             {hasYT && (
               <button
                 onClick={() => { setShowYT(true); setShowCoach(false); }}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition ${
-                  showYT ? "bg-[#E50914] text-white" : "text-muted-foreground"
+                className={`px-2.5 py-1 rounded-none text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition relative overflow-hidden ${
+                  showYT ? "bg-primary text-primary-foreground border border-white/20" : "text-muted-foreground border border-transparent"
                 }`}
               >
-                <Youtube className="h-3 w-3" /> YouTube
+                {showYT && <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-40" />}
+                <Youtube className="h-3 w-3 relative z-10" /> <span className="relative z-10">YouTube</span>
               </button>
             )}
           </div>
