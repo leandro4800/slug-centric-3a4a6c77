@@ -56,7 +56,7 @@ const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) =
       onMouseLeave={reset}
       onTouchMove={handleMove}
       onTouchEnd={reset}
-      className="flex-shrink-0 w-44 h-60 rounded-xl border border-border relative overflow-hidden cursor-pointer transition-transform duration-200 ease-out will-change-transform hover:border-accent/60 hover:shadow-[0_20px_50px_-10px_hsl(var(--accent)/0.4)]"
+      className="flex-shrink-0 w-44 h-60 rounded-xl border border-border relative overflow-hidden cursor-pointer transition-transform duration-200 ease-out will-change-transform hover:border-primary/60 hover:shadow-[0_20px_50px_-10px_hsl(var(--primary)/0.4)]"
       style={{ transformStyle: "preserve-3d" }}
     >
       {children}
@@ -188,7 +188,7 @@ const AlunoHome = () => {
 
             {/* Ícone de Engrenagem apenas para admins */}
             {isAdmin && (
-              <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center backdrop-blur">
+              <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center backdrop-blur">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -230,9 +230,9 @@ const AlunoHome = () => {
       <section className="px-5 -mt-2 space-y-3">
         <Link 
           to={`/${slug}/app/dr-ia`}
-          className="bg-card/60 border border-accent/40 rounded-2xl p-4 flex items-center gap-4 hover:bg-accent/5 transition-colors group"
+          className="bg-card/60 border border-primary/20 rounded-2xl p-4 flex items-center gap-4 hover:bg-primary/5 transition-colors group"
         >
-          <div className="w-12 h-12 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
             <Stethoscope className="h-6 w-6 text-primary" />
           </div>
           <div className="flex-1">
@@ -272,7 +272,7 @@ const AlunoHome = () => {
                 className="pointer-events-none absolute inset-0 opacity-0 hover:opacity-100 transition-opacity"
                 style={{
                   background:
-                    "radial-gradient(circle at var(--mx,50%) var(--my,50%), hsl(var(--accent)/0.25), transparent 60%)",
+                    "radial-gradient(circle at var(--mx,50%) var(--my,50%), hsl(var(--primary)/0.25), transparent 60%)",
                 }}
               />
               <div className="absolute top-3 left-3 w-8 h-8 rounded-md bg-background/70 backdrop-blur flex items-center justify-center">

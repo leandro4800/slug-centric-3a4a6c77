@@ -11,16 +11,16 @@ interface Props {
 export type EditableTarget =
   | { id: "background"; label: "Fundo do app"; tokens: ["background"] }
   | { id: "card"; label: "Cartões"; tokens: ["card"] }
-  | { id: "primary"; label: "Cor primária / Logo"; tokens: ["primary", "primary_glow"] }
-  | { id: "accent"; label: "Botão Reproduzir / Ícones"; tokens: ["accent"] }
+  | { id: "primary"; label: "Cor primária / Botões"; tokens: ["primary", "primary_glow", "accent"] }
+  | { id: "accent"; label: "Detalhes secundários"; tokens: ["accent"] }
   | { id: "foreground"; label: "Texto principal"; tokens: ["foreground"] }
   | { id: "border"; label: "Bordas"; tokens: ["border"] };
 
 export const EDITABLE_TARGETS: EditableTarget[] = [
   { id: "background", label: "Fundo do app", tokens: ["background"] },
   { id: "card", label: "Cartões", tokens: ["card"] },
-  { id: "primary", label: "Cor primária / Logo", tokens: ["primary", "primary_glow"] },
-  { id: "accent", label: "Botão Reproduzir / Ícones", tokens: ["accent"] },
+  { id: "primary", label: "Cor primária / Botões", tokens: ["primary", "primary_glow", "accent"] },
+  { id: "accent", label: "Detalhes secundários", tokens: ["accent"] },
   { id: "foreground", label: "Texto principal", tokens: ["foreground"] },
   { id: "border", label: "Bordas", tokens: ["border"] },
 ];
@@ -99,8 +99,8 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
               onClick={() => onPick(find("accent"))}
               className="rounded-full"
             >
-              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--accent)/0.2)", border: "1px solid hsl(var(--accent)/0.4)" }}>
-                <Settings className="h-3 w-3" style={{ color: "hsl(var(--accent))" }} />
+              <div className="w-7 h-7 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.2)", border: "1px solid hsl(var(--primary)/0.4)" }}>
+                <Settings className="h-3 w-3" style={{ color: "hsl(var(--primary))" }} />
               </div>
             </HotZone>
           </div>
@@ -128,8 +128,8 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                 className="rounded-md inline-flex"
               >
                 <span
-                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded"
-                  style={{ background: "hsl(var(--accent))", color: "hsl(var(--accent-foreground))" }}
+                  className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-1 rounded shadow-glow"
+                  style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}
                 >
                   <Play className="h-2.5 w-2.5 fill-current" /> REPRODUZIR
                 </span>
@@ -149,9 +149,9 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                 className="w-full rounded-lg p-2 flex items-center gap-2"
                 style={{ background: "hsl(var(--card)/0.8)", border: "1px solid hsl(var(--border))" }}
               >
-                <div className="w-7 h-7 rounded-md" style={{ background: "hsl(var(--accent)/0.2)", border: "1px solid hsl(var(--accent)/0.4)" }} />
+                <div className="w-7 h-7 rounded-md" style={{ background: "hsl(var(--primary)/0.2)", border: "1px solid hsl(var(--primary)/0.4)" }} />
                 <div className="text-left">
-                  <p className="font-display text-[10px]" style={{ color: "hsl(var(--accent))" }}>LINKS ÚTEIS</p>
+                  <p className="font-display text-[10px]" style={{ color: "hsl(var(--primary))" }}>LINKS ÚTEIS</p>
                   <p className="text-[7px]" style={{ color: "hsl(var(--foreground)/0.6)" }}>Parceiros & cupons</p>
                 </div>
               </div>
@@ -161,7 +161,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
           {/* Mini cards prescrição */}
           <div className="absolute top-[72%] left-3 right-3">
             <p className="font-display text-[9px] mb-1" style={{ color: "hsl(var(--foreground))" }}>
-              <span style={{ color: "hsl(var(--accent))" }}>▶</span> MINHA PRESCRIÇÃO
+              <span style={{ color: "hsl(var(--primary))" }}>▶</span> MINHA PRESCRIÇÃO
             </p>
             <div className="flex gap-1.5">
               {[0,1,2].map((i) => (
@@ -184,7 +184,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
           {/* Bottom nav */}
           <div className="absolute bottom-0 left-0 right-0 h-9 flex items-center justify-around px-2 z-10" style={{ background: "hsl(var(--card))", borderTop: "1px solid hsl(var(--border))" }}>
             {[0,1,2,3].map((i) => (
-              <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: i === 0 ? "hsl(var(--accent))" : "hsl(var(--foreground)/0.4)" }} />
+              <div key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: i === 0 ? "hsl(var(--primary))" : "hsl(var(--foreground)/0.4)" }} />
             ))}
           </div>
         </div>

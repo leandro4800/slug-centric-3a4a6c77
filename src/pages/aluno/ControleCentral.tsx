@@ -4,6 +4,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
 
 const parceiros = [
   { nome: "GROWTH", tag: "PIKACHU" },
@@ -31,10 +32,10 @@ const ControleCentral = () => {
   }, [user]);
 
   return (
-    <div className="px-5 pt-6 pb-32">
+    <div className="px-5 pt-6 pb-32 bg-black min-h-screen">
       <button
         onClick={() => navigate(`/${slug}/app`)}
-        className="flex items-center gap-2 text-accent text-sm font-semibold uppercase tracking-widest"
+        className="flex items-center gap-2 text-primary text-sm font-semibold uppercase tracking-widest hover:brightness-125 transition-all"
       >
         <ArrowLeft className="h-4 w-4" /> Voltar
       </button>
@@ -42,7 +43,7 @@ const ControleCentral = () => {
       {isSuperAdmin && (
         <Link
           to="/admin/coaches"
-          className="mt-4 flex items-center gap-3 bg-gradient-to-r from-primary to-primary/70 text-primary-foreground rounded-2xl px-4 py-3 shadow-[0_0_30px_-5px_hsl(var(--primary)/0.6)]"
+          className="mt-4 flex items-center gap-3 bg-gradient-primary text-primary-foreground rounded-none px-4 py-3 shadow-glow"
         >
           <LayoutDashboard className="h-5 w-5" />
           <div className="flex-1">
@@ -53,106 +54,107 @@ const ControleCentral = () => {
         </Link>
       )}
 
-      <div className="flex items-center gap-2 mt-6 text-accent">
+      <div className="flex items-center gap-2 mt-8 text-primary/80">
         <Clapperboard className="h-4 w-4" />
-        <span className="text-xs uppercase tracking-[0.3em]">Produção Original</span>
+        <span className="text-[10px] uppercase tracking-[0.3em] font-bold">Produção Original</span>
       </div>
-      <h1 className="font-display text-4xl mt-2 text-accent leading-tight" style={{ textShadow: "0 0 30px hsl(var(--accent) / 0.4)" }}>
-        CONTROLE CENTRAL: {(tenant?.nome || "TIME").toUpperCase()}
+      <h1 className="font-display text-4xl mt-2 text-white leading-tight">
+        CONTROLE CENTRAL: <span className="text-primary">{(tenant?.nome || "TIME").toUpperCase()}</span>
       </h1>
-      <div className="h-px bg-accent/30 mt-3" />
+      <div className="h-px bg-primary/20 mt-3" />
 
-      <div className="space-y-4 mt-6">
+      <div className="space-y-4 mt-8">
         <Link
           to={isSuperAdmin ? "/admin/coaches" : `/${slug}/admin`}
-          className="block bg-card/40 border border-accent/30 rounded-2xl p-4 flex items-center gap-4"
+          className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
         >
-          <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center">
-            {isSuperAdmin ? <LayoutDashboard className="h-5 w-5 text-accent" /> : <Users className="h-5 w-5 text-accent" />}
+          <div className="w-12 h-12 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+            {isSuperAdmin ? <LayoutDashboard className="h-5 w-5 text-primary" /> : <Users className="h-5 w-5 text-primary" />}
           </div>
           <div className="flex-1">
-            <p className="font-display text-lg text-accent">{isSuperAdmin ? "PAINEL ADMIN" : "GERENCIAR ELENCO"}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">
+            <p className="font-display text-lg text-white group-hover:text-primary transition-all">{isSuperAdmin ? "PAINEL ADMIN" : "GERENCIAR ELENCO"}</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
               {isSuperAdmin ? "Controle de coaches e tenants" : "Atletas da equipe"}
             </p>
           </div>
-          <span className="text-accent">→</span>
+          <span className="text-primary">→</span>
         </Link>
 
         <Link
           to={`/${slug}/admin/aparencia`}
-          className="block bg-card/40 border border-accent/30 rounded-2xl p-4 flex items-center gap-4"
+          className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
         >
-          <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center">
-            <Palette className="h-5 w-5 text-accent" />
+          <div className="w-12 h-12 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+            <Palette className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="font-display text-lg text-accent">IDENTIDADE VISUAL</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Logo, cores e fontes · 1x/mês</p>
+            <p className="font-display text-lg text-white group-hover:text-primary transition-all">IDENTIDADE VISUAL</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Logo, cores e fontes · 1x/mês</p>
           </div>
-          <span className="text-accent">→</span>
+          <span className="text-primary">→</span>
         </Link>
 
         <Link
           to={`/${slug}/admin/faturamento`}
-          className="block bg-card/40 border border-accent/30 rounded-2xl p-4 flex items-center gap-4"
+          className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
         >
-          <div className="w-12 h-12 rounded-lg bg-accent/15 border border-accent/30 flex items-center justify-center">
-            <Wallet className="h-5 w-5 text-accent" />
+          <div className="w-12 h-12 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+            <Wallet className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="font-display text-lg text-accent">FATURAMENTO</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Gestão financeira e saques</p>
+            <p className="font-display text-lg text-white group-hover:text-primary transition-all">FATURAMENTO</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Gestão financeira e saques</p>
           </div>
-          <span className="text-accent">→</span>
+          <span className="text-primary">→</span>
         </Link>
 
-
-        <button className="w-full bg-accent text-accent-foreground font-display text-lg py-4 rounded-2xl flex items-center justify-center gap-3 shadow-[0_0_40px_-5px_hsl(var(--accent)/0.6)]">
+        <Button 
+          className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-display text-xl rounded-none shadow-glow flex items-center justify-center gap-3"
+        >
           <Plus className="h-5 w-5" /> LANÇAR NOVO EPISÓDIO
-        </button>
+        </Button>
 
-        <div className="bg-card/40 border border-[hsl(142_70%_45%)]/40 rounded-2xl p-4">
+        <div className="bg-card/40 border border-white/10 rounded-none p-4">
           <div className="flex items-center gap-2 mb-3">
-            <Headphones className="h-5 w-5 text-[hsl(142_70%_55%)]" />
-            <p className="font-display text-base">PLAYLIST DO TREINO</p>
+            <Headphones className="h-5 w-5 text-primary" />
+            <p className="font-display text-base text-white">PLAYLIST DO TREINO</p>
           </div>
           <div className="flex gap-2">
             <input
               value={playlist}
               onChange={(e) => setPlaylist(e.target.value)}
-              className="flex-1 bg-background border border-border rounded-lg px-3 py-2.5 text-sm"
+              className="flex-1 bg-black border border-white/10 rounded-none px-3 py-2.5 text-sm focus:border-primary/50 outline-none transition-all"
             />
-            <button className="w-12 h-12 rounded-lg bg-[hsl(142_70%_45%)] flex items-center justify-center">
-              <Save className="h-4 w-4 text-black" />
-            </button>
+            <Button className="w-12 h-12 p-0" variant="default">
+              <Save className="h-4 w-4" />
+            </Button>
           </div>
         </div>
 
-        <div className="bg-card/40 border border-border rounded-2xl p-4">
+        <div className="bg-card/40 border border-white/10 rounded-none p-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-accent fill-accent" />
-              <p className="font-display text-base">PARCEIROS ELITE</p>
+              <Star className="h-5 w-5 text-primary fill-primary" />
+              <p className="font-display text-base text-white">PARCEIROS ELITE</p>
             </div>
-            <button className="w-9 h-9 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center">
-              <Plus className="h-4 w-4 text-accent" />
+            <button className="w-9 h-9 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center hover:bg-primary/30 transition-all">
+              <Plus className="h-4 w-4 text-primary" />
             </button>
           </div>
           <div className="space-y-3">
             {parceiros.map((p) => (
-              <div key={p.nome} className="flex items-center gap-3 bg-background/50 rounded-xl p-3">
-                <div className="w-12 h-12 rounded-lg bg-secondary flex items-center justify-center text-[10px] font-bold">
+              <div key={p.nome} className="flex items-center gap-3 bg-black/50 border border-white/5 rounded-none p-3">
+                <div className="w-12 h-12 rounded-none bg-secondary flex items-center justify-center text-[10px] font-bold border border-white/10 uppercase">
                   {p.nome.split(" ")[0]}
                 </div>
                 <div className="flex-1">
-                  <p className="font-bold text-sm">{p.nome}</p>
-                  <p className="text-xs text-accent">{p.tag}</p>
+                  <p className="font-bold text-sm text-white">{p.nome}</p>
+                  <p className="text-[10px] text-primary uppercase font-bold tracking-widest">{p.tag}</p>
                 </div>
-                <button className="w-9 h-9 flex items-center justify-center text-accent">
+                <button className="w-9 h-9 flex items-center justify-center text-primary/60 hover:text-primary transition-all">
                   <Pencil className="h-4 w-4" />
                 </button>
-                <button className="w-9 h-9 flex items-center justify-center text-[hsl(0_80%_60%)]">
+                <button className="w-9 h-9 flex items-center justify-center text-red-500/60 hover:text-red-500 transition-all">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
