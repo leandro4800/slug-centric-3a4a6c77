@@ -3,7 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import fs from "fs";
 
 const SUPABASE_URL = "https://rmetppilvfrxosvxzhgj.supabase.co"; 
-const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const SERVICE_KEY = "";
 
 if (!SERVICE_KEY) {
   console.error("SERVICE_KEY_MISSING");
