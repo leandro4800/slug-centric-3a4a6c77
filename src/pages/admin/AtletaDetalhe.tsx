@@ -114,7 +114,10 @@ const AtletaDetalhe = () => {
   const [nivel, setNivel] = useState<string>("intermediario");
   const [savingNivel, setSavingNivel] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [importType, setImportType] = useState<"treino" | "dieta">("treino");
   const [protocolResult, setProtocolResult] = useState<string | null>(null);
   const [isGeneratingProtocol, setIsGeneratingProtocol] = useState(false);
   const [showProtocolDialog, setShowProtocolDialog] = useState(false);
@@ -227,6 +230,48 @@ const AtletaDetalhe = () => {
     }
   };
 
+  const handleImportFile = async (file: File) => {
+    if (!aluno) return;
+    setImporting(true);
+    const toastId = toast.loading(`Processando ${importType} com IA...`);
+    
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(file);
+      });
+      
+      const base64 = await base64Promise;
+      
+      const { data, error } = await supabase.functions.invoke("import-with-ai", {
+        body: { 
+          file: base64, 
+          fileType: file.type,
+          importType,
+          alunoId: aluno.id,
+          tenantId: aluno.tenant_id
+        },
+      });
+
+      if (error) throw error;
+      
+      if (importType === "treino") {
+        toast.success("Treino importado com sucesso!", { id: toastId });
+        navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}`);
+      } else {
+        toast.success("Dieta importada com sucesso!", { id: toastId });
+        // Refresh page to show data if needed, or navigate to diet page if it existed
+        void load();
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Falha ao importar: ${e.message}`, { id: toastId });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleGenerateProtocol = async () => {
     if (!aluno) return;
     setIsGeneratingProtocol(true);
@@ -320,19 +365,48 @@ const AtletaDetalhe = () => {
             className="w-10 h-10 rounded-full bg-background/70 backdrop-blur"
           />
           <div className="flex gap-2">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="image/*,.pdf,.doc,.docx"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void handleImportFile(f);
+                e.target.value = "";
+              }}
+            />
             <Button
               size="sm"
+              disabled={importing}
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8"
-              onClick={() => toast.success("Treino exportado!")}
+              onClick={() => {
+                setImportType("treino");
+                importInputRef.current?.click();
+              }}
             >
-              <Download className="h-3 w-3 mr-1" /> Exportar treino
+              {importing && importType === "treino" ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Upload className="h-3 w-3 mr-1" />
+              )}
+              Importar treino
             </Button>
             <Button
               size="sm"
+              disabled={importing}
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8"
-              onClick={() => toast.success("Dieta exportada!")}
+              onClick={() => {
+                setImportType("dieta");
+                importInputRef.current?.click();
+              }}
             >
-              <Download className="h-3 w-3 mr-1" /> Exportar dieta
+              {importing && importType === "dieta" ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Upload className="h-3 w-3 mr-1" />
+              )}
+              Importar dieta
             </Button>
           </div>
         </div>
@@ -396,20 +470,6 @@ const AtletaDetalhe = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
-            onClick={() => navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}`)}
-          >
-            <Upload className="h-4 w-4 mr-2" /> Importar Treino
-          </Button>
-          <Button
-            className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
-            onClick={() => toast.info("Em breve: importador de dieta")}
-          >
-            <Upload className="h-4 w-4 mr-2" /> Importar Dieta
-          </Button>
-        </div>
 
         <div className="space-y-2">
           <button
