@@ -107,7 +107,7 @@ REGRAS ABSOLUTAS:
 4. Cruze a observação visual com a variação numérica de peso/BF informada. Se houver discrepância (ex: perdeu peso mas parece mais "achatado"), aponte hipóteses (perda de massa magra, glicogênio, retenção).
 5. Linguagem: técnica de coach, direta, sem enrolação, sem clichês motivacionais genéricos. Trate como atleta sério.
 6. Estruture em: VEREDITO VISUAL, PONTOS FORTES, PONTOS A CORRIGIR, RECOMENDAÇÃO TÁTICA (treino/dieta/cardio/sódio/água), PRÓXIMO CHECK-IN.
-7. Seja objetivo: 4 a 6 parágrafos curtos no total. Sem markdown pesado, use texto corrido com títulos em CAIXA ALTA.`;
+7. Use parágrafos claros com uma linha em branco entre eles. Use CAIXA ALTA para os títulos das seções.`;
 
     const userContent: any[] = [{ type: "text", text: dadosTxt }];
     for (const img of imagens) {
