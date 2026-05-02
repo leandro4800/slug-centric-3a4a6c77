@@ -1401,6 +1401,41 @@ export type Database = {
         }
         Relationships: []
       }
+      tenants_private: {
+        Row: {
+          created_at: string
+          stripe_account_id: string | null
+          stripe_onboarding_completed: boolean | null
+          tenant_id: string
+          updated_at: string
+          vlog_webhook_secret: string | null
+        }
+        Insert: {
+          created_at?: string
+          stripe_account_id?: string | null
+          stripe_onboarding_completed?: boolean | null
+          tenant_id: string
+          updated_at?: string
+          vlog_webhook_secret?: string | null
+        }
+        Update: {
+          created_at?: string
+          stripe_account_id?: string | null
+          stripe_onboarding_completed?: boolean | null
+          tenant_id?: string
+          updated_at?: string
+          vlog_webhook_secret?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenants_private_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treinos_prescritos: {
         Row: {
           aluno_id: string
