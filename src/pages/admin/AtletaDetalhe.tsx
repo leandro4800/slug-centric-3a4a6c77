@@ -610,7 +610,7 @@ const AtletaDetalhe = () => {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Button
-              className={`h-14 font-display text-sm uppercase tracking-wider ${
+              className={`h-10 font-display text-base uppercase tracking-wider ${
                 canGenerate 
                   ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                   : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
@@ -630,7 +630,7 @@ const AtletaDetalhe = () => {
               Montar Treino
             </Button>
             <Button
-              className={`h-14 font-display text-sm uppercase tracking-wider ${
+              className={`h-10 font-display text-base uppercase tracking-wider ${
                 canGenerate 
                   ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                   : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
@@ -653,7 +653,7 @@ const AtletaDetalhe = () => {
 
           <Button
             variant="outline"
-            className={`w-full h-14 font-display text-sm uppercase tracking-wider border-primary/30 text-primary hover:bg-primary/5 ${
+            className={`w-full h-10 font-display text-base uppercase tracking-wider border-primary/30 text-primary hover:bg-primary/5 ${
               !canGenerate ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={!canGenerate}
