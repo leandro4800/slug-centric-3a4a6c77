@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none text-sm font-bold uppercase tracking-[0.2em] ring-offset-background transition-all duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden active:scale-[0.97]",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-none text-sm font-bold uppercase tracking-[0.2em] ring-offset-background transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 relative overflow-hidden active:scale-[0.98] border border-transparent shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)]",
   {
     variants: {
       variant: {
@@ -13,8 +13,8 @@ const buttonVariants = cva(
           "bg-primary text-primary-foreground",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)] before:pointer-events-none",
           "after:absolute after:inset-0 after:border after:border-[var(--btn-border)] after:pointer-events-none",
-          "hover:bg-primary-glow hover:shadow-[0_0_40px_-10px_hsl(var(--primary-glow)/0.6)]",
-          "hover:after:border-white/50",
+          "hover:bg-primary hover:shadow-[0_0_50px_-5px_hsl(var(--primary-glow)/0.8)]",
+          "hover:after:border-white/80 transition-all duration-300",
           "group/btn"
         ].join(" "),
         destructive: [
@@ -37,25 +37,25 @@ const buttonVariants = cva(
         accent: [
           "bg-accent text-accent-foreground",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)]",
-          "after:absolute after:inset-0 after:border after:border-white/20",
+          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)]",
           "hover:brightness-110 shadow-lg"
         ].join(" "),
         blue: [
           "bg-secondary text-secondary-foreground",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)]",
-          "after:absolute after:inset-0 after:border after:border-white/20",
+          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)]",
           "hover:brightness-110"
         ].join(" "),
         green: [
           "bg-muted text-white",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)]",
-          "after:absolute after:inset-0 after:border after:border-white/20",
+          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)]",
           "hover:brightness-110"
         ].join(" "),
         purple: [
           "bg-premium-purple text-white",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)]",
-          "after:absolute after:inset-0 after:border after:border-white/20",
+          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)]",
           "hover:brightness-110"
         ].join(" "),
         ghost: "hover:bg-primary/10 hover:text-primary tracking-widest",

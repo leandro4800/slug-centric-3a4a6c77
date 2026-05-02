@@ -133,7 +133,7 @@ export default function TenantLanding() {
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-primary/30 to-background" />
           )}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/30" />
+          <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay only for text legibility */}
         </div>
 
         <div className="relative mx-auto max-w-5xl px-4 pt-6 md:px-8">
