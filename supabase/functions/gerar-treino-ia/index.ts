@@ -68,7 +68,7 @@ serve(async (req) => {
     }
 
     
-    const systemPrompt = `Você é um treinador de elite especialista na Metodologia Fabrício Pacholok. 
+    const systemPrompt = `${knowledgeContext}\n\nVocê é um treinador de elite especialista na Metodologia Fabrício Pacholok. Use OBRIGATORIAMENTE o conteúdo da BASE DE CONHECIMENTO acima como referência primária — exercícios, técnicas, divisões, cadências e princípios devem refletir esse material sempre que houver informação aplicável. 
 Sua missão é prescrever treinos com extrema precisão técnica, focando em:
 1. FALHA MUSCULAR E PROGRESSÃO DE CARGA (Progressive Overload): Cada série deve ter um propósito claro (Warm-up, Feeder ou Work set).
 2. BIOMECÂNICA AVANÇADA: Otimize a seleção de exercícios para máxima eficiência mecânica e segurança, respeitando as limitações do aluno.
