@@ -194,7 +194,7 @@ const AdminFaturamento = () => {
           <AdminBackButton 
             className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all hover:scale-105 flex items-center justify-center" 
           />
-          <div className="text-primary font-black text-2xl tracking-tighter uppercase italic">ALPHA <span className="text-white">FINANCE</span></div>
+          <div className="text-primary font-bold text-2xl tracking-tight uppercase italic">ALPHA <span className="text-white">FINANCE</span></div>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-glow border border-white/20" />
         </header>
 
@@ -269,7 +269,7 @@ const AdminFaturamento = () => {
                 <div className="space-y-1 z-10">
                   <p className="font-bold text-sm text-white uppercase tracking-tight">{item.label}</p>
                   {item.badge && (
-                    <Badge variant="outline" className={`${item.badgeColor} text-[10px] uppercase tracking-widest px-2 h-5 border-none p-0 font-black`}>
+                    <Badge variant="outline" className={`${item.badgeColor} text-[10px] uppercase tracking-widest px-2 h-5 border-none p-0 font-bold`}>
                       {item.badge}
                     </Badge>
                   )}
@@ -288,7 +288,7 @@ const AdminFaturamento = () => {
               </div>
               <p className="text-xs uppercase tracking-widest text-white/80 font-bold mb-4 italic">Alunos Ativos</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-6xl font-black text-white">{activeStudents}</span>
+                <span className="text-6xl font-bold text-white">{activeStudents}</span>
                 <span className="text-white/60 text-sm font-bold flex items-center"><TrendingUp className="h-4 w-4 mr-1 text-primary" />Demo</span>
               </div>
               <div className="mt-6 h-1 w-full bg-white/20 rounded-none overflow-hidden">
@@ -298,7 +298,7 @@ const AdminFaturamento = () => {
                   className="h-full bg-primary" 
                 />
               </div>
-              <p className="text-[11px] uppercase tracking-widest text-primary font-black mt-4">Ver lista →</p>
+              <p className="text-[11px] uppercase tracking-widest text-primary font-bold mt-4">Ver lista →</p>
             </button>
 
             <button onClick={() => setStudentsView("desistentes")} className="min-w-[280px] text-left bg-white/10 border border-white/20 rounded-none p-6 relative group overflow-hidden hover:border-primary transition-colors">
@@ -307,7 +307,7 @@ const AdminFaturamento = () => {
               </div>
               <p className="text-xs uppercase tracking-widest text-white/80 font-bold mb-4 italic">Desistentes</p>
               <div className="flex items-baseline gap-2">
-                <span className="text-6xl font-black text-white">0</span>
+                <span className="text-6xl font-bold text-white">0</span>
                 <span className="text-primary text-sm font-bold flex items-center"><TrendingDown className="h-4 w-4 mr-1" />-0%</span>
               </div>
               <div className="mt-6 h-1 w-full bg-white/20 rounded-none overflow-hidden">
@@ -317,7 +317,7 @@ const AdminFaturamento = () => {
                    className="h-full bg-primary" 
                 />
               </div>
-              <p className="text-[11px] uppercase tracking-widest text-primary font-black mt-4">Ver lista →</p>
+              <p className="text-[11px] uppercase tracking-widest text-primary font-bold mt-4">Ver lista →</p>
             </button>
           </div>
         </section>
@@ -327,7 +327,7 @@ const AdminFaturamento = () => {
       <Dialog open={isVerifyDialogOpen} onOpenChange={setIsVerifyDialogOpen}>
         <DialogContent className="bg-black border-white/10 text-white sm:max-w-md rounded-none">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2 italic">
+            <DialogTitle className="text-2xl font-bold uppercase tracking-tight flex items-center gap-2 italic">
               <UserCheck className="h-6 w-6 text-primary" />
               Validar Identidade
             </DialogTitle>
@@ -361,7 +361,7 @@ const AdminFaturamento = () => {
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="border-white/20 bg-transparent hover:bg-white/10 font-black rounded-none uppercase text-[10px] tracking-widest"
+                className="border-white/20 bg-transparent hover:bg-white/10 font-bold rounded-none uppercase text-[10px] tracking-widest"
                 onClick={() => document.getElementById('id-upload')?.click()}
               >
                 Escolher Arquivo
@@ -370,7 +370,7 @@ const AdminFaturamento = () => {
           </div>
           <DialogFooter className="gap-2 sm:justify-center">
             <Button 
-              className="bg-primary text-white hover:bg-primary font-black px-12 py-6 h-auto rounded-none uppercase tracking-widest w-full" 
+              className="bg-primary text-white hover:bg-primary font-bold px-12 py-6 h-auto rounded-none uppercase tracking-widest w-full" 
               onClick={handleUploadIdentity}
               disabled={isUploading || !file}
             >
@@ -384,7 +384,7 @@ const AdminFaturamento = () => {
       <Dialog open={isSaqueDialogOpen} onOpenChange={setIsSaqueDialogOpen}>
         <DialogContent className="bg-black border-white/10 text-white sm:max-w-md rounded-none">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter flex items-center gap-2 text-primary italic">
+            <DialogTitle className="text-2xl font-bold uppercase tracking-tight flex items-center gap-2 text-primary italic">
               <HandCoins className="h-6 w-6" />
               Solicitar Saque
             </DialogTitle>
@@ -395,20 +395,20 @@ const AdminFaturamento = () => {
           <div className="py-6 space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="amount" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">Quanto deseja sacar?</Label>
+                <Label htmlFor="amount" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Quanto deseja sacar?</Label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-black text-white/20 text-xl">R$</span>
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-white/20 text-xl">R$</span>
                   <Input 
                     id="amount" 
                     placeholder="0,00" 
-                    className="bg-white/5 border-white/10 pl-12 h-16 text-3xl font-black rounded-none border-l-4 border-l-primary focus-visible:ring-primary"
+                    className="bg-white/5 border-white/10 pl-12 h-16 text-3xl font-bold rounded-none border-l-4 border-l-primary focus-visible:ring-primary"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                   />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pix" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">Sua Chave PIX</Label>
+                <Label htmlFor="pix" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Sua Chave PIX</Label>
                 <Input 
                   id="pix" 
                   placeholder="CPF, E-mail ou Celular" 
@@ -421,7 +421,7 @@ const AdminFaturamento = () => {
           </div>
           <DialogFooter className="gap-2 sm:justify-center">
             <Button 
-              className="bg-white text-black hover:bg-white/90 font-black px-12 py-6 h-auto rounded-none uppercase tracking-widest w-full" 
+              className="bg-white text-black hover:bg-white/90 font-bold px-12 py-6 h-auto rounded-none uppercase tracking-widest w-full" 
               onClick={handleSaqueRequest}
             >
               Confirmar Solicitação
@@ -434,7 +434,7 @@ const AdminFaturamento = () => {
       <Dialog open={!!activePanel} onOpenChange={(o) => !o && setActivePanel(null)}>
         <DialogContent className="bg-black border-white/10 text-white sm:max-w-2xl rounded-none max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-2">
+            <DialogTitle className="text-2xl font-bold uppercase tracking-tight italic flex items-center gap-2">
               {activePanel === "dashboard" && <><LayoutDashboard className="h-6 w-6 text-primary" /> Dashboard</>}
               {activePanel === "transacoes" && <><ArrowLeftRight className="h-6 w-6 text-primary" /> Transações</>}
               {activePanel === "relatorios" && <><FileText className="h-6 w-6 text-primary" /> Relatórios</>}
@@ -450,23 +450,23 @@ const AdminFaturamento = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white/5 border-l-4 border-primary p-4">
                   <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Faturamento Bruto</p>
-                  <p className="text-2xl font-black mt-1">{formatBRL(totalGross)}</p>
+                  <p className="text-2xl font-bold mt-1">{formatBRL(totalGross)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-white/30 p-4">
                   <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Comissão (10%)</p>
-                  <p className="text-2xl font-black mt-1 text-primary">-{formatBRL(totalCommission)}</p>
+                  <p className="text-2xl font-bold mt-1 text-primary">-{formatBRL(totalCommission)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-primary p-4">
                   <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido</p>
-                  <p className="text-2xl font-black mt-1">{formatBRL(totalNet)}</p>
+                  <p className="text-2xl font-bold mt-1">{formatBRL(totalNet)}</p>
                 </div>
               </div>
               <div className="bg-white/5 p-4">
                 <p className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">Resumo</p>
                 <div className="space-y-2 text-sm">
-                  <div className="flex justify-between"><span className="text-white/60">Alunos ativos</span><span className="font-black">{activeStudents}</span></div>
-                  <div className="flex justify-between"><span className="text-white/60">Ticket médio</span><span className="font-black">{formatBRL(PLAN_VALUE)}</span></div>
-                  <div className="flex justify-between"><span className="text-white/60">Próximo repasse</span><span className="font-black">D+30</span></div>
+                  <div className="flex justify-between"><span className="text-white/60">Alunos ativos</span><span className="font-bold">{activeStudents}</span></div>
+                  <div className="flex justify-between"><span className="text-white/60">Ticket médio</span><span className="font-bold">{formatBRL(PLAN_VALUE)}</span></div>
+                  <div className="flex justify-between"><span className="text-white/60">Próximo repasse</span><span className="font-bold">D+30</span></div>
                 </div>
               </div>
             </div>
@@ -477,7 +477,7 @@ const AdminFaturamento = () => {
             <div className="py-4 space-y-2">
               {DEMO_ATHLETES.map((a, i) => (
                 <div key={a.id} className="flex items-center gap-3 bg-white/5 border-l-2 border-primary p-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-black text-primary">
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">
                     {a.nome_completo[0]}
                   </div>
                   <div className="flex-1">
@@ -485,7 +485,7 @@ const AdminFaturamento = () => {
                     <p className="text-[10px] uppercase tracking-widest text-white/40">Pagamento Mensalidade · {new Date(Date.now() - i * 86400000 * 3).toLocaleDateString("pt-BR")}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-emerald-500">+{formatBRL(PLAN_VALUE - PLAN_VALUE * COMMISSION_RATE)}</p>
+                    <p className="font-bold text-emerald-500">+{formatBRL(PLAN_VALUE - PLAN_VALUE * COMMISSION_RATE)}</p>
                     <p className="text-[9px] uppercase tracking-widest text-white/40">Líquido</p>
                   </div>
                 </div>
@@ -523,7 +523,7 @@ const AdminFaturamento = () => {
                 { q: "Como funciona o bloqueio?", a: "Caso a assinatura do aluno expire ou seja cancelada, o acesso é bloqueado automaticamente." },
               ].map((item) => (
                 <div key={item.q} className="bg-white/5 border-l-2 border-primary p-4">
-                  <p className="font-black text-sm uppercase tracking-tight mb-1">{item.q}</p>
+                  <p className="font-bold text-sm uppercase tracking-tight mb-1">{item.q}</p>
                   <p className="text-xs text-white/60 leading-relaxed">{item.a}</p>
                 </div>
               ))}
@@ -535,25 +535,25 @@ const AdminFaturamento = () => {
             <div className="py-4 space-y-3">
               <div className="bg-white/5 p-5 border-l-4 border-primary">
                 <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Comissão da Plataforma</p>
-                <p className="text-4xl font-black mt-2">10%</p>
+                <p className="text-4xl font-bold mt-2">10%</p>
                 <p className="text-xs text-white/60 mt-1">Sobre cada mensalidade após o trial de 30 dias.</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/5 p-4">
                   <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Trial Gratuito</p>
-                  <p className="text-2xl font-black mt-1">30 dias</p>
+                  <p className="text-2xl font-bold mt-1">30 dias</p>
                 </div>
                 <div className="bg-white/5 p-4">
                   <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Prazo Saque</p>
-                  <p className="text-2xl font-black mt-1">D+2</p>
+                  <p className="text-2xl font-bold mt-1">D+2</p>
                 </div>
                 <div className="bg-white/5 p-4">
                   <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Taxa Saque</p>
-                  <p className="text-2xl font-black mt-1 text-emerald-500">Grátis</p>
+                  <p className="text-2xl font-bold mt-1 text-emerald-500">Grátis</p>
                 </div>
                 <div className="bg-white/5 p-4">
                   <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Repasse</p>
-                  <p className="text-2xl font-black mt-1">D+30</p>
+                  <p className="text-2xl font-bold mt-1">D+30</p>
                 </div>
               </div>
             </div>
@@ -563,24 +563,24 @@ const AdminFaturamento = () => {
           {activePanel === "bancarios" && (
             <div className="py-4 space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">Banco</Label>
+                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Banco</Label>
                 <Input placeholder="Selecione seu banco" className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">Agência</Label>
+                  <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Agência</Label>
                   <Input placeholder="0000" className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">Conta</Label>
+                  <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Conta</Label>
                   <Input placeholder="00000-0" className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-black">CPF do Titular</Label>
+                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">CPF do Titular</Label>
                 <Input placeholder="000.000.000-00" className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
               </div>
-              <Button className="w-full bg-primary hover:bg-primary font-black uppercase tracking-widest rounded-none py-6 h-auto">
+              <Button className="w-full bg-primary hover:bg-primary font-bold uppercase tracking-widest rounded-none py-6 h-auto">
                 Salvar Dados Bancários
               </Button>
             </div>
@@ -592,7 +592,7 @@ const AdminFaturamento = () => {
       <Dialog open={!!activeReport} onOpenChange={(o) => !o && setActiveReport(null)}>
         <DialogContent className="bg-black border-white/10 text-white sm:max-w-2xl rounded-none max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-2">
+            <DialogTitle className="text-2xl font-bold uppercase tracking-tight italic flex items-center gap-2">
               <FileText className="h-6 w-6 text-primary" />
               {activeReport === "mensal" && "Relatório Mensal"}
               {activeReport === "anual" && "Relatório Anual"}
@@ -609,24 +609,24 @@ const AdminFaturamento = () => {
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white/5 border-l-4 border-primary p-4">
                   <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Bruto do Mês</p>
-                  <p className="text-2xl font-black mt-1">{formatBRL(totalGross)}</p>
+                  <p className="text-2xl font-bold mt-1">{formatBRL(totalGross)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-white/30 p-4">
                   <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Comissão</p>
-                  <p className="text-2xl font-black mt-1 text-primary">-{formatBRL(totalCommission)}</p>
+                  <p className="text-2xl font-bold mt-1 text-primary">-{formatBRL(totalCommission)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-primary p-4">
                   <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido</p>
-                  <p className="text-2xl font-black mt-1">{formatBRL(totalNet)}</p>
+                  <p className="text-2xl font-bold mt-1">{formatBRL(totalNet)}</p>
                 </div>
               </div>
               <div className="bg-white/5 p-4 space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-white/60">Novos alunos</span><span className="font-black">{activeStudents}</span></div>
-                <div className="flex justify-between"><span className="text-white/60">Cancelamentos</span><span className="font-black">0</span></div>
-                <div className="flex justify-between"><span className="text-white/60">Reembolsos</span><span className="font-black">{formatBRL(0)}</span></div>
-                <div className="flex justify-between"><span className="text-white/60">Mensalidades pagas</span><span className="font-black">{activeStudents}</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Novos alunos</span><span className="font-bold">{activeStudents}</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Cancelamentos</span><span className="font-bold">0</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Reembolsos</span><span className="font-bold">{formatBRL(0)}</span></div>
+                <div className="flex justify-between"><span className="text-white/60">Mensalidades pagas</span><span className="font-bold">{activeStudents}</span></div>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar PDF</Button>
+              <Button className="w-full bg-primary hover:bg-primary font-bold uppercase tracking-widest rounded-none py-6 h-auto">Baixar PDF</Button>
             </div>
           )}
 
@@ -635,11 +635,11 @@ const AdminFaturamento = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/5 border-l-4 border-primary p-4">
                   <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Faturamento Anual</p>
-                  <p className="text-2xl font-black mt-1">{formatBRL(totalGross * 12)}</p>
+                  <p className="text-2xl font-bold mt-1">{formatBRL(totalGross * 12)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-primary p-4">
                   <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido Anual</p>
-                  <p className="text-2xl font-black mt-1">{formatBRL(totalNet * 12)}</p>
+                  <p className="text-2xl font-bold mt-1">{formatBRL(totalNet * 12)}</p>
                 </div>
               </div>
               <div className="bg-white/5 p-4">
@@ -653,7 +653,7 @@ const AdminFaturamento = () => {
                   ))}
                 </div>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar PDF</Button>
+              <Button className="w-full bg-primary hover:bg-primary font-bold uppercase tracking-widest rounded-none py-6 h-auto">Baixar PDF</Button>
             </div>
           )}
 
@@ -661,20 +661,20 @@ const AdminFaturamento = () => {
             <div className="py-4 space-y-4">
               <div className="bg-white/5 border-l-4 border-primary p-5">
                 <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Rendimentos Tributáveis ({new Date().getFullYear()})</p>
-                <p className="text-4xl font-black mt-2">{formatBRL(totalNet * 12)}</p>
+                <p className="text-4xl font-bold mt-2">{formatBRL(totalNet * 12)}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="bg-white/5 p-4">
                   <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">CNPJ Pagadora</p>
-                  <p className="font-black mt-1">00.000.000/0001-00</p>
+                  <p className="font-bold mt-1">00.000.000/0001-00</p>
                 </div>
                 <div className="bg-white/5 p-4">
                   <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">IRRF Retido</p>
-                  <p className="font-black mt-1">{formatBRL(0)}</p>
+                  <p className="font-bold mt-1">{formatBRL(0)}</p>
                 </div>
               </div>
               <p className="text-[11px] text-white/50 leading-relaxed">Informe estes valores na ficha “Rendimentos Recebidos de Pessoa Jurídica” da sua declaração anual.</p>
-              <Button className="w-full bg-primary hover:bg-primary font-black uppercase tracking-widest rounded-none py-6 h-auto">Baixar Informe de Rendimentos</Button>
+              <Button className="w-full bg-primary hover:bg-primary font-bold uppercase tracking-widest rounded-none py-6 h-auto">Baixar Informe de Rendimentos</Button>
             </div>
           )}
 
@@ -682,22 +682,22 @@ const AdminFaturamento = () => {
             <div className="py-4 space-y-2">
               {DEMO_ATHLETES.map((a, i) => (
                 <div key={a.id} className="flex items-center gap-3 bg-white/5 border-l-2 border-primary p-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-black text-primary">{a.nome_completo[0]}</div>
+                  <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">{a.nome_completo[0]}</div>
                   <div className="flex-1">
                     <p className="font-bold text-sm">{a.nome_completo}</p>
                     <p className="text-[10px] uppercase tracking-widest text-white/40">Crédito Mensalidade · {new Date(Date.now() - i * 86400000 * 3).toLocaleDateString("pt-BR")}</p>
                   </div>
                   <div className="text-right">
-                    <p className="font-black text-emerald-500">+{formatBRL(PLAN_VALUE)}</p>
+                    <p className="font-bold text-emerald-500">+{formatBRL(PLAN_VALUE)}</p>
                     <p className="text-[9px] uppercase tracking-widest text-primary">-{formatBRL(PLAN_VALUE * COMMISSION_RATE)} taxa</p>
                   </div>
                 </div>
               ))}
               <div className="flex justify-between bg-white/5 border-l-4 border-primary p-4 mt-3">
-                <span className="font-black uppercase tracking-widest text-sm">Saldo Final</span>
-                <span className="font-black text-xl">{formatBRL(totalNet)}</span>
+                <span className="font-bold uppercase tracking-widest text-sm">Saldo Final</span>
+                <span className="font-bold text-xl">{formatBRL(totalNet)}</span>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary font-black uppercase tracking-widest rounded-none py-6 h-auto mt-2">Exportar CSV</Button>
+              <Button className="w-full bg-primary hover:bg-primary font-bold uppercase tracking-widest rounded-none py-6 h-auto mt-2">Exportar CSV</Button>
             </div>
           )}
         </DialogContent>
@@ -707,7 +707,7 @@ const AdminFaturamento = () => {
       <Dialog open={!!studentsView} onOpenChange={(o) => !o && setStudentsView(null)}>
         <DialogContent className="bg-black border-white/10 text-white sm:max-w-2xl rounded-none max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-black uppercase tracking-tighter italic flex items-center gap-2">
+            <DialogTitle className="text-2xl font-bold uppercase tracking-tight italic flex items-center gap-2">
               {studentsView === "ativos" ? (
                 <><TrendingUp className="h-6 w-6 text-primary" /> Alunos Ativos</>
               ) : (
@@ -725,14 +725,14 @@ const AdminFaturamento = () => {
             <div className="py-4 space-y-2">
               {DEMO_ATHLETES.map((a) => (
                 <div key={a.id} className="flex items-center gap-3 bg-white/5 border-l-2 border-emerald-500 p-3">
-                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center font-black text-emerald-500">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/20 flex items-center justify-center font-bold text-emerald-500">
                     {a.nome_completo[0]}
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-sm">{a.nome_completo}</p>
                     <p className="text-[10px] uppercase tracking-widest text-white/40">{a.email}</p>
                   </div>
-                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 uppercase text-[9px] font-black tracking-widest rounded-none">
+                  <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 uppercase text-[9px] font-bold tracking-widest rounded-none">
                     Ativo
                   </Badge>
                 </div>
@@ -745,7 +745,7 @@ const AdminFaturamento = () => {
               <div className="w-16 h-16 mx-auto rounded-full bg-white/5 flex items-center justify-center">
                 <XCircle className="h-8 w-8 text-white/30" />
               </div>
-              <p className="font-black uppercase tracking-widest text-sm text-white/60">Nenhum desistente</p>
+              <p className="font-bold uppercase tracking-widest text-sm text-white/60">Nenhum desistente</p>
               <p className="text-xs text-white/40 max-w-sm mx-auto">Quando um aluno cancelar a assinatura ou tiver o acesso bloqueado, ele aparecerá aqui.</p>
             </div>
           )}
