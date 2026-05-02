@@ -141,17 +141,17 @@ const CompararEvolucao = () => {
   const formatAnalise = (text: string) => {
     return text.split('\n').map((line, i) => {
       const trimmedLine = line.trim();
-      if (!trimmedLine) return <div key={i} className="h-4" />;
+      if (!trimmedLine) return <div key={i} className="h-6" />;
       
       const isTitle = trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3;
       if (isTitle) {
         return (
-          <p key={i} className="text-primary font-normal mt-8 mb-4 tracking-[0.25em] text-[13px] uppercase border-b border-primary/30 pb-2">
+          <p key={i} className="text-primary font-medium mt-10 mb-5 tracking-[0.3em] text-[14px] uppercase border-b border-primary/20 pb-3">
             {trimmedLine}
           </p>
         );
       }
-      return <p key={i} className="text-white/90 text-[16px] leading-relaxed mb-4 font-light">{trimmedLine}</p>;
+      return <p key={i} className="text-white text-[18px] leading-[1.8] mb-6 font-normal tracking-wide">{trimmedLine}</p>;
     });
   };
 
@@ -210,20 +210,20 @@ const CompararEvolucao = () => {
             <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
               <Scale className="h-5 w-5 text-primary mb-1" />
               <p className="text-[10px] uppercase text-muted-foreground tracking-widest">Peso</p>
-              <p className="text-sm font-medium text-white">
+              <p className="text-sm font-normal text-white">
                 {antes.peso_kg}kg → {depois.peso_kg}kg
               </p>
-              <p className={`text-[10px] font-medium ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-[10px] font-normal ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {parseFloat(pesoDiff) > 0 ? '+' : ''}{pesoDiff}kg
               </p>
             </div>
             <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
               <Activity className="h-5 w-5 text-primary mb-1" />
               <p className="text-[10px] uppercase text-muted-foreground tracking-widest">BF%</p>
-              <p className="text-sm font-medium text-white">
+              <p className="text-sm font-normal text-white">
                 {antes.bf_percentual || '--'}% → {depois.bf_percentual || '--'}%
               </p>
-              <p className={`text-[10px] font-medium ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-[10px] font-normal ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {parseFloat(bfDiff) > 0 ? '+' : ''}{bfDiff}%
               </p>
             </div>
@@ -251,8 +251,8 @@ const CompararEvolucao = () => {
             ) : analise ? "Gerar nova análise" : "Gerar análise visual"}
           </Button>
           {analise && (
-            <div className="bg-zinc-900/80 border border-white/10 p-5 mt-2 rounded-lg shadow-2xl">
-              <div className="space-y-1">
+            <div className="bg-zinc-950 border border-white/5 p-8 mt-4 rounded-none shadow-2xl">
+              <div className="max-w-none">
                 {formatAnalise(analise)}
               </div>
             </div>
