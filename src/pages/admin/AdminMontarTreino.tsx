@@ -349,7 +349,7 @@ const AdminMontarTreino = () => {
               </div>
               <div className="flex gap-3">
                 <Button onClick={salvarPerfil} variant="outline">Salvar perfil</Button>
-                <Button onClick={gerarComIA} disabled={generating} variant="outline">
+                <Button onClick={() => gerarComIA()} disabled={generating} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                   Gerar com IA
                 </Button>
