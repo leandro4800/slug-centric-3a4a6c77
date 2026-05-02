@@ -69,7 +69,7 @@ const DrIA = () => {
               setCurrentAnalysis(null);
             }}
             className={`flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors ${
-              tab === "nova" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              tab === "nova" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
             }`}
           >
             Nova análise
@@ -77,7 +77,7 @@ const DrIA = () => {
           <button
             onClick={() => setTab("clinica")}
             className={`flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors ${
-              tab === "clinica" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              tab === "clinica" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
             }`}
           >
             Histórico
@@ -85,7 +85,7 @@ const DrIA = () => {
           <button
             onClick={() => setTab("evolucao")}
             className={`flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors ${
-              tab === "evolucao" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+              tab === "evolucao" ? "bg-primary text-primary-foreground" : "text-muted-foreground"
             }`}
           >
             Evolução
@@ -95,8 +95,8 @@ const DrIA = () => {
         {isAnalyzing ? (
           <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
             <div className="relative">
-              <div className="absolute inset-0 blur-xl bg-accent/20 rounded-full animate-pulse" />
-              <Loader2 className="h-12 w-12 text-accent animate-spin relative" />
+              <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full animate-pulse" />
+              <Loader2 className="h-12 w-12 text-primary animate-spin relative" />
             </div>
             <div>
               <h3 className="font-display text-xl">DR. IA ESTÁ ANALISANDO SEU EXAME...</h3>
@@ -123,10 +123,10 @@ const DrIA = () => {
                   toast.error("Por favor, envie um arquivo PDF.");
                 }
               }}
-              className="w-full bg-card/40 border-2 border-dashed border-accent/40 rounded-3xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-card/60 transition-colors group"
+              className="w-full bg-card/40 border-2 border-dashed border-primary/40 rounded-3xl p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-card/60 transition-colors group"
             >
-              <div className="w-16 h-16 rounded-full bg-accent/15 border border-accent/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Upload className="h-8 w-8 text-accent" />
+              <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                <Upload className="h-8 w-8 text-primary" />
               </div>
               <h3 className="font-display text-xl uppercase mb-1">Analisar Exame</h3>
               <p className="text-sm text-muted-foreground">Arraste seu PDF aqui ou clique para selecionar (Max 10MB)</p>
@@ -134,20 +134,20 @@ const DrIA = () => {
 
             <div className="bg-card/40 border border-border rounded-2xl p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Stethoscope className="h-4 w-4 text-accent" />
+                <Stethoscope className="h-4 w-4 text-primary" />
                 <h3 className="font-display text-base uppercase">Como o Dr. IA te ajuda</h3>
               </div>
               <ul className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">•</span>
+                  <span className="text-primary font-bold">•</span>
                   <span>Análise de performance (não apenas normalidade clínica)</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">•</span>
+                  <span className="text-primary font-bold">•</span>
                   <span>Identificação de janelas "ouro" para atletas</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">•</span>
+                  <span className="text-primary font-bold">•</span>
                   <span>Sugestões baseadas em inteligência clínica esportiva</span>
                 </li>
               </ul>
@@ -160,7 +160,7 @@ const DrIA = () => {
                 setCurrentAnalysis(null);
                 setTab("nova");
               }}
-              className="mb-4 text-xs text-accent flex items-center gap-1 uppercase font-bold"
+              className="mb-4 text-xs text-primary flex items-center gap-1 uppercase font-bold"
             >
               <ChevronRight className="h-3 w-3 rotate-180" /> Voltar
             </button>
@@ -175,7 +175,7 @@ const DrIA = () => {
           <div className="space-y-4 animate-in fade-in duration-500">
             {isLoadingAnalyses ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="h-8 w-8 text-accent animate-spin" />
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
             ) : analyses?.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground">
@@ -183,7 +183,7 @@ const DrIA = () => {
                 <p>Nenhuma análise encontrada.</p>
                 <button 
                   onClick={() => setTab("nova")}
-                  className="text-accent text-sm font-bold mt-2 uppercase"
+                  className="text-primary text-sm font-bold mt-2 uppercase"
                 >
                   Começar agora
                 </button>
@@ -207,14 +207,14 @@ const DrIA = () => {
                   })}
                   className="w-full bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4 text-left"
                 >
-                  <div className="w-12 h-12 rounded-full bg-accent/20 border border-accent/30 flex items-center justify-center font-bold text-accent">
+                  <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-bold text-primary">
                     {analise.score_performance}%
                   </div>
                   <div className="flex-1">
                     <p className="font-display text-base uppercase">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
                     <p className="text-xs text-muted-foreground">{analise.exames_biomarcadores.length} Biomarcadores analisados</p>
                   </div>
-                  <div className="flex items-center gap-1 text-accent text-xs font-bold uppercase">
+                  <div className="flex items-center gap-1 text-primary text-xs font-bold uppercase">
                     Ver detalhes
                     <ChevronRight className="h-4 w-4" />
                   </div>
@@ -225,7 +225,7 @@ const DrIA = () => {
         ) : (
           <div className="animate-in fade-in duration-500">
             <div className="flex items-center gap-2 mb-6">
-              <LineChartIcon className="h-5 w-5 text-accent" />
+              <LineChartIcon className="h-5 w-5 text-primary" />
               <h3 className="font-display text-xl uppercase">Evolução de Biomarcadores</h3>
             </div>
             <EvolutionChart />
