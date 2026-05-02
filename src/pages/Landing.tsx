@@ -76,12 +76,12 @@ interface DemoAppScreenProps {
 
 const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor = "#E50914" }: DemoAppScreenProps) => (
   <div
-    className="h-full w-full overflow-hidden bg-zinc-950 text-white"
+    className="h-full w-full overflow-hidden bg-background text-foreground"
     style={{ ["--brand" as any]: brandColor }}
   >
-    <div className="relative h-56 overflow-hidden bg-zinc-900">
+    <div className="relative h-56 overflow-hidden bg-secondary">
       <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
-      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
       <div className="absolute left-5 right-5 bottom-5">
         <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: brandColor }}>{brandName}</p>
         <h3 className="mt-1 text-3xl font-black uppercase leading-none">Plano Elite</h3>
@@ -91,7 +91,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
     <div className="space-y-4 p-5">
       <div className="grid grid-cols-3 gap-2">
         {["Treino", "Dieta", "Check-in"].map((item) => (
-          <div key={item} className="rounded-lg border border-white/10 bg-zinc-900 p-3 text-center">
+          <div key={item} className="rounded-none border border-white/10 bg-secondary/50 p-3 text-center">
             <p className="text-[9px] font-black uppercase tracking-wide text-white">{item}</p>
           </div>
         ))}
@@ -107,7 +107,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
         </div>
         <div className="space-y-2">
           {["Supino inclinado", "Remada curvada", "Agachamento livre"].map((item, i) => (
-            <div key={item} className="flex items-center justify-between rounded-lg bg-zinc-950 p-3">
+            <div key={item} className="flex items-center justify-between rounded-lg bg-background p-3">
               <span className="text-xs font-bold text-gray-200">{item}</span>
               <span className="text-[10px] font-black" style={{ color: brandColor }}>{i + 3}x12</span>
             </div>
@@ -116,11 +116,11 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
+        <div className="rounded-none border border-white/10 bg-secondary/50 p-4">
           <p className="text-2xl font-black" style={{ color: brandColor }}>87%</p>
           <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-zinc-900 p-4">
+        <div className="rounded-xl border border-white/10 bg-secondary p-4">
           <p className="text-2xl font-black" style={{ color: brandColor }}>+4kg</p>
           <p className="text-[10px] uppercase text-gray-400">Carga média</p>
         </div>
@@ -130,7 +130,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
 );
 
 const renderScreenMedia = (url: string) => {
-  if (!url) return <div className="h-full w-full bg-zinc-900 flex items-center justify-center text-zinc-700 text-[10px] uppercase font-black">Sem mídia</div>;
+  if (!url) return <div className="h-full w-full bg-secondary flex items-center justify-center text-zinc-700 text-[10px] uppercase font-black">Sem mídia</div>;
   const isVideo = url.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/) || url.includes('video') || url.includes('.mp4');
   if (isVideo) {
     return <video src={url} autoPlay muted loop playsInline className="h-full w-full object-cover" />;
@@ -139,12 +139,12 @@ const renderScreenMedia = (url: string) => {
 };
 
 const BRAND_COLORS = [
-  { name: "Netflix", hex: "#E50914" },
-  { name: "Gold", hex: "#F5C518" },
-  { name: "Cyber", hex: "#00E5FF" },
-  { name: "Lime", hex: "#A3E635" },
-  { name: "Violet", hex: "#8B5CF6" },
-  { name: "Sunset", hex: "#FB923C" },
+  { name: "Bordeaux", hex: "#5E2129" },
+  { name: "Heritage Blue", hex: "#202C39" },
+  { name: "Old Gold", hex: "#BAA174" },
+  { name: "Forest Green", hex: "#22302A" },
+  { name: "Aubergine", hex: "#3A2B38" },
+  { name: "Graphite", hex: "#1F1F1F" },
 ];
 
 const Landing = () => {
@@ -156,7 +156,7 @@ const Landing = () => {
   const [students, setStudents] = useState(80);
   const [price, setPrice] = useState(400);
   const [brandName, setBrandName] = useState("Seu Coach Team");
-  const [brandColor, setBrandColor] = useState("#E50914");
+  const [brandColor, setBrandColor] = useState("#5E2129");
   const [screen1, setScreen1] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4");
   const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
@@ -327,9 +327,9 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-white overflow-x-hidden">
       {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/10">
         <Logo />
         <nav className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-widest text-gray-300">
           <a href="#coaches" className="hover:text-primary transition-colors">Coaches</a>
@@ -389,7 +389,7 @@ const Landing = () => {
               <div className="grid md:grid-cols-2 gap-8 mt-12">
                 <button 
                   onClick={() => setMode("aluno")}
-                  className="group relative p-8 bg-zinc-950/80 border border-white/10 rounded-sm hover:border-primary transition-all text-left overflow-hidden shadow-card"
+                  className="group relative p-8 bg-background/80 border border-white/10 rounded-none hover:border-primary transition-all text-left overflow-hidden shadow-card"
                 >
                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                     <UserRound size={120} />
@@ -404,7 +404,7 @@ const Landing = () => {
 
                 <button 
                   onClick={() => setMode("coach")}
-                  className="group relative p-8 bg-zinc-950/80 border border-white/10 rounded-sm hover:border-primary transition-all text-left overflow-hidden shadow-card"
+                  className="group relative p-8 bg-background/80 border border-white/10 rounded-sm hover:border-primary transition-all text-left overflow-hidden shadow-card"
                 >
                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                     <TrendingUp size={120} />
@@ -448,7 +448,7 @@ const Landing = () => {
                       value={coachLink}
                       onChange={(e) => setCoachLink(e.target.value)}
                       placeholder="alphacoach.app/seucoach" 
-                      className="h-16 bg-zinc-900/50 border-white/10 text-xl font-bold"
+                      className="h-16 bg-secondary/50 border-white/10 text-xl font-bold"
                       autoFocus
                     />
                     <Button type="submit" size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 px-8 rounded-xl uppercase">
@@ -470,7 +470,7 @@ const Landing = () => {
                           value={searchCoach}
                           onChange={(e) => setSearchCoach(e.target.value)}
                           placeholder="Nome do coach ou equipe..." 
-                          className="h-16 pl-12 bg-zinc-900/50 border-white/10 text-xl font-bold"
+                          className="h-16 pl-12 bg-secondary/50 border-white/10 text-xl font-bold"
                         />
                       </div>
                       <Button type="submit" size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 px-8 rounded-xl uppercase">
@@ -488,7 +488,7 @@ const Landing = () => {
                           value={searchRegion}
                           onChange={(e) => setSearchRegion(e.target.value)}
                           placeholder="Cidade ou estado..." 
-                          className="h-16 pl-12 bg-zinc-900/50 border-white/10 text-xl font-bold"
+                          className="h-16 pl-12 bg-secondary/50 border-white/10 text-xl font-bold"
                         />
                       </div>
                       <Button type="submit" size="lg" variant="outline" className="border-primary/50 text-primary hover:bg-primary/10 font-bold h-16 px-8 rounded-xl uppercase">
@@ -558,21 +558,21 @@ const Landing = () => {
             <p className="text-gray-400 max-w-2xl mx-auto">Tudo o que você precisa para escalar seu negócio e oferecer uma experiência de elite.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+            <div className="p-8 bg-secondary/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle2 className="text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-4 uppercase">TREINOS CINEMATOGRÁFICOS</h3>
               <p className="text-gray-400 text-sm leading-relaxed">Vídeos em 4K com execuções perfeitas, cronômetro inteligente e histórico de cargas automático.</p>
             </div>
-            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+            <div className="p-8 bg-secondary/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle2 className="text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-4 uppercase">DIETA POR IA</h3>
               <p className="text-gray-400 text-sm leading-relaxed">Cálculo de macros, sugestões de cardápios e lista de compras inteligente integrada ao perfil do aluno.</p>
             </div>
-            <div className="p-8 bg-zinc-900/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+            <div className="p-8 bg-secondary/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle2 className="text-primary" />
               </div>
@@ -596,7 +596,7 @@ const Landing = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredCoaches.length === 0 ? (
-            <div className="col-span-full py-20 text-center bg-zinc-900/30 rounded-2xl border border-white/5">
+            <div className="col-span-full py-20 text-center bg-secondary/30 rounded-2xl border border-white/5">
               <p className="text-gray-500 font-bold uppercase tracking-widest">Nenhum coach encontrado nesta região.</p>
               <Button 
                 variant="link" 
@@ -609,7 +609,7 @@ const Landing = () => {
           ) : filteredCoaches.map((coach, i) => (
             <div 
               key={i} 
-              className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-zinc-900 border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
+              className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-secondary border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
             >
               {/* Video Background */}
               {coach.video.includes('instagram.com') ? (
@@ -633,7 +633,7 @@ const Landing = () => {
               
               {/* Overlays */}
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-              <div className="absolute inset-0 bg-black/40 group-hover:bg-transparent transition-colors duration-500" />
+              <div className="absolute inset-0 bg-background/40 group-hover:bg-transparent transition-colors duration-500" />
               
               {/* Content */}
               <div className="absolute inset-0 p-6 flex flex-col justify-end">
@@ -673,7 +673,7 @@ const Landing = () => {
 
 
       {/* Antes vs Depois */}
-      <section className="py-24 px-6 md:px-12 bg-black">
+      <section className="py-24 px-6 md:px-12 bg-background">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">A VIRADA DE CHAVE</h2>
@@ -681,7 +681,7 @@ const Landing = () => {
           </div>
 
           <div className="grid md:grid-cols-2 gap-6">
-            <div className="p-8 md:p-10 bg-zinc-950 border border-white/5 rounded-2xl relative overflow-hidden">
+            <div className="p-8 md:p-10 bg-background border border-white/5 rounded-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-red-950/30 rounded-full blur-3xl" />
               <div className="relative">
                 <span className="text-xs font-bold uppercase tracking-widest text-gray-500 mb-2 block">Antes do Alpha Coach</span>
@@ -705,7 +705,7 @@ const Landing = () => {
               </div>
             </div>
 
-            <div className="p-8 md:p-10 bg-gradient-to-br from-primary/10 to-zinc-950 border border-primary/30 rounded-2xl relative overflow-hidden">
+            <div className="p-8 md:p-10 bg-gradient-to-br from-primary/10 to-background border border-primary/30 rounded-2xl relative overflow-hidden">
               <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl" />
               <div className="relative">
                 <span className="text-xs font-bold uppercase tracking-widest text-primary mb-2 block">Com Alpha Coach</span>
@@ -748,7 +748,7 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="bg-zinc-950 border border-white/10 rounded-2xl p-6 md:p-10">
+          <div className="bg-background border border-white/10 rounded-2xl p-6 md:p-10">
             <div className="space-y-8 mb-10">
               <div>
                 <div className="flex justify-between items-center mb-3">
@@ -813,7 +813,7 @@ const Landing = () => {
       </section>
 
       {/* Sua marca, suas regras */}
-      <section className="py-24 px-6 md:px-12 bg-black">
+      <section className="py-24 px-6 md:px-12 bg-background">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
@@ -845,7 +845,7 @@ const Landing = () => {
           </div>
 
           <div className="relative">
-            <div className="relative overflow-hidden bg-zinc-950 border border-primary/30 rounded-2xl p-8 shadow-2xl">
+            <div className="relative overflow-hidden bg-background border border-primary/30 rounded-2xl p-8 shadow-2xl">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_10%,hsl(var(--primary)/0.22),transparent_38%)]" />
               <div className="relative flex items-center gap-2 mb-6 pb-4 border-b border-white/10">
                 <div className="w-3 h-3 rounded-full bg-red-500" />
@@ -863,26 +863,26 @@ const Landing = () => {
                   <div className="px-2 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded">PRO</div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="aspect-square bg-zinc-900 border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="aspect-square bg-secondary border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">TREINOS</p>
                   </div>
-                  <div className="aspect-square bg-zinc-900 border border-white/10 rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="aspect-square bg-secondary border border-white/10 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">DIETA</p>
                   </div>
-                  <div className="aspect-square bg-zinc-900 border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="aspect-square bg-secondary border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">EVOLUÇÃO</p>
                   </div>
                 </div>
-                <div className="h-32 bg-zinc-900 border border-white/10 rounded-lg flex flex-col items-center justify-center gap-2">
+                <div className="h-32 bg-secondary border border-white/10 rounded-lg flex flex-col items-center justify-center gap-2">
                   <Smartphone className="h-10 w-10 text-primary" />
                   <p className="text-xs text-gray-300 font-semibold">App próprio com sua marca</p>
                 </div>
                 <div className="grid grid-cols-2 gap-2 pt-2">
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-lg">
+                  <div className="p-3 bg-background/40 border border-white/5 rounded-lg">
                     <p className="text-2xl font-black text-primary">+128</p>
                     <p className="text-[10px] text-gray-500 uppercase">Alunos ativos</p>
                   </div>
-                  <div className="p-3 bg-black/40 border border-white/5 rounded-lg">
+                  <div className="p-3 bg-background/40 border border-white/5 rounded-lg">
                     <p className="text-2xl font-black text-primary">R$ 24k</p>
                     <p className="text-[10px] text-gray-500 uppercase">Faturamento/mês</p>
                   </div>
@@ -914,7 +914,7 @@ const Landing = () => {
 
           <div className="grid lg:grid-cols-5 gap-10 items-start">
             {/* Simulator Controls */}
-            <div className="lg:col-span-1 space-y-4 bg-zinc-950/50 p-6 rounded-2xl border border-white/10 lg:sticky lg:top-24">
+            <div className="lg:col-span-1 space-y-4 bg-background/50 p-6 rounded-2xl border border-white/10 lg:sticky lg:top-24">
               <h3 className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/10 pb-3 mb-4">Configuração</h3>
               
               <div className="space-y-4">
@@ -930,7 +930,7 @@ const Landing = () => {
                       value={s.val}
                       onChange={(e) => s.set(e.target.value)}
                       placeholder="URL da mídia..."
-                      className="bg-zinc-900 border-white/10 text-white focus:border-primary text-[10px] h-9"
+                      className="bg-secondary border-white/10 text-white focus:border-primary text-[10px] h-9"
                     />
                   </div>
                 ))}
@@ -961,11 +961,11 @@ const Landing = () => {
               ].map((screen, idx) => (
                 <div key={idx} className="relative group w-full max-w-[240px]">
                   <div className="absolute -inset-1 bg-primary/20 rounded-[2.5rem] blur-lg opacity-0 group-hover:opacity-100 transition duration-1000"></div>
-                  <div className="relative aspect-[9/19] w-full bg-zinc-950 rounded-[2.5rem] border-[5px] border-zinc-900 shadow-2xl overflow-hidden ring-1 ring-white/10">
+                  <div className="relative aspect-[9/19] w-full bg-background rounded-[2.5rem] border-[5px] border-secondary shadow-2xl overflow-hidden ring-1 ring-white/10">
                     {/* Notch */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-900 rounded-b-lg z-20" />
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-secondary rounded-b-lg z-20" />
                     
-                    <div className="h-full w-full relative z-10 bg-zinc-900">
+                    <div className="h-full w-full relative z-10 bg-secondary">
                       {renderScreenMedia(screen.url)}
                     </div>
                     
@@ -993,7 +993,7 @@ const Landing = () => {
       </section>
 
       {/* Paz de espírito financeira */}
-      <section className="py-24 px-6 md:px-12 bg-black">
+      <section className="py-24 px-6 md:px-12 bg-background">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
@@ -1012,7 +1012,7 @@ const Landing = () => {
           </div>
 
           <div className="space-y-3">
-            <div className="flex items-center justify-between p-6 bg-zinc-950 border border-white/10 rounded-xl">
+            <div className="flex items-center justify-between p-6 bg-background border border-white/10 rounded-xl">
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Aluno paga no app</p>
                 <p className="text-3xl font-black text-white">R$ 200</p>
@@ -1024,7 +1024,7 @@ const Landing = () => {
               <ArrowRight className="h-6 w-6 text-primary rotate-90" />
             </div>
 
-            <div className="flex items-center justify-between p-4 bg-zinc-950/50 border border-white/5 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-background/50 border border-white/5 rounded-xl">
               <p className="text-[10px] uppercase tracking-widest text-gray-500">Taxa Alpha Coach</p>
               <p className="text-xl font-bold text-gray-500">- R$ 20</p>
             </div>
@@ -1033,7 +1033,7 @@ const Landing = () => {
               <ArrowRight className="h-6 w-6 text-primary rotate-90" />
             </div>
 
-            <div className="flex items-center justify-between p-6 bg-gradient-to-br from-primary/20 to-zinc-950 border border-primary/40 rounded-xl">
+            <div className="flex items-center justify-between p-6 bg-gradient-to-br from-primary/20 to-background border border-primary/40 rounded-xl">
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-primary mb-1">Cai na sua conta</p>
                 <p className="text-3xl font-black text-primary text-glow-primary">R$ 180</p>
@@ -1089,17 +1089,17 @@ const Landing = () => {
             {/* Phone Stack Effect */}
             <div className="relative">
               {/* Back Phone */}
-              <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[-10deg] hidden md:block">
+              <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-background rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[-10deg] hidden md:block">
                 <DemoAppScreen mode="stats" brandName={brandName} brandColor={brandColor} />
               </div>
               
               {/* Main Phone */}
-              <div className="relative w-[300px] h-[600px] bg-zinc-950 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
+              <div className="relative w-[300px] h-[600px] bg-background rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-zinc-800 rounded-b-xl z-20" />
                 {isUnlocked ? (
                   <DemoAppScreen mode="home" brandName={brandName} brandColor={brandColor} />
                 ) : (
-                  <div className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
+                  <div className="absolute inset-0 bg-background/60 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
                     <Lock className="h-10 w-10 text-primary mb-4" />
                     <p className="text-sm font-bold uppercase mb-6">Acesso Bloqueado</p>
                     <Button onClick={() => setShowSimulador(true)} size="sm" className="bg-primary">Liberar com Email</Button>
@@ -1108,7 +1108,7 @@ const Landing = () => {
               </div>
 
               {/* Front Phone */}
-              <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-zinc-950 rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[10deg] hidden md:block z-20">
+              <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-background rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[10deg] hidden md:block z-20">
                 <DemoAppScreen mode="treino" brandName={brandName} brandColor={brandColor} />
               </div>
             </div>
@@ -1120,7 +1120,7 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 bg-black py-16 px-6">
+      <footer className="border-t border-white/5 bg-background py-16 px-6">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="flex flex-col items-center md:items-start gap-4">
             <Logo size={40} />
@@ -1151,7 +1151,7 @@ const Landing = () => {
 
       {/* Simulador Modal Overlay */}
       {showSimulador && (
-        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl flex items-center justify-center p-4">
           <button 
             onClick={() => setShowSimulador(false)}
             className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors text-4xl font-light z-[110]"
@@ -1160,10 +1160,10 @@ const Landing = () => {
           </button>
           
           <div className="flex flex-col lg:flex-row items-center gap-12 max-w-6xl w-full">
-            <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[650px] bg-zinc-950 rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden shrink-0">
+            <div className="relative w-[280px] md:w-[320px] h-[580px] md:h-[650px] bg-background rounded-[3rem] border-[10px] border-zinc-800 shadow-2xl overflow-hidden shrink-0">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-zinc-800 rounded-b-2xl z-20" />
               {!isUnlocked ? (
-                <div className="absolute inset-0 z-30 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
+                <div className="absolute inset-0 z-30 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center p-8 text-center">
                   <Lock className="h-12 w-12 text-primary mb-6 animate-pulse" />
                   <h3 className="text-xl font-bold uppercase mb-4 tracking-tighter">Área Restrita</h3>
                   <p className="text-sm text-gray-400 mb-8">

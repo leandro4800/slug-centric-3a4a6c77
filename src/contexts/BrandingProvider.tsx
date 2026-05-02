@@ -50,13 +50,13 @@ export const useBranding = () => useContext(BrandingContext);
 
 // Defaults Netflix
 const DEFAULTS = {
-  primary: "0 85% 45%",
-  primary_glow: "0 95% 55%",
-  accent: "0 85% 45%",
-  background: "0 0% 2%",
-  card: "0 0% 5%",
+  primary: "353 40% 26%",
+  primary_glow: "353 50% 35%",
+  accent: "39 34% 59%",
+  background: "0 0% 12%",
+  card: "0 0% 10%",
   foreground: "0 0% 98%",
-  border: "0 0% 12%",
+  border: "0 0% 18%",
 };
 
 const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {

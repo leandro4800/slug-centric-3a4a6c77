@@ -7,7 +7,7 @@ export const Logo = ({ size = 36, withText = true }: { size?: number; withText?:
       alt="AlphaCoach"
       width={size}
       height={size}
-      className="rounded-lg object-cover"
+      className="rounded-none object-cover"
       style={{ width: size, height: size }}
     />
     {withText && (
