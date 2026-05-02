@@ -120,11 +120,11 @@ const Clinica = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/40" />
         <div className="absolute bottom-5 left-5 right-5">
-          <p className="text-[11px] text-accent font-bold tracking-[0.25em] uppercase drop-shadow-lg">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
+          <p className="text-[11px] text-primary font-bold tracking-[0.25em] uppercase drop-shadow-lg">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
           <h1 className="font-display text-4xl mt-1.5 leading-[0.95] drop-shadow-2xl">CENTRO DE ANÁLISE<br />METABÓLICA</h1>
           <div className="flex items-center gap-2 mt-2">
-            <div className="h-1 w-10 bg-accent rounded-full" />
-            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Dr. IA — Performance & Longevidade</p>
+            <div className="h-1 w-10 bg-primary rounded-full shadow-glow" />
+            <p className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">Dr. IA — Performance & Longevidade</p>
           </div>
         </div>
       </div>
@@ -153,21 +153,21 @@ const Clinica = () => {
         {isAnalyzing ? (
           <div className="py-16 flex flex-col items-center justify-center text-center space-y-6">
             <div className="relative w-32 h-40">
-              <div className="absolute inset-0 bg-card border-2 border-accent/40 rounded-lg shadow-lg overflow-hidden">
-                <FileText className="absolute inset-0 m-auto h-16 w-16 text-accent/30" strokeWidth={1} />
+              <div className="absolute inset-0 bg-card border-2 border-primary/40 rounded-none shadow-lg overflow-hidden">
+                <FileText className="absolute inset-0 m-auto h-16 w-16 text-primary/30" strokeWidth={1} />
                 <div className="absolute inset-x-3 top-3 space-y-1.5">
-                  <div className="h-1 bg-accent/20 rounded w-3/4" />
-                  <div className="h-1 bg-accent/20 rounded w-full" />
-                  <div className="h-1 bg-accent/20 rounded w-2/3" />
+                  <div className="h-1 bg-primary/20 rounded w-3/4" />
+                  <div className="h-1 bg-primary/20 rounded w-full" />
+                  <div className="h-1 bg-primary/20 rounded w-2/3" />
                 </div>
                 <div className="absolute inset-x-3 bottom-3 space-y-1.5">
-                  <div className="h-1 bg-accent/20 rounded w-full" />
-                  <div className="h-1 bg-accent/20 rounded w-1/2" />
+                  <div className="h-1 bg-primary/20 rounded w-full" />
+                  <div className="h-1 bg-primary/20 rounded w-1/2" />
                 </div>
-                <div className="absolute inset-x-0 h-0.5 bg-accent shadow-[0_0_12px_2px_hsl(var(--accent))] animate-scan" />
-                <div className="absolute inset-x-0 h-8 bg-gradient-to-b from-accent/30 to-transparent animate-scan" />
+                <div className="absolute inset-x-0 h-0.5 bg-primary shadow-[0_0_12px_2px_hsl(var(--primary))] animate-scan" />
+                <div className="absolute inset-x-0 h-8 bg-gradient-to-b from-primary/30 to-transparent animate-scan" />
               </div>
-              <div className="absolute -top-3 -right-3 bg-accent text-accent-foreground rounded-full p-2 shadow-lg animate-pulse">
+              <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground rounded-none p-2 shadow-lg animate-pulse">
                 <ScanLine className="h-4 w-4" />
               </div>
             </div>
@@ -198,22 +198,22 @@ const Clinica = () => {
               </Button>
             ))}
 
-            <div className="bg-card/40 border border-border rounded-2xl p-5 mt-5">
+            <div className="bg-card/40 border border-border rounded-none p-5 mt-5">
               <div className="flex items-center gap-2 mb-3">
-                <Stethoscope className="h-4 w-4 text-accent" />
-                <h3 className="font-display text-base uppercase">Como funciona</h3>
+                <Stethoscope className="h-4 w-4 text-primary" />
+                <h3 className="font-display text-base uppercase tracking-widest text-primary">Como funciona</h3>
               </div>
               <ol className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">1.</span>
+                  <span className="text-primary font-bold">1.</span>
                   <span>Envie seu exame (PDF recomendado para maior precisão)</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">2.</span>
+                  <span className="text-primary font-bold">2.</span>
                   <span>O Dr. IA extrai biomarcadores e calcula seu score de performance</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">3.</span>
+                  <span className="text-primary font-bold">3.</span>
                   <span>Acesse o parecer técnico e as sugestões de otimização</span>
                 </li>
               </ol>
@@ -241,7 +241,7 @@ const Clinica = () => {
           <div className="space-y-4 animate-in fade-in duration-500">
             {isLoadingAnalyses ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="h-8 w-8 text-accent animate-spin" />
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
             ) : analyses?.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground">
