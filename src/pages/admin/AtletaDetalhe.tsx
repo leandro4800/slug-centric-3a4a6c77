@@ -470,20 +470,6 @@ const AtletaDetalhe = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <Button
-            className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
-            onClick={() => navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}`)}
-          >
-            <Upload className="h-4 w-4 mr-2" /> Importar Treino
-          </Button>
-          <Button
-            className="h-14 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider shadow-glow"
-            onClick={() => toast.info("Em breve: importador de dieta")}
-          >
-            <Upload className="h-4 w-4 mr-2" /> Importar Dieta
-          </Button>
-        </div>
 
         <div className="space-y-2">
           <button
