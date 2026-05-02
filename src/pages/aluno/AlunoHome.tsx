@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Settings, Play, Volume2, VolumeX, Stethoscope, ChevronRight } from "lucide-react";
+import { Play, Volume2, VolumeX, Stethoscope, ChevronRight, User } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
@@ -64,21 +64,24 @@ const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) =
 
 const AlunoHome = () => {
   const { tenant } = useBranding();
+  const { user } = useAuth();
   const { slug } = useParams();
   const [vlogs, setVlogs] = useState<VlogPost[]>([]);
-
-  const featured = vlogs[0];
-  const ytId = featured ? extractYouTubeId(featured.url) : (isDirectVideo(tenant?.hero_url) || extractYouTubeId(tenant?.hero_url) ? null : extractYouTubeId(tenant?.hero_url));
-  
-  // Se não houver vlog, mas houver um vídeo de hero do tenant
-  const tenantHeroVideoId = !featured ? extractYouTubeId(tenant?.hero_url) : null;
-  const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
-
-  const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
-  const [expanded, setExpanded] = useState(false);
-  const [muted, setMuted] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    const checkRole = async () => {
+      if (!user) return;
+      const { data } = await supabase.rpc("has_role", {
+        _user_id: user.id,
+        _role: "admin",
+      });
+      setIsAdmin(Boolean(data));
+    };
+    checkRole();
+  }, [user]);
+
+  const featured = vlogs[0];
     if (!tenant?.id) return;
     void supabase
       .from("vlog_posts")
