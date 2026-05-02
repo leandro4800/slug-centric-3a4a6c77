@@ -204,7 +204,7 @@ const AdminFaturamento = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-1"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-white/40 font-bold italic">Saldo Disponível</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60 font-bold italic">Saldo Disponível</p>
             <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white">
               {formatBRL(totalNet)}
             </h1>
@@ -212,7 +212,7 @@ const AdminFaturamento = () => {
               <Badge variant="outline" className="bg-primary/20 text-primary border-primary/40 uppercase text-[10px] tracking-widest font-bold px-3 py-1 rounded-none border-l-4">
                 PLATAFORMA ATIVA
               </Badge>
-              <p className="text-xs text-white/40">{formatBRL(totalCommission)} retidos (10%)</p>
+              <p className="text-sm text-white/70 font-medium">{formatBRL(totalCommission)} retidos (10%)</p>
             </div>
           </motion.div>
           
