@@ -30,6 +30,7 @@ import DrIA from "./pages/aluno/DrIA";
 import Anamnese from "./pages/aluno/Anamnese";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AdminMontarTreino from "./pages/admin/AdminMontarTreino";
+import AdminMontarDieta from "./pages/admin/AdminMontarDieta";
 import MeusAtletas from "./pages/admin/MeusAtletas";
 import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
 import AdminCoaches from "./pages/admin/AdminCoaches";
@@ -104,6 +105,9 @@ const App = () => (
             } />
             <Route path="/:slug/admin/montar-treino" element={
               <BrandingProvider><RequireAuth><AdminMontarTreino /></RequireAuth></BrandingProvider>
+            } />
+            <Route path="/:slug/admin/montar-dieta" element={
+              <BrandingProvider><RequireAuth><AdminMontarDieta /></RequireAuth></BrandingProvider>
             } />
             <Route path="/:slug/admin/atletas" element={
               <BrandingProvider><RequireAuth><MeusAtletas /></RequireAuth></BrandingProvider>

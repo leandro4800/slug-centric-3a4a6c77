@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
@@ -72,11 +72,12 @@ const sugerirDivisoes = (frequencia: number, sexo: string | null, nivel: string)
 
 const AdminMontarTreino = () => {
   const { slug } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { tenant } = useBranding();
   const { user } = useAuth();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
-  const [alunoId, setAlunoId] = useState<string>("");
+  const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
     objetivo: "hipertrofia", frequencia_semanal: 4, tempo_treino: "Iniciante",
@@ -159,7 +160,7 @@ const AdminMontarTreino = () => {
     else toast.success("Perfil salvo.");
   };
 
-  const gerarComIA = async () => {
+  const gerarComIA = useCallback(async () => {
     if (!alunoId || !tenant) {
       toast.error("Selecione um aluno.");
       return;
@@ -201,7 +202,13 @@ const AdminMontarTreino = () => {
     } finally {
       setGenerating(false);
     }
-  };
+  }, [alunoId, tenant, perfil, divisoes]);
+
+  useEffect(() => {
+    if (searchParams.get("auto") === "true" && alunoId && tenant && !generating && exercicios.length === 0) {
+      void gerarComIA();
+    }
+  }, [searchParams, alunoId, tenant, generating, exercicios.length, gerarComIA]);
 
   const salvarPrescricao = async () => {
     if (!alunoId || !tenant) return;

@@ -125,6 +125,7 @@ const AtletaDetalhe = () => {
   const [show7DobrasIntro, setShow7DobrasIntro] = useState(false);
   const [anamnese, setAnamnese] = useState<any>(null);
   const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
+  const [ultimaAvaliacao, setUltimaAvaliacao] = useState<any>(null);
   const [loadingAnamnese, setLoadingAnamnese] = useState(false);
 
   useEffect(() => {
@@ -143,7 +144,13 @@ const AtletaDetalhe = () => {
       return;
     }
 
-    const [{ data: a }, { data: pt }, { data: ass }, { data: ana }] = await Promise.all([
+    const [
+      { data: a }, 
+      { data: pt }, 
+      { data: ass }, 
+      { data: ana },
+      { data: aval }
+    ] = await Promise.all([
       supabase
         .from("perfis")
         .select("id, nome_completo, email, avatar_url, tenant_id")
@@ -172,11 +179,19 @@ const AtletaDetalhe = () => {
         .select("*")
         .eq("aluno_id", atletaId!)
         .maybeSingle(),
+      supabase
+        .from("avaliacoes_fisicas")
+        .select("*")
+        .eq("aluno_id", atletaId!)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
     setAssinatura((ass as any) || null);
     setAnamnese(ana);
+    setUltimaAvaliacao(aval);
     setNivel(TEMPO_TO_NIVEL((pt as PerfilTreino | null)?.tempo_treino));
     setLoading(false);
   };
@@ -299,6 +314,10 @@ const AtletaDetalhe = () => {
     const partes = [peso, bf].filter(Boolean).join(" · ");
     return `Treinamento ${partes || "—"} — ${nivel.toUpperCase()}`;
   }, [perfil, nivel]);
+
+  const canGenerate = useMemo(() => {
+    return !!anamnese && !!perfil && !!ultimaAvaliacao;
+  }, [anamnese, perfil, ultimaAvaliacao]);
 
   if (loading) {
     return (
@@ -582,6 +601,45 @@ const AtletaDetalhe = () => {
           <div className="h-28 rounded-lg bg-background/40 flex items-center justify-center text-xs text-muted-foreground">
             Sem registros ainda
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Button
+            className={`h-14 font-display text-sm uppercase tracking-wider ${
+              canGenerate 
+                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
+            }`}
+            disabled={!canGenerate}
+            onClick={() => {
+              if (canGenerate) {
+                navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}&auto=true`);
+              } else {
+                toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
+              }
+            }}
+          >
+            <Dumbbell className="h-5 w-5 mr-2" />
+            Montar Treino
+          </Button>
+          <Button
+            className={`h-14 font-display text-sm uppercase tracking-wider ${
+              canGenerate 
+                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
+            }`}
+            disabled={!canGenerate}
+            onClick={() => {
+              if (canGenerate) {
+                navigate(`/${slug}/admin/montar-dieta?aluno=${aluno.id}&auto=true`);
+              } else {
+                toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
+              }
+            }}
+          >
+            <Apple className="h-5 w-5 mr-2" />
+            Montar Dieta
+          </Button>
         </div>
       </main>
 
