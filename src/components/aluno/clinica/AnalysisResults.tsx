@@ -24,7 +24,7 @@ interface AnalysisResultsProps {
 export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes_medicamentos, aviso_medico }: AnalysisResultsProps) => {
   const getScoreColor = (s: number) => {
     if (s >= 80) return "text-green-500";
-    if (s >= 50) return "text-accent";
+    if (s >= 50) return "text-primary";
     return "text-red-500";
   };
 
@@ -39,7 +39,7 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
         <div className={cn("absolute -top-20 left-1/2 -translate-x-1/2 w-72 h-72 blur-[80px] opacity-30 rounded-full", scoreColor.replace("text-", "bg-"))} />
 
         <div className="flex items-center gap-2 mb-4 relative z-10">
-          <Stethoscope className="h-4 w-4 text-accent" />
+          <Stethoscope className="h-4 w-4 text-primary" />
           <h3 className="font-display text-sm uppercase tracking-[0.25em] text-muted-foreground">Score de Performance</h3>
         </div>
 
@@ -66,8 +66,8 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
       </div>
 
       {/* RESUMO */}
-      <div className="bg-gradient-to-br from-card/70 to-card/30 border border-border rounded-3xl p-6">
-        <h3 className="font-display text-lg mb-4 uppercase tracking-wider text-accent border-b border-accent/20 pb-2">Resumo Executivo</h3>
+      <div className="bg-gradient-to-br from-card/70 to-card/30 border border-border rounded-none p-6">
+        <h3 className="font-display text-lg mb-4 uppercase tracking-[0.2em] text-primary border-b border-primary/20 pb-2">Resumo Executivo</h3>
         <div className="prose prose-invert prose-sm max-w-none text-muted-foreground leading-relaxed">
           {(parecer ?? "").split('\n').map((para, i) => (
             para.trim() ? <p key={i} className="mb-4 last:mb-0">{para}</p> : null
@@ -76,13 +76,13 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
       </div>
 
       {/* CONDUTA */}
-      <div className="bg-gradient-to-br from-card/70 to-card/30 border border-border rounded-3xl p-6">
-        <h3 className="font-display text-lg mb-4 uppercase tracking-wider text-accent border-b border-accent/20 pb-2">Conduta Sugerida</h3>
+      <div className="bg-gradient-to-br from-card/70 to-card/30 border border-border rounded-none p-6">
+        <h3 className="font-display text-lg mb-4 uppercase tracking-[0.2em] text-primary border-b border-primary/20 pb-2">Conduta Sugerida</h3>
         <ul className="space-y-3">
           {conduta && conduta.length > 0 ? (
             conduta.map((item, i) => (
               <li key={i} className="flex gap-3 text-sm text-muted-foreground items-start">
-                <span className="text-accent font-bold mt-1 shrink-0">•</span>
+                <span className="text-primary font-bold mt-1 shrink-0">•</span>
                 <span>{item}</span>
               </li>
             ))
@@ -94,16 +94,16 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
 
       {/* SUGESTÕES DE MEDICAMENTOS */}
       {meds.length > 0 && (
-        <div className="bg-gradient-to-br from-accent/10 via-card/60 to-card/30 border border-accent/30 rounded-3xl p-6 shadow-[0_0_40px_-15px_hsl(var(--accent)/0.4)]">
-          <div className="flex items-center gap-2 mb-4 border-b border-accent/20 pb-2">
-            <Pill className="h-5 w-5 text-accent" />
-            <h3 className="font-display text-lg uppercase tracking-wider text-accent">Sugestões de Suporte</h3>
+        <div className="bg-gradient-to-br from-primary/10 via-card/60 to-card/30 border border-primary/30 rounded-none p-6 shadow-[0_0_40px_-15px_hsl(var(--primary)/0.4)]">
+          <div className="flex items-center gap-2 mb-4 border-b border-primary/20 pb-2">
+            <Pill className="h-5 w-5 text-primary" />
+            <h3 className="font-display text-lg uppercase tracking-[0.2em] text-primary">Sugestões de Suporte</h3>
           </div>
           <ul className="space-y-3">
             {meds.map((m, i) => (
               <li key={i} className="flex gap-3 text-sm text-foreground/90 items-start">
-                <div className="w-5 h-5 rounded-md bg-accent/20 border border-accent/40 flex items-center justify-center shrink-0 mt-0.5">
-                  <Pill className="h-3 w-3 text-accent" />
+                <div className="w-5 h-5 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 mt-0.5">
+                  <Pill className="h-3 w-3 text-primary" />
                 </div>
                 <span>{m}</span>
               </li>
@@ -113,7 +113,7 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
       )}
 
       {/* AVISO MÉDICO */}
-      <div className="bg-gradient-to-br from-amber-500/10 to-card/30 border border-amber-500/30 rounded-3xl p-5 flex gap-3 items-start">
+      <div className="bg-gradient-to-br from-amber-500/10 to-card/30 border border-amber-500/30 rounded-none p-5 flex gap-3 items-start">
         <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
         <div>
           <p className="font-display text-sm uppercase tracking-wider text-amber-500 mb-1">Aviso Médico</p>
@@ -123,7 +123,7 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
 
       {/* BIOMARCADORES */}
       <div className="space-y-4">
-        <h3 className="font-display text-lg px-1 uppercase tracking-wider">Biomarcadores</h3>
+        <h3 className="font-display text-lg px-1 uppercase tracking-[0.2em] text-primary">Biomarcadores</h3>
         <div className="grid grid-cols-1 gap-3">
           {(marcadores ?? []).map((m, i) => (
             <MarkerCard

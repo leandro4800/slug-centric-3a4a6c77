@@ -52,7 +52,7 @@ export const MarkerCard = ({ nome, valor, unidade, status, observacao, sugestao_
 
   return (
     <div className={cn(
-      "rounded-2xl border p-4 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5",
+      "rounded-none border p-4 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5",
       config.bg, config.border, config.glow
     )}>
       <div className="flex justify-between items-start mb-2 gap-3">
@@ -78,11 +78,11 @@ export const MarkerCard = ({ nome, valor, unidade, status, observacao, sugestao_
 
       {showMed && (
         <div className="mt-3 pt-3 border-t border-border/50 flex gap-2 items-start">
-          <div className="w-6 h-6 rounded-md bg-accent/20 border border-accent/30 flex items-center justify-center shrink-0">
-            <Pill className="h-3 w-3 text-accent" />
+          <div className="w-6 h-6 rounded-none bg-primary/20 border border-primary/30 flex items-center justify-center shrink-0">
+            <Pill className="h-3 w-3 text-primary" />
           </div>
           <div className="min-w-0">
-            <p className="text-[10px] uppercase font-bold tracking-wider text-accent mb-0.5">Sugestão</p>
+            <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-primary mb-0.5">Sugestão</p>
             <p className="text-xs leading-relaxed text-foreground/90">{sugestao_medicamento}</p>
           </div>
         </div>

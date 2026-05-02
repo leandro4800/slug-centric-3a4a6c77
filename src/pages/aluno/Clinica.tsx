@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
@@ -119,56 +120,54 @@ const Clinica = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/40" />
         <div className="absolute bottom-5 left-5 right-5">
-          <p className="text-[11px] text-accent font-bold tracking-[0.25em] uppercase drop-shadow-lg">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
+          <p className="text-[11px] text-primary font-bold tracking-[0.25em] uppercase drop-shadow-lg">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
           <h1 className="font-display text-4xl mt-1.5 leading-[0.95] drop-shadow-2xl">CENTRO DE ANÁLISE<br />METABÓLICA</h1>
           <div className="flex items-center gap-2 mt-2">
-            <div className="h-1 w-10 bg-accent rounded-full" />
-            <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Dr. IA — Performance & Longevidade</p>
+            <div className="h-1 w-10 bg-primary rounded-full shadow-glow" />
+            <p className="text-[11px] text-muted-foreground uppercase tracking-[0.2em]">Dr. IA — Performance & Longevidade</p>
           </div>
         </div>
       </div>
 
       <div className="px-5 pb-6">
-        <div className="flex bg-card rounded-xl p-1 mb-5">
-          <button
+        <div className="flex bg-card/80 border border-border rounded-none p-1 mb-5">
+          <Button
+            variant={tab === "nova" ? "default" : "ghost"}
             onClick={() => {
               setTab("nova");
               setCurrentAnalysis(null);
             }}
-            className={`flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors ${
-              tab === "nova" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-            }`}
+            className="flex-1"
           >
             Nova análise
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={tab === "clinica" ? "default" : "ghost"}
             onClick={() => setTab("clinica")}
-            className={`flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors ${
-              tab === "clinica" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-            }`}
+            className="flex-1"
           >
             Clínica
-          </button>
+          </Button>
         </div>
 
         {isAnalyzing ? (
           <div className="py-16 flex flex-col items-center justify-center text-center space-y-6">
             <div className="relative w-32 h-40">
-              <div className="absolute inset-0 bg-card border-2 border-accent/40 rounded-lg shadow-lg overflow-hidden">
-                <FileText className="absolute inset-0 m-auto h-16 w-16 text-accent/30" strokeWidth={1} />
+              <div className="absolute inset-0 bg-card border-2 border-primary/40 rounded-none shadow-lg overflow-hidden">
+                <FileText className="absolute inset-0 m-auto h-16 w-16 text-primary/30" strokeWidth={1} />
                 <div className="absolute inset-x-3 top-3 space-y-1.5">
-                  <div className="h-1 bg-accent/20 rounded w-3/4" />
-                  <div className="h-1 bg-accent/20 rounded w-full" />
-                  <div className="h-1 bg-accent/20 rounded w-2/3" />
+                  <div className="h-1 bg-primary/20 rounded w-3/4" />
+                  <div className="h-1 bg-primary/20 rounded w-full" />
+                  <div className="h-1 bg-primary/20 rounded w-2/3" />
                 </div>
                 <div className="absolute inset-x-3 bottom-3 space-y-1.5">
-                  <div className="h-1 bg-accent/20 rounded w-full" />
-                  <div className="h-1 bg-accent/20 rounded w-1/2" />
+                  <div className="h-1 bg-primary/20 rounded w-full" />
+                  <div className="h-1 bg-primary/20 rounded w-1/2" />
                 </div>
-                <div className="absolute inset-x-0 h-0.5 bg-accent shadow-[0_0_12px_2px_hsl(var(--accent))] animate-scan" />
-                <div className="absolute inset-x-0 h-8 bg-gradient-to-b from-accent/30 to-transparent animate-scan" />
+                <div className="absolute inset-x-0 h-0.5 bg-primary shadow-[0_0_12px_2px_hsl(var(--primary))] animate-scan" />
+                <div className="absolute inset-x-0 h-8 bg-gradient-to-b from-primary/30 to-transparent animate-scan" />
               </div>
-              <div className="absolute -top-3 -right-3 bg-accent text-accent-foreground rounded-full p-2 shadow-lg animate-pulse">
+              <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground rounded-none p-2 shadow-lg animate-pulse">
                 <ScanLine className="h-4 w-4" />
               </div>
             </div>
@@ -182,38 +181,39 @@ const Clinica = () => {
         ) : tab === "nova" && !currentAnalysis ? (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
-              <button
+              <Button
                 key={a.title}
+                variant="secondary"
                 onClick={a.onClick}
-                className={`w-full bg-gradient-to-br from-card/80 to-card/30 ${a.dashed ? "border-dashed border-2" : "border"} border-accent/40 rounded-2xl p-4 flex items-center gap-4 text-left hover:from-card hover:to-card/50 hover:scale-[1.01] hover:border-accent/70 transition-all duration-300 shadow-[0_8px_24px_-12px_hsl(0_0%_0%/0.6)]`}
+                className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--accent)/0.5)]">
-                  <a.icon className="h-5 w-5 text-accent" />
+                <div className="w-12 h-12 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
+                  <a.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{a.sub}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 tracking-widest">{a.sub}</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-accent" />
-              </button>
+                <ChevronRight className="h-4 w-4 text-primary" />
+              </Button>
             ))}
 
-            <div className="bg-card/40 border border-border rounded-2xl p-5 mt-5">
+            <div className="bg-card/40 border border-border rounded-none p-5 mt-5">
               <div className="flex items-center gap-2 mb-3">
-                <Stethoscope className="h-4 w-4 text-accent" />
-                <h3 className="font-display text-base uppercase">Como funciona</h3>
+                <Stethoscope className="h-4 w-4 text-primary" />
+                <h3 className="font-display text-base uppercase tracking-widest text-primary">Como funciona</h3>
               </div>
               <ol className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">1.</span>
+                  <span className="text-primary font-bold">1.</span>
                   <span>Envie seu exame (PDF recomendado para maior precisão)</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">2.</span>
+                  <span className="text-primary font-bold">2.</span>
                   <span>O Dr. IA extrai biomarcadores e calcula seu score de performance</span>
                 </li>
                 <li className="flex gap-2">
-                  <span className="text-accent font-bold">3.</span>
+                  <span className="text-primary font-bold">3.</span>
                   <span>Acesse o parecer técnico e as sugestões de otimização</span>
                 </li>
               </ol>
@@ -221,12 +221,13 @@ const Clinica = () => {
           </div>
         ) : currentAnalysis ? (
           <div className="animate-in fade-in zoom-in-95 duration-500">
-            <button 
+            <Button
+              variant="link"
               onClick={() => setCurrentAnalysis(null)}
-              className="mb-4 text-xs text-accent flex items-center gap-1 uppercase font-bold"
+              className="mb-4 text-primary p-0 h-auto self-start"
             >
               <ChevronRight className="h-3 w-3 rotate-180" /> Fazer nova análise
-            </button>
+            </Button>
             <AnalysisResults 
               score={currentAnalysis.score_performance}
               parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
@@ -240,23 +241,25 @@ const Clinica = () => {
           <div className="space-y-4 animate-in fade-in duration-500">
             {isLoadingAnalyses ? (
               <div className="py-10 flex justify-center">
-                <Loader2 className="h-8 w-8 text-accent animate-spin" />
+                <Loader2 className="h-8 w-8 text-primary animate-spin" />
               </div>
             ) : analyses?.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground">
                 <History className="h-10 w-10 mx-auto mb-3 opacity-20" />
                 <p>Nenhuma análise encontrada.</p>
-                <button 
+                <Button
+                  variant="link"
                   onClick={() => setTab("nova")}
-                  className="text-accent text-sm font-bold mt-2 uppercase"
+                  className="text-primary mt-2"
                 >
                   Começar agora
-                </button>
+                </Button>
               </div>
             ) : (
               analyses?.map((analise: any) => (
-                <button
+                <Button
                   key={analise.id}
+                  variant="secondary"
                   onClick={() => setCurrentAnalysis({
                     score_performance: analise.score_performance,
                     parecer_tecnico: analise.parecer_ia,
@@ -273,17 +276,17 @@ const Clinica = () => {
                       sugestao_medicamento: (analise.dados_extraidos?.marcadores ?? []).find((m: any) => m.codigo === b.codigo)?.sugestao_medicamento
                     }))
                   })}
-                  className="w-full bg-gradient-to-br from-card/80 to-card/30 border border-border rounded-2xl p-4 flex items-center gap-4 text-left hover:scale-[1.01] hover:border-accent/40 transition-all duration-300 shadow-[0_8px_24px_-12px_hsl(0_0%_0%/0.6)]"
+                  className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
                 >
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-accent/30 to-accent/5 border border-accent/40 flex items-center justify-center font-bold text-accent font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--accent)/0.5)]">
+                  <div className="w-14 h-14 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-primary font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
                     {analise.score_performance}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-display text-base uppercase tracking-wide">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
-                    <p className="text-xs text-muted-foreground">{analise.exames_biomarcadores.length} marcadores detectados</p>
+                    <p className="text-[10px] text-muted-foreground tracking-widest">{analise.exames_biomarcadores.length} marcadores detectados</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-accent shrink-0" />
-                </button>
+                  <ChevronRight className="h-4 w-4 text-primary shrink-0" />
+                </Button>
               ))
             )}
           </div>
