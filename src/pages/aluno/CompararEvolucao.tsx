@@ -141,17 +141,17 @@ const CompararEvolucao = () => {
   const formatAnalise = (text: string) => {
     return text.split('\n').map((line, i) => {
       const trimmedLine = line.trim();
-      if (!trimmedLine) return <div key={i} className="h-2" />;
+      if (!trimmedLine) return <div key={i} className="h-4" />;
       
       const isTitle = trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3;
       if (isTitle) {
         return (
-          <p key={i} className="text-primary font-bold mt-6 mb-3 tracking-[0.2em] text-[12px] uppercase border-b border-primary/20 pb-1">
+          <p key={i} className="text-primary font-normal mt-8 mb-4 tracking-[0.25em] text-[13px] uppercase border-b border-primary/30 pb-2">
             {trimmedLine}
           </p>
         );
       }
-      return <p key={i} className="text-zinc-200 text-[15px] leading-relaxed mb-3">{trimmedLine}</p>;
+      return <p key={i} className="text-white/90 text-[16px] leading-relaxed mb-4 font-light">{trimmedLine}</p>;
     });
   };
 
@@ -210,20 +210,20 @@ const CompararEvolucao = () => {
             <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
               <Scale className="h-5 w-5 text-primary mb-1" />
               <p className="text-[10px] uppercase text-muted-foreground tracking-widest">Peso</p>
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-medium text-white">
                 {antes.peso_kg}kg → {depois.peso_kg}kg
               </p>
-              <p className={`text-[10px] font-bold ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-[10px] font-medium ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {parseFloat(pesoDiff) > 0 ? '+' : ''}{pesoDiff}kg
               </p>
             </div>
             <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
               <Activity className="h-5 w-5 text-primary mb-1" />
               <p className="text-[10px] uppercase text-muted-foreground tracking-widest">BF%</p>
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-medium text-white">
                 {antes.bf_percentual || '--'}% → {depois.bf_percentual || '--'}%
               </p>
-              <p className={`text-[10px] font-bold ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-[10px] font-medium ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {parseFloat(bfDiff) > 0 ? '+' : ''}{bfDiff}%
               </p>
             </div>
@@ -277,7 +277,7 @@ const CompararEvolucao = () => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase">Sem foto</div>
                   )}
-                  <span className="absolute top-2 left-2 bg-black/80 text-white text-[8px] px-2 py-0.5 rounded uppercase font-bold tracking-tighter">Antes</span>
+                  <span className="absolute top-2 left-2 bg-black/80 text-white text-[8px] px-2 py-0.5 rounded uppercase font-medium tracking-tighter">Antes</span>
                 </div>
                 <div className="relative aspect-[3/4] bg-zinc-900 overflow-hidden border border-primary/20 shadow-glow-sm">
                   {urls[`depois_foto_${angulo}_url`] ? (
@@ -289,7 +289,7 @@ const CompararEvolucao = () => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase">Sem foto</div>
                   )}
-                  <span className="absolute top-2 left-2 bg-primary text-white text-[8px] px-2 py-0.5 rounded uppercase font-bold tracking-tighter">Depois</span>
+                  <span className="absolute top-2 left-2 bg-primary text-white text-[8px] px-2 py-0.5 rounded uppercase font-medium tracking-tighter">Depois</span>
                 </div>
               </div>
             </div>
