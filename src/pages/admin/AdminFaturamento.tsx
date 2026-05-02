@@ -184,7 +184,7 @@ const AdminFaturamento = () => {
   ];
 
   return (
-    <div className="relative min-h-screen bg-black text-white font-sans selection:bg-red-600 selection:text-white">
+    <div className="relative min-h-screen bg-black text-white font-sans selection:bg-primary selection:text-white">
       {/* Logo de fundo Alpha Coach */}
       <div
         aria-hidden
@@ -195,8 +195,8 @@ const AdminFaturamento = () => {
       <div className="relative z-10">
       {/* Netflix-style Header Banner */}
       <div className="relative h-[40vh] w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-red-900/20 via-black/60 to-black z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-red-600/10 via-transparent to-transparent opacity-50" />
+        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-black/60 to-black z-0" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
         
         <header className="relative z-10 px-5 pt-6 flex items-center justify-between max-w-4xl mx-auto w-full">
           <button
