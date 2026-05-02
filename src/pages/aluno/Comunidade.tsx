@@ -28,7 +28,7 @@ const Comunidade = () => {
         >
           <ArrowLeft className="h-4 w-4" /> Voltar
         </Button>
-        <p className="text-xs text-accent uppercase tracking-widest mt-5">{tenant?.nome || "TIME"}</p>
+        <p className="text-[10px] text-primary uppercase tracking-[0.3em] font-bold mt-5">{tenant?.nome || "TIME"}</p>
         <h1 className="font-display text-4xl mt-1">COMUNIDADE ELITE</h1>
       </div>
 
