@@ -20,10 +20,10 @@
     --popover: 0 0% 3%;
     --popover-foreground: 0 0% 98%;
 
-    /* Premium Ferrari Red - LOCKED */
-    --primary: 355 100% 48% !important; /* #E00000 - Ferrari Red */
-    --primary-foreground: 0 0% 100% !important;
-    --primary-glow: 355 100% 60% !important;
+    /* Premium Ferrari Red - Default Brand */
+    --primary: 355 100% 48%; /* #E00000 - Ferrari Red */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 355 100% 60%;
 
     /* Premium Navy Heritage Blue */
     --secondary: 211 28% 17%; /* #202C39 - Azul Marinho Heritage */
@@ -50,15 +50,15 @@
     /* Sharp Corners for Authority - LOCKED */
     --radius: 0rem !important;
 
-    /* Cinematic Mirrored Gradients - LOCKED */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%) !important;
+    /* Cinematic Mirrored Gradients - Default */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%);
     --gradient-gold: linear-gradient(135deg, #EAD6A5 0%, #BAA174 50%, #8E794F 100%);
     --gradient-silver: linear-gradient(135deg, #FFFFFF 0%, #CCCCCC 50%, #999999 100%);
     
-    /* Mirrored/Metallic Button Effect - Ferrari Chrome Style - LOCKED */
-    --btn-mirror: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 52%, rgba(0,0,0,0.3) 100%) !important;
-    --btn-shine: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.4) 50%, transparent 75%) !important;
-    --btn-border: rgba(255,255,255,0.6) !important;
+    /* Mirrored/Metallic Button Effect - Ferrari Chrome Style */
+    --btn-mirror: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 52%, rgba(0,0,0,0.3) 100%);
+    --btn-shine: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.4) 50%, transparent 75%);
+    --btn-border: rgba(255,255,255,0.6);
 
     /* Shadows */
     --shadow-premium: 0 10px 40px -10px rgba(0,0,0,0.8);
@@ -89,6 +89,7 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
   h1, h2, h3, .font-display {
+    @apply font-black uppercase tracking-widest;
     font-family: 'Bebas Neue', 'Inter', sans-serif;
     letter-spacing: 0.02em;
   }
