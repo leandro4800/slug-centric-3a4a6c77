@@ -327,9 +327,9 @@ const Landing = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-background text-foreground selection:bg-primary selection:text-white overflow-x-hidden">
       {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/5">
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/10">
         <Logo />
         <nav className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-widest text-gray-300">
           <a href="#coaches" className="hover:text-primary transition-colors">Coaches</a>
