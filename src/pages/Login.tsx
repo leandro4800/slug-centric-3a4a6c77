@@ -125,7 +125,7 @@ const Login = () => {
         <div className="relative bg-background/90 backdrop-blur-xl border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           <Tabs defaultValue="login">
-            <TabsList className="grid grid-cols-2 w-full mb-8 bg-secondary/50 p-1 rounded-none border border-white/5">
+            <TabsList className="grid grid-cols-2 w-full mb-8 bg-card p-1 rounded-none border border-white/5">
               <TabsTrigger value="login" className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs">Entrar</TabsTrigger>
               <TabsTrigger value="signup" className="rounded-none data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs">Criar conta</TabsTrigger>
             </TabsList>
