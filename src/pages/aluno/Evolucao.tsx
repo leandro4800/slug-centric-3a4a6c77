@@ -128,6 +128,12 @@ const Evolucao = () => {
           </p>
         </div>
 
+        {/* Histórico de Check-ins (com excluir) */}
+        <div className="mt-6 space-y-3">
+          <h3 className="font-display text-sm text-white tracking-widest uppercase">Histórico</h3>
+          <HistoricoCheckins refreshKey={refreshKey} onChanged={() => setRefreshKey(k => k + 1)} />
+        </div>
+
         {/* Gerador de Card Instagram */}
         <InstagramCardGenerator 
           userName={user?.user_metadata?.nome || "Você"} 
@@ -137,7 +143,7 @@ const Evolucao = () => {
         />
 
         {/* Botão de Check-in (Modal) */}
-        <CheckInModal />
+        <CheckInModal onSaved={() => setRefreshKey(k => k + 1)} />
       </div>
     </div>
   );
