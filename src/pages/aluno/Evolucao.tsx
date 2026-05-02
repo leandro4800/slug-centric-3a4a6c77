@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { TrendingUp, Brain, Plus, Instagram } from "lucide-react";
+import { useState, useEffect } from "react";
+import { TrendingUp, Brain, Plus, Instagram, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { TenantSymbol } from "@/components/TenantSymbol";
@@ -8,31 +8,54 @@ import { EvolutionChart } from "@/components/aluno/evolucao/EvolutionChart";
 import { BeforeAfterSlider } from "@/components/aluno/evolucao/BeforeAfterSlider";
 import { CheckInModal } from "@/components/aluno/evolucao/CheckInModal";
 import { InstagramCardGenerator } from "@/components/aluno/evolucao/InstagramCardGenerator";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 
 const Evolucao = () => {
   const [tab, setTab] = useState<"PESO" | "BF%">("PESO");
   const { tenant } = useBranding();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const [chartData, setChartData] = useState<any[]>([]);
+  const [beforeUrl, setBeforeUrl] = useState("https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop&q=60");
+  const [afterUrl, setAfterUrl] = useState("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=60");
 
-  // Mock data for initial state
-  const weightData = [
-    { date: "01/05", value: 85.5 },
-    { date: "08/05", value: 84.2 },
-    { date: "15/05", value: 83.8 },
-    { date: "22/05", value: 82.5 },
-  ];
+  useEffect(() => {
+    if (user) {
+      fetchEvolucao();
+    }
+  }, [user, tab]);
 
-  const bfData = [
-    { date: "01/05", value: 22.5 },
-    { date: "08/05", value: 22.1 },
-    { date: "15/05", value: 21.8 },
-    { date: "22/05", value: 21.2 },
-  ];
+  const fetchEvolucao = async () => {
+    const { data, error } = await supabase
+      .from('evolucao_checkins')
+      .select('*')
+      .eq('user_id', user?.id)
+      .order('data_checkin', { ascending: true });
 
-  const chartData = tab === "PESO" ? weightData : bfData;
+    if (data && data.length > 0) {
+      const formatted = data.map(c => ({
+        date: new Date(c.data_checkin).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
+        value: tab === "PESO" ? Number(c.peso_kg) : Number(c.bf_percentual)
+      }));
+      setChartData(formatted);
 
-  // Imagens mock para o slider (substitua pelas URLs reais do usuário no futuro)
-  const mockBefore = "https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop&q=60";
-  const mockAfter = "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=60";
+      // Carregar fotos para o slider
+      const lastCheckin = data[data.length - 1];
+      const firstCheckin = data[0];
+
+      if (firstCheckin.foto_frente_url) {
+        const { data: fData } = await supabase.storage.from('evolucao-fotos').createSignedUrl(firstCheckin.foto_frente_url, 3600);
+        if (fData?.signedUrl) setBeforeUrl(fData.signedUrl);
+      }
+      if (lastCheckin.foto_frente_url) {
+        const { data: lData } = await supabase.storage.from('evolucao-fotos').createSignedUrl(lastCheckin.foto_frente_url, 3600);
+        if (lData?.signedUrl) setAfterUrl(lData.signedUrl);
+      }
+    }
+  };
 
   return (
     <div className="pb-32">
@@ -45,10 +68,18 @@ const Evolucao = () => {
 
         {/* Comparativo Antes e Depois */}
         <div className="mb-8">
-          <div className="flex items-center gap-2 mb-4">
+          <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-lg text-white tracking-widest uppercase underline decoration-primary underline-offset-4 decoration-2">Visual</h3>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => navigate("comparar")}
+              className="text-[10px] tracking-widest h-7 border-primary/30 hover:bg-primary/10"
+            >
+              <ImageIcon className="mr-2 h-3 w-3" /> COMPARAR FOTOS
+            </Button>
           </div>
-          <BeforeAfterSlider beforeUrl={mockBefore} afterUrl={mockAfter} />
+          <BeforeAfterSlider beforeUrl={beforeUrl} afterUrl={afterUrl} />
         </div>
 
         {/* Gráfico de Performance */}
@@ -88,10 +119,10 @@ const Evolucao = () => {
 
         {/* Gerador de Card Instagram */}
         <InstagramCardGenerator 
-          userName="Seu Nome" 
+          userName={user?.user_metadata?.nome || "Você"} 
           weightLoss="3.0" 
-          beforeImg={mockBefore} 
-          afterImg={mockAfter} 
+          beforeImg={beforeUrl} 
+          afterImg={afterUrl} 
         />
 
         {/* Botão de Check-in (Modal) */}

@@ -1,0 +1,223 @@
+import { useState, useEffect } from "react";
+import { TrendingUp, ArrowLeft, Calendar, Scale, Activity } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { PageHeader } from "@/components/aluno/PageHeader";
+import { useBranding } from "@/contexts/BrandingProvider";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { useNavigate } from "react-router-dom";
+
+const CompararEvolucao = () => {
+  const { tenant } = useBranding();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [checkins, setCheckins] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const [antesId, setAntesId] = useState<string>("");
+  const [depoisId, setDepoisId] = useState<string>("");
+  
+  const [antes, setAntes] = useState<any>(null);
+  const [depois, setDepois] = useState<any>(null);
+  
+  const [urls, setUrls] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (user) {
+      fetchCheckins();
+    }
+  }, [user]);
+
+  const fetchCheckins = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('evolucao_checkins')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('data_checkin', { ascending: false });
+
+      if (error) throw error;
+      setCheckins(data || []);
+      
+      if (data && data.length >= 2) {
+        setAntesId(data[data.length - 1].id);
+        setDepoisId(data[0].id);
+      }
+    } catch (error: any) {
+      toast.error("Erro ao carregar check-ins: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (antesId) {
+      const checkin = checkins.find(c => c.id === antesId);
+      setAntes(checkin);
+      loadSignedUrls(checkin, 'antes');
+    }
+  }, [antesId, checkins]);
+
+  useEffect(() => {
+    if (depoisId) {
+      const checkin = checkins.find(c => c.id === depoisId);
+      setDepois(checkin);
+      loadSignedUrls(checkin, 'depois');
+    }
+  }, [depoisId, checkins]);
+
+  const loadSignedUrls = async (checkin: any, prefix: string) => {
+    if (!checkin) return;
+    
+    const types = ['foto_frente_url', 'foto_costas_url', 'foto_lado_url'];
+    const newUrls: Record<string, string> = { ...urls };
+    
+    for (const type of types) {
+      if (checkin[type]) {
+        try {
+          const { data, error } = await supabase.storage
+            .from('evolucao-fotos')
+            .createSignedUrl(checkin[type], 3600);
+          
+          if (data?.signedUrl) {
+            newUrls[`${prefix}_${type}`] = data.signedUrl;
+          }
+        } catch (err) {
+          console.error(`Error loading signed URL for ${type}:`, err);
+        }
+      }
+    }
+    setUrls(newUrls);
+  };
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-screen text-white">Carregando...</div>;
+  }
+
+  const pesoDiff = depois && antes ? (depois.peso_kg - antes.peso_kg).toFixed(1) : "0";
+  const bfDiff = depois && antes && depois.bf_percentual && antes.bf_percentual 
+    ? (depois.bf_percentual - antes.bf_percentual).toFixed(1) 
+    : "0";
+
+  return (
+    <div className="pb-32 bg-black min-h-screen">
+      <div className="px-5 pt-5">
+        <Button 
+          variant="ghost" 
+          onClick={() => navigate(-1)} 
+          className="text-white/60 hover:text-white p-0 mb-4"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
+        </Button>
+      </div>
+
+      <PageHeader icon={TrendingUp} title="COMPARATIVO" subtitle="EVOLUÇÃO VISUAL" />
+
+      <div className="px-5 space-y-6">
+        {/* Seleção de Check-ins */}
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Antes</Label>
+            <Select value={antesId} onValueChange={setAntesId}>
+              <SelectTrigger className="bg-card/40 border-border text-xs rounded-none">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-900 border-border text-white">
+                {checkins.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {format(new Date(c.data_checkin), "dd/MM/yyyy", { locale: ptBR })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Depois</Label>
+            <Select value={depoisId} onValueChange={setDepoisId}>
+              <SelectTrigger className="bg-card/40 border-border text-xs rounded-none">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent className="bg-zinc-900 border-border text-white">
+                {checkins.map((c) => (
+                  <SelectItem key={c.id} value={c.id}>
+                    {format(new Date(c.data_checkin), "dd/MM/yyyy", { locale: ptBR })}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        {/* Resumo de Mudanças */}
+        {antes && depois && (
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
+              <Scale className="h-5 w-5 text-primary mb-1" />
+              <p className="text-[10px] uppercase text-muted-foreground tracking-widest">Peso</p>
+              <p className="text-sm font-bold text-white">
+                {antes.peso_kg}kg → {depois.peso_kg}kg
+              </p>
+              <p className={`text-[10px] font-bold ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {parseFloat(pesoDiff) > 0 ? '+' : ''}{pesoDiff}kg
+              </p>
+            </div>
+            <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
+              <Activity className="h-5 w-5 text-primary mb-1" />
+              <p className="text-[10px] uppercase text-muted-foreground tracking-widest">BF%</p>
+              <p className="text-sm font-bold text-white">
+                {antes.bf_percentual || '--'}% → {depois.bf_percentual || '--'}%
+              </p>
+              <p className={`text-[10px] font-bold ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+                {parseFloat(bfDiff) > 0 ? '+' : ''}{bfDiff}%
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Grade de Fotos */}
+        <div className="space-y-4">
+          {['frente', 'costas', 'lado'].map((angulo) => (
+            <div key={angulo} className="space-y-2">
+              <h4 className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold border-l-2 border-primary pl-2">
+                {angulo}
+              </h4>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="relative aspect-[3/4] bg-zinc-900 overflow-hidden border border-white/5">
+                  {urls[`antes_foto_${angulo}_url`] ? (
+                    <img 
+                      src={urls[`antes_foto_${angulo}_url`]} 
+                      className="w-full h-full object-cover" 
+                      alt={`Antes ${angulo}`}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase">Sem foto</div>
+                  )}
+                  <span className="absolute top-2 left-2 bg-black/80 text-white text-[8px] px-2 py-0.5 rounded uppercase font-bold tracking-tighter">Antes</span>
+                </div>
+                <div className="relative aspect-[3/4] bg-zinc-900 overflow-hidden border border-primary/20 shadow-glow-sm">
+                  {urls[`depois_foto_${angulo}_url`] ? (
+                    <img 
+                      src={urls[`depois_foto_${angulo}_url`]} 
+                      className="w-full h-full object-cover" 
+                      alt={`Depois ${angulo}`}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase">Sem foto</div>
+                  )}
+                  <span className="absolute top-2 left-2 bg-primary text-white text-[8px] px-2 py-0.5 rounded uppercase font-bold tracking-tighter">Depois</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default CompararEvolucao;

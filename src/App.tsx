@@ -22,6 +22,7 @@ import AlunoHome from "./pages/aluno/AlunoHome";
 import Treino from "./pages/aluno/Treino";
 import Dieta from "./pages/aluno/Dieta";
 import Evolucao from "./pages/aluno/Evolucao";
+import CompararEvolucao from "./pages/aluno/CompararEvolucao";
 import Clinica from "./pages/aluno/Clinica";
 import Comunidade from "./pages/aluno/Comunidade";
 import Perfil from "./pages/aluno/Perfil";
@@ -88,6 +89,7 @@ const App = () => (
               <Route path="treino" element={<Treino />} />
               <Route path="dieta" element={<Dieta />} />
               <Route path="evolucao" element={<Evolucao />} />
+              <Route path="evolucao/comparar" element={<CompararEvolucao />} />
               <Route path="clinica" element={<Clinica />} />
               <Route path="dr-ia" element={<DrIA />} />
               <Route path="comunidade" element={<Comunidade />} />
