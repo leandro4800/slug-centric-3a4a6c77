@@ -152,7 +152,7 @@ const CompararEvolucao = () => {
         );
       }
       return (
-        <p key={i} className="text-white text-[16px] leading-[1.8] mb-6 tracking-wide" style={{ fontWeight: 300, fontStyle: 'normal' }}>
+        <p key={i} className="text-white text-[16px] leading-[1.8] mb-6 tracking-wide" style={{ fontWeight: 300, fontStyle: 'normal', textRendering: 'optimizeLegibility', WebkitFontSmoothing: 'antialiased' }}>
           {trimmedLine}
         </p>
       );
