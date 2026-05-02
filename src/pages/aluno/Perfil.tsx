@@ -249,43 +249,48 @@ const Perfil = () => {
           </p>
 
           <div className="flex gap-3 pt-2">
-            <button 
+            <Button 
               onClick={() => setProfileOpen(true)}
-              className="bg-white text-black font-semibold px-6 py-3 rounded-md flex items-center gap-2 flex-1 justify-center"
+              variant="default"
+              className="flex-1"
             >
               <User className="h-4 w-4" /> Editar Perfil
-            </button>
-            <button 
+            </Button>
+            <Button 
               onClick={() => setEvalOpen(true)}
-              className="bg-secondary/80 text-foreground font-semibold px-6 py-3 rounded-md flex items-center gap-2 flex-1 justify-center"
+              variant="default"
+              className="flex-1"
             >
               <Ruler className="h-4 w-4" /> Nova Avaliação
-            </button>
+            </Button>
           </div>
-
+          
           <div className="flex gap-2 pt-1">
-            <button
+            <Button
               onClick={() => navigate(`/${slug}/app/anamnese`)}
-              className="flex-1 h-11 rounded-md bg-accent text-accent-foreground flex items-center justify-center gap-2 text-sm font-bold uppercase tracking-wider shadow-glow"
+              variant="default"
+              className="flex-1 shadow-glow"
             >
               <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
-            </button>
+            </Button>
           </div>
 
           <div className="flex gap-2 pt-1">
-            <button
+            <Button
               onClick={() => setPwOpen(true)}
-              className="flex-1 h-11 rounded-md bg-secondary/70 flex items-center justify-center gap-2 text-sm font-medium"
+              variant="secondary"
+              className="flex-1 h-11"
             >
               <KeyRound className="h-4 w-4" /> Trocar senha
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleLogout}
-              className="w-11 h-11 rounded-md bg-secondary/70 flex items-center justify-center"
+              variant="secondary"
+              className="w-11 h-11 p-0"
               aria-label="Sair"
             >
               <LogOut className="h-4 w-4" />
-            </button>
+            </Button>
           </div>
         </div>
       </section>
@@ -370,7 +375,7 @@ const Perfil = () => {
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setProfileOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={saving} className="bg-gradient-primary">
+              <Button type="submit" disabled={saving} variant="default">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar"}
               </Button>
             </DialogFooter>
@@ -414,7 +419,7 @@ const Perfil = () => {
             )}
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setEvalOpen(false)}>Cancelar</Button>
-              <Button type="submit" disabled={saving} className="bg-gradient-primary">
+              <Button type="submit" disabled={saving} variant="default">
                 {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar"}
               </Button>
             </DialogFooter>
