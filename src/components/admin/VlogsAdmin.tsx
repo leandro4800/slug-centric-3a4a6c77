@@ -169,8 +169,8 @@ export const VlogsAdmin = () => {
   return (
     <div className="space-y-6">
       {/* Webhook config */}
-      <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-        <h3 className="font-display text-xl mb-1">AUTOMAÇÃO EXTERNA</h3>
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-2 text-primary">AUTOMAÇÃO EXTERNA</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Configure no Make / n8n / Zapier / Apify para enviar cada novo post pra esse webhook. O app gera a thumb automaticamente quando possível.
         </p>
