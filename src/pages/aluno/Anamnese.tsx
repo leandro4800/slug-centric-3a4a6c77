@@ -115,7 +115,7 @@ export default function Anamnese() {
     try {
       const anamneseData = {
         aluno_id: user.id,
-        tenant_id: tenant?.id,
+        tenant_id: existingRecord?.tenant_id || tenant?.id,
         doencas: form.doencas.split(",").map(s => s.trim()).filter(Boolean),
         medicamentos: form.medicamentos,
         lesoes_atuais: form.lesoes_atuais,
