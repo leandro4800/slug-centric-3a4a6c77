@@ -44,7 +44,7 @@ const AdminBaseConhecimento = () => {
 
   const loadRows = async (tid: string | null) => {
     setLoading(true);
-    let query = supabase
+    let query = (supabase as any)
       .from("base_conhecimento_treino")
       .select("id, titulo, fonte, tenant_id, created_at")
       .order("created_at", { ascending: false })
@@ -52,7 +52,7 @@ const AdminBaseConhecimento = () => {
     if (scope === "tenant" && tid) query = query.eq("tenant_id", tid);
     if (scope === "global") query = query.is("tenant_id", null);
     const { data } = await query;
-    setRows(data || []);
+    setRows((data as KnowledgeRow[]) || []);
     setLoading(false);
   };
 
@@ -99,7 +99,7 @@ const AdminBaseConhecimento = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm("Remover este trecho da base?")) return;
-    const { error } = await supabase.from("base_conhecimento_treino").delete().eq("id", id);
+    const { error } = await (supabase as any).from("base_conhecimento_treino").delete().eq("id", id);
     if (error) return toast.error(error.message);
     toast.success("Removido");
     await loadRows(tenantId);
