@@ -127,6 +127,9 @@ const AtletaDetalhe = () => {
   const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
   const [ultimaAvaliacao, setUltimaAvaliacao] = useState<any>(null);
   const [loadingAnamnese, setLoadingAnamnese] = useState(false);
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [promptType, setPromptType] = useState<"treino" | "dieta" | "ambos">("treino");
+  const [iaPrompt, setIaPrompt] = useState("");
 
   useEffect(() => {
     if (!atletaId) return;
