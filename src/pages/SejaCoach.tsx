@@ -338,7 +338,7 @@ export default function SejaCoach() {
                   onClick={async () => {
                     if (!tenantId) return;
                     setBusy(true);
-                    await supabase.from("tenants").update({ stripe_onboarding_completed: true }).eq("id", tenantId);
+                    await supabase.from("tenants_private" as any).upsert({ tenant_id: tenantId, stripe_onboarding_completed: true });
                     setStep("pending");
                     setBusy(false);
                     toast({ title: "Stripe ignorado (Admin)" });

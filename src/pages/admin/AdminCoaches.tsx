@@ -70,7 +70,13 @@ export default function AdminCoaches() {
       .from("tenants")
       .select("*")
       .order("created_at", { ascending: false });
-    setTenants((data as PendingTenant[]) ?? []);
+    const list = (data as any[]) ?? [];
+    // Fetch onboarding flags from tenants_private (admin can read all)
+    const { data: privs } = await supabase
+      .from("tenants_private" as any)
+      .select("tenant_id, stripe_onboarding_completed");
+    const map = new Map((privs as any[] || []).map((p) => [p.tenant_id, !!p.stripe_onboarding_completed]));
+    setTenants(list.map((t) => ({ ...t, stripe_onboarding_completed: map.get(t.id) ?? false })) as PendingTenant[]);
     setLoading(false);
   };
 
