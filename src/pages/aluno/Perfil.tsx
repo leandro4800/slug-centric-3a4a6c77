@@ -41,6 +41,7 @@ const Perfil = () => {
     telefone: "",
     data_nascimento: "",
     sexo: "M" as "M" | "F",
+    avatar_url: "",
   });
 
   // Evaluation form
@@ -69,6 +70,7 @@ const Perfil = () => {
           telefone: p.telefone || "",
           data_nascimento: p.data_nascimento || "",
           sexo: p.sexo as "M" | "F" || "M",
+          avatar_url: p.avatar_url || "",
         });
       }
       if (e) {
@@ -187,7 +189,7 @@ const Perfil = () => {
     <>
       {/* Hero estilo Netflix */}
       <section className="relative h-[60vh] min-h-[450px] -mt-0">
-        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
+        <img src={profile?.avatar_url || hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-transparent" />
 
@@ -266,6 +268,10 @@ const Perfil = () => {
             <DialogDescription>Atualize seus dados básicos.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <div>
+              <Label htmlFor="avatar">URL da Foto de Perfil</Label>
+              <Input id="avatar" value={formProfile.avatar_url} onChange={(e) => setFormProfile({...formProfile, avatar_url: e.target.value})} placeholder="https://..." />
+            </div>
             <div>
               <Label htmlFor="nome">Nome Completo</Label>
               <Input id="nome" value={formProfile.nome_completo} onChange={(e) => setFormProfile({...formProfile, nome_completo: e.target.value})} required />
