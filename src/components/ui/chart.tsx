@@ -235,7 +235,8 @@ const ChartLegendContent = React.forwardRef<
       hideIcon?: boolean;
       nameKey?: string;
     }
->(({ className, hideIcon = false, payload, verticalAlign = "bottom", nameKey }, ref) => {
+>( (props, ref) => {
+  const { className, hideIcon = false, payload, verticalAlign = "bottom", nameKey } = props as any;
   const { config } = useChart();
 
   if (!payload || (Array.isArray(payload) && payload.length === 0)) {
