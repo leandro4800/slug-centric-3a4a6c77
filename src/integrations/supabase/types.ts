@@ -534,7 +534,7 @@ export type Database = {
           enfase: string | null
           estrutura_json: Json | null
           frequencia_semanal: number | null
-          grupo_muscular: string
+          grupo_muscular: string | null
           id: string
           nivel: string | null
           nome_exercicio: string
@@ -550,7 +550,7 @@ export type Database = {
           enfase?: string | null
           estrutura_json?: Json | null
           frequencia_semanal?: number | null
-          grupo_muscular: string
+          grupo_muscular?: string | null
           id?: string
           nivel?: string | null
           nome_exercicio: string
@@ -566,7 +566,7 @@ export type Database = {
           enfase?: string | null
           estrutura_json?: Json | null
           frequencia_semanal?: number | null
-          grupo_muscular?: string
+          grupo_muscular?: string | null
           id?: string
           nivel?: string | null
           nome_exercicio?: string
