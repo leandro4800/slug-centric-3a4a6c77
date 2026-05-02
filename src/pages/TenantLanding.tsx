@@ -71,6 +71,10 @@ export default function TenantLanding() {
           .maybeSingle();
         
         setHasSubscription(!!sub);
+        if (sub) {
+          navigate(`/${slug}/app`);
+          return;
+        }
       }
 
       const { data: p } = await supabase
