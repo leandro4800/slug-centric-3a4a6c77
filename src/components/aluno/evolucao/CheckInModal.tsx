@@ -10,7 +10,11 @@ import { useAuth } from "@/hooks/use-auth";
 
 type PhotoType = 'frente' | 'costas' | 'lado';
 
-export const CheckInModal = () => {
+interface CheckInModalProps {
+  onSaved?: () => void;
+}
+
+export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [show7Dobras, setShow7Dobras] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -90,6 +94,7 @@ export const CheckInModal = () => {
       if (error) throw error;
 
       toast.success("Check-in de evolução salvo com sucesso!");
+      onSaved?.();
       setIsOpen(false);
       // Reset form
       setPeso("");
