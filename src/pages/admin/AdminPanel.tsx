@@ -142,6 +142,11 @@ const AdminPanel = () => {
                 <span className="text-[9px] text-muted-foreground font-normal uppercase tracking-wider">Gestão financeira e saques</span>
               </Button>
             </Link>
+            <Link to={`/${slug}/admin/base-conhecimento`}>
+              <Button variant="outline" className="border-primary/40">
+                <Sparkles className="h-4 w-4 mr-2" /> Base de Conhecimento IA
+              </Button>
+            </Link>
             <Link to={`/${slug}/admin/montar-treino`}>
               <Button className="bg-gradient-primary shadow-glow">
                 <Sparkles className="h-4 w-4 mr-2" /> Montar Treino com IA

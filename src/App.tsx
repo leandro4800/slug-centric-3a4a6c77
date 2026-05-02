@@ -35,6 +35,7 @@ import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
 import AdminCoaches from "./pages/admin/AdminCoaches";
 import AdminPlanos from "./pages/admin/AdminPlanos";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
+import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -115,6 +116,9 @@ const App = () => (
             } />
             <Route path="/:slug/admin/faturamento" element={
               <BrandingProvider><RequireAuth><AdminFaturamento /></RequireAuth></BrandingProvider>
+            } />
+            <Route path="/:slug/admin/base-conhecimento" element={
+              <BrandingProvider><RequireAuth><AdminBaseConhecimento /></RequireAuth></BrandingProvider>
             } />
 
             <Route path="*" element={<NotFound />} />
