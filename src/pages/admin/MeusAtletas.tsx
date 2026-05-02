@@ -164,6 +164,67 @@ const MeusAtletas = () => {
         </div>
       </div>
 
+      {/* Alertas Críticos */}
+      {alertas.length > 0 && (
+        <div className="px-5 mb-4">
+          <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-4 animate-pulse">
+            <div className="flex items-center gap-2 text-red-500 mb-2">
+              <AlertTriangle className="h-5 w-5" />
+              <h2 className="font-display text-sm uppercase font-bold tracking-wider">RISCO CRÍTICO DETECTADO</h2>
+            </div>
+            <div className="space-y-2">
+              {alertas.map((alerta) => (
+                <div key={alerta.id} className="text-[11px] text-red-200/80 flex justify-between items-center border-b border-red-500/10 pb-1 last:border-0">
+                  <span>{alerta.perfis?.nome_completo}: {alerta.motivo_alerta}</span>
+                  <span className="text-[9px] opacity-60">{new Date(alerta.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IA Knowledge QA */}
+      <div className="px-5 mb-6">
+        <button 
+          onClick={() => setQaOpen(!qaOpen)}
+          className="w-full bg-primary/10 border border-primary/30 rounded-2xl p-4 flex items-center justify-between hover:bg-primary/20 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <MessageSquare className="h-5 w-5 text-primary" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-display text-sm uppercase">CONSULTAR METODOLOGIA</h3>
+              <p className="text-[10px] text-muted-foreground uppercase">Pergunte à Dr. IA sobre o Pacholok ou Saúde</p>
+            </div>
+          </div>
+          <ChevronRight className={`h-5 w-5 text-primary transition-transform ${qaOpen ? 'rotate-90' : ''}`} />
+        </button>
+        
+        {qaOpen && (
+          <div className="mt-3 bg-card border border-border rounded-2xl p-4 animate-in slide-in-from-top-2 duration-300">
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Ex: O que o Pacholok diz sobre Dorsal?" 
+                value={pregunta}
+                onChange={(e) => setPregunta(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAskIA()}
+                className="bg-secondary/40"
+              />
+              <Button onClick={handleAskIA} disabled={isAsking} size="icon">
+                {isAsking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+            {resposta && (
+              <ScrollArea className="mt-4 h-40 rounded-lg bg-secondary/20 p-3">
+                <p className="text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">{resposta}</p>
+              </ScrollArea>
+            )}
+          </div>
+        )}
+      </div>
+
       <main className="px-5 pb-16">
         {loading ? (
           <div className="flex justify-center py-16">
