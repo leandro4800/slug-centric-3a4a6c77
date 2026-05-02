@@ -171,14 +171,14 @@ const AdminFaturamento = () => {
       icon: Landmark, 
       label: "Dados bancários", 
       badge: "Pendente", 
-      badgeColor: "bg-red-600/20 text-red-500 border-red-600/30",
+      badgeColor: "bg-primary/20 text-primary border-primary/30",
       onClick: () => setActivePanel("bancarios")
     },
     { 
       icon: UserCheck, 
       label: "Identidade", 
       badge: profile?.status_identidade === "aprovado" ? "Verificado" : profile?.status_identidade === "em_analise" ? "Em análise" : "Pendente",
-      badgeColor: profile?.status_identidade === "aprovado" ? "bg-white/20 text-white border-white/30" : "bg-red-600/20 text-red-500 border-red-600/30",
+      badgeColor: profile?.status_identidade === "aprovado" ? "bg-white/20 text-white border-white/30" : "bg-primary/20 text-primary border-primary/30",
       onClick: () => (profile?.status_identidade === "pendente" || !profile?.status_identidade) && setIsVerifyDialogOpen(true)
     },
   ];
