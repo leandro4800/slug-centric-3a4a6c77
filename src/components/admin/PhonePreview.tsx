@@ -12,7 +12,7 @@ export type EditableTarget =
   | { id: "background"; label: "Fundo do app"; tokens: ["background"] }
   | { id: "card"; label: "Cartões"; tokens: ["card"] }
   | { id: "primary"; label: "Cor primária / Botões"; tokens: ["primary", "primary_glow", "accent"] }
-  | { id: "accent"; label: "Botão Reproduzir / Ícones"; tokens: ["accent"] }
+  | { id: "accent"; label: "Detalhes secundários"; tokens: ["accent"] }
   | { id: "foreground"; label: "Texto principal"; tokens: ["foreground"] }
   | { id: "border"; label: "Bordas"; tokens: ["border"] };
 
