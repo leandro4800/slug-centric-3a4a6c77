@@ -109,9 +109,9 @@ const AdminBaseConhecimento = () => {
   return (
     <div className="min-h-screen bg-black text-white p-6 max-w-4xl mx-auto">
       <div className="flex items-center gap-3 mb-6 bg-black/95 backdrop-blur p-4 rounded-2xl border border-white/10 sticky top-4 z-20">
-        <Button variant="ghost" size="icon" onClick={() => navigate(`/${slug}/admin`)}>
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
+        <AdminBackButton 
+          className="h-5 w-5" 
+        />
         <Brain className="h-6 w-6 text-accent" />
         <h1 className="font-display text-2xl">Base de Conhecimento da IA</h1>
       </div>
