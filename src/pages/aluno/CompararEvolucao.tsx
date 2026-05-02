@@ -220,10 +220,10 @@ const CompararEvolucao = () => {
             <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
               <Activity className="h-5 w-5 text-primary mb-1" />
               <p className="text-[10px] uppercase text-muted-foreground tracking-widest">BF%</p>
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-medium text-white">
                 {antes.bf_percentual || '--'}% → {depois.bf_percentual || '--'}%
               </p>
-              <p className={`text-[10px] font-bold ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-[10px] font-medium ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {parseFloat(bfDiff) > 0 ? '+' : ''}{bfDiff}%
               </p>
             </div>
