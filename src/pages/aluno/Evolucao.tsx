@@ -19,7 +19,7 @@ const Evolucao = () => {
         <div className="bg-card/40 border border-accent/30 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-lg text-accent">PESO CORPORAL</h3>
-            <div className="flex bg-secondary rounded-full p-0.5">
+            <div className="flex bg-card rounded-full p-0.5">
               {(["PESO", "BF%"] as const).map((t) => (
                 <button
                   key={t}

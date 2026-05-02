@@ -1,6 +1,7 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
 import { Play, Volume2, VolumeX, Stethoscope, ChevronRight, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
@@ -156,7 +157,7 @@ const AlunoHome = () => {
           <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
         )}
         {!expanded && (
-          <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/30 to-background pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black pointer-events-none" />
         )}
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5 z-10">
           <Logo size={32} withText={false} />
@@ -168,7 +169,7 @@ const AlunoHome = () => {
                 title={muted ? "Ativar som" : "Silenciar"}
                 aria-label={muted ? "Ativar som" : "Silenciar"}
               >
-                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-accent" />}
+                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-primary" />}
               </button>
             )}
             {expanded && (
@@ -181,7 +182,7 @@ const AlunoHome = () => {
             )}
             
             {/* Ícone de Perfil para todos os alunos */}
-            <Link to={`/${slug}/app/perfil`} className="w-10 h-10 rounded-full bg-secondary/70 border border-border flex items-center justify-center backdrop-blur">
+            <Link to={`/${slug}/app/perfil`} className="w-10 h-10 rounded-full bg-card/70 border border-border flex items-center justify-center backdrop-blur">
               <User className="h-4 w-4 text-foreground" />
             </Link>
 
@@ -198,7 +199,7 @@ const AlunoHome = () => {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="lucide lucide-settings text-accent"
+                  className="lucide lucide-settings text-primary"
                 >
                   <path d="M12.22 2h-.44a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2v-.44a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2Z" />
                   <circle cx="12" cy="12" r="3" />
@@ -213,14 +214,14 @@ const AlunoHome = () => {
             <h1 className="font-display text-5xl text-foreground mb-5 leading-none drop-shadow-lg">
               {featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
             </h1>
-            <button
+            <Button
               onClick={handlePlay}
               disabled={!featured}
-              className="inline-flex items-center gap-2 bg-accent text-accent-foreground font-semibold px-6 py-3 rounded-md hover:opacity-90 transition disabled:opacity-60"
+              className="inline-flex items-center gap-2 font-black px-6 py-3 rounded-none tracking-widest"
               title={featured ? "Reproduzir último vlog" : "Sem vlog publicado"}
             >
               <Play className="h-4 w-4 fill-current" /> REPRODUZIR
-            </button>
+            </Button>
           </div>
         )}
       </section>
@@ -232,17 +233,17 @@ const AlunoHome = () => {
           className="bg-card/60 border border-accent/40 rounded-2xl p-4 flex items-center gap-4 hover:bg-accent/5 transition-colors group"
         >
           <div className="w-12 h-12 rounded-xl bg-accent/15 border border-accent/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Stethoscope className="h-6 w-6 text-accent" />
+            <Stethoscope className="h-6 w-6 text-primary" />
           </div>
           <div className="flex-1">
-            <p className="font-display text-lg text-accent leading-tight uppercase">Dr. IA</p>
+            <p className="font-display text-lg text-primary leading-tight uppercase">Dr. IA</p>
             <p className="text-xs text-muted-foreground">Seu médico esportivo de bolso</p>
           </div>
-          <ChevronRight className="h-5 w-5 text-accent/50" />
+          <ChevronRight className="h-5 w-5 text-primary/50" />
         </Link>
 
         <div className="bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-secondary/50 border border-border flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg bg-card/50 border border-border flex items-center justify-center">
             <TenantSymbol size={28} />
           </div>
           <div>
@@ -255,7 +256,7 @@ const AlunoHome = () => {
       {/* Minha prescrição */}
       <section className="px-5 mt-8">
         <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-          <span className="text-accent">▶</span> MINHA PRESCRIÇÃO
+          <span className="text-primary">▶</span> MINHA PRESCRIÇÃO
         </h2>
         <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-4 pt-2">
           {sections.map((s) => (
@@ -288,7 +289,7 @@ const AlunoHome = () => {
       {/* Vlogs */}
       <section className="px-5 mt-8">
         <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-          <span className="text-accent">▶</span> VLOGS DO COACH
+          <span className="text-primary">▶</span> VLOGS DO COACH
         </h2>
         {vlogs.length === 0 ? (
           <p className="text-xs text-muted-foreground">Nenhum vlog publicado ainda.</p>
@@ -310,8 +311,8 @@ const AlunoHome = () => {
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent" />
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-accent/90 flex items-center justify-center">
-                    <Play className="h-5 w-5 text-accent-foreground fill-current" />
+                  <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
+                    <Play className="h-5 w-5 text-primary-foreground fill-current" />
                   </div>
                 </div>
                 {v.title && (

@@ -62,7 +62,7 @@ const DrIA = () => {
       </div>
 
       <div className="px-5 pb-6">
-        <div className="flex bg-secondary rounded-xl p-1 mb-5">
+        <div className="flex bg-card rounded-xl p-1 mb-5">
           <button
             onClick={() => {
               setTab("nova");
