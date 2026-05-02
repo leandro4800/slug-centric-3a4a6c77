@@ -195,13 +195,13 @@ export default function TenantLanding() {
         {!hasSubscription && (
           <>
             {planos.length === 0 ? (
-          <div className="rounded-2xl border border-border/50 bg-card/40 p-12 text-center text-muted-foreground">
+          <div className="rounded-none border border-border/50 bg-card/40 p-12 text-center text-muted-foreground">
             Este coach ainda não publicou planos.
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {tenant.permite_aula_avulsa && (
-              <div className="relative overflow-hidden rounded-2xl border-2 border-primary/30 bg-card p-8 flex flex-col">
+              <div className="relative overflow-hidden rounded-none border-2 border-primary/30 bg-card p-8 flex flex-col">
                 <Badge className="absolute right-4 top-4 bg-primary text-primary-foreground">Aula Presencial</Badge>
                 <h3 className="font-display text-2xl uppercase">Aula Avulsa</h3>
                 <p className="mt-2 text-sm text-muted-foreground">Treino presencial único para correção de técnica e performance.</p>
@@ -228,7 +228,7 @@ export default function TenantLanding() {
               return (
                 <div
                   key={p.id}
-                  className={`relative overflow-hidden rounded-2xl border p-8 transition-all ${
+                  className={`relative overflow-hidden rounded-none border p-8 transition-all ${
                     destaque
                       ? "border-primary bg-gradient-to-b from-primary/10 to-card shadow-glow"
                       : "border-border/50 bg-card hover:border-primary/40"
