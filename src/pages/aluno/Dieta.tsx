@@ -137,22 +137,21 @@ const Dieta = () => {
     <>
       <PageHeader icon={Utensils} title="MINHA DIETA" subtitle={dieta?.objetivo || undefined} />
       <div className="px-5 pb-10">
-        {/* Hero / CTA */}
+        {/* Título da Prescrição */}
         <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/20 via-background to-background p-5 mb-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 text-xs text-primary mb-1">
-                <Sparkles className="h-3.5 w-3.5" /> DR. IA NUTRI
+              <div className="flex items-center gap-2 text-xs text-primary mb-1 uppercase font-bold tracking-widest">
+                Prescrição Nutricional
               </div>
               <h2 className="font-display text-xl leading-tight">Plano alimentar personalizado</h2>
-              <p className="text-xs text-muted-foreground mt-1">Baseado nos seus exames clínicos e objetivo</p>
+              <p className="text-xs text-muted-foreground mt-1">Sua dieta será montada e ajustada exclusivamente pelo seu coach.</p>
               {badge && (
                 <Badge variant="outline" className="mt-3 border-primary/50 text-primary bg-primary/10">
                   <Activity className="h-3 w-3 mr-1" /> Ajustada para {badge}
                 </Badge>
               )}
             </div>
-            {/* Botão de geração removido - exclusivo do coach */}
           </div>
         </div>
 
