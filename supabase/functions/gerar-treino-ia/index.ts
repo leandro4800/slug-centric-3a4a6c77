@@ -24,6 +24,9 @@ serve(async (req) => {
     const lesoes = (perfil?.lesoes || []).join(", ") || "nenhuma";
     const limitacoes = (perfil?.limitacoes || []).join(", ") || "nenhuma";
 
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
     // === BUSCA ESTRUTURADA: templates de treino do catálogo ===
     let templatesContext = "";
     try {
