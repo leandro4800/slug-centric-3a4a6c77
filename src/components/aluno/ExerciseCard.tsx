@@ -193,14 +193,15 @@ export const ExerciseCard = ({
                 </p>
               </div>
             )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-black/40" />
-            <div className="absolute top-3 right-3 w-9 h-9 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60" />
+            <div className="absolute top-3 right-3 w-9 h-9 rounded-full bg-emerald-500/80 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/20">
               <CheckCircle2 className="h-5 w-5 text-white" />
             </div>
             {(hasCoach || hasYT) && (
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-16 h-16 rounded-full bg-primary flex items-center justify-center shadow-2xl group-hover:scale-110 transition">
-                  <Play className="h-7 w-7 fill-white text-white ml-1" />
+                <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-[0_0_50px_-10px_rgba(224,0,0,0.6)] group-hover:scale-110 transition-all duration-500 relative overflow-hidden border border-white/30">
+                  <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-80" />
+                  <Play className="h-9 w-9 fill-white text-white ml-1 relative z-10" />
                 </div>
               </div>
             )}
@@ -233,11 +234,12 @@ export const ExerciseCard = ({
             {hasYT && (
               <button
                 onClick={() => { setShowYT(true); setShowCoach(false); }}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition ${
-                  showYT ? "bg-[#E50914] text-white" : "text-muted-foreground"
+                className={`px-2.5 py-1 rounded-none text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition relative overflow-hidden ${
+                  showYT ? "bg-primary text-primary-foreground border border-white/20" : "text-muted-foreground border border-transparent"
                 }`}
               >
-                <Youtube className="h-3 w-3" /> YouTube
+                {showYT && <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-40" />}
+                <Youtube className="h-3 w-3 relative z-10" /> <span className="relative z-10">YouTube</span>
               </button>
             )}
           </div>
@@ -268,8 +270,9 @@ export const ExerciseCard = ({
         </div>
 
         {!isOpen && (
-          <div className="mt-3 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-display text-sm flex items-center justify-center gap-2">
-            ▶ EXECUTAR
+          <div className="mt-3 w-full py-3 rounded-none bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2 relative overflow-hidden border border-white/20 shadow-lg">
+            <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
+            <span className="relative z-10">▶ EXECUTAR</span>
           </div>
         )}
       </button>
@@ -301,10 +304,11 @@ export const ExerciseCard = ({
           <div className="grid grid-cols-[auto_1fr] gap-2">
             <button
               onClick={() => setRunning((r) => !r)}
-              className="px-4 py-3 rounded-lg bg-primary text-primary-foreground font-display text-xs leading-tight flex items-center gap-2"
+              className="px-6 py-4 rounded-none bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95"
             >
-              <Play className="h-4 w-4 fill-current" />
-              <span>{running ? "PAUSAR" : "INICIAR"}<br/>EXERCÍCIO</span>
+              <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
+              <Play className="h-5 w-5 fill-current relative z-10" />
+              <span className="relative z-10">{running ? "PAUSAR" : "INICIAR"}<br/>EXERCÍCIO</span>
             </button>
             <div className="rounded-lg border border-accent/30 bg-secondary/30 px-4 py-3 flex items-center justify-between">
               <div>
@@ -365,10 +369,11 @@ export const ExerciseCard = ({
           <button
             onClick={handleFinalizar}
             disabled={savingAll}
-            className="w-full py-3 rounded-lg bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2"
+            className="w-full py-4 rounded-none bg-primary text-primary-foreground font-display text-lg flex items-center justify-center gap-3 relative overflow-hidden border border-white/30 shadow-[0_10px_40px_-10px_rgba(224,0,0,0.4)] transition-all active:scale-[0.98]"
           >
-            {savingAll ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-            FINALIZAR
+            <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-70" />
+            {savingAll ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : null}
+            <span className="relative z-10 tracking-[0.1em]">FINALIZAR TREINO</span>
           </button>
         </div>
       )}

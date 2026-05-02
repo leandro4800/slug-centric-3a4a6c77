@@ -11,13 +11,13 @@
 @layer base {
   :root {
     /* Premium Global Theme - Absolute Luxury Palette */
-    --background: 0 0% 12%; /* #1F1F1F - Negro Absoluto */
+    --background: 0 0% 0%; /* #000000 - Negro Absoluto */
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 10%;
+    --card: 0 0% 3%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 10%;
+    --popover: 0 0% 3%;
     --popover-foreground: 0 0% 98%;
 
     /* Premium Ferrari Red */
@@ -95,16 +95,15 @@
 }
 
 @layer utilities {
-  .text-gradient-primary {
-    background: var(--gradient-primary);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+  .text-glow-primary {
+    text-shadow: 0 0 20px hsla(var(--primary-glow) / 0.5), 0 0 40px hsla(var(--primary) / 0.3);
   }
   .bg-gradient-primary { background: var(--gradient-primary); }
   .bg-gradient-card { background: var(--gradient-card); }
-  .shadow-glow { box-shadow: var(--shadow-glow); }
-  .shadow-card { box-shadow: var(--shadow-card); }
+  .shadow-glow { box-shadow: 0 0 30px -10px hsla(var(--primary) / 0.5); }
+  .shadow-card { box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.9); }
+  .border-premium { border: 1px solid rgba(255, 255, 255, 0.1); }
+  .border-premium-glow { border: 1px solid hsla(var(--primary) / 0.3); }
 
   .hero-mask {
     -webkit-mask-image: linear-gradient(180deg, #000 40%, transparent 100%);

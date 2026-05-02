@@ -53,10 +53,10 @@ const DEFAULTS = {
   primary: "355 100% 48%", // Ferrari Red
   primary_glow: "355 100% 60%",
   accent: "39 34% 59%", // Old Gold
-  background: "0 0% 12%", // Absolute Black
-  card: "0 0% 10%",
+  background: "0 0% 0%", // Absolute Black
+  card: "0 0% 3%",
   foreground: "0 0% 98%",
-  border: "0 0% 18%",
+  border: "0 0% 15%",
 };
 
 const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {

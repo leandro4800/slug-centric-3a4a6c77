@@ -184,7 +184,7 @@ export default function TenantLanding() {
           {hasSubscription && (
             <Button 
               size="lg" 
-              className="mt-6 bg-primary hover:bg-primary/90"
+              className="mt-6 font-black uppercase tracking-widest"
               onClick={() => navigate(`/dashboard`)}
             >
               Ir para o Dashboard
@@ -217,7 +217,7 @@ export default function TenantLanding() {
                 <Button 
                   onClick={() => handleCheckout(undefined, 'aula_avulsa')}
                   disabled={checkoutLoading === 'aula_avulsa'}
-                  className="w-full bg-primary hover:bg-primary/90"
+                  className="w-full font-black uppercase tracking-widest"
                 >
                   {checkoutLoading === 'aula_avulsa' ? "Redirecionando..." : "Agendar Aula"}
                 </Button>
@@ -257,7 +257,7 @@ export default function TenantLanding() {
                   <Button
                     onClick={() => handleCheckout(p.id)}
                     disabled={checkoutLoading === p.id}
-                    className={`w-full ${destaque ? "bg-primary hover:bg-primary/90" : ""}`}
+                    className="w-full font-black uppercase tracking-widest"
                     variant={destaque ? "default" : "outline"}
                   >
                     {checkoutLoading === p.id ? "Redirecionando..." : "Testar 30 dias grátis"}
