@@ -119,10 +119,10 @@ const Evolucao = () => {
 
         {/* Gerador de Card Instagram */}
         <InstagramCardGenerator 
-          userName="Seu Nome" 
+          userName={user?.user_metadata?.nome || "Você"} 
           weightLoss="3.0" 
-          beforeImg={mockBefore} 
-          afterImg={mockAfter} 
+          beforeImg={beforeUrl} 
+          afterImg={afterUrl} 
         />
 
         {/* Botão de Check-in (Modal) */}
