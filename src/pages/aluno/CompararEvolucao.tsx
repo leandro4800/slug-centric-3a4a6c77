@@ -141,17 +141,17 @@ const CompararEvolucao = () => {
   const formatAnalise = (text: string) => {
     return text.split('\n').map((line, i) => {
       const trimmedLine = line.trim();
-      if (!trimmedLine) return <div key={i} className="h-2" />;
+      if (!trimmedLine) return <div key={i} className="h-4" />;
       
       const isTitle = trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3;
       if (isTitle) {
         return (
-          <p key={i} className="text-primary font-bold mt-6 mb-3 tracking-[0.2em] text-[12px] uppercase border-b border-primary/20 pb-1">
+          <p key={i} className="text-primary font-normal mt-8 mb-4 tracking-[0.25em] text-[13px] uppercase border-b border-primary/30 pb-2">
             {trimmedLine}
           </p>
         );
       }
-      return <p key={i} className="text-zinc-200 text-[15px] leading-relaxed mb-3">{trimmedLine}</p>;
+      return <p key={i} className="text-white/90 text-[16px] leading-relaxed mb-4 font-light">{trimmedLine}</p>;
     });
   };
 
