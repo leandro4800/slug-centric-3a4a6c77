@@ -65,6 +65,10 @@ const Perfil = () => {
       if (!silent) setLoading(true);
       const { data: p } = await supabase.from("perfis").select("*").eq("id", user?.id).maybeSingle();
       const { data: e } = await supabase.from("avaliacoes_fisicas").select("*").eq("aluno_id", user?.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user?.id);
+      const { data: ownedTenant } = await supabase.from("tenants").select("id").eq("owner_user_id", user?.id).maybeSingle();
+      
+      setIsCoach(roles?.some(r => r.role === "coach" || r.role === "admin") || !!ownedTenant);
       
       if (p) {
         setProfile(p);
