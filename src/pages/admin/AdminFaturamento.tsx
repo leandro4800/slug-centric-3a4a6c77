@@ -205,8 +205,8 @@ const AdminFaturamento = () => {
           >
             <ArrowLeft className="h-5 w-5" />
           </button>
-          <div className="text-red-600 font-black text-2xl tracking-tighter uppercase italic">ALPHA <span className="text-white">FINANCE</span></div>
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-red-600 to-red-900 border border-white/20" />
+          <div className="text-primary font-black text-2xl tracking-tighter uppercase italic">ALPHA <span className="text-white">FINANCE</span></div>
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-glow border border-white/20" />
         </header>
 
         <main className="relative z-10 px-5 pt-12 max-w-4xl mx-auto w-full">
