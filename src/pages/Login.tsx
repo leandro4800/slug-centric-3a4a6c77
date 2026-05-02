@@ -31,13 +31,7 @@ const Login = () => {
       const isAdmin = roles?.some((r) => r.role === "admin");
       const isCoach = roles?.some((r) => r.role === "coach");
 
-      // Super admin AlphaCoach
-      if (isAdmin && !isCoach) {
-        navigate("/admin/coaches", { replace: true });
-        return;
-      }
-
-      // Coach: vai para o painel do próprio tenant
+      // Coach (mesmo se também for admin): vai para o painel do próprio tenant
       if (isCoach) {
         const coachRole = roles?.find((r) => r.role === "coach");
         let slug: string | null = null;
@@ -50,6 +44,12 @@ const Login = () => {
           slug = t?.slug ?? null;
         }
         navigate(slug ? `/${slug}/admin` : "/seja-coach", { replace: true });
+        return;
+      }
+
+      // Super admin AlphaCoach (sem tenant próprio)
+      if (isAdmin) {
+        navigate("/admin/coaches", { replace: true });
         return;
       }
 
