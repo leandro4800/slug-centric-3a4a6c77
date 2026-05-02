@@ -20,10 +20,10 @@
     --popover: 0 0% 10%;
     --popover-foreground: 0 0% 98%;
 
-    /* Premium Bordeaux Red */
-    --primary: 353 40% 26%; /* #5E2129 - Bordeaux */
+    /* Premium Ferrari Red */
+    --primary: 355 100% 48%; /* #E00000 - Ferrari Red */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 353 50% 35%;
+    --primary-glow: 355 100% 60%;
 
     /* Premium Navy Heritage Blue */
     --secondary: 211 28% 17%; /* #202C39 - Azul Marinho Heritage */
@@ -55,10 +55,10 @@
     --gradient-gold: linear-gradient(135deg, #EAD6A5 0%, #BAA174 50%, #8E794F 100%);
     --gradient-silver: linear-gradient(135deg, #FFFFFF 0%, #CCCCCC 50%, #999999 100%);
     
-    /* Mirrored/Metallic Button Effect */
-    --btn-mirror: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.2) 100%);
-    --btn-shine: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.3) 50%, transparent 75%);
-    --btn-border: rgba(255,255,255,0.3);
+    /* Mirrored/Metallic Button Effect - Ferrari Chrome Style */
+    --btn-mirror: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 52%, rgba(0,0,0,0.3) 100%);
+    --btn-shine: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.5) 50%, transparent 75%);
+    --btn-border: rgba(255,255,255,0.5);
 
     /* Shadows */
     --shadow-premium: 0 10px 40px -10px rgba(0,0,0,0.8);
