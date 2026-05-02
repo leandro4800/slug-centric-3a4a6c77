@@ -56,9 +56,9 @@ const Perfil = () => {
     if (user) loadData();
   }, [user]);
 
-  const loadData = async () => {
+  const loadData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data: p } = await supabase.from("perfis").select("*").eq("id", user?.id).maybeSingle();
       const { data: e } = await supabase.from("avaliacoes_fisicas").select("*").eq("aluno_id", user?.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
       
@@ -105,17 +105,32 @@ const Perfil = () => {
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) return toast.error("Usuário não identificado.");
     setSaving(true);
-    const { error } = await supabase.from("perfis").update(formProfile).eq("id", user?.id);
+    
+    // Usar upsert para garantir que o registro existe, mantendo o tenant_id original
+    const { error } = await supabase.from("perfis").upsert({
+      id: user.id,
+      email: user.email,
+      ...formProfile,
+      tenant_id: profile?.tenant_id || tenant?.id,
+      updated_at: new Date().toISOString()
+    });
+
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      console.error("Erro ao salvar perfil:", error);
+      return toast.error("Erro ao salvar: " + error.message);
+    }
+    
     toast.success("Perfil atualizado!");
     setProfileOpen(false);
-    loadData();
+    loadData(true);
   };
 
   const handleUpdateEval = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user?.id) return toast.error("Usuário não identificado.");
     setSaving(true);
     
     const peso = Number(formEval.peso_kg);
@@ -132,8 +147,8 @@ const Perfil = () => {
     const massaMagra = bf && peso ? +(peso - (massaGorda ?? 0)).toFixed(2) : null;
 
     const evalData = {
-      aluno_id: user?.id,
-      tenant_id: profile?.tenant_id,
+      aluno_id: user.id,
+      tenant_id: profile?.tenant_id || tenant?.id,
       peso_kg: peso,
       altura_cm: alt,
       pescoco_cm: Number(formEval.pescoco_cm),
@@ -143,17 +158,30 @@ const Perfil = () => {
       imc,
       massa_magra_kg: massaMagra,
       massa_gorda_kg: massaGorda,
+      data: new Date().toISOString()
     };
 
     const { error } = await supabase.from("avaliacoes_fisicas").insert(evalData);
     setSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      console.error("Erro ao salvar avaliação:", error);
+      return toast.error("Erro ao salvar: " + error.message);
+    }
+    
     toast.success("Nova avaliação registrada!");
     setEvalOpen(false);
-    loadData();
+    loadData(true);
   };
 
   const nomeDisplay = profile?.nome_completo || user?.email?.split("@")[0]?.toUpperCase() || "ATLETA";
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <>

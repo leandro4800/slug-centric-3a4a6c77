@@ -23,6 +23,7 @@ export default function Anamnese() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [existingRecord, setExistingRecord] = useState<any>(null);
 
   // Form State
   const [form, setForm] = useState({
@@ -65,19 +66,20 @@ export default function Anamnese() {
 
       if (error) throw error;
       if (data) {
+        setExistingRecord(data);
         setForm({
           doencas: (data.doencas as string[])?.join(", ") || "",
           medicamentos: data.medicamentos || "",
           lesoes_atuais: data.lesoes_atuais || "",
-          horas_sono: [Number(data.horas_sono) || 7],
-          nivel_estresse: [data.nivel_estresse || 5],
+          horas_sono: [Number(data.horas_sono ?? 7)],
+          nivel_estresse: [data.nivel_estresse ?? 5],
           tabagismo: data.tabagismo || false,
           alcool: data.alcool || "nao",
           suplementos: (data.suplementos as string[])?.join(", ") || "",
           restricoes_alimentares: (data.restricoes_alimentares as string[])?.join(", ") || "",
-          refeicoes_dia: String(data.refeicoes_dia || "4"),
-          agua_litros: String(data.agua_litros || "2"),
-          anos_treino: String(data.anos_treino || "0"),
+          refeicoes_dia: String(data.refeicoes_dia ?? "4"),
+          agua_litros: String(data.agua_litros ?? "2"),
+          anos_treino: String(data.anos_treino ?? "0"),
           disponibilidade_dias: (data.disponibilidade_dias as string[]) || [],
           nivel_experiencia: data.nivel_experiencia || "Intermediário",
           faz_uso_ergogenicos: data.faz_uso_ergogenicos || false,
@@ -88,7 +90,7 @@ export default function Anamnese() {
           alimentos_evita: data.alimentos_evita || "",
           modalidades_anteriores: (data.modalidades_anteriores as string[])?.join(", ") || "",
           tempo_recuperacao: data.tempo_recuperacao || "",
-          qualidade_sono: [data.qualidade_sono || 5],
+          qualidade_sono: [data.qualidade_sono ?? 5],
         });
       }
     } catch (e: any) {
@@ -113,7 +115,7 @@ export default function Anamnese() {
     try {
       const anamneseData = {
         aluno_id: user.id,
-        tenant_id: tenant?.id,
+        tenant_id: existingRecord?.tenant_id || tenant?.id,
         doencas: form.doencas.split(",").map(s => s.trim()).filter(Boolean),
         medicamentos: form.medicamentos,
         lesoes_atuais: form.lesoes_atuais,
@@ -124,9 +126,9 @@ export default function Anamnese() {
         alcool: form.alcool,
         suplementos: form.suplementos.split(",").map(s => s.trim()).filter(Boolean),
         restricoes_alimentares: form.restricoes_alimentares.split(",").map(s => s.trim()).filter(Boolean),
-        refeicoes_dia: Number(form.refeicoes_dia),
-        agua_litros: Number(form.agua_litros),
-        anos_treino: Number(form.anos_treino),
+        refeicoes_dia: parseInt(form.refeicoes_dia) || 0,
+        agua_litros: parseFloat(form.agua_litros) || 0,
+        anos_treino: parseFloat(form.anos_treino) || 0,
         disponibilidade_dias: form.disponibilidade_dias,
         nivel_experiencia: form.nivel_experiencia,
         faz_uso_ergogenicos: form.faz_uso_ergogenicos,
