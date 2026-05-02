@@ -6,6 +6,7 @@ import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Loader2, Search, Users, Mail } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 
 interface Aluno {
   id: string;
