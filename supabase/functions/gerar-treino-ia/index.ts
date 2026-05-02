@@ -24,7 +24,62 @@ serve(async (req) => {
     const lesoes = (perfil?.lesoes || []).join(", ") || "nenhuma";
     const limitacoes = (perfil?.limitacoes || []).join(", ") || "nenhuma";
 
-    // === RAG: Busca conhecimento relevante (global + tenant) ===
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+
+    // === BUSCA ESTRUTURADA: templates de treino do catálogo ===
+    let templatesContext = "";
+    try {
+      // Mapeia o perfil do aluno para os filtros da tabela
+      const sexo = (perfil?.sexo || "").toLowerCase();
+      const publicoFiltro = sexo.startsWith("f") || sexo === "mulher" || sexo === "feminino" ? "feminino" : "masculino";
+      const nivelMap: Record<string, string> = {
+        "iniciante": "iniciante",
+        "intermediario": "intermediario",
+        "intermediário": "intermediario",
+        "avancado": "avancado",
+        "avançado": "avancado",
+        "atleta": "super_avancado",
+        "atleta de alto nivel": "super_avancado",
+        "atleta de alto nível": "super_avancado",
+      };
+      const nivelFiltro = nivelMap[(perfil?.tempo_treino || "").toLowerCase()] || null;
+      const freqFiltro = perfil?.frequencia_semanal || null;
+      const divisaoFiltro = (divisoes && divisoes.length === 1) ? divisoes[0] : null;
+
+      const tplResp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/buscar_templates_treino`, {
+        method: "POST",
+        headers: {
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          p_publico: publicoFiltro,
+          p_nivel: nivelFiltro,
+          p_frequencia: freqFiltro,
+          p_divisao: divisaoFiltro,
+          p_enfase: null,
+          p_tenant_id: tenant_id || null,
+          p_limit: 5,
+        }),
+      });
+      if (tplResp.ok) {
+        const tpls = await tplResp.json();
+        if (Array.isArray(tpls) && tpls.length) {
+          templatesContext = "\n\n=== TEMPLATES RECOMENDADOS DO CATÁLOGO ===\n" +
+            tpls.map((t: any) =>
+              `• [${t.codigo}] ${t.titulo}\n  Público: ${t.publico} | Nível: ${t.nivel} | ${t.frequencia_semanal || "?"}x/semana | Divisão: ${t.divisao || "—"} | Ênfase: ${t.enfase || "—"}\n  ${t.resumo || ""}`
+            ).join("\n\n") +
+            "\n=== FIM TEMPLATES ===\n\nUse o template de MAIOR score como base estrutural (divisão, frequência, ênfase) para montar o treino.";
+          console.log(`Templates: ${tpls.length} encontrados (publico=${publicoFiltro}, nivel=${nivelFiltro}, freq=${freqFiltro})`);
+        }
+      }
+    } catch (tplErr) {
+      console.error("Templates busca error (não fatal):", tplErr);
+    }
+
+    // === RAG: Busca conhecimento semântico (global + tenant) ===
     let knowledgeContext = "";
     try {
       const queryText = `Treino para ${perfil?.sexo || ""} ${perfil?.idade || ""} anos, nivel ${perfil?.tempo_treino || "Iniciante"}, objetivo ${perfil?.objetivo || "hipertrofia"}, ${perfil?.frequencia_semanal || 4}x/semana. Lesoes: ${lesoes}. Limitacoes: ${limitacoes}. Divisao: ${(divisoes || []).join(",")}.`;
