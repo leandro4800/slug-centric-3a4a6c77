@@ -99,11 +99,14 @@ Deno.serve(async (req) => {
     };
 
     if (!skipStripeConnect) {
+      // IMPORTANTE: NÃO usamos `on_behalf_of`. Assim a cobrança fica na conta
+      // da PLATAFORMA, que absorve as taxas do Stripe. Repassamos 90% ao coach
+      // via transfer_data.destination — o coach só "paga" os 10% da plataforma,
+      // sem nenhuma taxa adicional do Stripe descontada dele.
       if (mode === 'subscription') {
         sessionParams.subscription_data = {
           trial_period_days: 30,
           application_fee_percent: PLATFORM_FEE_PCT,
-          on_behalf_of: tenant_to_use.stripe_account_id,
           transfer_data: { destination: tenant_to_use.stripe_account_id },
         };
       } else {
