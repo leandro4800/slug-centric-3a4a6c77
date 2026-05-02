@@ -148,7 +148,7 @@ const AdminPanel = () => {
               </Button>
             </Link>
             <Link to={`/${slug}/admin/montar-treino`}>
-              <Button className="bg-gradient-primary shadow-glow">
+              <Button>
                 <Sparkles className="h-4 w-4 mr-2" /> Montar Treino com IA
               </Button>
             </Link>
@@ -216,7 +216,7 @@ const AdminPanel = () => {
                     </div>
                     <label className="block">
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "hero")} />
-                      <Button asChild className="w-full bg-gradient-primary" disabled={uploading === "hero"}>
+                      <Button asChild disabled={uploading === "hero"}>
                         <span>{uploading === "hero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Trocar imagem de fundo</>}</span>
                       </Button>
                     </label>
@@ -284,7 +284,7 @@ const AdminPanel = () => {
                         </div>
                       )}
                     </div>
-                    <Button onClick={handleSaveAppearance} className="w-full bg-gradient-primary shadow-glow">Salvar configurações</Button>
+                    <Button onClick={handleSaveAppearance} className="w-full">Salvar configurações</Button>
                   </div>
                 </div>
               </TabsContent>
