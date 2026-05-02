@@ -52,7 +52,7 @@ export const useBranding = () => useContext(BrandingContext);
 const DEFAULTS = {
   primary: "355 100% 48%", // Ferrari Red
   primary_glow: "355 100% 60%",
-  accent: "39 34% 59%", // Old Gold
+  accent: "355 100% 48%", // Ferrari Red (Matched by default)
   background: "0 0% 0%", // Absolute Black
   card: "0 0% 3%",
   foreground: "0 0% 98%",

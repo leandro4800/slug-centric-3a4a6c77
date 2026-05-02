@@ -33,9 +33,9 @@
     --muted: 152 17% 16%; /* #22302A - Verde Floresta */
     --muted-foreground: 0 0% 60%;
 
-    /* Premium Gold / Champagne */
-    --accent: 39 34% 59%; /* #BAA174 - Ouro Velho */
-    --accent-foreground: 0 0% 10%;
+    /* Premium Accent - Default Ferrari Red */
+    --accent: 355 100% 48%; /* #E00000 - Ferrari Red */
+    --accent-foreground: 0 0% 100%;
 
     /* Premium Purple / Aubergine */
     --premium-purple: 309 13% 25%; /* #3A2B38 - Beringela */
