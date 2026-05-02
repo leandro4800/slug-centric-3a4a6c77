@@ -151,13 +151,16 @@ const AdminMontarTreino = () => {
     [perfil.frequencia_semanal, perfil.sexo, nivel]
   );
 
-  const salvarPerfil = async () => {
+  const salvarPerfil = async (silent = false) => {
     if (!alunoId || !tenant) return;
     const { error } = await supabase
       .from("perfis_treino")
       .upsert({ aluno_id: alunoId, tenant_id: tenant.id, ...perfil }, { onConflict: "aluno_id" });
-    if (error) toast.error(error.message);
-    else toast.success("Perfil salvo.");
+    if (error) {
+      if (!silent) toast.error(error.message);
+    } else {
+      if (!silent) toast.success("Perfil salvo.");
+    }
   };
 
   const gerarComIA = useCallback(async (customPrompt?: string) => {
@@ -167,7 +170,7 @@ const AdminMontarTreino = () => {
     }
     setGenerating(true);
     try {
-      await salvarPerfil();
+      await salvarPerfil(true);
       const { data: biblioteca } = await supabase
         .from("biblioteca_exercicios")
         .select("nome, grupo_muscular, contraindicacoes")
