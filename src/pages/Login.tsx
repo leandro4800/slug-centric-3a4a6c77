@@ -13,6 +13,7 @@ import loginBg from "@/assets/login-anilhas-bg.jpg";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
