@@ -147,7 +147,7 @@ export default function TenantLanding() {
             <img
               src={tenant.foto_url}
               alt={tenant.nome}
-              className="mb-6 h-24 w-24 rounded-2xl border-2 border-primary/40 object-cover shadow-glow md:h-32 md:w-32"
+              className="mb-6 h-24 w-24 rounded-none border-2 border-primary/40 object-cover shadow-glow md:h-32 md:w-32"
             />
           )}
           <Badge className="mb-4 bg-primary/20 text-primary border border-primary/40">
