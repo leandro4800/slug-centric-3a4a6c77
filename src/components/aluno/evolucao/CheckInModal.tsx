@@ -10,7 +10,11 @@ import { useAuth } from "@/hooks/use-auth";
 
 type PhotoType = 'frente' | 'costas' | 'lado';
 
-export const CheckInModal = () => {
+interface CheckInModalProps {
+  onSaved?: () => void;
+}
+
+export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [show7Dobras, setShow7Dobras] = useState(false);
   const [loading, setLoading] = useState(false);
