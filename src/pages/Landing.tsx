@@ -193,6 +193,12 @@ const Landing = () => {
   const formatBRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
   useEffect(() => {
+    if (!authLoading && user) {
+      navigate("/login", { replace: true });
+    }
+  }, [user, authLoading, navigate]);
+
+  useEffect(() => {
     const loadCoaches = async () => {
       const { data } = await supabase
         .from("tenants")
