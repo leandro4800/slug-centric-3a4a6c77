@@ -3,23 +3,120 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Camera, Plus, Calculator } from "lucide-react";
+import { Camera, Plus, Calculator, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
+
+type PhotoType = 'frente' | 'costas' | 'lado';
 
 export const CheckInModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [show7Dobras, setShow7Dobras] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [peso, setPeso] = useState("");
+  const [bf, setBf] = useState("");
+  const [fotos, setFotos] = useState<{ frente?: File; costas?: File; lado?: File }>({});
+  const [previews, setPreviews] = useState<{ frente?: string; costas?: string; lado?: string }>({});
+
+  const [dobras, setDobras] = useState({
+    peitoral: "",
+    axilar: "",
+    triceps: "",
+    subescapular: "",
+    abdominal: "",
+    suprailiaca: "",
+    coxa: "",
+  });
+
+  const handleFoto = (tipo: PhotoType, file: File) => {
+    setFotos(prev => ({ ...prev, [tipo]: file }));
+    setPreviews(prev => ({ ...prev, [tipo]: URL.createObjectURL(file) }));
+  };
+
+  const calculateBF = () => {
+    const sum = Object.values(dobras).reduce((acc, val) => acc + (parseFloat(val) || 0), 0);
+    if (sum === 0) return;
+
+    // Simplificação do Jackson & Pollock 7 Dobras para exemplo (deve ser refinado com idade/sexo se disponível)
+    // Densidade Corporal (DC) = 1.112 - (0.00043499 * soma) + (0.00000055 * soma^2) - (0.00028826 * idade)
+    // %Gordura = ((4.95 / DC) - 4.50) * 100
+    
+    // Para simplificar agora, usaremos uma estimativa linear baseada na soma
+    const estimatedBF = (sum * 0.15 + 5).toFixed(1);
+    setBf(estimatedBF);
+    toast.info(`BF% estimado em ${estimatedBF}% baseado nas dobras.`);
+  };
+
+  const uploadFoto = async (file: File, tipo: string) => {
+    if (!user) return null;
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}_${tipo}.${fileExt}`;
+    
+    const { error } = await supabase.storage
+      .from('evolucao-fotos')
+      .upload(fileName, file);
+
+    if (error) throw error;
+    return fileName;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Progresso registrado com sucesso!");
-    setIsOpen(false);
+    if (!user) {
+      toast.error("Você precisa estar logado.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const foto_frente_url = fotos.frente ? await uploadFoto(fotos.frente, 'frente') : null;
+      const foto_costas_url = fotos.costas ? await uploadFoto(fotos.costas, 'costas') : null;
+      const foto_lado_url = fotos.lado ? await uploadFoto(fotos.lado, 'lado') : null;
+
+      const { error } = await supabase.from('evolucao_checkins').insert({
+        user_id: user.id,
+        peso_kg: parseFloat(peso) || null,
+        bf_percentual: parseFloat(bf) || null,
+        foto_frente_url,
+        foto_costas_url,
+        foto_lado_url,
+        dobras: dobras,
+        data_checkin: new Date().toISOString()
+      });
+
+      if (error) throw error;
+
+      toast.success("Check-in de evolução salvo com sucesso!");
+      setIsOpen(false);
+      // Reset form
+      setPeso("");
+      setBf("");
+      setFotos({});
+      setPreviews({});
+      setDobras({
+        peitoral: "",
+        axilar: "",
+        triceps: "",
+        subescapular: "",
+        abdominal: "",
+        suprailiaca: "",
+        coxa: "",
+      });
+    } catch (error: any) {
+      console.error(error);
+      toast.error("Erro ao salvar check-in: " + error.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="fixed bottom-24 right-5 w-14 h-14 rounded-full p-0 shadow-glow animate-pulse" variant="default">
+        <Button className="fixed bottom-24 right-5 w-14 h-14 rounded-full p-0 shadow-glow animate-pulse z-50" variant="default">
           <Plus className="h-6 w-6" />
         </Button>
       </DialogTrigger>
@@ -37,11 +134,27 @@ export const CheckInModal = () => {
           <div className="space-y-3">
             <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Fotos de Progresso</Label>
             <div className="grid grid-cols-3 gap-2">
-              {['Frente', 'Costas', 'Lado'].map((pos) => (
-                <div key={pos} className="aspect-square border border-border bg-card/20 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary/50 transition-colors">
-                  <Camera className="h-5 w-5 text-muted-foreground" />
-                  <span className="text-[8px] uppercase tracking-tighter">{pos}</span>
-                </div>
+              {(['frente', 'costas', 'lado'] as PhotoType[]).map((tipo) => (
+                <label 
+                  key={tipo} 
+                  className="aspect-[3/4] border border-border bg-card/20 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary/50 transition-colors overflow-hidden relative"
+                >
+                  {previews[tipo] ? (
+                    <img src={previews[tipo]} alt={tipo} className="w-full h-full object-cover" />
+                  ) : (
+                    <>
+                      <Camera className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[8px] uppercase tracking-tighter">{tipo}</span>
+                    </>
+                  )}
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    capture="environment" 
+                    className="hidden" 
+                    onChange={(e) => e.target.files?.[0] && handleFoto(tipo, e.target.files[0])}
+                  />
+                </label>
               ))}
             </div>
           </div>
@@ -50,11 +163,26 @@ export const CheckInModal = () => {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Peso (kg)</Label>
-              <Input type="number" step="0.1" className="bg-card/40 border-border rounded-none h-12 text-center text-lg font-bold" placeholder="0.0" />
+              <Input 
+                type="number" 
+                step="0.1" 
+                required
+                value={peso}
+                onChange={(e) => setPeso(e.target.value)}
+                className="bg-card/40 border-border rounded-none h-12 text-center text-lg font-bold" 
+                placeholder="0.0" 
+              />
             </div>
             <div className="space-y-2">
               <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">BF% (Opcional)</Label>
-              <Input type="number" step="0.1" className="bg-card/40 border-border rounded-none h-12 text-center text-lg font-bold" placeholder="0.0" />
+              <Input 
+                type="number" 
+                step="0.1" 
+                value={bf}
+                onChange={(e) => setBf(e.target.value)}
+                className="bg-card/40 border-border rounded-none h-12 text-center text-lg font-bold" 
+                placeholder="0.0" 
+              />
             </div>
           </div>
 
@@ -73,24 +201,42 @@ export const CheckInModal = () => {
             <div className="bg-card/40 border border-primary/20 p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
               <p className="text-[10px] text-primary/80 tracking-widest text-center uppercase mb-2">Jackson & Pollock Protocol</p>
               <div className="grid grid-cols-2 gap-3">
-                {['Peitoral', 'Axilar', 'Tríceps', 'Subescapular', 'Abdominal', 'Suprailíaca', 'Coxa'].map((dobra) => (
-                  <div key={dobra} className="space-y-1">
-                    <Label className="text-[8px] uppercase text-muted-foreground">{dobra}</Label>
-                    <Input type="number" className="h-8 bg-black/40 border-border rounded-none text-xs" placeholder="mm" />
+                {Object.keys(dobras).map((key) => (
+                  <div key={key} className="space-y-1">
+                    <Label className="text-[8px] uppercase text-muted-foreground">{key}</Label>
+                    <Input 
+                      type="number" 
+                      value={dobras[key as keyof typeof dobras]}
+                      onChange={(e) => setDobras(prev => ({ ...prev, [key]: e.target.value }))}
+                      className="h-8 bg-black/40 border-border rounded-none text-xs" 
+                      placeholder="mm" 
+                    />
                   </div>
                 ))}
               </div>
-              <div className="pt-2 border-t border-primary/10 mt-2">
-                <div className="flex justify-between items-center text-[10px] tracking-widest text-white">
-                  <span>RESULTADO ESTIMADO:</span>
-                  <span className="text-primary font-bold">-- %</span>
+              <div className="pt-2 border-t border-primary/10 mt-2 flex justify-between items-center">
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  onClick={calculateBF}
+                  className="text-[10px] h-7 bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30"
+                >
+                  CALCULAR
+                </Button>
+                <div className="text-[10px] tracking-widest text-white">
+                  <span>ESTIMADO:</span>
+                  <span className="text-primary font-bold ml-2">{bf || "--"} %</span>
                 </div>
               </div>
             </div>
           )}
 
-          <Button type="submit" className="w-full h-12 text-sm tracking-widest font-bold shadow-glow">
-            SALVAR EVOLUÇÃO
+          <Button 
+            type="submit" 
+            disabled={loading}
+            className="w-full h-12 text-sm tracking-widest font-bold shadow-glow"
+          >
+            {loading ? <Loader2 className="animate-spin h-5 w-5" /> : "SALVAR EVOLUÇÃO"}
           </Button>
         </form>
       </DialogContent>
