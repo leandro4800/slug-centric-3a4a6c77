@@ -111,6 +111,7 @@ const Perfil = () => {
     // Usar upsert para garantir que o registro existe, mantendo o tenant_id original
     const { error } = await supabase.from("perfis").upsert({
       id: user.id,
+      email: user.email,
       ...formProfile,
       tenant_id: profile?.tenant_id || tenant?.id,
       updated_at: new Date().toISOString()
