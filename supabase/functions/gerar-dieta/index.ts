@@ -18,6 +18,8 @@ interface DietRequest {
   sexo?: string;
   nivel_atividade?: number; // 1.2 - 1.9
   nivel?: string; // "iniciante" | "intermediario" | "avancado" | "alto_nivel"
+  aluno_id?: string;
+  tenant_id?: string;
 }
 
 serve(async (req) => {
@@ -32,6 +34,7 @@ serve(async (req) => {
     if (!user) throw new Error("Usuário inválido");
 
     const body: DietRequest = await req.json().catch(() => ({}));
+    const targetUserId = body.aluno_id || user.id;
     const objetivo = body.objetivo || "hipertrofia";
     const peso = Number(body.peso_kg) || 75;
     const altura = Number(body.altura_cm) || 175;
@@ -70,7 +73,7 @@ serve(async (req) => {
     const { data: ultimaAnalise } = await supabase
       .from("analises_clinicas")
       .select("id, resumo_clinico, dados_extraidos")
-      .eq("user_id", user.id)
+      .eq("user_id", targetUserId)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -78,7 +81,7 @@ serve(async (req) => {
     const { data: biomarcadores } = await supabase
       .from("exames_biomarcadores")
       .select("nome, valor, unidade, classificacao")
-      .eq("user_id", user.id)
+      .eq("user_id", targetUserId)
       .in("classificacao", ["Alerta", "Critico", "Subotimizado"])
       .limit(20);
 
@@ -163,7 +166,7 @@ Gere o plano em JSON.`;
     const { data: dieta, error: dietaErr } = await supabase
       .from("dietas")
       .insert({
-        user_id: user.id,
+        user_id: targetUserId,
         analise_id: ultimaAnalise?.id || null,
         objetivo,
         tmb_estimada: Math.round(tmb),
