@@ -342,7 +342,7 @@ const Landing = () => {
           </Link>
           <Button 
             onClick={() => setShowSimulador(true)}
-            className="px-6"
+            className="px-6 font-black uppercase tracking-widest"
           >
             TESTAR AGORA
           </Button>
@@ -432,10 +432,10 @@ const Landing = () => {
                 <div className="space-y-6">
                   <p className="text-xl text-gray-400 mb-8 font-medium">Você já possui o link direto do seu coach?</p>
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Button onClick={() => setHasCoachLink(true)} size="lg" className="h-16 px-8 rounded-sm text-lg uppercase font-black">
+                    <Button onClick={() => setHasCoachLink(true)} size="lg" className="h-16 px-8 text-lg uppercase font-black">
                       Sim, eu tenho o link
                     </Button>
-                    <Button onClick={() => setHasCoachLink(false)} size="lg" variant="outline" className="h-16 px-8 rounded-sm text-lg uppercase font-black">
+                    <Button onClick={() => setHasCoachLink(false)} size="lg" variant="outline" className="h-16 px-8 text-lg uppercase font-black border-white/20">
                       Não, quero procurar um
                     </Button>
                   </div>
@@ -451,7 +451,7 @@ const Landing = () => {
                       className="h-16 bg-secondary/50 border-white/10 text-xl font-bold"
                       autoFocus
                     />
-                    <Button type="submit" size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 px-8 rounded-xl uppercase">
+                    <Button type="submit" size="lg" className="h-16 px-8 font-black uppercase tracking-widest">
                       Acessar Coach
                     </Button>
                   </div>
@@ -473,7 +473,7 @@ const Landing = () => {
                           className="h-16 pl-12 bg-secondary/50 border-white/10 text-xl font-bold"
                         />
                       </div>
-                      <Button type="submit" size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 px-8 rounded-xl uppercase">
+                      <Button type="submit" size="lg" className="h-16 px-8 font-black uppercase tracking-widest">
                         Buscar
                       </Button>
                     </form>
@@ -491,7 +491,7 @@ const Landing = () => {
                           className="h-16 pl-12 bg-secondary/50 border-white/10 text-xl font-bold"
                         />
                       </div>
-                      <Button type="submit" size="lg" variant="outline" className="border-primary/50 text-primary hover:bg-primary/10 font-bold h-16 px-8 rounded-xl uppercase">
+                      <Button type="submit" size="lg" variant="outline" className="h-16 px-8 font-black uppercase tracking-widest border-primary/50 text-primary">
                         Ver no Mapa
                       </Button>
                     </form>
@@ -529,13 +529,13 @@ const Landing = () => {
               
               <div className="flex flex-col sm:flex-row flex-wrap gap-4">
                 <Link to="/seja-coach" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto px-8 h-16 rounded-sm font-black uppercase tracking-wider group">
+                  <Button size="lg" className="w-full sm:w-auto px-8 h-16 font-black uppercase tracking-widest group">
                     <Play className="mr-2 h-4 w-4 fill-current" />
                     Quero minha franquia Alpha Coach
                   </Button>
                 </Link>
                 <Link to="/login" className="w-full sm:w-auto">
-                  <Button size="lg" variant="outline" className="w-full px-8 h-16 rounded-sm font-black tracking-wider group uppercase">
+                  <Button size="lg" variant="outline" className="w-full px-8 h-16 font-black tracking-widest group uppercase border-white/20">
                     Já sou coach — Entrar
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
