@@ -149,6 +149,7 @@ const BRAND_COLORS = [
 ];
 
 const Landing = () => {
+  const { user, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<"choice" | "aluno" | "coach" | null>(null);
   const [showSimulador, setShowSimulador] = useState(false);
   const [email, setEmail] = useState("");
