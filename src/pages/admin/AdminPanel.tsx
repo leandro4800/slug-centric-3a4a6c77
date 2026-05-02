@@ -238,8 +238,8 @@ const AdminPanel = () => {
                   </div>
 
                   {/* Logo & textos */}
-                  <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm space-y-5">
-                    <h3 className="font-display text-xl">LOGO & TEXTOS</h3>
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-5">
+                    <h3 className="font-display text-2xl text-primary uppercase tracking-wider">LOGO & TEXTOS</h3>
                     <div>
                       <Label>Logo</Label>
                       <div className="flex items-center gap-3 mt-2">
