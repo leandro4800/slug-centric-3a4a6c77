@@ -23,25 +23,28 @@ const Login = () => {
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
-      const [{ data: perfil }, { data: roles }] = await Promise.all([
+      const [{ data: perfil }, { data: roles }, { data: ownedTenant }] = await Promise.all([
         supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
         supabase.from("user_roles").select("role, tenant_id").eq("user_id", user.id),
+        supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle(),
       ]);
 
       const isAdmin = roles?.some((r) => r.role === "admin");
-      const isCoach = roles?.some((r) => r.role === "coach");
+      const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
 
-      // Coach (mesmo se também for admin): vai para o painel do próprio tenant
+      // Coach (dono de tenant ou role coach): vai direto para o painel do tenant
       if (isCoach) {
-        const coachRole = roles?.find((r) => r.role === "coach");
-        let slug: string | null = null;
-        if (coachRole?.tenant_id) {
-          const { data: t } = await supabase
-            .from("tenants")
-            .select("slug")
-            .eq("id", coachRole.tenant_id)
-            .maybeSingle();
-          slug = t?.slug ?? null;
+        let slug: string | null = ownedTenant?.slug ?? null;
+        if (!slug) {
+          const coachRole = roles?.find((r) => r.role === "coach");
+          if (coachRole?.tenant_id) {
+            const { data: t } = await supabase
+              .from("tenants")
+              .select("slug")
+              .eq("id", coachRole.tenant_id)
+              .maybeSingle();
+            slug = t?.slug ?? null;
+          }
         }
         navigate(slug ? `/${slug}/admin` : "/seja-coach", { replace: true });
         return;

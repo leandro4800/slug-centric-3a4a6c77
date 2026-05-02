@@ -535,12 +535,12 @@ const Landing = () => {
                     Quero minha franquia Alpha Coach
                   </Button>
                 </Link>
-                <a href="#coaches" className="w-full sm:w-auto">
+                <Link to="/login" className="w-full sm:w-auto">
                   <Button size="lg" variant="outline" className="w-full text-white border-white/20 bg-white/5 hover:bg-white/10 text-base px-8 h-14 rounded-md font-medium group uppercase font-bold tracking-wider">
-                    Ver coaches em destaque
+                    Já sou coach — Entrar
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
-                </a>
+                </Link>
               </div>
             </div>
           )}
