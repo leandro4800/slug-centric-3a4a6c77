@@ -41,7 +41,35 @@ const Login = () => {
       const isAdmin = roles?.some((r) => r.role === "admin");
       const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
 
-      // Coach (dono de tenant ou role coach): vai direto para o painel do tenant
+      // Se for um coach/admin e NÃO houver um redirectPath explícito, ele vai para o admin do tenant dele
+      // Mas se o usuário estiver tentando acessar alphateam/app (que define redirectPath), ele deve ir para lá.
+      
+      // Aluno ou Coach tentando acessar a Home do App:
+      if (!isAdmin && !isCoach) {
+        const { count: anamneseCount } = await supabase
+          .from("anamnese_aluno")
+          .select("id", { count: 'exact', head: true })
+          .eq("aluno_id", user.id);
+
+        const { count: avaliacaoCount } = await supabase
+          .from("avaliacoes_fisicas")
+          .select("id", { count: 'exact', head: true })
+          .eq("aluno_id", user.id);
+
+        if (!perfil?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
+          navigate("/onboarding", { replace: true });
+          return;
+        }
+      }
+
+      // Se chegamos aqui, o onboarding está OK ou é Admin/Coach
+      // Se houver um redirectPath, respeitamos ele (ex: /alphateam/app)
+      if (redirectPath && redirectPath !== "/login") {
+        navigate(redirectPath, { replace: true });
+        return;
+      }
+
+      // Fallbacks se não houver redirectPath:
       if (isCoach) {
         let slug: string | null = ownedTenant?.slug ?? null;
         if (!slug) {
@@ -59,25 +87,8 @@ const Login = () => {
         return;
       }
 
-      // Super admin AlphaCoach (sem tenant próprio)
       if (isAdmin) {
         navigate("/admin/coaches", { replace: true });
-        return;
-      }
-
-      // Aluno: precisa onboarding completo
-      const { count: anamneseCount } = await supabase
-        .from("anamnese_aluno")
-        .select("id", { count: 'exact', head: true })
-        .eq("aluno_id", user.id);
-
-      const { count: avaliacaoCount } = await supabase
-        .from("avaliacoes_fisicas")
-        .select("id", { count: 'exact', head: true })
-        .eq("aluno_id", user.id);
-
-      if (!perfil?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
-        navigate("/onboarding", { replace: true });
         return;
       }
 
