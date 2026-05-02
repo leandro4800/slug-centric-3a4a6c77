@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, ArrowLeft, Calendar, Scale, Activity } from "lucide-react";
+import { TrendingUp, ArrowLeft, Calendar, Scale, Activity, Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/aluno/PageHeader";
