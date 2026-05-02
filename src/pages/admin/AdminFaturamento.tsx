@@ -280,7 +280,7 @@ const AdminFaturamento = () => {
         </section>
 
         <section className="space-y-4 pt-4">
-          <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-primary pl-3">Análise de Performance</h2>
+          <h2 className="text-xl font-bold uppercase tracking-wide text-primary border-l-4 border-primary pl-3">Análise de Performance</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
             <button onClick={() => setStudentsView("ativos")} className="min-w-[280px] text-left bg-white/10 border border-white/20 rounded-none p-6 relative group overflow-hidden hover:border-primary transition-colors">
               <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
