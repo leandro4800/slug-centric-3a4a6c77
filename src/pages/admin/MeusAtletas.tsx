@@ -90,9 +90,9 @@ const MeusAtletas = () => {
   }, [alunos, q]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-black text-white">
       {/* Header */}
-      <header className="px-5 pt-6 pb-4 flex items-center gap-3 sticky top-0 bg-background/95 backdrop-blur z-10">
+      <header className="px-5 pt-6 pb-4 flex items-center gap-3 sticky top-0 bg-black/95 backdrop-blur z-10 border-b border-white/10">
         <button
           onClick={() => navigate(`/${slug}/app`)}
           className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center"

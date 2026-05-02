@@ -130,7 +130,7 @@ export const IdentidadeVisual = () => {
   return (
     <div className="grid lg:grid-cols-[auto_1fr] gap-6">
       {/* Preview do celular */}
-      <div className="bg-gradient-card border border-border rounded-2xl p-6 shadow-card">
+      <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4 text-center">
           Toque em qualquer elemento para editar
         </p>
@@ -148,7 +148,7 @@ export const IdentidadeVisual = () => {
       {/* Painel de edição */}
       <div className="space-y-4">
         {/* Editor IA */}
-        <div className="bg-gradient-card border border-border rounded-2xl p-5 shadow-card">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="h-4 w-4 text-primary" />
             <h3 className="font-display text-lg">EDITAR COM IA</h3>
@@ -174,7 +174,7 @@ export const IdentidadeVisual = () => {
         </div>
 
         {/* Editor do elemento selecionado */}
-        <div className="bg-gradient-card border border-border rounded-2xl p-5 shadow-card">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
           <h3 className="font-display text-lg mb-3">
             {picked ? `EDITAR · ${picked.label.toUpperCase()}` : "SELECIONE UM ELEMENTO"}
           </h3>
@@ -214,7 +214,7 @@ export const IdentidadeVisual = () => {
         </div>
 
         {/* Reset total */}
-        <div className="bg-gradient-card border border-border rounded-2xl p-5 shadow-card flex items-center justify-between gap-3">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm flex items-center justify-between gap-3">
           <div>
             <p className="font-medium text-sm">Restaurar tema padrão (Netflix)</p>
             <p className="text-xs text-muted-foreground">Apaga todas as customizações salvas deste tenant</p>
@@ -225,7 +225,7 @@ export const IdentidadeVisual = () => {
         </div>
 
         {/* Atalhos: lista de elementos */}
-        <div className="bg-gradient-card border border-border rounded-2xl p-5 shadow-card">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
           <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Elementos editáveis</p>
           <div className="flex flex-wrap gap-2">
             {EDITABLE_TARGETS.map((t) => (

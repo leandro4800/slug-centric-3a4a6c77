@@ -106,8 +106,8 @@ const AdminBaseConhecimento = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-6 max-w-4xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="min-h-screen bg-black text-white p-6 max-w-4xl mx-auto">
+      <div className="flex items-center gap-3 mb-6 bg-black/95 backdrop-blur p-4 rounded-2xl border border-white/10 sticky top-4 z-20">
         <Button variant="ghost" size="icon" onClick={() => navigate(`/${slug}/admin`)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -137,7 +137,7 @@ const AdminBaseConhecimento = () => {
         )}
       </div>
 
-      <Card className="p-5 mb-6 space-y-4">
+      <Card className="p-5 mb-6 space-y-4 bg-black/40 border-white/10 shadow-2xl backdrop-blur-sm">
         <div>
           <Label>Arquivo (.zip, .pdf, .txt, .md)</Label>
           <Input
@@ -170,7 +170,7 @@ const AdminBaseConhecimento = () => {
       ) : (
         <div className="space-y-2">
           {rows.map((r) => (
-            <div key={r.id} className="flex items-center gap-3 p-3 bg-card border border-border rounded-lg">
+            <div key={r.id} className="flex items-center gap-3 p-3 bg-black/40 border border-white/10 rounded-lg backdrop-blur-sm">
               <FileText className="h-4 w-4 text-muted-foreground flex-shrink-0" />
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{r.titulo}</p>

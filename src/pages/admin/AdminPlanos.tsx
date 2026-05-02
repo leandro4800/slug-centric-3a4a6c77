@@ -119,12 +119,12 @@ export default function AdminPlanos() {
     void load();
   };
 
-  if (isLoading || loading) return <div className="flex h-screen items-center justify-center bg-background"><Loader2 className="h-6 w-6 animate-spin" /></div>;
+  if (isLoading || loading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="h-6 w-6 animate-spin text-red-600" /></div>;
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/50">
-        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 md:px-8">
+    <div className="min-h-screen bg-black text-white">
+      <header className="border-b border-white/10">
+        <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 md:px-8 bg-black/95 backdrop-blur">
           <Link to={`/${slug}/admin`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-4 w-4" /> Voltar
           </Link>
@@ -134,7 +134,7 @@ export default function AdminPlanos() {
 
       <div className="mx-auto max-w-4xl space-y-8 px-4 py-8 md:px-8">
         {/* Criar plano */}
-        <section className="rounded-2xl border border-border/50 bg-card p-6">
+        <section className="rounded-2xl border border-white/10 bg-black/40 p-6 shadow-2xl backdrop-blur-sm">
           <h2 className="mb-4 font-display text-xl uppercase">Novo plano</h2>
           <form onSubmit={handleCreate} className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
@@ -183,7 +183,7 @@ export default function AdminPlanos() {
           ) : (
             <div className="space-y-3">
               {planos.map((p) => (
-                <div key={p.id} className="flex items-center justify-between rounded-xl border border-border/50 bg-card p-4">
+                <div key={p.id} className="flex items-center justify-between rounded-xl border border-white/10 bg-black/40 p-4 shadow-2xl backdrop-blur-sm">
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-display text-lg uppercase">{p.nome}</h3>
