@@ -186,34 +186,25 @@ const AdminFaturamento = () => {
 
   return (
     <div className="relative min-h-screen bg-black text-white font-sans selection:bg-primary selection:text-white">
-      {/* Logo de fundo Alpha Coach */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0 bg-no-repeat bg-center bg-contain opacity-[0.06]"
-        style={{ backgroundImage: `url(${alphaLogo})` }}
-      />
-      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 bg-gradient-to-b from-black via-black/90 to-black" />
       <div className="relative z-10">
-      {/* Netflix-style Header Banner */}
-      <div className="relative h-[40vh] w-full overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 via-black/60 to-black z-0" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/10 via-transparent to-transparent opacity-50" />
-        
+      {/* Header */}
+      <div className="relative w-full pb-8">
         <header className="relative z-10 px-5 pt-6 flex items-center justify-between max-w-4xl mx-auto w-full">
           <AdminBackButton 
-            className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all hover:scale-105" 
+            className="w-10 h-10 rounded-full bg-white/5 backdrop-blur-md border border-white/10 hover:bg-white/20 transition-all hover:scale-105 flex items-center justify-center" 
           />
           <div className="text-primary font-black text-2xl tracking-tighter uppercase italic">ALPHA <span className="text-white">FINANCE</span></div>
           <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-primary-glow border border-white/20" />
         </header>
 
-        <main className="relative z-10 px-5 pt-12 max-w-4xl mx-auto w-full">
+        <main className="relative z-10 px-5 pt-8 max-w-4xl mx-auto w-full">
           <motion.div 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="space-y-1"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-white/40 font-bold italic">Saldo Disponível</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-white/60 font-bold italic">Saldo Disponível</p>
             <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white">
               {formatBRL(totalNet)}
             </h1>
@@ -221,7 +212,7 @@ const AdminFaturamento = () => {
               <Badge variant="outline" className="bg-primary/20 text-primary border-primary/40 uppercase text-[10px] tracking-widest font-bold px-3 py-1 rounded-none border-l-4">
                 PLATAFORMA ATIVA
               </Badge>
-              <p className="text-xs text-white/40">{formatBRL(totalCommission)} retidos (10%)</p>
+              <p className="text-sm text-white/70 font-medium">{formatBRL(totalCommission)} retidos (10%)</p>
             </div>
           </motion.div>
           
@@ -249,12 +240,12 @@ const AdminFaturamento = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-primary/10 border-l-4 border-primary p-5 flex gap-4 items-center"
+            className="bg-primary/20 border-l-4 border-primary p-6 flex gap-4 items-center"
           >
             <AlertCircle className="h-8 w-8 text-primary shrink-0" />
             <div className="space-y-1">
-              <p className="font-bold text-sm uppercase tracking-wider text-white">Verificação de Identidade</p>
-              <p className="text-xs text-white/60 leading-relaxed">
+              <p className="font-bold text-base uppercase tracking-wider text-white">Verificação de Identidade</p>
+              <p className="text-sm text-white/80 leading-relaxed font-medium">
                 {profile?.status_identidade === "em_analise" 
                   ? "Seus documentos estão em análise. Aguarde até 24h."
                   : "Para o seu 1º saque, é necessário enviar uma foto da sua identidade."}
@@ -268,17 +259,17 @@ const AdminFaturamento = () => {
             {menuItems.map((item, idx) => (
               <motion.button
                 key={idx}
-                whileHover={{ y: -5, backgroundColor: "rgba(255, 255, 255, 0.08)" }}
+                whileHover={{ y: -5, backgroundColor: "rgba(255, 255, 255, 0.12)" }}
                 onClick={item.onClick}
-                className="flex flex-col items-start gap-4 p-5 bg-white/5 border border-white/5 hover:border-primary/30 transition-all group text-left relative overflow-hidden"
+                className="flex flex-col items-start gap-4 p-5 bg-white/10 border border-white/10 hover:border-primary/50 transition-all group text-left relative overflow-hidden"
               >
-                <div className="w-12 h-12 rounded-none bg-black flex items-center justify-center border border-white/10 group-hover:border-primary/50 transition-colors">
+                <div className="w-12 h-12 rounded-none bg-black flex items-center justify-center border border-white/20 group-hover:border-primary transition-colors">
                   <item.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div className="space-y-1 z-10">
-                  <p className="font-bold text-sm text-white/90 uppercase tracking-tight">{item.label}</p>
+                  <p className="font-bold text-sm text-white uppercase tracking-tight">{item.label}</p>
                   {item.badge && (
-                    <Badge variant="outline" className={`${item.badgeColor} text-[8px] uppercase tracking-widest px-1.5 h-4 border-none p-0 font-black`}>
+                    <Badge variant="outline" className={`${item.badgeColor} text-[10px] uppercase tracking-widest px-2 h-5 border-none p-0 font-black`}>
                       {item.badge}
                     </Badge>
                   )}
@@ -291,42 +282,42 @@ const AdminFaturamento = () => {
         <section className="space-y-4 pt-4">
           <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-primary pl-3">Análise de Performance</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-            <button onClick={() => setStudentsView("ativos")} className="min-w-[280px] text-left bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden hover:border-primary/50 transition-colors">
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <button onClick={() => setStudentsView("ativos")} className="min-w-[280px] text-left bg-white/10 border border-white/20 rounded-none p-6 relative group overflow-hidden hover:border-primary transition-colors">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <TrendingUp className="h-24 w-24 text-white" />
               </div>
-              <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-4 italic">Alunos Ativos</p>
+              <p className="text-xs uppercase tracking-widest text-white/80 font-bold mb-4 italic">Alunos Ativos</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-6xl font-black text-white">{activeStudents}</span>
-                <span className="text-white/40 text-sm font-bold flex items-center"><TrendingUp className="h-3 w-3 mr-1" />Demo</span>
+                <span className="text-white/60 text-sm font-bold flex items-center"><TrendingUp className="h-4 w-4 mr-1 text-primary" />Demo</span>
               </div>
-              <div className="mt-6 h-1 w-full bg-white/10 rounded-none overflow-hidden">
+              <div className="mt-6 h-1 w-full bg-white/20 rounded-none overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: "80%" }}
                   className="h-full bg-primary" 
                 />
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-primary font-black mt-3">Ver lista →</p>
+              <p className="text-[11px] uppercase tracking-widest text-primary font-black mt-4">Ver lista →</p>
             </button>
 
-            <button onClick={() => setStudentsView("desistentes")} className="min-w-[280px] text-left bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden hover:border-primary/50 transition-colors">
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <button onClick={() => setStudentsView("desistentes")} className="min-w-[280px] text-left bg-white/10 border border-white/20 rounded-none p-6 relative group overflow-hidden hover:border-primary transition-colors">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <TrendingDown className="h-24 w-24 text-primary" />
               </div>
-              <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-4 italic">Desistentes</p>
+              <p className="text-xs uppercase tracking-widest text-white/80 font-bold mb-4 italic">Desistentes</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-6xl font-black text-white">0</span>
-                <span className="text-primary text-sm font-bold flex items-center"><TrendingDown className="h-3 w-3 mr-1" />-0%</span>
+                <span className="text-primary text-sm font-bold flex items-center"><TrendingDown className="h-4 w-4 mr-1" />-0%</span>
               </div>
-              <div className="mt-6 h-1 w-full bg-white/10 rounded-none overflow-hidden">
+              <div className="mt-6 h-1 w-full bg-white/20 rounded-none overflow-hidden">
                 <motion.div 
                    initial={{ width: 0 }}
                    animate={{ width: "10%" }}
                    className="h-full bg-primary" 
                 />
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-primary font-black mt-3">Ver lista →</p>
+              <p className="text-[11px] uppercase tracking-widest text-primary font-black mt-4">Ver lista →</p>
             </button>
           </div>
         </section>
