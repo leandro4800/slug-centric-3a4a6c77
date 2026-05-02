@@ -538,7 +538,7 @@ export type Database = {
           id: string
           nivel: string | null
           nome_exercicio: string
-          profissional_id: string
+          profissional_id: string | null
           tags: string[] | null
           updated_at: string
           video_url: string | null
@@ -554,7 +554,7 @@ export type Database = {
           id?: string
           nivel?: string | null
           nome_exercicio: string
-          profissional_id: string
+          profissional_id?: string | null
           tags?: string[] | null
           updated_at?: string
           video_url?: string | null
@@ -570,7 +570,7 @@ export type Database = {
           id?: string
           nivel?: string | null
           nome_exercicio?: string
-          profissional_id?: string
+          profissional_id?: string | null
           tags?: string[] | null
           updated_at?: string
           video_url?: string | null
