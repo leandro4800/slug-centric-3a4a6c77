@@ -146,12 +146,16 @@ const CompararEvolucao = () => {
       const isTitle = trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3;
       if (isTitle) {
         return (
-          <p key={i} className="text-primary font-medium mt-10 mb-5 tracking-[0.3em] text-[14px] uppercase border-b border-primary/20 pb-3">
+          <p key={i} className="text-primary font-medium mt-10 mb-5 tracking-[0.3em] text-[14px] uppercase border-b border-primary/20 pb-3" style={{ fontWeight: 400 }}>
             {trimmedLine}
           </p>
         );
       }
-      return <p key={i} className="text-white text-[18px] leading-[1.8] mb-6 font-normal tracking-wide">{trimmedLine}</p>;
+      return (
+        <p key={i} className="text-white text-[16px] leading-[1.8] mb-6 tracking-wide" style={{ fontWeight: 300, fontStyle: 'normal', textRendering: 'optimizeLegibility', WebkitFontSmoothing: 'antialiased' }}>
+          {trimmedLine}
+        </p>
+      );
     });
   };
 
@@ -210,20 +214,20 @@ const CompararEvolucao = () => {
             <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
               <Scale className="h-5 w-5 text-primary mb-1" />
               <p className="text-[10px] uppercase text-muted-foreground tracking-widest">Peso</p>
-              <p className="text-sm font-normal text-white">
+              <p className="text-sm text-white" style={{ fontWeight: 400 }}>
                 {antes.peso_kg}kg → {depois.peso_kg}kg
               </p>
-              <p className={`text-[10px] font-normal ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-[10px] ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`} style={{ fontWeight: 400 }}>
                 {parseFloat(pesoDiff) > 0 ? '+' : ''}{pesoDiff}kg
               </p>
             </div>
             <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
               <Activity className="h-5 w-5 text-primary mb-1" />
               <p className="text-[10px] uppercase text-muted-foreground tracking-widest">BF%</p>
-              <p className="text-sm font-normal text-white">
+              <p className="text-sm text-white" style={{ fontWeight: 400 }}>
                 {antes.bf_percentual || '--'}% → {depois.bf_percentual || '--'}%
               </p>
-              <p className={`text-[10px] font-normal ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-[10px] ${parseFloat(bfDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`} style={{ fontWeight: 400 }}>
                 {parseFloat(bfDiff) > 0 ? '+' : ''}{bfDiff}%
               </p>
             </div>
@@ -277,7 +281,7 @@ const CompararEvolucao = () => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase">Sem foto</div>
                   )}
-                  <span className="absolute top-2 left-2 bg-black/80 text-white text-[8px] px-2 py-0.5 rounded uppercase font-medium tracking-tighter">Antes</span>
+                  <span className="absolute top-2 left-2 bg-black/80 text-white text-[8px] px-2 py-0.5 rounded uppercase tracking-tighter" style={{ fontWeight: 400 }}>Antes</span>
                 </div>
                 <div className="relative aspect-[3/4] bg-zinc-900 overflow-hidden border border-primary/20 shadow-glow-sm">
                   {urls[`depois_foto_${angulo}_url`] ? (
@@ -289,7 +293,7 @@ const CompararEvolucao = () => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase">Sem foto</div>
                   )}
-                  <span className="absolute top-2 left-2 bg-primary text-white text-[8px] px-2 py-0.5 rounded uppercase font-medium tracking-tighter">Depois</span>
+                  <span className="absolute top-2 left-2 bg-primary text-white text-[8px] px-2 py-0.5 rounded uppercase tracking-tighter" style={{ fontWeight: 400 }}>Depois</span>
                 </div>
               </div>
             </div>
