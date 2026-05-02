@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { useToast } from "@/hooks/use-toast";
 import { formatBRL } from "@/lib/body-metrics";
 
