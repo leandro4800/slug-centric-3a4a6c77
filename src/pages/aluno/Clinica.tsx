@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
 
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
@@ -129,26 +130,24 @@ const Clinica = () => {
       </div>
 
       <div className="px-5 pb-6">
-        <div className="flex bg-card rounded-xl p-1 mb-5">
-          <button
+        <div className="flex bg-card/80 border border-border rounded-none p-1 mb-5">
+          <Button
+            variant={tab === "nova" ? "default" : "ghost"}
             onClick={() => {
               setTab("nova");
               setCurrentAnalysis(null);
             }}
-            className={`flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors ${
-              tab === "nova" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-            }`}
+            className="flex-1"
           >
             Nova análise
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={tab === "clinica" ? "default" : "ghost"}
             onClick={() => setTab("clinica")}
-            className={`flex-1 py-3 rounded-lg text-sm font-semibold uppercase tracking-wider transition-colors ${
-              tab === "clinica" ? "bg-accent text-accent-foreground" : "text-muted-foreground"
-            }`}
+            className="flex-1"
           >
             Clínica
-          </button>
+          </Button>
         </div>
 
         {isAnalyzing ? (
@@ -182,20 +181,21 @@ const Clinica = () => {
         ) : tab === "nova" && !currentAnalysis ? (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
-              <button
+              <Button
                 key={a.title}
+                variant="secondary"
                 onClick={a.onClick}
-                className={`w-full bg-gradient-to-br from-card/80 to-card/30 ${a.dashed ? "border-dashed border-2" : "border"} border-accent/40 rounded-2xl p-4 flex items-center gap-4 text-left hover:from-card hover:to-card/50 hover:scale-[1.01] hover:border-accent/70 transition-all duration-300 shadow-[0_8px_24px_-12px_hsl(0_0%_0%/0.6)]`}
+                className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
               >
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent/30 to-accent/10 border border-accent/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--accent)/0.5)]">
-                  <a.icon className="h-5 w-5 text-accent" />
+                <div className="w-12 h-12 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
+                  <a.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
                   <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">{a.sub}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 tracking-widest">{a.sub}</p>
                 </div>
-                <ChevronRight className="h-4 w-4 text-accent" />
-              </button>
+                <ChevronRight className="h-4 w-4 text-primary" />
+              </Button>
             ))}
 
             <div className="bg-card/40 border border-border rounded-2xl p-5 mt-5">
