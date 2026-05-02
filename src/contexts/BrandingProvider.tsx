@@ -81,6 +81,9 @@ export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl
   else root.style.removeProperty("--hero-url");
 };
 
+const TENANT_PUBLIC_COLUMNS =
+  "id, slug, nome, tagline, logo_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
+
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const { slug } = useParams<{ slug: string }>();
   const [tenant, setTenant] = useState<Tenant | null>(null);
@@ -96,7 +99,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     setLoading(true);
     const { data, error } = await supabase
       .from("tenants")
-      .select("*")
+      .select(TENANT_PUBLIC_COLUMNS)
       .eq("slug", slug)
       .maybeSingle();
     if (error) console.warn("[Branding] erro:", error.message);
