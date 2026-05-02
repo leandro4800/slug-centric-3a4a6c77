@@ -17,15 +17,56 @@ serve(async (req) => {
   }
 
   try {
-    const { perfil, biblioteca, divisoes } = await req.json();
+    const { perfil, biblioteca, divisoes, tenant_id } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
     const lesoes = (perfil?.lesoes || []).join(", ") || "nenhuma";
     const limitacoes = (perfil?.limitacoes || []).join(", ") || "nenhuma";
 
-    // Preparação para futura integração com a tabela biblioteca_metodologia_pacho
-    // Por enquanto, usamos a biblioteca geral enviada pelo frontend
+    // === RAG: Busca conhecimento relevante (global + tenant) ===
+    let knowledgeContext = "";
+    try {
+      const queryText = `Treino para ${perfil?.sexo || ""} ${perfil?.idade || ""} anos, nivel ${perfil?.tempo_treino || "Iniciante"}, objetivo ${perfil?.objetivo || "hipertrofia"}, ${perfil?.frequencia_semanal || 4}x/semana. Lesoes: ${lesoes}. Limitacoes: ${limitacoes}. Divisao: ${(divisoes || []).join(",")}.`;
+      const embResp = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model: "openai/text-embedding-3-small", input: queryText }),
+      });
+      if (embResp.ok) {
+        const embData = await embResp.json();
+        const queryEmbedding = embData.data[0].embedding;
+
+        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+        const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+        const rpcResp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/buscar_conhecimento_treino`, {
+          method: "POST",
+          headers: {
+            apikey: SERVICE_KEY,
+            Authorization: `Bearer ${SERVICE_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            query_embedding: queryEmbedding,
+            p_tenant_id: tenant_id || null,
+            match_count: 18,
+            similarity_threshold: 0.35,
+          }),
+        });
+        if (rpcResp.ok) {
+          const matches = await rpcResp.json();
+          if (Array.isArray(matches) && matches.length) {
+            knowledgeContext = "\n\n=== BASE DE CONHECIMENTO (use rigorosamente como referência) ===\n" +
+              matches.map((m: any, i: number) => `[Fonte: ${m.fonte || "?"}]\n${m.conteudo}`).join("\n---\n") +
+              "\n=== FIM DA BASE ===\n";
+            console.log(`RAG: ${matches.length} chunks injetados`);
+          }
+        }
+      }
+    } catch (ragErr) {
+      console.error("RAG error (não fatal):", ragErr);
+    }
+
     
     const systemPrompt = `Você é um treinador de elite especialista na Metodologia Fabrício Pacholok. 
 Sua missão é prescrever treinos com extrema precisão técnica, focando em:
