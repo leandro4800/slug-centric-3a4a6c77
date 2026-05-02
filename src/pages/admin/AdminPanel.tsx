@@ -107,7 +107,33 @@ const AdminPanel = () => {
           <Logo size={32} />
           <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-black tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
         </div>
-        <Button variant="ghost" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Sair</Button>
+        
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost">
+              <LogOut className="h-4 w-4 mr-2" /> Sair
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="bg-black border-white/10 text-white">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Encerrar sessão?</AlertDialogTitle>
+              <AlertDialogDescription className="text-muted-foreground">
+                Você será desconectado do aplicativo. Deseja continuar?
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className="bg-transparent border-white/10 text-white hover:bg-white/5">
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={handleLogout}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                Sair
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </header>
 
       <main className="max-w-6xl mx-auto p-6">
