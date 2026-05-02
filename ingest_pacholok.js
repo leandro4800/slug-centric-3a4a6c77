@@ -35,8 +35,8 @@ async function ingest() {
     const enfaseMatch = title.match(/FOCO EM (.*)/i);
     const enfase = enfaseMatch ? enfaseMatch[1].trim() : "Geral";
 
-    const exercises: any[] = [];
-    let currentExercise: any = null;
+    const exercises = [];
+    let currentExercise = null;
     
     for (let i = 1; i < lines.length; i++) {
       const line = lines[i].trim();
