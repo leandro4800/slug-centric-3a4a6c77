@@ -131,7 +131,7 @@ export default function TenantLanding() {
           {tenant.hero_url ? (
             <img src={tenant.hero_url} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-primary/30 to-zinc-950" />
+            <div className="h-full w-full bg-gradient-to-br from-primary/30 to-background" />
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-background/30" />
         </div>
