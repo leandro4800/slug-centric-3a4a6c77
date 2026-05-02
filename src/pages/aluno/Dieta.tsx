@@ -72,10 +72,7 @@ const Dieta = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dieta, setDieta] = useState<Dieta | null>(null);
-  const [open, setOpen] = useState(false);
-  const [generating, setGenerating] = useState(false);
   const [selectedRef, setSelectedRef] = useState<Refeicao | null>(null);
-  const [form, setForm] = useState({ objetivo: "hipertrofia", peso_kg: 75, altura_cm: 175, idade: 28, sexo: "M", nivel_atividade: 1.55 });
 
   const carregar = async () => {
     if (!user) return;
@@ -122,35 +119,6 @@ const Dieta = () => {
 
   useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [user]);
 
-  const gerar = async () => {
-    setGenerating(true);
-    try {
-      // Busca o nível do atleta (perfis_treino.tempo_treino) para personalizar dieta
-      let nivel = "intermediario";
-      if (user?.id) {
-        const { data: pt } = await supabase
-          .from("perfis_treino")
-          .select("tempo_treino")
-          .eq("aluno_id", user.id)
-          .maybeSingle();
-        const t = (pt?.tempo_treino || "").toLowerCase();
-        if (t.includes("alto")) nivel = "alto_nivel";
-        else if (t.includes("avan")) nivel = "avancado";
-        else if (t.includes("inici")) nivel = "iniciante";
-        else if (t.includes("inter")) nivel = "intermediario";
-      }
-      const { error } = await supabase.functions.invoke("gerar-dieta", { body: { ...form, nivel } });
-      if (error) throw error;
-      toast.success("Dieta gerada pelo Dr. IA!");
-      setOpen(false);
-      await carregar();
-    } catch (e: any) {
-      toast.error(e.message || "Falha ao gerar dieta");
-    } finally {
-      setGenerating(false);
-    }
-  };
-
   const totalDia = dieta ? dieta.refeicoes.reduce((acc, r) => {
     const m = calcMacros(r.itens);
     return { kcal: acc.kcal + m.kcal, p: acc.p + m.p, c: acc.c + m.c, g: acc.g + m.g };
@@ -169,73 +137,21 @@ const Dieta = () => {
     <>
       <PageHeader icon={Utensils} title="MINHA DIETA" subtitle={dieta?.objetivo || undefined} />
       <div className="px-5 pb-10">
-        {/* Hero / CTA */}
+        {/* Título da Prescrição */}
         <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/20 via-background to-background p-5 mb-5">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 text-xs text-primary mb-1">
-                <Sparkles className="h-3.5 w-3.5" /> DR. IA NUTRI
+              <div className="flex items-center gap-2 text-xs text-primary mb-1 uppercase font-bold tracking-widest">
+                Prescrição Nutricional
               </div>
               <h2 className="font-display text-xl leading-tight">Plano alimentar personalizado</h2>
-              <p className="text-xs text-muted-foreground mt-1">Baseado nos seus exames clínicos e objetivo</p>
+              <p className="text-xs text-muted-foreground mt-1">Sua dieta será montada e ajustada exclusivamente pelo seu coach.</p>
               {badge && (
                 <Badge variant="outline" className="mt-3 border-primary/50 text-primary bg-primary/10">
                   <Activity className="h-3 w-3 mr-1" /> Ajustada para {badge}
                 </Badge>
               )}
             </div>
-            <Dialog open={open} onOpenChange={setOpen}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="shrink-0 bg-primary text-primary-foreground hover:bg-primary/90">
-                  {dieta ? <><RefreshCcw className="h-3.5 w-3.5 mr-1" />Refazer</> : <><Sparkles className="h-3.5 w-3.5 mr-1" />Gerar</>}
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader><DialogTitle className="font-display">Gerar plano com Dr. IA</DialogTitle></DialogHeader>
-                <div className="space-y-3">
-                  <div className="grid grid-cols-2 gap-3">
-                    <div><Label className="text-xs">Peso (kg)</Label><Input type="number" value={form.peso_kg} onChange={e => setForm({ ...form, peso_kg: Number(e.target.value) })} /></div>
-                    <div><Label className="text-xs">Altura (cm)</Label><Input type="number" value={form.altura_cm} onChange={e => setForm({ ...form, altura_cm: Number(e.target.value) })} /></div>
-                    <div><Label className="text-xs">Idade</Label><Input type="number" value={form.idade} onChange={e => setForm({ ...form, idade: Number(e.target.value) })} /></div>
-                    <div>
-                      <Label className="text-xs">Sexo</Label>
-                      <Select value={form.sexo} onValueChange={v => setForm({ ...form, sexo: v })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent><SelectItem value="M">Masculino</SelectItem><SelectItem value="F">Feminino</SelectItem></SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Objetivo</Label>
-                    <Select value={form.objetivo} onValueChange={v => setForm({ ...form, objetivo: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="hipertrofia">Hipertrofia (superávit)</SelectItem>
-                        <SelectItem value="cutting">Cutting (déficit)</SelectItem>
-                        <SelectItem value="manutencao">Manutenção</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label className="text-xs">Nível de atividade</Label>
-                    <Select value={String(form.nivel_atividade)} onValueChange={v => setForm({ ...form, nivel_atividade: Number(v) })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="1.2">Sedentário</SelectItem>
-                        <SelectItem value="1.375">Leve</SelectItem>
-                        <SelectItem value="1.55">Moderado</SelectItem>
-                        <SelectItem value="1.725">Intenso</SelectItem>
-                        <SelectItem value="1.9">Atleta</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <Button onClick={gerar} disabled={generating} className="w-full bg-primary text-primary-foreground">
-                    {generating ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Gerando...</> : <><Sparkles className="h-4 w-4 mr-2" />Gerar Dieta</>}
-                  </Button>
-                  <p className="text-[10px] text-muted-foreground flex gap-1"><AlertCircle className="h-3 w-3 shrink-0 mt-0.5" />Sugestão educacional. Consulte seu nutricionista.</p>
-                </div>
-              </DialogContent>
-            </Dialog>
           </div>
         </div>
 
@@ -244,7 +160,7 @@ const Dieta = () => {
         ) : !dieta ? (
           <div className="text-center py-12 border border-dashed border-border rounded-2xl">
             <Utensils className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">Você ainda não tem uma dieta. Gere agora com o Dr. IA.</p>
+            <p className="text-sm text-muted-foreground">Sua dieta personalizada será montada pelo seu coach.</p>
           </div>
         ) : (
           <>
