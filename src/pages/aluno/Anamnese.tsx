@@ -23,6 +23,7 @@ export default function Anamnese() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [existingRecord, setExistingRecord] = useState<any>(null);
 
   // Form State
   const [form, setForm] = useState({
