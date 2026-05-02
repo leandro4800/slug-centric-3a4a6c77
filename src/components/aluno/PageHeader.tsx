@@ -19,22 +19,22 @@ export const PageHeader = ({ icon: Icon, title, subtitle, showTeam = true, back 
       {back && (
         <button
           onClick={() => navigate(`/${slug}/app`)}
-          className="w-10 h-10 rounded-full bg-secondary/80 flex items-center justify-center shrink-0"
+          className="w-10 h-10 rounded-none bg-primary flex items-center justify-center shrink-0 shadow-glow"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
       )}
-      <div className="w-11 h-11 rounded-full bg-accent/15 border border-accent/40 flex items-center justify-center shrink-0">
-        <Icon className="h-5 w-5 text-accent" />
+      <div className="w-11 h-11 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
+        <Icon className="h-5 w-5 text-primary" />
       </div>
       <div className="flex-1 min-w-0">
         <h1 className="font-display text-2xl leading-none truncate">{title}</h1>
         {subtitle && (
-          <p className="text-[10px] uppercase tracking-widest text-accent mt-1 truncate">{subtitle}</p>
+          <p className="text-[10px] uppercase tracking-widest text-primary mt-1 truncate">{subtitle}</p>
         )}
       </div>
       {showTeam && (
-        <button className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-secondary text-xs font-semibold uppercase tracking-wider shrink-0">
+        <button className="flex items-center gap-1.5 px-3 py-2 rounded-none bg-primary text-white text-[10px] font-bold uppercase tracking-[0.2em] shrink-0 shadow-glow">
           {tenant?.nome || "Time"} <ChevronDown className="h-3 w-3" />
         </button>
       )}
