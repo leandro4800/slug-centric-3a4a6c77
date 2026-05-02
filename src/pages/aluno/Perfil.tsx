@@ -169,7 +169,7 @@ const Perfil = () => {
     
     toast.success("Nova avaliação registrada!");
     setEvalOpen(false);
-    loadData();
+    loadData(true);
   };
 
   const nomeDisplay = profile?.nome_completo || user?.email?.split("@")[0]?.toUpperCase() || "ATLETA";
