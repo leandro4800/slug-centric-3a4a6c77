@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 import heroDefault from "@/assets/hero-default.jpg";
 
 interface Aluno {
@@ -127,6 +128,9 @@ const AtletaDetalhe = () => {
   const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
   const [ultimaAvaliacao, setUltimaAvaliacao] = useState<any>(null);
   const [loadingAnamnese, setLoadingAnamnese] = useState(false);
+  const [showPromptDialog, setShowPromptDialog] = useState(false);
+  const [promptType, setPromptType] = useState<"treino" | "dieta" | "ambos">("treino");
+  const [iaPrompt, setIaPrompt] = useState("");
 
   useEffect(() => {
     if (!atletaId) return;
@@ -603,42 +607,68 @@ const AtletaDetalhe = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <Button
+              className={`h-14 font-display text-sm uppercase tracking-wider ${
+                canGenerate 
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                  : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
+              }`}
+              disabled={!canGenerate}
+              onClick={() => {
+                if (canGenerate) {
+                  setPromptType("treino");
+                  setIaPrompt("");
+                  setShowPromptDialog(true);
+                } else {
+                  toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
+                }
+              }}
+            >
+              <Dumbbell className="h-5 w-5 mr-2" />
+              Montar Treino
+            </Button>
+            <Button
+              className={`h-14 font-display text-sm uppercase tracking-wider ${
+                canGenerate 
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                  : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
+              }`}
+              disabled={!canGenerate}
+              onClick={() => {
+                if (canGenerate) {
+                  setPromptType("dieta");
+                  setIaPrompt("");
+                  setShowPromptDialog(true);
+                } else {
+                  toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
+                }
+              }}
+            >
+              <Apple className="h-5 w-5 mr-2" />
+              Montar Dieta
+            </Button>
+          </div>
+
           <Button
-            className={`h-14 font-display text-sm uppercase tracking-wider ${
-              canGenerate 
-                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
+            variant="outline"
+            className={`w-full h-14 font-display text-sm uppercase tracking-wider border-primary/30 text-primary hover:bg-primary/5 ${
+              !canGenerate ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={!canGenerate}
             onClick={() => {
               if (canGenerate) {
-                navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}&auto=true`);
+                setPromptType("ambos");
+                setIaPrompt("");
+                setShowPromptDialog(true);
               } else {
                 toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
               }
             }}
           >
-            <Dumbbell className="h-5 w-5 mr-2" />
-            Montar Treino
-          </Button>
-          <Button
-            className={`h-14 font-display text-sm uppercase tracking-wider ${
-              canGenerate 
-                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
-            }`}
-            disabled={!canGenerate}
-            onClick={() => {
-              if (canGenerate) {
-                navigate(`/${slug}/admin/montar-dieta?aluno=${aluno.id}&auto=true`);
-              } else {
-                toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
-              }
-            }}
-          >
-            <Apple className="h-5 w-5 mr-2" />
-            Montar Dieta
+            <Sparkles className="h-5 w-5 mr-2 text-primary" />
+            Gerar Protocolo Completo (IA)
           </Button>
         </div>
       </main>
@@ -741,6 +771,61 @@ const AtletaDetalhe = () => {
           <DialogFooter className="border-t border-border/50 pt-4">
             <Button variant="ghost" onClick={() => setShowAnamneseDialog(false)}>
               Fechar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={showPromptDialog} onOpenChange={setShowPromptDialog}>
+        <DialogContent className="max-w-md bg-card border-border shadow-2xl">
+          <DialogHeader>
+            <div className="flex items-center gap-2 text-primary mb-1">
+              <Sparkles className="h-5 w-5" />
+              <span className="text-[10px] font-bold uppercase tracking-[0.3em]">IA GENERATIVA</span>
+            </div>
+            <DialogTitle className="font-display text-2xl uppercase tracking-tight">
+              {promptType === 'treino' ? 'Montar Treino' : promptType === 'dieta' ? 'Montar Dieta' : 'Montar Protocolo Completo'}
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs uppercase tracking-wider">
+              Deseja adicionar instruções específicas para a IA?
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4 space-y-4">
+            <Textarea
+              placeholder="Ex: Focar em glúteos e posteriores, dieta sem lactose, incluir jejum intermitente..."
+              className="min-h-[120px] bg-background border-primary/20 focus:border-primary/50 text-sm"
+              value={iaPrompt}
+              onChange={(e) => setIaPrompt(e.target.value)}
+            />
+            <p className="text-[10px] text-muted-foreground uppercase leading-relaxed">
+              Dica: Você pode pedir para a IA focar em grupos musculares específicos, respeitar alergias alimentares ou seguir uma metodologia preferida.
+            </p>
+          </div>
+
+          <DialogFooter className="flex flex-col gap-2">
+            <Button
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-widest h-12"
+              onClick={() => {
+                const promptQuery = iaPrompt ? `&prompt=${encodeURIComponent(iaPrompt)}` : '';
+                if (promptType === 'treino') {
+                  navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}&auto=true${promptQuery}`);
+                } else if (promptType === 'dieta') {
+                  navigate(`/${slug}/admin/montar-dieta?aluno=${aluno.id}&auto=true${promptQuery}`);
+                } else {
+                  navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}&auto=true&andDiet=true${promptQuery}`);
+                }
+                setShowPromptDialog(false);
+              }}
+            >
+              {iaPrompt ? 'Gerar com Instruções' : 'Gerar Agora (Padrão)'}
+            </Button>
+            <Button
+              variant="ghost"
+              className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground"
+              onClick={() => setShowPromptDialog(false)}
+            >
+              Cancelar
             </Button>
           </DialogFooter>
         </DialogContent>

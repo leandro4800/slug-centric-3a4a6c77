@@ -160,7 +160,7 @@ const AdminMontarTreino = () => {
     else toast.success("Perfil salvo.");
   };
 
-  const gerarComIA = useCallback(async () => {
+  const gerarComIA = useCallback(async (customPrompt?: string) => {
     if (!alunoId || !tenant) {
       toast.error("Selecione um aluno.");
       return;
@@ -173,8 +173,11 @@ const AdminMontarTreino = () => {
         .select("nome, grupo_muscular, contraindicacoes")
         .eq("tenant_id", tenant.id);
 
+      const promptFromUrl = searchParams.get("prompt");
+      const activePrompt = customPrompt || promptFromUrl || "";
+
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil, biblioteca: biblioteca || [], divisoes },
+        body: { perfil, biblioteca: biblioteca || [], divisoes, prompt: activePrompt },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -197,6 +200,15 @@ const AdminMontarTreino = () => {
       setExercicios(novos);
       setCardio(data.cardio || "");
       toast.success(`Treino gerado · ${novos.length} exercícios`);
+
+      if (searchParams.get("andDiet") === "true") {
+        setTimeout(async () => {
+          await salvarPrescricao(novos);
+          const prompt = searchParams.get("prompt");
+          const promptQuery = prompt ? `&prompt=${encodeURIComponent(prompt)}` : "";
+          navigate(`/${slug}/admin/montar-dieta?aluno=${alunoId}&auto=true${promptQuery}`);
+        }, 1000);
+      }
     } catch (e: any) {
       toast.error(e.message || "Falha ao gerar.");
     } finally {
@@ -210,12 +222,13 @@ const AdminMontarTreino = () => {
     }
   }, [searchParams, alunoId, tenant, generating, exercicios.length, gerarComIA]);
 
-  const salvarPrescricao = async () => {
+  const salvarPrescricao = async (manualExercicios?: ExercicioPrescrito[]) => {
     if (!alunoId || !tenant) return;
+    const exerciciosToSave = manualExercicios || exercicios;
     setSaving(true);
     await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenant.id);
-    if (exercicios.length > 0) {
-      const rows = exercicios.map((e) => ({
+    if (exerciciosToSave.length > 0) {
+      const rows = exerciciosToSave.map((e) => ({
         tenant_id: tenant.id,
         aluno_id: alunoId,
         dia_semana: e.dia_semana,
@@ -346,7 +359,7 @@ const AdminMontarTreino = () => {
               </div>
               <div className="flex gap-3">
                 <Button onClick={salvarPerfil} variant="outline">Salvar perfil</Button>
-                <Button onClick={gerarComIA} disabled={generating} variant="outline">
+                <Button onClick={() => gerarComIA()} disabled={generating} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                   Gerar com IA
                 </Button>
@@ -365,7 +378,7 @@ const AdminMontarTreino = () => {
             <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-5">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl">PRESCRIÇÃO</h2>
-                <Button onClick={salvarPrescricao} disabled={saving}>
+                <Button onClick={() => salvarPrescricao()} disabled={saving}>
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                   Salvar prescrição
                 </Button>
