@@ -210,10 +210,10 @@ const CompararEvolucao = () => {
             <div className="bg-card/40 border border-border p-4 flex flex-col items-center justify-center text-center">
               <Scale className="h-5 w-5 text-primary mb-1" />
               <p className="text-[10px] uppercase text-muted-foreground tracking-widest">Peso</p>
-              <p className="text-sm font-bold text-white">
+              <p className="text-sm font-medium text-white">
                 {antes.peso_kg}kg → {depois.peso_kg}kg
               </p>
-              <p className={`text-[10px] font-bold ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
+              <p className={`text-[10px] font-medium ${parseFloat(pesoDiff) <= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {parseFloat(pesoDiff) > 0 ? '+' : ''}{pesoDiff}kg
               </p>
             </div>
