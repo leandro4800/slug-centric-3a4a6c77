@@ -369,7 +369,7 @@ const AdminMontarTreino = () => {
             <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-5">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl">PRESCRIÇÃO</h2>
-                <Button onClick={salvarPrescricao} disabled={saving}>
+                <Button onClick={() => salvarPrescricao()} disabled={saving}>
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                   Salvar prescrição
                 </Button>
