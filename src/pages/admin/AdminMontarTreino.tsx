@@ -213,12 +213,13 @@ const AdminMontarTreino = () => {
     }
   }, [searchParams, alunoId, tenant, generating, exercicios.length, gerarComIA]);
 
-  const salvarPrescricao = async () => {
+  const salvarPrescricao = async (manualExercicios?: ExercicioPrescrito[]) => {
     if (!alunoId || !tenant) return;
+    const exerciciosToSave = manualExercicios || exercicios;
     setSaving(true);
     await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenant.id);
-    if (exercicios.length > 0) {
-      const rows = exercicios.map((e) => ({
+    if (exerciciosToSave.length > 0) {
+      const rows = exerciciosToSave.map((e) => ({
         tenant_id: tenant.id,
         aluno_id: alunoId,
         dia_semana: e.dia_semana,
