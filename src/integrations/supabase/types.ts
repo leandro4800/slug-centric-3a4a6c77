@@ -729,6 +729,96 @@ export type Database = {
           },
         ]
       }
+      evolucao_fotos: {
+        Row: {
+          data_foto: string | null
+          data_registro: string | null
+          id: string
+          legenda: string | null
+          tipo: string | null
+          url_foto: string
+          user_id: string | null
+        }
+        Insert: {
+          data_foto?: string | null
+          data_registro?: string | null
+          id?: string
+          legenda?: string | null
+          tipo?: string | null
+          url_foto: string
+          user_id?: string | null
+        }
+        Update: {
+          data_foto?: string | null
+          data_registro?: string | null
+          id?: string
+          legenda?: string | null
+          tipo?: string | null
+          url_foto?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      evolucao_metricas: {
+        Row: {
+          bf: number | null
+          braco: number | null
+          cintura: number | null
+          data_registro: string | null
+          dobra_abdominal: number | null
+          dobra_axilar_media: number | null
+          dobra_coxa: number | null
+          dobra_peitoral: number | null
+          dobra_subescapular: number | null
+          dobra_suprailiaca: number | null
+          dobra_triceps: number | null
+          id: string
+          massa_gorda: number | null
+          massa_magra: number | null
+          peso: number | null
+          user_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          bf?: number | null
+          braco?: number | null
+          cintura?: number | null
+          data_registro?: string | null
+          dobra_abdominal?: number | null
+          dobra_axilar_media?: number | null
+          dobra_coxa?: number | null
+          dobra_peitoral?: number | null
+          dobra_subescapular?: number | null
+          dobra_suprailiaca?: number | null
+          dobra_triceps?: number | null
+          id?: string
+          massa_gorda?: number | null
+          massa_magra?: number | null
+          peso?: number | null
+          user_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          bf?: number | null
+          braco?: number | null
+          cintura?: number | null
+          data_registro?: string | null
+          dobra_abdominal?: number | null
+          dobra_axilar_media?: number | null
+          dobra_coxa?: number | null
+          dobra_peitoral?: number | null
+          dobra_subescapular?: number | null
+          dobra_suprailiaca?: number | null
+          dobra_triceps?: number | null
+          id?: string
+          massa_gorda?: number | null
+          massa_magra?: number | null
+          peso?: number | null
+          user_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: []
+      }
       exames_biomarcadores: {
         Row: {
           analise_id: string | null
