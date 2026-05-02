@@ -349,7 +349,7 @@ const AdminFaturamento = () => {
               </div>
               <div className="text-center">
                 <p className="font-bold text-sm uppercase tracking-tight">{file ? file.name : "Toque para enviar foto"}</p>
-                <p className="text-[10px] text-white/40 mt-1 uppercase">RG, CNH ou Passaporte</p>
+                <p className="text-[10px] text-white/60 mt-1 uppercase">RG, CNH ou Passaporte</p>
               </div>
               <Input 
                 type="file" 
@@ -395,7 +395,7 @@ const AdminFaturamento = () => {
           <div className="py-6 space-y-6">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="amount" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Quanto deseja sacar?</Label>
+                <Label htmlFor="amount" className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-bold">Quanto deseja sacar?</Label>
                 <div className="relative">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-white/20 text-xl">R$</span>
                   <Input 
@@ -408,7 +408,7 @@ const AdminFaturamento = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="pix" className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Sua Chave PIX</Label>
+                <Label htmlFor="pix" className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-bold">Sua Chave PIX</Label>
                 <Input 
                   id="pix" 
                   placeholder="CPF, E-mail ou Celular" 
@@ -449,20 +449,20 @@ const AdminFaturamento = () => {
             <div className="py-4 space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white/5 border-l-4 border-primary p-4">
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Faturamento Bruto</p>
+                  <p className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Faturamento Bruto</p>
                   <p className="text-2xl font-bold mt-1">{formatBRL(totalGross)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-white/30 p-4">
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Comissão (10%)</p>
+                  <p className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Comissão (10%)</p>
                   <p className="text-2xl font-bold mt-1 text-primary">-{formatBRL(totalCommission)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-primary p-4">
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido</p>
+                  <p className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Líquido</p>
                   <p className="text-2xl font-bold mt-1">{formatBRL(totalNet)}</p>
                 </div>
               </div>
               <div className="bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">Resumo</p>
+                <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-3">Resumo</p>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between"><span className="text-white/60">Alunos ativos</span><span className="font-bold">{activeStudents}</span></div>
                   <div className="flex justify-between"><span className="text-white/60">Ticket médio</span><span className="font-bold">{formatBRL(PLAN_VALUE)}</span></div>
@@ -482,11 +482,11 @@ const AdminFaturamento = () => {
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-sm">{a.nome_completo}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-white/40">Pagamento Mensalidade · {new Date(Date.now() - i * 86400000 * 3).toLocaleDateString("pt-BR")}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-white/60">Pagamento Mensalidade · {new Date(Date.now() - i * 86400000 * 3).toLocaleDateString("pt-BR")}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-emerald-500">+{formatBRL(PLAN_VALUE - PLAN_VALUE * COMMISSION_RATE)}</p>
-                    <p className="text-[9px] uppercase tracking-widest text-white/40">Líquido</p>
+                    <p className="text-[9px] uppercase tracking-widest text-white/60">Líquido</p>
                   </div>
                 </div>
               ))}
@@ -507,7 +507,7 @@ const AdminFaturamento = () => {
                     <FileText className="h-5 w-5 text-primary" />
                     <span className="font-bold text-sm uppercase tracking-tight">{r.label}</span>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-white/40 group-hover:text-primary" />
+                  <ChevronRight className="h-4 w-4 text-white/60 group-hover:text-primary" />
                 </button>
               ))}
             </div>
@@ -534,25 +534,25 @@ const AdminFaturamento = () => {
           {activePanel === "taxas" && (
             <div className="py-4 space-y-3">
               <div className="bg-white/5 p-5 border-l-4 border-primary">
-                <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Comissão da Plataforma</p>
+                <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Comissão da Plataforma</p>
                 <p className="text-4xl font-bold mt-2">10%</p>
                 <p className="text-xs text-white/60 mt-1">Sobre cada mensalidade após o trial de 30 dias.</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/5 p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Trial Gratuito</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Trial Gratuito</p>
                   <p className="text-2xl font-bold mt-1">30 dias</p>
                 </div>
                 <div className="bg-white/5 p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Prazo Saque</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Prazo Saque</p>
                   <p className="text-2xl font-bold mt-1">D+2</p>
                 </div>
                 <div className="bg-white/5 p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Taxa Saque</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Taxa Saque</p>
                   <p className="text-2xl font-bold mt-1 text-emerald-500">Grátis</p>
                 </div>
                 <div className="bg-white/5 p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Repasse</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Repasse</p>
                   <p className="text-2xl font-bold mt-1">D+30</p>
                 </div>
               </div>
@@ -563,21 +563,21 @@ const AdminFaturamento = () => {
           {activePanel === "bancarios" && (
             <div className="py-4 space-y-4">
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Banco</Label>
+                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-bold">Banco</Label>
                 <Input placeholder="Selecione seu banco" className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Agência</Label>
+                  <Label className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-bold">Agência</Label>
                   <Input placeholder="0000" className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">Conta</Label>
+                  <Label className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-bold">Conta</Label>
                   <Input placeholder="00000-0" className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">CPF do Titular</Label>
+                <Label className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-bold">CPF do Titular</Label>
                 <Input placeholder="000.000.000-00" className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
               </div>
               <Button className="w-full bg-primary hover:bg-primary font-bold uppercase tracking-widest rounded-none py-6 h-auto">
@@ -608,15 +608,15 @@ const AdminFaturamento = () => {
             <div className="py-4 space-y-4">
               <div className="grid grid-cols-3 gap-3">
                 <div className="bg-white/5 border-l-4 border-primary p-4">
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Bruto do Mês</p>
+                  <p className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Bruto do Mês</p>
                   <p className="text-2xl font-bold mt-1">{formatBRL(totalGross)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-white/30 p-4">
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Comissão</p>
+                  <p className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Comissão</p>
                   <p className="text-2xl font-bold mt-1 text-primary">-{formatBRL(totalCommission)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-primary p-4">
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido</p>
+                  <p className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Líquido</p>
                   <p className="text-2xl font-bold mt-1">{formatBRL(totalNet)}</p>
                 </div>
               </div>
@@ -634,16 +634,16 @@ const AdminFaturamento = () => {
             <div className="py-4 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="bg-white/5 border-l-4 border-primary p-4">
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Faturamento Anual</p>
+                  <p className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Faturamento Anual</p>
                   <p className="text-2xl font-bold mt-1">{formatBRL(totalGross * 12)}</p>
                 </div>
                 <div className="bg-white/5 border-l-4 border-primary p-4">
-                  <p className="text-[9px] uppercase tracking-widest text-white/40 font-bold">Líquido Anual</p>
+                  <p className="text-[9px] uppercase tracking-widest text-white/60 font-bold">Líquido Anual</p>
                   <p className="text-2xl font-bold mt-1">{formatBRL(totalNet * 12)}</p>
                 </div>
               </div>
               <div className="bg-white/5 p-4">
-                <p className="text-xs uppercase tracking-widest text-white/40 font-bold mb-3">Por mês</p>
+                <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-3">Por mês</p>
                 <div className="space-y-1">
                   {["Jan","Fev","Mar","Abr","Mai","Jun","Jul","Ago","Set","Out","Nov","Dez"].map((m) => (
                     <div key={m} className="flex justify-between text-sm border-b border-white/5 py-1">
@@ -660,16 +660,16 @@ const AdminFaturamento = () => {
           {activeReport === "ir" && (
             <div className="py-4 space-y-4">
               <div className="bg-white/5 border-l-4 border-primary p-5">
-                <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">Rendimentos Tributáveis ({new Date().getFullYear()})</p>
+                <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">Rendimentos Tributáveis ({new Date().getFullYear()})</p>
                 <p className="text-4xl font-bold mt-2">{formatBRL(totalNet * 12)}</p>
               </div>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div className="bg-white/5 p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">CNPJ Pagadora</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">CNPJ Pagadora</p>
                   <p className="font-bold mt-1">00.000.000/0001-00</p>
                 </div>
                 <div className="bg-white/5 p-4">
-                  <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">IRRF Retido</p>
+                  <p className="text-[10px] uppercase tracking-widest text-white/60 font-bold">IRRF Retido</p>
                   <p className="font-bold mt-1">{formatBRL(0)}</p>
                 </div>
               </div>
@@ -685,7 +685,7 @@ const AdminFaturamento = () => {
                   <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center font-bold text-primary">{a.nome_completo[0]}</div>
                   <div className="flex-1">
                     <p className="font-bold text-sm">{a.nome_completo}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-white/40">Crédito Mensalidade · {new Date(Date.now() - i * 86400000 * 3).toLocaleDateString("pt-BR")}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-white/60">Crédito Mensalidade · {new Date(Date.now() - i * 86400000 * 3).toLocaleDateString("pt-BR")}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-emerald-500">+{formatBRL(PLAN_VALUE)}</p>
@@ -730,7 +730,7 @@ const AdminFaturamento = () => {
                   </div>
                   <div className="flex-1">
                     <p className="font-bold text-sm">{a.nome_completo}</p>
-                    <p className="text-[10px] uppercase tracking-widest text-white/40">{a.email}</p>
+                    <p className="text-[10px] uppercase tracking-widest text-white/60">{a.email}</p>
                   </div>
                   <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 uppercase text-[9px] font-bold tracking-widest rounded-none">
                     Ativo
@@ -746,7 +746,7 @@ const AdminFaturamento = () => {
                 <XCircle className="h-8 w-8 text-white/30" />
               </div>
               <p className="font-bold uppercase tracking-widest text-sm text-white/60">Nenhum desistente</p>
-              <p className="text-xs text-white/40 max-w-sm mx-auto">Quando um aluno cancelar a assinatura ou tiver o acesso bloqueado, ele aparecerá aqui.</p>
+              <p className="text-xs text-white/60 max-w-sm mx-auto">Quando um aluno cancelar a assinatura ou tiver o acesso bloqueado, ele aparecerá aqui.</p>
             </div>
           )}
         </DialogContent>
