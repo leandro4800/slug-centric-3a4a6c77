@@ -75,7 +75,6 @@ const Dieta = () => {
   const [open, setOpen] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [selectedRef, setSelectedRef] = useState<Refeicao | null>(null);
-  const [form, setForm] = useState({ objetivo: "hipertrofia", peso_kg: 75, altura_cm: 175, idade: 28, sexo: "M", nivel_atividade: 1.55 });
 
   const carregar = async () => {
     if (!user) return;
