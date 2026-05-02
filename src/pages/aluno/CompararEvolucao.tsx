@@ -281,7 +281,7 @@ const CompararEvolucao = () => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase">Sem foto</div>
                   )}
-                  <span className="absolute top-2 left-2 bg-black/80 text-white text-[8px] px-2 py-0.5 rounded uppercase font-medium tracking-tighter">Antes</span>
+                  <span className="absolute top-2 left-2 bg-black/80 text-white text-[8px] px-2 py-0.5 rounded uppercase tracking-tighter" style={{ fontWeight: 400 }}>Antes</span>
                 </div>
                 <div className="relative aspect-[3/4] bg-zinc-900 overflow-hidden border border-primary/20 shadow-glow-sm">
                   {urls[`depois_foto_${angulo}_url`] ? (
