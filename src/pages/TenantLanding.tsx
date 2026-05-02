@@ -190,7 +190,7 @@ export default function TenantLanding() {
             <Button 
               size="lg" 
               className="mt-6 font-black uppercase tracking-widest"
-              onClick={() => navigate(`/dashboard`)}
+              onClick={() => navigate(`/${slug}/app`)}
             >
               Ir para o Dashboard
             </Button>
