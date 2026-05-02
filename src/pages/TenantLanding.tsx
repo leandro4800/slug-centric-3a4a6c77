@@ -34,6 +34,9 @@ interface Plano {
 
 const intervaloLabel = { mensal: "/mês", trimestral: "/trimestre", anual: "/ano" };
 
+const TENANT_PUBLIC_COLUMNS =
+  "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
+
 export default function TenantLanding() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
@@ -56,7 +59,7 @@ export default function TenantLanding() {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     setUser(currentUser);
 
-    const { data: t } = await supabase.from("tenants").select("*").eq("slug", slug).maybeSingle();
+    const { data: t } = await supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("slug", slug).maybeSingle();
     setTenant(t as Tenant);
     
     if (t) {
