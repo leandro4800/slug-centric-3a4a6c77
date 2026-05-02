@@ -49,6 +49,47 @@ const MeusAtletas = () => {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [alertas, setAlertas] = useState<any[]>([]);
+  const [qaOpen, setQaOpen] = useState(false);
+  const [pregunta, setPregunta] = useState("");
+  const [resposta, setResposta] = useState("");
+  const [isAsking, setIsAsking] = useState(false);
+
+  useEffect(() => {
+    if (tenant) {
+      void loadAlertas(tenant.id);
+    }
+  }, [tenant]);
+
+  const loadAlertas = async (tenantId: string) => {
+    const { data } = await supabase
+      .from('analises_clinicas')
+      .select('id, motivo_alerta, created_at, perfis(nome_completo)')
+      .eq('alerta_critico', true)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    setAlertas(data || []);
+  };
+
+  const handleAskIA = async () => {
+    if (!pregunta.trim()) return;
+    setIsAsking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('theme-ai', {
+        body: { 
+          prompt: `Como especialista na Metodologia Pacholok e no material Anabolismo Total, responda à pergunta do Coach Admin: "${pregunta}". Cite módulos específicos se possível.`,
+          system: "Você é o assistente técnico Alpha Coach. Use a base de conhecimento do Pacholok e do Anabolismo Total para responder tecnicamente."
+        }
+      });
+      if (error) throw error;
+      setResposta(data.reply);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao consultar base de conhecimento");
+    } finally {
+      setIsAsking(false);
+    }
+  };
 
   useEffect(() => {
     if (!tenant && slug === "demo") {
