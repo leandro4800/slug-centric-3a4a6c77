@@ -220,7 +220,7 @@ const AdminFaturamento = () => {
               {formatBRL(totalNet)}
             </h1>
             <div className="flex items-center gap-2 pt-2">
-              <Badge variant="outline" className="bg-red-600/20 text-red-600 border-red-600/40 uppercase text-[10px] tracking-widest font-bold px-3 py-1 rounded-none border-l-4">
+              <Badge variant="outline" className="bg-primary/20 text-primary border-primary/40 uppercase text-[10px] tracking-widest font-bold px-3 py-1 rounded-none border-l-4">
                 PLATAFORMA ATIVA
               </Badge>
               <p className="text-xs text-white/40">{formatBRL(totalCommission)} retidos (10%)</p>
