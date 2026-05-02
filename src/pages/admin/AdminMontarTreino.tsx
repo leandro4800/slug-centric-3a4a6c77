@@ -244,20 +244,20 @@ const AdminMontarTreino = () => {
   const dias = [...new Set(exercicios.map((e) => e.dia_semana))];
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10">
+    <div className="min-h-screen bg-black text-white">
+      <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
         <div className="flex items-center gap-3">
           <Link to={`/${slug}/admin`}>
             <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
           </Link>
           <h1 className="font-display text-2xl">MONTAR TREINO</h1>
-          <span className="text-xs px-2 py-1 rounded bg-accent/15 text-accent uppercase tracking-wider">IA Pacho</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-red-600/20 text-red-500 uppercase font-black tracking-widest border border-red-600/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">IA Pacho</span>
         </div>
       </header>
 
       <main className="max-w-6xl mx-auto p-6 space-y-6">
         {/* Selecionar aluno */}
-        <div className="bg-card border border-border rounded-2xl p-5">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
           <Label>Aluno</Label>
           <select
             value={alunoId}
@@ -274,7 +274,7 @@ const AdminMontarTreino = () => {
         {alunoId && (
           <>
             {/* Perfil */}
-            <div className="bg-card border border-border rounded-2xl p-5 space-y-4">
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl">PERFIL DO ALUNO</h2>
                 <span className="text-xs px-3 py-1 rounded-full bg-primary/15 text-primary uppercase">Nível: {nivel}</span>
@@ -339,7 +339,7 @@ const AdminMontarTreino = () => {
               </div>
               <div className="flex gap-3">
                 <Button onClick={salvarPerfil} variant="outline">Salvar perfil</Button>
-                <Button onClick={gerarComIA} disabled={generating} className="bg-gradient-primary shadow-glow">
+                <Button onClick={gerarComIA} disabled={generating} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                   Gerar com IA
                 </Button>
@@ -355,10 +355,10 @@ const AdminMontarTreino = () => {
             )}
 
             {/* Editor de prescrição */}
-            <div className="bg-card border border-border rounded-2xl p-5 space-y-5">
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-5">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl">PRESCRIÇÃO</h2>
-                <Button onClick={salvarPrescricao} disabled={saving} className="bg-gradient-primary">
+                <Button onClick={salvarPrescricao} disabled={saving}>
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                   Salvar prescrição
                 </Button>

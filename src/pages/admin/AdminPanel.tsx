@@ -95,8 +95,8 @@ const AdminPanel = () => {
   const handleLogout = async () => { await signOut(); navigate("/login"); };
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 bg-background/95 backdrop-blur z-10">
+    <div className="min-h-screen bg-black text-white">
+      <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
         <div className="flex items-center gap-4">
           <AlertDialog>
             <AlertDialogTrigger asChild>
@@ -116,7 +116,7 @@ const AdminPanel = () => {
             </AlertDialogContent>
           </AlertDialog>
           <Logo size={32} />
-          <span className="text-xs px-2 py-1 rounded bg-primary/15 text-primary uppercase tracking-wider">Admin</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-red-600/20 text-red-500 uppercase font-black tracking-widest border border-red-600/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
         </div>
         <Button variant="ghost" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Sair</Button>
       </header>
@@ -148,7 +148,7 @@ const AdminPanel = () => {
               </Button>
             </Link>
             <Link to={`/${slug}/admin/montar-treino`}>
-              <Button className="bg-gradient-primary shadow-glow">
+              <Button>
                 <Sparkles className="h-4 w-4 mr-2" /> Montar Treino com IA
               </Button>
             </Link>
@@ -163,7 +163,7 @@ const AdminPanel = () => {
           </TabsList>
 
           <TabsContent value="elenco">
-            <div className="bg-gradient-card border border-border rounded-2xl p-6 shadow-card">
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
               <h2 className="font-display text-2xl mb-6">ALUNOS · {alunos.length}</h2>
               {loading ? (
                 <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
@@ -209,21 +209,21 @@ const AdminPanel = () => {
               <TabsContent value="midia">
                 <div className="grid lg:grid-cols-2 gap-6">
                   {/* Hero upload */}
-                  <div className="bg-gradient-card border border-border rounded-2xl p-6 shadow-card">
+                  <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
                     <h3 className="font-display text-xl mb-4">IMAGEM DE FUNDO</h3>
                     <div className="aspect-video rounded-xl overflow-hidden border border-border mb-4 relative">
                       <img src={tenant?.hero_url || heroDefault} alt="" className="w-full h-full object-cover" />
                     </div>
                     <label className="block">
                       <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "hero")} />
-                      <Button asChild className="w-full bg-gradient-primary" disabled={uploading === "hero"}>
+                      <Button asChild disabled={uploading === "hero"}>
                         <span>{uploading === "hero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Trocar imagem de fundo</>}</span>
                       </Button>
                     </label>
                   </div>
 
                   {/* Logo & textos */}
-                  <div className="bg-gradient-card border border-border rounded-2xl p-6 shadow-card space-y-5">
+                  <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm space-y-5">
                     <h3 className="font-display text-xl">LOGO & TEXTOS</h3>
                     <div>
                       <Label>Logo</Label>
@@ -284,7 +284,7 @@ const AdminPanel = () => {
                         </div>
                       )}
                     </div>
-                    <Button onClick={handleSaveAppearance} className="w-full bg-gradient-primary shadow-glow">Salvar configurações</Button>
+                    <Button onClick={handleSaveAppearance} className="w-full">Salvar configurações</Button>
                   </div>
                 </div>
               </TabsContent>
