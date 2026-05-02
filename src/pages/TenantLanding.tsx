@@ -258,8 +258,10 @@ export default function TenantLanding() {
                 </div>
               );
             })}
-          </>
+          </div>
         )}
+      </>
+    )}
       </section>
     </div>
   );
