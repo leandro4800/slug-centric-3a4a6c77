@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.gerar-dieta]
 verify_jwt = true
+
+[functions.analise-evolucao]
+verify_jwt = true
