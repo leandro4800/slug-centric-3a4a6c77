@@ -75,10 +75,10 @@ const MeusAtletas = () => {
     if (!pregunta.trim()) return;
     setIsAsking(true);
     try {
-      const { data, error } = await supabase.functions.invoke('theme-ai', {
+      const { data, error } = await supabase.functions.invoke('knowledge-qa', {
         body: { 
-          prompt: `Como especialista na Metodologia Pacholok e no material Anabolismo Total, responda à pergunta do Coach Admin: "${pregunta}". Cite módulos específicos se possível.`,
-          system: "Você é o assistente técnico Alpha Coach. Use a base de conhecimento do Pacholok e do Anabolismo Total para responder tecnicamente."
+          question: pregunta,
+          tenant_id: tenant?.id
         }
       });
       if (error) throw error;
