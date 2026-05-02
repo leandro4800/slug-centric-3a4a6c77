@@ -221,12 +221,13 @@ const Clinica = () => {
           </div>
         ) : currentAnalysis ? (
           <div className="animate-in fade-in zoom-in-95 duration-500">
-            <button 
+            <Button
+              variant="link"
               onClick={() => setCurrentAnalysis(null)}
-              className="mb-4 text-xs text-accent flex items-center gap-1 uppercase font-bold"
+              className="mb-4 text-primary p-0 h-auto self-start"
             >
               <ChevronRight className="h-3 w-3 rotate-180" /> Fazer nova análise
-            </button>
+            </Button>
             <AnalysisResults 
               score={currentAnalysis.score_performance}
               parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
@@ -246,17 +247,19 @@ const Clinica = () => {
               <div className="py-10 text-center text-muted-foreground">
                 <History className="h-10 w-10 mx-auto mb-3 opacity-20" />
                 <p>Nenhuma análise encontrada.</p>
-                <button 
+                <Button
+                  variant="link"
                   onClick={() => setTab("nova")}
-                  className="text-accent text-sm font-bold mt-2 uppercase"
+                  className="text-primary mt-2"
                 >
                   Começar agora
-                </button>
+                </Button>
               </div>
             ) : (
               analyses?.map((analise: any) => (
-                <button
+                <Button
                   key={analise.id}
+                  variant="secondary"
                   onClick={() => setCurrentAnalysis({
                     score_performance: analise.score_performance,
                     parecer_tecnico: analise.parecer_ia,
@@ -273,17 +276,17 @@ const Clinica = () => {
                       sugestao_medicamento: (analise.dados_extraidos?.marcadores ?? []).find((m: any) => m.codigo === b.codigo)?.sugestao_medicamento
                     }))
                   })}
-                  className="w-full bg-gradient-to-br from-card/80 to-card/30 border border-border rounded-2xl p-4 flex items-center gap-4 text-left hover:scale-[1.01] hover:border-accent/40 transition-all duration-300 shadow-[0_8px_24px_-12px_hsl(0_0%_0%/0.6)]"
+                  className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
                 >
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-accent/30 to-accent/5 border border-accent/40 flex items-center justify-center font-bold text-accent font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--accent)/0.5)]">
+                  <div className="w-14 h-14 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-primary font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
                     {analise.score_performance}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-display text-base uppercase tracking-wide">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
-                    <p className="text-xs text-muted-foreground">{analise.exames_biomarcadores.length} marcadores detectados</p>
+                    <p className="text-[10px] text-muted-foreground tracking-widest">{analise.exames_biomarcadores.length} marcadores detectados</p>
                   </div>
-                  <ChevronRight className="h-4 w-4 text-accent shrink-0" />
-                </button>
+                  <ChevronRight className="h-4 w-4 text-primary shrink-0" />
+                </Button>
               ))
             )}
           </div>
