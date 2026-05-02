@@ -329,21 +329,20 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary selection:text-white overflow-x-hidden">
       {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/5">
         <Logo />
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-          <a href="#coaches" className="hover:text-white transition-colors">Coaches</a>
-          <button onClick={() => setShowSimulador(true)} className="hover:text-white transition-colors">Simulador</button>
-          <a href="#" className="hover:text-white transition-colors">Recursos</a>
-          <a href="#" className="hover:text-white transition-colors">FAQ</a>
+        <nav className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-widest text-gray-300">
+          <a href="#coaches" className="hover:text-primary transition-colors">Coaches</a>
+          <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
+          <a href="#" className="hover:text-primary transition-colors">Recursos</a>
         </nav>
         <div className="flex items-center gap-3">
           <Link to="/login">
-            <Button variant="ghost" className="text-white hover:bg-white/10 hidden md:flex">Entrar</Button>
+            <Button variant="ghost" className="text-white hover:bg-white/10 hidden md:flex font-bold uppercase tracking-wider">Entrar</Button>
           </Link>
           <Button 
             onClick={() => setShowSimulador(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-6 font-bold"
+            className="px-6"
           >
             TESTAR AGORA
           </Button>
