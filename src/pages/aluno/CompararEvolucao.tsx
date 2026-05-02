@@ -138,6 +138,23 @@ const CompararEvolucao = () => {
     ? (depois.bf_percentual - antes.bf_percentual).toFixed(1) 
     : "0";
 
+  const formatAnalise = (text: string) => {
+    return text.split('\n').map((line, i) => {
+      const trimmedLine = line.trim();
+      if (!trimmedLine) return <div key={i} className="h-2" />;
+      
+      const isTitle = trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3;
+      if (isTitle) {
+        return (
+          <p key={i} className="text-primary font-bold mt-6 mb-3 tracking-[0.2em] text-[12px] uppercase border-b border-primary/20 pb-1">
+            {trimmedLine}
+          </p>
+        );
+      }
+      return <p key={i} className="text-zinc-200 text-[15px] leading-relaxed mb-3">{trimmedLine}</p>;
+    });
+  };
+
   return (
     <div className="pb-32 bg-black min-h-screen">
       <div className="px-5 pt-5">
@@ -234,10 +251,10 @@ const CompararEvolucao = () => {
             ) : analise ? "Gerar nova análise" : "Gerar análise visual"}
           </Button>
           {analise && (
-            <div className="bg-black/40 border border-border p-4 mt-2">
-              <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap">
-                {analise}
-              </p>
+            <div className="bg-zinc-900/80 border border-white/10 p-5 mt-2 rounded-lg shadow-2xl">
+              <div className="space-y-1">
+                {formatAnalise(analise)}
+              </div>
             </div>
           )}
         </div>
