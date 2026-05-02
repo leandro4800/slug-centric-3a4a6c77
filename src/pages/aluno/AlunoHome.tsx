@@ -5,6 +5,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/use-auth";
 import heroDefault from "@/assets/hero-default.jpg";
 import cardTreino from "@/assets/card-treino.jpg";
 import cardDieta from "@/assets/card-dieta.jpg";
@@ -68,6 +69,8 @@ const AlunoHome = () => {
   const { slug } = useParams();
   const [vlogs, setVlogs] = useState<VlogPost[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [muted, setMuted] = useState(true);
 
   useEffect(() => {
     const checkRole = async () => {
@@ -81,7 +84,7 @@ const AlunoHome = () => {
     checkRole();
   }, [user]);
 
-  const featured = vlogs[0];
+  useEffect(() => {
     if (!tenant?.id) return;
     void supabase
       .from("vlog_posts")
@@ -93,6 +96,15 @@ const AlunoHome = () => {
       .limit(6)
       .then(({ data }) => setVlogs((data as VlogPost[]) || []));
   }, [tenant?.id]);
+
+  const featured = vlogs[0];
+  const ytId = featured ? extractYouTubeId(featured.url) : (isDirectVideo(tenant?.hero_url) || extractYouTubeId(tenant?.hero_url) ? null : extractYouTubeId(tenant?.hero_url));
+  
+  // Se não houver vlog, mas houver um vídeo de hero do tenant
+  const tenantHeroVideoId = !featured ? extractYouTubeId(tenant?.hero_url) : null;
+  const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
+
+  const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
 
   const handlePlay = () => {
     if (!featured) return;
@@ -167,9 +179,32 @@ const AlunoHome = () => {
                 Fechar
               </button>
             )}
-            <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center">
-              <Settings className="h-4 w-4 text-accent" />
+            
+            {/* Ícone de Perfil para todos os alunos */}
+            <Link to={`/${slug}/app/perfil`} className="w-10 h-10 rounded-full bg-secondary/70 border border-border flex items-center justify-center backdrop-blur">
+              <User className="h-4 w-4 text-foreground" />
             </Link>
+
+            {/* Ícone de Engrenagem apenas para admins */}
+            {isAdmin && (
+              <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-accent/20 border border-accent/40 flex items-center justify-center backdrop-blur">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="lucide lucide-settings text-accent"
+                >
+                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2v-.44a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2Z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+              </Link>
+            )}
           </div>
         </div>
         {!expanded && (
