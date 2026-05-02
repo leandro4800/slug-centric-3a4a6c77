@@ -282,42 +282,42 @@ const AdminFaturamento = () => {
         <section className="space-y-4 pt-4">
           <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-primary pl-3">Análise de Performance</h2>
           <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
-            <button onClick={() => setStudentsView("ativos")} className="min-w-[280px] text-left bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden hover:border-primary/50 transition-colors">
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <button onClick={() => setStudentsView("ativos")} className="min-w-[280px] text-left bg-white/10 border border-white/20 rounded-none p-6 relative group overflow-hidden hover:border-primary transition-colors">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <TrendingUp className="h-24 w-24 text-white" />
               </div>
-              <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-4 italic">Alunos Ativos</p>
+              <p className="text-xs uppercase tracking-widest text-white/80 font-bold mb-4 italic">Alunos Ativos</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-6xl font-black text-white">{activeStudents}</span>
-                <span className="text-white/40 text-sm font-bold flex items-center"><TrendingUp className="h-3 w-3 mr-1" />Demo</span>
+                <span className="text-white/60 text-sm font-bold flex items-center"><TrendingUp className="h-4 w-4 mr-1 text-primary" />Demo</span>
               </div>
-              <div className="mt-6 h-1 w-full bg-white/10 rounded-none overflow-hidden">
+              <div className="mt-6 h-1 w-full bg-white/20 rounded-none overflow-hidden">
                 <motion.div 
                   initial={{ width: 0 }}
                   animate={{ width: "80%" }}
                   className="h-full bg-primary" 
                 />
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-primary font-black mt-3">Ver lista →</p>
+              <p className="text-[11px] uppercase tracking-widest text-primary font-black mt-4">Ver lista →</p>
             </button>
 
-            <button onClick={() => setStudentsView("desistentes")} className="min-w-[280px] text-left bg-white/5 border border-white/10 rounded-none p-6 relative group overflow-hidden hover:border-primary/50 transition-colors">
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+            <button onClick={() => setStudentsView("desistentes")} className="min-w-[280px] text-left bg-white/10 border border-white/20 rounded-none p-6 relative group overflow-hidden hover:border-primary transition-colors">
+              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                 <TrendingDown className="h-24 w-24 text-primary" />
               </div>
-              <p className="text-xs uppercase tracking-widest text-white/60 font-bold mb-4 italic">Desistentes</p>
+              <p className="text-xs uppercase tracking-widest text-white/80 font-bold mb-4 italic">Desistentes</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-6xl font-black text-white">0</span>
-                <span className="text-primary text-sm font-bold flex items-center"><TrendingDown className="h-3 w-3 mr-1" />-0%</span>
+                <span className="text-primary text-sm font-bold flex items-center"><TrendingDown className="h-4 w-4 mr-1" />-0%</span>
               </div>
-              <div className="mt-6 h-1 w-full bg-white/10 rounded-none overflow-hidden">
+              <div className="mt-6 h-1 w-full bg-white/20 rounded-none overflow-hidden">
                 <motion.div 
                    initial={{ width: 0 }}
                    animate={{ width: "10%" }}
                    className="h-full bg-primary" 
                 />
               </div>
-              <p className="text-[10px] uppercase tracking-widest text-primary font-black mt-3">Ver lista →</p>
+              <p className="text-[11px] uppercase tracking-widest text-primary font-black mt-4">Ver lista →</p>
             </button>
           </div>
         </section>
