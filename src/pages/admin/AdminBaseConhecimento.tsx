@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { ArrowLeft, Upload, Loader2, FileText, Trash2, Brain, Globe } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 
 interface KnowledgeRow {
