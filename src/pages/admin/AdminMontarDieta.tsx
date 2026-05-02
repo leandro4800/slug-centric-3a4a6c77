@@ -75,7 +75,7 @@ const AdminMontarDieta = () => {
     })();
   }, [alunoId]);
 
-  const gerarComIA = useCallback(async () => {
+  const gerarComIA = useCallback(async (customPrompt?: string) => {
     if (!alunoId) {
       toast.error("Selecione um aluno.");
       return;
@@ -83,6 +83,9 @@ const AdminMontarDieta = () => {
     setGenerating(true);
     const toastId = toast.loading("Gerando dieta com IA...");
     try {
+      const promptFromUrl = searchParams.get("prompt");
+      const activePrompt = customPrompt || promptFromUrl || "";
+
       const { data, error } = await supabase.functions.invoke("gerar-dieta", {
         body: { 
           aluno_id: alunoId,
@@ -91,7 +94,8 @@ const AdminMontarDieta = () => {
           altura_cm: perfil.altura_cm,
           idade: perfil.idade,
           sexo: perfil.sexo === "masculino" ? "M" : "F",
-          nivel: perfil.tempo_treino
+          nivel: perfil.tempo_treino,
+          prompt: activePrompt
         },
       });
       if (error) throw error;
