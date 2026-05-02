@@ -79,7 +79,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
     className="h-full w-full overflow-hidden bg-background text-foreground"
     style={{ ["--brand" as any]: brandColor }}
   >
-    <div className="relative h-56 overflow-hidden bg-secondary">>
+    <div className="relative h-56 overflow-hidden bg-secondary">
       <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
       <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent" />
       <div className="absolute left-5 right-5 bottom-5">
@@ -156,7 +156,7 @@ const Landing = () => {
   const [students, setStudents] = useState(80);
   const [price, setPrice] = useState(400);
   const [brandName, setBrandName] = useState("Seu Coach Team");
-  const [brandColor, setBrandColor] = useState("#E50914");
+  const [brandColor, setBrandColor] = useState("#5E2129");
   const [screen1, setScreen1] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4");
   const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
@@ -389,7 +389,7 @@ const Landing = () => {
               <div className="grid md:grid-cols-2 gap-8 mt-12">
                 <button 
                   onClick={() => setMode("aluno")}
-                  className="group relative p-8 bg-zinc-950/80 border border-white/10 rounded-sm hover:border-primary transition-all text-left overflow-hidden shadow-card"
+                  className="group relative p-8 bg-zinc-950/80 border border-white/10 rounded-none hover:border-primary transition-all text-left overflow-hidden shadow-card"
                 >
                   <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                     <UserRound size={120} />
