@@ -240,12 +240,12 @@ const AdminFaturamento = () => {
           <motion.div 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-primary/10 border-l-4 border-primary p-5 flex gap-4 items-center"
+            className="bg-primary/20 border-l-4 border-primary p-6 flex gap-4 items-center"
           >
             <AlertCircle className="h-8 w-8 text-primary shrink-0" />
             <div className="space-y-1">
-              <p className="font-bold text-sm uppercase tracking-wider text-white">Verificação de Identidade</p>
-              <p className="text-xs text-white/60 leading-relaxed">
+              <p className="font-bold text-base uppercase tracking-wider text-white">Verificação de Identidade</p>
+              <p className="text-sm text-white/80 leading-relaxed font-medium">
                 {profile?.status_identidade === "em_analise" 
                   ? "Seus documentos estão em análise. Aguarde até 24h."
                   : "Para o seu 1º saque, é necessário enviar uma foto da sua identidade."}
