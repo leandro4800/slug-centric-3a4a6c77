@@ -116,7 +116,7 @@ const AdminPanel = () => {
             </AlertDialogContent>
           </AlertDialog>
           <Logo size={32} />
-          <span className="text-[10px] px-2 py-0.5 rounded bg-red-600/20 text-red-500 uppercase font-black tracking-widest border border-red-600/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-black tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
         </div>
         <Button variant="ghost" onClick={handleLogout}><LogOut className="h-4 w-4 mr-2" /> Sair</Button>
       </header>
