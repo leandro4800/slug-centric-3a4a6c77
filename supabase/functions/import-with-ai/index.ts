@@ -100,6 +100,9 @@ serve(async (req) => {
       }
     } else {
       // Import Dieta
+      // Clear existing diets for this user
+      await supabase.from("dietas").delete().eq("user_id", alunoId);
+
       const { data: dieta, error: dError } = await supabase
         .from("dietas")
         .insert({
