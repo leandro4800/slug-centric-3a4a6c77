@@ -14,7 +14,8 @@ const buttonVariants = cva(
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)] before:pointer-events-none",
           "after:absolute after:inset-0 after:border after:border-[var(--btn-border)] after:pointer-events-none",
           "hover:bg-primary-glow hover:shadow-[0_0_40px_-10px_hsl(var(--primary-glow)/0.6)]",
-          "hover:after:border-white/50"
+          "hover:after:border-white/50",
+          "group/btn"
         ].join(" "),
         destructive: [
           "bg-destructive text-destructive-foreground",
