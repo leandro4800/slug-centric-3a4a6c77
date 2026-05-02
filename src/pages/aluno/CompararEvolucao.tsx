@@ -251,8 +251,8 @@ const CompararEvolucao = () => {
             ) : analise ? "Gerar nova análise" : "Gerar análise visual"}
           </Button>
           {analise && (
-            <div className="bg-zinc-900/80 border border-white/10 p-5 mt-2 rounded-lg shadow-2xl">
-              <div className="space-y-1">
+            <div className="bg-zinc-950 border border-white/5 p-8 mt-4 rounded-none shadow-2xl">
+              <div className="max-w-none">
                 {formatAnalise(analise)}
               </div>
             </div>
