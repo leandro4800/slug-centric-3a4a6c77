@@ -94,6 +94,7 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
       if (error) throw error;
 
       toast.success("Check-in de evolução salvo com sucesso!");
+      onSaved?.();
       setIsOpen(false);
       // Reset form
       setPeso("");
