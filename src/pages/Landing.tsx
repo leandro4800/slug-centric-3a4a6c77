@@ -5,6 +5,7 @@ import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
 
 interface CoachData {
