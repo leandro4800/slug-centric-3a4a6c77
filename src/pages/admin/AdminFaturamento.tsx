@@ -254,8 +254,16 @@ const AdminFaturamento = () => {
             className="bg-primary/10 border-l-4 border-primary p-5 flex gap-4 items-center"
           >
             <AlertCircle className="h-8 w-8 text-primary shrink-0" />
-...
-        <section className="space-y-4">
+            <div className="space-y-1">
+              <p className="font-bold text-sm uppercase tracking-wider text-white">Verificação de Identidade</p>
+              <p className="text-xs text-white/60 leading-relaxed">
+                {profile?.status_identidade === "em_analise" 
+                  ? "Seus documentos estão em análise. Aguarde até 24h."
+                  : "Para o seu 1º saque, é necessário enviar uma foto da sua identidade."}
+              </p>
+            </div>
+          </motion.div>
+        )}
           <h2 className="text-xl font-black uppercase tracking-tight text-white/90 border-l-4 border-primary pl-3">Gestão e Serviços</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {menuItems.map((item, idx) => (
