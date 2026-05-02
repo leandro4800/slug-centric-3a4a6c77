@@ -26,6 +26,7 @@ import {
   Sparkles,
   ShieldAlert,
 } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
 import { SevenDobrasIntro } from "@/components/admin/SevenDobrasIntro";
 import { 
