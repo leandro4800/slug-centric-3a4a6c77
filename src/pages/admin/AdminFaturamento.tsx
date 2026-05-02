@@ -204,8 +204,8 @@ const AdminFaturamento = () => {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-1"
           >
-            <p className="text-xs uppercase tracking-[0.3em] text-white/60 font-bold italic">Saldo Disponível</p>
-            <h1 className="text-6xl md:text-7xl font-black tracking-tighter text-white">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-white/50 font-bold italic">Saldo Disponível</p>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-white mt-1">
               {formatBRL(totalNet)}
             </h1>
             <div className="flex items-center gap-2 pt-2">
