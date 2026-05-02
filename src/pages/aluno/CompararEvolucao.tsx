@@ -146,12 +146,16 @@ const CompararEvolucao = () => {
       const isTitle = trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3;
       if (isTitle) {
         return (
-          <p key={i} className="text-primary font-medium mt-10 mb-5 tracking-[0.3em] text-[14px] uppercase border-b border-primary/20 pb-3">
+          <p key={i} className="text-primary font-medium mt-10 mb-5 tracking-[0.3em] text-[14px] uppercase border-b border-primary/20 pb-3" style={{ fontWeight: 400 }}>
             {trimmedLine}
           </p>
         );
       }
-      return <p key={i} className="text-white text-[18px] leading-[1.8] mb-6 font-normal tracking-wide">{trimmedLine}</p>;
+      return (
+        <p key={i} className="text-white text-[16px] leading-[1.8] mb-6 tracking-wide" style={{ fontWeight: 300, fontStyle: 'normal' }}>
+          {trimmedLine}
+        </p>
+      );
     });
   };
 
