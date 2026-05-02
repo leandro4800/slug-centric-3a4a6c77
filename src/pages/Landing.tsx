@@ -329,21 +329,20 @@ const Landing = () => {
   return (
     <div className="min-h-screen bg-[#0a0a0a] text-white selection:bg-primary selection:text-white overflow-x-hidden">
       {/* Nav */}
-      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+      <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/5">
         <Logo />
-        <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-gray-300">
-          <a href="#coaches" className="hover:text-white transition-colors">Coaches</a>
-          <button onClick={() => setShowSimulador(true)} className="hover:text-white transition-colors">Simulador</button>
-          <a href="#" className="hover:text-white transition-colors">Recursos</a>
-          <a href="#" className="hover:text-white transition-colors">FAQ</a>
+        <nav className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-widest text-gray-300">
+          <a href="#coaches" className="hover:text-primary transition-colors">Coaches</a>
+          <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
+          <a href="#" className="hover:text-primary transition-colors">Recursos</a>
         </nav>
         <div className="flex items-center gap-3">
           <Link to="/login">
-            <Button variant="ghost" className="text-white hover:bg-white/10 hidden md:flex">Entrar</Button>
+            <Button variant="ghost" className="text-white hover:bg-white/10 hidden md:flex font-bold uppercase tracking-wider">Entrar</Button>
           </Link>
           <Button 
             onClick={() => setShowSimulador(true)}
-            className="bg-primary hover:bg-primary/90 text-white px-6 font-bold"
+            className="px-6"
           >
             TESTAR AGORA
           </Button>
@@ -390,31 +389,31 @@ const Landing = () => {
               <div className="grid md:grid-cols-2 gap-8 mt-12">
                 <button 
                   onClick={() => setMode("aluno")}
-                  className="group relative p-8 bg-zinc-900/80 border-2 border-white/10 rounded-2xl hover:border-primary transition-all text-left overflow-hidden"
+                  className="group relative p-8 bg-zinc-950/80 border border-white/10 rounded-sm hover:border-primary transition-all text-left overflow-hidden shadow-card"
                 >
-                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                     <UserRound size={120} />
                   </div>
                   <Users className="mb-4 text-primary h-12 w-12" />
-                  <h3 className="text-3xl font-black uppercase mb-2">Sou Aluno</h3>
-                  <p className="text-gray-400 mb-6 font-medium">Quero treinar, evoluir e encontrar os melhores coaches.</p>
-                  <div className="flex items-center text-primary font-bold uppercase tracking-wider group-hover:translate-x-2 transition-transform">
-                    Acessar agora <ArrowRight className="ml-2 h-5 w-5" />
+                  <h3 className="text-3xl font-black uppercase mb-2 tracking-tighter">Sou Aluno</h3>
+                  <p className="text-gray-400 mb-6 font-medium text-sm">Quero treinar, evoluir e encontrar os melhores coaches.</p>
+                  <div className="flex items-center text-primary font-bold uppercase tracking-widest text-xs group-hover:translate-x-2 transition-transform">
+                    Acessar agora <ArrowRight className="ml-2 h-4 w-4" />
                   </div>
                 </button>
 
                 <button 
                   onClick={() => setMode("coach")}
-                  className="group relative p-8 bg-zinc-900/80 border-2 border-white/10 rounded-2xl hover:border-primary transition-all text-left overflow-hidden"
+                  className="group relative p-8 bg-zinc-950/80 border border-white/10 rounded-sm hover:border-primary transition-all text-left overflow-hidden shadow-card"
                 >
-                  <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                  <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
                     <TrendingUp size={120} />
                   </div>
                   <Smartphone className="mb-4 text-primary h-12 w-12" />
-                  <h3 className="text-3xl font-black uppercase mb-2">Sou Coach</h3>
-                  <p className="text-gray-400 mb-6 font-medium">Quero digitalizar minha consultoria e escalar meus resultados.</p>
-                  <div className="flex items-center text-primary font-bold uppercase tracking-wider group-hover:translate-x-2 transition-transform">
-                    Criar meu App <ArrowRight className="ml-2 h-5 w-5" />
+                  <h3 className="text-3xl font-black uppercase mb-2 tracking-tighter">Sou Coach</h3>
+                  <p className="text-gray-400 mb-6 font-medium text-sm">Quero digitalizar minha consultoria e escalar meus resultados.</p>
+                  <div className="flex items-center text-primary font-bold uppercase tracking-widest text-xs group-hover:translate-x-2 transition-transform">
+                    Criar meu App <ArrowRight className="ml-2 h-4 w-4" />
                   </div>
                 </button>
               </div>
@@ -433,10 +432,10 @@ const Landing = () => {
                 <div className="space-y-6">
                   <p className="text-xl text-gray-400 mb-8 font-medium">Você já possui o link direto do seu coach?</p>
                   <div className="flex flex-col sm:flex-row gap-4">
-                    <Button onClick={() => setHasCoachLink(true)} size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-16 px-8 rounded-xl text-lg uppercase">
+                    <Button onClick={() => setHasCoachLink(true)} size="lg" className="h-16 px-8 rounded-sm text-lg uppercase font-black">
                       Sim, eu tenho o link
                     </Button>
-                    <Button onClick={() => setHasCoachLink(false)} size="lg" variant="outline" className="border-white/20 bg-white/5 hover:bg-white/10 text-white font-bold h-16 px-8 rounded-xl text-lg uppercase">
+                    <Button onClick={() => setHasCoachLink(false)} size="lg" variant="outline" className="h-16 px-8 rounded-sm text-lg uppercase font-black">
                       Não, quero procurar um
                     </Button>
                   </div>
@@ -530,13 +529,13 @@ const Landing = () => {
               
               <div className="flex flex-col sm:flex-row flex-wrap gap-4">
                 <Link to="/seja-coach" className="w-full sm:w-auto">
-                  <Button size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-white text-base px-8 h-14 rounded-md font-bold uppercase tracking-wider group">
+                  <Button size="lg" className="w-full sm:w-auto px-8 h-16 rounded-sm font-black uppercase tracking-wider group">
                     <Play className="mr-2 h-4 w-4 fill-current" />
                     Quero minha franquia Alpha Coach
                   </Button>
                 </Link>
                 <Link to="/login" className="w-full sm:w-auto">
-                  <Button size="lg" variant="outline" className="w-full text-white border-white/20 bg-white/5 hover:bg-white/10 text-base px-8 h-14 rounded-md font-medium group uppercase font-bold tracking-wider">
+                  <Button size="lg" variant="outline" className="w-full px-8 h-16 rounded-sm font-black tracking-wider group uppercase">
                     Já sou coach — Entrar
                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                   </Button>
