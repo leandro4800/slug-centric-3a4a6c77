@@ -124,7 +124,7 @@ const Perfil = () => {
     
     toast.success("Perfil atualizado!");
     setProfileOpen(false);
-    loadData();
+    loadData(true);
   };
 
   const handleUpdateEval = async (e: React.FormEvent) => {
