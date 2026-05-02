@@ -2,18 +2,18 @@
 import { createClient } from "@supabase/supabase-js";
 import fs from "fs";
 
-// Using constants directly to avoid env var issues in this specific script
 const SUPABASE_URL = "https://rmetppilvfrxosvxzhgj.supabase.co"; 
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SERVICE_KEY) {
-  console.error("SUPABASE_SERVICE_ROLE_KEY must be set");
+  console.error("SERVICE_KEY_MISSING");
   process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
 async function ingest() {
+  console.log("Iniciando ingestão...");
   const content = fs.readFileSync("pacholok_conhecimento.md", "utf-8");
   const sections = content.split(/^## /m);
   
@@ -71,6 +71,7 @@ async function ingest() {
       if (error) console.error("Erro ao inserir:", error);
     }
   }
+  console.log("Fim da ingestão.");
 }
 
 ingest();
