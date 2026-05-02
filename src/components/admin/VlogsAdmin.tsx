@@ -229,8 +229,8 @@ export const VlogsAdmin = () => {
       </div>
 
       {/* List */}
-      <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-        <h3 className="font-display text-xl mb-4">VLOGS · {posts.length}</h3>
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-6 text-primary border-l-4 border-primary pl-4">VLOGS · {posts.length}</h3>
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : posts.length === 0 ? (
