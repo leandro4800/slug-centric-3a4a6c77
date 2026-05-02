@@ -56,9 +56,9 @@ const Perfil = () => {
     if (user) loadData();
   }, [user]);
 
-  const loadData = async () => {
+  const loadData = async (silent = false) => {
     try {
-      setLoading(true);
+      if (!silent) setLoading(true);
       const { data: p } = await supabase.from("perfis").select("*").eq("id", user?.id).maybeSingle();
       const { data: e } = await supabase.from("avaliacoes_fisicas").select("*").eq("aluno_id", user?.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
       
