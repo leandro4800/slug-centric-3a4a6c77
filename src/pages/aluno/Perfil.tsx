@@ -279,6 +279,18 @@ const Perfil = () => {
               <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
             </Button>
           </div>
+          
+          {isCoach && (
+            <div className="flex gap-2 pt-1">
+              <Button
+                onClick={() => navigate(`/${slug}/admin`)}
+                variant="outline"
+                className="flex-1 border-primary/40 text-primary hover:bg-primary/10"
+              >
+                <Settings className="h-4 w-4" /> Painel do Coach
+              </Button>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-1">
             <Button
