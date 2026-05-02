@@ -122,12 +122,12 @@ const Login = () => {
 
       <div className="relative w-full max-w-md">
         <Link to="/" className="flex justify-center mb-8"><Logo /></Link>
-        <div className="relative bg-black/70 backdrop-blur-xl border border-primary/30 rounded-2xl p-8 shadow-[0_25px_80px_-15px_hsl(var(--primary)/0.45)] ring-1 ring-white/5">
-          <div className="absolute -inset-px rounded-2xl pointer-events-none bg-gradient-to-b from-primary/20 via-transparent to-transparent opacity-60" />
+        <div className="relative bg-zinc-950/90 backdrop-blur-xl border border-white/10 rounded-sm p-8 shadow-card overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           <Tabs defaultValue="login">
-            <TabsList className="grid grid-cols-2 w-full mb-6">
-              <TabsTrigger value="login">Entrar</TabsTrigger>
-              <TabsTrigger value="signup">Criar conta</TabsTrigger>
+            <TabsList className="grid grid-cols-2 w-full mb-8 bg-zinc-900/50 p-1 rounded-sm border border-white/5">
+              <TabsTrigger value="login" className="rounded-sm data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs">Entrar</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-sm data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs">Criar conta</TabsTrigger>
             </TabsList>
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
@@ -139,8 +139,8 @@ const Login = () => {
                   <Label htmlFor="password">Senha</Label>
                   <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
-                <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-glow h-11">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Entrar"}
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ACESSAR AGORA"}
                 </Button>
                 <div className="text-center">
                   <Link to="/forgot-password" className="text-sm text-primary hover:underline">
@@ -163,8 +163,8 @@ const Login = () => {
                   <Label htmlFor="password-s">Senha</Label>
                   <Input id="password-s" type="password" minLength={6} required value={password} onChange={(e) => setPassword(e.target.value)} />
                 </div>
-                <Button type="submit" disabled={loading} className="w-full bg-gradient-primary shadow-glow h-11">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
+                <Button type="submit" disabled={loading} className="w-full">
+                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "CRIAR CONTA ALPHA"}
                 </Button>
               </form>
             </TabsContent>
