@@ -11,57 +11,63 @@
 @layer base {
   :root {
     /* Neutral global theme (used on /, /login) */
-    --background: 0 0% 4%;
+    --background: 0 0% 2%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 7%;
+    --card: 0 0% 5%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 7%;
+    --popover: 0 0% 5%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 357 92% 47%;
+    /* Updated Red: Deeper, more vibrant "mirrored/metallic" vibe */
+    --primary: 0 85% 45%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 357 92% 60%;
+    --primary-glow: 0 95% 55%;
 
-    --secondary: 0 0% 12%;
+    --secondary: 0 0% 8%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 14%;
-    --muted-foreground: 0 0% 64%;
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 60%;
 
-    --accent: 357 92% 47%;
+    --accent: 0 85% 45%;
     --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 72% 51%;
+    --destructive: 0 85% 45%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 16%;
-    --input: 0 0% 14%;
-    --ring: 357 92% 47%;
+    --border: 0 0% 12%;
+    --input: 0 0% 10%;
+    --ring: 0 85% 45%;
 
-    --radius: 0.75rem;
+    /* Style: Sharper corners for that aggressive look */
+    --radius: 0.25rem;
 
-    /* Cinematic gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary-glow)) 100%);
-    --gradient-hero-overlay: linear-gradient(180deg, hsla(0,0%,2%,0) 0%, hsla(0,0%,2%,0.4) 50%, hsl(0 0% 4%) 100%);
-    --gradient-hero-side: linear-gradient(90deg, hsl(0 0% 4%) 0%, hsla(0,0%,4%,0.4) 50%, transparent 100%);
-    --gradient-card: linear-gradient(160deg, hsl(0 0% 9%) 0%, hsl(0 0% 5%) 100%);
+    /* Cinematic gradients with a more reflective feel */
+    --gradient-primary: linear-gradient(180deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%);
+    --gradient-hero-overlay: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+    --gradient-hero-side: linear-gradient(90deg, #050505 0%, transparent 100%);
+    --gradient-card: linear-gradient(160deg, hsl(0 0% 7%) 0%, hsl(0 0% 3%) 100%);
+
+    /* Button specific styles for the "mirrored" look */
+    --btn-gloss: linear-gradient(180deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 100%);
+    --btn-border: rgba(255,255,255,0.2);
 
     /* Shadows */
-    --shadow-glow: 0 0 60px -10px hsl(var(--primary) / 0.5);
-    --shadow-card: 0 20px 50px -20px hsl(0 0% 0% / 0.8);
+    --shadow-glow: 0 0 20px -5px hsl(var(--primary) / 0.6);
+    --shadow-card: 0 10px 30px -10px rgba(0,0,0,0.9);
 
     --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
 
-    --sidebar-background: 0 0% 6%;
+    --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 357 92% 47%;
+    --sidebar-primary: 0 85% 45%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 12%;
+    --sidebar-accent: 0 0% 10%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 14%;
-    --sidebar-ring: 357 92% 47%;
+    --sidebar-border: 0 0% 12%;
+    --sidebar-ring: 0 85% 45%;
   }
 }
 
