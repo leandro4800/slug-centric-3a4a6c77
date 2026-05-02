@@ -230,7 +230,7 @@ const AdminFaturamento = () => {
           <div className="flex gap-3 mt-8">
             <Button 
               onClick={() => setIsSaqueDialogOpen(true)}
-              className="bg-red-600 text-white hover:bg-red-700 font-bold px-8 py-6 h-auto rounded-none flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
+              className="font-bold px-8 py-6 h-auto flex items-center gap-2 transition-transform hover:scale-105 active:scale-95"
             >
               <HandCoins className="h-5 w-5" />
               Solicitar Saque
