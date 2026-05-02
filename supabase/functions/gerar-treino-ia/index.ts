@@ -27,59 +27,7 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // === BUSCA ESTRUTURADA: templates de treino do catálogo ===
-    let templatesContext = "";
-    try {
-      // Mapeia o perfil do aluno para os filtros da tabela
-      const sexo = (perfil?.sexo || "").toLowerCase();
-      const publicoFiltro = sexo.startsWith("f") || sexo === "mulher" || sexo === "feminino" ? "feminino" : "masculino";
-      const nivelMap: Record<string, string> = {
-        "iniciante": "iniciante",
-        "intermediario": "intermediario",
-        "intermediário": "intermediario",
-        "avancado": "avancado",
-        "avançado": "avancado",
-        "atleta": "super_avancado",
-        "atleta de alto nivel": "super_avancado",
-        "atleta de alto nível": "super_avancado",
-      };
-      const nivelFiltro = nivelMap[(perfil?.tempo_treino || "").toLowerCase()] || null;
-      const freqFiltro = perfil?.frequencia_semanal || null;
-      const divisaoFiltro = (divisoes && divisoes.length === 1) ? divisoes[0] : null;
-
-      const tplResp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/buscar_templates_treino`, {
-        method: "POST",
-        headers: {
-          apikey: SERVICE_KEY,
-          Authorization: `Bearer ${SERVICE_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          p_publico: publicoFiltro,
-          p_nivel: nivelFiltro,
-          p_frequencia: freqFiltro,
-          p_divisao: divisaoFiltro,
-          p_enfase: null,
-          p_tenant_id: tenant_id || null,
-          p_limit: 5,
-        }),
-      });
-      if (tplResp.ok) {
-        const tpls = await tplResp.json();
-        if (Array.isArray(tpls) && tpls.length) {
-          templatesContext = "\n\n=== TEMPLATES RECOMENDADOS DO CATÁLOGO ===\n" +
-            tpls.map((t: any) =>
-              `• [${t.codigo}] ${t.titulo}\n  Público: ${t.publico} | Nível: ${t.nivel} | ${t.frequencia_semanal || "?"}x/semana | Divisão: ${t.divisao || "—"} | Ênfase: ${t.enfase || "—"}\n  ${t.resumo || ""}`
-            ).join("\n\n") +
-            "\n=== FIM TEMPLATES ===\n\nUse o template de MAIOR score como base estrutural (divisão, frequência, ênfase) para montar o treino.";
-          console.log(`Templates: ${tpls.length} encontrados (publico=${publicoFiltro}, nivel=${nivelFiltro}, freq=${freqFiltro})`);
-        }
-      }
-    } catch (tplErr) {
-      console.error("Templates busca error (não fatal):", tplErr);
-    }
-
-    // === RAG: Busca conhecimento semântico (global + tenant) ===
+    // === RAG: Busca conhecimento semântico da Base de Verdade Absolute (Pacho) ===
     let knowledgeContext = "";
     try {
       const queryText = `Treino para ${perfil?.sexo || ""} ${perfil?.idade || ""} anos, nivel ${perfil?.tempo_treino || "Iniciante"}, objetivo ${perfil?.objetivo || "hipertrofia"}, ${perfil?.frequencia_semanal || 4}x/semana. Lesoes: ${lesoes}. Limitacoes: ${limitacoes}. Divisao: ${(divisoes || []).join(",")}.`;
@@ -92,8 +40,6 @@ serve(async (req) => {
         const embData = await embResp.json();
         const queryEmbedding = embData.data[0].embedding;
 
-        const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-        const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
         const rpcResp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/buscar_conhecimento_treino`, {
           method: "POST",
           headers: {
@@ -104,17 +50,16 @@ serve(async (req) => {
           body: JSON.stringify({
             query_embedding: queryEmbedding,
             p_tenant_id: tenant_id || null,
-            match_count: 18,
-            similarity_threshold: 0.35,
+            match_count: 20,
+            similarity_threshold: 0.3,
           }),
         });
         if (rpcResp.ok) {
           const matches = await rpcResp.json();
           if (Array.isArray(matches) && matches.length) {
-            knowledgeContext = "\n\n=== BASE DE CONHECIMENTO (use rigorosamente como referência) ===\n" +
-              matches.map((m: any, i: number) => `[Fonte: ${m.fonte || "?"}]\n${m.conteudo}`).join("\n---\n") +
+            knowledgeContext = "\n\n=== BASE DE CONHECIMENTO METODOLOGIA PACHOLOK (FONTE ABSOLUTA) ===\n" +
+              matches.map((m: any, i: number) => `[Módulo: ${m.fonte || "?"}]\n${m.conteudo}`).join("\n---\n") +
               "\n=== FIM DA BASE ===\n";
-            console.log(`RAG: ${matches.length} chunks injetados`);
           }
         }
       }
@@ -122,47 +67,35 @@ serve(async (req) => {
       console.error("RAG error (não fatal):", ragErr);
     }
 
-    
-    const systemPrompt = `${templatesContext}\n${knowledgeContext}\n\nVocê é um treinador de elite especialista na Metodologia Fabrício Pacholok. Use OBRIGATORIAMENTE o template recomendado do CATÁLOGO acima como base estrutural (divisão, frequência, ênfase) e o conteúdo da BASE DE CONHECIMENTO como referência técnica primária — exercícios, técnicas, divisões, cadências e princípios devem refletir esse material sempre que houver informação aplicável. 
-Sua missão é prescrever treinos com extrema precisão técnica, focando em:
-1. FALHA MUSCULAR E PROGRESSÃO DE CARGA (Progressive Overload): Cada série deve ter um propósito claro (Warm-up, Feeder ou Work set).
-2. BIOMECÂNICA AVANÇADA: Otimize a seleção de exercícios para máxima eficiência mecânica e segurança, respeitando as limitações do aluno.
-3. TÉCNICAS DE INTENSIDADE: Use Rest-Pause, Drop-set, FST-7 e Cluster Sets estrategicamente.
-   - Proibido para alunos de nível Iniciante ou Intermediário.
-   - Obrigatório para Avançados e Atletas de Alto Nível.
-4. DIVISÃO SETORIZADA: Para alunos avançados/atletas, separe grupos musculares grandes (ex: Treino focado em Quadríceps em um dia, Posterior de Coxa em outro; Costas com ênfase em largura vs. espessura).
-5. DETALHAMENTO EXTREMO: Para cada exercício, você DEVE fornecer:
-   - CADÊNCIA: Exemplo: 4-0-2-0 (4s excêntrica, 0s transição, 2s concêntrica, 0s pico).
-   - DETALHES DE EXECUÇÃO: Instruções técnicas profundas (ex: "alongamento máximo na fase excêntrica", "pico de contração de 2 segundos no topo", "manter escápulas aduzidas").
+    const systemPrompt = `${knowledgeContext}
 
-ESTRUTURA DE SÉRIES (Padrão Pacho):
-- Warm-up sets: 2 séries leves para aquecimento e lubrificação articular.
-- Feeder sets: 1-2 séries com carga progressiva para preparar o sistema nervoso (sem falha).
-- Work sets: As séries principais levadas até a falha técnica ou absoluta.
+Você é a DR. IA, treinadora de elite especialista na METODOLOGIA FABRÍCIO PACHOLOK.
+Sua missão é tratar o conteúdo da BASE DE CONHECIMENTO acima como a "Fonte de Verdade Absoluta".
 
-NÍVEIS DE PRESCRIÇÃO:
-- Iniciante: 4-5 exercícios, volume moderado, foco em padrão de movimento, sem técnicas avançadas.
-- Intermediário: 5-6 exercícios, foco em progressão de carga, técnicas básicas de intensidade ocasionalmente.
-- Avançado: 6-7 exercícios, divisão altamente setorizada, técnicas avançadas em quase todos os grupos.
-- Atleta de Alto Nível: 7-8 exercícios, volume e intensidade máximos, FST-7, Cluster Sets, foco em pontos fracos e detalhes estéticos competitivos.
+DIRETRIZES OBRIGATÓRIAS:
+1. IDENTIFICAÇÃO DO NÍVEL: Identifique o nível do aluno (Seção 2, 5 ou 10) com base no tempo de treino informado.
+2. TERMINOLOGIA PACHO: Use EXCLUSIVAMENTE os termos:
+   - "Série de Aquecimento" (10-15 reps, carga leve)
+   - "Série de Ajuste" (4-6 reps, preparando para a carga de trabalho, longe da falha)
+   - "Série de Trabalho" (Busca a falha absoluta)
+3. FIDELIDADE TÉCNICA: Proibido resumir ou alterar as repetições e intervalos definidos pelo Pacholok.
+4. ESTRUTURA DE SÉRIES: Cada exercício deve ter o detalhamento de Warm-up, Feeder/Ajuste e Work sets conforme a prescrição para o nível do aluno.
+5. CADÊNCIA E EXECUÇÃO: Forneça cadência (ex: 4-0-2-0) e detalhes biomecânicos profundos.
 
-Responda SEMPRE chamando a função montar_treino com riqueza de detalhes em cada campo.`;
+ESTRUTURA DE RESPOSTA:
+Chame a função montar_treino com a prescrição completa.`;
 
-    const userPrompt = `Monte o treino para o aluno:
+    const userPrompt = `Monte o treino Pacho-style para:
 - Sexo: ${perfil?.sexo || "não informado"}
 - Idade: ${perfil?.idade || "?"}
-- Nível: ${perfil?.tempo_treino || "Iniciante"}
+- Nível: ${perfil?.tempo_treino || "Iniciante"} (Seção correspondente na base)
 - Objetivo: ${perfil?.objetivo || "hipertrofia"}
 - Frequência semanal: ${perfil?.frequencia_semanal || 4}x
-- Lesões: ${lesoes}
-- Limitações: ${limitacoes}
+- Ênfase desejada: ${perfil?.enfase || "Geral"}
+- Lesões/Limitações: ${lesoes} / ${limitacoes}
 
-Divisão sugerida: ${divisoes?.join(", ") || "ABC"}
-
-Use exercícios desta biblioteca (id, nome, grupo, contraindicacoes):
-${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}] contra: ${(e.contraindicacoes || []).join("/") || "—"}`).join("\n")}
-
-Prescreva o cardio adequado ao objetivo (Pacho style).`;
+Use exercícios desta biblioteca:
+${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("\n")}`;
 
     const tools = [
       {
@@ -185,25 +118,22 @@ Prescreva o cardio adequado ao objetivo (Pacho style).`;
                         type: "object",
                         properties: {
                           nome: { type: "string" },
-                          series: { type: "string", description: "Ex: 2 Warm-up + 1 Feeder + 3 Work sets" },
-                          repeticoes: { type: "string", description: "Ex: 8-12 + Drop-set" },
-                          cadencia: { type: "string", description: "Tempo de execução (ex: 3-1-2-0)" },
-                          detalhes_execucao: { type: "string", description: "Instruções biomecânicas e de intensidade ricas em detalhes" },
-                          observacao: { type: "string", description: "Informações adicionais curtas" },
+                          series: { type: "string", description: "Ex: 2 Séries de Aquecimento + 1 Série de Ajuste + 3 Séries de Trabalho" },
+                          repeticoes: { type: "string", description: "Ex: 8-12 + Drop-set final" },
+                          cadencia: { type: "string", description: "Ex: 4-0-2-0" },
+                          detalhes_execucao: { type: "string" },
+                          observacao: { type: "string" },
                         },
                         required: ["nome", "series", "repeticoes", "cadencia", "detalhes_execucao", "observacao"],
-                        additionalProperties: false,
                       },
                     },
                   },
                   required: ["dia", "exercicios"],
-                  additionalProperties: false,
                 },
               },
-              cardio: { type: "string", description: "Prescrição de cardio personalizada" },
+              cardio: { type: "string" },
             },
             required: ["dias", "cardio"],
-            additionalProperties: false,
           },
         },
       },
@@ -216,7 +146,7 @@ Prescreva o cardio adequado ao objetivo (Pacho style).`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "google/gemini-2.0-flash-001",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -226,37 +156,16 @@ Prescreva o cardio adequado ao objetivo (Pacho style).`;
       }),
     });
 
-    if (resp.status === 429) {
-      return new Response(JSON.stringify({ error: "Rate limit atingido. Tente em alguns instantes." }), {
-        status: 429,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    if (resp.status === 402) {
-      return new Response(JSON.stringify({ error: "Créditos insuficientes na workspace Lovable AI." }), {
-        status: 402,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
     if (!resp.ok) {
       const t = await resp.text();
       console.error("AI gateway error:", resp.status, t);
-      return new Response(JSON.stringify({ error: "Falha na IA" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      throw new Error("IA falhou");
     }
 
     const data = await resp.json();
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
     const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : null;
-    if (!args) {
-      return new Response(JSON.stringify({ error: "IA não retornou estrutura válida" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
+    
     return new Response(JSON.stringify(args), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
