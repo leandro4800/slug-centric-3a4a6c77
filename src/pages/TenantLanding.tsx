@@ -42,6 +42,8 @@ export default function TenantLanding() {
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [loading, setLoading] = useState(true);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [hasSubscription, setHasSubscription] = useState(false);
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     void load();
@@ -50,9 +52,27 @@ export default function TenantLanding() {
   const load = async () => {
     if (!slug) return;
     setLoading(true);
+    
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    setUser(currentUser);
+
     const { data: t } = await supabase.from("tenants").select("*").eq("slug", slug).maybeSingle();
     setTenant(t as Tenant);
+    
     if (t) {
+      // Check for subscription
+      if (currentUser) {
+        const { data: sub } = await supabase
+          .from("assinaturas")
+          .select("status")
+          .eq("aluno_id", currentUser.id)
+          .eq("tenant_id", t.id)
+          .in("status", ["active", "trialing"])
+          .maybeSingle();
+        
+        setHasSubscription(!!sub);
+      }
+
       const { data: p } = await supabase
         .from("planos")
         .select("*")
@@ -146,11 +166,28 @@ export default function TenantLanding() {
       {/* Planos */}
       <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
         <div className="mb-12 text-center">
-          <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
-          <p className="mt-3 text-muted-foreground">Experimente por 30 dias grátis. Cancele quando quiser.</p>
+          <h2 className="font-display text-4xl uppercase md:text-5xl">
+            {hasSubscription ? "Você já possui acesso" : "Escolha seu plano"}
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            {hasSubscription 
+              ? "Aproveite todos os benefícios do seu plano ativo." 
+              : "Experimente por 30 dias grátis. Cancele quando quiser."}
+          </p>
+          {hasSubscription && (
+            <Button 
+              size="lg" 
+              className="mt-6 bg-primary hover:bg-primary/90"
+              onClick={() => navigate(`/dashboard`)}
+            >
+              Ir para o Dashboard
+            </Button>
+          )}
         </div>
 
-        {planos.length === 0 ? (
+        {!hasSubscription && (
+          <>
+            {planos.length === 0 ? (
           <div className="rounded-2xl border border-border/50 bg-card/40 p-12 text-center text-muted-foreground">
             Este coach ainda não publicou planos.
           </div>
@@ -221,7 +258,7 @@ export default function TenantLanding() {
                 </div>
               );
             })}
-          </div>
+          </>
         )}
       </section>
     </div>
