@@ -116,7 +116,7 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-none border border-white/10 bg-secondary/50 p-4">
+        <div className="rounded-none border border-white/10 bg-card/50 p-4">
           <p className="text-2xl font-black" style={{ color: brandColor }}>87%</p>
           <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
         </div>
@@ -360,7 +360,7 @@ const Landing = () => {
             alt="Atletas" 
             className="w-full h-[50vh] object-cover object-center"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-[#0a0a0a]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/60 to-background" />
         </div>
 
         {/* Desktop Background */}
@@ -375,7 +375,7 @@ const Landing = () => {
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 via-40% to-transparent" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-transparent to-transparent opacity-80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
         </div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full mt-[50vh] md:mt-[40vh]">

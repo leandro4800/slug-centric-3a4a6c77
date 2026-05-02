@@ -182,7 +182,7 @@ const AlunoHome = () => {
             )}
             
             {/* Ícone de Perfil para todos os alunos */}
-            <Link to={`/${slug}/app/perfil`} className="w-10 h-10 rounded-full bg-secondary/70 border border-border flex items-center justify-center backdrop-blur">
+            <Link to={`/${slug}/app/perfil`} className="w-10 h-10 rounded-full bg-card/70 border border-border flex items-center justify-center backdrop-blur">
               <User className="h-4 w-4 text-foreground" />
             </Link>
 
@@ -243,7 +243,7 @@ const AlunoHome = () => {
         </Link>
 
         <div className="bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-secondary/50 border border-border flex items-center justify-center">
+          <div className="w-12 h-12 rounded-lg bg-card/50 border border-border flex items-center justify-center">
             <TenantSymbol size={28} />
           </div>
           <div>
