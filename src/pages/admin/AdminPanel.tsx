@@ -139,7 +139,7 @@ const AdminPanel = () => {
       <main className="max-w-6xl mx-auto p-6">
         <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
           <div>
-            <h1 className="font-display text-4xl mb-2">PAINEL DO COACH</h1>
+            <h1 className="font-display text-5xl mb-2 text-white tracking-wider">PAINEL DO COACH</h1>
             <p className="text-muted-foreground">Gestão do tenant <strong className="text-primary">{tenant?.slug}</strong></p>
           </div>
           <div className="flex gap-2 flex-wrap">
