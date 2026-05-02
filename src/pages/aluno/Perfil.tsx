@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -34,6 +34,8 @@ const Perfil = () => {
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Profile form
   const [formProfile, setFormProfile] = useState({
@@ -103,6 +105,44 @@ const Perfil = () => {
     toast.success("Senha alterada com sucesso!");
     setPwOpen(false);
     setNewPw(""); setConfirmPw("");
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      return toast.error("Por favor, selecione uma imagem.");
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      return toast.error("A imagem deve ter no máximo 2MB.");
+    }
+
+    try {
+      setUploading(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      toast.success("Foto carregada com sucesso!");
+    } catch (error: any) {
+      console.error("Erro no upload:", error);
+      toast.error("Erro ao carregar imagem: " + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
@@ -268,8 +308,40 @@ const Perfil = () => {
             <DialogDescription>Atualize seus dados básicos.</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateProfile} className="space-y-4">
+            <div className="flex flex-col items-center gap-4">
+              <div className="relative group">
+                <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20 bg-muted flex items-center justify-center">
+                  {formProfile.avatar_url ? (
+                    <img src={formProfile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <User className="w-12 h-12 text-muted-foreground" />
+                  )}
+                  {uploading && (
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Loader2 className="h-6 w-6 animate-spin text-white" />
+                    </div>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute bottom-0 right-0 bg-primary text-primary-foreground p-1.5 rounded-full shadow-lg hover:scale-110 transition-transform"
+                  disabled={uploading}
+                >
+                  <Camera className="h-4 w-4" />
+                </button>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUpload}
+              />
+              <p className="text-xs text-muted-foreground">Toque no ícone para alterar sua foto</p>
+            </div>
             <div>
-              <Label htmlFor="avatar">URL da Foto de Perfil</Label>
+              <Label htmlFor="avatar">Link da Imagem (Opcional)</Label>
               <Input id="avatar" value={formProfile.avatar_url} onChange={(e) => setFormProfile({...formProfile, avatar_url: e.target.value})} placeholder="https://..." />
             </div>
             <div>
