@@ -365,19 +365,48 @@ const AtletaDetalhe = () => {
             className="w-10 h-10 rounded-full bg-background/70 backdrop-blur"
           />
           <div className="flex gap-2">
+            <input
+              ref={importInputRef}
+              type="file"
+              accept="image/*,.pdf,.doc,.docx"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) void handleImportFile(f);
+                e.target.value = "";
+              }}
+            />
             <Button
               size="sm"
+              disabled={importing}
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8"
-              onClick={() => toast.success("Treino exportado!")}
+              onClick={() => {
+                setImportType("treino");
+                importInputRef.current?.click();
+              }}
             >
-              <Download className="h-3 w-3 mr-1" /> Exportar treino
+              {importing && importType === "treino" ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Upload className="h-3 w-3 mr-1" />
+              )}
+              Importar treino
             </Button>
             <Button
               size="sm"
+              disabled={importing}
               className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8"
-              onClick={() => toast.success("Dieta exportada!")}
+              onClick={() => {
+                setImportType("dieta");
+                importInputRef.current?.click();
+              }}
             >
-              <Download className="h-3 w-3 mr-1" /> Exportar dieta
+              {importing && importType === "dieta" ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Upload className="h-3 w-3 mr-1" />
+              )}
+              Importar dieta
             </Button>
           </div>
         </div>
