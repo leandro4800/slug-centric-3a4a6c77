@@ -181,7 +181,7 @@ const AdminMontarDieta = () => {
 
             <Button 
               className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-widest"
-              onClick={gerarComIA}
+              onClick={() => gerarComIA()}
               disabled={generating}
             >
               {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
