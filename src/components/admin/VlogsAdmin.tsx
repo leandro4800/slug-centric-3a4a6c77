@@ -62,7 +62,7 @@ export const VlogsAdmin = () => {
       supabase.from("tenants_private" as any).select("vlog_webhook_secret").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     setPosts((list as VlogPost[]) || []);
-    setSecret((t as { vlog_webhook_secret: string } | null)?.vlog_webhook_secret ?? null);
+    setSecret(((t as unknown) as { vlog_webhook_secret: string } | null)?.vlog_webhook_secret ?? null);
     setLoading(false);
   };
 
