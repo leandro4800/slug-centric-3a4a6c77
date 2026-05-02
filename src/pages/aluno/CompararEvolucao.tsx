@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, ArrowLeft, Calendar, Scale, Activity } from "lucide-react";
+import { TrendingUp, ArrowLeft, Calendar, Scale, Activity, Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/aluno/PageHeader";
@@ -26,6 +26,40 @@ const CompararEvolucao = () => {
   const [depois, setDepois] = useState<any>(null);
   
   const [urls, setUrls] = useState<Record<string, string>>({});
+  const [analise, setAnalise] = useState<string>("");
+  const [analisando, setAnalisando] = useState(false);
+
+  const gerarAnalise = async () => {
+    if (!antesId || !depoisId) {
+      toast.error("Selecione os dois check-ins");
+      return;
+    }
+    if (antesId === depoisId) {
+      toast.error("Selecione check-ins diferentes");
+      return;
+    }
+    setAnalisando(true);
+    setAnalise("");
+    try {
+      const { data, error } = await supabase.functions.invoke("analise-evolucao", {
+        body: { antes_id: antesId, depois_id: depoisId },
+      });
+      if (error) {
+        const msg = (error as any)?.context?.status === 429
+          ? "Limite atingido, tente em instantes."
+          : (error as any)?.context?.status === 402
+          ? "Créditos de IA insuficientes."
+          : error.message;
+        throw new Error(msg);
+      }
+      if (data?.error) throw new Error(data.error);
+      setAnalise(data?.analise || "");
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar análise");
+    } finally {
+      setAnalisando(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -178,6 +212,35 @@ const CompararEvolucao = () => {
             </div>
           </div>
         )}
+
+        {/* Análise IA Visual */}
+        <div className="bg-card/40 border border-primary/30 p-5 space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-primary/15 border border-primary/40 flex items-center justify-center">
+              <Brain className="h-4 w-4 text-primary" />
+            </div>
+            <p className="font-display text-base text-primary tracking-widest uppercase">Análise Visual do Coach IA</p>
+          </div>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            Análise baseada nas fotos enviadas e nos números reais informados — sem invenções.
+          </p>
+          <Button
+            onClick={gerarAnalise}
+            disabled={analisando || !antes || !depois}
+            className="w-full rounded-none uppercase tracking-widest text-xs"
+          >
+            {analisando ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Analisando fotos...</>
+            ) : analise ? "Gerar nova análise" : "Gerar análise visual"}
+          </Button>
+          {analise && (
+            <div className="bg-black/40 border border-border p-4 mt-2">
+              <p className="text-sm text-white/90 leading-relaxed whitespace-pre-wrap">
+                {analise}
+              </p>
+            </div>
+          )}
+        </div>
 
         {/* Grade de Fotos */}
         <div className="space-y-4">
