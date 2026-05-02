@@ -293,7 +293,7 @@ const CompararEvolucao = () => {
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-[10px] text-white/20 uppercase">Sem foto</div>
                   )}
-                  <span className="absolute top-2 left-2 bg-primary text-white text-[8px] px-2 py-0.5 rounded uppercase font-medium tracking-tighter">Depois</span>
+                  <span className="absolute top-2 left-2 bg-primary text-white text-[8px] px-2 py-0.5 rounded uppercase tracking-tighter" style={{ fontWeight: 400 }}>Depois</span>
                 </div>
               </div>
             </div>
