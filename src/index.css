@@ -20,10 +20,10 @@
     --popover: 0 0% 3%;
     --popover-foreground: 0 0% 98%;
 
-    /* Premium Ferrari Red */
-    --primary: 355 100% 48%; /* #E00000 - Ferrari Red */
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 355 100% 60%;
+    /* Premium Ferrari Red - LOCKED */
+    --primary: 355 100% 48% !important; /* #E00000 - Ferrari Red */
+    --primary-foreground: 0 0% 100% !important;
+    --primary-glow: 355 100% 60% !important;
 
     /* Premium Navy Heritage Blue */
     --secondary: 211 28% 17%; /* #202C39 - Azul Marinho Heritage */
@@ -45,20 +45,20 @@
 
     --border: 0 0% 18%;
     --input: 0 0% 15%;
-    --ring: 39 34% 59%;
+    --ring: 355 100% 48%; /* Locked to primary for coherence */
 
-    /* Sharp Corners for Authority */
-    --radius: 0rem;
+    /* Sharp Corners for Authority - LOCKED */
+    --radius: 0rem !important;
 
-    /* Cinematic Mirrored Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%);
+    /* Cinematic Mirrored Gradients - LOCKED */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary-glow)) 0%, hsl(var(--primary)) 100%) !important;
     --gradient-gold: linear-gradient(135deg, #EAD6A5 0%, #BAA174 50%, #8E794F 100%);
     --gradient-silver: linear-gradient(135deg, #FFFFFF 0%, #CCCCCC 50%, #999999 100%);
     
-    /* Mirrored/Metallic Button Effect - Ferrari Chrome Style - Refined to be subtle */
-    --btn-mirror: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 48%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 52%, rgba(0,0,0,0.2) 100%);
-    --btn-shine: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.3) 50%, transparent 75%);
-    --btn-border: rgba(255,255,255,0.5);
+    /* Mirrored/Metallic Button Effect - Ferrari Chrome Style - LOCKED */
+    --btn-mirror: linear-gradient(180deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 52%, rgba(0,0,0,0.3) 100%) !important;
+    --btn-shine: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.4) 50%, transparent 75%) !important;
+    --btn-border: rgba(255,255,255,0.6) !important;
 
     /* Shadows */
     --shadow-premium: 0 10px 40px -10px rgba(0,0,0,0.8);
@@ -68,12 +68,12 @@
 
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 353 40% 26%;
+    --sidebar-primary: 355 100% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 0 0% 15%;
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 39 34% 59%;
+    --sidebar-ring: 355 100% 48%;
   }
 }
 

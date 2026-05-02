@@ -22,13 +22,15 @@ const BottomNav = () => {
             to={`/${slug}/app${to ? `/${to}` : ""}`}
             end={!to}
             className={({ isActive }) =>
-              `flex flex-col items-center justify-center gap-1 py-1 text-[9px] uppercase tracking-wider transition-colors ${
-                isActive ? "text-accent" : "text-muted-foreground hover:text-foreground"
+              `flex flex-col items-center justify-center gap-1 py-1 text-[9px] uppercase tracking-wider transition-all duration-300 ${
+                isActive 
+                  ? "text-primary filter drop-shadow-[0_0_8px_hsla(var(--primary-glow)/0.8)] scale-110" 
+                  : "text-muted-foreground hover:text-foreground opacity-70"
               }`
             }
           >
-            <Icon className="h-[18px] w-[18px]" strokeWidth={1.8} />
-            <span className="truncate w-full text-center">{label}</span>
+            <Icon className={`h-[18px] w-[18px] ${isActive ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
+            <span className={`truncate w-full text-center ${isActive ? "font-bold" : "font-normal"}`}>{label}</span>
           </NavLink>
         ))}
       </div>
