@@ -193,7 +193,7 @@ const Dieta = () => {
         ) : !dieta ? (
           <div className="text-center py-12 border border-dashed border-border rounded-2xl">
             <Utensils className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">Você ainda não tem uma dieta. Gere agora com o Dr. IA.</p>
+            <p className="text-sm text-muted-foreground">Sua dieta personalizada será montada pelo seu coach.</p>
           </div>
         ) : (
           <>
