@@ -24,6 +24,7 @@ const Perfil = () => {
   const [profile, setProfile] = useState<any>(null);
   const [lastEval, setLastEval] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isCoach, setIsCoach] = useState(false);
 
   // Edit Modals
   const [pwOpen, setPwOpen] = useState(false);
