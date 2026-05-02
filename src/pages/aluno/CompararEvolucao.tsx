@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { TrendingUp, ArrowLeft, Calendar, Scale, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
