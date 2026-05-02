@@ -200,6 +200,15 @@ const AdminMontarTreino = () => {
       setExercicios(novos);
       setCardio(data.cardio || "");
       toast.success(`Treino gerado · ${novos.length} exercícios`);
+
+      if (searchParams.get("andDiet") === "true") {
+        setTimeout(async () => {
+          await salvarPrescricao(novos);
+          const prompt = searchParams.get("prompt");
+          const promptQuery = prompt ? `&prompt=${encodeURIComponent(prompt)}` : "";
+          navigate(`/${slug}/admin/montar-dieta?aluno=${alunoId}&auto=true${promptQuery}`);
+        }, 1000);
+      }
     } catch (e: any) {
       toast.error(e.message || "Falha ao gerar.");
     } finally {
