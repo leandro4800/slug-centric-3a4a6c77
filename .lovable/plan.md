@@ -1,18 +1,20 @@
-Implement a "Netflix-style" visual update for the onboarding and profile screens, featuring background image/video support and a dark, high-end theme.
+Para permitir que o aluno edite seu perfil, anamnese e avaliação física, farei as seguintes alterações:
 
-### User-facing changes
-- **Immersive Onboarding**: The profile setup screens will now feature a full-screen background image or video, creating a premium "Netflix-like" experience.
-- **Glassmorphism UI**: All forms and inputs will be presented in sleek, semi-transparent "glass" cards that maintain readability while showing the background.
-- **Dark Theme Priority**: The UI will default to a dark, high-contrast aesthetic that matches the requested "Netflix" style.
+### Perfil
+- Adicionar um estado de edição (`isEditing`) na página `Perfil.tsx`.
+- Criar campos de entrada para Nome e Telefone na seção de resumo (já existente ou expandida).
+- Implementar a função `handleUpdateProfile` para salvar essas alterações na tabela `perfis`.
 
-### Technical details
-- **Background Support**: Modify `Onboarding.tsx` to include a background container that supports both images (e.g., from `tenant.hero_url`) and potentially video backgrounds.
-- **Branding Integration**: Utilize the `useBranding` hook to dynamically pull the tenant's primary colors and hero assets.
-- **Styling Refactor**: Replace standard card styles with `backdrop-blur` and semi-transparent backgrounds (`bg-background/60` or `bg-black/40`).
-- **Layout Optimization**: Center the onboarding content vertically and horizontally to create a focused, cinematic experience.
+### Anamnese
+- O componente `Anamnese.tsx` já funciona como um formulário de edição/upsert. Adicionarei um botão de "Minha Anamnese" no perfil que leva a essa página (já existe).
 
-Technical details:
-- Update `src/pages/Onboarding.tsx` to use `useBranding`.
-- Add a background layer with `hero-default.jpg` as fallback.
-- Apply `bg-black` to the main container and use `z-index` for layering.
-- Add an option (via tenant config or hardcoded for now) to show a video background.
+### Avaliação Física
+- Criar um novo componente de modal/página para editar a avaliação física mais recente ou adicionar uma nova.
+- Implementar lógica para buscar a última avaliação (`avaliacoes_fisicas`) e permitir a edição.
+
+### Resumo das alterações
+1. `src/pages/aluno/Perfil.tsx`: Adicionar formulário de edição de dados básicos.
+2. `src/pages/aluno/AvaliacaoFisicaEdit.tsx`: Novo componente para gerenciar avaliações físicas.
+3. Adicionar rota `/perfil/avaliacoes` se necessário ou integrar ao perfil.
+
+A implementação focará em utilizar os hooks e serviços Supabase existentes, seguindo o design atual.
