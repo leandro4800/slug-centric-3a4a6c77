@@ -119,7 +119,7 @@ export default function AdminPlanos() {
     void load();
   };
 
-  if (isLoading || loading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="h-6 w-6 animate-spin text-red-600" /></div>;
+  if (isLoading || loading) return <div className="flex h-screen items-center justify-center bg-black"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
 
   return (
     <div className="min-h-screen bg-black text-white">

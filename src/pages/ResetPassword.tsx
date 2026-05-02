@@ -59,25 +59,26 @@ const ResetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="relative min-h-screen flex items-center justify-center bg-background px-4">
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.15),transparent_60%)]" />
       <div className="relative w-full max-w-md">
         <Link to="/" className="flex justify-center mb-8"><Logo /></Link>
-        <div className="bg-gradient-card border border-border rounded-2xl p-8 shadow-card">
-          <h1 className="text-2xl font-bold mb-2">Redefinir senha</h1>
-          <p className="text-sm text-muted-foreground mb-6">
+        <div className="relative bg-background/90 backdrop-blur-xl border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
+          <h1 className="text-2xl font-black mb-2 uppercase tracking-tighter italic">Redefinir senha</h1>
+          <p className="text-sm text-muted-foreground mb-6 uppercase tracking-widest text-[10px] font-bold">
             {ready ? "Escolha uma nova senha para sua conta." : "Validando link de recuperação..."}
           </p>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <Label htmlFor="password">Nova senha</Label>
-              <Input id="password" type="password" minLength={6} required value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="space-y-2">
+              <Label htmlFor="password" title="text-[10px] uppercase tracking-widest font-black text-white/60">Nova senha</Label>
+              <Input id="password" type="password" minLength={6} required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
             </div>
-            <div>
-              <Label htmlFor="confirm">Confirmar senha</Label>
-              <Input id="confirm" type="password" minLength={6} required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+            <div className="space-y-2">
+              <Label htmlFor="confirm" title="text-[10px] uppercase tracking-widest font-black text-white/60">Confirmar senha</Label>
+              <Input id="confirm" type="password" minLength={6} required value={confirm} onChange={(e) => setConfirm(e.target.value)} className="bg-white/5 border-white/10 h-12 rounded-none focus-visible:ring-primary" />
             </div>
-            <Button type="submit" disabled={loading || !ready} className="w-full bg-gradient-primary shadow-glow h-11">
+            <Button type="submit" disabled={loading || !ready} className="w-full h-12 font-black uppercase tracking-widest">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Salvar nova senha"}
             </Button>
           </form>

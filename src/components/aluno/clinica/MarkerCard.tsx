@@ -30,9 +30,9 @@ export const MarkerCard = ({ nome, valor, unidade, status, observacao, sugestao_
     },
     Critico: {
       icon: AlertCircle,
-      color: "text-red-500",
-      bg: "bg-gradient-to-br from-red-500/15 via-card/60 to-card/40",
-      border: "border-red-500/40",
+      color: "text-primary",
+      bg: "bg-gradient-to-br from-primary/15 via-card/60 to-card/40",
+      border: "border-primary/40",
       glow: "shadow-[0_0_30px_-10px_hsl(0_72%_51%/0.5)]",
       label: "CRÍTICO"
     },
