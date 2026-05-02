@@ -21,6 +21,7 @@ import {
   XCircle,
   Loader2
 } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { 
