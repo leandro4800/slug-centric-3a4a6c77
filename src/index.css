@@ -55,9 +55,9 @@
     --gradient-gold: linear-gradient(135deg, #EAD6A5 0%, #BAA174 50%, #8E794F 100%);
     --gradient-silver: linear-gradient(135deg, #FFFFFF 0%, #CCCCCC 50%, #999999 100%);
     
-    /* Mirrored/Metallic Button Effect - Ferrari Chrome Style */
-    --btn-mirror: linear-gradient(180deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 48%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 52%, rgba(0,0,0,0.3) 100%);
-    --btn-shine: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.5) 50%, transparent 75%);
+    /* Mirrored/Metallic Button Effect - Ferrari Chrome Style - Refined to be subtle */
+    --btn-mirror: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0.05) 48%, rgba(255,255,255,0) 50%, rgba(0,0,0,0.05) 52%, rgba(0,0,0,0.2) 100%);
+    --btn-shine: linear-gradient(45deg, transparent 25%, rgba(255,255,255,0.3) 50%, transparent 75%);
     --btn-border: rgba(255,255,255,0.5);
 
     /* Shadows */

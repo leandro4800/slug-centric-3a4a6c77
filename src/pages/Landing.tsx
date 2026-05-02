@@ -551,28 +551,28 @@ const Landing = () => {
 
 
       {/* Features Section */}
-      <section className="py-24 px-6 md:px-12 bg-[#080808]">
+      <section className="py-24 px-6 md:px-12 bg-background">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-5xl font-black uppercase mb-4">MUDE O JOGO DA SUA CONSULTORIA</h2>
             <p className="text-gray-400 max-w-2xl mx-auto">Tudo o que você precisa para escalar seu negócio e oferecer uma experiência de elite.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-8 bg-secondary/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+            <div className="p-8 bg-card/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle2 className="text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-4 uppercase">TREINOS CINEMATOGRÁFICOS</h3>
               <p className="text-gray-400 text-sm leading-relaxed">Vídeos em 4K com execuções perfeitas, cronômetro inteligente e histórico de cargas automático.</p>
             </div>
-            <div className="p-8 bg-secondary/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+            <div className="p-8 bg-card/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle2 className="text-primary" />
               </div>
               <h3 className="text-xl font-bold mb-4 uppercase">DIETA POR IA</h3>
               <p className="text-gray-400 text-sm leading-relaxed">Cálculo de macros, sugestões de cardápios e lista de compras inteligente integrada ao perfil do aluno.</p>
             </div>
-            <div className="p-8 bg-secondary/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
+            <div className="p-8 bg-card/50 rounded-2xl border border-white/5 hover:border-primary/30 transition-all">
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle2 className="text-primary" />
               </div>
@@ -596,7 +596,7 @@ const Landing = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredCoaches.length === 0 ? (
-            <div className="col-span-full py-20 text-center bg-secondary/30 rounded-2xl border border-white/5">
+            <div className="col-span-full py-20 text-center bg-card/30 rounded-2xl border border-white/5">
               <p className="text-gray-500 font-bold uppercase tracking-widest">Nenhum coach encontrado nesta região.</p>
               <Button 
                 variant="link" 
@@ -609,7 +609,7 @@ const Landing = () => {
           ) : filteredCoaches.map((coach, i) => (
             <div 
               key={i} 
-              className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-secondary border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
+              className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-card border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
             >
               {/* Video Background */}
               {coach.video.includes('instagram.com') ? (
@@ -733,7 +733,7 @@ const Landing = () => {
       </section>
 
       {/* Simulador de Lucros */}
-      <section className="py-24 px-6 md:px-12 bg-[#080808]">
+      <section className="py-24 px-6 md:px-12 bg-background">
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
@@ -863,17 +863,17 @@ const Landing = () => {
                   <div className="px-2 py-1 bg-primary/20 text-primary text-[10px] font-bold rounded">PRO</div>
                 </div>
                 <div className="grid grid-cols-3 gap-2">
-                  <div className="aspect-square bg-secondary border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="aspect-square bg-card border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">TREINOS</p>
                   </div>
-                  <div className="aspect-square bg-secondary border border-white/10 rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="aspect-square bg-card border border-white/10 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">DIETA</p>
                   </div>
-                  <div className="aspect-square bg-secondary border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
+                  <div className="aspect-square bg-card border border-primary/30 rounded-lg flex items-center justify-center shadow-lg">
                     <p className="text-[9px] font-bold text-center px-1">EVOLUÇÃO</p>
                   </div>
                 </div>
-                <div className="h-32 bg-secondary border border-white/10 rounded-lg flex flex-col items-center justify-center gap-2">
+                <div className="h-32 bg-card border border-white/10 rounded-lg flex flex-col items-center justify-center gap-2">
                   <Smartphone className="h-10 w-10 text-primary" />
                   <p className="text-xs text-gray-300 font-semibold">App próprio com sua marca</p>
                 </div>
@@ -895,7 +895,7 @@ const Landing = () => {
       </section>
 
       {/* Telas Personalizadas Section */}
-      <section className="py-24 px-6 md:px-12 bg-[#080808]">
+      <section className="py-24 px-6 md:px-12 bg-background">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
