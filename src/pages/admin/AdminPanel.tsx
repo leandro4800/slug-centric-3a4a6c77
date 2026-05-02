@@ -224,8 +224,8 @@ const AdminPanel = () => {
               <TabsContent value="midia">
                 <div className="grid lg:grid-cols-2 gap-6">
                   {/* Hero upload */}
-                  <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-                    <h3 className="font-display text-xl mb-4">IMAGEM DE FUNDO</h3>
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+                    <h3 className="font-display text-2xl mb-4 text-primary uppercase tracking-wider">IMAGEM DE FUNDO</h3>
                     <div className="aspect-video rounded-xl overflow-hidden border border-border mb-4 relative">
                       <img src={tenant?.hero_url || heroDefault} alt="" className="w-full h-full object-cover" />
                     </div>
