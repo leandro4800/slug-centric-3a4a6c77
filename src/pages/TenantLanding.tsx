@@ -136,10 +136,15 @@ export default function TenantLanding() {
           <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay only for text legibility */}
         </div>
 
-        <div className="relative mx-auto max-w-5xl px-4 pt-6 md:px-8">
+        <div className="relative mx-auto max-w-5xl px-4 pt-6 md:px-8 flex justify-between items-center">
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Marketplace
           </Link>
+          <div className="flex items-center gap-3">
+            <Link to={`/${slug}/app`}>
+              <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">Entrar</Button>
+            </Link>
+          </div>
         </div>
 
         <div className="relative mx-auto max-w-5xl px-4 pb-16 pt-12 md:px-8 md:pb-24 md:pt-20">
