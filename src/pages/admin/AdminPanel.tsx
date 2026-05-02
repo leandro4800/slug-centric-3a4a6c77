@@ -105,7 +105,7 @@ const AdminPanel = () => {
             exitMessage="Você voltará para a área do aluno. Deseja continuar?" 
           />
           <Logo size={32} />
-          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-black tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
         </div>
         
         <AlertDialog>
@@ -139,7 +139,7 @@ const AdminPanel = () => {
       <main className="max-w-6xl mx-auto p-6">
         <div className="flex items-start justify-between mb-8 gap-4 flex-wrap">
           <div>
-            <h1 className="font-display text-4xl mb-2">PAINEL DO COACH</h1>
+            <h1 className="font-display text-5xl mb-2 text-white tracking-wider">PAINEL DO COACH</h1>
             <p className="text-muted-foreground">Gestão do tenant <strong className="text-primary">{tenant?.slug}</strong></p>
           </div>
           <div className="flex gap-2 flex-wrap">
@@ -149,12 +149,12 @@ const AdminPanel = () => {
               </Button>
             </Link>
             <Link to={`/${slug}/admin/faturamento`}>
-              <Button variant="outline" className="border-primary/40 h-auto py-1.5 px-4 flex flex-col items-start gap-0.5">
+              <Button variant="outline" className="border-primary/40 h-auto py-2 px-4 flex flex-col items-start gap-0.5 bg-black/60 hover:bg-black/80">
                 <div className="flex items-center gap-2">
                   <Wallet className="h-4 w-4 text-primary" />
-                  <span className="font-display text-sm tracking-tight">FATURAMENTO</span>
+                  <span className="font-display text-base tracking-wide">FATURAMENTO</span>
                 </div>
-                <span className="text-[9px] text-muted-foreground font-normal uppercase tracking-wider">Gestão financeira e saques</span>
+                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Gestão financeira e saques</span>
               </Button>
             </Link>
             <Link to={`/${slug}/admin/base-conhecimento`}>
@@ -178,8 +178,8 @@ const AdminPanel = () => {
           </TabsList>
 
           <TabsContent value="elenco">
-            <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-              <h2 className="font-display text-2xl mb-6">ALUNOS · {alunos.length}</h2>
+            <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+              <h2 className="font-display text-3xl mb-6 text-primary border-l-4 border-primary pl-4 uppercase tracking-wider">ALUNOS · {alunos.length}</h2>
               {loading ? (
                 <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
               ) : alunos.length === 0 ? (
@@ -224,8 +224,8 @@ const AdminPanel = () => {
               <TabsContent value="midia">
                 <div className="grid lg:grid-cols-2 gap-6">
                   {/* Hero upload */}
-                  <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-                    <h3 className="font-display text-xl mb-4">IMAGEM DE FUNDO</h3>
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+                    <h3 className="font-display text-2xl mb-4 text-primary uppercase tracking-wider">IMAGEM DE FUNDO</h3>
                     <div className="aspect-video rounded-xl overflow-hidden border border-border mb-4 relative">
                       <img src={tenant?.hero_url || heroDefault} alt="" className="w-full h-full object-cover" />
                     </div>
@@ -238,8 +238,8 @@ const AdminPanel = () => {
                   </div>
 
                   {/* Logo & textos */}
-                  <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm space-y-5">
-                    <h3 className="font-display text-xl">LOGO & TEXTOS</h3>
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-5">
+                    <h3 className="font-display text-2xl text-primary uppercase tracking-wider">LOGO & TEXTOS</h3>
                     <div>
                       <Label>Logo</Label>
                       <div className="flex items-center gap-3 mt-2">

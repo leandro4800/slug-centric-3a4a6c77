@@ -121,7 +121,7 @@ const AdminMontarDieta = () => {
         <div className="flex items-center gap-3">
           <AdminBackButton />
           <h1 className="font-display text-2xl uppercase">Montar Dieta</h1>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-black tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">IA Pacho</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">IA Pacho</span>
         </div>
       </header>
 

@@ -169,8 +169,8 @@ export const VlogsAdmin = () => {
   return (
     <div className="space-y-6">
       {/* Webhook config */}
-      <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-        <h3 className="font-display text-xl mb-1">AUTOMAÇÃO EXTERNA</h3>
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-2 text-primary">AUTOMAÇÃO EXTERNA</h3>
         <p className="text-sm text-muted-foreground mb-4">
           Configure no Make / n8n / Zapier / Apify para enviar cada novo post pra esse webhook. O app gera a thumb automaticamente quando possível.
         </p>
@@ -211,8 +211,8 @@ export const VlogsAdmin = () => {
       </div>
 
       {/* Manual add */}
-      <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-        <h3 className="font-display text-xl mb-4">ADICIONAR LINK MANUAL</h3>
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
         <div className="grid md:grid-cols-[2fr_1.5fr_auto] gap-3 items-end">
           <div>
             <Label>URL (YouTube, Instagram, TikTok…)</Label>
@@ -229,8 +229,8 @@ export const VlogsAdmin = () => {
       </div>
 
       {/* List */}
-      <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
-        <h3 className="font-display text-xl mb-4">VLOGS · {posts.length}</h3>
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-6 text-primary border-l-4 border-primary pl-4">VLOGS · {posts.length}</h3>
         {loading ? (
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : posts.length === 0 ? (

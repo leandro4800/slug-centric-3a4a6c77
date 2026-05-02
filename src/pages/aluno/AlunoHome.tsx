@@ -217,7 +217,7 @@ const AlunoHome = () => {
             <Button
               onClick={handlePlay}
               disabled={!featured}
-              className="inline-flex items-center gap-2 font-black px-6 py-3 rounded-none tracking-widest"
+              className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-none tracking-widest"
               title={featured ? "Reproduzir último vlog" : "Sem vlog publicado"}
             >
               <Play className="h-4 w-4 fill-current" /> REPRODUZIR

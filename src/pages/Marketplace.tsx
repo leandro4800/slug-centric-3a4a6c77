@@ -210,7 +210,7 @@ export default function Marketplace() {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-display text-2xl uppercase text-white leading-none">{c.nome}</h3>
                       {c.permite_aula_avulsa && (
-                        <Badge className="bg-primary text-[10px] font-black uppercase px-1.5 py-0 h-4">Aula Avulsa</Badge>
+                        <Badge className="bg-primary text-[10px] font-bold uppercase px-1.5 py-0 h-4">Aula Avulsa</Badge>
                       )}
                     </div>
                     {c.tagline && <p className="mt-1 text-sm text-white/70 line-clamp-1">{c.tagline}</p>}
@@ -237,12 +237,12 @@ export default function Marketplace() {
                 </div>
                 <div className="flex items-center justify-between p-4">
                   <div className="flex flex-col">
-                    <span className="text-xs text-muted-foreground uppercase font-black tracking-widest">Consultoria</span>
+                    <span className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Consultoria</span>
                     <span className="text-sm font-bold">Ver planos</span>
                   </div>
                   {c.permite_aula_avulsa && c.preco_aula_avulsa && (
                     <div className="flex flex-col items-end border-l border-border/50 pl-4">
-                      <span className="text-[10px] text-muted-foreground uppercase font-black tracking-widest">Aula Avulsa</span>
+                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Aula Avulsa</span>
                       <span className="text-sm font-bold text-primary">R$ {c.preco_aula_avulsa}</span>
                     </div>
                   )}

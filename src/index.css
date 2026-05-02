@@ -89,9 +89,9 @@
     font-family: 'Inter', system-ui, sans-serif;
   }
   h1, h2, h3, .font-display {
-    @apply font-black uppercase tracking-widest;
+    @apply font-bold uppercase;
     font-family: 'Bebas Neue', 'Inter', sans-serif;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
   }
 }
 
