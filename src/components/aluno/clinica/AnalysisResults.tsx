@@ -25,7 +25,7 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
   const getScoreColor = (s: number) => {
     if (s >= 80) return "text-green-500";
     if (s >= 50) return "text-primary";
-    return "text-red-500";
+    return "text-primary";
   };
 
   const scoreColor = getScoreColor(score);
