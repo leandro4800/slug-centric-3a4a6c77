@@ -31,6 +31,9 @@ interface PendingTenant {
   owner_user_id: string | null;
 }
 
+const TENANT_ADMIN_COLUMNS =
+  "id, slug, nome, tagline, bio, especialidades, status, created_at, owner_user_id";
+
 export default function AdminCoaches() {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -68,7 +71,7 @@ export default function AdminCoaches() {
     setLoading(true);
     const { data } = await supabase
       .from("tenants")
-      .select("*")
+      .select(TENANT_ADMIN_COLUMNS)
       .order("created_at", { ascending: false });
     const list = (data as any[]) ?? [];
     // Fetch onboarding flags from tenants_private (admin can read all)
