@@ -259,17 +259,17 @@ const AdminFaturamento = () => {
             {menuItems.map((item, idx) => (
               <motion.button
                 key={idx}
-                whileHover={{ y: -5, backgroundColor: "rgba(255, 255, 255, 0.08)" }}
+                whileHover={{ y: -5, backgroundColor: "rgba(255, 255, 255, 0.12)" }}
                 onClick={item.onClick}
-                className="flex flex-col items-start gap-4 p-5 bg-white/5 border border-white/5 hover:border-primary/30 transition-all group text-left relative overflow-hidden"
+                className="flex flex-col items-start gap-4 p-5 bg-white/10 border border-white/10 hover:border-primary/50 transition-all group text-left relative overflow-hidden"
               >
-                <div className="w-12 h-12 rounded-none bg-black flex items-center justify-center border border-white/10 group-hover:border-primary/50 transition-colors">
+                <div className="w-12 h-12 rounded-none bg-black flex items-center justify-center border border-white/20 group-hover:border-primary transition-colors">
                   <item.icon className="h-6 w-6 text-primary" />
                 </div>
                 <div className="space-y-1 z-10">
-                  <p className="font-bold text-sm text-white/90 uppercase tracking-tight">{item.label}</p>
+                  <p className="font-bold text-sm text-white uppercase tracking-tight">{item.label}</p>
                   {item.badge && (
-                    <Badge variant="outline" className={`${item.badgeColor} text-[8px] uppercase tracking-widest px-1.5 h-4 border-none p-0 font-black`}>
+                    <Badge variant="outline" className={`${item.badgeColor} text-[10px] uppercase tracking-widest px-2 h-5 border-none p-0 font-black`}>
                       {item.badge}
                     </Badge>
                   )}
