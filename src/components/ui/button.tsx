@@ -37,25 +37,25 @@ const buttonVariants = cva(
         accent: [
           "bg-accent text-accent-foreground",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)]",
-          "after:absolute after:inset-0 after:border after:border-white/20",
+          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)]",
           "hover:brightness-110 shadow-lg"
         ].join(" "),
         blue: [
           "bg-secondary text-secondary-foreground",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)]",
-          "after:absolute after:inset-0 after:border after:border-white/20",
+          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)]",
           "hover:brightness-110"
         ].join(" "),
         green: [
           "bg-muted text-white",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)]",
-          "after:absolute after:inset-0 after:border after:border-white/20",
+          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)]",
           "hover:brightness-110"
         ].join(" "),
         purple: [
           "bg-premium-purple text-white",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)]",
-          "after:absolute after:inset-0 after:border after:border-white/20",
+          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)]",
           "hover:brightness-110"
         ].join(" "),
         ghost: "hover:bg-primary/10 hover:text-primary tracking-widest",
