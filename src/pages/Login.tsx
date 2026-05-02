@@ -174,7 +174,8 @@ const Login = () => {
                 </Button>
               </form>
             </TabsContent>
-          </Tabs>
+            </Tabs>
+          )}
         </div>
         <p className="text-center text-xs text-muted-foreground mt-6">
           AlphaCoach 1.0 · Plataforma multi-tenant para coaches
