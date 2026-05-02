@@ -1,19 +1,19 @@
 
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import "https://deno.land/x/dotenv/load.ts";
+import { createClient } from "@supabase/supabase-js";
+import fs from "fs";
 
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
-const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const SUPABASE_URL = process.env.SUPABASE_URL || "";
+const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || "";
 
 if (!SUPABASE_URL || !SERVICE_KEY) {
   console.error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set");
-  Deno.exit(1);
+  process.exit(1);
 }
 
 const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
 
 async function ingest() {
-  const content = await Deno.readTextFile("pacholok_conhecimento.md");
+  const content = fs.readFileSync("pacholok_conhecimento.md", "utf-8");
   const sections = content.split(/^## /m);
   
   for (const section of sections) {
@@ -22,13 +22,9 @@ async function ingest() {
     const lines = section.split("\n");
     const title = lines[0].trim();
     
-    // Identificar Nível, Frequência e Ênfase
-    // Ex: "2. TREINO ADAPTAÇÃO MUSCULAR (2X NA SEMANA)"
-    // Ex: "6. TREINO INTERMEDIÁRIO (5X NA SEMANA) - FOCO EM QUADRÍCEPS"
-    
     let nivel = "";
     if (title.toLowerCase().includes("adaptação")) nivel = "2";
-    else if (title.toLowerCase().includes("iniciante")) nivel = "2"; // 2 na escala do user (Seção 2, 5 ou 10) - wait user said (Seção 2, 5 ou 10)
+    else if (title.toLowerCase().includes("iniciante")) nivel = "2";
     else if (title.toLowerCase().includes("intermediário") || title.toLowerCase().includes("intermediario")) nivel = "5";
     else if (title.toLowerCase().includes("avançado") || title.toLowerCase().includes("avancado")) nivel = "10";
     else if (title.toLowerCase().includes("atleta")) nivel = "10";
@@ -39,7 +35,6 @@ async function ingest() {
     const enfaseMatch = title.match(/FOCO EM (.*)/i);
     const enfase = enfaseMatch ? enfaseMatch[1].trim() : "Geral";
 
-    // Extrair exercícios
     const exercises: any[] = [];
     let currentExercise: any = null;
     
@@ -47,7 +42,6 @@ async function ingest() {
       const line = lines[i].trim();
       if (!line) continue;
       
-      // EX: "1. Supino reto"
       const nameMatch = line.match(/^\d+\.\s+\*\*(.*)\*\*/);
       if (nameMatch) {
         if (currentExercise) exercises.push(currentExercise);
@@ -67,7 +61,7 @@ async function ingest() {
       console.log(`Ingerindo: ${title} | Nível: ${nivel} | Freq: ${freq} | Ênfase: ${enfase}`);
       const { error } = await supabase.from("biblioteca_metodologia_pacho").insert({
         nome_exercicio: title,
-        descricao_metodologia: section.substring(0, 1000), // Resumo
+        descricao_metodologia: section.substring(0, 1000),
         nivel,
         frequencia_semanal: freq,
         enfase,
