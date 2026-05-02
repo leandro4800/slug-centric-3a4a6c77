@@ -610,7 +610,7 @@ const AtletaDetalhe = () => {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <Button
-              className={`h-10 font-display text-base uppercase tracking-wider ${
+              className={`h-16 flex-1 font-display text-xl uppercase tracking-wider ${
                 canGenerate 
                   ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                   : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
@@ -626,11 +626,11 @@ const AtletaDetalhe = () => {
                 }
               }}
             >
-              <Dumbbell className="h-5 w-5 mr-2" />
+              <Dumbbell className="h-6 w-6 mr-2" />
               Montar Treino
             </Button>
             <Button
-              className={`h-10 font-display text-base uppercase tracking-wider ${
+              className={`h-16 flex-1 font-display text-xl uppercase tracking-wider ${
                 canGenerate 
                   ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                   : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
@@ -646,30 +646,32 @@ const AtletaDetalhe = () => {
                 }
               }}
             >
-              <Apple className="h-5 w-5 mr-2" />
+              <Apple className="h-6 w-6 mr-2" />
               Montar Dieta
             </Button>
           </div>
 
-          <Button
-            variant="outline"
-            className={`w-full h-10 font-display text-base uppercase tracking-wider border-primary/30 text-primary hover:bg-primary/5 ${
-              !canGenerate ? "opacity-50 cursor-not-allowed" : ""
-            }`}
-            disabled={!canGenerate}
-            onClick={() => {
-              if (canGenerate) {
-                setPromptType("ambos");
-                setIaPrompt("");
-                setShowPromptDialog(true);
-              } else {
-                toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
-              }
-            }}
-          >
-            <Sparkles className="h-5 w-5 mr-2 text-primary" />
-            Gerar Protocolo Completo (IA)
-          </Button>
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              className={`w-3/4 h-14 font-display text-lg uppercase tracking-wider border-primary/30 text-primary hover:bg-primary/5 ${
+                !canGenerate ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={!canGenerate}
+              onClick={() => {
+                if (canGenerate) {
+                  setPromptType("ambos");
+                  setIaPrompt("");
+                  setShowPromptDialog(true);
+                } else {
+                  toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
+                }
+              }}
+            >
+              <Sparkles className="h-6 w-6 mr-2 text-primary" />
+              Gerar Protocolo Completo (IA)
+            </Button>
+          </div>
         </div>
       </main>
 
