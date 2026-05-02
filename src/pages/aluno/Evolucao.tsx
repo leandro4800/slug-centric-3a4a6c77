@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { TrendingUp, Brain, Plus, Instagram } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { TenantSymbol } from "@/components/TenantSymbol";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -50,13 +52,13 @@ const Evolucao = () => {
           </p>
         </div>
 
-        <button className="w-full mt-6 bg-accent text-accent-foreground font-display text-base py-4 rounded-xl flex items-center justify-center gap-3">
+        <Button className="w-full mt-6" variant="default" onClick={() => toast.info("Funcionalidade em desenvolvimento")}>
           <Instagram className="h-5 w-5" /> COMPARTILHAR EVOLUÇÃO NO INSTAGRAM
-        </button>
+        </Button>
 
-        <button className="fixed bottom-24 right-5 w-14 h-14 rounded-full bg-accent text-accent-foreground shadow-lg flex items-center justify-center">
+        <Button className="fixed bottom-24 right-5 w-14 h-14 rounded-full p-0" variant="default">
           <Plus className="h-6 w-6" />
-        </button>
+        </Button>
       </div>
     </>
   );
