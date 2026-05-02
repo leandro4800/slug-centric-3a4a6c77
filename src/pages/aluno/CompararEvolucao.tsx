@@ -140,11 +140,18 @@ const CompararEvolucao = () => {
 
   const formatAnalise = (text: string) => {
     return text.split('\n').map((line, i) => {
-      const isTitle = line.trim() === line.trim().toUpperCase() && line.trim().length > 3;
+      const trimmedLine = line.trim();
+      if (!trimmedLine) return <div key={i} className="h-2" />;
+      
+      const isTitle = trimmedLine === trimmedLine.toUpperCase() && trimmedLine.length > 3;
       if (isTitle) {
-        return <p key={i} className="text-primary font-bold mt-4 mb-2 tracking-[0.2em] text-[11px] uppercase">{line}</p>;
+        return (
+          <p key={i} className="text-primary font-bold mt-6 mb-3 tracking-[0.2em] text-[12px] uppercase border-b border-primary/20 pb-1">
+            {trimmedLine}
+          </p>
+        );
       }
-      return <p key={i} className="text-zinc-200 text-[14px] leading-relaxed mb-1">{line}</p>;
+      return <p key={i} className="text-zinc-200 text-[15px] leading-relaxed mb-3">{trimmedLine}</p>;
     });
   };
 
