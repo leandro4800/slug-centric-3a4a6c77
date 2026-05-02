@@ -105,7 +105,7 @@ const AdminPanel = () => {
             exitMessage="Você voltará para a área do aluno. Deseja continuar?" 
           />
           <Logo size={32} />
-          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-black tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">Admin</span>
         </div>
         
         <AlertDialog>
