@@ -17,7 +17,7 @@ interface Tenant {
   hero_url: string | null;
   especialidades: string[] | null;
   status: string;
-  stripe_onboarding_completed: boolean;
+  stripe_onboarding_completed?: boolean;
   cidade: string | null;
   estado: string | null;
   permite_aula_avulsa: boolean | null;

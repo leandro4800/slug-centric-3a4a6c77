@@ -59,10 +59,10 @@ export const VlogsAdmin = () => {
         .eq("tenant_id", tenant.id)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false }),
-      supabase.from("tenants").select("vlog_webhook_secret").eq("id", tenant.id).maybeSingle(),
+      supabase.from("tenants_private" as any).select("vlog_webhook_secret").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     setPosts((list as VlogPost[]) || []);
-    setSecret((t as { vlog_webhook_secret: string } | null)?.vlog_webhook_secret ?? null);
+    setSecret(((t as unknown) as { vlog_webhook_secret: string } | null)?.vlog_webhook_secret ?? null);
     setLoading(false);
   };
 
@@ -145,7 +145,7 @@ export const VlogsAdmin = () => {
     const newSecret = Array.from(crypto.getRandomValues(new Uint8Array(24)))
       .map((b) => b.toString(16).padStart(2, "0"))
       .join("");
-    const { error } = await supabase.from("tenants").update({ vlog_webhook_secret: newSecret }).eq("id", tenant.id);
+    const { error } = await supabase.from("tenants_private" as any).upsert({ tenant_id: tenant.id, vlog_webhook_secret: newSecret });
     if (error) return toast.error(error.message);
     toast.success("Novo segredo gerado");
     await refresh();
