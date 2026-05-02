@@ -114,7 +114,10 @@ const AtletaDetalhe = () => {
   const [nivel, setNivel] = useState<string>("intermediario");
   const [savingNivel, setSavingNivel] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const importInputRef = useRef<HTMLInputElement>(null);
+  const [importType, setImportType] = useState<"treino" | "dieta">("treino");
   const [protocolResult, setProtocolResult] = useState<string | null>(null);
   const [isGeneratingProtocol, setIsGeneratingProtocol] = useState(false);
   const [showProtocolDialog, setShowProtocolDialog] = useState(false);
