@@ -21,13 +21,13 @@ const Evolucao = () => {
         <div className="bg-card/40 border border-accent/30 rounded-2xl p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-lg text-accent">PESO CORPORAL</h3>
-            <div className="flex bg-card rounded-full p-0.5">
+            <div className="flex bg-card/80 border border-border rounded-none p-0.5">
               {(["PESO", "BF%"] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    tab === t ? "bg-accent text-accent-foreground" : "text-muted-foreground"
+                  className={`px-3 py-1 rounded-none text-xs font-semibold uppercase tracking-widest transition-all duration-300 ${
+                    tab === t ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-white"
                   }`}
                 >
                   {t}
