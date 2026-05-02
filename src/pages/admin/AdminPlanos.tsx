@@ -126,9 +126,12 @@ export default function AdminPlanos() {
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10">
         <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-4 md:px-8 bg-black/95 backdrop-blur">
-          <Link to={`/${slug}/admin`} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
-            <ArrowLeft className="h-4 w-4" /> Voltar
-          </Link>
+          <AdminBackButton 
+            showLabel 
+            variant="ghost" 
+            className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto"
+            size="default"
+          />
           <h1 className="font-display text-xl uppercase">Meus planos</h1>
         </div>
       </header>
