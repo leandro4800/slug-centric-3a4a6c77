@@ -139,12 +139,12 @@ const renderScreenMedia = (url: string) => {
 };
 
 const BRAND_COLORS = [
-  { name: "Netflix", hex: "#E50914" },
-  { name: "Gold", hex: "#F5C518" },
-  { name: "Cyber", hex: "#00E5FF" },
-  { name: "Lime", hex: "#A3E635" },
-  { name: "Violet", hex: "#8B5CF6" },
-  { name: "Sunset", hex: "#FB923C" },
+  { name: "Bordeaux", hex: "#5E2129" },
+  { name: "Heritage Blue", hex: "#202C39" },
+  { name: "Old Gold", hex: "#BAA174" },
+  { name: "Forest Green", hex: "#22302A" },
+  { name: "Aubergine", hex: "#3A2B38" },
+  { name: "Graphite", hex: "#1F1F1F" },
 ];
 
 const Landing = () => {
