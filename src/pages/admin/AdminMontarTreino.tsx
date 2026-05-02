@@ -151,13 +151,16 @@ const AdminMontarTreino = () => {
     [perfil.frequencia_semanal, perfil.sexo, nivel]
   );
 
-  const salvarPerfil = async () => {
+  const salvarPerfil = async (silent = false) => {
     if (!alunoId || !tenant) return;
     const { error } = await supabase
       .from("perfis_treino")
       .upsert({ aluno_id: alunoId, tenant_id: tenant.id, ...perfil }, { onConflict: "aluno_id" });
-    if (error) toast.error(error.message);
-    else toast.success("Perfil salvo.");
+    if (error) {
+      if (!silent) toast.error(error.message);
+    } else {
+      if (!silent) toast.success("Perfil salvo.");
+    }
   };
 
   const gerarComIA = useCallback(async (customPrompt?: string) => {
@@ -167,7 +170,7 @@ const AdminMontarTreino = () => {
     }
     setGenerating(true);
     try {
-      await salvarPerfil();
+      await salvarPerfil(true);
       const { data: biblioteca } = await supabase
         .from("biblioteca_exercicios")
         .select("nome, grupo_muscular, contraindicacoes")
@@ -358,7 +361,7 @@ const AdminMontarTreino = () => {
                 Divisões sugeridas: <strong className="text-foreground">{divisoes.join(" · ")}</strong>
               </div>
               <div className="flex gap-3">
-                <Button onClick={salvarPerfil} variant="outline">Salvar perfil</Button>
+                <Button onClick={() => salvarPerfil()} variant="outline">Salvar perfil</Button>
                 <Button onClick={() => gerarComIA()} disabled={generating} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                   Gerar com IA
