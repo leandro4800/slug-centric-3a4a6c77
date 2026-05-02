@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import loginBg from "@/assets/login-anilhas-bg.jpg";
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +25,7 @@ const Login = () => {
     if (authLoading || !user) return;
     (async () => {
       // Priority 1: Check if there's a redirect in state (from RequireAuth)
-      const locationState = window.history.state?.usr;
+      const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
       const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
       
       if (redirectPath && redirectPath !== "/login") {
@@ -41,10 +42,30 @@ const Login = () => {
       const isAdmin = roles?.some((r) => r.role === "admin");
       const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
 
-      // Se for um coach/admin e NÃO houver um redirectPath explícito, ele vai para o admin do tenant dele
-      // Mas se o usuário estiver tentando acessar alphateam/app (que define redirectPath), ele deve ir para lá.
-      
-      // Aluno ou Coach tentando acessar a Home do App:
+      // Determinamos o slug do tenant do usuário
+      let userSlug = "demo";
+      if (ownedTenant?.slug) {
+        userSlug = ownedTenant.slug;
+      } else if (perfil?.tenant_id) {
+        const { data: tenant } = await supabase
+          .from("tenants")
+          .select("slug")
+          .eq("id", perfil.tenant_id)
+          .maybeSingle();
+        userSlug = tenant?.slug || userSlug;
+      } else {
+        const coachRole = roles?.find((r) => r.role === "coach");
+        if (coachRole?.tenant_id) {
+          const { data: t } = await supabase
+            .from("tenants")
+            .select("slug")
+            .eq("id", coachRole.tenant_id)
+            .maybeSingle();
+          userSlug = t?.slug || userSlug;
+        }
+      }
+
+      // Se for um usuário comum, verifica onboarding
       if (!isAdmin && !isCoach) {
         const { count: anamneseCount } = await supabase
           .from("anamnese_aluno")
@@ -62,47 +83,21 @@ const Login = () => {
         }
       }
 
-      // Se chegamos aqui, o onboarding está OK ou é Admin/Coach
-      // Se houver um redirectPath, respeitamos ele (ex: /alphateam/app)
+      // REDIRECIONAMENTO FINAL:
+      // Se houver um redirectPath explícito, usamos ele.
       if (redirectPath && redirectPath !== "/login") {
         navigate(redirectPath, { replace: true });
         return;
       }
 
-      // Fallbacks se não houver redirectPath:
-      if (isCoach) {
-        let slug: string | null = ownedTenant?.slug ?? null;
-        if (!slug) {
-          const coachRole = roles?.find((r) => r.role === "coach");
-          if (coachRole?.tenant_id) {
-            const { data: t } = await supabase
-              .from("tenants")
-              .select("slug")
-              .eq("id", coachRole.tenant_id)
-              .maybeSingle();
-            slug = t?.slug ?? null;
-          }
-        }
-        navigate(slug ? `/${slug}/admin` : "/seja-coach", { replace: true });
-        return;
-      }
-
-      if (isAdmin) {
+      // Caso contrário, o usuário SEMPRE vai para o Início do App (Home) por padrão
+      // conforme solicitado (mesmo sendo coach/admin).
+      if (isAdmin && !isCoach && !perfil?.tenant_id) {
+        // Se for um Admin Global sem tenant, vai para o painel de coaches
         navigate("/admin/coaches", { replace: true });
-        return;
+      } else {
+        navigate(`/${userSlug}/app`, { replace: true });
       }
-
-      // Aluno OK: vai pro tenant
-      let slug = "demo";
-      if (perfil?.tenant_id) {
-        const { data: tenant } = await supabase
-          .from("tenants")
-          .select("slug")
-          .eq("id", perfil.tenant_id)
-          .maybeSingle();
-        slug = tenant?.slug || slug;
-      }
-      navigate(`/${slug}/app`, { replace: true });
     })();
   }, [user, authLoading, navigate]);
 

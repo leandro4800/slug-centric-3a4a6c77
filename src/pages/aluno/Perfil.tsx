@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -24,6 +24,7 @@ const Perfil = () => {
   const [profile, setProfile] = useState<any>(null);
   const [lastEval, setLastEval] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isCoach, setIsCoach] = useState(false);
 
   // Edit Modals
   const [pwOpen, setPwOpen] = useState(false);
@@ -64,6 +65,10 @@ const Perfil = () => {
       if (!silent) setLoading(true);
       const { data: p } = await supabase.from("perfis").select("*").eq("id", user?.id).maybeSingle();
       const { data: e } = await supabase.from("avaliacoes_fisicas").select("*").eq("aluno_id", user?.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user?.id);
+      const { data: ownedTenant } = await supabase.from("tenants").select("id").eq("owner_user_id", user?.id).maybeSingle();
+      
+      setIsCoach(roles?.some(r => r.role === "coach" || r.role === "admin") || !!ownedTenant);
       
       if (p) {
         setProfile(p);
@@ -274,6 +279,18 @@ const Perfil = () => {
               <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
             </Button>
           </div>
+          
+          {isCoach && (
+            <div className="flex gap-2 pt-1">
+              <Button
+                onClick={() => navigate(`/${slug}/admin`)}
+                variant="outline"
+                className="flex-1 border-primary/40 text-primary hover:bg-primary/10"
+              >
+                <Settings className="h-4 w-4" /> Painel do Coach
+              </Button>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-1">
             <Button
