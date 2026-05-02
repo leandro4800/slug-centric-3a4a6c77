@@ -5,8 +5,10 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Loader2, Search, Users, Mail } from "lucide-react";
+import { ArrowLeft, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
+import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Aluno {
   id: string;
@@ -47,6 +49,47 @@ const MeusAtletas = () => {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [alertas, setAlertas] = useState<any[]>([]);
+  const [qaOpen, setQaOpen] = useState(false);
+  const [pregunta, setPregunta] = useState("");
+  const [resposta, setResposta] = useState("");
+  const [isAsking, setIsAsking] = useState(false);
+
+  useEffect(() => {
+    if (tenant) {
+      void loadAlertas(tenant.id);
+    }
+  }, [tenant]);
+
+  const loadAlertas = async (tenantId: string) => {
+    const { data } = await supabase
+      .from('analises_clinicas')
+      .select('id, motivo_alerta, created_at, perfis(nome_completo)')
+      .eq('alerta_critico', true)
+      .order('created_at', { ascending: false })
+      .limit(5);
+    setAlertas(data || []);
+  };
+
+  const handleAskIA = async () => {
+    if (!pregunta.trim()) return;
+    setIsAsking(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('theme-ai', {
+        body: { 
+          prompt: `Como especialista na Metodologia Pacholok e no material Anabolismo Total, responda à pergunta do Coach Admin: "${pregunta}". Cite módulos específicos se possível.`,
+          system: "Você é o assistente técnico Alpha Coach. Use a base de conhecimento do Pacholok e do Anabolismo Total para responder tecnicamente."
+        }
+      });
+      if (error) throw error;
+      setResposta(data.reply);
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao consultar base de conhecimento");
+    } finally {
+      setIsAsking(false);
+    }
+  };
 
   useEffect(() => {
     if (!tenant && slug === "demo") {
@@ -119,6 +162,67 @@ const MeusAtletas = () => {
             className="pl-9 bg-secondary/60 border-border"
           />
         </div>
+      </div>
+
+      {/* Alertas Críticos */}
+      {alertas.length > 0 && (
+        <div className="px-5 mb-4">
+          <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-4 animate-pulse">
+            <div className="flex items-center gap-2 text-red-500 mb-2">
+              <AlertTriangle className="h-5 w-5" />
+              <h2 className="font-display text-sm uppercase font-bold tracking-wider">RISCO CRÍTICO DETECTADO</h2>
+            </div>
+            <div className="space-y-2">
+              {alertas.map((alerta) => (
+                <div key={alerta.id} className="text-[11px] text-red-200/80 flex justify-between items-center border-b border-red-500/10 pb-1 last:border-0">
+                  <span>{alerta.perfis?.nome_completo}: {alerta.motivo_alerta}</span>
+                  <span className="text-[9px] opacity-60">{new Date(alerta.created_at).toLocaleDateString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* IA Knowledge QA */}
+      <div className="px-5 mb-6">
+        <button 
+          onClick={() => setQaOpen(!qaOpen)}
+          className="w-full bg-primary/10 border border-primary/30 rounded-2xl p-4 flex items-center justify-between hover:bg-primary/20 transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
+              <MessageSquare className="h-5 w-5 text-primary" />
+            </div>
+            <div className="text-left">
+              <h3 className="font-display text-sm uppercase">CONSULTAR METODOLOGIA</h3>
+              <p className="text-[10px] text-muted-foreground uppercase">Pergunte à Dr. IA sobre o Pacholok ou Saúde</p>
+            </div>
+          </div>
+          <ChevronRight className={`h-5 w-5 text-primary transition-transform ${qaOpen ? 'rotate-90' : ''}`} />
+        </button>
+        
+        {qaOpen && (
+          <div className="mt-3 bg-card border border-border rounded-2xl p-4 animate-in slide-in-from-top-2 duration-300">
+            <div className="flex gap-2">
+              <Input 
+                placeholder="Ex: O que o Pacholok diz sobre Dorsal?" 
+                value={pregunta}
+                onChange={(e) => setPregunta(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAskIA()}
+                className="bg-secondary/40"
+              />
+              <Button onClick={handleAskIA} disabled={isAsking} size="icon">
+                {isAsking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </div>
+            {resposta && (
+              <ScrollArea className="mt-4 h-40 rounded-lg bg-secondary/20 p-3">
+                <p className="text-xs leading-relaxed text-muted-foreground whitespace-pre-wrap">{resposta}</p>
+              </ScrollArea>
+            )}
+          </div>
+        )}
       </div>
 
       <main className="px-5 pb-16">

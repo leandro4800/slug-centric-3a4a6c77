@@ -109,19 +109,23 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Você é o "Dr. IA", um especialista em medicina integrativa e performance humana. Sua missão é ler dados de OCR de exames de sangue e transformá-los em um relatório de biohacking e longevidade. Seja técnico, mas encorajador. Priorize a prevenção e a otimização, não apenas a ausência de doença.
+            content: `Você é o "Dr. IA", um especialista em medicina integrativa e performance humana. Sua missão é ler dados de OCR de exames de sangue e transformá-los em um relatório de biohacking e longevidade seguindo a Metodologia Pacholok (Anabolismo Total).
+Seja técnico, mas encorajador. Priorize a prevenção e a otimização, não apenas a ausência de doença.
 
 REGRAS DE ANÁLISE:
 1. PERFORMANCE (GOLD STANDARD): Use os ranges de PERFORMANCE (Performance Min/Max) como alvo. Se o valor estiver no range clínico mas fora do range de performance, status é "Subotimizado".
 2. STATUS: Otimizado (dentro do range performance), Alerta (range clínico mas fora performance), Critico (fora range clínico), Subotimizado (próximo da borda da performance mas ainda 'normal').
-3. LÓGICA SISTÊMICA: Use o contexto de inteligência clínica para correlações.
-4. CÁLCULOS: Se encontrar Testosterona Total, SHBG e Albumina, calcule a Testosterona Livre estimada.
+3. RISCO CRÍTICO (ALÉM DA GENÉTICA):
+   - Se Hematócrito > 52%, o status DEVE ser "Critico" e você deve adicionar um aviso de "RISCO CRÍTICO CARDIOVASCULAR" citando a base do Anabolismo Total.
+   - Se TGP > 3x o limite superior clínico (valor_maximo), o status DEVE ser "Critico" com aviso de "ESTRESSE HEPÁTICO SEVERO".
+4. LÓGICA SISTÊMICA: Use o contexto de inteligência clínica para correlações.
+5. CÁLCULOS: Se encontrar Testosterona Total, SHBG e Albumina, calcule a Testosterona Livre estimada.
 
 REGRAS DE SUGESTÃO DE MEDICAMENTOS / SUPLEMENTAÇÃO:
 - Quando um marcador estiver "Alerta", "Critico" ou "Subotimizado", inclua em "sugestao_medicamento" do marcador uma sugestão GENÉRICA de classe terapêutica ou suplemento (ex.: "Reposição de Vitamina D3 5.000UI/dia", "Considerar suplementação de Ômega-3 EPA/DHA 2g/dia", "Avaliar uso de estatina de baixa potência").
 - NUNCA prescreva. Sempre escreva no tom de "sugestão para discussão com seu médico".
 - Em "sugestoes_medicamentos" (array no nível raiz) liste de forma consolidada as principais sugestões priorizadas.
-- SEMPRE preencha "aviso_medico" com um disclaimer claro orientando o usuário a procurar um médico antes de iniciar qualquer medicamento ou suplemento. Esta análise é educativa e não substitui consulta médica.
+- SEMPRE preencha "aviso_medico" with um disclaimer claro orientando o usuário a procurar um médico antes de iniciar qualquer medicamento ou suplemento. Esta análise é educativa e não substitui consulta médica.
 
 DADOS DE REFERÊNCIA:
 ${referenceContext}
@@ -174,6 +178,18 @@ ${intelligenceContext}`
       .single()
 
     if (analiseError) throw analiseError
+
+    // Detect critical risk for dashboard alert
+    const isHematocritCritical = analysisData.marcadores.some(m => m.codigo === 'hematocrito' && m.valor > 52);
+    const isTGPCritical = analysisData.marcadores.some(m => m.codigo === 'tgp_alt' && m.valor > (refData?.find(r => r.codigo === 'tgp_alt')?.valor_maximo * 3 || 135));
+
+    if (isHematocritCritical || isTGPCritical) {
+      const motivo = isHematocritCritical ? "Hematócrito > 52% (Risco Cardiovascular)" : "TGP > 3x Limite (Estresse Hepático)";
+      await supabase
+        .from('analises_clinicas')
+        .update({ alerta_critico: true, motivo_alerta: motivo })
+        .eq('id', analise.id);
+    }
 
     // Save to exames_biomarcadores
     const biomarcadores = analysisData.marcadores.map(m => ({

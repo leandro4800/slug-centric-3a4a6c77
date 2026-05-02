@@ -103,9 +103,11 @@ export type Database = {
       }
       analises_clinicas: {
         Row: {
+          alerta_critico: boolean | null
           created_at: string
           dados_extraidos: Json
           id: string
+          motivo_alerta: string | null
           nome_arquivo: string | null
           parecer_ia: string | null
           resumo_clinico: string | null
@@ -118,9 +120,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          alerta_critico?: boolean | null
           created_at?: string
           dados_extraidos?: Json
           id?: string
+          motivo_alerta?: string | null
           nome_arquivo?: string | null
           parecer_ia?: string | null
           resumo_clinico?: string | null
@@ -133,9 +137,11 @@ export type Database = {
           user_id?: string
         }
         Update: {
+          alerta_critico?: boolean | null
           created_at?: string
           dados_extraidos?: Json
           id?: string
+          motivo_alerta?: string | null
           nome_arquivo?: string | null
           parecer_ia?: string | null
           resumo_clinico?: string | null
@@ -524,8 +530,13 @@ export type Database = {
         Row: {
           created_at: string
           descricao_metodologia: string | null
+          divisao: string | null
+          enfase: string | null
+          estrutura_json: Json | null
+          frequencia_semanal: number | null
           grupo_muscular: string
           id: string
+          nivel: string | null
           nome_exercicio: string
           profissional_id: string
           tags: string[] | null
@@ -535,8 +546,13 @@ export type Database = {
         Insert: {
           created_at?: string
           descricao_metodologia?: string | null
+          divisao?: string | null
+          enfase?: string | null
+          estrutura_json?: Json | null
+          frequencia_semanal?: number | null
           grupo_muscular: string
           id?: string
+          nivel?: string | null
           nome_exercicio: string
           profissional_id: string
           tags?: string[] | null
@@ -546,8 +562,13 @@ export type Database = {
         Update: {
           created_at?: string
           descricao_metodologia?: string | null
+          divisao?: string | null
+          enfase?: string | null
+          estrutura_json?: Json | null
+          frequencia_semanal?: number | null
           grupo_muscular?: string
           id?: string
+          nivel?: string | null
           nome_exercicio?: string
           profissional_id?: string
           tags?: string[] | null
