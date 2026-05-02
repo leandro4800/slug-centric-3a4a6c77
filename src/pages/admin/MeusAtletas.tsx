@@ -5,7 +5,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send } from "lucide-react";
+import { ArrowLeft, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
