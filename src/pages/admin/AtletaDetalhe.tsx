@@ -39,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
 import heroDefault from "@/assets/hero-default.jpg";
 
 interface Aluno {
