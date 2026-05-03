@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, Wallet } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, Wallet, ShieldCheck } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import {
@@ -42,6 +42,20 @@ const AdminPanel = () => {
   const [estado, setEstado] = useState("");
   const [permiteAulaAvulsa, setPermiteAulaAvulsa] = useState(false);
   const [precoAulaAvulsa, setPrecoAulaAvulsa] = useState("");
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    void (async () => {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .is("tenant_id", null);
+      setIsSuperAdmin(!!data && data.length > 0);
+    })();
+  }, [user]);
 
   useEffect(() => {
     if (!tenant) return;
@@ -143,6 +157,13 @@ const AdminPanel = () => {
             <p className="text-muted-foreground">Gestão do tenant <strong className="text-primary">{tenant?.slug}</strong></p>
           </div>
           <div className="flex gap-2 flex-wrap">
+            {isSuperAdmin && (
+              <Link to="/admin/coaches">
+                <Button variant="outline" className="border-primary/40 bg-primary/10">
+                  <ShieldCheck className="h-4 w-4 mr-2 text-primary" /> Aprovar Coaches
+                </Button>
+              </Link>
+            )}
             <Link to={`/${slug}/admin/atletas`}>
               <Button variant="outline" className="border-primary/40">
                 <Users className="h-4 w-4 mr-2" /> Gerenciar Elenco
