@@ -81,6 +81,12 @@ DIRETRIZES OBRIGATÓRIAS:
 3. FIDELIDADE TÉCNICA: Proibido resumir ou alterar as repetições e intervalos definidos pelo Pacholok.
 4. ESTRUTURA DE SÉRIES: Cada exercício deve ter o detalhamento de Warm-up, Feeder/Ajuste e Work sets conforme a prescrição para o nível do aluno.
 5. CADÊNCIA E EXECUÇÃO: Forneça cadência (ex: 4-0-2-0) e detalhes biomecânicos profundos.
+6. ÊNFASE / PONTOS FRACOS (CRÍTICO): Quando o usuário pedir ênfase em um grupo muscular específico (ou apontar pontos fracos), você DEVE:
+   - Distribuir esse(s) grupo(s) em MAIS dias da semana (ex: peitoral clavicular + ombros aparecendo em 2-3 dias diferentes, não apenas 1).
+   - AUMENTAR o VOLUME (mais exercícios e mais séries de trabalho) para o(s) grupo(s) enfatizado(s) — tipicamente 2x o volume padrão.
+   - Priorizar variações que ataquem especificamente a região (ex: "clavicular" → supinos inclinados, crucifixo inclinado, crossover de baixo para cima).
+   - Reduzir levemente o volume de grupos não-prioritários para compensar fadiga sistêmica.
+   - Mencionar explicitamente no campo "observacao" do exercício que ele faz parte da estratégia de ênfase/ponto fraco.
 
 ESTRUTURA DE RESPOSTA:
 Chame a função montar_treino com a prescrição completa.`;
@@ -93,7 +99,7 @@ Chame a função montar_treino com a prescrição completa.`;
 - Frequência semanal: ${perfil?.frequencia_semanal || 4}x
 - Ênfase desejada: ${perfil?.enfase || "Geral"}
 - Lesões/Limitações: ${lesoes} / ${limitacoes}
-
+${customPrompt ? `\n=== PEDIDO ESPECÍFICO DO COACH (PRIORIDADE MÁXIMA) ===\n"${customPrompt}"\n\nINTERPRETE este pedido e aplique a Diretriz #6 (Ênfase/Pontos Fracos): aumente o volume e a frequência semanal dos grupos mencionados.\n` : ""}
 Use exercícios desta biblioteca:
 ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("\n")}`;
 
