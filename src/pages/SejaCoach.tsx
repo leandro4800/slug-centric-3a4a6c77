@@ -113,9 +113,7 @@ export default function SejaCoach() {
         navigate(`/${data.slug}/admin`);
         return;
       }
-      if (stripeOnboardingCompleted) setStep("pending");
-      else if (stripeAccountId || hasPlano) setStep("stripe");
-      else if (hasPlano) setStep("stripe");
+      if (hasPlano || stripeOnboardingCompleted || stripeAccountId) setStep("pending");
       else setStep("product");
     } else {
       setStep(perfil?.telefone ? "tenant" : "personal");
@@ -254,7 +252,7 @@ export default function SejaCoach() {
         ordem: 0,
       });
       if (error) throw error;
-      setStep("stripe");
+      setStep("pending");
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
@@ -540,7 +538,7 @@ export default function SejaCoach() {
               <h2 className="font-display text-2xl uppercase">Pronto! Aguardando aprovação</h2>
               <p className="text-muted-foreground">
                 Seu painel <span className="font-mono text-primary">/{slug}</span> está em análise.
-                Você receberá um email assim que for aprovado e poderá receber alunos.
+                Você receberá um email assim que for aprovado e poderá receber alunos. O Stripe pode ser configurado depois.
               </p>
               <Link to="/"><Button variant="outline">Voltar ao marketplace</Button></Link>
             </div>
