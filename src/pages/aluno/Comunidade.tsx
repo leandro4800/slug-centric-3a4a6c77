@@ -202,7 +202,7 @@ const Comunidade = () => {
                 <Avatar className="w-full h-full">
                   <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
                   <AvatarFallback className="bg-zinc-800 text-zinc-400">
-                    {profile.nome_completo?.substring(0, 2).toUpperCase()}
+                    {profile.nome_completo ? profile.nome_completo.substring(0, 2).toUpperCase() : "U"}
                   </AvatarFallback>
                 </Avatar>
               </div>
@@ -233,8 +233,8 @@ const Comunidade = () => {
                 <div className="flex items-center gap-3">
                   <Avatar className="w-10 h-10 border border-white/10">
                     <AvatarImage src={post.perfil?.avatar_url || ""} />
-                    <AvatarFallback className="bg-zinc-800">
-                      {post.perfil?.nome_completo?.substring(0, 2).toUpperCase()}
+                    <AvatarFallback className="bg-zinc-800 text-zinc-400">
+                      {post.perfil?.nome_completo ? post.perfil.nome_completo.substring(0, 2).toUpperCase() : "U"}
                     </AvatarFallback>
                   </Avatar>
                   <div>
