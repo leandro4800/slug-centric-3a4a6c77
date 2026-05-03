@@ -413,7 +413,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
             {screen === "perfil" && (
               <div className="pt-6 px-3">
                 {/* Hero do perfil */}
-                <div className="relative h-40 rounded-lg overflow-visible mb-2">
+                <div className="relative h-56 rounded-lg overflow-visible mb-2">
                   <div className="relative h-full rounded-lg overflow-hidden">
                     <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
