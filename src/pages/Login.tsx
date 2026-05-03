@@ -65,6 +65,18 @@ const Login = () => {
         }
       }
 
+      // Se a flag is_coach existir nos metadados, redireciona para o cadastro de coach
+      const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
+      if (isCoachSignup && !ownedTenant) {
+        navigate("/seja-coach", { replace: true });
+        return;
+      }
+      if (ownedTenant && !isAdmin) {
+        // Coach com tenant: vai direto para o painel admin do tenant
+        navigate(`/${ownedTenant.slug}/admin`, { replace: true });
+        return;
+      }
+
       // Se for um usuário comum, verifica onboarding
       if (!isAdmin && !isCoach) {
         const { count: anamneseCount } = await supabase
