@@ -56,9 +56,20 @@ serve(async (req) => {
 
     // === 2. PARECER DE SAÚDE (EXAMES) ===
     let saudeContext = "";
-    if (user?.id) {
+    let userId: string | null = perfil?.aluno_id || perfil?.user_id || null;
+    if (!userId) {
       try {
-        const examesResp = await fetch(`${SUPABASE_URL}/rest/v1/analises_clinicas?user_id=eq.${user.id}&order=created_at.desc&limit=1`, {
+        const authHeader = req.headers.get("Authorization");
+        if (authHeader?.startsWith("Bearer ")) {
+          const token = authHeader.slice(7);
+          const payload = JSON.parse(atob(token.split(".")[1]));
+          userId = payload.sub || null;
+        }
+      } catch (_) { /* ignore */ }
+    }
+    if (userId) {
+      try {
+        const examesResp = await fetch(`${SUPABASE_URL}/rest/v1/analises_clinicas?user_id=eq.${userId}&order=created_at.desc&limit=1`, {
           headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
         });
         if (examesResp.ok) {
