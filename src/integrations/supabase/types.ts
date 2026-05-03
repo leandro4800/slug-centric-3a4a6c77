@@ -414,6 +414,33 @@ export type Database = {
           },
         ]
       }
+      biblioteca_abdominais_pacho: {
+        Row: {
+          foco: string
+          id: string
+          instrucao: string | null
+          nome_exercicio: string
+          repeticoes: string | null
+          series: number | null
+        }
+        Insert: {
+          foco: string
+          id?: string
+          instrucao?: string | null
+          nome_exercicio: string
+          repeticoes?: string | null
+          series?: number | null
+        }
+        Update: {
+          foco?: string
+          id?: string
+          instrucao?: string | null
+          nome_exercicio?: string
+          repeticoes?: string | null
+          series?: number | null
+        }
+        Relationships: []
+      }
       biblioteca_exercicios: {
         Row: {
           contraindicacoes: string[] | null
@@ -1536,6 +1563,27 @@ export type Database = {
           valor_minimo?: number | null
           valor_ouro_max?: number | null
           valor_ouro_min?: number | null
+        }
+        Relationships: []
+      }
+      regras_descanso_pacho: {
+        Row: {
+          cardio_instrução: string | null
+          dias_descanso_sugeridos: string | null
+          logica_descanso: string | null
+          nivel: string
+        }
+        Insert: {
+          cardio_instrução?: string | null
+          dias_descanso_sugeridos?: string | null
+          logica_descanso?: string | null
+          nivel: string
+        }
+        Update: {
+          cardio_instrução?: string | null
+          dias_descanso_sugeridos?: string | null
+          logica_descanso?: string | null
+          nivel?: string
         }
         Relationships: []
       }
