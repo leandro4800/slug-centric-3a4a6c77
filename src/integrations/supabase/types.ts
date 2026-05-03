@@ -626,6 +626,103 @@ export type Database = {
           },
         ]
       }
+      comunidade_comentarios: {
+        Row: {
+          comentario: string
+          criado_em: string | null
+          id: string
+          post_id: string | null
+          profissional_id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          comentario: string
+          criado_em?: string | null
+          id?: string
+          post_id?: string | null
+          profissional_id: string
+          usuario_id?: string | null
+        }
+        Update: {
+          comentario?: string
+          criado_em?: string | null
+          id?: string
+          post_id?: string | null
+          profissional_id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunidade_comentarios_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "comunidade_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunidade_curtidas: {
+        Row: {
+          id: string
+          post_id: string | null
+          profissional_id: string
+          usuario_id: string | null
+        }
+        Insert: {
+          id?: string
+          post_id?: string | null
+          profissional_id: string
+          usuario_id?: string | null
+        }
+        Update: {
+          id?: string
+          post_id?: string | null
+          profissional_id?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunidade_curtidas_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "comunidade_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunidade_posts: {
+        Row: {
+          conteudo: string | null
+          criado_em: string | null
+          id: string
+          imagem_url: string | null
+          profissional_id: string
+          tipo: string | null
+          usuario_id: string | null
+          video_url: string | null
+        }
+        Insert: {
+          conteudo?: string | null
+          criado_em?: string | null
+          id?: string
+          imagem_url?: string | null
+          profissional_id: string
+          tipo?: string | null
+          usuario_id?: string | null
+          video_url?: string | null
+        }
+        Update: {
+          conteudo?: string | null
+          criado_em?: string | null
+          id?: string
+          imagem_url?: string | null
+          profissional_id?: string
+          tipo?: string | null
+          usuario_id?: string | null
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       configuracoes_tenant: {
         Row: {
           chave: string
