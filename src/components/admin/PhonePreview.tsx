@@ -413,12 +413,12 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
             {screen === "perfil" && (
               <div className="pt-6 px-3">
                 {/* Hero do perfil */}
-                <div className="relative h-24 rounded-lg overflow-visible mb-8">
+                <div className="relative h-40 rounded-lg overflow-visible mb-2">
                   <div className="relative h-full rounded-lg overflow-hidden">
                     <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                   </div>
-                  <HotZone label="Cor primária" active={isActive("primary")} onClick={pick("primary")} className="absolute -bottom-5 left-3 rounded-full">
+                  <HotZone label="Cor primária" active={isActive("primary")} onClick={pick("primary")} className="absolute bottom-2 left-3 rounded-full">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--primary))", border: "2px solid hsl(var(--background))" }}>
                       <User className="h-4 w-4" style={{ color: "hsl(var(--primary-foreground))" }} />
                     </div>
