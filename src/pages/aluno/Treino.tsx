@@ -36,6 +36,7 @@ const Treino = () => {
   const { slug } = useParams();
   const [loading, setLoading] = useState(true);
   const [treinos, setTreinos] = useState<Treino[]>([]);
+  const [observacaoClinica, setObservacaoClinica] = useState<string | null>(null);
   const [diaAtual, setDiaAtual] = useState("");
   const [isMock, setIsMock] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -165,7 +166,7 @@ const Treino = () => {
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url, observacao_clinica")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
             .order("dia_semana")
@@ -203,6 +204,9 @@ const Treino = () => {
           }
           setTreinos(filled);
           setDiaAtual(filled[0].dia_semana);
+          if (data[0].observacao_clinica) {
+            setObservacaoClinica(data[0].observacao_clinica);
+          }
           setIsMock(false);
           return;
         }
@@ -304,6 +308,23 @@ const Treino = () => {
             />
           ))}
         </div>
+
+        {observacaoClinica && (
+          <div className="mt-8 mb-10 bg-card border border-primary/30 rounded-2xl p-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            <div className="flex items-center gap-2 mb-3 text-primary">
+              <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                <Dumbbell className="h-4 w-4" />
+              </span>
+              <h3 className="font-display text-lg uppercase">Parecer da Dr. IA (Clínico)</h3>
+            </div>
+            <p className="text-sm text-foreground/90 leading-relaxed italic border-l-2 border-primary pl-4">
+              "{observacaoClinica}"
+            </p>
+            <p className="text-[10px] text-muted-foreground mt-4 uppercase tracking-widest text-center">
+              Baseado em seus exames de sangue mais recentes
+            </p>
+          </div>
+        )}
       </div>
     </>
   );

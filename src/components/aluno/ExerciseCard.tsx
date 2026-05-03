@@ -44,8 +44,30 @@ const fmtTime = (s: number) => {
 
 const parseSeries = (s: string | null) => {
   if (!s) return 4;
+  // Se for o formato Pacho "2x Aquecimento + 1x Ajuste + 2x Trabalho", somamos
+  const matches = s.match(/\d+/g);
+  if (matches && matches.length > 1) {
+    return matches.reduce((acc, curr) => acc + parseInt(curr), 0);
+  }
   const n = parseInt(String(s).match(/\d+/)?.[0] || "4");
-  return Math.min(Math.max(n, 1), 8);
+  return Math.min(Math.max(n, 1), 12);
+};
+
+const getSeriesType = (seriesStr: string | null, index: number) => {
+  if (!seriesStr) return "Trabalho";
+  const str = seriesStr.toLowerCase();
+  
+  // Lógica para identificar o tipo baseado na posição e na string
+  // Ex: "2x Aquecimento + 1x Ajuste + 2x Trabalho"
+  const aquecimentoMatch = str.match(/(\d+)\s*x?\s*aquecimento/);
+  const ajusteMatch = str.match(/(\d+)\s*x?\s*ajuste/);
+  
+  const numAquecimento = aquecimentoMatch ? parseInt(aquecimentoMatch[1]) : 0;
+  const numAjuste = ajusteMatch ? parseInt(ajusteMatch[1]) : 0;
+
+  if (index < numAquecimento) return "Aquecimento";
+  if (index < numAquecimento + numAjuste) return "Ajuste";
+  return "Trabalho";
 };
 
 export const ExerciseCard = ({
@@ -330,13 +352,21 @@ export const ExerciseCard = ({
 
           <div className="space-y-2">
             {slots.map((slot, i) => (
-              <div key={i} className="border border-border rounded-lg p-3 space-y-2 bg-background/40">
+              <div key={i} className={`border rounded-lg p-3 space-y-2 transition-all ${
+                getSeriesType(data.series, i) === "Trabalho" 
+                  ? "border-primary/50 bg-primary/5 shadow-[0_0_15px_-5px_hsl(var(--primary)/0.3)]" 
+                  : getSeriesType(data.series, i) === "Ajuste"
+                  ? "border-amber-500/50 bg-amber-500/5"
+                  : "border-border bg-background/40"
+              }`}>
                 <button
                   onClick={() => toggleDone(i)}
                   className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
                 >
                   <CheckCircle2 className={`h-4 w-4 ${slot.done ? "text-emerald-500" : "text-muted-foreground"}`} />
-                  S{i + 1}
+                  <span className={getSeriesType(data.series, i) !== "Aquecimento" ? "font-black" : ""}>
+                    S{i + 1} - {getSeriesType(data.series, i)}
+                  </span>
                 </button>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
