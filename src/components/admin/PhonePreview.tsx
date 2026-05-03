@@ -101,7 +101,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                 {/* Hero section */}
                 <div className="relative h-[200px] w-full overflow-hidden">
                   <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-[hsl(var(--background))]" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80" />
                   <div className="absolute top-2 left-0 right-0 flex items-center justify-between px-3 z-10">
                     <HotZone label="Logo" active={isActive("primary")} onClick={pick("primary")} className="rounded">
                       <span className="font-display text-[10px] font-black" style={{ color: "hsl(var(--primary))" }}>
@@ -169,7 +169,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                       <HotZone key={s.t} label="Cartões" active={isActive("card")} onClick={pick("card")} className="rounded-md flex-1 block">
                         <div className="relative w-full h-20 rounded-md overflow-hidden" style={{ border: "1px solid hsl(var(--border))" }}>
                           <img src={s.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, hsl(var(--background)), transparent 60%)" }} />
+                          <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent 60%)" }} />
                           <p className="absolute bottom-1 left-1 right-1 font-display text-[7px] leading-tight" style={{ color: "hsl(var(--foreground))" }}>{s.t}</p>
                         </div>
                       </HotZone>
@@ -416,7 +416,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                 <div className="relative h-24 rounded-lg overflow-visible mb-8">
                   <div className="relative h-full rounded-lg overflow-hidden">
                     <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--background))] to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent" />
                   </div>
                   <HotZone label="Cor primária" active={isActive("primary")} onClick={pick("primary")} className="absolute -bottom-5 left-3 rounded-full">
                     <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--primary))", border: "2px solid hsl(var(--background))" }}>
