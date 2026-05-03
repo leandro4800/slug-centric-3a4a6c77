@@ -27,45 +27,52 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    // === RAG: Busca conhecimento semântico da Base de Verdade Absolute (Pacho) ===
-    let knowledgeContext = "";
+    // === 1. BUSCA DE MODELO PACHOLOK (BIBLIOTECA) ===
+    let bibliotecaPachoContext = "";
     try {
-      const queryText = `Treino para ${perfil?.sexo || ""} ${perfil?.idade || ""} anos, nivel ${perfil?.tempo_treino || "Iniciante"}, objetivo ${perfil?.objetivo || "hipertrofia"}, ${perfil?.frequencia_semanal || 4}x/semana. Lesoes: ${lesoes}. Limitacoes: ${limitacoes}. Divisao: ${(divisoes || []).join(",")}.`;
-      const embResp = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
-        method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model: "openai/text-embedding-3-small", input: queryText }),
-      });
-      if (embResp.ok) {
-        const embData = await embResp.json();
-        const queryEmbedding = embData.data[0].embedding;
+      const nivelInput = (perfil?.tempo_treino || "Iniciante").toLowerCase();
+      const variant = Math.floor(Math.random() * 3) + 1; // Sorteio de Variante (1, 2 ou 3)
 
-        const rpcResp = await fetch(`${SUPABASE_URL}/rest/v1/rpc/buscar_conhecimento_treino`, {
-          method: "POST",
-          headers: {
-            apikey: SERVICE_KEY,
-            Authorization: `Bearer ${SERVICE_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            query_embedding: queryEmbedding,
-            p_tenant_id: tenant_id || null,
-            match_count: 20,
-            similarity_threshold: 0.3,
-          }),
-        });
-        if (rpcResp.ok) {
-          const matches = await rpcResp.json();
-          if (Array.isArray(matches) && matches.length) {
-            knowledgeContext = "\n\n=== BASE DE CONHECIMENTO METODOLOGIA PACHOLOK (FONTE ABSOLUTA) ===\n" +
-              matches.map((m: any, i: number) => `[Módulo: ${m.fonte || "?"}]\n${m.conteudo}`).join("\n---\n") +
-              "\n=== FIM DA BASE ===\n";
-          }
+      const pachoResp = await fetch(`${SUPABASE_URL}/rest/v1/biblioteca_metodologia_pacho?nivel=eq.${nivelInput}&variante=eq.${variant}&order=ordem_exercicio.asc`, {
+        headers: {
+          apikey: SERVICE_KEY,
+          Authorization: `Bearer ${SERVICE_KEY}`,
+        },
+      });
+
+      if (pachoResp.ok) {
+        const pachoData = await pachoResp.ok ? await pachoResp.json() : [];
+        if (pachoData.length > 0) {
+          bibliotecaPachoContext = "\n\n=== ESTRUTURA BASE PACHOLOK (MODELO SORTEADO: VARIANTE " + variant + ") ===\n" +
+            pachoData.map((e: any) => 
+              `- ${e.nome_exercicio} [${e.grupo_muscular}] | Ordem: ${e.ordem_exercicio} | Aquecimento: ${e.series_aquecimento} | Ajuste: ${e.series_ajuste} | Trabalho: ${e.series_trabalho} | Técnica: ${e.tecnica_especifica || "Nenhuma"} | Cadência: ${e.cadencia || "3-0-2-0"}`
+            ).join("\n") +
+            "\n=== FIM DO MODELO ===\n";
         }
       }
-    } catch (ragErr) {
-      console.error("RAG error (não fatal):", ragErr);
+    } catch (err) {
+      console.error("Erro ao buscar biblioteca Pacho:", err);
     }
+
+    // === 2. PARECER DE SAÚDE (EXAMES) ===
+    let saudeContext = "";
+    if (user?.id) {
+      try {
+        const examesResp = await fetch(`${SUPABASE_URL}/rest/v1/analises_clinicas?user_id=eq.${user.id}&order=created_at.desc&limit=1`, {
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+        });
+        if (examesResp.ok) {
+          const exames = await examesResp.json();
+          if (exames && exames.length > 0) {
+            saudeContext = `\n\n=== DADOS CLÍNICOS RECENTES DO ALUNO ===\n${exames[0].parecer_ia || exames[0].resumo_clinico}\nScore Performance: ${exames[0].score_performance}%\n`;
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao buscar exames:", err);
+      }
+    }
+
+    const knowledgeContext = bibliotecaPachoContext + saudeContext;
 
     const systemPrompt = `${knowledgeContext}
 
@@ -118,7 +125,7 @@ C) AVANÇADO / ATLETA (Intensidade Máxima):
 - Detalhes biomecânicos profundos no campo "detalhes_execucao" (ângulo, ponto de contração, controle excêntrico).
 - Proibido alterar repetições/intervalos definidos pelo Pacholok.
 
-ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição completa, respeitando TODAS as regras acima sem exceção.`;
+ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição completa. Se houver dados clínicos no contexto, adicione um campo "observacao_clinica" ao final (fora do array de dias) com um parecer estratégico baseado nos biomarcadores (ex: ajustar volume se cortisol estiver alto). Respeite TODAS as regras acima sem exceção.`;
 
     const userPrompt = `Monte o treino Pacho-style para:
 - Sexo: ${perfil?.sexo || "não informado"}
@@ -167,6 +174,7 @@ ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("
                 },
               },
               cardio: { type: "string" },
+              observacao_clinica: { type: "string", description: "Parecer clínico baseado nos exames de sangue do aluno (se disponíveis)." },
             },
             required: ["dias", "cardio"],
           },

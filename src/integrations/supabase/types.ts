@@ -580,6 +580,36 @@ export type Database = {
         }
         Relationships: []
       }
+      biblioteca_mobilidade_pacho: {
+        Row: {
+          foco: string
+          id: string
+          instrução_tecnica: string
+          nivel: string
+          nome_exercicio: string
+          tempo_ou_reps: string
+          video_url: string | null
+        }
+        Insert: {
+          foco: string
+          id?: string
+          instrução_tecnica: string
+          nivel: string
+          nome_exercicio: string
+          tempo_ou_reps: string
+          video_url?: string | null
+        }
+        Update: {
+          foco?: string
+          id?: string
+          instrução_tecnica?: string
+          nivel?: string
+          nome_exercicio?: string
+          tempo_ou_reps?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       biblioteca_treinos_pacho: {
         Row: {
           created_at: string
