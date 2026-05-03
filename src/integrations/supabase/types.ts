@@ -528,62 +528,57 @@ export type Database = {
       }
       biblioteca_metodologia_pacho: {
         Row: {
-          created_at: string
-          descricao_metodologia: string | null
-          divisao: string | null
-          enfase: string | null
-          estrutura_json: Json | null
-          frequencia_semanal: number | null
-          grupo_muscular: string | null
+          cadencia: string | null
+          dia_ordem: number
+          grupo_muscular: string
           id: string
-          nivel: string | null
+          nivel: string
           nome_exercicio: string
-          profissional_id: string | null
-          tags: string[] | null
-          updated_at: string
-          video_url: string | null
+          observacao_tecnica: string | null
+          ordem_exercicio: number
+          repeticoes: string
+          series_ajuste: number | null
+          series_aquecimento: number | null
+          series_trabalho: number
+          tecnica_especifica: string | null
+          titulo_dia: string
+          variante: number
         }
         Insert: {
-          created_at?: string
-          descricao_metodologia?: string | null
-          divisao?: string | null
-          enfase?: string | null
-          estrutura_json?: Json | null
-          frequencia_semanal?: number | null
-          grupo_muscular?: string | null
+          cadencia?: string | null
+          dia_ordem: number
+          grupo_muscular: string
           id?: string
-          nivel?: string | null
+          nivel: string
           nome_exercicio: string
-          profissional_id?: string | null
-          tags?: string[] | null
-          updated_at?: string
-          video_url?: string | null
+          observacao_tecnica?: string | null
+          ordem_exercicio: number
+          repeticoes: string
+          series_ajuste?: number | null
+          series_aquecimento?: number | null
+          series_trabalho: number
+          tecnica_especifica?: string | null
+          titulo_dia: string
+          variante?: number
         }
         Update: {
-          created_at?: string
-          descricao_metodologia?: string | null
-          divisao?: string | null
-          enfase?: string | null
-          estrutura_json?: Json | null
-          frequencia_semanal?: number | null
-          grupo_muscular?: string | null
+          cadencia?: string | null
+          dia_ordem?: number
+          grupo_muscular?: string
           id?: string
-          nivel?: string | null
+          nivel?: string
           nome_exercicio?: string
-          profissional_id?: string | null
-          tags?: string[] | null
-          updated_at?: string
-          video_url?: string | null
+          observacao_tecnica?: string | null
+          ordem_exercicio?: number
+          repeticoes?: string
+          series_ajuste?: number | null
+          series_aquecimento?: number | null
+          series_trabalho?: number
+          tecnica_especifica?: string | null
+          titulo_dia?: string
+          variante?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "biblioteca_metodologia_pacho_profissional_id_fkey"
-            columns: ["profissional_id"]
-            isOneToOne: false
-            referencedRelation: "profissionais"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       biblioteca_treinos_pacho: {
         Row: {
@@ -1166,6 +1161,30 @@ export type Database = {
         }
         Relationships: []
       }
+      metodologia_pacho_config: {
+        Row: {
+          intensidade_esforc_percebido: number | null
+          objetivo: string | null
+          percentual_carga: number | null
+          repeticoes_alvo: string | null
+          tipo_serie: string
+        }
+        Insert: {
+          intensidade_esforc_percebido?: number | null
+          objetivo?: string | null
+          percentual_carga?: number | null
+          repeticoes_alvo?: string | null
+          tipo_serie: string
+        }
+        Update: {
+          intensidade_esforc_percebido?: number | null
+          objetivo?: string | null
+          percentual_carga?: number | null
+          repeticoes_alvo?: string | null
+          tipo_serie?: string
+        }
+        Relationships: []
+      }
       perfis: {
         Row: {
           avatar_url: string | null
@@ -1490,6 +1509,30 @@ export type Database = {
         }
         Relationships: []
       }
+      regras_volume_pacho: {
+        Row: {
+          min_exercicios_grandes: number | null
+          min_exercicios_ombro: number | null
+          min_exercicios_pequenos: number | null
+          nivel: string
+          usa_tecnicas_avancadas: boolean | null
+        }
+        Insert: {
+          min_exercicios_grandes?: number | null
+          min_exercicios_ombro?: number | null
+          min_exercicios_pequenos?: number | null
+          nivel: string
+          usa_tecnicas_avancadas?: boolean | null
+        }
+        Update: {
+          min_exercicios_grandes?: number | null
+          min_exercicios_ombro?: number | null
+          min_exercicios_pequenos?: number | null
+          nivel?: string
+          usa_tecnicas_avancadas?: boolean | null
+        }
+        Relationships: []
+      }
       saques: {
         Row: {
           chave_pix: string
@@ -1723,7 +1766,9 @@ export type Database = {
           series: string | null
           status: string | null
           tecnica_id: string | null
+          técnica_intensificacao: string | null
           tenant_id: string
+          tipo_serie_pacho: string | null
           updated_at: string
           video_coach_url: string | null
           video_url: string | null
@@ -1743,7 +1788,9 @@ export type Database = {
           series?: string | null
           status?: string | null
           tecnica_id?: string | null
+          técnica_intensificacao?: string | null
           tenant_id: string
+          tipo_serie_pacho?: string | null
           updated_at?: string
           video_coach_url?: string | null
           video_url?: string | null
@@ -1763,7 +1810,9 @@ export type Database = {
           series?: string | null
           status?: string | null
           tecnica_id?: string | null
+          técnica_intensificacao?: string | null
           tenant_id?: string
+          tipo_serie_pacho?: string | null
           updated_at?: string
           video_coach_url?: string | null
           video_url?: string | null
