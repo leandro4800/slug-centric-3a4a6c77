@@ -5,10 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
+
+type Step = "signup" | "personal" | "tenant" | "product" | "stripe" | "pending";
+const STEPS: Step[] = ["signup", "personal", "tenant", "product", "stripe", "pending"];
 
 export default function SejaCoach() {
   const { user, isLoading } = useAuth();
@@ -16,7 +20,7 @@ export default function SejaCoach() {
   const [params] = useSearchParams();
   const { toast } = useToast();
 
-  const [step, setStep] = useState<"signup" | "form" | "stripe" | "pending">("signup");
+  const [step, setStep] = useState<Step>("signup");
   const [busy, setBusy] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
@@ -25,18 +29,26 @@ export default function SejaCoach() {
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
 
+  // personal
+  const [telefone, setTelefone] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+
   // tenant form
+  const [nomePainel, setNomePainel] = useState("");
   const [slug, setSlug] = useState("");
   const [tagline, setTagline] = useState("");
   const [bio, setBio] = useState("");
   const [especialidades, setEspecialidades] = useState("");
-  const [cidade, setCidade] = useState("");
-  const [estado, setEstado] = useState("");
+
+  // product
+  const [planoNome, setPlanoNome] = useState("");
+  const [planoDescricao, setPlanoDescricao] = useState("");
+  const [planoPreco, setPlanoPreco] = useState("");
+  const [planoIntervalo, setPlanoIntervalo] = useState<"mensal" | "trimestral" | "anual">("mensal");
 
   const [tenantId, setTenantId] = useState<string | null>(null);
-  const [stripeStatus, setStripeStatus] = useState<{ completed: boolean } | null>(null);
 
-  // Detecta usuário logado e busca tenant existente
   useEffect(() => {
     if (isLoading) return;
     if (user) void loadExisting();
@@ -45,7 +57,6 @@ export default function SejaCoach() {
   const loadExisting = async () => {
     if (!user) return;
 
-    // Check if user is admin
     const { data: roles } = await supabase
       .from("user_roles")
       .select("role")
@@ -54,14 +65,24 @@ export default function SejaCoach() {
     const userIsAdmin = !!roles && roles.length > 0;
     setIsAdmin(userIsAdmin);
 
+    const { data: perfil } = await supabase
+      .from("perfis")
+      .select("nome_completo, telefone")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (perfil?.nome_completo) setNome(perfil.nome_completo);
+    if (perfil?.telefone) setTelefone(perfil.telefone);
+
     const { data } = await supabase
       .from("tenants")
-      .select("id, slug, status")
+      .select("id, slug, status, nome, tagline, bio, cidade, estado, especialidades")
       .eq("owner_user_id", user.id)
       .maybeSingle();
 
     let stripeAccountId: string | null = null;
     let stripeOnboardingCompleted = false;
+    let hasPlano = false;
     if (data?.id) {
       const { data: priv } = await supabase
         .from("tenants_private" as any)
@@ -70,27 +91,38 @@ export default function SejaCoach() {
         .maybeSingle();
       stripeAccountId = (priv as any)?.stripe_account_id ?? null;
       stripeOnboardingCompleted = !!(priv as any)?.stripe_onboarding_completed;
+
+      const { count } = await supabase
+        .from("planos")
+        .select("id", { count: "exact", head: true })
+        .eq("tenant_id", data.id);
+      hasPlano = (count ?? 0) > 0;
     }
 
     if (data) {
       setTenantId(data.id);
       setSlug(data.slug);
-      
+      setNomePainel(data.nome ?? "");
+      setTagline(data.tagline ?? "");
+      setBio(data.bio ?? "");
+      setCidade(data.cidade ?? "");
+      setEstado(data.estado ?? "");
+      setEspecialidades((data.especialidades ?? []).join(", "));
+
       if (data.status === "approved") {
         navigate(`/${data.slug}/admin`);
-      } else if (stripeOnboardingCompleted) {
-        setStep("pending");
-      } else if (stripeAccountId && !userIsAdmin) {
-        setStep("stripe");
-      } else {
-        setStep("stripe");
+        return;
       }
+      if (stripeOnboardingCompleted) setStep("pending");
+      else if (stripeAccountId || hasPlano) setStep("stripe");
+      else if (hasPlano) setStep("stripe");
+      else setStep("product");
     } else {
-      setStep("form");
+      setStep(perfil?.telefone ? "tenant" : "personal");
     }
 
-    if (params.get("completed") === "1" && stripeAccountId) {
-      void syncStripe(data!.id);
+    if (params.get("completed") === "1" && data?.id) {
+      void syncStripe(data.id);
     }
   };
 
@@ -103,11 +135,33 @@ export default function SejaCoach() {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/seja-coach`,
-          data: { nome_completo: nome },
+          data: { nome_completo: nome, is_coach: true },
         },
       });
       if (error) throw error;
       toast({ title: "Conta criada!", description: "Continue o cadastro do seu painel." });
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSavePersonal = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+    setBusy(true);
+    try {
+      const { error } = await supabase
+        .from("perfis")
+        .update({
+          nome_completo: nome,
+          telefone,
+          onboarding_completo: true,
+        })
+        .eq("id", user.id);
+      if (error) throw error;
+      setStep("tenant");
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
@@ -132,33 +186,75 @@ export default function SejaCoach() {
         .map((s) => s.trim())
         .filter(Boolean);
 
-      const { data, error } = await supabase
-        .from("tenants")
-        .insert({
-          slug: cleanSlug,
-          nome,
-          tagline,
-          bio,
-          especialidades: especArr,
-          cidade,
-          estado: estado.toUpperCase(),
-          owner_user_id: user.id,
-          status: "pending",
-        })
-        .select()
-        .single();
-      if (error) throw error;
+      let currentTenantId = tenantId;
+      if (currentTenantId) {
+        const { error } = await supabase
+          .from("tenants")
+          .update({
+            slug: cleanSlug,
+            nome: nomePainel,
+            tagline,
+            bio,
+            especialidades: especArr,
+            cidade,
+            estado: estado.toUpperCase(),
+          })
+          .eq("id", currentTenantId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await supabase
+          .from("tenants")
+          .insert({
+            slug: cleanSlug,
+            nome: nomePainel,
+            tagline,
+            bio,
+            especialidades: especArr,
+            cidade,
+            estado: estado.toUpperCase(),
+            owner_user_id: user.id,
+            status: "pending",
+          })
+          .select()
+          .single();
+        if (error) throw error;
+        currentTenantId = data.id;
 
-      // dá role coach automaticamente
-      await supabase.from("user_roles").insert({
-        user_id: user.id,
-        role: "coach" as any,
-        tenant_id: data.id,
+        await supabase.from("user_roles").insert({
+          user_id: user.id,
+          role: "coach" as any,
+          tenant_id: data.id,
+        });
+      }
+
+      setTenantId(currentTenantId);
+      setStep("product");
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleCreateProduct = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!tenantId) return;
+    setBusy(true);
+    try {
+      const preco = Math.round(parseFloat(planoPreco.replace(",", ".")) * 100);
+      if (!preco || preco < 100) throw new Error("Valor inválido");
+
+      const { error } = await supabase.from("planos").insert({
+        tenant_id: tenantId,
+        nome: planoNome,
+        descricao: planoDescricao,
+        preco_centavos: preco,
+        intervalo: planoIntervalo,
+        ativo: true,
+        ordem: 0,
       });
-
-      setTenantId(data.id);
+      if (error) throw error;
       setStep("stripe");
-      toast({ title: "Painel criado", description: "Agora conecte seu Stripe pra receber pagamentos." });
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
@@ -185,13 +281,13 @@ export default function SejaCoach() {
     const { data } = await supabase.functions.invoke("stripe-connect-status", {
       body: { tenant_id: id },
     });
-    if (data?.completed) {
-      setStripeStatus(data);
-      setStep("pending");
-    }
+    if (data?.completed) setStep("pending");
   };
 
-  if (isLoading) return <div className="flex h-screen items-center justify-center bg-background">Carregando...</div>;
+  if (isLoading)
+    return <div className="flex h-screen items-center justify-center bg-background">Carregando...</div>;
+
+  const stepIndex = STEPS.indexOf(step);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -207,14 +303,14 @@ export default function SejaCoach() {
       <div className="mx-auto max-w-2xl px-4 py-12 md:px-8">
         <h1 className="font-display text-4xl uppercase md:text-5xl">Seja um coach Elite</h1>
         <p className="mt-2 text-muted-foreground">
-          Cadastre seu painel, conecte seu Stripe e receba 90% de cada assinatura. Plataforma fica com 10%.
+          Cadastre seu painel, crie sua consultoria e receba 90% de cada assinatura. Plataforma fica com 10%.
         </p>
 
         {/* Steps indicator */}
         <div className="my-8 flex items-center gap-2 text-xs">
-          {(["signup", "form", "stripe", "pending"] as const).map((s, i) => {
+          {STEPS.slice(0, 5).map((s, i) => {
             const active = step === s;
-            const done = ["signup", "form", "stripe", "pending"].indexOf(step) > i;
+            const done = stepIndex > i;
             return (
               <div key={s} className="flex flex-1 items-center gap-2">
                 <div
@@ -224,7 +320,7 @@ export default function SejaCoach() {
                 >
                   {done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
                 </div>
-                {i < 3 && <div className={`h-px flex-1 ${done ? "bg-primary" : "bg-border"}`} />}
+                {i < 4 && <div className={`h-px flex-1 ${done ? "bg-primary" : "bg-border"}`} />}
               </div>
             );
           })}
@@ -255,12 +351,42 @@ export default function SejaCoach() {
             </form>
           )}
 
-          {step === "form" && (
-            <form onSubmit={handleCreateTenant} className="space-y-4">
-              <h2 className="font-display text-2xl uppercase">2. Configure seu painel</h2>
+          {step === "personal" && (
+            <form onSubmit={handleSavePersonal} className="space-y-4">
+              <h2 className="font-display text-2xl uppercase">2. Seus dados pessoais</h2>
+              <p className="text-sm text-muted-foreground">
+                Esses dados ficam visíveis apenas para você e a equipe da plataforma.
+              </p>
               <div>
-                <Label>Nome do painel</Label>
-                <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Pikachu Team" required />
+                <Label>Nome completo</Label>
+                <Input value={nome} onChange={(e) => setNome(e.target.value)} required />
+              </div>
+              <div>
+                <Label>Telefone (WhatsApp)</Label>
+                <Input
+                  value={telefone}
+                  onChange={(e) => setTelefone(e.target.value)}
+                  placeholder="(11) 99999-9999"
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={busy} className="w-full bg-primary hover:bg-primary/90">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
+              </Button>
+            </form>
+          )}
+
+          {step === "tenant" && (
+            <form onSubmit={handleCreateTenant} className="space-y-4">
+              <h2 className="font-display text-2xl uppercase">3. Configure seu painel</h2>
+              <div>
+                <Label>Como sua consultoria vai se chamar</Label>
+                <Input
+                  value={nomePainel}
+                  onChange={(e) => setNomePainel(e.target.value)}
+                  placeholder="Ex: TEAMLEANDRO"
+                  required
+                />
               </div>
               <div>
                 <Label>Slug (URL única)</Label>
@@ -269,7 +395,7 @@ export default function SejaCoach() {
                   <Input
                     value={slug}
                     onChange={(e) => setSlug(e.target.value)}
-                    placeholder="pikachuteam"
+                    placeholder="teamleandro"
                     required
                     pattern="[a-z0-9-]+"
                   />
@@ -311,12 +437,66 @@ export default function SejaCoach() {
             </form>
           )}
 
+          {step === "product" && (
+            <form onSubmit={handleCreateProduct} className="space-y-4">
+              <h2 className="font-display text-2xl uppercase">4. Seu primeiro produto</h2>
+              <p className="text-sm text-muted-foreground">
+                Crie o plano que seus alunos vão assinar. Você pode adicionar mais depois.
+              </p>
+              <div>
+                <Label>Nome do plano</Label>
+                <Input
+                  value={planoNome}
+                  onChange={(e) => setPlanoNome(e.target.value)}
+                  placeholder="Ex: Mentoria Mensal"
+                  required
+                />
+              </div>
+              <div>
+                <Label>Descrição</Label>
+                <Textarea
+                  value={planoDescricao}
+                  onChange={(e) => setPlanoDescricao(e.target.value)}
+                  placeholder="O que está incluso no plano..."
+                  rows={3}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Valor (R$)</Label>
+                  <Input
+                    type="text"
+                    inputMode="decimal"
+                    value={planoPreco}
+                    onChange={(e) => setPlanoPreco(e.target.value)}
+                    placeholder="297,00"
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>Período</Label>
+                  <Select value={planoIntervalo} onValueChange={(v: any) => setPlanoIntervalo(v)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mensal">Mensal</SelectItem>
+                      <SelectItem value="trimestral">Trimestral</SelectItem>
+                      <SelectItem value="anual">Anual</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <Button type="submit" disabled={busy} className="w-full bg-primary hover:bg-primary/90">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
+              </Button>
+            </form>
+          )}
+
           {step === "stripe" && (
             <div className="space-y-6 text-center">
-              <h2 className="font-display text-2xl uppercase">3. Conecte seu Stripe</h2>
+              <h2 className="font-display text-2xl uppercase">5. Conecte seu Stripe</h2>
               <p className="text-muted-foreground">
                 Crie sua conta Stripe Express em ~3 minutos. É como você vai receber 90% de cada assinatura,
-                direto na sua conta bancária.
+                direto na sua conta bancária. A confirmação de identidade para saques acontece dentro do painel.
               </p>
               <Button
                 onClick={handleStripeOnboard}
@@ -333,8 +513,8 @@ export default function SejaCoach() {
                 )}
               </Button>
               {isAdmin && (
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   onClick={async () => {
                     if (!tenantId) return;
                     setBusy(true);
