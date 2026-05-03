@@ -73,6 +73,28 @@ export default function Onboarding() {
 
   const loadProfile = async () => {
     if (!user) return;
+
+    // Coaches NÃO passam pelo onboarding de aluno
+    const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
+    const { data: ownedTenant } = await supabase
+      .from("tenants")
+      .select("slug")
+      .eq("owner_user_id", user.id)
+      .maybeSingle();
+    const { data: roles } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id);
+    const isCoach = isCoachSignup || !!ownedTenant || roles?.some((r) => r.role === "coach");
+    if (isCoach) {
+      if (ownedTenant?.slug) {
+        navigate(`/${ownedTenant.slug}/admin`, { replace: true });
+      } else {
+        navigate("/seja-coach", { replace: true });
+      }
+      return;
+    }
+
     const { data: perfil } = await supabase
       .from("perfis")
       .select("nome_completo, tenant_id, onboarding_completo")
