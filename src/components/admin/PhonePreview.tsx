@@ -89,12 +89,12 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
         <div className="absolute inset-[6px] rounded-[30px] overflow-hidden" style={{ background: "hsl(var(--background))" }}>
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-neutral-900 rounded-b-2xl z-30" />
 
-          {/* Background hot-zone */}
-          <HotZone label="Fundo do app" active={isActive("background")} onClick={pick("background")} className="absolute inset-0 rounded-none">
+          {/* Background hot-zone (atrás de tudo, só captura cliques fora do conteúdo) */}
+          <HotZone label="Fundo do app" active={isActive("background")} onClick={pick("background")} className="absolute inset-0 rounded-none z-0">
             <div className="absolute inset-0" />
           </HotZone>
 
-          <div className="absolute inset-0 overflow-y-auto pb-12 scrollbar-hide">
+          <div className="absolute inset-0 overflow-y-auto overflow-x-hidden pb-12 scrollbar-hide z-10">
             {/* ====== HOME ====== */}
             {screen === "home" && (
               <>
