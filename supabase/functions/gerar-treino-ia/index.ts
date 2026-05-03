@@ -138,7 +138,6 @@ B) INTERMEDIÁRIO (Divisão Estratégica 5-6 dias):
 - Dia 4 — Ombro Completo + Trapézio: mín. 2 exerc. por porção (anterior, lateral, posterior). Aplicar técnicas de intensificação (Drop-set / Rest-pause) em TODOS os finais.
 - Dia 5 — Ênfase Cadeia Posterior: 4 exerc. de Posterior + 2 de Quadríceps.
 - Dia 6 (Opcional/Ênfase): 3 de Peito + 3 de Costas + 1 técnica isolada para Ombro.
-- Domingo: descanso obrigatório.
 
 C) AVANÇADO / ATLETA (Intensidade Máxima):
 - Lógica: 1 Músculo por Dia (Foco Total).
@@ -147,7 +146,24 @@ C) AVANÇADO / ATLETA (Intensidade Máxima):
 - Foco: Explorar biomecânica profunda e exaustão de TODAS as porções.
 
 ═══════════════════════════════════════════════
-3. DIRETRIZES DE PONTO FRACO
+3. REGRAS DE DESCANSO E CARDIO (INVIOLÁVEIS)
+═══════════════════════════════════════════════
+- CARDIO: 
+  - Em DIAS DE TREINO: Adicione SEMPRE uma linha final de "Cardio Pós-Treino" (20 min) em todos os dias de treino.
+  - Em DIAS DE OFF: Adicione um card de "Cardio Regenerativo" (45 min) como a única atividade do dia.
+- DESCANSO (OFF):
+  - INTERMEDIÁRIO: Coloque o dia de "OFF" obrigatoriamente na Quarta ou Quinta E aos Domingos.
+  - AVANÇADO: O dia de "OFF" deve ser OBRIGATORIAMENTE no dia seguinte ao treino de Pernas.
+  - O array de "dias" na resposta deve conter 7 entradas, representando a semana completa, incluindo os dias de "OFF".
+
+═══════════════════════════════════════════════
+4. TREINO DE CORE (ABDOMINAIS)
+═══════════════════════════════════════════════
+- FREQUÊNCIA: Adicione um bloco de "Treino de Core" 3 vezes na semana (Segunda, Quarta e Sexta).
+- EXERCÍCIO: Sorteie aleatoriamente UM exercício da "BIBLIOTECA DE ABDOMINAIS" para cada um desses dias.
+
+═══════════════════════════════════════════════
+5. DIRETRIZES DE PONTO FRACO
 ═══════════════════════════════════════════════
 - PEITORAL CLAVICULAR: Os 2 PRIMEIROS exercícios do dia de Peito DEVEM ser inclinações (Halteres inclinado, Smith inclinado ou Máquina inclinada). Crossover de baixo para cima também é aceito como reforço.
 - OMBRO: Inclua OBRIGATORIAMENTE técnicas de "Pico de Contração" e "Isometria" nas elevações laterais. Distribuir ombro em 2-3 dias da semana.
@@ -155,13 +171,13 @@ C) AVANÇADO / ATLETA (Intensidade Máxima):
 - MARCAÇÃO: No campo "observacao" do exercício, mencione explicitamente quando ele faz parte da estratégia de ponto fraco.
 
 ═══════════════════════════════════════════════
-4. EXECUÇÃO E CADÊNCIA
+6. EXECUÇÃO E CADÊNCIA
 ═══════════════════════════════════════════════
 - Forneça cadência específica (ex: 4-0-2-0) em cada exercício.
 - Detalhes biomecânicos profundos no campo "detalhes_execucao" (ângulo, ponto de contração, controle excêntrico).
 - Proibido alterar repetições/intervalos definidos pelo Pacholok.
 
-ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição completa. Se houver dados clínicos no contexto, adicione um campo "observacao_clinica" ao final (fora do array de dias) com um parecer estratégico baseado nos biomarcadores (ex: ajustar volume se cortisol estiver alto). Respeite TODAS as regras acima sem exceção.`;
+ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição completa (7 dias). Se houver dados clínicos no contexto, adicione um campo "observacao_clinica" ao final (fora do array de dias) com um parecer estratégico baseado nos biomarcadores. Respeite TODAS as regras acima sem exceção.`;
 
     const userPrompt = `Monte o treino Pacho-style para:
 - Sexo: ${perfil?.sexo || "não informado"}
