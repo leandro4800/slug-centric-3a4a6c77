@@ -89,12 +89,12 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
         <div className="absolute inset-[6px] rounded-[30px] overflow-hidden" style={{ background: "hsl(var(--background))" }}>
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-5 bg-neutral-900 rounded-b-2xl z-30" />
 
-          {/* Background hot-zone */}
-          <HotZone label="Fundo do app" active={isActive("background")} onClick={pick("background")} className="absolute inset-0 rounded-none">
+          {/* Background hot-zone (atrás de tudo, só captura cliques fora do conteúdo) */}
+          <HotZone label="Fundo do app" active={isActive("background")} onClick={pick("background")} className="absolute inset-0 rounded-none z-0">
             <div className="absolute inset-0" />
           </HotZone>
 
-          <div className="absolute inset-0 overflow-y-auto pb-12 scrollbar-hide">
+          <div className="absolute inset-0 overflow-y-auto overflow-x-hidden pb-12 scrollbar-hide z-10">
             {/* ====== HOME ====== */}
             {screen === "home" && (
               <>
@@ -413,12 +413,14 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
             {screen === "perfil" && (
               <div className="pt-6 px-3">
                 {/* Hero do perfil */}
-                <div className="relative h-24 rounded-lg overflow-hidden mb-12">
-                  <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--background))] to-transparent" />
-                  <HotZone label="Cor primária" active={isActive("primary")} onClick={pick("primary")} className="absolute -bottom-8 left-3 rounded-full">
-                    <div className="w-16 h-16 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--primary))", border: "3px solid hsl(var(--background))" }}>
-                      <User className="h-7 w-7" style={{ color: "hsl(var(--primary-foreground))" }} />
+                <div className="relative h-24 rounded-lg overflow-visible mb-8">
+                  <div className="relative h-full rounded-lg overflow-hidden">
+                    <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[hsl(var(--background))] to-transparent" />
+                  </div>
+                  <HotZone label="Cor primária" active={isActive("primary")} onClick={pick("primary")} className="absolute -bottom-5 left-3 rounded-full">
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--primary))", border: "2px solid hsl(var(--background))" }}>
+                      <User className="h-4 w-4" style={{ color: "hsl(var(--primary-foreground))" }} />
                     </div>
                   </HotZone>
                 </div>
