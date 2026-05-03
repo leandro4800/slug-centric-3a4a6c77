@@ -193,9 +193,20 @@ const Landing = () => {
   const formatBRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
   useEffect(() => {
-    if (!authLoading && user) {
+    if (authLoading || !user) return;
+    (async () => {
+      // Se já é dono de tenant aprovado, vai direto pro painel
+      const { data: owned } = await supabase
+        .from("tenants")
+        .select("slug, status")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (owned?.slug) {
+        navigate(`/${owned.slug}/admin`, { replace: true });
+        return;
+      }
       navigate("/login", { replace: true });
-    }
+    })();
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
