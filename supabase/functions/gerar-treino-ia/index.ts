@@ -29,19 +29,27 @@ serve(async (req) => {
 
     // === 1. BUSCA DE MODELO PACHOLOK (BIBLIOTECA) ===
     let bibliotecaPachoContext = "";
+    let regrasDescansoContext = "";
+    let bibliotecaAbsContext = "";
+
     try {
       const nivelInput = (perfil?.tempo_treino || "Iniciante").toLowerCase();
       const variant = Math.floor(Math.random() * 3) + 1; // Sorteio de Variante (1, 2 ou 3)
 
-      const pachoResp = await fetch(`${SUPABASE_URL}/rest/v1/biblioteca_metodologia_pacho?nivel=eq.${nivelInput}&variante=eq.${variant}&order=ordem_exercicio.asc`, {
-        headers: {
-          apikey: SERVICE_KEY,
-          Authorization: `Bearer ${SERVICE_KEY}`,
-        },
-      });
+      const [pachoResp, descansoResp, absResp] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/biblioteca_metodologia_pacho?nivel=eq.${nivelInput}&variante=eq.${variant}&order=ordem_exercicio.asc`, {
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/regras_descanso_pacho?nivel=eq.${nivelInput}`, {
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/biblioteca_abdominais_pacho`, {
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+        })
+      ]);
 
       if (pachoResp.ok) {
-        const pachoData = await pachoResp.ok ? await pachoResp.json() : [];
+        const pachoData = await pachoResp.json();
         if (pachoData.length > 0) {
           bibliotecaPachoContext = "\n\n=== ESTRUTURA BASE PACHOLOK (MODELO SORTEADO: VARIANTE " + variant + ") ===\n" +
             pachoData.map((e: any) => 
@@ -50,8 +58,24 @@ serve(async (req) => {
             "\n=== FIM DO MODELO ===\n";
         }
       }
+
+      if (descansoResp.ok) {
+        const descansoData = await descansoResp.json();
+        if (descansoData.length > 0) {
+          regrasDescansoContext = "\n\n=== REGRAS DE DESCANSO E CARDIO ===\n" +
+            descansoData.map((d: any) => `- Lógica: ${d.logica_descanso}\n- Dias Sugeridos: ${d.dias_descanso_sugeridos}\n- Cardio: ${d.cardio_instrução}`).join("\n");
+        }
+      }
+
+      if (absResp.ok) {
+        const absData = await absResp.json();
+        if (absData.length > 0) {
+          bibliotecaAbsContext = "\n\n=== BIBLIOTECA DE ABDOMINAIS (CORE) ===\n" +
+            absData.map((a: any) => `- ${a.nome_exercicio}: ${a.series}x${a.repeticoes} (${a.instrucao})`).join("\n");
+        }
+      }
     } catch (err) {
-      console.error("Erro ao buscar biblioteca Pacho:", err);
+      console.error("Erro ao buscar dados da biblioteca:", err);
     }
 
     // === 2. PARECER DE SAÚDE (EXAMES) ===
@@ -63,10 +87,11 @@ serve(async (req) => {
         if (authHeader?.startsWith("Bearer ")) {
           const token = authHeader.slice(7);
           const payload = JSON.parse(atob(token.split(".")[1]));
-          userId = payload.sub || null;
+          userId = payload?.sub || null;
         }
       } catch (_) { /* ignore */ }
     }
+
     if (userId) {
       try {
         const examesResp = await fetch(`${SUPABASE_URL}/rest/v1/analises_clinicas?user_id=eq.${userId}&order=created_at.desc&limit=1`, {
@@ -83,7 +108,7 @@ serve(async (req) => {
       }
     }
 
-    const knowledgeContext = bibliotecaPachoContext + saudeContext;
+    const knowledgeContext = bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext;
 
     const systemPrompt = `${knowledgeContext}
 
