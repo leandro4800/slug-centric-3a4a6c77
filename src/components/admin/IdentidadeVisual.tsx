@@ -1,248 +1,223 @@
 import { useState } from "react";
 import { useBranding, type ThemeOverrides } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
-import { PhonePreview, type EditableTarget, EDITABLE_TARGETS } from "./PhonePreview";
+import { PhonePreview } from "./PhonePreview";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Loader2, RotateCcw, Save, Wand2 } from "lucide-react";
+import { Loader2, RotateCcw, Save, Check } from "lucide-react";
 import { toast } from "sonner";
 
-// HEX <-> HSL helpers
-const hexToHsl = (hex: string): string | null => {
-  const m = hex.replace("#", "").match(/^([0-9a-f]{6})$/i);
-  if (!m) return null;
-  const num = parseInt(m[1], 16);
-  let r = ((num >> 16) & 255) / 255;
-  let g = ((num >> 8) & 255) / 255;
-  let b = (num & 255) / 255;
-  const max = Math.max(r, g, b), min = Math.min(r, g, b);
-  let h = 0, s = 0; const l = (max + min) / 2;
-  if (max !== min) {
-    const d = max - min;
-    s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-    switch (max) {
-      case r: h = ((g - b) / d + (g < b ? 6 : 0)); break;
-      case g: h = (b - r) / d + 2; break;
-      case b: h = (r - g) / d + 4; break;
-    }
-    h *= 60;
-  }
-  return `${Math.round(h)} ${Math.round(s * 100)}% ${Math.round(l * 100)}%`;
+type Preset = {
+  id: string;
+  name: string;
+  subtitle: string;
+  swatches: string[]; // hex array for visual chip
+  overrides: ThemeOverrides;
 };
-const hslToHex = (hsl: string): string => {
-  const m = hsl.match(/(\d+(?:\.\d+)?)\s+(\d+(?:\.\d+)?)%\s+(\d+(?:\.\d+)?)%/);
-  if (!m) return "#000000";
-  const h = parseFloat(m[1]) / 360, s = parseFloat(m[2]) / 100, l = parseFloat(m[3]) / 100;
-  const a = s * Math.min(l, 1 - l);
-  const f = (n: number) => {
-    const k = (n + h * 12) % 12;
-    const c = l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1));
-    return Math.round(c * 255).toString(16).padStart(2, "0");
-  };
-  return `#${f(0)}${f(8)}${f(4)}`;
-};
+
+// Defaults Netflix/Ferrari já estão no BrandingProvider; aqui só os presets.
+const PRESETS: Preset[] = [
+  {
+    id: "ferrari",
+    name: "FERRARI BLACK",
+    subtitle: "Padrão · Vermelho & Preto",
+    swatches: ["#000000", "#0A0A0A", "#E10600", "#FAFAFA"],
+    overrides: {
+      primary: "355 100% 48%",
+      primary_glow: "355 100% 60%",
+      accent: "355 100% 48%",
+      background: "0 0% 0%",
+      card: "0 0% 3%",
+      foreground: "0 0% 98%",
+      border: "0 0% 15%",
+    },
+  },
+  {
+    id: "tech-titanium",
+    name: "TECH TITANIUM",
+    subtitle: "Performance · Azul Elétrico",
+    swatches: ["#121417", "#1C1F28", "#007BFF", "#FFFFFF"],
+    overrides: {
+      primary: "212 100% 50%",
+      primary_glow: "212 100% 65%",
+      accent: "212 100% 50%",
+      background: "220 14% 8%",
+      card: "222 18% 13%",
+      foreground: "0 0% 100%",
+      border: "220 14% 22%",
+    },
+  },
+  {
+    id: "deep-sea-glass",
+    name: "DEEP SEA GLASS",
+    subtitle: "Moderno & Fluido",
+    swatches: ["#0F172A", "#1E293B", "#7DD3FC", "#FEFFEF"],
+    overrides: {
+      primary: "199 89% 74%",
+      primary_glow: "199 89% 85%",
+      accent: "199 89% 74%",
+      background: "222 47% 11%",
+      card: "217 33% 17%",
+      foreground: "60 100% 97%",
+      border: "217 33% 25%",
+    },
+  },
+  {
+    id: "nordic-minimalist",
+    name: "NORDIC MINIMALIST",
+    subtitle: "Limpo & Sofisticado",
+    swatches: ["#FBF9FA", "#212529", "#A9A9A9", "#000000"],
+    overrides: {
+      primary: "210 11% 15%",
+      primary_glow: "210 11% 30%",
+      accent: "210 11% 15%",
+      background: "330 14% 98%",
+      card: "0 0% 100%",
+      foreground: "210 11% 15%",
+      border: "0 0% 85%",
+    },
+  },
+];
 
 export const IdentidadeVisual = () => {
   const { tenant, refresh, applyPreview, clearPreview } = useBranding();
-  const [picked, setPicked] = useState<EditableTarget | null>(null);
-  const [draft, setDraft] = useState<ThemeOverrides>({});
-  const [aiCmd, setAiCmd] = useState("");
-  const [busy, setBusy] = useState<"ai" | "save" | null>(null);
+  const [selected, setSelected] = useState<Preset | null>(null);
+  const [busy, setBusy] = useState(false);
 
   if (!tenant) return null;
 
-  const current: ThemeOverrides = { ...(tenant.theme_overrides || {}), ...draft };
-
-  const setToken = (key: keyof ThemeOverrides, value: string) => {
-    const next = { ...draft, [key]: value };
-    setDraft(next);
-    applyPreview(next);
+  const handlePick = (p: Preset) => {
+    setSelected(p);
+    applyPreview(p.overrides);
   };
 
-  const handlePickColor = (key: keyof ThemeOverrides, hex: string) => {
-    const hsl = hexToHsl(hex);
-    if (!hsl) return;
-    setToken(key, hsl);
-  };
-
-  const handleAI = async () => {
-    if (!aiCmd.trim()) return;
-    setBusy("ai");
-    try {
-      const { data, error } = await supabase.functions.invoke("theme-ai", {
-        body: { command: aiCmd, current },
-      });
-      if (error) throw error;
-      const patch = (data?.patch || {}) as ThemeOverrides;
-      if (Object.keys(patch).length === 0) {
-        toast.info("A IA não sugeriu mudanças.");
-      } else {
-        const next = { ...draft, ...patch };
-        setDraft(next);
-        applyPreview(next);
-        toast.success(`IA aplicou: ${Object.keys(patch).join(", ")}`);
-        setAiCmd("");
-      }
-    } catch (e) {
-      toast.error((e as Error).message);
-    } finally {
-      setBusy(null);
-    }
+  const handleDiscard = () => {
+    setSelected(null);
+    clearPreview();
   };
 
   const handleSave = async () => {
-    setBusy("save");
-    const merged = { ...(tenant.theme_overrides || {}), ...draft };
+    if (!selected) return;
+    setBusy(true);
     const { error } = await supabase
       .from("tenants")
-      .update({ theme_overrides: merged })
+      .update({ theme_overrides: selected.overrides })
       .eq("id", tenant.id);
     if (error) toast.error(error.message);
     else {
-      toast.success("Identidade visual salva!");
-      setDraft({});
+      toast.success(`Tema "${selected.name}" aplicado em todo o app!`);
+      setSelected(null);
       await refresh();
     }
-    setBusy(null);
-  };
-
-  const handleReset = () => {
-    setDraft({});
-    clearPreview();
-    setPicked(null);
-    toast.message("Mudanças não salvas descartadas");
+    setBusy(false);
   };
 
   const handleResetAll = async () => {
-    setBusy("save");
+    setBusy(true);
     const { error } = await supabase.from("tenants").update({ theme_overrides: {} }).eq("id", tenant.id);
     if (error) toast.error(error.message);
     else {
-      setDraft({});
+      setSelected(null);
       await refresh();
-      toast.success("Tema restaurado para o padrão Netflix");
+      toast.success("Tema restaurado para o padrão");
     }
-    setBusy(null);
+    setBusy(false);
   };
 
   return (
     <div className="grid lg:grid-cols-[auto_1fr] gap-6">
-      {/* Preview do celular */}
+      {/* Preview */}
       <div className="bg-black/40 border border-white/10 rounded-2xl p-6 shadow-2xl backdrop-blur-sm">
         <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4 text-center">
-          Toque em qualquer elemento para editar
+          Pré-visualização
         </p>
-        <PhonePreview onPick={setPicked} pickedTarget={picked} />
+        <PhonePreview onPick={() => {}} pickedTarget={null} />
         <div className="flex gap-2 mt-4">
-          <Button variant="outline" size="sm" className="flex-1" onClick={handleReset} disabled={Object.keys(draft).length === 0}>
+          <Button
+            variant="outline"
+            size="sm"
+            className="flex-1"
+            onClick={handleDiscard}
+            disabled={!selected}
+          >
             <RotateCcw className="h-3 w-3 mr-1" /> Descartar
           </Button>
-          <Button size="sm" className="flex-1 bg-gradient-primary shadow-glow" onClick={handleSave} disabled={busy === "save" || Object.keys(draft).length === 0}>
-            {busy === "save" ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Save className="h-3 w-3 mr-1" /> Salvar</>}
+          <Button
+            size="sm"
+            className="flex-1 bg-gradient-primary shadow-glow"
+            onClick={handleSave}
+            disabled={busy || !selected}
+          >
+            {busy ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Save className="h-3 w-3 mr-1" /> Aplicar</>}
           </Button>
         </div>
       </div>
 
-      {/* Painel de edição */}
+      {/* Presets */}
       <div className="space-y-4">
-        {/* Editor IA */}
         <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <h3 className="font-display text-lg">EDITAR COM IA</h3>
-          </div>
-          <p className="text-xs text-muted-foreground mb-3">
-            Descreva a mudança em português. Ex: <em>"muda o fundo para roxo escuro"</em>, <em>"botão reproduzir azul"</em>.
+          <h3 className="font-display text-lg mb-1">ESCOLHA UM TEMA</h3>
+          <p className="text-xs text-muted-foreground mb-4">
+            Toque em qualquer card e o app inteiro muda na hora. Depois clique em <strong>Aplicar</strong> para salvar.
           </p>
-          <div className="flex gap-2">
-            <Textarea
-              value={aiCmd}
-              onChange={(e) => setAiCmd(e.target.value)}
-              placeholder="muda o fundo da tela para roxo espelhado..."
-              rows={2}
-              className="flex-1 resize-none"
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAI();
-              }}
-            />
-            <Button onClick={handleAI} disabled={busy === "ai" || !aiCmd.trim()} className="bg-gradient-primary self-stretch px-4">
-              {busy === "ai" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
-            </Button>
-          </div>
-        </div>
 
-        {/* Editor do elemento selecionado */}
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
-          <h3 className="font-display text-lg mb-3">
-            {picked ? `EDITAR · ${picked.label.toUpperCase()}` : "SELECIONE UM ELEMENTO"}
-          </h3>
-          {!picked ? (
-            <p className="text-xs text-muted-foreground">
-              Clique em qualquer parte do preview à esquerda (fundo, botão, texto, cards…) para editar a cor.
-            </p>
-          ) : (
-            <div className="space-y-3">
-              {picked.tokens.map((tk) => {
-                const tokenKey = tk as keyof ThemeOverrides;
-                const value = current[tokenKey] || "";
-                const hex = value ? hslToHex(value) : "#000000";
-                return (
-                  <div key={tk} className="flex items-center gap-3">
-                    <div className="flex-1">
-                      <Label className="text-xs uppercase">{tk}</Label>
-                      <Input
-                        value={value}
-                        onChange={(e) => setToken(tokenKey, e.target.value)}
-                        placeholder="ex: 270 60% 25%"
-                        className="font-mono text-xs mt-1"
-                      />
+          <div className="grid sm:grid-cols-2 gap-3">
+            {PRESETS.map((p) => {
+              const isActive = selected?.id === p.id;
+              return (
+                <button
+                  key={p.id}
+                  onClick={() => handlePick(p)}
+                  className={`relative text-left rounded-xl border-2 p-4 transition-all overflow-hidden ${
+                    isActive
+                      ? "border-primary shadow-glow scale-[1.02]"
+                      : "border-border hover:border-primary/60"
+                  }`}
+                  style={{
+                    background: `linear-gradient(135deg, ${p.swatches[0]} 0%, ${p.swatches[1]} 100%)`,
+                  }}
+                >
+                  {isActive && (
+                    <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                      <Check className="h-3 w-3" />
                     </div>
-                    <input
-                      type="color"
-                      value={hex}
-                      onChange={(e) => handlePickColor(tokenKey, e.target.value)}
-                      className="w-12 h-12 rounded-lg border border-border cursor-pointer mt-5"
-                      title="Color picker"
-                    />
+                  )}
+                  <p
+                    className="font-display text-sm font-bold tracking-wide"
+                    style={{ color: p.swatches[3] }}
+                  >
+                    {p.name}
+                  </p>
+                  <p className="text-[10px] opacity-70 mb-3" style={{ color: p.swatches[3] }}>
+                    {p.subtitle}
+                  </p>
+                  <div className="flex gap-1.5">
+                    {p.swatches.map((c, i) => (
+                      <div
+                        key={i}
+                        className="w-6 h-6 rounded-full border border-white/20 shadow-md"
+                        style={{ background: c }}
+                      />
+                    ))}
                   </div>
-                );
-              })}
-            </div>
-          )}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Reset total */}
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm flex items-center justify-between gap-3">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-sm flex items-center justify-between gap-3">
           <div>
-            <p className="font-medium text-sm">Restaurar tema padrão (Netflix)</p>
-            <p className="text-xs text-muted-foreground">Apaga todas as customizações salvas deste tenant</p>
+            <p className="font-medium text-sm">Restaurar padrão</p>
+            <p className="text-xs text-muted-foreground">Volta para o tema Ferrari Black</p>
           </div>
-          <Button variant="outline" size="sm" onClick={handleResetAll} disabled={busy === "save"}>
+          <Button variant="outline" size="sm" onClick={handleResetAll} disabled={busy}>
             <RotateCcw className="h-3 w-3 mr-1" /> Restaurar
           </Button>
         </div>
 
-        {/* Atalhos: lista de elementos */}
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
-          <p className="text-xs uppercase tracking-widest text-muted-foreground mb-3">Elementos editáveis</p>
-          <div className="flex flex-wrap gap-2">
-            {EDITABLE_TARGETS.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => setPicked(t)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition ${
-                  picked?.id === t.id
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "border-border hover:border-primary/60"
-                }`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <p className="text-xs text-muted-foreground text-center">
+          Em breve: mais temas exclusivos serão adicionados aqui.
+        </p>
       </div>
     </div>
   );
