@@ -264,8 +264,8 @@ const Comunidade = () => {
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center gap-5">
                   <Heart className="h-6 w-6 cursor-pointer hover:text-primary transition-colors" />
-                  <MessageCircle className="h-6 w-6 cursor-pointer hover:text-white transition-colors text-zinc-300" />
-                  <Share2 className="h-6 w-6 cursor-pointer hover:text-white transition-colors text-zinc-300" />
+                  <MessageCircle className="h-6 w-6 cursor-pointer hover:text-foreground transition-colors text-zinc-300" />
+                  <Share2 className="h-6 w-6 cursor-pointer hover:text-foreground transition-colors text-zinc-300" />
                 </div>
               </div>
 
