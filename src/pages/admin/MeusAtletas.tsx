@@ -333,6 +333,11 @@ const MeusAtletas = () => {
                 </Button>
               </Link>
             </div>
+            <Link to={`/${slug}/app`}>
+              <Button variant="outline" className="w-full gap-2 border-primary/40">
+                <User className="h-4 w-4" /> Meu cadastro (perfil, anamnese e avaliação)
+              </Button>
+            </Link>
             <Button
               variant="outline"
               className="w-full"
