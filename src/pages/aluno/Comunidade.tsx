@@ -292,7 +292,7 @@ const Comunidade = () => {
 
       {/* New Post Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white max-w-md w-[95%] rounded-3xl p-0 overflow-hidden">
+        <DialogContent className="bg-background/90 backdrop-blur-xl border-border text-foreground max-w-md w-[95%] rounded-3xl p-0 overflow-hidden">
           <DialogHeader className="p-4 border-b border-white/10 flex flex-row items-center justify-between">
             <DialogTitle className="text-lg font-display uppercase tracking-widest text-primary">Nova Publicação</DialogTitle>
             <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-zinc-400">
