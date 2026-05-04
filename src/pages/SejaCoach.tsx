@@ -128,15 +128,55 @@ export default function SejaCoach() {
     e.preventDefault();
     setBusy(true);
     try {
-      const { error } = await supabase.auth.signUp({
-        email,
+      const cleanEmail = email.trim().toLowerCase();
+
+      // Verifica se o e-mail já tem perfil cadastrado para evitar duplicidade silenciosa
+      const { data: exists, error: checkErr } = await supabase
+        .rpc("email_is_registered", { _email: cleanEmail });
+      if (checkErr) throw checkErr;
+      if (exists) {
+        toast({
+          title: "E-mail já cadastrado",
+          description: "Esse e-mail já está cadastrado. Faça login para continuar seu cadastro.",
+          variant: "destructive",
+        });
+        navigate(`/login?redirect=/seja-coach`);
+        return;
+      }
+
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanEmail,
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/seja-coach`,
           data: { nome_completo: nome, is_coach: true },
         },
       });
-      if (error) throw error;
+      if (error) {
+        // Supabase pode retornar erro genérico para email já existente
+        const msg = error.message?.toLowerCase() || "";
+        if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+          toast({
+            title: "E-mail já cadastrado",
+            description: "Esse e-mail já está cadastrado. Faça login para continuar.",
+            variant: "destructive",
+          });
+          navigate(`/login?redirect=/seja-coach`);
+          return;
+        }
+        throw error;
+      }
+      // Heurística adicional: signUp retorna user com identities=[] quando o email já existe
+      const identities = (data?.user as any)?.identities;
+      if (data?.user && Array.isArray(identities) && identities.length === 0) {
+        toast({
+          title: "E-mail já cadastrado",
+          description: "Esse e-mail já está cadastrado. Faça login para continuar.",
+          variant: "destructive",
+        });
+        navigate(`/login?redirect=/seja-coach`);
+        return;
+      }
       toast({ title: "Conta criada!", description: "Continue o cadastro do seu painel." });
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
