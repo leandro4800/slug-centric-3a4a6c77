@@ -77,6 +77,7 @@ export const VlogsAdmin = () => {
       let endpoint: string | null = null;
       if (platform === "youtube") endpoint = `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(link)}`;
       else if (platform === "tiktok") endpoint = `https://www.tiktok.com/oembed?url=${encodeURIComponent(link)}`;
+      else if (platform === "instagram") endpoint = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.instagram.com/api/v1/oembed/?url=${link}`)}`;
       if (!endpoint) return null;
       const r = await fetch(endpoint);
       if (!r.ok) return null;
@@ -94,7 +95,7 @@ export const VlogsAdmin = () => {
 
     // Auto-enriquecimento: busca título + thumb via oEmbed (YouTube/TikTok)
     const oe = await fetchOEmbed(platform, cleanUrl);
-    let thumb: string | null = oe?.thumbnail_url || null;
+    let thumb: string | null = thumbInput.trim() || oe?.thumbnail_url || null;
     let autoTitle: string | null = oe?.title || null;
     const author: string | null = oe?.author_name || null;
 
@@ -102,6 +103,11 @@ export const VlogsAdmin = () => {
     if (!thumb && platform === "youtube") {
       const ytMatch = cleanUrl.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
       if (ytMatch) thumb = `https://i.ytimg.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+    }
+
+    // Fallback Instagram: usa serviço de screenshot público (microlink)
+    if (!thumb && platform === "instagram") {
+      thumb = `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url`;
     }
 
     const { error } = await supabase.from("vlog_posts").upsert(
@@ -123,6 +129,7 @@ export const VlogsAdmin = () => {
     toast.success("Vlog adicionado!");
     setUrl("");
     setTitle("");
+    setThumbInput("");
     void load();
   };
 
