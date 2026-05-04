@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Youtube, Instagram, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
+import { isDirectVideo } from "@/lib/utils";
 
 interface VlogPost {
   id: string;
@@ -543,7 +544,17 @@ Data:
             {posts.map((p) => (
               <div key={p.id} className="border border-border rounded-xl overflow-hidden bg-background/40">
                 <a href={p.url} target="_blank" rel="noreferrer" className="block aspect-video bg-muted relative">
-                  {p.thumbnail_url ? (
+                  {isDirectVideo(p.url) ? (
+                    <video
+                      src={`${p.url}#t=0.1`}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="auto"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : p.thumbnail_url ? (
                     <img src={p.thumbnail_url} alt={p.title || ""} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
