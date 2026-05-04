@@ -43,6 +43,7 @@ export const VlogsAdmin = () => {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
+  const [thumbInput, setThumbInput] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [secret, setSecret] = useState<string | null>(null);
 
@@ -76,6 +77,7 @@ export const VlogsAdmin = () => {
       let endpoint: string | null = null;
       if (platform === "youtube") endpoint = `https://www.youtube.com/oembed?format=json&url=${encodeURIComponent(link)}`;
       else if (platform === "tiktok") endpoint = `https://www.tiktok.com/oembed?url=${encodeURIComponent(link)}`;
+      else if (platform === "instagram") endpoint = `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://www.instagram.com/api/v1/oembed/?url=${link}`)}`;
       if (!endpoint) return null;
       const r = await fetch(endpoint);
       if (!r.ok) return null;
@@ -93,7 +95,7 @@ export const VlogsAdmin = () => {
 
     // Auto-enriquecimento: busca título + thumb via oEmbed (YouTube/TikTok)
     const oe = await fetchOEmbed(platform, cleanUrl);
-    let thumb: string | null = oe?.thumbnail_url || null;
+    let thumb: string | null = thumbInput.trim() || oe?.thumbnail_url || null;
     let autoTitle: string | null = oe?.title || null;
     const author: string | null = oe?.author_name || null;
 
@@ -101,6 +103,11 @@ export const VlogsAdmin = () => {
     if (!thumb && platform === "youtube") {
       const ytMatch = cleanUrl.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
       if (ytMatch) thumb = `https://i.ytimg.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+    }
+
+    // Fallback Instagram: usa serviço de screenshot público (microlink)
+    if (!thumb && platform === "instagram") {
+      thumb = `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url`;
     }
 
     const { error } = await supabase.from("vlog_posts").upsert(
@@ -122,6 +129,7 @@ export const VlogsAdmin = () => {
     toast.success("Vlog adicionado!");
     setUrl("");
     setTitle("");
+    setThumbInput("");
     void load();
   };
 
@@ -286,7 +294,7 @@ Data:
       {/* Manual add */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
-        <div className="grid md:grid-cols-[2fr_1.5fr_auto] gap-3 items-end">
+        <div className="grid md:grid-cols-2 gap-3 items-end">
           <div>
             <Label>URL (YouTube, Instagram, TikTok…)</Label>
             <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
@@ -295,7 +303,14 @@ Data:
             <Label>Título (opcional)</Label>
             <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Episódio 12 - Coxa" />
           </div>
-          <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow">
+          <div className="md:col-span-2">
+            <Label>Thumbnail (opcional · cole URL de uma imagem)</Label>
+            <Input value={thumbInput} onChange={(e) => setThumbInput(e.target.value)} placeholder="https://...jpg — útil para Instagram" />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Instagram não fornece thumb pública. Se não colar uma imagem, geramos um screenshot automático.
+            </p>
+          </div>
+          <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow md:col-span-2">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-2" /> Adicionar</>}
           </Button>
         </div>
