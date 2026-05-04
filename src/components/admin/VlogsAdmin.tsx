@@ -271,6 +271,8 @@ export const VlogsAdmin = () => {
     toast.success("Vídeo adicionado aos seus Vlogs!");
     void load();
   };
+
+  const exemploCurl = `curl -X POST '${webhookUrl}' \\
   -H 'Content-Type: application/json' \\
   -d '{
     "secret": "${secret || "SEU_SEGREDO"}",
