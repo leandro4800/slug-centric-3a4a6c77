@@ -43,6 +43,7 @@ export const VlogsAdmin = () => {
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
+  const [thumbInput, setThumbInput] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [secret, setSecret] = useState<string | null>(null);
 
