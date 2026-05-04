@@ -191,17 +191,7 @@ const AdminPanel = () => {
           </div>
         </div>
 
-        <AdminTabs />
-      </main>
-    </div>
-  );
-};
-
-const AdminTabs = () => {
-  const [params, setParams] = useSearchParams();
-  const tab = params.get("tab") || "elenco";
-  return (
-    <Tabs value={tab} onValueChange={(v) => setParams({ tab: v })}>
+        <Tabs value={tabValue} onValueChange={(v) => setSearchParams({ tab: v })}>
 
           <TabsList className="mb-6">
             <TabsTrigger value="elenco"><Users className="h-4 w-4 mr-2" /> Elenco</TabsTrigger>
