@@ -106,6 +106,9 @@ const App = () => (
 
             {/* Painel do coach */}
             <Route path="/:slug/admin" element={<SlugRedirect to="app" />} />
+            <Route path="/:slug/admin/atletas" element={
+              <BrandingProvider><RequireAuth><MeusAtletas /></RequireAuth></BrandingProvider>
+            } />
             <Route path="/:slug/admin/aparencia" element={
               <BrandingProvider><RequireAuth><AdminPanel /></RequireAuth></BrandingProvider>
             } />
