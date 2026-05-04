@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -98,20 +98,24 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const { slug } = useParams<{ slug: string }>();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
+  const isMountedRef = useRef(true);
 
   const load = async () => {
     if (!slug) {
       applyTheme(null);
-      setTenant(null);
-      setLoading(false);
+      if (isMountedRef.current) {
+        setTenant(null);
+        setLoading(false);
+      }
       return;
     }
-    setLoading(true);
+    if (isMountedRef.current) setLoading(true);
     const { data, error } = await supabase
       .from("tenants")
       .select(TENANT_PUBLIC_COLUMNS)
       .eq("slug", slug)
       .maybeSingle();
+    if (!isMountedRef.current) return;
     if (error) console.warn("[Branding] erro:", error.message);
     const t = data as Tenant | null;
     setTenant(t);
@@ -126,8 +130,11 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const clearPreview = () => applyTheme(tenant?.theme_overrides as ThemeOverrides | null, tenant?.hero_url);
 
   useEffect(() => {
+    isMountedRef.current = true;
     void load();
-    return () => applyTheme(null);
+    return () => {
+      isMountedRef.current = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
