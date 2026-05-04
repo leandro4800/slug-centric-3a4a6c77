@@ -231,7 +231,7 @@ const Comunidade = () => {
               {/* Post Header */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10 border border-white/10">
+                  <Avatar className="w-10 h-10 border border-border">
                     <AvatarImage src={post.perfil?.avatar_url || ""} />
                     <AvatarFallback className="bg-zinc-800 text-zinc-400">
                       {post.perfil?.nome_completo ? post.perfil.nome_completo.substring(0, 2).toUpperCase() : "U"}
