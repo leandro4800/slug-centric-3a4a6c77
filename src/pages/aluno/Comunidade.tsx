@@ -251,7 +251,7 @@ const Comunidade = () => {
 
               {/* Post Media */}
               {post.imagem_url && (
-                <div className="relative aspect-square w-full bg-zinc-900 flex items-center justify-center overflow-hidden">
+                <div className="relative aspect-square w-full bg-card/50 flex items-center justify-center overflow-hidden">
                   <img 
                     src={post.imagem_url} 
                     alt="" 
