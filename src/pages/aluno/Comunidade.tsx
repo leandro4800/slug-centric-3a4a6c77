@@ -352,7 +352,7 @@ const Comunidade = () => {
               <Button
                 disabled={isUploading || (!newPostText && !selectedFile)}
                 onClick={handleCreatePost}
-                className="bg-[#E50914] hover:bg-[#b20710] rounded-full px-6 flex gap-2 font-bold tracking-tight"
+                className="bg-primary hover:bg-primary/90 rounded-full px-6 flex gap-2 font-bold tracking-tight"
               >
                 {isUploading ? "ENVIANDO..." : (
                   <>
