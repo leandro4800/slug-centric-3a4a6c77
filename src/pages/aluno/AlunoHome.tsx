@@ -340,7 +340,15 @@ const AlunoHome = () => {
                       className="absolute inset-0 w-full h-full"
                     />
                   ) : isDirectVideo(v.url) ? (
-                    <video src={v.url} controls playsInline className="absolute inset-0 w-full h-full object-cover" />
+                    <video
+                      src={`${v.url}#t=0.1`}
+                      poster={v.thumbnail_url || undefined}
+                      controls
+                      muted
+                      playsInline
+                      preload="metadata"
+                      className="absolute inset-0 w-full h-full object-cover"
+                    />
                   ) : (
                     <button
                       type="button"
