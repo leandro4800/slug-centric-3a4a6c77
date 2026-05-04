@@ -73,10 +73,14 @@ export const VlogsAdmin = () => {
         .eq("tenant_id", tenant.id)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false }),
-      supabase.from("tenants_private" as any).select("vlog_webhook_secret").eq("tenant_id", tenant.id).maybeSingle(),
+      supabase.from("tenants_private" as any).select("vlog_webhook_secret, instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     setPosts((list as VlogPost[]) || []);
-    setSecret(((t as unknown) as { vlog_webhook_secret: string } | null)?.vlog_webhook_secret ?? null);
+    const tp = (t as unknown) as { vlog_webhook_secret?: string; instagram_access_token?: string; instagram_business_account_id?: string } | null;
+    setSecret(tp?.vlog_webhook_secret ?? null);
+    setIgToken(tp?.instagram_access_token ?? "");
+    setIgAccountId(tp?.instagram_business_account_id ?? "");
+    setIgConfigured(!!(tp?.instagram_access_token && tp?.instagram_business_account_id));
     setLoading(false);
   };
 
