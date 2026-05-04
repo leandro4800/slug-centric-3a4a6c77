@@ -62,6 +62,21 @@ const PRESETS: Preset[] = [
     },
   },
   {
+    id: "gold-rush",
+    name: "GOLD RUSH",
+    subtitle: "Preto & Amarelo Ouro",
+    swatches: ["#000000", "#0A0A0A", "#FFB800", "#FAFAFA"],
+    overrides: {
+      primary: "44 100% 50%",
+      primary_glow: "44 100% 65%",
+      accent: "44 100% 50%",
+      background: "0 0% 0%",
+      card: "0 0% 3%",
+      foreground: "0 0% 98%",
+      border: "0 0% 15%",
+    },
+  },
+  {
     id: "nordic-minimalist",
     name: "NORDIC MINIMALIST",
     subtitle: "Limpo & Sofisticado",
