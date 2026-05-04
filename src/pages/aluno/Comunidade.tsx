@@ -285,7 +285,7 @@ const Comunidade = () => {
       {/* FAB */}
       <Button 
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-24 right-5 w-14 h-14 rounded-full p-0 shadow-[0_0_20px_rgba(229,9,20,0.4)] bg-[#E50914] hover:bg-[#b20710] z-20"
+        className="fixed bottom-24 right-5 w-14 h-14 rounded-full p-0 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 z-20"
       >
         <Plus className="h-7 w-7" />
       </Button>
