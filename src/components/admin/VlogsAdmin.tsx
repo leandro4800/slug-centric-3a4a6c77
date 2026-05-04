@@ -47,6 +47,19 @@ export const VlogsAdmin = () => {
   const [showSecret, setShowSecret] = useState(false);
   const [secret, setSecret] = useState<string | null>(null);
 
+  // Instagram Graph API config
+  const [igToken, setIgToken] = useState("");
+  const [igAccountId, setIgAccountId] = useState("");
+  const [showIgToken, setShowIgToken] = useState(false);
+  const [igConfigured, setIgConfigured] = useState(false);
+
+  // Download + auto-publish
+  const [downloadUrl, setDownloadUrl] = useState("");
+  const [downloadedVideoUrl, setDownloadedVideoUrl] = useState<string | null>(null);
+  const [publishCaption, setPublishCaption] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
   const projectRef = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) || "";
   const webhookUrl = `https://${projectRef}.functions.supabase.co/vlog-ingest`;
 
