@@ -15,7 +15,8 @@ const buttonVariants = cva(
           "after:absolute after:inset-0 after:border after:border-[var(--btn-border)] after:pointer-events-none",
           "hover:shadow-[0_0_50px_-5px_hsl(var(--primary-glow)/0.8)]",
           "hover:after:border-white/80 transition-all duration-300",
-          "group/btn"
+          "relative overflow-hidden group/btn",
+          "after:absolute after:inset-0 after:bg-[var(--btn-shine)] after:bg-[length:200%_100%] after:bg-[position:-100%_0] hover:after:bg-[position:100%_0] after:transition-all after:duration-1000 after:ease-in-out"
         ].join(" "),
         destructive: [
           "bg-destructive text-destructive-foreground",
