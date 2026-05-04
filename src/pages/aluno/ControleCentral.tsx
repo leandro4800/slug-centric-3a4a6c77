@@ -154,7 +154,7 @@ const ControleCentral = () => {
         </Link>
 
         <Link
-          to={`/${slug}/admin?tab=vlogs`}
+          to={`/${slug}/admin/vlogs`}
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-display text-xl rounded-none shadow-glow flex items-center justify-center gap-3 h-14"
         >
           <Plus className="h-5 w-5" /> LANÇAR NOVO EPISÓDIO (VLOG)
