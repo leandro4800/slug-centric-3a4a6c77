@@ -94,32 +94,60 @@ export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl
 const TENANT_PUBLIC_COLUMNS =
   "id, slug, nome, tagline, logo_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
 
+const CACHE_KEY = (slug: string) => `branding:${slug}`;
+
+const readCache = (slug: string): { overrides: ThemeOverrides | null; hero: string | null } | null => {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY(slug));
+    return raw ? JSON.parse(raw) : null;
+  } catch { return null; }
+};
+
+const writeCache = (slug: string, overrides: ThemeOverrides | null, hero: string | null) => {
+  try { localStorage.setItem(CACHE_KEY(slug), JSON.stringify({ overrides, hero })); } catch {}
+};
+
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const { slug } = useParams<{ slug: string }>();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const isMountedRef = useRef(true);
+  
 
   const load = async () => {
     if (!slug) {
-      applyTheme(null);
+      // Sem slug (rotas públicas): NÃO limpa o tema — mantém o que já estava aplicado
+      // para evitar "piscar" entre telas/navegações.
       if (isMountedRef.current) {
         setTenant(null);
         setLoading(false);
       }
       return;
     }
-    if (isMountedRef.current) setLoading(true);
+
+    // 1) Aplica IMEDIATAMENTE o tema cacheado para evitar flash do padrão
+    const cached = readCache(slug);
+    if (cached) {
+      applyTheme(cached.overrides, cached.hero);
+    }
+
+    // 2) Busca dados atualizados em background
     const { data, error } = await supabase
       .from("tenants")
       .select(TENANT_PUBLIC_COLUMNS)
       .eq("slug", slug)
       .maybeSingle();
     if (!isMountedRef.current) return;
-    if (error) console.warn("[Branding] erro:", error.message);
+    if (error) {
+      console.warn("[Branding] erro:", error.message);
+      setLoading(false);
+      return;
+    }
     const t = data as Tenant | null;
     setTenant(t);
-    applyTheme(t?.theme_overrides as ThemeOverrides | null, t?.hero_url);
+    const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
+    applyTheme(overrides, t?.hero_url);
+    writeCache(slug, overrides, t?.hero_url ?? null);
     setLoading(false);
   };
 
