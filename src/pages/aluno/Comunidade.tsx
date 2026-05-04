@@ -344,7 +344,7 @@ const Comunidade = () => {
                   htmlFor="file-upload"
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 cursor-pointer transition-colors text-xs font-semibold"
                 >
-                  <Camera className="h-4 w-4 text-[#E50914]" />
+                  <Camera className="h-4 w-4 text-primary" />
                   ADICIONAR MÍDIA
                 </label>
               </div>
