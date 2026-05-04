@@ -6,10 +6,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
-const parceiros = [
-  { nome: "GROWTH", tag: "PIKACHU" },
-  { nome: "JOIAS MAROMBA", tag: "PIKACHU" },
-];
+import { toast } from "sonner";
+
+interface Parceiro {
+  id: string;
+  nome: string;
+  cupom: string | null;
+  url: string | null;
+  logo_url: string | null;
+}
 
 const ControleCentral = () => {
   const navigate = useNavigate();
