@@ -340,15 +340,27 @@ const AlunoHome = () => {
                       className="absolute inset-0 w-full h-full"
                     />
                   ) : isDirectVideo(v.url) ? (
-                    <video
-                      src={`${v.url}#t=0.1`}
-                      poster={v.thumbnail_url || undefined}
-                      controls
-                      muted
-                      playsInline
-                      preload="metadata"
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setPlaying(v)}
+                      className="absolute inset-0 w-full h-full"
+                      aria-label={v.title ? `Reproduzir ${v.title}` : "Reproduzir vlog"}
+                    >
+                      <video
+                        src={`${v.url}#t=0.1`}
+                        autoPlay
+                        muted
+                        loop
+                        playsInline
+                        preload="auto"
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-background/20">
+                        <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
+                          <Play className="h-5 w-5 text-primary-foreground fill-current" />
+                        </div>
+                      </div>
+                    </button>
                   ) : (
                     <button
                       type="button"
