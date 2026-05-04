@@ -5,7 +5,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Home, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight } from "lucide-react";
+import { Home, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -301,6 +301,28 @@ const MeusAtletas = () => {
 
         {!loading && (
           <div className="mt-6 space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <Link to={`/${slug}/admin/aparencia`}>
+                <Button variant="outline" className="w-full gap-2 border-primary/40">
+                  <Settings className="h-4 w-4" /> Painel completo
+                </Button>
+              </Link>
+              <Link to={`/${slug}/admin/montar-treino`}>
+                <Button variant="outline" className="w-full gap-2 border-primary/40">
+                  <Sparkles className="h-4 w-4" /> Montar treino IA
+                </Button>
+              </Link>
+              <Link to={`/${slug}/admin/planos`}>
+                <Button variant="outline" className="w-full gap-2 border-primary/40">
+                  <DollarSign className="h-4 w-4" /> Planos
+                </Button>
+              </Link>
+              <Link to={`/${slug}/admin/faturamento`}>
+                <Button variant="outline" className="w-full gap-2 border-primary/40">
+                  <Wallet className="h-4 w-4" /> Faturamento
+                </Button>
+              </Link>
+            </div>
             <Button
               variant="outline"
               className="w-full"
