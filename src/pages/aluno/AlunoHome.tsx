@@ -102,7 +102,8 @@ const AlunoHome = () => {
   const featured = vlogs[0];
   const ytId = featured ? extractYouTubeId(featured.url) : (isDirectVideo(tenant?.hero_url) || extractYouTubeId(tenant?.hero_url) ? null : extractYouTubeId(tenant?.hero_url));
   
-  // Se não houver vlog, mas houver um vídeo de hero do tenant
+  // Vídeo direto do featured (mp4 etc) ou fallback para hero do tenant
+  const featuredDirectUrl = featured && isDirectVideo(featured.url) ? featured.url : null;
   const tenantHeroVideoId = !featured ? extractYouTubeId(tenant?.hero_url) : null;
   const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
 
