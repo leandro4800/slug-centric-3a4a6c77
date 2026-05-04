@@ -52,31 +52,38 @@ export const useBranding = () => useContext(BrandingContext);
 const DEFAULTS = {
   primary: "355 100% 48%", // Ferrari Red
   primary_glow: "355 100% 60%",
-  accent: "355 100% 48%", // Ferrari Red (Matched by default)
-  background: "0 0% 0%", // Absolute Black
-  card: "0 0% 3%",
-  foreground: "0 0% 98%",
-  border: "0 0% 15%",
+  accent: "355 100% 48%",
+  background: "0 0% 0%",
 };
 
+// IMPORTANTE: Apenas tokens "seguros" são sobrescritos pelo tenant.
+// NÃO sobrescrevemos card/foreground/border para preservar o layout/UX
+// uniforme das telas (Dieta, Treino, etc.) entre todos os tenants.
 const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
   primary: ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring"],
   primary_glow: ["--primary-glow"],
   accent: ["--accent"],
   background: ["--background"],
-  card: ["--card", "--popover"],
-  foreground: ["--foreground", "--card-foreground", "--popover-foreground"],
-  border: ["--border", "--sidebar-border"],
+};
+
+const SAFE_KEYS: (keyof typeof DEFAULTS)[] = ["primary", "primary_glow", "accent", "background"];
+
+const clearTokens = (root: HTMLElement) => {
+  Object.values(TOKEN_TO_VAR).flat().forEach((v) => root.style.removeProperty(v));
 };
 
 export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl?: string | null) => {
   const root = document.documentElement;
-  const merged = { ...DEFAULTS, ...(overrides || {}) };
-  (Object.keys(merged) as (keyof typeof DEFAULTS)[]).forEach((k) => {
-    const value = merged[k];
-    if (!value) return;
-    TOKEN_TO_VAR[k].forEach((v) => root.style.setProperty(v, value));
-  });
+  // Sempre limpa antes para garantir que nada vaze entre tenants
+  clearTokens(root);
+  if (overrides) {
+    const merged = { ...DEFAULTS, ...overrides };
+    SAFE_KEYS.forEach((k) => {
+      const value = merged[k];
+      if (!value) return;
+      TOKEN_TO_VAR[k].forEach((v) => root.style.setProperty(v, value));
+    });
+  }
   if (heroUrl) root.style.setProperty("--hero-url", `url(${heroUrl})`);
   else root.style.removeProperty("--hero-url");
 };
