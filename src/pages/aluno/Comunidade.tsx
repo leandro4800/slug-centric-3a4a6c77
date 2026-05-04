@@ -194,7 +194,7 @@ const Comunidade = () => {
       </div>
 
       {/* Stories */}
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide px-5 mt-4 pb-2 border-b border-white/10">
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide px-5 mt-4 pb-2 border-b border-border">
         {stories.map((profile) => (
           <div key={profile.id} className="flex-shrink-0 flex flex-col items-center gap-1">
             <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-tr from-primary to-primary/60">
