@@ -5,7 +5,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight } from "lucide-react";
+import { Home, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -300,13 +300,21 @@ const MeusAtletas = () => {
         )}
 
         {!loading && (
-          <div className="mt-6">
+          <div className="mt-6 space-y-3">
             <Button
               variant="outline"
               className="w-full"
               onClick={() => tenant && load(tenant.id)}
             >
               Atualizar lista
+            </Button>
+            <Button
+              variant="secondary"
+              className="w-full gap-2"
+              onClick={() => navigate("/")}
+            >
+              <Home className="h-4 w-4" />
+              Voltar para tela inicial
             </Button>
           </div>
         )}
