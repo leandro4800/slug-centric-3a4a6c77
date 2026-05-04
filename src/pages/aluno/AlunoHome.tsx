@@ -311,34 +311,55 @@ const AlunoHome = () => {
         {vlogs.length === 0 ? (
           <p className="text-xs text-muted-foreground">Nenhum vlog publicado ainda.</p>
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {vlogs.map((v) => (
-              <button
-                key={v.id}
-                type="button"
-                onClick={() => setPlaying(v)}
-                className="aspect-video rounded-xl bg-gradient-card border border-border relative overflow-hidden cursor-pointer group text-left"
-              >
-                <img
-                  src={v.thumbnail_url || tenant?.hero_url || heroDefault}
-                  alt={v.title || ""}
-                  loading="lazy"
-                  className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/10 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
-                    <Play className="h-5 w-5 text-primary-foreground fill-current" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {vlogs.map((v) => {
+              const embed = buildEmbed(v);
+              const isReel = v.url.includes("instagram.com") || v.url.includes("tiktok.com");
+              return (
+                <div
+                  key={v.id}
+                  className={`rounded-xl bg-black border border-border relative overflow-hidden ${isReel ? "aspect-[9/16] max-h-[560px] mx-auto w-full" : "aspect-video"}`}
+                >
+                  {embed ? (
+                    <iframe
+                      src={embed}
+                      title={v.title || "Vlog"}
+                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                      allowFullScreen
+                      scrolling="no"
+                      className="absolute inset-0 w-full h-full"
+                    />
+                  ) : isDirectVideo(v.url) ? (
+                    <video src={v.url} controls playsInline className="absolute inset-0 w-full h-full object-cover" />
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setPlaying(v)}
+                      className="absolute inset-0 w-full h-full"
+                    >
+                      <img
+                        src={v.thumbnail_url || tenant?.hero_url || heroDefault}
+                        alt={v.title || ""}
+                        className="absolute inset-0 w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                        <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
+                          <Play className="h-5 w-5 text-primary-foreground fill-current" />
+                        </div>
+                      </div>
+                    </button>
+                  )}
+                  <div className="absolute top-2 right-2 bg-background/70 backdrop-blur rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wider z-10">
+                    {v.platform}
                   </div>
+                  {v.title && (
+                    <p className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-xs font-semibold line-clamp-2 bg-gradient-to-t from-black via-black/70 to-transparent">
+                      {v.title}
+                    </p>
+                  )}
                 </div>
-                {v.title && (
-                  <p className="absolute bottom-2 left-2 right-2 text-xs font-semibold line-clamp-2">{v.title}</p>
-                )}
-                <div className="absolute top-2 right-2 bg-background/70 backdrop-blur rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wider">
-                  {v.platform}
-                </div>
-              </button>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>
