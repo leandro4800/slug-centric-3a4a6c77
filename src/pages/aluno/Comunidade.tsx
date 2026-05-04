@@ -218,7 +218,7 @@ const Comunidade = () => {
       <div className="mt-6 flex flex-col gap-8">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 opacity-50">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E50914]"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <p className="mt-4 text-sm uppercase tracking-widest">Carregando Feed...</p>
           </div>
         ) : posts.length === 0 ? (
