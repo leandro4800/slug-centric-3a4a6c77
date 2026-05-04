@@ -10,10 +10,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-primary text-primary-foreground",
+          "bg-gradient-primary text-primary-foreground",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)] before:pointer-events-none",
           "after:absolute after:inset-0 after:border after:border-[var(--btn-border)] after:pointer-events-none",
-          "hover:bg-primary hover:shadow-[0_0_50px_-5px_hsl(var(--primary-glow)/0.8)]",
+          "hover:shadow-[0_0_50px_-5px_hsl(var(--primary-glow)/0.8)]",
           "hover:after:border-white/80 transition-all duration-300",
           "group/btn"
         ].join(" "),
