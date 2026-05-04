@@ -32,6 +32,21 @@ const PRESETS: Preset[] = [
     },
   },
   {
+    id: "gold-mirror",
+    name: "GOLD MIRROR",
+    subtitle: "Premium · Dourado Espelhado",
+    swatches: ["#000000", "#1A1A1A", "#FFD700", "#FFFACD"],
+    overrides: {
+      primary: "44 85% 50%",
+      primary_glow: "48 100% 85%",
+      accent: "44 85% 50%",
+      background: "0 0% 0%",
+      card: "0 0% 3%",
+      foreground: "0 0% 98%",
+      border: "0 0% 15%",
+    },
+  },
+  {
     id: "tech-titanium",
     name: "TECH TITANIUM",
     subtitle: "Performance · Azul Elétrico",
@@ -59,21 +74,6 @@ const PRESETS: Preset[] = [
       card: "217 33% 17%",
       foreground: "60 100% 97%",
       border: "217 33% 25%",
-    },
-  },
-  {
-    id: "gold-mirror",
-    name: "GOLD MIRROR",
-    subtitle: "Dourado Espelhado & Preto",
-    swatches: ["#000000", "#1A1A1A", "#FFD700", "#FFFFFF"],
-    overrides: {
-      primary: "42 100% 50%",
-      primary_glow: "48 100% 80%",
-      accent: "42 100% 50%",
-      background: "0 0% 0%",
-      card: "0 0% 3%",
-      foreground: "0 0% 98%",
-      border: "0 0% 15%",
     },
   },
   {
