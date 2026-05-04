@@ -197,8 +197,8 @@ const Comunidade = () => {
       <div className="flex gap-4 overflow-x-auto scrollbar-hide px-5 mt-4 pb-2 border-b border-white/10">
         {stories.map((profile) => (
           <div key={profile.id} className="flex-shrink-0 flex flex-col items-center gap-1">
-            <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-tr from-[#E50914] to-[#ff4d4d]">
-              <div className="w-full h-full rounded-full bg-black p-[2px]">
+            <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-tr from-primary to-primary/60">
+              <div className="w-full h-full rounded-full bg-background p-[2px]">
                 <Avatar className="w-full h-full">
                   <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
                   <AvatarFallback className="bg-zinc-800 text-zinc-400">
