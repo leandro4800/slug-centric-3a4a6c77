@@ -1843,6 +1843,9 @@ export type Database = {
       tenants_private: {
         Row: {
           created_at: string
+          instagram_access_token: string | null
+          instagram_business_account_id: string | null
+          instagram_token_expires_at: string | null
           stripe_account_id: string | null
           stripe_onboarding_completed: boolean | null
           tenant_id: string
@@ -1851,6 +1854,9 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          instagram_access_token?: string | null
+          instagram_business_account_id?: string | null
+          instagram_token_expires_at?: string | null
           stripe_account_id?: string | null
           stripe_onboarding_completed?: boolean | null
           tenant_id: string
@@ -1859,6 +1865,9 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          instagram_access_token?: string | null
+          instagram_business_account_id?: string | null
+          instagram_token_expires_at?: string | null
           stripe_account_id?: string | null
           stripe_onboarding_completed?: boolean | null
           tenant_id?: string
