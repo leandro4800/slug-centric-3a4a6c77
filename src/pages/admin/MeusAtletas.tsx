@@ -109,13 +109,23 @@ const MeusAtletas = () => {
       return;
     }
 
-    const { data, error } = await supabase
-      .from("perfis")
-      .select("id, nome_completo, email, avatar_url")
-      .eq("tenant_id", tenantId)
-      .order("nome_completo", { ascending: true });
+    const [{ data, error }, { data: tenantRow }, { data: coachRoles }] = await Promise.all([
+      supabase
+        .from("perfis")
+        .select("id, nome_completo, email, avatar_url")
+        .eq("tenant_id", tenantId)
+        .order("nome_completo", { ascending: true }),
+      supabase.from("tenants").select("owner_user_id").eq("id", tenantId).maybeSingle(),
+      supabase.from("user_roles").select("user_id").eq("tenant_id", tenantId).eq("role", "coach"),
+    ]);
 
-    const atletasBanco = ((data as Aluno[]) || []).filter((a) => !DEMO_ATHLETE_EMAILS.has(a.email || ""));
+    const excluidos = new Set<string>();
+    if (tenantRow?.owner_user_id) excluidos.add(tenantRow.owner_user_id);
+    (coachRoles || []).forEach((r: any) => r.user_id && excluidos.add(r.user_id));
+
+    const atletasBanco = ((data as Aluno[]) || [])
+      .filter((a) => !DEMO_ATHLETE_EMAILS.has(a.email || ""))
+      .filter((a) => !excluidos.has(a.id));
     const atletas = slug === "demo" ? [...DEMO_ATHLETES, ...atletasBanco] : atletasBanco;
 
     if (error && slug !== "demo") console.error("[MeusAtletas] Error loading profiles:", error);
