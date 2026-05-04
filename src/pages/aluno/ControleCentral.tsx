@@ -223,37 +223,6 @@ const ControleCentral = () => {
             ))}
           </div>
         </div>
-
-        <div className="bg-card/40 border border-white/10 rounded-none p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Star className="h-5 w-5 text-primary fill-primary" />
-              <p className="font-display text-base text-white">PARCEIROS ELITE</p>
-            </div>
-            <button className="w-9 h-9 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center hover:bg-primary/30 transition-all">
-              <Plus className="h-4 w-4 text-primary" />
-            </button>
-          </div>
-          <div className="space-y-3">
-            {parceiros.map((p) => (
-              <div key={p.nome} className="flex items-center gap-3 bg-black/50 border border-white/5 rounded-none p-3">
-                <div className="w-12 h-12 rounded-none bg-secondary flex items-center justify-center text-[10px] font-bold border border-white/10 uppercase">
-                  {p.nome.split(" ")[0]}
-                </div>
-                <div className="flex-1">
-                  <p className="font-bold text-sm text-white">{p.nome}</p>
-                  <p className="text-[10px] text-primary uppercase font-bold tracking-widest">{p.tag}</p>
-                </div>
-                <button className="w-9 h-9 flex items-center justify-center text-primary/60 hover:text-primary transition-all">
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button className="w-9 h-9 flex items-center justify-center text-red-500/60 hover:text-red-500 transition-all">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   );
