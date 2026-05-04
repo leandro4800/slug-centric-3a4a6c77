@@ -1242,6 +1242,53 @@ export type Database = {
         }
         Relationships: []
       }
+      parceiros: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          cupom: string | null
+          id: string
+          logo_url: string | null
+          nome: string
+          ordem: number
+          tenant_id: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          cupom?: string | null
+          id?: string
+          logo_url?: string | null
+          nome: string
+          ordem?: number
+          tenant_id: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          cupom?: string | null
+          id?: string
+          logo_url?: string | null
+          nome?: string
+          ordem?: number
+          tenant_id?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parceiros_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       perfis: {
         Row: {
           avatar_url: string | null
