@@ -313,12 +313,11 @@ const AlunoHome = () => {
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {vlogs.map((v) => (
-              <a
+              <button
                 key={v.id}
-                href={v.url}
-                target="_blank"
-                rel="noreferrer"
-                className="aspect-video rounded-xl bg-gradient-card border border-border relative overflow-hidden cursor-pointer group"
+                type="button"
+                onClick={() => setPlaying(v)}
+                className="aspect-video rounded-xl bg-gradient-card border border-border relative overflow-hidden cursor-pointer group text-left"
               >
                 <img
                   src={v.thumbnail_url || tenant?.hero_url || heroDefault}
@@ -338,12 +337,56 @@ const AlunoHome = () => {
                 <div className="absolute top-2 right-2 bg-background/70 backdrop-blur rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wider">
                   {v.platform}
                 </div>
-              </a>
+              </button>
             ))}
           </div>
         )}
       </section>
 
+      {/* In-app player modal */}
+      {playing && (
+        <div
+          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
+          onClick={() => setPlaying(null)}
+        >
+          <button
+            onClick={() => setPlaying(null)}
+            className="absolute top-4 right-4 px-4 h-9 rounded-full bg-background/80 border border-border text-xs font-semibold backdrop-blur z-10"
+          >
+            Fechar
+          </button>
+          <div
+            className="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {(() => {
+              const embed = buildEmbed(playing);
+              if (embed) {
+                return (
+                  <iframe
+                    src={embed}
+                    title={playing.title || "Vlog"}
+                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allowFullScreen
+                    className="w-full h-full"
+                  />
+                );
+              }
+              if (isDirectVideo(playing.url)) {
+                return <video src={playing.url} controls autoPlay className="w-full h-full" />;
+              }
+              return (
+                <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
+                  <p className="text-sm text-muted-foreground">Não foi possível embutir esse vídeo.</p>
+                  <a href={playing.url} target="_blank" rel="noreferrer" className="text-primary underline text-sm">
+                    Abrir em nova aba
+                  </a>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
     </>
   );
 };
