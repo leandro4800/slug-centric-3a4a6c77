@@ -154,7 +154,7 @@ const AlunoHome = () => {
     <>
       {/* Hero */}
       <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden bg-background">
-        {ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl ? (
+        {ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl ? (
           <>
             {ytAutoSrc || tenantHeroVideoId ? (
               <iframe
@@ -168,11 +168,12 @@ const AlunoHome = () => {
               />
             ) : (
               <video
-                src={tenantHeroDirectUrl!}
+                src={(featuredDirectUrl || tenantHeroDirectUrl)!}
                 autoPlay
                 muted
                 loop
                 playsInline
+                preload="auto"
                 className="absolute inset-0 w-full h-full object-cover"
               />
             )}
