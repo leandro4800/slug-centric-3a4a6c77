@@ -324,7 +324,7 @@ const Comunidade = () => {
                     setSelectedFile(null);
                     setPreviewUrl(null);
                   }}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md p-0 hover:bg-black/80"
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/60 backdrop-blur-md p-0 hover:bg-background/80"
                 >
                   <X className="h-4 w-4" />
                 </Button>
