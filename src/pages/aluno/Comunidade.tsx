@@ -276,7 +276,7 @@ const Comunidade = () => {
                   {post.conteudo}
                 </p>
               </div>
-              <div className="h-[1px] bg-white/5 mx-4 mt-2"></div>
+              <div className="h-[1px] bg-border/40 mx-4 mt-2"></div>
             </div>
           ))
         )}
