@@ -31,6 +31,8 @@ interface Aluno { id: string; nome_completo: string | null; email: string | null
 const AdminPanel = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabValue = searchParams.get("tab") || "elenco";
   const { user, signOut } = useAuth();
   const { tenant, refresh } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
