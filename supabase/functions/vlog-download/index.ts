@@ -11,11 +11,11 @@ const corsHeaders = {
 const json = (s: number, b: unknown) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-// Lista de instâncias públicas do cobalt (fallback automático)
+// Instâncias públicas do cobalt v10 (POST raiz, JSON). Fallback automático.
 const COBALT_INSTANCES = [
-  "https://api.cobalt.tools/api/json",
-  "https://co.wuk.sh/api/json",
-  "https://capi.oak.li/api/json",
+  "https://dwnld.nichind.dev/",
+  "https://co.eepy.today/",
+  "https://cobalt-api.kwiatekmiki.com/",
 ];
 
 async function fetchVideoUrl(sourceUrl: string): Promise<string | null> {
@@ -24,12 +24,23 @@ async function fetchVideoUrl(sourceUrl: string): Promise<string | null> {
       const r = await fetch(api, {
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
-        body: JSON.stringify({ url: sourceUrl, vQuality: "720", filenamePattern: "basic", isAudioOnly: false }),
+        body: JSON.stringify({
+          url: sourceUrl,
+          videoQuality: "720",
+          filenameStyle: "basic",
+          downloadMode: "auto",
+        }),
       });
       if (!r.ok) continue;
       const data = await r.json();
+      if (data?.status === "redirect" || data?.status === "tunnel") {
+        if (data.url) return data.url as string;
+      }
+      if (data?.status === "picker" && Array.isArray(data.picker)) {
+        const v = data.picker.find((p: any) => p.type === "video") || data.picker[0];
+        if (v?.url) return v.url as string;
+      }
       if (data?.url) return data.url as string;
-      if (data?.picker?.[0]?.url) return data.picker[0].url as string;
     } catch {
       continue;
     }
