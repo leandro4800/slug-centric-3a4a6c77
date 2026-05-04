@@ -188,7 +188,7 @@ const Comunidade = () => {
           </Button>
           <h1 className="font-display text-2xl mt-1 tracking-tight">COMUNIDADE</h1>
         </div>
-        <div className="w-10 h-10 rounded-full border-2 border-[#E50914] p-0.5 overflow-hidden">
+        <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden">
           <img src={tenant?.logo_url || ""} alt="" className="w-full h-full rounded-full object-cover" />
         </div>
       </div>
