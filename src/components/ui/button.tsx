@@ -10,11 +10,11 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: [
-          "bg-primary text-primary-foreground",
-          "before:absolute before:inset-0 before:bg-[var(--btn-mirror)] before:pointer-events-none",
-          "after:absolute after:inset-0 after:border after:border-[var(--btn-border)] after:pointer-events-none",
-          "hover:bg-primary hover:shadow-[0_0_50px_-5px_hsl(var(--primary-glow)/0.8)]",
-          "hover:after:border-white/80 transition-all duration-300",
+          "bg-gradient-primary text-primary-foreground",
+          "before:absolute before:inset-0 before:bg-[var(--btn-mirror)] before:pointer-events-none before:z-10",
+          "after:absolute after:inset-0 after:bg-[var(--btn-shine)] after:bg-[length:200%_100%] after:bg-[position:-100%_0] hover:after:bg-[position:100%_0] after:transition-all after:duration-1000 after:ease-in-out after:pointer-events-none after:z-20",
+          "hover:shadow-[0_0_50px_-5px_hsl(var(--primary-glow)/0.8)]",
+          "border border-white/20 hover:border-white/60 transition-all duration-300",
           "group/btn"
         ].join(" "),
         destructive: [
