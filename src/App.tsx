@@ -134,6 +134,9 @@ const App = () => (
             <Route path="/:slug/admin/base-conhecimento" element={
               <BrandingProvider><RequireAuth><AdminBaseConhecimento /></RequireAuth></BrandingProvider>
             } />
+            <Route path="/:slug/admin/vlogs" element={
+              <BrandingProvider><RequireAuth><AdminVlogs /></RequireAuth></BrandingProvider>
+            } />
 
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
