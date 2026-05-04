@@ -272,7 +272,7 @@ const Comunidade = () => {
               {/* Post Content */}
               <div className="px-4 pb-4">
                 <p className="text-sm leading-relaxed text-zinc-200">
-                  <span className="font-bold mr-2 text-white">{post.perfil?.nome_completo}</span>
+                  <span className="font-bold mr-2 text-foreground">{post.perfil?.nome_completo}</span>
                   {post.conteudo}
                 </p>
               </div>
