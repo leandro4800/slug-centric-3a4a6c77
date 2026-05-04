@@ -175,30 +175,30 @@ const Comunidade = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pb-24">
+    <div className="min-h-screen bg-background text-foreground pb-24">
       {/* Header */}
-      <div className="px-5 pt-6 flex items-center justify-between sticky top-0 bg-black/80 backdrop-blur-md z-10 pb-4">
+      <div className="px-5 pt-6 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 pb-4">
         <div className="flex flex-col">
           <Button
             variant="ghost"
             onClick={() => navigate(`/${slug}/app`)}
-            className="text-white p-0 h-auto w-fit hover:bg-transparent -ml-2"
+            className="text-foreground p-0 h-auto w-fit hover:bg-transparent -ml-2"
           >
             <ArrowLeft className="h-5 w-5 mr-1" /> Voltar
           </Button>
           <h1 className="font-display text-2xl mt-1 tracking-tight">COMUNIDADE</h1>
         </div>
-        <div className="w-10 h-10 rounded-full border-2 border-[#E50914] p-0.5 overflow-hidden">
+        <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden">
           <img src={tenant?.logo_url || ""} alt="" className="w-full h-full rounded-full object-cover" />
         </div>
       </div>
 
       {/* Stories */}
-      <div className="flex gap-4 overflow-x-auto scrollbar-hide px-5 mt-4 pb-2 border-b border-white/10">
+      <div className="flex gap-4 overflow-x-auto scrollbar-hide px-5 mt-4 pb-2 border-b border-border">
         {stories.map((profile) => (
           <div key={profile.id} className="flex-shrink-0 flex flex-col items-center gap-1">
-            <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-tr from-[#E50914] to-[#ff4d4d]">
-              <div className="w-full h-full rounded-full bg-black p-[2px]">
+            <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-tr from-primary to-primary/60">
+              <div className="w-full h-full rounded-full bg-background p-[2px]">
                 <Avatar className="w-full h-full">
                   <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
                   <AvatarFallback className="bg-zinc-800 text-zinc-400">
@@ -218,7 +218,7 @@ const Comunidade = () => {
       <div className="mt-6 flex flex-col gap-8">
         {loading ? (
           <div className="flex flex-col items-center justify-center py-20 opacity-50">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#E50914]"></div>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             <p className="mt-4 text-sm uppercase tracking-widest">Carregando Feed...</p>
           </div>
         ) : posts.length === 0 ? (
@@ -227,11 +227,11 @@ const Comunidade = () => {
           </div>
         ) : (
           posts.map((post) => (
-            <div key={post.id} className="flex flex-col bg-zinc-950/50">
+            <div key={post.id} className="flex flex-col bg-card/30">
               {/* Post Header */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
-                  <Avatar className="w-10 h-10 border border-white/10">
+                  <Avatar className="w-10 h-10 border border-border">
                     <AvatarImage src={post.perfil?.avatar_url || ""} />
                     <AvatarFallback className="bg-zinc-800 text-zinc-400">
                       {post.perfil?.nome_completo ? post.perfil.nome_completo.substring(0, 2).toUpperCase() : "U"}
@@ -251,7 +251,7 @@ const Comunidade = () => {
 
               {/* Post Media */}
               {post.imagem_url && (
-                <div className="relative aspect-square w-full bg-zinc-900 flex items-center justify-center overflow-hidden">
+                <div className="relative aspect-square w-full bg-card/50 flex items-center justify-center overflow-hidden">
                   <img 
                     src={post.imagem_url} 
                     alt="" 
@@ -263,20 +263,20 @@ const Comunidade = () => {
               {/* Post Actions */}
               <div className="px-4 pt-4 pb-2">
                 <div className="flex items-center gap-5">
-                  <Heart className="h-6 w-6 cursor-pointer hover:text-[#E50914] transition-colors" />
-                  <MessageCircle className="h-6 w-6 cursor-pointer hover:text-white transition-colors text-zinc-300" />
-                  <Share2 className="h-6 w-6 cursor-pointer hover:text-white transition-colors text-zinc-300" />
+                  <Heart className="h-6 w-6 cursor-pointer hover:text-primary transition-colors" />
+                  <MessageCircle className="h-6 w-6 cursor-pointer hover:text-foreground transition-colors text-zinc-300" />
+                  <Share2 className="h-6 w-6 cursor-pointer hover:text-foreground transition-colors text-zinc-300" />
                 </div>
               </div>
 
               {/* Post Content */}
               <div className="px-4 pb-4">
                 <p className="text-sm leading-relaxed text-zinc-200">
-                  <span className="font-bold mr-2 text-white">{post.perfil?.nome_completo}</span>
+                  <span className="font-bold mr-2 text-foreground">{post.perfil?.nome_completo}</span>
                   {post.conteudo}
                 </p>
               </div>
-              <div className="h-[1px] bg-white/5 mx-4 mt-2"></div>
+              <div className="h-[1px] bg-border/40 mx-4 mt-2"></div>
             </div>
           ))
         )}
@@ -285,16 +285,16 @@ const Comunidade = () => {
       {/* FAB */}
       <Button 
         onClick={() => setIsModalOpen(true)}
-        className="fixed bottom-24 right-5 w-14 h-14 rounded-full p-0 shadow-[0_0_20px_rgba(229,9,20,0.4)] bg-[#E50914] hover:bg-[#b20710] z-20"
+        className="fixed bottom-24 right-5 w-14 h-14 rounded-full p-0 shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 z-20"
       >
         <Plus className="h-7 w-7" />
       </Button>
 
       {/* New Post Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="bg-black/90 backdrop-blur-xl border-white/10 text-white max-w-md w-[95%] rounded-3xl p-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b border-white/10 flex flex-row items-center justify-between">
-            <DialogTitle className="text-lg font-display uppercase tracking-widest text-[#E50914]">Nova Publicação</DialogTitle>
+        <DialogContent className="bg-background/90 backdrop-blur-xl border-border text-foreground max-w-md w-[95%] rounded-3xl p-0 overflow-hidden">
+          <DialogHeader className="p-4 border-b border-border flex flex-row items-center justify-between">
+            <DialogTitle className="text-lg font-display uppercase tracking-widest text-primary">Nova Publicação</DialogTitle>
             <Button variant="ghost" size="icon" onClick={() => setIsModalOpen(false)} className="text-zinc-400">
               <X className="h-5 w-5" />
             </Button>
@@ -317,14 +317,14 @@ const Comunidade = () => {
             </div>
 
             {previewUrl && (
-              <div className="relative rounded-2xl overflow-hidden aspect-video bg-zinc-900 border border-white/10">
+              <div className="relative rounded-2xl overflow-hidden aspect-video bg-card/50 border border-border">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 <Button 
                   onClick={() => {
                     setSelectedFile(null);
                     setPreviewUrl(null);
                   }}
-                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md p-0 hover:bg-black/80"
+                  className="absolute top-2 right-2 w-8 h-8 rounded-full bg-background/60 backdrop-blur-md p-0 hover:bg-background/80"
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -344,7 +344,7 @@ const Comunidade = () => {
                   htmlFor="file-upload"
                   className="flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-900 hover:bg-zinc-800 cursor-pointer transition-colors text-xs font-semibold"
                 >
-                  <Camera className="h-4 w-4 text-[#E50914]" />
+                  <Camera className="h-4 w-4 text-primary" />
                   ADICIONAR MÍDIA
                 </label>
               </div>
@@ -352,7 +352,7 @@ const Comunidade = () => {
               <Button
                 disabled={isUploading || (!newPostText && !selectedFile)}
                 onClick={handleCreatePost}
-                className="bg-[#E50914] hover:bg-[#b20710] rounded-full px-6 flex gap-2 font-bold tracking-tight"
+                className="bg-primary hover:bg-primary/90 rounded-full px-6 flex gap-2 font-bold tracking-tight"
               >
                 {isUploading ? "ENVIANDO..." : (
                   <>
