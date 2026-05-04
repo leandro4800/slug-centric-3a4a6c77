@@ -229,7 +229,48 @@ export const VlogsAdmin = () => {
     void load();
   };
 
-  const exemploCurl = `curl -X POST '${webhookUrl}' \\
+  const handleShare = async () => {
+    if (!downloadedVideoUrl) return;
+    try {
+      // Tenta share nativo com arquivo (mobile)
+      const res = await fetch(downloadedVideoUrl);
+      const blob = await res.blob();
+      const file = new File([blob], "reel.mp4", { type: blob.type || "video/mp4" });
+      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
+      if (nav.canShare?.({ files: [file] })) {
+        await navigator.share({ files: [file], title: "Vlog", text: publishCaption });
+        return;
+      }
+      // Fallback: compartilha link
+      if (navigator.share) {
+        await navigator.share({ title: "Vlog", text: publishCaption, url: downloadedVideoUrl });
+        return;
+      }
+      copy(downloadedVideoUrl, "Link do vídeo");
+    } catch (e: any) {
+      if (e?.name !== "AbortError") toast.error("Compartilhamento não suportado neste navegador");
+    }
+  };
+
+  const handleSaveAsVlog = async () => {
+    if (!tenant || !downloadedVideoUrl) return;
+    const { error } = await supabase.from("vlog_posts").upsert(
+      {
+        tenant_id: tenant.id,
+        url: downloadedVideoUrl,
+        platform: detectPlatform(downloadUrl),
+        title: publishCaption.trim().slice(0, 120) || "Vlog importado",
+        thumbnail_url: null,
+        source: "import",
+        posted_at: new Date().toISOString(),
+        visivel: true,
+      },
+      { onConflict: "tenant_id,url" }
+    );
+    if (error) return toast.error(error.message);
+    toast.success("Vídeo adicionado aos seus Vlogs!");
+    void load();
+  };
   -H 'Content-Type: application/json' \\
   -d '{
     "secret": "${secret || "SEU_SEGREDO"}",
