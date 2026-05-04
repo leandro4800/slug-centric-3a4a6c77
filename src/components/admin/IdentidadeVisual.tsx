@@ -32,7 +32,7 @@ const PRESETS: Preset[] = [
     },
   },
   {
-    id: "gold-mirror",
+    id: "gold-rush",
     name: "GOLD MIRROR",
     subtitle: "Premium · Dourado Espelhado",
     swatches: ["#000000", "#1A1A1A", "#FFD700", "#FFFACD"],
