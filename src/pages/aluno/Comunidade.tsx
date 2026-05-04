@@ -317,7 +317,7 @@ const Comunidade = () => {
             </div>
 
             {previewUrl && (
-              <div className="relative rounded-2xl overflow-hidden aspect-video bg-zinc-900 border border-border">
+              <div className="relative rounded-2xl overflow-hidden aspect-video bg-card/50 border border-border">
                 <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
                 <Button 
                   onClick={() => {
