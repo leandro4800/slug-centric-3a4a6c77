@@ -72,6 +72,7 @@ const AlunoHome = () => {
   const [isAdmin, setIsAdmin] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [muted, setMuted] = useState(true);
+  const [playing, setPlaying] = useState<VlogPost | null>(null);
 
   useEffect(() => {
     const checkRole = async () => {
