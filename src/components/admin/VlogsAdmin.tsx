@@ -182,6 +182,53 @@ export const VlogsAdmin = () => {
     toast.success(`${label} copiado`);
   };
 
+  const saveIgConfig = async () => {
+    if (!tenant) return;
+    const { error } = await supabase
+      .from("tenants_private" as any)
+      .upsert({
+        tenant_id: tenant.id,
+        instagram_access_token: igToken.trim() || null,
+        instagram_business_account_id: igAccountId.trim() || null,
+      });
+    if (error) return toast.error(error.message);
+    toast.success("Credenciais do Instagram salvas");
+    void load();
+  };
+
+  const handleDownload = async () => {
+    if (!tenant || !downloadUrl.trim()) return;
+    setDownloading(true);
+    setDownloadedVideoUrl(null);
+    const { data, error } = await supabase.functions.invoke("vlog-download", {
+      body: { url: downloadUrl.trim(), tenant_id: tenant.id },
+    });
+    setDownloading(false);
+    if (error || !data?.video_url) {
+      return toast.error(error?.message || data?.error || "Falha ao baixar");
+    }
+    setDownloadedVideoUrl(data.video_url);
+    toast.success("Vídeo baixado! Pronto pra publicar ou baixar manualmente.");
+  };
+
+  const handlePublishIG = async () => {
+    if (!tenant || !downloadedVideoUrl) return;
+    if (!igConfigured) return toast.error("Configure o Instagram Access Token primeiro");
+    setPublishing(true);
+    const { data, error } = await supabase.functions.invoke("instagram-publish", {
+      body: { tenant_id: tenant.id, video_url: downloadedVideoUrl, caption: publishCaption, media_type: "REELS" },
+    });
+    setPublishing(false);
+    if (error || !data?.ok) {
+      return toast.error(error?.message || data?.error || "Falha ao publicar");
+    }
+    toast.success("Reel publicado no Instagram!");
+    setDownloadUrl("");
+    setDownloadedVideoUrl(null);
+    setPublishCaption("");
+    void load();
+  };
+
   const exemploCurl = `curl -X POST '${webhookUrl}' \\
   -H 'Content-Type: application/json' \\
   -d '{
