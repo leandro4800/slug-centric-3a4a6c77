@@ -43,6 +43,11 @@ import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
 
+const SlugRedirect = ({ to }: { to: string }) => {
+  const { slug } = useParams();
+  return <Navigate to={`/${slug}/${to}`} replace />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
