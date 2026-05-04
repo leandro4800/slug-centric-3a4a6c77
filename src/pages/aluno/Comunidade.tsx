@@ -182,7 +182,7 @@ const Comunidade = () => {
           <Button
             variant="ghost"
             onClick={() => navigate(`/${slug}/app`)}
-            className="text-white p-0 h-auto w-fit hover:bg-transparent -ml-2"
+            className="text-foreground p-0 h-auto w-fit hover:bg-transparent -ml-2"
           >
             <ArrowLeft className="h-5 w-5 mr-1" /> Voltar
           </Button>
