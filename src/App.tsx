@@ -30,6 +30,7 @@ import ControleCentral from "./pages/aluno/ControleCentral";
 import DrIA from "./pages/aluno/DrIA";
 import Anamnese from "./pages/aluno/Anamnese";
 import AdminPanel from "./pages/admin/AdminPanel";
+import AdminVlogs from "./pages/admin/AdminVlogs";
 import AdminMontarTreino from "./pages/admin/AdminMontarTreino";
 import AdminMontarDieta from "./pages/admin/AdminMontarDieta";
 import MeusAtletas from "./pages/admin/MeusAtletas";
