@@ -210,6 +210,79 @@ export const VlogsAdmin = () => {
         </p>
       </div>
 
+      {/* Tutorial Zapier/Make */}
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-2 text-primary">TUTORIAL · CONECTAR YOUTUBE / INSTAGRAM</h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Use o Zapier (mais fácil) ou Make. Cada novo vídeo postado vai aparecer aqui automaticamente.
+        </p>
+
+        <details className="border border-white/10 rounded-xl p-4 mb-3 bg-background/40" open>
+          <summary className="cursor-pointer font-display text-lg flex items-center gap-2">
+            <Youtube className="h-5 w-5 text-[hsl(0_85%_55%)]" /> YouTube via Zapier (recomendado)
+          </summary>
+          <ol className="mt-4 space-y-3 text-sm list-decimal list-inside">
+            <li>No <a href="https://zapier.com/app/zaps" target="_blank" rel="noreferrer" className="text-primary underline">Zapier</a>, clique em <b>Create Zap</b>.</li>
+            <li><b>Trigger:</b> escolha <code className="bg-muted px-1 rounded">YouTube</code> → evento <code className="bg-muted px-1 rounded">New Video in Channel</code> e conecte sua conta Google.</li>
+            <li><b>Action:</b> escolha <code className="bg-muted px-1 rounded">Webhooks by Zapier</code> → <code className="bg-muted px-1 rounded">POST</code>.</li>
+            <li>Configure o POST com:
+              <ul className="list-disc list-inside ml-4 mt-2 space-y-1 text-xs">
+                <li><b>URL:</b> cole a URL do webhook acima</li>
+                <li><b>Payload Type:</b> <code>json</code></li>
+                <li><b>Data</b> (mapeie do trigger YouTube):
+                  <pre className="bg-background/60 p-2 rounded mt-1 overflow-x-auto">{`secret        → ${secret ? secret.slice(0, 8) + "..." : "SEU_SEGREDO"}
+url           → Video URL  (ou: https://youtube.com/watch?v={{Video Id}})
+platform      → youtube
+title         → Title
+thumbnail_url → Thumbnail Default Url  (ou High/Maxres)
+author        → Channel Title
+description   → Description
+posted_at     → Published At
+external_id   → Video Id`}</pre>
+                </li>
+              </ul>
+            </li>
+            <li>Clique <b>Test step</b> e depois <b>Publish Zap</b>. Pronto — todo vídeo novo entra aqui em até 15 minutos.</li>
+          </ol>
+        </details>
+
+        <details className="border border-white/10 rounded-xl p-4 mb-3 bg-background/40">
+          <summary className="cursor-pointer font-display text-lg flex items-center gap-2">
+            <Instagram className="h-5 w-5 text-[hsl(330_85%_60%)]" /> Instagram via Zapier
+          </summary>
+          <ol className="mt-4 space-y-3 text-sm list-decimal list-inside">
+            <li>É necessário ter conta <b>Instagram Business ou Creator</b> conectada a uma <b>Página do Facebook</b>.</li>
+            <li>No Zapier, <b>Create Zap</b>.</li>
+            <li><b>Trigger:</b> <code className="bg-muted px-1 rounded">Instagram for Business</code> → <code className="bg-muted px-1 rounded">New Media Posted</code> e conecte sua conta.</li>
+            <li><b>Action:</b> <code className="bg-muted px-1 rounded">Webhooks by Zapier</code> → <code className="bg-muted px-1 rounded">POST</code> com:
+              <pre className="bg-background/60 p-2 rounded mt-2 text-xs overflow-x-auto">{`URL: ${webhookUrl}
+Payload Type: json
+Data:
+  secret        → ${secret ? secret.slice(0, 8) + "..." : "SEU_SEGREDO"}
+  url           → Permalink
+  platform      → instagram
+  title         → Caption  (use Formatter para cortar em 80 chars se quiser)
+  thumbnail_url → Thumbnail Url  (ou Media Url p/ imagens)
+  author        → Username
+  posted_at     → Timestamp
+  external_id   → Id`}</pre>
+            </li>
+            <li><b>Test</b> e <b>Publish</b>.</li>
+          </ol>
+        </details>
+
+        <details className="border border-white/10 rounded-xl p-4 bg-background/40">
+          <summary className="cursor-pointer font-display text-lg flex items-center gap-2">
+            <LinkIcon className="h-5 w-5" /> Make (Integromat) — alternativa
+          </summary>
+          <ol className="mt-4 space-y-2 text-sm list-decimal list-inside">
+            <li>Crie um cenário com módulo <b>YouTube → Watch Videos</b> (ou <b>Instagram for Business → Watch Media</b>).</li>
+            <li>Adicione módulo <b>HTTP → Make a request</b>: método <code>POST</code>, URL acima, body <code>JSON</code> com os mesmos campos do Zapier.</li>
+            <li>Ative o cenário e defina o intervalo (15min recomendado).</li>
+          </ol>
+        </details>
+      </div>
+
       {/* Manual add */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
