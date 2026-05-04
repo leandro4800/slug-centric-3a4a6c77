@@ -459,11 +459,21 @@ Data:
         {downloadedVideoUrl && (
           <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
             <video src={downloadedVideoUrl} controls className="w-full max-h-80 rounded-lg bg-black" />
-            <Button asChild variant="outline" className="w-full">
-              <a href={downloadedVideoUrl} download target="_blank" rel="noreferrer">
-                <Download className="h-4 w-4 mr-2" /> Baixar arquivo no dispositivo
-              </a>
-            </Button>
+
+            <div className="grid sm:grid-cols-3 gap-2">
+              <Button asChild variant="outline">
+                <a href={downloadedVideoUrl} download target="_blank" rel="noreferrer">
+                  <Download className="h-4 w-4 mr-2" /> Baixar arquivo
+                </a>
+              </Button>
+              <Button variant="outline" onClick={handleShare}>
+                <Share2 className="h-4 w-4 mr-2" /> Compartilhar
+              </Button>
+              <Button variant="outline" onClick={handleSaveAsVlog}>
+                <Plus className="h-4 w-4 mr-2" /> Salvar nos Vlogs
+              </Button>
+            </div>
+
             <Label>Legenda do post</Label>
             <Textarea
               value={publishCaption}
@@ -474,12 +484,21 @@ Data:
             <Button
               onClick={handlePublishIG}
               disabled={publishing || !igConfigured}
-              className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90"
+              className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 disabled:opacity-50"
             >
               {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4 mr-2" /> Publicar como Reel no Instagram</>}
             </Button>
             {!igConfigured && (
-              <p className="text-xs text-yellow-500 text-center">Configure o Access Token acima para habilitar publicação automática.</p>
+              <div className="flex gap-2 items-start bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-xs">
+                <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold text-yellow-500 mb-1">Publicação automática desativada</p>
+                  <p className="text-muted-foreground">
+                    Para postar direto no Instagram, configure o <b>Access Token</b> e o <b>Business Account ID</b> na seção
+                    "PUBLICAÇÃO DIRETA NO INSTAGRAM" acima. Enquanto isso, use <b>"Baixar arquivo"</b> ou <b>"Compartilhar"</b> e poste manualmente pelo app do Instagram.
+                  </p>
+                </div>
+              </div>
             )}
           </div>
         )}
