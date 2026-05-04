@@ -69,7 +69,7 @@ const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
 // Apenas cores de MARCA são aplicadas pelo tenant.
 // background/card/foreground/border NÃO são tocados — o app sempre fica
 // com o fundo escuro e cards Netflix-style padrão.
-const SAFE_KEYS: (keyof typeof DEFAULTS)[] = ["primary", "primary_glow", "accent"];
+const SAFE_KEYS: (keyof typeof DEFAULTS)[] = ["primary", "primary_glow", "accent", "background"];
 
 const clearTokens = (root: HTMLElement) => {
   Object.values(TOKEN_TO_VAR).flat().forEach((v) => root.style.removeProperty(v));
