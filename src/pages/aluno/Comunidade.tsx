@@ -177,7 +177,7 @@ const Comunidade = () => {
   return (
     <div className="min-h-screen bg-background text-foreground pb-24">
       {/* Header */}
-      <div className="px-5 pt-6 flex items-center justify-between sticky top-0 bg-black/80 backdrop-blur-md z-10 pb-4">
+      <div className="px-5 pt-6 flex items-center justify-between sticky top-0 bg-background/80 backdrop-blur-md z-10 pb-4">
         <div className="flex flex-col">
           <Button
             variant="ghost"
