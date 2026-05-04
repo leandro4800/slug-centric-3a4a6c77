@@ -23,6 +23,11 @@ const ControleCentral = () => {
   const { user } = useAuth();
   const [playlist, setPlaylist] = useState("https://open.spotify.com/playlist/1kdeP");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [parceiros, setParceiros] = useState<Parceiro[]>([]);
+  const [novoNome, setNovoNome] = useState("");
+  const [novoCupom, setNovoCupom] = useState("");
+  const [novoUrl, setNovoUrl] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
 
   useEffect(() => {
     const check = async () => {
@@ -35,6 +40,41 @@ const ControleCentral = () => {
     };
     void check();
   }, [user]);
+
+  const loadParceiros = async () => {
+    if (!tenant?.id) return;
+    const { data } = await supabase
+      .from("parceiros" as any)
+      .select("id, nome, cupom, url, logo_url")
+      .eq("tenant_id", tenant.id)
+      .eq("ativo", true)
+      .order("ordem")
+      .order("created_at");
+    setParceiros((data as unknown as Parceiro[]) || []);
+  };
+
+  useEffect(() => { void loadParceiros(); }, [tenant?.id]);
+
+  const addParceiro = async () => {
+    if (!tenant?.id || !novoNome.trim()) return;
+    const { error } = await supabase.from("parceiros" as any).insert({
+      tenant_id: tenant.id,
+      nome: novoNome.trim(),
+      cupom: novoCupom.trim() || null,
+      url: novoUrl.trim() || null,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Parceiro adicionado");
+    setNovoNome(""); setNovoCupom(""); setNovoUrl(""); setShowAdd(false);
+    void loadParceiros();
+  };
+
+  const removeParceiro = async (id: string) => {
+    if (!confirm("Remover parceiro?")) return;
+    const { error } = await supabase.from("parceiros" as any).delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    void loadParceiros();
+  };
 
   return (
     <div className="px-5 pt-6 pb-32 bg-black min-h-screen">
