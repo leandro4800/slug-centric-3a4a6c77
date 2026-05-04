@@ -39,6 +39,7 @@ import AdminPlanos from "./pages/admin/AdminPlanos";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import NotFound from "./pages/NotFound";
+import Unsubscribe from "./pages/Unsubscribe";
 
 const queryClient = new QueryClient();
 
@@ -127,6 +128,7 @@ const App = () => (
               <BrandingProvider><RequireAuth><AdminBaseConhecimento /></RequireAuth></BrandingProvider>
             } />
 
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

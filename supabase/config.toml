@@ -1,25 +1,29 @@
 project_id = "iflgryuemsohurtdaawm"
 
-[functions.gerar-treino-ia]
-verify_jwt = true
-
-[functions.seed-alunos-demo]
-verify_jwt = false
-
-[functions.stripe-webhook]
-verify_jwt = false
-
-[functions.stripe-checkout]
-verify_jwt = false
-
-[functions.theme-ai]
-verify_jwt = true
-
-[functions.vlog-ingest]
-verify_jwt = false
-
-[functions.gerar-dieta]
-verify_jwt = true
-
-[functions.analise-evolucao]
-verify_jwt = true
+[functions]
+  [functions.analise-evolucao]
+    verify_jwt = true
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.gerar-dieta]
+    verify_jwt = true
+  [functions.gerar-treino-ia]
+    verify_jwt = true
+  [functions.seed-alunos-demo]
+    verify_jwt = false
+  [functions.stripe-checkout]
+    verify_jwt = false
+  [functions.stripe-webhook]
+    verify_jwt = false
+  [functions.theme-ai]
+    verify_jwt = true
+  [functions.vlog-ingest]
+    verify_jwt = false
+  [functions.send-transactional-email]
+    verify_jwt = true
+  [functions.preview-transactional-email]
+    verify_jwt = false
+  [functions.handle-email-unsubscribe]
+    verify_jwt = false
+  [functions.handle-email-suppression]
+    verify_jwt = false
