@@ -85,12 +85,40 @@ export default function AdminCoaches() {
   };
 
   const setStatus = async (id: string, status: "approved" | "rejected" | "suspended") => {
+    const tenant = tenants.find((t) => t.id === id);
     const { error } = await supabase.from("tenants").update({ status }).eq("id", id);
     if (error) {
       toast({ title: "Erro", description: error.message, variant: "destructive" });
       return;
     }
     toast({ title: `Coach ${status === "approved" ? "aprovado" : status === "rejected" ? "rejeitado" : "suspenso"}` });
+
+    // Send approval email when coach is approved
+    if (status === "approved" && tenant?.owner_user_id) {
+      try {
+        const { data: ownerPerfil } = await supabase
+          .from("perfis")
+          .select("email, nome_completo")
+          .eq("id", tenant.owner_user_id)
+          .maybeSingle();
+        if (ownerPerfil?.email) {
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "coach-approved",
+              recipientEmail: ownerPerfil.email,
+              idempotencyKey: `coach-approved-${id}`,
+              templateData: {
+                name: ownerPerfil.nome_completo || tenant.nome,
+                slug: tenant.slug,
+              },
+            },
+          });
+          toast({ title: "E-mail de aprovação enviado" });
+        }
+      } catch (e) {
+        console.error("Failed to send approval email", e);
+      }
+    }
     void load();
   };
 
