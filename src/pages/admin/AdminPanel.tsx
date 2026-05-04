@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -31,6 +31,8 @@ interface Aluno { id: string; nome_completo: string | null; email: string | null
 const AdminPanel = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabValue = searchParams.get("tab") || "elenco";
   const { user, signOut } = useAuth();
   const { tenant, refresh } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
@@ -191,7 +193,8 @@ const AdminPanel = () => {
           </div>
         </div>
 
-        <Tabs defaultValue="elenco">
+        <Tabs value={tabValue} onValueChange={(v) => setSearchParams({ tab: v })}>
+
           <TabsList className="mb-6">
             <TabsTrigger value="elenco"><Users className="h-4 w-4 mr-2" /> Elenco</TabsTrigger>
             <TabsTrigger value="aparencia"><Palette className="h-4 w-4 mr-2" /> Aparência</TabsTrigger>

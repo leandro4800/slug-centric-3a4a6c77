@@ -6,10 +6,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 
-const parceiros = [
-  { nome: "GROWTH", tag: "PIKACHU" },
-  { nome: "JOIAS MAROMBA", tag: "PIKACHU" },
-];
+import { toast } from "sonner";
+
+interface Parceiro {
+  id: string;
+  nome: string;
+  cupom: string | null;
+  url: string | null;
+  logo_url: string | null;
+}
 
 const ControleCentral = () => {
   const navigate = useNavigate();
@@ -18,6 +23,11 @@ const ControleCentral = () => {
   const { user } = useAuth();
   const [playlist, setPlaylist] = useState("https://open.spotify.com/playlist/1kdeP");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [parceiros, setParceiros] = useState<Parceiro[]>([]);
+  const [novoNome, setNovoNome] = useState("");
+  const [novoCupom, setNovoCupom] = useState("");
+  const [novoUrl, setNovoUrl] = useState("");
+  const [showAdd, setShowAdd] = useState(false);
 
   useEffect(() => {
     const check = async () => {
@@ -30,6 +40,41 @@ const ControleCentral = () => {
     };
     void check();
   }, [user]);
+
+  const loadParceiros = async () => {
+    if (!tenant?.id) return;
+    const { data } = await supabase
+      .from("parceiros" as any)
+      .select("id, nome, cupom, url, logo_url")
+      .eq("tenant_id", tenant.id)
+      .eq("ativo", true)
+      .order("ordem")
+      .order("created_at");
+    setParceiros((data as unknown as Parceiro[]) || []);
+  };
+
+  useEffect(() => { void loadParceiros(); }, [tenant?.id]);
+
+  const addParceiro = async () => {
+    if (!tenant?.id || !novoNome.trim()) return;
+    const { error } = await supabase.from("parceiros" as any).insert({
+      tenant_id: tenant.id,
+      nome: novoNome.trim(),
+      cupom: novoCupom.trim() || null,
+      url: novoUrl.trim() || null,
+    });
+    if (error) return toast.error(error.message);
+    toast.success("Parceiro adicionado");
+    setNovoNome(""); setNovoCupom(""); setNovoUrl(""); setShowAdd(false);
+    void loadParceiros();
+  };
+
+  const removeParceiro = async (id: string) => {
+    if (!confirm("Remover parceiro?")) return;
+    const { error } = await supabase.from("parceiros" as any).delete().eq("id", id);
+    if (error) return toast.error(error.message);
+    void loadParceiros();
+  };
 
   return (
     <div className="px-5 pt-6 pb-32 bg-black min-h-screen">
@@ -108,11 +153,12 @@ const ControleCentral = () => {
           <span className="text-primary">→</span>
         </Link>
 
-        <Button 
-          className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-display text-xl rounded-none shadow-glow flex items-center justify-center gap-3"
+        <Link
+          to={`/${slug}/admin?tab=vlogs`}
+          className="bg-primary hover:bg-primary/90 text-primary-foreground font-display text-xl rounded-none shadow-glow flex items-center justify-center gap-3 h-14"
         >
-          <Plus className="h-5 w-5" /> LANÇAR NOVO EPISÓDIO
-        </Button>
+          <Plus className="h-5 w-5" /> LANÇAR NOVO EPISÓDIO (VLOG)
+        </Link>
 
         <div className="bg-card/40 border border-white/10 rounded-none p-4">
           <div className="flex items-center gap-2 mb-3">
@@ -137,24 +183,40 @@ const ControleCentral = () => {
               <Star className="h-5 w-5 text-primary fill-primary" />
               <p className="font-display text-base text-white">PARCEIROS ELITE</p>
             </div>
-            <button className="w-9 h-9 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center hover:bg-primary/30 transition-all">
+            <button
+              onClick={() => setShowAdd((v) => !v)}
+              className="w-9 h-9 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center hover:bg-primary/30 transition-all"
+            >
               <Plus className="h-4 w-4 text-primary" />
             </button>
           </div>
+
+          {showAdd && (
+            <div className="space-y-2 mb-4 p-3 border border-primary/30 bg-black/40">
+              <input value={novoNome} onChange={(e) => setNovoNome(e.target.value)} placeholder="Nome do parceiro"
+                className="w-full bg-black border border-white/10 px-3 py-2 text-sm outline-none focus:border-primary/50" />
+              <input value={novoCupom} onChange={(e) => setNovoCupom(e.target.value)} placeholder="Cupom (opcional)"
+                className="w-full bg-black border border-white/10 px-3 py-2 text-sm outline-none focus:border-primary/50" />
+              <input value={novoUrl} onChange={(e) => setNovoUrl(e.target.value)} placeholder="URL (opcional)"
+                className="w-full bg-black border border-white/10 px-3 py-2 text-sm outline-none focus:border-primary/50" />
+              <Button onClick={addParceiro} className="w-full">Salvar parceiro</Button>
+            </div>
+          )}
+
           <div className="space-y-3">
+            {parceiros.length === 0 && !showAdd && (
+              <p className="text-xs text-muted-foreground text-center py-2">Nenhum parceiro cadastrado.</p>
+            )}
             {parceiros.map((p) => (
-              <div key={p.nome} className="flex items-center gap-3 bg-black/50 border border-white/5 rounded-none p-3">
-                <div className="w-12 h-12 rounded-none bg-secondary flex items-center justify-center text-[10px] font-bold border border-white/10 uppercase">
-                  {p.nome.split(" ")[0]}
+              <div key={p.id} className="flex items-center gap-3 bg-black/50 border border-white/5 rounded-none p-3">
+                <div className="w-12 h-12 rounded-none bg-secondary flex items-center justify-center text-[10px] font-bold border border-white/10 uppercase overflow-hidden">
+                  {p.logo_url ? <img src={p.logo_url} alt={p.nome} className="w-full h-full object-cover" /> : p.nome.split(" ")[0]?.slice(0, 4)}
                 </div>
-                <div className="flex-1">
-                  <p className="font-bold text-sm text-white">{p.nome}</p>
-                  <p className="text-[10px] text-primary uppercase font-bold tracking-widest">{p.tag}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-sm text-white truncate">{p.nome}</p>
+                  {p.cupom && <p className="text-[10px] text-primary uppercase font-bold tracking-widest">CUPOM: {p.cupom}</p>}
                 </div>
-                <button className="w-9 h-9 flex items-center justify-center text-primary/60 hover:text-primary transition-all">
-                  <Pencil className="h-4 w-4" />
-                </button>
-                <button className="w-9 h-9 flex items-center justify-center text-red-500/60 hover:text-red-500 transition-all">
+                <button onClick={() => removeParceiro(p.id)} className="w-9 h-9 flex items-center justify-center text-red-500/60 hover:text-red-500 transition-all">
                   <Trash2 className="h-4 w-4" />
                 </button>
               </div>
