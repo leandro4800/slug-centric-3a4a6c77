@@ -227,7 +227,7 @@ const Comunidade = () => {
           </div>
         ) : (
           posts.map((post) => (
-            <div key={post.id} className="flex flex-col bg-zinc-950/50">
+            <div key={post.id} className="flex flex-col bg-card/30">
               {/* Post Header */}
               <div className="flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3">
