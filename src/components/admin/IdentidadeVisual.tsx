@@ -64,12 +64,12 @@ const PRESETS: Preset[] = [
   {
     id: "gold-rush",
     name: "GOLD RUSH",
-    subtitle: "Preto & Amarelo Ouro",
-    swatches: ["#000000", "#0A0A0A", "#FFB800", "#FAFAFA"],
+    subtitle: "Preto & Dourado",
+    swatches: ["#000000", "#0A0A0A", "#E8B647", "#FAFAFA"],
     overrides: {
-      primary: "44 100% 50%",
-      primary_glow: "44 100% 65%",
-      accent: "44 100% 50%",
+      primary: "42 78% 59%",
+      primary_glow: "42 85% 70%",
+      accent: "42 78% 59%",
       background: "0 0% 0%",
       card: "0 0% 3%",
       foreground: "0 0% 98%",
