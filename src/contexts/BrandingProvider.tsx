@@ -112,7 +112,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const isMountedRef = useRef(true);
-  const lastSlugRef = useRef<string | null>(null);
+  
 
   const load = async () => {
     if (!slug) {
