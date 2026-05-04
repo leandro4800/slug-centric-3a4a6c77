@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Youtube, Instagram, Music2, Link as LinkIcon } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Youtube, Instagram, Music2, Link as LinkIcon, Download, Send, Save } from "lucide-react";
 import { toast } from "sonner";
 
 interface VlogPost {
@@ -47,6 +47,19 @@ export const VlogsAdmin = () => {
   const [showSecret, setShowSecret] = useState(false);
   const [secret, setSecret] = useState<string | null>(null);
 
+  // Instagram Graph API config
+  const [igToken, setIgToken] = useState("");
+  const [igAccountId, setIgAccountId] = useState("");
+  const [showIgToken, setShowIgToken] = useState(false);
+  const [igConfigured, setIgConfigured] = useState(false);
+
+  // Download + auto-publish
+  const [downloadUrl, setDownloadUrl] = useState("");
+  const [downloadedVideoUrl, setDownloadedVideoUrl] = useState<string | null>(null);
+  const [publishCaption, setPublishCaption] = useState("");
+  const [downloading, setDownloading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
+
   const projectRef = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) || "";
   const webhookUrl = `https://${projectRef}.functions.supabase.co/vlog-ingest`;
 
@@ -60,10 +73,14 @@ export const VlogsAdmin = () => {
         .eq("tenant_id", tenant.id)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false }),
-      supabase.from("tenants_private" as any).select("vlog_webhook_secret").eq("tenant_id", tenant.id).maybeSingle(),
+      supabase.from("tenants_private" as any).select("vlog_webhook_secret, instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     setPosts((list as VlogPost[]) || []);
-    setSecret(((t as unknown) as { vlog_webhook_secret: string } | null)?.vlog_webhook_secret ?? null);
+    const tp = (t as unknown) as { vlog_webhook_secret?: string; instagram_access_token?: string; instagram_business_account_id?: string } | null;
+    setSecret(tp?.vlog_webhook_secret ?? null);
+    setIgToken(tp?.instagram_access_token ?? "");
+    setIgAccountId(tp?.instagram_business_account_id ?? "");
+    setIgConfigured(!!(tp?.instagram_access_token && tp?.instagram_business_account_id));
     setLoading(false);
   };
 
@@ -163,6 +180,53 @@ export const VlogsAdmin = () => {
   const copy = (txt: string, label: string) => {
     navigator.clipboard.writeText(txt);
     toast.success(`${label} copiado`);
+  };
+
+  const saveIgConfig = async () => {
+    if (!tenant) return;
+    const { error } = await supabase
+      .from("tenants_private" as any)
+      .upsert({
+        tenant_id: tenant.id,
+        instagram_access_token: igToken.trim() || null,
+        instagram_business_account_id: igAccountId.trim() || null,
+      });
+    if (error) return toast.error(error.message);
+    toast.success("Credenciais do Instagram salvas");
+    void load();
+  };
+
+  const handleDownload = async () => {
+    if (!tenant || !downloadUrl.trim()) return;
+    setDownloading(true);
+    setDownloadedVideoUrl(null);
+    const { data, error } = await supabase.functions.invoke("vlog-download", {
+      body: { url: downloadUrl.trim(), tenant_id: tenant.id },
+    });
+    setDownloading(false);
+    if (error || !data?.video_url) {
+      return toast.error(error?.message || data?.error || "Falha ao baixar");
+    }
+    setDownloadedVideoUrl(data.video_url);
+    toast.success("Vídeo baixado! Pronto pra publicar ou baixar manualmente.");
+  };
+
+  const handlePublishIG = async () => {
+    if (!tenant || !downloadedVideoUrl) return;
+    if (!igConfigured) return toast.error("Configure o Instagram Access Token primeiro");
+    setPublishing(true);
+    const { data, error } = await supabase.functions.invoke("instagram-publish", {
+      body: { tenant_id: tenant.id, video_url: downloadedVideoUrl, caption: publishCaption, media_type: "REELS" },
+    });
+    setPublishing(false);
+    if (error || !data?.ok) {
+      return toast.error(error?.message || data?.error || "Falha ao publicar");
+    }
+    toast.success("Reel publicado no Instagram!");
+    setDownloadUrl("");
+    setDownloadedVideoUrl(null);
+    setPublishCaption("");
+    void load();
   };
 
   const exemploCurl = `curl -X POST '${webhookUrl}' \\
@@ -289,6 +353,93 @@ Data:
             <li>Ative o cenário e defina o intervalo (15min recomendado).</li>
           </ol>
         </details>
+      </div>
+
+      {/* IG Graph API config */}
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-2 text-primary flex items-center gap-2">
+          <Instagram className="h-6 w-6" /> PUBLICAÇÃO DIRETA NO INSTAGRAM
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Para postar Reels diretamente do app, cole abaixo o <b>Access Token de longa duração</b> e o <b>ID da conta Business</b> do Instagram.
+          Requer conta Business/Creator vinculada a uma Página do Facebook + App aprovado pela Meta com permissão <code>instagram_content_publish</code>.{" "}
+          <a href="https://developers.facebook.com/docs/instagram-platform/content-publishing" target="_blank" rel="noreferrer" className="text-primary underline">
+            Tutorial oficial
+          </a>
+        </p>
+
+        <Label className="text-xs uppercase tracking-wider">Instagram Business Account ID</Label>
+        <Input
+          value={igAccountId}
+          onChange={(e) => setIgAccountId(e.target.value)}
+          placeholder="17841400000000000"
+          className="font-mono text-xs mt-1.5"
+        />
+
+        <Label className="text-xs uppercase tracking-wider mt-4 block">Access Token (longa duração)</Label>
+        <div className="flex gap-2 mt-1.5">
+          <Input
+            value={igToken}
+            onChange={(e) => setIgToken(e.target.value)}
+            type={showIgToken ? "text" : "password"}
+            placeholder="EAAB..."
+            className="font-mono text-xs"
+          />
+          <Button variant="outline" size="icon" onClick={() => setShowIgToken((v) => !v)}>
+            {showIgToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </Button>
+        </div>
+
+        <Button onClick={saveIgConfig} className="bg-gradient-primary shadow-glow mt-4 w-full">
+          <Save className="h-4 w-4 mr-2" /> Salvar credenciais
+        </Button>
+        {igConfigured && <p className="text-xs text-green-500 mt-2">✓ Instagram conectado</p>}
+      </div>
+
+      {/* Download from URL + auto-publish */}
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-2 text-primary flex items-center gap-2">
+          <Download className="h-6 w-6" /> IMPORTAR VÍDEO DE URL
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Cole a URL de um Reel, TikTok ou Short. O sistema baixa o vídeo e te dá 2 opções: <b>publicar direto no seu Instagram</b> (se configurado) ou <b>baixar o arquivo</b>.
+        </p>
+
+        <Label>URL do vídeo (Instagram, TikTok, YouTube Shorts)</Label>
+        <div className="flex gap-2 mt-1.5">
+          <Input value={downloadUrl} onChange={(e) => setDownloadUrl(e.target.value)} placeholder="https://www.instagram.com/reel/..." />
+          <Button onClick={handleDownload} disabled={downloading || !downloadUrl.trim()} className="bg-gradient-primary shadow-glow">
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="h-4 w-4 mr-2" /> Baixar</>}
+          </Button>
+        </div>
+
+        {downloadedVideoUrl && (
+          <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
+            <video src={downloadedVideoUrl} controls className="w-full max-h-80 rounded-lg bg-black" />
+            <Button asChild variant="outline" className="w-full">
+              <a href={downloadedVideoUrl} download target="_blank" rel="noreferrer">
+                <Download className="h-4 w-4 mr-2" /> Baixar arquivo no dispositivo
+              </a>
+            </Button>
+            <Label>Legenda do post</Label>
+            <Textarea
+              value={publishCaption}
+              onChange={(e) => setPublishCaption(e.target.value)}
+              placeholder="Escreva a legenda do Reel..."
+              rows={3}
+            />
+            <Button
+              onClick={handlePublishIG}
+              disabled={publishing || !igConfigured}
+              className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90"
+            >
+              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4 mr-2" /> Publicar como Reel no Instagram</>}
+            </Button>
+            {!igConfigured && (
+              <p className="text-xs text-yellow-500 text-center">Configure o Access Token acima para habilitar publicação automática.</p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Manual add */}
