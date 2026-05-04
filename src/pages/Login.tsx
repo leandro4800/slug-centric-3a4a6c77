@@ -124,8 +124,18 @@ const Login = () => {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email: email.trim(),
+    const cleanEmail = email.trim().toLowerCase();
+
+    // Verifica se já existe perfil para este e-mail
+    const { data: exists } = await supabase.rpc("email_is_registered", { _email: cleanEmail });
+    if (exists) {
+      setLoading(false);
+      toast.error("Este e-mail já está cadastrado. Faça login.");
+      return;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
       password,
       options: {
         emailRedirectTo: `${window.location.origin}/login`,
@@ -133,8 +143,21 @@ const Login = () => {
       },
     });
     setLoading(false);
-    if (error) toast.error(error.message);
-    else toast.success("Conta criada! Verifique seu e-mail.");
+    if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
+        toast.error("Este e-mail já está cadastrado. Faça login.");
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+    const identities = (data?.user as any)?.identities;
+    if (data?.user && Array.isArray(identities) && identities.length === 0) {
+      toast.error("Este e-mail já está cadastrado. Faça login.");
+      return;
+    }
+    toast.success("Conta criada! Verifique seu e-mail.");
   };
 
   return (
