@@ -113,15 +113,25 @@ const AlunoHome = () => {
     const yt = extractYouTubeId(u);
     if (yt) return `https://www.youtube.com/embed/${yt}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
     if (u.includes("instagram.com")) {
-      // converte para embed oficial do Instagram (não exige login para reels/posts públicos)
-      const clean = u.split("?")[0].replace(/\/$/, "");
-      return `${clean}/embed`;
+      // Normaliza: /reels/ → /reel/, remove query, garante trailing slash, usa /embed/captioned/
+      let clean = u.split("?")[0].split("#")[0];
+      clean = clean.replace("/reels/", "/reel/");
+      if (!clean.endsWith("/")) clean += "/";
+      return `${clean}embed/captioned/`;
     }
     if (u.includes("tiktok.com")) {
       const m = u.match(/\/video\/(\d+)/);
       if (m) return `https://www.tiktok.com/embed/v2/${m[1]}`;
     }
     return null;
+  };
+
+  const buildThumb = (v: VlogPost): string => {
+    if (v.thumbnail_url) return v.thumbnail_url;
+    const yt = extractYouTubeId(v.url);
+    if (yt) return `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`;
+    // fallback genérico via screenshot
+    return `https://api.microlink.io/?url=${encodeURIComponent(v.url)}&screenshot=true&meta=false&embed=screenshot.url`;
   };
 
   const handlePlay = () => {
