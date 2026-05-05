@@ -56,40 +56,38 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
+          <BrandingProvider>
+            <Routes>
             {/* Marketplace público */}
-            <Route path="/" element={<BrandingProvider><Landing /></BrandingProvider>} />
-            <Route path="/marketplace" element={<BrandingProvider><Marketplace /></BrandingProvider>} />
-            <Route path="/seja-coach" element={<BrandingProvider><SejaCoach /></BrandingProvider>} />
-            <Route path="/login" element={<BrandingProvider><Login /></BrandingProvider>} />
-            <Route path="/forgot-password" element={<BrandingProvider><ForgotPassword /></BrandingProvider>} />
-            <Route path="/reset-password" element={<BrandingProvider><ResetPassword /></BrandingProvider>} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/seja-coach" element={<SejaCoach />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
             {/* Pós-checkout */}
-            <Route path="/checkout/sucesso" element={<BrandingProvider><CheckoutSucesso /></BrandingProvider>} />
+            <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
 
             {/* Onboarding obrigatório */}
-            <Route path="/onboarding" element={<BrandingProvider><RequireAuth><Onboarding /></RequireAuth></BrandingProvider>} />
+            <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
 
             {/* Admin AlphaCoach (super admin) */}
-            <Route path="/admin/coaches" element={<BrandingProvider><RequireAuth><AdminCoaches /></RequireAuth></BrandingProvider>} />
-            <Route path="/admin/faturamento" element={<BrandingProvider><RequireAuth><AdminFaturamento /></RequireAuth></BrandingProvider>} />
-
+            <Route path="/admin/coaches" element={<RequireAuth><AdminCoaches /></RequireAuth>} />
+            <Route path="/admin/faturamento" element={<RequireAuth><AdminFaturamento /></RequireAuth>} />
 
             {/* Landing pública do tenant */}
-            <Route path="/:slug" element={<BrandingProvider><TenantLanding /></BrandingProvider>} />
+            <Route path="/:slug" element={<TenantLanding />} />
 
             {/* App do aluno */}
             <Route
               path="/:slug/app"
               element={
-                <BrandingProvider>
-                  <RequireAuth>
-                    <SubscriptionGuard>
-                      <AlunoLayout />
-                    </SubscriptionGuard>
-                  </RequireAuth>
-                </BrandingProvider>
+                <RequireAuth>
+                  <SubscriptionGuard>
+                    <AlunoLayout />
+                  </SubscriptionGuard>
+                </RequireAuth>
               }
             >
               <Route index element={<AlunoHome />} />
@@ -107,42 +105,22 @@ const App = () => (
 
             {/* Painel do coach */}
             <Route path="/:slug/admin" element={<SlugRedirect to="app/controle" />} />
-            <Route path="/:slug/admin/atletas" element={
-              <BrandingProvider><RequireAuth><MeusAtletas /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/aparencia" element={
-              <BrandingProvider><RequireAuth><AdminPanel /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/montar-treino" element={
-              <BrandingProvider><RequireAuth><AdminMontarTreino /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/montar-dieta" element={
-              <BrandingProvider><RequireAuth><AdminMontarDieta /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/atletas" element={
-              <BrandingProvider><RequireAuth><MeusAtletas /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/atleta/:atletaId" element={
-              <BrandingProvider><RequireAuth><AtletaDetalhe /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/planos" element={
-              <BrandingProvider><RequireAuth><AdminPlanos /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/faturamento" element={
-              <BrandingProvider><RequireAuth><AdminFaturamento /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/base-conhecimento" element={
-              <BrandingProvider><RequireAuth><AdminBaseConhecimento /></RequireAuth></BrandingProvider>
-            } />
-            <Route path="/:slug/admin/vlogs" element={
-              <BrandingProvider><RequireAuth><AdminVlogs /></RequireAuth></BrandingProvider>
-            } />
+            <Route path="/:slug/admin/atletas" element={<RequireAuth><MeusAtletas /></RequireAuth>} />
+            <Route path="/:slug/admin/aparencia" element={<RequireAuth><AdminPanel /></RequireAuth>} />
+            <Route path="/:slug/admin/montar-treino" element={<RequireAuth><AdminMontarTreino /></RequireAuth>} />
+            <Route path="/:slug/admin/montar-dieta" element={<RequireAuth><AdminMontarDieta /></RequireAuth>} />
+            <Route path="/:slug/admin/atleta/:atletaId" element={<RequireAuth><AtletaDetalhe /></RequireAuth>} />
+            <Route path="/:slug/admin/planos" element={<RequireAuth><AdminPlanos /></RequireAuth>} />
+            <Route path="/:slug/admin/faturamento" element={<RequireAuth><AdminFaturamento /></RequireAuth>} />
+            <Route path="/:slug/admin/base-conhecimento" element={<RequireAuth><AdminBaseConhecimento /></RequireAuth>} />
+            <Route path="/:slug/admin/vlogs" element={<RequireAuth><AdminVlogs /></RequireAuth>} />
 
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
-        </AuthProvider>
-      </BrowserRouter>
+        </BrandingProvider>
+      </AuthProvider>
+    </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );
