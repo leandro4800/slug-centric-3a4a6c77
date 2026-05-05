@@ -169,9 +169,9 @@ const Login = () => {
         className="absolute inset-0 bg-cover bg-center scale-110"
         style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.18),transparent_70%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.85)_100%)]" />
+      <div className="absolute inset-0 bg-black/40" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.1),transparent_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.4)_100%)]" />
 
       <div className="relative w-full max-w-md">
         <Link to={urlSlug ? `/${urlSlug}` : "/"} className="flex justify-center mb-8">
@@ -188,7 +188,7 @@ const Login = () => {
             )}
           </div>
         </Link>
-        <div className="relative bg-transparent backdrop-blur-md border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
+        <div className="relative bg-black/10 border border-white/20 rounded-none p-8 shadow-card overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           {user ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
