@@ -210,11 +210,11 @@ const Login = () => {
                   <div className="relative">
                     <Input 
                       id="email" 
-                      type={showEmail ? "text" : "email"} 
+                      type="email" 
                       required 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10" 
+                      className="bg-white/5 border-white/10" 
                     />
                     <button
                       type="button"
