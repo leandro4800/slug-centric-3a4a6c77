@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Instagram, Download } from "lucide-react";
+import {  Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { toast } from "sonner";

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Youtube, Instagram, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff,   Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
 
@@ -495,7 +495,7 @@ Data:
                 <div>
                   <p className="font-semibold text-yellow-500 mb-1">Publicação automática desativada</p>
                   <p className="text-muted-foreground">
-                    Para postar direto no Instagram, configure o <b>Access Token</b> e o <b>Business Account ID</b> na seção
+                    Para postar direto no  configure o <b>Access Token</b> e o <b>Business Account ID</b> na seção
                     "PUBLICAÇÃO DIRETA NO INSTAGRAM" acima. Enquanto isso, use <b>"Baixar arquivo"</b> ou <b>"Compartilhar"</b> e poste manualmente pelo app do Instagram.
                   </p>
                 </div>
@@ -510,7 +510,7 @@ Data:
         <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
         <div className="grid md:grid-cols-2 gap-3 items-end">
           <div>
-            <Label>URL (YouTube, Instagram, TikTok…)</Label>
+            <Label>URL (YouTube,  TikTok…)</Label>
             <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
           </div>
           <div>
