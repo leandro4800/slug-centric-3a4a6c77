@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -22,6 +22,7 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Redirect logged-in user
   useEffect(() => {
@@ -209,7 +210,23 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="password">Senha</Label>
-                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/5 border-white/10" />
+                  <div className="relative">
+                    <Input 
+                      id="password" 
+                      type={showPassword ? "text" : "password"} 
+                      required 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      className="bg-white/5 border-white/10 pr-10" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ACESSAR AGORA"}
@@ -233,7 +250,24 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="password-s">Senha</Label>
-                  <Input id="password-s" type="password" minLength={6} required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/5 border-white/10" />
+                  <div className="relative">
+                    <Input 
+                      id="password-s" 
+                      type={showPassword ? "text" : "password"} 
+                      minLength={6} 
+                      required 
+                      value={password} 
+                      onChange={(e) => setPassword(e.target.value)} 
+                      className="bg-white/5 border-white/10 pr-10" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "CRIAR CONTA ALPHA"}
