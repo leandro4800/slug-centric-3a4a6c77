@@ -1530,6 +1530,36 @@ export type Database = {
           },
         ]
       }
+      referencia_exercicios: {
+        Row: {
+          created_at: string | null
+          grupamento_muscular: string | null
+          id: string
+          nome_exercicio: string
+          profissional_id: string | null
+          thumbnail_url: string | null
+          url_video: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          grupamento_muscular?: string | null
+          id?: string
+          nome_exercicio: string
+          profissional_id?: string | null
+          thumbnail_url?: string | null
+          url_video?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          grupamento_muscular?: string | null
+          id?: string
+          nome_exercicio?: string
+          profissional_id?: string | null
+          thumbnail_url?: string | null
+          url_video?: string | null
+        }
+        Relationships: []
+      }
       referencia_videos: {
         Row: {
           created_at: string
