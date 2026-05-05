@@ -23,6 +23,7 @@ const Login = () => {
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
 
   // Redirect logged-in user
   useEffect(() => {
@@ -206,7 +207,23 @@ const Login = () => {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <Label htmlFor="email">E-mail</Label>
-                  <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white/5 border-white/10" />
+                  <div className="relative">
+                    <Input 
+                      id="email" 
+                      type={showEmail ? "text" : "email"} 
+                      required 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      className="bg-white/5 border-white/10 pr-10" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEmail(!showEmail)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                    >
+                      {showEmail ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="password">Senha</Label>
@@ -246,7 +263,23 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="email-s">E-mail</Label>
-                  <Input id="email-s" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white/5 border-white/10" />
+                  <div className="relative">
+                    <Input 
+                      id="email-s" 
+                      type={showEmail ? "text" : "email"} 
+                      required 
+                      value={email} 
+                      onChange={(e) => setEmail(e.target.value)} 
+                      className="bg-white/5 border-white/10 pr-10" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowEmail(!showEmail)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                    >
+                      {showEmail ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="password-s">Senha</Label>
