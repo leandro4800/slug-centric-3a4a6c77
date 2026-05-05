@@ -1800,6 +1800,7 @@ export type Database = {
           foto_url: string | null
           hero_url: string | null
           id: string
+          login_video_url: string | null
           logo_url: string | null
           nome: string
           owner_user_id: string | null
@@ -1826,6 +1827,7 @@ export type Database = {
           foto_url?: string | null
           hero_url?: string | null
           id?: string
+          login_video_url?: string | null
           logo_url?: string | null
           nome: string
           owner_user_id?: string | null
@@ -1852,6 +1854,7 @@ export type Database = {
           foto_url?: string | null
           hero_url?: string | null
           id?: string
+          login_video_url?: string | null
           logo_url?: string | null
           nome?: string
           owner_user_id?: string | null
