@@ -128,8 +128,8 @@
   }
 
   .hero-mask {
-    -webkit-mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
-            mask-image: linear-gradient(180deg, #000 40%, transparent 100%);
+    @apply fixed inset-0 w-full h-full -z-10 object-cover opacity-40;
+    mask-image: linear-gradient(180deg, rgba(0,0,0,1) 0%, rgba(0,0,0,0.4) 100%);
   }
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { scrollbar-width: none; }
