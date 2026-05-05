@@ -3,6 +3,7 @@ import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Youtube, Mic } f
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
+import ExercisePlayer from "./ExercisePlayer";
 
 export interface ExerciseCardData {
   id: string;
@@ -44,7 +45,6 @@ const fmtTime = (s: number) => {
 
 const parseSeries = (s: string | null) => {
   if (!s) return 4;
-  // Se for o formato Pacho "2x Aquecimento + 1x Ajuste + 2x Trabalho", somamos
   const matches = s.match(/\d+/g);
   if (matches && matches.length > 1) {
     return matches.reduce((acc, curr) => acc + parseInt(curr), 0);
@@ -57,8 +57,6 @@ const getSeriesType = (seriesStr: string | null, index: number) => {
   if (!seriesStr) return "Trabalho";
   const str = seriesStr.toLowerCase();
   
-  // Lógica para identificar o tipo baseado na posição e na string
-  // Ex: "2x Aquecimento + 1x Ajuste + 2x Trabalho"
   const aquecimentoMatch = str.match(/(\d+)\s*x?\s*aquecimento/);
   const ajusteMatch = str.match(/(\d+)\s*x?\s*ajuste/);
   
@@ -91,6 +89,32 @@ export const ExerciseCard = ({
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
   const [listeningIdx, setListeningIdx] = useState<number | null>(null);
+  const [referenceVideoUrl, setReferenceVideoUrl] = useState<string | null>(data.video_url || null);
+
+  useEffect(() => {
+    const fetchReferenceVideo = async () => {
+      if (data.video_url) {
+        setReferenceVideoUrl(data.video_url);
+        return;
+      }
+
+      try {
+        const { data: refData, error } = await supabase
+          .from('referencia_exercicios')
+          .select('url_video')
+          .eq('nome_exercicio', data.exercicio)
+          .maybeSingle();
+        
+        if (!error && refData) {
+          setReferenceVideoUrl(refData.url_video);
+        }
+      } catch (err) {
+        console.error("Erro ao buscar vídeo de referência:", err);
+      }
+    };
+
+    fetchReferenceVideo();
+  }, [data.exercicio, data.video_url]);
 
   const startListening = (index: number) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -112,18 +136,15 @@ export const ExerciseCard = ({
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript.toLowerCase();
-      console.log("Transcrição:", transcript);
       
       const numbers = transcript.match(/\d+/g)?.map(Number) || [];
       let reps = "";
       let carga = "";
 
-      // Parser Inteligente
       const hasKg = /kg|quilo|carga/.test(transcript);
       const hasReps = /rep|movimento/.test(transcript);
 
       if (hasKg || hasReps) {
-        // Tenta associar números baseados em palavras-chave próximas
         const words = transcript.split(/\s+/);
         words.forEach((word, idx) => {
           if (!isNaN(Number(word))) {
@@ -134,14 +155,11 @@ export const ExerciseCard = ({
         });
       }
 
-      // Heurística se falhar o parser por palavras-chave
       if (!reps && !carga && numbers.length >= 1) {
         if (numbers.length === 1) {
-          // Se só um número, assume reps se pequeno, senão carga
           if (numbers[0] <= 30) reps = String(numbers[0]);
           else carga = String(numbers[0]);
         } else {
-          // Dois números: heuristicamente o maior costuma ser carga (se > 30)
           const n1 = numbers[0];
           const n2 = numbers[1];
           if (n1 > 30 && n2 <= 30) {
@@ -151,7 +169,6 @@ export const ExerciseCard = ({
             carga = String(n2);
             reps = String(n1);
           } else {
-            // Padrão: primeiro reps, segundo carga
             reps = String(n1);
             carga = String(n2);
           }
@@ -175,8 +192,7 @@ export const ExerciseCard = ({
       }
     };
 
-    recognition.onerror = (event: any) => {
-      console.error("Speech error", event.error);
+    recognition.onerror = () => {
       toast.error("Erro ao ouvir. Tente novamente.", { id: "voice-toast" });
       setListeningIdx(null);
     };
@@ -188,7 +204,6 @@ export const ExerciseCard = ({
     recognition.start();
   };
 
-  // Timer
   const [running, setRunning] = useState(false);
   const [seconds, setSeconds] = useState(0);
   const intRef = useRef<number | null>(null);
@@ -203,14 +218,9 @@ export const ExerciseCard = ({
     };
   }, [running]);
 
-  const ytId = extractYouTubeId(data.video_url);
   const coachUrl = data.video_coach_url || null;
-  const coachIsYT = extractYouTubeId(coachUrl);
-  const coachIsDirect = isDirectVideo(coachUrl);
-
-  // Vídeo principal exibido no topo (preferimos coach se existir, senão YT)
   const hasCoach = !!coachUrl;
-  const hasYT = !!ytId;
+  const hasReference = !!referenceVideoUrl;
 
   const updateSlot = (i: number, field: "carga" | "reps", val: string) =>
     setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)));
@@ -250,84 +260,16 @@ export const ExerciseCard = ({
     setRunning(false);
   };
 
+  const currentVideoUrl = (hasCoach && (showCoach || !showYT)) ? coachUrl : referenceVideoUrl;
+
   return (
     <div className="bg-card/50 border border-primary/30 rounded-xl overflow-hidden">
-      {/* Player grande no topo — sempre visível (com poster placeholder se não houver vídeo) */}
       <div className="relative aspect-video bg-black">
-        {hasCoach && (showCoach || !showYT) ? (
-          coachIsYT ? (
-            <iframe
-              src={`https://www.youtube.com/embed/${coachIsYT}?autoplay=1`}
-              title={`${data.exercicio} - Coach`}
-              className="absolute inset-0 w-full h-full"
-              allow="autoplay; encrypted-media"
-              allowFullScreen
-            />
-          ) : coachIsDirect ? (
-            <video
-              src={coachUrl!}
-              controls
-              autoPlay
-              playsInline
-              className="absolute inset-0 w-full h-full object-contain bg-black"
-            />
-          ) : (
-            <a
-              href={coachUrl!}
-              target="_blank"
-              rel="noreferrer"
-              className="absolute inset-0 flex items-center justify-center text-sm text-primary underline"
-            >
-              Abrir vídeo do coach
-            </a>
-          )
-        ) : showYT && ytId ? (
-          <iframe
-            src={`https://www.youtube.com/embed/${ytId}?autoplay=1`}
-            title={data.exercicio}
-            className="absolute inset-0 w-full h-full"
-            allow="autoplay; encrypted-media"
-            allowFullScreen
-          />
-        ) : (
-          // Poster (com thumb do YT se houver, ou placeholder escuro)
-          <button
-            onClick={() => {
-              if (hasCoach) setShowCoach(true);
-              else if (hasYT) setShowYT(true);
-            }}
-            disabled={!hasCoach && !hasYT}
-            className="absolute inset-0 w-full h-full group"
-          >
-            {ytId ? (
-              <img
-                src={`https://img.youtube.com/vi/${ytId}/hqdefault.jpg`}
-                alt=""
-                className="absolute inset-0 w-full h-full object-cover opacity-90"
-              />
-            ) : (
-              <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-black flex items-center justify-center">
-                <p className="text-xs text-muted-foreground uppercase tracking-widest">
-                  Vídeo em breve
-                </p>
-              </div>
-            )}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60" />
-            <div className="absolute top-3 right-3 w-9 h-9 rounded-full bg-emerald-500/80 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/20">
-              <CheckCircle2 className="h-5 w-5 text-white" />
-            </div>
-            {(hasCoach || hasYT) && (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-20 h-20 rounded-full bg-primary flex items-center justify-center shadow-[0_0_50px_-10px_rgba(224,0,0,0.6)] group-hover:scale-110 transition-all duration-500 relative overflow-hidden border border-white/30">
-                  <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-80" />
-                  <Play className="h-9 w-9 fill-white text-white ml-1 relative z-10" />
-                </div>
-              </div>
-            )}
-          </button>
-        )}
+        <ExercisePlayer 
+          videoUrl={currentVideoUrl} 
+          exerciseName={data.exercicio}
+        />
 
-        {/* Botões flutuantes inferiores */}
         <div className="absolute bottom-2 left-2 flex gap-2 z-10">
           <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
             <Share2 className="h-4 w-4 text-white" />
@@ -337,8 +279,7 @@ export const ExerciseCard = ({
           </button>
         </div>
 
-        {/* Tabs de fonte do vídeo (Coach / YouTube) — sempre visíveis quando há ao menos um */}
-        {(hasCoach || hasYT) && (
+        {(hasCoach || hasReference) && (
           <div className="absolute bottom-2 right-2 z-10 flex gap-1.5 bg-background/70 backdrop-blur rounded-full p-1">
             {hasCoach && (
               <button
@@ -350,23 +291,23 @@ export const ExerciseCard = ({
                 Coach
               </button>
             )}
-            {hasYT && (
+            {hasReference && (
               <button
                 onClick={() => { setShowYT(true); setShowCoach(false); }}
-                className={`px-2.5 py-1 rounded-none text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition relative overflow-hidden ${
-                  showYT ? "bg-primary text-primary-foreground border border-white/20" : "text-muted-foreground border border-transparent"
+                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition relative overflow-hidden ${
+                  showYT || (!hasCoach && !showYT) ? "bg-primary text-primary-foreground border border-white/20" : "text-muted-foreground border border-transparent"
                 }`}
               >
                 {showYT && <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-40" />}
-                <Youtube className="h-3 w-3 relative z-10" /> <span className="relative z-10">YouTube</span>
+                <Youtube className="h-3 w-3 relative z-10" /> <span className="relative z-10">Técnico</span>
               </button>
             )}
           </div>
         )}
       </div>
 
-      {/* Header do card (clicável para abrir o modo execução) */}
       <button onClick={onToggle} className="w-full p-4 text-left">
+
         <div className="flex items-start justify-between gap-3">
           <p className="font-display text-lg leading-tight">{data.exercicio.toUpperCase()}</p>
           {data.is_extra && (
