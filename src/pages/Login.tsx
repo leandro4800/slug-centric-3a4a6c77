@@ -205,11 +205,11 @@ const Login = () => {
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
                   <Label htmlFor="email">E-mail</Label>
-                  <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white/5 border-white/10" />
                 </div>
                 <div>
                   <Label htmlFor="password">Senha</Label>
-                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/5 border-white/10" />
                 </div>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ACESSAR AGORA"}
@@ -225,15 +225,15 @@ const Login = () => {
               <form onSubmit={handleSignup} className="space-y-4">
                 <div>
                   <Label htmlFor="nome">Nome completo</Label>
-                  <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} />
+                  <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} className="bg-white/5 border-white/10" />
                 </div>
                 <div>
                   <Label htmlFor="email-s">E-mail</Label>
-                  <Input id="email-s" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
+                  <Input id="email-s" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} className="bg-white/5 border-white/10" />
                 </div>
                 <div>
                   <Label htmlFor="password-s">Senha</Label>
-                  <Input id="password-s" type="password" minLength={6} required value={password} onChange={(e) => setPassword(e.target.value)} />
+                  <Input id="password-s" type="password" minLength={6} required value={password} onChange={(e) => setPassword(e.target.value)} className="bg-white/5 border-white/10" />
                 </div>
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "CRIAR CONTA ALPHA"}
