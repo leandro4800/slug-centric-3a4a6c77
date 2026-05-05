@@ -190,7 +190,11 @@ const Login = () => {
       <div className="relative w-full max-w-md">
         <Link to={urlSlug ? `/${urlSlug}` : "/"} className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
-            <Logo withText={false} />
+            {tenant?.logo_url ? (
+              <img src={tenant.logo_url} alt={tenant.nome} className="h-12 w-auto object-contain" />
+            ) : (
+              <Logo withText={false} />
+            )}
             {tenant ? (
               <span className="font-display text-xl tracking-wider uppercase">
                 {tenant.nome}
