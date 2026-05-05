@@ -111,10 +111,7 @@ const TENANT_PUBLIC_COLUMNS =
 const CACHE_KEY = (slug: string) => `branding:${slug}`;
 
 const readCache = (slug: string): { overrides: ThemeOverrides | null; hero: string | null } | null => {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY(slug));
-    return raw ? JSON.parse(raw) : null;
-  } catch { return null; }
+  return null; // Desativando cache local temporariamente para garantir consistência total com o servidor
 };
 
 const writeCache = (slug: string, overrides: ThemeOverrides | null, hero: string | null) => {
