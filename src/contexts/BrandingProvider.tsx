@@ -116,7 +116,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const params = useParams<{ slug: string }>();
   const location = useLocation();
   
-  // Extrai o slug do path se useParams falhar (comum se o Provider estiver acima das Routes)
+  // Extrai o slug do path se useParams falhar
   const pathParts = location.pathname.split("/").filter(Boolean);
   const reservedKeywords = ["marketplace", "seja-coach", "login", "forgot-password", "reset-password", "checkout", "onboarding", "admin", "unsubscribe"];
   const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
@@ -126,15 +126,46 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
+  const lastLoadedTenantId = useRef<string | null>(null);
 
   const load = async (targetSlug: string | null, force = false) => {
+    // Se não temos slug, tentamos buscar o tenant do usuário logado
     if (!targetSlug) {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from("perfis")
+          .select("tenant_id")
+          .eq("id", session.user.id)
+          .maybeSingle();
+        
+        if (profile?.tenant_id) {
+          const { data: tenantData } = await supabase
+            .from("tenants")
+            .select(TENANT_PUBLIC_COLUMNS)
+            .eq("id", profile.tenant_id)
+            .maybeSingle();
+          
+          if (tenantData && isMountedRef.current) {
+            const t = tenantData as Tenant;
+            setTenant(t);
+            const overrides = (t.theme_overrides as ThemeOverrides | null) ?? null;
+            applyTheme(overrides, t.hero_url, force);
+            setLoading(false);
+            lastLoadedSlug.current = t.slug;
+            lastLoadedTenantId.current = t.id;
+            return;
+          }
+        }
+      }
+
       if (isMountedRef.current) {
         setTenant(null);
         setLoading(false);
-        applyTheme(null, null);
+        applyTheme(null, null, force);
       }
       lastLoadedSlug.current = null;
+      lastLoadedTenantId.current = null;
       return;
     }
 
@@ -145,13 +176,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
     lastLoadedSlug.current = targetSlug;
 
-    // 1) Aplica IMEDIATAMENTE o tema cacheado
-    const cached = readCache(targetSlug);
-    if (cached) {
-      applyTheme(cached.overrides, cached.hero);
-    }
-
-    // 2) Busca dados atualizados
+    // Busca dados atualizados do tenant via slug
     const { data, error } = await supabase
       .from("tenants")
       .select(TENANT_PUBLIC_COLUMNS)
@@ -169,9 +194,9 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     const t = data as Tenant | null;
     setTenant(t);
     const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
-    applyTheme(overrides, t?.hero_url);
-    writeCache(targetSlug, overrides, t?.hero_url ?? null);
+    applyTheme(overrides, t?.hero_url, force);
     setLoading(false);
+    if (t) lastLoadedTenantId.current = t.id;
   };
 
   const applyPreview = (overrides: ThemeOverrides) => {
@@ -184,11 +209,44 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     isMountedRef.current = true;
     void load(slug);
+    
+    // 1) Escuta mudanças de auth para recarregar o branding
+    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        void load(slug, true);
+      }
+    });
+
+    // 2) Real-time subscription para manter o tema sincronizado entre dispositivos
+    // Se temos um tenant carregado, escutamos mudanças na tabela 'tenants' para aquele ID
+    let tenantSub: any = null;
+    
+    if (tenant?.id) {
+      tenantSub = supabase
+        .channel(`tenant-branding-${tenant.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tenants',
+            filter: `id=eq.${tenant.id}`
+          },
+          (payload) => {
+            console.log("[Branding] Mudança detectada em tempo real:", payload.new);
+            const t = payload.new as Tenant;
+            setTenant(t);
+            applyTheme(t.theme_overrides as ThemeOverrides, t.hero_url, true);
+          }
+        )
+        .subscribe();
+    }
+
     return () => {
-      // NÃO limpamos isMountedRef aqui se o provider for global, 
-      // mas se ele unmountar (ex: logout total), limpamos.
+      authSub.unsubscribe();
+      if (tenantSub) supabase.removeChannel(tenantSub);
     };
-  }, [slug]);
+  }, [slug, tenant?.id]);
 
   return (
     <BrandingContext.Provider value={{ tenant, loading, refresh: () => load(slug, true), applyPreview, clearPreview }}>
