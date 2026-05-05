@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff,   Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
 
@@ -23,8 +23,8 @@ interface VlogPost {
 }
 
 const PlatformIcon = ({ p }: { p: string }) => {
-  if (p === "youtube") return <Youtube className="h-4 w-4 text-[hsl(0_85%_55%)]" />;
-  if (p === "instagram") return <Instagram className="h-4 w-4 text-[hsl(330_85%_60%)]" />;
+  if (p === "youtube") return <Video className="h-4 w-4 text-[hsl(0_85%_55%)]" />;
+  if (p === "instagram") return <Video className="h-4 w-4 text-[hsl(330_85%_60%)]" />;
   if (p === "tiktok") return <Music2 className="h-4 w-4 text-foreground" />;
   return <LinkIcon className="h-4 w-4 text-muted-foreground" />;
 };
@@ -335,7 +335,7 @@ export const VlogsAdmin = () => {
 
         <details className="border border-white/10 rounded-xl p-4 mb-3 bg-background/40" open>
           <summary className="cursor-pointer font-display text-lg flex items-center gap-2">
-            <Youtube className="h-5 w-5 text-[hsl(0_85%_55%)]" /> YouTube via Zapier (recomendado)
+            <Video className="h-5 w-5 text-[hsl(0_85%_55%)]" /> YouTube via Zapier (recomendado)
           </summary>
           <ol className="mt-4 space-y-3 text-sm list-decimal list-inside">
             <li>No <a href="https://zapier.com/app/zaps" target="_blank" rel="noreferrer" className="text-primary underline">Zapier</a>, clique em <b>Create Zap</b>.</li>
@@ -364,7 +364,7 @@ external_id   → Video Id`}</pre>
 
         <details className="border border-white/10 rounded-xl p-4 mb-3 bg-background/40">
           <summary className="cursor-pointer font-display text-lg flex items-center gap-2">
-            <Instagram className="h-5 w-5 text-[hsl(330_85%_60%)]" /> Instagram via Zapier
+            <Video className="h-5 w-5 text-[hsl(330_85%_60%)]" /> Instagram via Zapier
           </summary>
           <ol className="mt-4 space-y-3 text-sm list-decimal list-inside">
             <li>É necessário ter conta <b>Instagram Business ou Creator</b> conectada a uma <b>Página do Facebook</b>.</li>

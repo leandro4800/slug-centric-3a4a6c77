@@ -302,7 +302,7 @@ export const ExerciseCard = ({
                 }`}
               >
                 {showYT && <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-40" />}
-                <Youtube className="h-3 w-3 relative z-10" /> <span className="relative z-10">Técnico</span>
+                <Video className="h-3 w-3 relative z-10" /> <span className="relative z-10">Técnico</span>
               </button>
             )}
           </div>

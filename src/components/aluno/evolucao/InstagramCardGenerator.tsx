@@ -44,7 +44,7 @@ export const InstagramCardGenerator = ({ userName, weightLoss, beforeImg, afterI
         className="w-full h-12 bg-gradient-to-r from-purple-600 to-pink-600 border-none text-white font-bold tracking-widest"
         onClick={handleGenerate}
       >
-        <Instagram className="h-5 w-5 mr-2" /> GERAR CARD RESULTADO
+        <Camera className="h-5 w-5 mr-2" /> GERAR CARD RESULTADO
       </Button>
 
       {/* Hidden/Preview Card for Generation */}
