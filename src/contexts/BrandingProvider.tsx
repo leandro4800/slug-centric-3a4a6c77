@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
 export type ThemeOverrides = Partial<{
@@ -33,7 +33,6 @@ interface BrandingContextValue {
   tenant: Tenant | null;
   loading: boolean;
   refresh: () => Promise<void>;
-  // Preview ao vivo (não persiste): aplica overrides instantâneos
   applyPreview: (overrides: ThemeOverrides) => void;
   clearPreview: () => void;
 }
@@ -48,17 +47,13 @@ const BrandingContext = createContext<BrandingContextValue>({
 
 export const useBranding = () => useContext(BrandingContext);
 
-// Defaults Premium Ferrari / Absolute Black
 const DEFAULTS = {
-  primary: "355 100% 48%", // Ferrari Red
+  primary: "355 100% 48%",
   primary_glow: "355 100% 60%",
   accent: "355 100% 48%",
   background: "0 0% 0%",
 };
 
-// IMPORTANTE: Apenas tokens "seguros" são sobrescritos pelo tenant.
-// NÃO sobrescrevemos card/foreground/border para preservar o layout/UX
-// uniforme das telas (Dieta, Treino, etc.) entre todos os tenants.
 const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
   primary: ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring"],
   primary_glow: ["--primary-glow"],
@@ -66,29 +61,48 @@ const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
   background: ["--background"],
 };
 
-// Apenas cores de MARCA são aplicadas pelo tenant.
-// background/card/foreground/border NÃO são tocados — o app sempre fica
-// com o fundo escuro e cards Netflix-style padrão.
 const SAFE_KEYS: (keyof typeof DEFAULTS)[] = ["primary", "primary_glow", "accent", "background"];
 
 const clearTokens = (root: HTMLElement) => {
   Object.values(TOKEN_TO_VAR).flat().forEach((v) => root.style.removeProperty(v));
+  root.style.removeProperty("--hero-url");
 };
 
-export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl?: string | null) => {
+// Referência global para evitar re-aplicar o mesmo tema e causar flicker
+let lastAppliedKey = "";
+
+export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl?: string | null, force = false) => {
   const root = document.documentElement;
-  // Sempre limpa antes para garantir que nada vaze entre tenants
-  clearTokens(root);
-  if (overrides) {
-    const merged = { ...DEFAULTS, ...overrides };
-    SAFE_KEYS.forEach((k) => {
-      const value = merged[k];
-      if (!value) return;
-      TOKEN_TO_VAR[k].forEach((v) => root.style.setProperty(v, value));
-    });
+  const currentKey = JSON.stringify({ overrides, heroUrl });
+  
+  if (!force && currentKey === lastAppliedKey) return;
+  lastAppliedKey = currentKey;
+
+  if (!overrides && !heroUrl) {
+    clearTokens(root);
+    return;
   }
-  if (heroUrl) root.style.setProperty("--hero-url", `url(${heroUrl})`);
-  else root.style.removeProperty("--hero-url");
+
+  const merged = { ...DEFAULTS, ...overrides };
+  SAFE_KEYS.forEach((k) => {
+    const value = merged[k];
+    if (!value) return;
+    TOKEN_TO_VAR[k].forEach((v) => {
+      // Só altera se o valor for diferente para evitar reflows desnecessários
+      if (root.style.getPropertyValue(v) !== value) {
+        root.style.setProperty(v, value);
+      }
+    });
+  });
+
+  if (heroUrl) {
+    const urlValue = `url(${heroUrl})`;
+    if (root.style.getPropertyValue("--hero-url") !== urlValue) {
+      root.style.setProperty("--hero-url", urlValue);
+    }
+  } else {
+    root.style.removeProperty("--hero-url");
+  }
 };
 
 const TENANT_PUBLIC_COLUMNS =
@@ -108,16 +122,22 @@ const writeCache = (slug: string, overrides: ThemeOverrides | null, hero: string
 };
 
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
-  const { slug } = useParams<{ slug: string }>();
+  const params = useParams<{ slug: string }>();
+  const location = useLocation();
+  
+  // Extrai o slug do path se useParams falhar (comum se o Provider estiver acima das Routes)
+  const pathParts = location.pathname.split("/").filter(Boolean);
+  const reservedKeywords = ["marketplace", "seja-coach", "login", "forgot-password", "reset-password", "checkout", "onboarding", "admin", "unsubscribe"];
+  const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
+  const slug = params.slug || slugFromPath;
+
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [loading, setLoading] = useState(true);
   const isMountedRef = useRef(true);
-  
+  const lastLoadedSlug = useRef<string | null>(null);
 
-  const load = async () => {
-    if (!slug) {
-      // Sem slug (rotas públicas): NÃO limpa o tema — mantém o que já estava aplicado
-      // para evitar "piscar" entre telas/navegações.
+  const load = async (targetSlug: string | null) => {
+    if (!targetSlug) {
       if (isMountedRef.current) {
         setTenant(null);
         setLoading(false);
@@ -125,49 +145,60 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    // 1) Aplica IMEDIATAMENTE o tema cacheado para evitar flash do padrão
-    const cached = readCache(slug);
+    if (lastLoadedSlug.current === targetSlug && tenant) {
+      setLoading(false);
+      return;
+    }
+
+    lastLoadedSlug.current = targetSlug;
+
+    // 1) Aplica IMEDIATAMENTE o tema cacheado
+    const cached = readCache(targetSlug);
     if (cached) {
       applyTheme(cached.overrides, cached.hero);
     }
 
-    // 2) Busca dados atualizados em background
+    // 2) Busca dados atualizados
     const { data, error } = await supabase
       .from("tenants")
       .select(TENANT_PUBLIC_COLUMNS)
-      .eq("slug", slug)
+      .eq("slug", targetSlug)
       .maybeSingle();
+
     if (!isMountedRef.current) return;
+    
     if (error) {
       console.warn("[Branding] erro:", error.message);
       setLoading(false);
       return;
     }
+
     const t = data as Tenant | null;
     setTenant(t);
     const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
     applyTheme(overrides, t?.hero_url);
-    writeCache(slug, overrides, t?.hero_url ?? null);
+    writeCache(targetSlug, overrides, t?.hero_url ?? null);
     setLoading(false);
   };
 
   const applyPreview = (overrides: ThemeOverrides) => {
     const merged = { ...(tenant?.theme_overrides || {}), ...overrides };
-    applyTheme(merged, tenant?.hero_url);
+    applyTheme(merged, tenant?.hero_url, true);
   };
-  const clearPreview = () => applyTheme(tenant?.theme_overrides as ThemeOverrides | null, tenant?.hero_url);
+  
+  const clearPreview = () => applyTheme(tenant?.theme_overrides as ThemeOverrides | null, tenant?.hero_url, true);
 
   useEffect(() => {
     isMountedRef.current = true;
-    void load();
+    void load(slug);
     return () => {
-      isMountedRef.current = false;
+      // NÃO limpamos isMountedRef aqui se o provider for global, 
+      // mas se ele unmountar (ex: logout total), limpamos.
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   return (
-    <BrandingContext.Provider value={{ tenant, loading, refresh: load, applyPreview, clearPreview }}>
+    <BrandingContext.Provider value={{ tenant, loading, refresh: () => load(slug), applyPreview, clearPreview }}>
       {children}
     </BrandingContext.Provider>
   );
