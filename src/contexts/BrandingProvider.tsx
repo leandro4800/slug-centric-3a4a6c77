@@ -136,7 +136,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
 
-  const load = async (targetSlug: string | null) => {
+  const load = async (targetSlug: string | null, force = false) => {
     if (!targetSlug) {
       if (isMountedRef.current) {
         setTenant(null);
@@ -147,7 +147,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
 
-    if (lastLoadedSlug.current === targetSlug && tenant) {
+    if (lastLoadedSlug.current === targetSlug && tenant && !force) {
       setLoading(false);
       return;
     }
@@ -200,7 +200,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   }, [slug]);
 
   return (
-    <BrandingContext.Provider value={{ tenant, loading, refresh: () => load(slug), applyPreview, clearPreview }}>
+    <BrandingContext.Provider value={{ tenant, loading, refresh: () => load(slug, true), applyPreview, clearPreview }}>
       {children}
     </BrandingContext.Provider>
   );
