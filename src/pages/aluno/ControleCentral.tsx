@@ -93,7 +93,7 @@ const ControleCentral = () => {
           <LayoutDashboard className="h-5 w-5" />
           <div className="flex-1">
             <p className="font-display text-base leading-tight">VOLTAR AO PAINEL ADMIN</p>
-            <p className="text-[10px] uppercase tracking-widest opacity-80">Super admin AlphaCoach</p>
+            <p className="text-[10px] uppercase tracking-widest opacity-80">Super admin Alpha Coach</p>
           </div>
           <span>→</span>
         </Link>
