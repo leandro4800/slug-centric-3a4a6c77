@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { BrandingProvider } from "@/contexts/BrandingProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
+import { SplashScreen } from "@/components/SplashScreen";
 
 import Landing from "./pages/Landing";
 import Marketplace from "./pages/Marketplace";
