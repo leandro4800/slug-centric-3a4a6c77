@@ -123,12 +123,15 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const slug = params.slug || slugFromPath;
 
   const [tenant, setTenant] = useState<Tenant | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false); // Mudado para false por padrão para evitar loop no SplashScreen se o slug não for encontrado de imediato
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
 
   const load = async (targetSlug: string | null, force = false) => {
+    if (targetSlug || force) {
+      setLoading(true);
+    }
     // Se não temos slug, tentamos buscar o tenant do usuário logado
     if (!targetSlug) {
       const { data: { session } } = await supabase.auth.getSession();
