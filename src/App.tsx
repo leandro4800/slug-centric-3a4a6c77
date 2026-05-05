@@ -39,6 +39,7 @@ import AdminCoaches from "./pages/admin/AdminCoaches";
 import AdminPlanos from "./pages/admin/AdminPlanos";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
+import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 
@@ -114,6 +115,7 @@ const App = () => (
             <Route path="/:slug/admin/faturamento" element={<RequireAuth><AdminFaturamento /></RequireAuth>} />
             <Route path="/:slug/admin/base-conhecimento" element={<RequireAuth><AdminBaseConhecimento /></RequireAuth>} />
             <Route path="/:slug/admin/vlogs" element={<RequireAuth><AdminVlogs /></RequireAuth>} />
+            <Route path="/:slug/admin/videos-tecnicos" element={<RequireAuth><AdminVideosTecnicos /></RequireAuth>} />
 
             <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />

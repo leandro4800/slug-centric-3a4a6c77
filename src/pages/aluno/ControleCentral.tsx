@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard, Wallet } from "lucide-react";
+import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard, Wallet, Video } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
@@ -158,6 +158,13 @@ const ControleCentral = () => {
           className="bg-primary hover:bg-primary/90 text-primary-foreground font-display text-xl rounded-none shadow-glow flex items-center justify-center gap-3 h-14"
         >
           <Plus className="h-5 w-5" /> LANÇAR NOVO EPISÓDIO (VLOG)
+        </Link>
+
+        <Link
+          to={`/${slug}/admin/videos-tecnicos`}
+          className="bg-zinc-900 border border-white/10 hover:border-primary/50 text-white font-display text-xl rounded-none flex items-center justify-center gap-3 h-14 transition-all"
+        >
+          <Video className="h-5 w-5 text-primary" /> VÍDEOS TÉCNICOS
         </Link>
 
         <div className="bg-card/40 border border-white/10 rounded-none p-4">
