@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Youtube, Mic } from "lucide-react";
+import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
@@ -302,7 +302,7 @@ export const ExerciseCard = ({
                 }`}
               >
                 {showYT && <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-40" />}
-                <Youtube className="h-3 w-3 relative z-10" /> <span className="relative z-10">Técnico</span>
+                <Video className="h-3 w-3 relative z-10" /> <span className="relative z-10">Técnico</span>
               </button>
             )}
           </div>
