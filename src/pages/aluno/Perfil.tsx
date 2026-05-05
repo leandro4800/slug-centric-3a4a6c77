@@ -97,7 +97,14 @@ const Perfil = () => {
     }
   };
 
-  const handleLogout = async () => { await signOut(); navigate("/login"); };
+  const handleLogout = async () => { 
+    await signOut(); 
+    if (slug) {
+      navigate(`/${slug}/login`);
+    } else {
+      navigate("/login");
+    }
+  };
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
