@@ -188,7 +188,7 @@ const Login = () => {
             )}
           </div>
         </Link>
-        <div className="relative bg-background/20 backdrop-blur-xl border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
+        <div className="relative bg-transparent backdrop-blur-md border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           {user ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
