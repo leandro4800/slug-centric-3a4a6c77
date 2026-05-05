@@ -193,21 +193,11 @@ const AlunoHome = () => {
                 {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-primary" />}
               </button>
             )}
-            {expanded && (
-              <button
-                onClick={() => { setExpanded(false); setMuted(true); }}
-                className="px-3 h-9 rounded-full bg-background/80 border border-border text-xs font-semibold backdrop-blur"
-              >
-                Fechar
-              </button>
-            )}
             
-            {/* Ícone de Perfil para todos os alunos */}
             <Link to={`/${slug}/app/perfil`} className="w-10 h-10 rounded-full bg-card/70 border border-border flex items-center justify-center backdrop-blur">
               <User className="h-4 w-4 text-foreground" />
             </Link>
 
-            {/* Ícone de Engrenagem apenas para admins */}
             {isAdmin && (
               <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center backdrop-blur">
                 <svg
@@ -229,22 +219,21 @@ const AlunoHome = () => {
             )}
           </div>
         </div>
-        {!expanded && (
-          <div className="absolute bottom-8 left-0 right-0 px-5 z-10">
-            <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "AlphaCoach"}</p>
-            <h1 className="font-display text-5xl text-foreground mb-5 leading-none drop-shadow-lg">
-              {featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
-            </h1>
-            <Button
-              onClick={handlePlay}
-              disabled={!featured}
-              className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-none tracking-widest"
-              title={featured ? "Reproduzir último vlog" : "Sem vlog publicado"}
-            >
-              <Play className="h-4 w-4 fill-current" /> REPRODUZIR
-            </Button>
-          </div>
-        )}
+        
+        <div className="relative z-10">
+          <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "AlphaCoach"}</p>
+          <h1 className="font-display text-5xl text-foreground mb-5 leading-none drop-shadow-lg">
+            {featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
+          </h1>
+          <Button
+            onClick={handlePlay}
+            disabled={!featured}
+            className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-none tracking-widest"
+          >
+            <Play className="h-4 w-4 fill-current" /> REPRODUZIR
+          </Button>
+        </div>
+      </section>
       </section>
 
       {/* Dr. IA Prompt */}
