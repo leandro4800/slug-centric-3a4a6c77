@@ -91,6 +91,51 @@ const PRESETS: Preset[] = [
       border: "0 0% 85%",
     },
   },
+  {
+    id: "army-stealth",
+    name: "ARMY STEALTH",
+    subtitle: "Tático · Verde Militar",
+    swatches: ["#1A1C14", "#2D3021", "#4B5320", "#D1D5B8"],
+    overrides: {
+      primary: "72 45% 23%",
+      primary_glow: "72 45% 40%",
+      accent: "72 45% 23%",
+      background: "75 15% 9%",
+      card: "75 15% 14%",
+      foreground: "60 30% 96%",
+      border: "75 15% 25%",
+    },
+  },
+  {
+    id: "desert-storm",
+    name: "DESERT STORM",
+    subtitle: "Ação · Areia & Cinza",
+    swatches: ["#2B2824", "#3D3934", "#C2B280", "#F5F5DC"],
+    overrides: {
+      primary: "45 38% 63%",
+      primary_glow: "45 38% 80%",
+      accent: "45 38% 63%",
+      background: "30 10% 12%",
+      card: "30 10% 18%",
+      foreground: "40 20% 98%",
+      border: "30 10% 25%",
+    },
+  },
+  {
+    id: "midnight-neon",
+    name: "MIDNIGHT NEON",
+    subtitle: "Cyberpunk · Roxo & Preto",
+    swatches: ["#000000", "#12001F", "#BC13FE", "#FFFFFF"],
+    overrides: {
+      primary: "282 100% 54%",
+      primary_glow: "282 100% 75%",
+      accent: "282 100% 54%",
+      background: "270 100% 3%",
+      card: "270 100% 7%",
+      foreground: "0 0% 100%",
+      border: "270 50% 20%",
+    },
+  },
 ];
 
 export const IdentidadeVisual = () => {
