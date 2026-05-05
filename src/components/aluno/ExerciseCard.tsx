@@ -98,6 +98,8 @@ export const ExerciseCard = ({
         return;
       }
 
+      setReferenceVideoUrl(null);
+
       try {
         const exerciseName = data.exercicio.trim();
         const { data: refData, error } = await supabase
