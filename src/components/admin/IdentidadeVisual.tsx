@@ -37,8 +37,8 @@ const PRESETS: Preset[] = [
     subtitle: "Premium · Dourado Espelhado",
     swatches: ["#000000", "#1A1A1A", "#FFD700", "#FFFACD"],
     overrides: {
-      primary: "44 85% 50%",
-      primary_glow: "48 100% 85%",
+      primary: "45 100% 50%",
+      primary_glow: "45 100% 80%",
       accent: "44 85% 50%",
       background: "0 0% 0%",
       card: "0 0% 3%",
