@@ -244,7 +244,7 @@ const Login = () => {
           )}
         </div>
         <p className="text-center text-xs text-muted-foreground mt-6">
-          Alpha Coach 1.0 · Plataforma multi-tenant para coaches
+          {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
         </p>
       </div>
     </div>
