@@ -99,10 +99,11 @@ export const ExerciseCard = ({
       }
 
       try {
+        const exerciseName = data.exercicio.trim();
         const { data: refData, error } = await supabase
           .from('referencia_exercicios')
           .select('url_video')
-          .eq('nome_exercicio', data.exercicio)
+          .ilike('nome_exercicio', exerciseName)
           .maybeSingle();
         
         if (!error && refData) {
