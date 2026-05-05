@@ -141,7 +141,9 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
       if (isMountedRef.current) {
         setTenant(null);
         setLoading(false);
+        applyTheme(null, null);
       }
+      lastLoadedSlug.current = null;
       return;
     }
 
