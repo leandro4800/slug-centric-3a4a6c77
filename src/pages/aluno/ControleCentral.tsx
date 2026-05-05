@@ -160,6 +160,13 @@ const ControleCentral = () => {
           <Plus className="h-5 w-5" /> LANÇAR NOVO EPISÓDIO (VLOG)
         </Link>
 
+        <Link
+          to={`/${slug}/admin/videos-tecnicos`}
+          className="bg-zinc-900 border border-white/10 hover:border-primary/50 text-white font-display text-xl rounded-none flex items-center justify-center gap-3 h-14 transition-all"
+        >
+          <Video className="h-5 w-5 text-primary" /> VÍDEOS TÉCNICOS
+        </Link>
+
         <div className="bg-card/40 border border-white/10 rounded-none p-4">
           <div className="flex items-center gap-2 mb-3">
             <Headphones className="h-5 w-5 text-primary" />
