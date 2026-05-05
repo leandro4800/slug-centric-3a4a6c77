@@ -221,7 +221,7 @@ const AlunoHome = () => {
         </div>
         
         <div className="relative z-10">
-          <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "AlphaCoach"}</p>
+          <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "Alpha Coach"}</p>
           <h1 className="font-display text-5xl text-foreground mb-5 leading-none drop-shadow-lg">
             {featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
           </h1>
