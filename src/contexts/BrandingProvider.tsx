@@ -210,17 +210,43 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     isMountedRef.current = true;
     void load(slug);
     
-    // Escuta mudanças de auth para recarregar o branding se o usuário logar/deslogar
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    // 1) Escuta mudanças de auth para recarregar o branding
+    const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
         void load(slug, true);
       }
     });
 
+    // 2) Real-time subscription para manter o tema sincronizado entre dispositivos
+    // Se temos um tenant carregado, escutamos mudanças na tabela 'tenants' para aquele ID
+    let tenantSub: any = null;
+    
+    if (tenant?.id) {
+      tenantSub = supabase
+        .channel(`tenant-branding-${tenant.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'public',
+            table: 'tenants',
+            filter: `id=eq.${tenant.id}`
+          },
+          (payload) => {
+            console.log("[Branding] Mudança detectada em tempo real:", payload.new);
+            const t = payload.new as Tenant;
+            setTenant(t);
+            applyTheme(t.theme_overrides as ThemeOverrides, t.hero_url, true);
+          }
+        )
+        .subscribe();
+    }
+
     return () => {
-      subscription.unsubscribe();
+      authSub.unsubscribe();
+      if (tenantSub) supabase.removeChannel(tenantSub);
     };
-  }, [slug]);
+  }, [slug, tenant?.id]);
 
   return (
     <BrandingContext.Provider value={{ tenant, loading, refresh: () => load(slug, true), applyPreview, clearPreview }}>
