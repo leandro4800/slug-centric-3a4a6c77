@@ -235,26 +235,7 @@ const AlunoHome = () => {
         </div>
       </section>
 
-      {/* Dr. IA Prompt - Removido a pedido do usuário */}
-      {/* 
       <section className="px-5 -mt-2 space-y-3">
-        <Link 
-          to={`/${slug}/app/dr-ia`}
-          className="bg-card/60 border border-primary/20 rounded-2xl p-4 flex items-center gap-4 hover:bg-primary/5 transition-colors group"
-        >
-          <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:scale-110 transition-transform">
-            <Stethoscope className="h-6 w-6 text-primary" />
-          </div>
-          <div className="flex-1">
-            <p className="font-display text-lg text-primary leading-tight uppercase">Dr. IA</p>
-            <p className="text-xs text-muted-foreground">Seu médico esportivo de bolso</p>
-          </div>
-          <ChevronRight className="h-5 w-5 text-primary/50" />
-        </Link>
-      ...
-      </section>
-      */}
-
         <div className="bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-card/50 border border-border flex items-center justify-center">
             <TenantSymbol size={28} />
