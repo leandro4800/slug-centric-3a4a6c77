@@ -4,7 +4,7 @@ export const Logo = ({ size = 36, withText = true }: { size?: number; withText?:
   <div className="flex items-center gap-3">
     <img
       src={logo}
-      alt="AlphaCoach"
+      alt="Alpha Coach"
       width={size}
       height={size}
       className="rounded-none object-cover"

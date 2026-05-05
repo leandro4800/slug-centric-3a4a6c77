@@ -228,7 +228,7 @@ const Login = () => {
           )}
         </div>
         <p className="text-center text-xs text-muted-foreground mt-6">
-          AlphaCoach 1.0 · Plataforma multi-tenant para coaches
+          Alpha Coach 1.0 · Plataforma multi-tenant para coaches
         </p>
       </div>
     </div>
