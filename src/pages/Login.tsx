@@ -269,7 +269,7 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="password-s">Senha</Label>
-                  <div className="relative">
+                  <div className="relative group">
                     <Input 
                       id="password-s" 
                       type={showPassword ? "text" : "password"} 
@@ -277,14 +277,16 @@ const Login = () => {
                       required 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10" 
+                      className="bg-white/5 border-white/10 pr-10 focus:ring-primary/50" 
                     />
                     <button
                       type="button"
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-all duration-200 z-10 p-1"
+                      aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
