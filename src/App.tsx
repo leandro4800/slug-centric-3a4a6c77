@@ -39,6 +39,7 @@ import AdminCoaches from "./pages/admin/AdminCoaches";
 import AdminPlanos from "./pages/admin/AdminPlanos";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
+import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 
