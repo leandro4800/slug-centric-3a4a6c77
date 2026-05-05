@@ -234,7 +234,6 @@ const AlunoHome = () => {
           </Button>
         </div>
       </section>
-      </section>
 
       {/* Dr. IA Prompt */}
       <section className="px-5 -mt-2 space-y-3">
