@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Youtube } from "lucide-react";
+import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Youtube, Mic } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
@@ -90,6 +90,103 @@ export const ExerciseCard = ({
   const [savingAll, setSavingAll] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
+  const [listeningIdx, setListeningIdx] = useState<number | null>(null);
+
+  const startListening = (index: number) => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "pt-BR";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      setListeningIdx(index);
+      toast.info("Ouvindo...", { id: "voice-toast" });
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript.toLowerCase();
+      console.log("Transcrição:", transcript);
+      
+      const numbers = transcript.match(/\d+/g)?.map(Number) || [];
+      let reps = "";
+      let carga = "";
+
+      // Parser Inteligente
+      const hasKg = /kg|quilo|carga/.test(transcript);
+      const hasReps = /rep|movimento/.test(transcript);
+
+      if (hasKg || hasReps) {
+        // Tenta associar números baseados em palavras-chave próximas
+        const words = transcript.split(/\s+/);
+        words.forEach((word, idx) => {
+          if (!isNaN(Number(word))) {
+            const nextWord = words[idx + 1] || "";
+            if (/kg|quilo|carga/.test(nextWord)) carga = word;
+            else if (/rep|movimento/.test(nextWord)) reps = word;
+          }
+        });
+      }
+
+      // Heurística se falhar o parser por palavras-chave
+      if (!reps && !carga && numbers.length >= 1) {
+        if (numbers.length === 1) {
+          // Se só um número, assume reps se pequeno, senão carga
+          if (numbers[0] <= 30) reps = String(numbers[0]);
+          else carga = String(numbers[0]);
+        } else {
+          // Dois números: heuristicamente o maior costuma ser carga (se > 30)
+          const n1 = numbers[0];
+          const n2 = numbers[1];
+          if (n1 > 30 && n2 <= 30) {
+            carga = String(n1);
+            reps = String(n2);
+          } else if (n2 > 30 && n1 <= 30) {
+            carga = String(n2);
+            reps = String(n1);
+          } else {
+            // Padrão: primeiro reps, segundo carga
+            reps = String(n1);
+            carga = String(n2);
+          }
+        }
+      }
+
+      if (reps || carga) {
+        setSlots(prev => prev.map((s, idx) => {
+          if (idx === index) {
+            return {
+              ...s,
+              reps: reps || s.reps,
+              carga: carga || s.carga
+            };
+          }
+          return s;
+        }));
+        toast.success(`Capturado: ${reps ? reps + " reps" : ""} ${carga ? carga + "kg" : ""}`, { id: "voice-toast" });
+      } else {
+        toast.error("Não entendi os valores. Tente: '10 repetições e 50 quilos'", { id: "voice-toast" });
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error("Speech error", event.error);
+      toast.error("Erro ao ouvir. Tente novamente.", { id: "voice-toast" });
+      setListeningIdx(null);
+    };
+
+    recognition.onend = () => {
+      setListeningIdx(null);
+    };
+
+    recognition.start();
+  };
 
   // Timer
   const [running, setRunning] = useState(false);
@@ -359,15 +456,27 @@ export const ExerciseCard = ({
                   ? "border-amber-500/50 bg-amber-500/5"
                   : "border-border bg-background/40"
               }`}>
-                <button
-                  onClick={() => toggleDone(i)}
-                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
-                >
-                  <CheckCircle2 className={`h-4 w-4 ${slot.done ? "text-emerald-500" : "text-muted-foreground"}`} />
-                  <span className={getSeriesType(data.series, i) !== "Aquecimento" ? "font-black" : ""}>
-                    S{i + 1} - {getSeriesType(data.series, i)}
-                  </span>
-                </button>
+                <div className="flex items-center justify-between">
+                  <button
+                    onClick={() => toggleDone(i)}
+                    className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+                  >
+                    <CheckCircle2 className={`h-4 w-4 ${slot.done ? "text-emerald-500" : "text-muted-foreground"}`} />
+                    <span className={getSeriesType(data.series, i) !== "Aquecimento" ? "font-black" : ""}>
+                      S{i + 1} - {getSeriesType(data.series, i)}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => startListening(i)}
+                    className={`p-2 rounded-full transition-all ${
+                      listeningIdx === i 
+                        ? "bg-primary text-primary-foreground animate-pulse" 
+                        : "bg-secondary text-muted-foreground hover:text-primary"
+                    }`}
+                  >
+                    <Mic className="h-4 w-4" />
+                  </button>
+                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Carga (kg)</label>
