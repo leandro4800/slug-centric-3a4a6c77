@@ -402,7 +402,7 @@ Data:
       {/* IG Graph API config */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-2 text-primary flex items-center gap-2">
-          <Instagram className="h-6 w-6" /> PUBLICAÇÃO DIRETA NO INSTAGRAM
+          <Video className="h-6 w-6" /> PUBLICAÇÃO DIRETA NO INSTAGRAM
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
           Para postar Reels diretamente do app, cole abaixo o <b>Access Token de longa duração</b> e o <b>ID da conta Business</b> do Instagram.
