@@ -1,56 +1,45 @@
 import { useBranding } from "@/contexts/BrandingProvider";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
 
+// Marcador de sessão: garante que o splash apareça só UMA vez por aba/sessão,
+// logo após o login, na primeira entrada no app do tenant.
+const SESSION_KEY = "splash_shown_session";
+
 export const SplashScreen = () => {
   const { tenant, loading } = useBranding();
   const location = useLocation();
-  const [isVisible, setIsVisible] = useState(true);
-  const [shouldRender, setShouldRender] = useState(true);
 
-  // Define quais rotas devem exibir a tela de splash (apenas áreas do "app")
-  const isAppRoute = 
-    location.pathname.includes('/app') || 
-    location.pathname.includes('/admin') || 
+  const isAppRoute =
+    location.pathname.includes('/app') ||
+    location.pathname.includes('/admin') ||
     location.pathname.includes('/onboarding') ||
     location.pathname.includes('/controle');
 
-  useEffect(() => {
-    // Se não for uma rota do app, não devemos renderizar o splash
-    if (!isAppRoute) {
-      setShouldRender(false);
-      setIsVisible(false);
-      return;
-    }
+  const alreadyShown = typeof window !== "undefined" && sessionStorage.getItem(SESSION_KEY) === "1";
 
-    // Se estiver no app e não estiver mais carregando o branding, iniciamos o fade out
-    if (!loading) {
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        // Remove do DOM após a animação de fade out
-        setTimeout(() => setShouldRender(false), 500);
-      }, 800);
-      return () => clearTimeout(timer);
-    } else {
-      // Se voltar a carregar (ex: mudança de rota interna do app), resetamos o estado
-      setShouldRender(true);
-      setIsVisible(true);
-    }
-  }, [loading, isAppRoute, location.pathname]);
+  const [shouldRender, setShouldRender] = useState(isAppRoute && !alreadyShown);
+  const [isVisible, setIsVisible] = useState(isAppRoute && !alreadyShown);
+  const startedRef = useRef(false);
 
-  // Segurança: se por algum motivo ficar preso em loading por mais de 5 segundos, libera a tela
   useEffect(() => {
-    if (loading && isAppRoute) {
-      const safetyTimer = setTimeout(() => {
-        console.warn("[SplashScreen] Timeout de segurança atingido, removendo tela de splash.");
-        setIsVisible(false);
-        setTimeout(() => setShouldRender(false), 500);
-      }, 5000);
-      return () => clearTimeout(safetyTimer);
-    }
-  }, [loading, isAppRoute]);
+    if (!shouldRender) return;
+    if (startedRef.current) return;
+    startedRef.current = true;
+
+    sessionStorage.setItem(SESSION_KEY, "1");
+
+    // Mostra por ~1.4s independente do estado de loading do branding
+    const fadeTimer = setTimeout(() => setIsVisible(false), 1400);
+    const removeTimer = setTimeout(() => setShouldRender(false), 1900);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
+  }, [shouldRender]);
 
   if (!shouldRender || !isAppRoute) return null;
 
