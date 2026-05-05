@@ -1,5 +1,5 @@
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
-import {  Play, CheckCircle2 } from "lucide-react";
+import { Video, Play, CheckCircle2 } from "lucide-react";
 
 interface ExercisePlayerProps {
   videoUrl?: string | null;
