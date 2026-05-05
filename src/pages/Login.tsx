@@ -197,7 +197,7 @@ const Login = () => {
             </div>
           ) : (
             <Tabs defaultValue="login">
-            <TabsList className="grid grid-cols-2 w-full mb-8 bg-card p-1 rounded-none border border-white/5">
+            <TabsList className="grid grid-cols-2 w-full mb-8 bg-transparent p-1 rounded-none border border-white/5">
               <TabsTrigger value="login" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs py-3">Entrar</TabsTrigger>
               <TabsTrigger value="signup" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs py-3">Criar conta</TabsTrigger>
             </TabsList>
