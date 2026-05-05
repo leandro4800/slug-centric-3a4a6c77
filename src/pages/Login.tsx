@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,13 @@ import { Logo } from "@/components/Logo";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
+import { useBranding } from "@/contexts/BrandingProvider";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { slug: urlSlug } = useParams<{ slug: string }>();
+  const { tenant } = useBranding();
   const { user, isLoading: authLoading } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -164,15 +167,28 @@ const Login = () => {
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-background">
       <div
         className="absolute inset-0 bg-cover bg-center scale-110"
-        style={{ backgroundImage: `url(${loginBg})` }}
+        style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.18),transparent_70%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.85)_100%)]" />
 
       <div className="relative w-full max-w-md">
-        <Link to="/" className="flex justify-center mb-8"><Logo /></Link>
-        <div className="relative bg-background/90 backdrop-blur-xl border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
+        <Link to={urlSlug ? `/${urlSlug}` : "/"} className="flex justify-center mb-8">
+          <div className="flex items-center gap-3">
+            <Logo withText={false} />
+            {tenant ? (
+              <span className="font-display text-xl tracking-wider uppercase">
+                {tenant.nome}
+              </span>
+            ) : (
+              <span className="font-display text-xl tracking-wider">
+                ALPHA<span className="text-primary">COACH</span>
+              </span>
+            )}
+          </div>
+        </Link>
+        <div className="relative bg-background/20 backdrop-blur-xl border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           {user ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">

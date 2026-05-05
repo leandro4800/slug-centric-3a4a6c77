@@ -141,7 +141,7 @@ export default function TenantLanding() {
             <ArrowLeft className="h-4 w-4" /> Marketplace
           </Link>
           <div className="flex items-center gap-3">
-            <Link to={`/${slug}/app`}>
+            <Link to={`/${slug}/login`}>
               <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">Entrar</Button>
             </Link>
           </div>
