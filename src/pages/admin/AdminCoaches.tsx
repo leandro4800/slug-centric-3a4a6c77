@@ -244,7 +244,7 @@ export default function AdminCoaches() {
             className="text-sm text-muted-foreground hover:text-foreground p-0 h-auto"
             size="default"
           />
-          <h1 className="font-display text-xl uppercase">Admin AlphaCoach</h1>
+          <h1 className="font-display text-xl uppercase">Admin Alpha Coach</h1>
         </div>
       </header>
 
