@@ -23,7 +23,7 @@ const Login = () => {
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showEmail, setShowEmail] = useState(false);
+  
 
   // Redirect logged-in user
   useEffect(() => {
