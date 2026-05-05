@@ -23,7 +23,7 @@ const Login = () => {
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [showEmail, setShowEmail] = useState(false);
+  
 
   // Redirect logged-in user
   useEffect(() => {
@@ -210,38 +210,33 @@ const Login = () => {
                   <div className="relative">
                     <Input 
                       id="email" 
-                      type={showEmail ? "text" : "email"} 
+                      type="email" 
                       required 
                       value={email} 
                       onChange={(e) => setEmail(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10" 
+                      className="bg-white/5 border-white/10" 
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowEmail(!showEmail)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
-                    >
-                      {showEmail ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
                   </div>
                 </div>
                 <div>
                   <Label htmlFor="password">Senha</Label>
-                  <div className="relative">
+                  <div className="relative group">
                     <Input 
                       id="password" 
                       type={showPassword ? "text" : "password"} 
                       required 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10" 
+                      className="bg-white/5 border-white/10 pr-10 focus:ring-primary/50" 
                     />
                     <button
                       type="button"
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-all duration-200 z-10 p-1"
+                      aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
@@ -263,27 +258,18 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="email-s">E-mail</Label>
-                  <div className="relative">
-                    <Input 
-                      id="email-s" 
-                      type={showEmail ? "text" : "email"} 
-                      required 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowEmail(!showEmail)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
-                    >
-                      {showEmail ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+                  <Input 
+                    id="email-s" 
+                    type="email" 
+                    required 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    className="bg-white/5 border-white/10" 
+                  />
                 </div>
                 <div>
                   <Label htmlFor="password-s">Senha</Label>
-                  <div className="relative">
+                  <div className="relative group">
                     <Input 
                       id="password-s" 
                       type={showPassword ? "text" : "password"} 
@@ -291,14 +277,16 @@ const Login = () => {
                       required 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10" 
+                      className="bg-white/5 border-white/10 pr-10 focus:ring-primary/50" 
                     />
                     <button
                       type="button"
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-all duration-200 z-10 p-1"
+                      aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
                     >
-                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
