@@ -169,7 +169,7 @@ const Login = () => {
         className="absolute inset-0 bg-cover bg-center scale-110"
         style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.18),transparent_70%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.85)_100%)]" />
 
