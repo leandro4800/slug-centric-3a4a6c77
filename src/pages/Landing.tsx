@@ -468,7 +468,7 @@ const Landing = () => {
                     <Input 
                       value={coachLink}
                       onChange={(e) => setCoachLink(e.target.value)}
-                      placeholder="alphacoach.app/seucoach" 
+                      placeholder="alpha-coach.app/seucoach" 
                       className="h-16 bg-secondary/50 border-white/10 text-xl font-bold"
                       autoFocus
                     />
