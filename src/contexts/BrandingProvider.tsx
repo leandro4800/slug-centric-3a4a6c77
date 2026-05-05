@@ -109,8 +109,17 @@ const TENANT_PUBLIC_COLUMNS =
   "id, slug, nome, tagline, logo_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
 
 // O cache local foi desativado para garantir que o tema venha sempre do Supabase
-const readCache = (slug: string) => null;
-const writeCache = (slug: string, overrides: any, hero: any) => {};
+const readCache = (slug: string) => {
+  const cached = localStorage.getItem(`branding_${slug}`);
+  return cached ? JSON.parse(cached) : null;
+};
+const writeCache = (slug: string, tenant: Tenant | null) => {
+  if (tenant) {
+    localStorage.setItem(`branding_${slug}`, JSON.stringify(tenant));
+  } else {
+    localStorage.removeItem(`branding_${slug}`);
+  }
+};
 
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const params = useParams<{ slug: string }>();
@@ -122,8 +131,8 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
   const slug = params.slug || slugFromPath;
 
-  const [tenant, setTenant] = useState<Tenant | null>(null);
-  const [loading, setLoading] = useState(false); // Mudado para false por padrão para evitar loop no SplashScreen se o slug não for encontrado de imediato
+  const [tenant, setTenant] = useState<Tenant | null>(() => (slug ? readCache(slug) : null));
+  const [loading, setLoading] = useState(false);
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
@@ -155,6 +164,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
             if (tenantData && isMountedRef.current) {
               const t = tenantData as Tenant;
               setTenant(t);
+              writeCache("default", t);
               const overrides = (t.theme_overrides as ThemeOverrides | null) ?? null;
               applyTheme(overrides, t.hero_url, force);
               lastLoadedSlug.current = t.slug;
@@ -195,6 +205,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
       const t = data as Tenant | null;
       setTenant(t);
+      if (targetSlug) writeCache(targetSlug, t);
       const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
       applyTheme(overrides, t?.hero_url, force);
       if (t) lastLoadedTenantId.current = t.id;
