@@ -152,42 +152,34 @@ const AlunoHome = () => {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden bg-background">
-        {ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl ? (
-          <>
-            {ytAutoSrc || tenantHeroVideoId ? (
-              <iframe
-                key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
-                src={ytAutoSrc || `https://www.youtube.com/embed/${tenantHeroVideoId}?autoplay=1&mute=1&loop=1&playlist=${tenantHeroVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
-                title={featured?.title || tenant?.nome || "Hero Video"}
-                allow="autoplay; encrypted-media; picture-in-picture"
-                allowFullScreen
-                className="absolute inset-0 w-full h-full pointer-events-none"
-                style={expanded ? { pointerEvents: "auto" } : undefined}
-              />
-            ) : (
-              <video
-                src={(featuredDirectUrl || tenantHeroDirectUrl)!}
-                autoPlay
-                muted
-                loop
-                playsInline
-                preload="auto"
-                className="absolute inset-0 w-full h-full object-cover"
-              />
-            )}
-            {/* máscara para esconder UI do YT quando não-expandido */}
-            {!expanded && (
-              <div className="absolute inset-0 pointer-events-none" />
-            )}
-          </>
+      {/* Background Hero Fixer */}
+      <div className="hero-mask">
+        {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
+          ytAutoSrc || tenantHeroVideoId ? (
+            <iframe
+              key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
+              src={ytAutoSrc || `https://www.youtube.com/embed/${tenantHeroVideoId}?autoplay=1&mute=1&loop=1&playlist=${tenantHeroVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+              className="w-full h-full pointer-events-none"
+            />
+          ) : (
+            <video
+              src={(featuredDirectUrl || tenantHeroDirectUrl)!}
+              autoPlay
+              muted
+              loop
+              playsInline
+              className="w-full h-full object-cover"
+            />
+          )
         ) : (
-          <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+          <img src={heroImg} alt="" className="w-full h-full object-cover" />
         )}
-        {!expanded && (
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black pointer-events-none" />
-        )}
+      </div>
+
+      {/* Hero Content Section */}
+      <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden flex flex-col justify-end pb-8 px-5">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black pointer-events-none" />
+
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5 z-10">
           <Logo size={32} withText={false} />
           <div className="flex items-center gap-2">
