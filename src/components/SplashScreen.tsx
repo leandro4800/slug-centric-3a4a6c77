@@ -24,6 +24,18 @@ export const SplashScreen = () => {
     }
   }, [loading]);
 
+  // Segurança: se por algum motivo ficar preso em loading por mais de 5 segundos, libera a tela
+  useEffect(() => {
+    if (loading) {
+      const safetyTimer = setTimeout(() => {
+        console.warn("[SplashScreen] Timeout de segurança atingido, removendo tela de splash.");
+        setIsVisible(false);
+        setTimeout(() => setShouldRender(false), 500);
+      }, 5000);
+      return () => clearTimeout(safetyTimer);
+    }
+  }, [loading]);
+
   if (!shouldRender) return null;
 
   return (
