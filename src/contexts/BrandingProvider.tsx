@@ -108,15 +108,9 @@ export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl
 const TENANT_PUBLIC_COLUMNS =
   "id, slug, nome, tagline, logo_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
 
-const CACHE_KEY = (slug: string) => `branding:${slug}`;
-
-const readCache = (slug: string): { overrides: ThemeOverrides | null; hero: string | null } | null => {
-  return null; // Desativando cache local temporariamente para garantir consistência total com o servidor
-};
-
-const writeCache = (slug: string, overrides: ThemeOverrides | null, hero: string | null) => {
-  try { localStorage.setItem(CACHE_KEY(slug), JSON.stringify({ overrides, hero })); } catch {}
-};
+// O cache local foi desativado para garantir que o tema venha sempre do Supabase
+const readCache = (slug: string) => null;
+const writeCache = (slug: string, overrides: any, hero: any) => {};
 
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const params = useParams<{ slug: string }>();
