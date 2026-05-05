@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Save, Trash2, Plus, Video, Search } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Plus, Video, Search, FileText, ClipboardList } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,6 +23,8 @@ const AdminVideosTecnicos = () => {
   const [novoNome, setNovoNome] = useState("");
   const [novoUrl, setNovoUrl] = useState("");
   const [isAdding, setIsAdding] = useState(false);
+  const [isBulkMode, setIsBulkMode] = useState(false);
+  const [bulkData, setBulkData] = useState("");
 
   const loadVideos = async () => {
     try {
@@ -71,6 +73,46 @@ const AdminVideosTecnicos = () => {
     }
   };
 
+  const handleBulkImport = async () => {
+    if (!bulkData.trim()) {
+      toast.error("Cole os dados primeiro");
+      return;
+    }
+
+    const lines = bulkData.split('\n').filter(line => line.trim());
+    const toInsert = lines.map(line => {
+      // Tenta separar por tab ou vírgula
+      const parts = line.includes('\t') ? line.split('\t') : line.split(';');
+      if (parts.length >= 2) {
+        return {
+          nome_exercicio: parts[0].trim(),
+          url_video: parts[1].trim()
+        };
+      }
+      return null;
+    }).filter(item => item !== null);
+
+    if (toInsert.length === 0) {
+      toast.error("Formato inválido. Use: Nome do Exercício [TAB ou ;] URL");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("referencia_exercicios")
+        .insert(toInsert as any);
+
+      if (error) throw error;
+
+      toast.success(`${toInsert.length} exercícios importados!`);
+      setBulkData("");
+      setIsBulkMode(false);
+      loadVideos();
+    } catch (error: any) {
+      toast.error("Erro na importação: " + error.message);
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Tem certeza que deseja remover este vídeo?")) return;
 
@@ -116,8 +158,8 @@ const AdminVideosTecnicos = () => {
       <div className="h-px bg-primary/20 mt-6" />
 
       <div className="mt-8 space-y-4">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
+        <div className="flex flex-wrap gap-2">
+          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               placeholder="Buscar exercício..."
@@ -126,39 +168,75 @@ const AdminVideosTecnicos = () => {
               className="w-full bg-card/40 border border-white/10 rounded-none pl-10 pr-4 py-3 text-sm text-white focus:border-primary/50 outline-none transition-all"
             />
           </div>
-          <Button 
-            onClick={() => setIsAdding(!isAdding)}
-            className="rounded-none h-auto px-4"
-          >
-            <Plus className="h-5 w-5 mr-2" /> NOVO
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => { setIsAdding(!isAdding); setIsBulkMode(false); }}
+              variant={isAdding ? "default" : "outline"}
+              className="rounded-none h-auto px-4"
+            >
+              <Plus className="h-5 w-5 mr-2" /> NOVO
+            </Button>
+            <Button 
+              onClick={() => { setIsBulkMode(!isBulkMode); setIsAdding(false); }}
+              variant={isBulkMode ? "default" : "outline"}
+              className="rounded-none h-auto px-4"
+            >
+              <ClipboardList className="h-5 w-5 mr-2" /> COLAR LISTA
+            </Button>
+          </div>
         </div>
 
         {isAdding && (
           <div className="bg-card/40 border border-primary/30 p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-primary font-bold block mb-1">Nome do Exercício</label>
-              <input
-                value={novoNome}
-                onChange={(e) => setNovoNome(e.target.value)}
-                placeholder="Ex: Supino Reto com Barra"
-                className="w-full bg-black border border-white/10 rounded-none px-3 py-2 text-sm text-white focus:border-primary/50 outline-none transition-all"
-              />
-            </div>
-            <div>
-              <label className="text-[10px] uppercase tracking-widest text-primary font-bold block mb-1">URL do Vídeo (YouTube ou Arquivo)</label>
-              <input
-                value={novoUrl}
-                onChange={(e) => setNovoUrl(e.target.value)}
-                placeholder="https://youtube.com/..."
-                className="w-full bg-black border border-white/10 rounded-none px-3 py-2 text-sm text-white focus:border-primary/50 outline-none transition-all"
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-primary font-bold block mb-1">Nome do Exercício</label>
+                <input
+                  value={novoNome}
+                  onChange={(e) => setNovoNome(e.target.value)}
+                  placeholder="Ex: Supino Reto com Barra"
+                  className="w-full bg-black border border-white/10 rounded-none px-3 py-2 text-sm text-white focus:border-primary/50 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] uppercase tracking-widest text-primary font-bold block mb-1">URL do Vídeo</label>
+                <input
+                  value={novoUrl}
+                  onChange={(e) => setNovoUrl(e.target.value)}
+                  placeholder="https://youtube.com/..."
+                  className="w-full bg-black border border-white/10 rounded-none px-3 py-2 text-sm text-white focus:border-primary/50 outline-none transition-all"
+                />
+              </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleAdd} className="flex-1 rounded-none">
                 <Save className="h-4 w-4 mr-2" /> Salvar Exercício
               </Button>
               <Button onClick={() => setIsAdding(false)} variant="outline" className="rounded-none">
+                Cancelar
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {isBulkMode && (
+          <div className="bg-card/40 border border-primary/30 p-4 space-y-4 animate-in fade-in slide-in-from-top-2">
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-primary font-bold block mb-1">Importação em Massa</label>
+              <p className="text-[10px] text-muted-foreground mb-2">Cole as linhas no formato: Nome do Exercício [TAB] URL do Vídeo (direto do Excel ou Sheets)</p>
+              <textarea
+                value={bulkData}
+                onChange={(e) => setBulkData(e.target.value)}
+                placeholder={"Supino Reto\thttps://youtube.com/...\nAgachamento Livre\thttps://youtube.com/..."}
+                rows={6}
+                className="w-full bg-black border border-white/10 rounded-none px-3 py-2 text-xs text-white focus:border-primary/50 outline-none transition-all font-mono"
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={handleBulkImport} className="flex-1 rounded-none">
+                <FileText className="h-4 w-4 mr-2" /> Importar Tudo
+              </Button>
+              <Button onClick={() => setIsBulkMode(false)} variant="outline" className="rounded-none">
                 Cancelar
               </Button>
             </div>
@@ -173,37 +251,39 @@ const AdminVideosTecnicos = () => {
               <p className="text-muted-foreground text-sm italic">Nenhum exercício encontrado.</p>
             </div>
           ) : (
-            filteredVideos.map((video) => (
-              <div 
-                key={video.id} 
-                className="group flex flex-col md:flex-row md:items-center gap-4 bg-card/20 border border-white/5 p-4 hover:border-primary/30 transition-all"
-              >
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-display text-lg text-white group-hover:text-primary transition-all">
-                    {video.nome_exercicio.toUpperCase()}
-                  </h3>
-                  <p className="text-[10px] text-muted-foreground truncate font-mono uppercase tracking-tighter mt-1 opacity-60">
-                    {video.url_video}
-                  </p>
+            <div className="grid grid-cols-1 gap-3">
+              {filteredVideos.map((video) => (
+                <div 
+                  key={video.id} 
+                  className="group flex flex-col md:flex-row md:items-center gap-4 bg-card/20 border border-white/5 p-4 hover:border-primary/30 transition-all"
+                >
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-display text-lg text-white group-hover:text-primary transition-all">
+                      {video.nome_exercicio.toUpperCase()}
+                    </h3>
+                    <p className="text-[10px] text-muted-foreground truncate font-mono uppercase tracking-tighter mt-1 opacity-60">
+                      {video.url_video}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a 
+                      href={video.url_video} 
+                      target="_blank" 
+                      rel="noreferrer"
+                      className="flex-1 md:flex-none h-10 px-4 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest flex items-center justify-center hover:bg-primary/20 transition-all"
+                    >
+                      Testar Link
+                    </a>
+                    <button 
+                      onClick={() => handleDelete(video.id)}
+                      className="w-10 h-10 flex items-center justify-center text-red-500/50 hover:text-red-500 transition-all border border-red-500/20 hover:border-red-500/50 bg-red-500/5"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <a 
-                    href={video.url_video} 
-                    target="_blank" 
-                    rel="noreferrer"
-                    className="flex-1 md:flex-none h-10 px-4 bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest flex items-center justify-center hover:bg-primary/20 transition-all"
-                  >
-                    Testar Link
-                  </a>
-                  <button 
-                    onClick={() => handleDelete(video.id)}
-                    className="w-10 h-10 flex items-center justify-center text-red-500/50 hover:text-red-500 transition-all border border-red-500/20 hover:border-red-500/50 bg-red-500/5"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
-                </div>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </div>
