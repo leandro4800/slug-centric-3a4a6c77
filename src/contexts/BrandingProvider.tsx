@@ -129,77 +129,82 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const lastLoadedTenantId = useRef<string | null>(null);
 
   const load = async (targetSlug: string | null, force = false) => {
+    console.log("[Branding] Iniciando load para slug:", targetSlug);
     if (targetSlug || force) {
       setLoading(true);
     }
-    // Se não temos slug, tentamos buscar o tenant do usuário logado
-    if (!targetSlug) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("perfis")
-          .select("tenant_id")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        
-        if (profile?.tenant_id) {
-          const { data: tenantData } = await supabase
-            .from("tenants")
-            .select(TENANT_PUBLIC_COLUMNS)
-            .eq("id", profile.tenant_id)
+    
+    try {
+      // Se não temos slug, tentamos buscar o tenant do usuário logado
+      if (!targetSlug) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from("perfis")
+            .select("tenant_id")
+            .eq("id", session.user.id)
             .maybeSingle();
           
-          if (tenantData && isMountedRef.current) {
-            const t = tenantData as Tenant;
-            setTenant(t);
-            const overrides = (t.theme_overrides as ThemeOverrides | null) ?? null;
-            applyTheme(overrides, t.hero_url, force);
-            setLoading(false);
-            lastLoadedSlug.current = t.slug;
-            lastLoadedTenantId.current = t.id;
-            return;
+          if (profile?.tenant_id) {
+            const { data: tenantData } = await supabase
+              .from("tenants")
+              .select(TENANT_PUBLIC_COLUMNS)
+              .eq("id", profile.tenant_id)
+              .maybeSingle();
+            
+            if (tenantData && isMountedRef.current) {
+              const t = tenantData as Tenant;
+              setTenant(t);
+              const overrides = (t.theme_overrides as ThemeOverrides | null) ?? null;
+              applyTheme(overrides, t.hero_url, force);
+              lastLoadedSlug.current = t.slug;
+              lastLoadedTenantId.current = t.id;
+              return;
+            }
           }
         }
+
+        if (isMountedRef.current) {
+          setTenant(null);
+          applyTheme(null, null, force);
+        }
+        lastLoadedSlug.current = null;
+        lastLoadedTenantId.current = null;
+        return;
       }
 
+      if (lastLoadedSlug.current === targetSlug && tenant && !force) {
+        return;
+      }
+
+      lastLoadedSlug.current = targetSlug;
+
+      // Busca dados atualizados do tenant via slug
+      const { data, error } = await supabase
+        .from("tenants")
+        .select(TENANT_PUBLIC_COLUMNS)
+        .eq("slug", targetSlug)
+        .maybeSingle();
+
+      if (!isMountedRef.current) return;
+      
+      if (error) {
+        console.warn("[Branding] erro ao buscar tenant:", error.message);
+        return;
+      }
+
+      const t = data as Tenant | null;
+      setTenant(t);
+      const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
+      applyTheme(overrides, t?.hero_url, force);
+      if (t) lastLoadedTenantId.current = t.id;
+    } catch (err) {
+      console.error("[Branding] Erro inesperado:", err);
+    } finally {
       if (isMountedRef.current) {
-        setTenant(null);
         setLoading(false);
-        applyTheme(null, null, force);
       }
-      lastLoadedSlug.current = null;
-      lastLoadedTenantId.current = null;
-      return;
     }
-
-    if (lastLoadedSlug.current === targetSlug && tenant && !force) {
-      setLoading(false);
-      return;
-    }
-
-    lastLoadedSlug.current = targetSlug;
-
-    // Busca dados atualizados do tenant via slug
-    const { data, error } = await supabase
-      .from("tenants")
-      .select(TENANT_PUBLIC_COLUMNS)
-      .eq("slug", targetSlug)
-      .maybeSingle();
-
-    if (!isMountedRef.current) return;
-    
-    if (error) {
-      console.warn("[Branding] erro:", error.message);
-      setLoading(false);
-      return;
-    }
-
-    const t = data as Tenant | null;
-    setTenant(t);
-    const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
-    applyTheme(overrides, t?.hero_url, force);
-    setLoading(false);
-    if (t) lastLoadedTenantId.current = t.id;
   };
 
   const applyPreview = (overrides: ThemeOverrides) => {
