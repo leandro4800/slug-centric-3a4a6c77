@@ -220,14 +220,14 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="password">Senha</Label>
-                  <div className="relative">
+                  <div className="relative group">
                     <Input 
                       id="password" 
                       type={showPassword ? "text" : "password"} 
                       required 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10" 
+                      className="bg-white/5 border-white/10 pr-10 focus:ring-primary/50" 
                     />
                     <button
                       type="button"
