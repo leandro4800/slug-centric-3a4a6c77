@@ -167,10 +167,22 @@ const Login = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-background">
-      <div
-        className="absolute inset-0 bg-cover bg-center scale-110"
-        style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
-      />
+      {tenant?.login_video_url ? (
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover scale-110"
+        >
+          <source src={tenant.login_video_url} type="video/mp4" />
+        </video>
+      ) : (
+        <div
+          className="absolute inset-0 bg-cover bg-center scale-110"
+          style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
+        />
+      )}
       <div className="absolute inset-0 bg-black/40" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.1),transparent_70%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.4)_100%)]" />
