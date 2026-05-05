@@ -31,7 +31,7 @@ const Login = () => {
       const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
       const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
       
-      if (redirectPath && redirectPath !== "/login") {
+      if (redirectPath && !redirectPath.includes("/login")) {
         navigate(redirectPath, { replace: true });
         return;
       }
@@ -100,7 +100,7 @@ const Login = () => {
 
       // REDIRECIONAMENTO FINAL:
       // Se houver um redirectPath explícito, usamos ele.
-      if (redirectPath && redirectPath !== "/login") {
+      if (redirectPath && !redirectPath.includes("/login")) {
         navigate(redirectPath, { replace: true });
         return;
       }
