@@ -256,23 +256,14 @@ const Login = () => {
                 </div>
                 <div>
                   <Label htmlFor="email-s">E-mail</Label>
-                  <div className="relative">
-                    <Input 
-                      id="email-s" 
-                      type={showEmail ? "text" : "email"} 
-                      required 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10" 
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowEmail(!showEmail)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-colors"
-                    >
-                      {showEmail ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
+                  <Input 
+                    id="email-s" 
+                    type="email" 
+                    required 
+                    value={email} 
+                    onChange={(e) => setEmail(e.target.value)} 
+                    className="bg-white/5 border-white/10" 
+                  />
                 </div>
                 <div>
                   <Label htmlFor="password-s">Senha</Label>
