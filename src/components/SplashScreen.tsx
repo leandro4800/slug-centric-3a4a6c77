@@ -1,15 +1,31 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
 
 export const SplashScreen = () => {
   const { tenant, loading } = useBranding();
+  const location = useLocation();
   const [isVisible, setIsVisible] = useState(true);
   const [shouldRender, setShouldRender] = useState(true);
 
+  // Define quais rotas devem exibir a tela de splash (apenas áreas do "app")
+  const isAppRoute = 
+    location.pathname.includes('/app') || 
+    location.pathname.includes('/admin') || 
+    location.pathname.includes('/onboarding') ||
+    location.pathname.includes('/controle');
+
   useEffect(() => {
-    // Se não estiver mais carregando o branding, iniciamos o fade out
+    // Se não for uma rota do app, não devemos renderizar o splash
+    if (!isAppRoute) {
+      setShouldRender(false);
+      setIsVisible(false);
+      return;
+    }
+
+    // Se estiver no app e não estiver mais carregando o branding, iniciamos o fade out
     if (!loading) {
       const timer = setTimeout(() => {
         setIsVisible(false);
@@ -18,15 +34,15 @@ export const SplashScreen = () => {
       }, 800);
       return () => clearTimeout(timer);
     } else {
-      // Se voltar a carregar (ex: mudança de rota), resetamos o estado
+      // Se voltar a carregar (ex: mudança de rota interna do app), resetamos o estado
       setShouldRender(true);
       setIsVisible(true);
     }
-  }, [loading]);
+  }, [loading, isAppRoute, location.pathname]);
 
   // Segurança: se por algum motivo ficar preso em loading por mais de 5 segundos, libera a tela
   useEffect(() => {
-    if (loading) {
+    if (loading && isAppRoute) {
       const safetyTimer = setTimeout(() => {
         console.warn("[SplashScreen] Timeout de segurança atingido, removendo tela de splash.");
         setIsVisible(false);
@@ -34,9 +50,9 @@ export const SplashScreen = () => {
       }, 5000);
       return () => clearTimeout(safetyTimer);
     }
-  }, [loading]);
+  }, [loading, isAppRoute]);
 
-  if (!shouldRender) return null;
+  if (!shouldRender || !isAppRoute) return null;
 
   return (
     <div 

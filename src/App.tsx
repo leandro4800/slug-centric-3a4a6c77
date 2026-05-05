@@ -56,10 +56,10 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <SplashScreen />
       <BrowserRouter>
         <AuthProvider>
           <BrandingProvider>
+            <SplashScreen />
             <Routes>
             {/* Marketplace público */}
             <Route path="/" element={<Landing />} />
