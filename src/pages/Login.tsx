@@ -169,7 +169,7 @@ const Login = () => {
         className="absolute inset-0 bg-cover bg-center scale-110"
         style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/80" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.18),transparent_70%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.85)_100%)]" />
 
@@ -188,7 +188,7 @@ const Login = () => {
             )}
           </div>
         </Link>
-        <div className="relative bg-background/20 backdrop-blur-xl border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
+        <div className="relative bg-transparent backdrop-blur-md border border-white/10 rounded-none p-8 shadow-card overflow-hidden">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           {user ? (
             <div className="flex flex-col items-center justify-center py-12 gap-4">
@@ -197,7 +197,7 @@ const Login = () => {
             </div>
           ) : (
             <Tabs defaultValue="login">
-            <TabsList className="grid grid-cols-2 w-full mb-8 bg-card p-1 rounded-none border border-white/5">
+            <TabsList className="grid grid-cols-2 w-full mb-8 bg-transparent p-1 rounded-none border border-white/5">
               <TabsTrigger value="login" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs py-3">Entrar</TabsTrigger>
               <TabsTrigger value="signup" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs py-3">Criar conta</TabsTrigger>
             </TabsList>
