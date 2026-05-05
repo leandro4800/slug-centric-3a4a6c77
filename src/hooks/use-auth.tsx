@@ -24,9 +24,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     // Setup listener BEFORE getSession (per Supabase guidance)
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, sess) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
       setSession(sess);
       setLoading(false);
+      if (event === "SIGNED_OUT") {
+        sessionStorage.removeItem("splash_shown_session");
+      }
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
