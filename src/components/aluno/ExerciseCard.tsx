@@ -98,15 +98,18 @@ export const ExerciseCard = ({
         return;
       }
 
+      setReferenceVideoUrl(null);
+
       try {
+        const exerciseName = data.exercicio.trim();
         const { data: refData, error } = await supabase
           .from('referencia_exercicios')
           .select('url_video')
-          .eq('nome_exercicio', data.exercicio)
-          .maybeSingle();
+          .ilike('nome_exercicio', exerciseName)
+          .limit(1);
         
-        if (!error && refData) {
-          setReferenceVideoUrl(refData.url_video);
+        if (!error && refData && refData.length > 0) {
+          setReferenceVideoUrl(refData[0].url_video);
         }
       } catch (err) {
         console.error("Erro ao buscar vídeo de referência:", err);
