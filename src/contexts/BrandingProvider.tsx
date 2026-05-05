@@ -109,8 +109,17 @@ const TENANT_PUBLIC_COLUMNS =
   "id, slug, nome, tagline, logo_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
 
 // O cache local foi desativado para garantir que o tema venha sempre do Supabase
-const readCache = (slug: string) => null;
-const writeCache = (slug: string, overrides: any, hero: any) => {};
+const readCache = (slug: string) => {
+  const cached = localStorage.getItem(`branding_${slug}`);
+  return cached ? JSON.parse(cached) : null;
+};
+const writeCache = (slug: string, tenant: Tenant | null) => {
+  if (tenant) {
+    localStorage.setItem(`branding_${slug}`, JSON.stringify(tenant));
+  } else {
+    localStorage.removeItem(`branding_${slug}`);
+  }
+};
 
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const params = useParams<{ slug: string }>();
@@ -122,84 +131,91 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
   const slug = params.slug || slugFromPath;
 
-  const [tenant, setTenant] = useState<Tenant | null>(null);
-  const [loading, setLoading] = useState(false); // Mudado para false por padrão para evitar loop no SplashScreen se o slug não for encontrado de imediato
+  const [tenant, setTenant] = useState<Tenant | null>(() => (slug ? readCache(slug) : null));
+  const [loading, setLoading] = useState(false);
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
 
   const load = async (targetSlug: string | null, force = false) => {
+    console.log("[Branding] Iniciando load para slug:", targetSlug);
     if (targetSlug || force) {
       setLoading(true);
     }
-    // Se não temos slug, tentamos buscar o tenant do usuário logado
-    if (!targetSlug) {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("perfis")
-          .select("tenant_id")
-          .eq("id", session.user.id)
-          .maybeSingle();
-        
-        if (profile?.tenant_id) {
-          const { data: tenantData } = await supabase
-            .from("tenants")
-            .select(TENANT_PUBLIC_COLUMNS)
-            .eq("id", profile.tenant_id)
+    
+    try {
+      // Se não temos slug, tentamos buscar o tenant do usuário logado
+      if (!targetSlug) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from("perfis")
+            .select("tenant_id")
+            .eq("id", session.user.id)
             .maybeSingle();
           
-          if (tenantData && isMountedRef.current) {
-            const t = tenantData as Tenant;
-            setTenant(t);
-            const overrides = (t.theme_overrides as ThemeOverrides | null) ?? null;
-            applyTheme(overrides, t.hero_url, force);
-            setLoading(false);
-            lastLoadedSlug.current = t.slug;
-            lastLoadedTenantId.current = t.id;
-            return;
+          if (profile?.tenant_id) {
+            const { data: tenantData } = await supabase
+              .from("tenants")
+              .select(TENANT_PUBLIC_COLUMNS)
+              .eq("id", profile.tenant_id)
+              .maybeSingle();
+            
+            if (tenantData && isMountedRef.current) {
+              const t = tenantData as Tenant;
+              setTenant(t);
+              writeCache("default", t);
+              const overrides = (t.theme_overrides as ThemeOverrides | null) ?? null;
+              applyTheme(overrides, t.hero_url, force);
+              lastLoadedSlug.current = t.slug;
+              lastLoadedTenantId.current = t.id;
+              return;
+            }
           }
         }
+
+        if (isMountedRef.current) {
+          setTenant(null);
+          applyTheme(null, null, force);
+        }
+        lastLoadedSlug.current = null;
+        lastLoadedTenantId.current = null;
+        return;
       }
 
+      if (lastLoadedSlug.current === targetSlug && tenant && !force) {
+        return;
+      }
+
+      lastLoadedSlug.current = targetSlug;
+
+      // Busca dados atualizados do tenant via slug
+      const { data, error } = await supabase
+        .from("tenants")
+        .select(TENANT_PUBLIC_COLUMNS)
+        .eq("slug", targetSlug)
+        .maybeSingle();
+
+      if (!isMountedRef.current) return;
+      
+      if (error) {
+        console.warn("[Branding] erro ao buscar tenant:", error.message);
+        return;
+      }
+
+      const t = data as Tenant | null;
+      setTenant(t);
+      if (targetSlug) writeCache(targetSlug, t);
+      const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
+      applyTheme(overrides, t?.hero_url, force);
+      if (t) lastLoadedTenantId.current = t.id;
+    } catch (err) {
+      console.error("[Branding] Erro inesperado:", err);
+    } finally {
       if (isMountedRef.current) {
-        setTenant(null);
         setLoading(false);
-        applyTheme(null, null, force);
       }
-      lastLoadedSlug.current = null;
-      lastLoadedTenantId.current = null;
-      return;
     }
-
-    if (lastLoadedSlug.current === targetSlug && tenant && !force) {
-      setLoading(false);
-      return;
-    }
-
-    lastLoadedSlug.current = targetSlug;
-
-    // Busca dados atualizados do tenant via slug
-    const { data, error } = await supabase
-      .from("tenants")
-      .select(TENANT_PUBLIC_COLUMNS)
-      .eq("slug", targetSlug)
-      .maybeSingle();
-
-    if (!isMountedRef.current) return;
-    
-    if (error) {
-      console.warn("[Branding] erro:", error.message);
-      setLoading(false);
-      return;
-    }
-
-    const t = data as Tenant | null;
-    setTenant(t);
-    const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
-    applyTheme(overrides, t?.hero_url, force);
-    setLoading(false);
-    if (t) lastLoadedTenantId.current = t.id;
   };
 
   const applyPreview = (overrides: ThemeOverrides) => {
