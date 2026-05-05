@@ -104,10 +104,10 @@ export const ExerciseCard = ({
           .from('referencia_exercicios')
           .select('url_video')
           .ilike('nome_exercicio', exerciseName)
-          .maybeSingle();
+          .limit(1);
         
-        if (!error && refData) {
-          setReferenceVideoUrl(refData.url_video);
+        if (!error && refData && refData.length > 0) {
+          setReferenceVideoUrl(refData[0].url_video);
         }
       } catch (err) {
         console.error("Erro ao buscar vídeo de referência:", err);
