@@ -15,8 +15,12 @@ export const SplashScreen = () => {
         setIsVisible(false);
         // Remove do DOM após a animação de fade out
         setTimeout(() => setShouldRender(false), 500);
-      }, 800); // Tempo mínimo de exibição para evitar flicker
+      }, 800);
       return () => clearTimeout(timer);
+    } else {
+      // Se voltar a carregar (ex: mudança de rota), resetamos o estado
+      setShouldRender(true);
+      setIsVisible(true);
     }
   }, [loading]);
 
