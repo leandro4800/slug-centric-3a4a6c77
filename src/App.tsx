@@ -55,8 +55,9 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <BrandingProvider>
-          <Routes>
+        <AuthProvider>
+          <BrandingProvider>
+            <Routes>
             {/* Marketplace público */}
             <Route path="/" element={<Landing />} />
             <Route path="/marketplace" element={<Marketplace />} />
