@@ -37,7 +37,7 @@ const AdminPanel = () => {
   const { tenant, refresh } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState<"hero" | "logo" | null>(null);
+  const [uploading, setUploading] = useState<"hero" | "logo" | "splash" | null>(null);
   const [nome, setNome] = useState("");
   const [tagline, setTagline] = useState("");
   const [cidade, setCidade] = useState("");
