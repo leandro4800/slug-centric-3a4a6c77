@@ -109,6 +109,25 @@
     background-repeat: no-repeat;
   }
 
+  /* Black Gold - cimento escuro realista da referência */
+  html[style*="--background: 0 0% 4%"] body {
+    background-color: hsl(var(--background));
+    background-image: linear-gradient(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.12)), url("/black-gold-cement-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
+  html[style*="--primary: 45 100% 50%"][style*="--background: 0 0% 0%"] body {
+    background-color: hsl(0 0% 4%);
+    background-image: linear-gradient(rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.12)), url("/black-gold-cement-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
+
   /* Black Flow - parede preta com salpicos brancos */
   html[style*="--background: 0 0% 2%"] body {
     background-image: url("/blackflow-bg.jpg");

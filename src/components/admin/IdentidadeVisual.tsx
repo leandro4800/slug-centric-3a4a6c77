@@ -11,6 +11,7 @@ type Preset = {
   name: string;
   subtitle: string;
   swatches: string[]; // hex array for visual chip
+  previewBackground?: string;
   overrides: ThemeOverrides;
 };
 
@@ -50,15 +51,16 @@ const PRESETS: Preset[] = [
   },
   {
     id: "gold-rush",
-    name: "GOLD MIRROR",
-    subtitle: "Premium · Dourado Espelhado",
-    swatches: ["#000000", "#1A1A1A", "#FFD700", "#FFFACD"],
+    name: "BLACK GOLD",
+    subtitle: "Cimento realista · Dourado",
+    swatches: ["#101010", "#2F2F2F", "#FFD700", "#FFFACD"],
+    previewBackground: "url('/black-gold-cement-bg.jpg') center/cover",
     overrides: {
       primary: "45 100% 50%",
       primary_glow: "45 100% 80%",
       accent: "44 85% 50%",
-      background: "0 0% 0%",
-      card: "0 0% 3%",
+      background: "0 0% 4%",
+      card: "0 0% 6%",
       foreground: "0 0% 98%",
       border: "0 0% 15%",
     },
@@ -267,7 +269,7 @@ export const IdentidadeVisual = () => {
                       : "border-border hover:border-primary/60"
                   }`}
                   style={{
-                    background: `linear-gradient(135deg, ${p.swatches[0]} 0%, ${p.swatches[1]} 100%)`,
+                    background: p.previewBackground ?? `linear-gradient(135deg, ${p.swatches[0]} 0%, ${p.swatches[1]} 100%)`,
                   }}
                 >
                   {isActive && (
