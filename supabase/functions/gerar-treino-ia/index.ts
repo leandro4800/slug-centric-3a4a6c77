@@ -110,7 +110,14 @@ serve(async (req) => {
 
     const knowledgeContext = bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext;
 
-    const systemPrompt = `${knowledgeContext}
+    const divisoesEscolhidas = Array.isArray(divisoes) && divisoes.length > 0
+      ? divisoes
+      : null;
+    const divisaoBlock = divisoesEscolhidas
+      ? `\n\n═══════════════════════════════════════════════\n0. DIVISÃO OBRIGATÓRIA (DEFINIDA PELO COACH) — INVIOLÁVEL\n═══════════════════════════════════════════════\nO Coach já escolheu EXATAMENTE como o aluno vai dividir a semana. Você DEVE retornar um dia para cada item abaixo, com o nome IDÊNTICO ao informado, na MESMA ORDEM, e os exercícios DEVEM corresponder aos grupos musculares descritos no nome de cada dia.\n\nDIVISÃO ESCOLHIDA (${divisoesEscolhidas.length} dias de treino):\n${divisoesEscolhidas.map((d: string, i: number) => `${i + 1}. "${d}"`).join("\n")}\n\nREGRAS DE INTERPRETAÇÃO:\n- "Peito + Tríceps" = treine SOMENTE peito e tríceps nesse dia (e ombro anterior se mencionado).\n- "Peito + Bíceps" = treine SOMENTE peito e bíceps (combinação alternativa, válida).\n- "Costas + Bíceps" / "Costas + Tríceps" — siga literalmente.\n- "Pernas Completas" = quadríceps + posterior + glúteo + panturrilha.\n- "Push" = peito/ombro/tríceps. "Pull" = costas/bíceps. "Legs" = pernas.\n- "Full Body" = todos os grandes grupos no mesmo dia.\n- NÃO adicione grupos musculares que não estejam no nome do dia.\n- Complete a semana (7 entradas) com OFFs estratégicos nos dias restantes.\n`
+      : "";
+
+    const systemPrompt = `${knowledgeContext}${divisaoBlock}
 
 Você é a Dr. IA, a mente estratégica por trás da metodologia Alpha Coach. Sua missão é gerar prescrições de treino com precisão cirúrgica, seguindo a Base de Conhecimento Pacholok (acima como Fonte de Verdade Absoluta) e as Regras de Estrutura de Elite abaixo.
 
