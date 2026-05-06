@@ -1,0 +1,1 @@
+UPDATE public.tenants SET permite_aula_avulsa = true, preco_aula_avulsa = 3.00 WHERE slug = 'nutrisamiladias';
