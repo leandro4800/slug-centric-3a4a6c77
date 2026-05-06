@@ -43,11 +43,6 @@ const AgendarAulaAvulsa = () => {
   const load = async () => {
     if (!token) return;
     setLoading(true);
-    const { data, error } = await supabase.functions.invoke("agendamento-aula", {
-      method: "GET" as any,
-      // workaround: invoke não suporta GET com query — usar fetch direto
-    } as any);
-    // Use fetch direto:
     try {
       const res = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/agendamento-aula?token=${token}`,
