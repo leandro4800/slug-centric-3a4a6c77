@@ -118,6 +118,8 @@ const AdminMontarTreino = () => {
   const [cardio, setCardio] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
+  const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
 
   useEffect(() => {
     if (!tenant) return;
