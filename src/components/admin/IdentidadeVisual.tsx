@@ -47,6 +47,7 @@ const PRESETS: Preset[] = [
       card: "0 0% 65%",
       foreground: "0 0% 5%",
       border: "0 0% 45%",
+      bg_texture: "url('/cimento-texture.jpg')",
     },
   },
   {
