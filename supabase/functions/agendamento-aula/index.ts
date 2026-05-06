@@ -40,8 +40,7 @@ Deno.serve(async (req) => {
           .select("token, status, slot_id")
           .eq("email", email.toLowerCase())
           .eq("tenant_id", tenant_id)
-          .eq("status", "pago")
-          .is("slot_id", null)
+          .in("status", ["pago", "confirmado"])
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle();
