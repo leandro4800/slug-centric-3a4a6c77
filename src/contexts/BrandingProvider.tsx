@@ -53,6 +53,9 @@ const DEFAULTS = {
   primary_glow: "355 100% 60%",
   accent: "355 100% 48%",
   background: "0 0% 0%",
+  foreground: "0 0% 98%",
+  card: "0 0% 3%",
+  border: "0 0% 18%",
 };
 
 const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
@@ -60,9 +63,12 @@ const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
   primary_glow: ["--primary-glow"],
   accent: ["--accent"],
   background: ["--background"],
+  foreground: ["--foreground"],
+  card: ["--card", "--sidebar-background"],
+  border: ["--border", "--sidebar-border"],
 };
 
-const SAFE_KEYS: (keyof typeof DEFAULTS)[] = ["primary", "primary_glow", "accent", "background"];
+const SAFE_KEYS = Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[];
 
 const clearTokens = (root: HTMLElement) => {
   Object.values(TOKEN_TO_VAR).flat().forEach((v) => root.style.removeProperty(v));
