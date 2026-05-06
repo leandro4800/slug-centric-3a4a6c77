@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 export type ThemeOverrides = Partial<{
   primary: string;
   primary_glow: string;
+  primary_foreground: string;
   accent: string;
   background: string;
   card: string;
