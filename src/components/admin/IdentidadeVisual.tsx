@@ -45,6 +45,7 @@ const PRESETS: Preset[] = [
       foreground: "0 0% 5%",
       border: "0 0% 45%",
     },
+  },
   {
     id: "gold-rush",
     name: "GOLD MIRROR",
