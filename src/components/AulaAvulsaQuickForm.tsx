@@ -34,7 +34,7 @@ export const AulaAvulsaQuickForm = ({ tenantId, tenantNome, preco, onClose }: Pr
       const json = await res.json();
       if (json.found && json.token) {
         setAlreadyPaid({ token: json.token });
-        toast.success("Pagamento encontrado! Você já pode agendar sua aula.");
+        toast.success("Encontramos sua aula avulsa!");
       } else {
         setAlreadyPaid(null);
       }
