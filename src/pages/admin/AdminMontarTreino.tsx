@@ -120,6 +120,7 @@ const AdminMontarTreino = () => {
   const [saving, setSaving] = useState(false);
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
+  const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
 
   useEffect(() => {
     if (!tenant) return;
