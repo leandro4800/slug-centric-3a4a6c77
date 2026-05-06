@@ -313,6 +313,51 @@ export type Database = {
           },
         ]
       }
+      aulas_avulsas: {
+        Row: {
+          aluno_id: string | null
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          status: string
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          telefone: string | null
+          tenant_id: string
+          updated_at: string
+          valor_centavos: number
+        }
+        Insert: {
+          aluno_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          telefone?: string | null
+          tenant_id: string
+          updated_at?: string
+          valor_centavos: number
+        }
+        Update: {
+          aluno_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          status?: string
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          telefone?: string | null
+          tenant_id?: string
+          updated_at?: string
+          valor_centavos?: number
+        }
+        Relationships: []
+      }
       avaliacoes_fisicas: {
         Row: {
           altura_cm: number
