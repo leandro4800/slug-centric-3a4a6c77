@@ -342,7 +342,7 @@ export const ExerciseCard = ({
 
       {isOpen && (
         <div className="px-4 pb-4 space-y-4">
-          {/* Detalhes Pacho */}
+          {/* Detalhes Coach */}
           <div className="space-y-2">
             {data.cadencia && (
               <div className="flex items-center gap-2 text-xs font-bold text-accent bg-accent/10 px-3 py-1.5 rounded-full w-fit">
