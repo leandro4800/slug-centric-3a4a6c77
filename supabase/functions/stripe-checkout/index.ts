@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
     let tenant_to_use;
     let line_items;
     let mode: "subscription" | "payment" = "subscription";
+    let agendamento_token: string | null = null;
 
     if (type === 'aula_avulsa') {
       if (!tenant_id) throw new Error("tenant_id required for aula_avulsa");
@@ -60,6 +61,22 @@ Deno.serve(async (req) => {
         },
         quantity: 1,
       }];
+      // Pré-cria agendamento pendente para gerar token público
+      const customerEmailForBooking = (email || userEmail || "").trim().toLowerCase();
+      const { data: agend, error: agendErr } = await supabase
+        .from("agendamentos_aula_avulsa")
+        .insert({
+          tenant_id,
+          nome: nome || customerEmailForBooking || "Cliente",
+          email: customerEmailForBooking,
+          telefone: telefone || null,
+          valor_centavos: Math.round(t.preco_aula_avulsa * 100),
+          status: "pendente",
+        })
+        .select("token")
+        .single();
+      if (agendErr || !agend) throw new Error("erro criando agendamento: " + agendErr?.message);
+      agendamento_token = agend.token;
     } else {
       if (!plano_id) throw new Error("plano_id required");
       const { data: plano } = await supabase
@@ -87,7 +104,9 @@ Deno.serve(async (req) => {
       allow_promotion_codes: true,
       line_items,
       customer_email: customerEmail || undefined,
-      success_url: `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${tenant_to_use.slug}`,
+      success_url: type === 'aula_avulsa' && agendamento_token
+        ? `${origin}/${tenant_to_use.slug}/agendar-aula/${agendamento_token}?session_id={CHECKOUT_SESSION_ID}`
+        : `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${tenant_to_use.slug}`,
       cancel_url: `${origin}/${tenant_to_use.slug}`,
       metadata: {
         plano_id: plano_id ?? "",
@@ -97,6 +116,7 @@ Deno.serve(async (req) => {
         type: type ?? 'subscription',
         nome: nome ?? "",
         telefone: telefone ?? "",
+        agendamento_token: agendamento_token ?? "",
       },
     };
 

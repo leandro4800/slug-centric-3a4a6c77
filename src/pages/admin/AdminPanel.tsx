@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, Wallet, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, Wallet, ShieldCheck, CalendarClock } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import {
@@ -178,6 +178,11 @@ const AdminPanel = () => {
                   <span className="font-display text-base tracking-wide">FATURAMENTO</span>
                 </div>
                 <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Gestão financeira e saques</span>
+              </Button>
+            </Link>
+            <Link to={`/${slug}/admin/agenda-avulsa`}>
+              <Button variant="outline" className="border-primary/40">
+                <CalendarClock className="h-4 w-4 mr-2" /> Agenda Aulas Avulsas
               </Button>
             </Link>
             <Link to={`/${slug}/admin/base-conhecimento`}>

@@ -14,6 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
+      agenda_aula_avulsa_slots: {
+        Row: {
+          ativo: boolean
+          capacidade: number
+          created_at: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          link_online: string | null
+          local: string | null
+          observacao: string | null
+          reservados: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          capacidade?: number
+          created_at?: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          link_online?: string | null
+          local?: string | null
+          observacao?: string | null
+          reservados?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          capacidade?: number
+          created_at?: string
+          data?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          link_online?: string | null
+          local?: string | null
+          observacao?: string | null
+          reservados?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      agendamentos_aula_avulsa: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          slot_id: string | null
+          status: string
+          stripe_session_id: string | null
+          telefone: string | null
+          tenant_id: string
+          token: string
+          updated_at: string
+          valor_centavos: number | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          slot_id?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          telefone?: string | null
+          tenant_id: string
+          token?: string
+          updated_at?: string
+          valor_centavos?: number | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          slot_id?: string | null
+          status?: string
+          stripe_session_id?: string | null
+          telefone?: string | null
+          tenant_id?: string
+          token?: string
+          updated_at?: string
+          valor_centavos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_aula_avulsa_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_aula_avulsa_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alimentos_taco: {
         Row: {
           carboidrato_g: number | null

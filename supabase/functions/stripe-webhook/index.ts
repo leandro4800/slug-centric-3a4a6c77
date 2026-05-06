@@ -59,7 +59,7 @@ Deno.serve(async (req) => {
           if (perfil) resolvedAlunoId = perfil.id;
         }
 
-        // Aula avulsa: registra na tabela aulas_avulsas
+        // Aula avulsa: registra na tabela aulas_avulsas + marca agendamento como pago
         if (meta.type === 'aula_avulsa') {
           await supabase.from("aulas_avulsas").upsert({
             tenant_id,
@@ -72,6 +72,15 @@ Deno.serve(async (req) => {
             stripe_payment_intent_id: s.payment_intent as string | null,
             status: 'paid',
           }, { onConflict: 'stripe_session_id' });
+
+          if (meta.agendamento_token) {
+            await supabase.from("agendamentos_aula_avulsa")
+              .update({
+                status: 'pago',
+                stripe_session_id: s.id,
+              })
+              .eq("token", meta.agendamento_token);
+          }
           break;
         }
 
