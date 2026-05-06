@@ -157,36 +157,9 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-      // Se não temos slug, tentamos buscar o tenant do usuário logado
+      // Sem slug na URL: tentamos o tenant do perfil só se for útil (admin global etc.)
       if (!targetSlug) {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from("perfis")
-            .select("tenant_id")
-            .eq("id", session.user.id)
-            .maybeSingle();
-          
-          if (profile?.tenant_id) {
-            const { data: tenantData } = await supabase
-              .from("tenants")
-              .select(TENANT_PUBLIC_COLUMNS)
-              .eq("id", profile.tenant_id)
-              .maybeSingle();
-            
-            if (tenantData && isMountedRef.current) {
-              const t = tenantData as Tenant;
-              setTenant(t);
-              writeCache("default", t);
-              const overrides = (t.theme_overrides as ThemeOverrides | null) ?? null;
-              applyTheme(overrides, t.hero_url, force);
-              lastLoadedSlug.current = t.slug;
-              lastLoadedTenantId.current = t.id;
-              return;
-            }
-          }
-        }
-
+        // Limpa qualquer tema customizado para usar defaults Netflix em rotas neutras
         if (isMountedRef.current) {
           setTenant(null);
           applyTheme(null, null, force);
