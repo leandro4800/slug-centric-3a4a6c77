@@ -78,6 +78,7 @@ Deno.serve(async (req) => {
               .update({
                 status: 'pago',
                 stripe_session_id: s.id,
+                email: customerEmail || '', // Garante que o email do agendamento seja o do pagamento
               })
               .eq("token", meta.agendamento_token);
           }
