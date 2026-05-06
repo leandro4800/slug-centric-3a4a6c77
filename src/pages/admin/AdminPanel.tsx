@@ -80,7 +80,7 @@ const AdminPanel = () => {
     setLoading(false);
   };
 
-  const handleUpload = async (file: File, kind: "hero" | "logo") => {
+  const handleUpload = async (file: File, kind: "hero" | "logo" | "splash") => {
     if (!tenant) return;
     setUploading(kind);
     const ext = file.name.split(".").pop();
@@ -88,7 +88,10 @@ const AdminPanel = () => {
     const { error } = await supabase.storage.from("branding").upload(path, file, { upsert: true });
     if (error) { toast.error(error.message); setUploading(null); return; }
     const { data: { publicUrl } } = supabase.storage.from("branding").getPublicUrl(path);
-    const patch = kind === "hero" ? { hero_url: publicUrl } : { logo_url: publicUrl };
+    const patch =
+      kind === "hero" ? { hero_url: publicUrl } :
+      kind === "logo" ? { logo_url: publicUrl } :
+      { splash_video_url: publicUrl };
     const { error: upErr } = await supabase.from("tenants").update(patch).eq("id", tenant.id);
     if (upErr) toast.error(upErr.message);
     else { toast.success("Atualizado!"); await refresh(); }
