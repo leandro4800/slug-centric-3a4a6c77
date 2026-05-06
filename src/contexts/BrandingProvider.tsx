@@ -81,6 +81,7 @@ const SAFE_KEYS = Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[];
 const clearTokens = (root: HTMLElement) => {
   Object.values(TOKEN_TO_VAR).flat().forEach((v) => root.style.removeProperty(v));
   root.style.removeProperty("--hero-url");
+  root.style.removeProperty("--bg-texture");
 };
 
 // Referência global para evitar re-aplicar o mesmo tema e causar flicker
