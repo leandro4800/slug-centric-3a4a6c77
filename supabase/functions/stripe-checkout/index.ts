@@ -104,7 +104,9 @@ Deno.serve(async (req) => {
       allow_promotion_codes: true,
       line_items,
       customer_email: customerEmail || undefined,
-      success_url: `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${tenant_to_use.slug}`,
+      success_url: type === 'aula_avulsa' && agendamento_token
+        ? `${origin}/${tenant_to_use.slug}/agendar-aula/${agendamento_token}?session_id={CHECKOUT_SESSION_ID}`
+        : `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${tenant_to_use.slug}`,
       cancel_url: `${origin}/${tenant_to_use.slug}`,
       metadata: {
         plano_id: plano_id ?? "",
@@ -114,6 +116,7 @@ Deno.serve(async (req) => {
         type: type ?? 'subscription',
         nome: nome ?? "",
         telefone: telefone ?? "",
+        agendamento_token: agendamento_token ?? "",
       },
     };
 
