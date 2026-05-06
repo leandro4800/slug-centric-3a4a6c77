@@ -100,7 +100,7 @@ const AlunoHome = () => {
   }, [tenant?.id]);
 
   const featured = vlogs[0];
-  const ytId = featured ? extractYouTubeId(featured.url) : (isDirectVideo(tenant?.hero_url) || extractYouTubeId(tenant?.hero_url) ? null : extractYouTubeId(tenant?.hero_url));
+  const ytId = featured ? extractYouTubeId(featured.url) : extractYouTubeId(tenant?.hero_url);
   
   // Vídeo direto do featured (mp4 etc) ou fallback para hero do tenant
   const featuredDirectUrl = featured && isDirectVideo(featured.url) ? featured.url : null;
@@ -136,12 +136,19 @@ const AlunoHome = () => {
   };
 
   const handlePlay = () => {
-    if (!featured) return;
-    if (ytId) {
-      setExpanded(true);
-      setMuted(false);
-    } else {
+    if (featured) {
       setPlaying(featured);
+      return;
+    }
+    
+    if (tenant?.hero_url) {
+      setPlaying({
+        id: "hero",
+        url: tenant.hero_url,
+        title: tenant.tagline || tenant.nome || "Apresentação",
+        thumbnail_url: null,
+        platform: "hero"
+      });
     }
   };
 
@@ -227,8 +234,8 @@ const AlunoHome = () => {
           </h1>
           <Button
             onClick={handlePlay}
-            disabled={!featured}
-            className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-none tracking-widest"
+            disabled={!featured && !tenant?.hero_url}
+            className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-xl tracking-widest shadow-[0_10px_30px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95"
           >
             <Play className="h-4 w-4 fill-current" /> REPRODUZIR
           </Button>

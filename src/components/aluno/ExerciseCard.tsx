@@ -333,7 +333,7 @@ export const ExerciseCard = ({
         </div>
 
         {!isOpen && (
-          <div className="mt-3 w-full py-3 rounded-none bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2 relative overflow-hidden border border-white/20 shadow-lg">
+          <div className="mt-3 w-full py-3 rounded-xl bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2 relative overflow-hidden border border-white/20 shadow-lg">
             <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
             <span className="relative z-10">▶ EXECUTAR</span>
           </div>
@@ -367,7 +367,7 @@ export const ExerciseCard = ({
           <div className="grid grid-cols-[auto_1fr] gap-2">
             <button
               onClick={() => setRunning((r) => !r)}
-              className="px-6 py-4 rounded-none bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95"
+              className="px-6 py-4 rounded-xl bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95"
             >
               <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
               <Play className="h-5 w-5 fill-current relative z-10" />
@@ -452,7 +452,7 @@ export const ExerciseCard = ({
           <button
             onClick={handleFinalizar}
             disabled={savingAll}
-            className="w-full py-4 rounded-none bg-primary text-primary-foreground font-display text-lg flex items-center justify-center gap-3 relative overflow-hidden border border-white/30 shadow-[0_10px_40px_-10px_rgba(224,0,0,0.4)] transition-all active:scale-[0.98]"
+            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display text-lg flex items-center justify-center gap-3 relative overflow-hidden border border-white/30 shadow-[0_10px_40px_-10px_rgba(224,0,0,0.4)] transition-all active:scale-[0.98]"
           >
             <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-70" />
             {savingAll ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : null}
