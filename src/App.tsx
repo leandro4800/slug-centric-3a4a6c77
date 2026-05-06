@@ -43,6 +43,8 @@ import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
+import AgendarAulaAvulsa from "./pages/AgendarAulaAvulsa";
+import AdminAgendaAvulsa from "./pages/admin/AdminAgendaAvulsa";
 
 const queryClient = new QueryClient();
 
