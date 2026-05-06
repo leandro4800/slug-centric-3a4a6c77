@@ -27,11 +27,13 @@ export const SplashScreen = () => {
   useEffect(() => {
     if (!shouldRender) return;
     if (startedRef.current) return;
+    // Aguarda o branding carregar para garantir que a logo do tenant apareça
+    if (loading) return;
     startedRef.current = true;
 
     sessionStorage.setItem(SESSION_KEY, "1");
 
-    // Mostra por ~1.4s independente do estado de loading do branding
+    // Mostra por ~1.4s após o branding estar pronto
     const fadeTimer = setTimeout(() => setIsVisible(false), 1400);
     const removeTimer = setTimeout(() => setShouldRender(false), 1900);
 
@@ -39,7 +41,7 @@ export const SplashScreen = () => {
       clearTimeout(fadeTimer);
       clearTimeout(removeTimer);
     };
-  }, [shouldRender]);
+  }, [shouldRender, loading]);
 
   if (!shouldRender || !isAppRoute) return null;
 
