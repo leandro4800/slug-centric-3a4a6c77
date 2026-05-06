@@ -39,6 +39,7 @@ const PRESETS: Preset[] = [
     overrides: {
       primary: "355 100% 48%",
       primary_glow: "355 100% 60%",
+      primary_foreground: "0 0% 100%",
       accent: "0 0% 100%",
       background: "0 0% 60%",
       card: "0 0% 65%",
