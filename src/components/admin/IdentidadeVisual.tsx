@@ -172,6 +172,7 @@ const PRESETS: Preset[] = [
       card: "0 0% 5%",
       foreground: "0 0% 98%",
       border: "0 0% 15%",
+      bg_texture: "url('/blackflow-bg.jpg')",
     },
   },
 ];
