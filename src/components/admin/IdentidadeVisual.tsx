@@ -164,7 +164,7 @@ const PRESETS: Preset[] = [
       primary_foreground: "0 0% 100%",
       accent: "355 100% 48%",
       accent_foreground: "0 0% 100%",
-      background: "0 0% 0%",
+      background: "0 0% 2%",
       card: "0 0% 5%",
       foreground: "0 0% 98%",
       border: "0 0% 15%",
