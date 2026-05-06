@@ -7,6 +7,7 @@ export type ThemeOverrides = Partial<{
   primary_glow: string;
   primary_foreground: string;
   accent: string;
+  accent_foreground: string;
   background: string;
   card: string;
   foreground: string;
