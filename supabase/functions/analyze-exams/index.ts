@@ -53,6 +53,32 @@ serve(async (req) => {
       })
     }
 
+    // === LIMITE: 1 análise de exame por mês por aluno ===
+    const startOfMonth = new Date()
+    startOfMonth.setUTCDate(1)
+    startOfMonth.setUTCHours(0, 0, 0, 0)
+
+    const { count: monthCount, error: countError } = await supabase
+      .from('analises_clinicas')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .gte('created_at', startOfMonth.toISOString())
+
+    if (countError) {
+      console.error('Erro ao verificar limite mensal:', countError)
+    } else if ((monthCount ?? 0) >= 1) {
+      const nextMonth = new Date(startOfMonth)
+      nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1)
+      return new Response(JSON.stringify({
+        error: 'limite_mensal_atingido',
+        message: 'Você já realizou sua leitura de exames deste mês. A próxima estará disponível no próximo ciclo.',
+        proxima_disponivel_em: nextMonth.toISOString(),
+      }), {
+        status: 429,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Fetch Reference Data
     const { data: refData } = await supabase.from('referencias_exames').select('*')
     const { data: intelData } = await supabase.from('inteligencia_clinica').select('*')
@@ -105,7 +131,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
+        model: 'openai/gpt-5-mini',
         messages: [
           {
             role: 'system',
