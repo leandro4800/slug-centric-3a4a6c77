@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 export type ThemeOverrides = Partial<{
   primary: string;
   primary_glow: string;
+  primary_foreground: string;
   accent: string;
+  accent_foreground: string;
   background: string;
   card: string;
   foreground: string;
@@ -51,18 +53,28 @@ export const useBranding = () => useContext(BrandingContext);
 const DEFAULTS = {
   primary: "355 100% 48%",
   primary_glow: "355 100% 60%",
+  primary_foreground: "0 0% 100%",
   accent: "355 100% 48%",
+  accent_foreground: "0 0% 100%",
   background: "0 0% 0%",
+  foreground: "0 0% 98%",
+  card: "0 0% 3%",
+  border: "0 0% 18%",
 };
 
 const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
   primary: ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring"],
   primary_glow: ["--primary-glow"],
+  primary_foreground: ["--primary-foreground"],
   accent: ["--accent"],
+  accent_foreground: ["--accent-foreground"],
   background: ["--background"],
+  foreground: ["--foreground"],
+  card: ["--card", "--sidebar-background"],
+  border: ["--border", "--sidebar-border"],
 };
 
-const SAFE_KEYS: (keyof typeof DEFAULTS)[] = ["primary", "primary_glow", "accent", "background"];
+const SAFE_KEYS = Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[];
 
 const clearTokens = (root: HTMLElement) => {
   Object.values(TOKEN_TO_VAR).flat().forEach((v) => root.style.removeProperty(v));
