@@ -54,6 +54,7 @@ const DEFAULTS = {
   accent: "355 100% 48%",
   background: "0 0% 0%",
   foreground: "0 0% 98%",
+  primary_foreground: "0 0% 100%",
   card: "0 0% 3%",
   border: "0 0% 18%",
 };
@@ -61,6 +62,7 @@ const DEFAULTS = {
 const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
   primary: ["--primary", "--ring", "--sidebar-primary", "--sidebar-ring"],
   primary_glow: ["--primary-glow"],
+  primary_foreground: ["--primary-foreground"],
   accent: ["--accent"],
   background: ["--background"],
   foreground: ["--foreground"],
