@@ -36,6 +36,7 @@ Deno.serve(async (req) => {
     let tenant_to_use;
     let line_items;
     let mode: "subscription" | "payment" = "subscription";
+    let agendamento_token: string | null = null;
 
     if (type === 'aula_avulsa') {
       if (!tenant_id) throw new Error("tenant_id required for aula_avulsa");
