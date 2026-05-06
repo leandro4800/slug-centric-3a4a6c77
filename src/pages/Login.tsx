@@ -11,6 +11,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
 
 const Login = () => {
   const navigate = useNavigate();
