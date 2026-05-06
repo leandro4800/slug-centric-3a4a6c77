@@ -224,11 +224,10 @@ export default function TenantLanding() {
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Suporte pós-treino</li>
                 </ul>
                 <Button 
-                  onClick={() => handleCheckout(undefined, 'aula_avulsa')}
-                  disabled={checkoutLoading === 'aula_avulsa'}
+                  onClick={() => setAulaAvulsaOpen(true)}
                   className="w-full font-bold uppercase tracking-widest"
                 >
-                  {checkoutLoading === 'aula_avulsa' ? "Redirecionando..." : "Agendar Aula"}
+                  Agendar Aula
                 </Button>
               </div>
             )}
