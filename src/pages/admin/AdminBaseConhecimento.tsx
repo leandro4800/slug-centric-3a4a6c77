@@ -151,7 +151,7 @@ const AdminBaseConhecimento = () => {
         <div>
           <Label>Fonte / Nome de referência (opcional)</Label>
           <Input
-            placeholder="Ex: Metodologia Pacholok 2024"
+            placeholder="Ex: Metodologia Coach 2024"
             value={fonte}
             onChange={(e) => setFonte(e.target.value)}
             disabled={uploading}
