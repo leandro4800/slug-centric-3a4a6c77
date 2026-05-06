@@ -12,6 +12,7 @@ export type ThemeOverrides = Partial<{
   card: string;
   foreground: string;
   border: string;
+  bg_texture: string; // ex: url('/blackflow-bg.jpg')
 }>;
 
 export interface Tenant {
