@@ -234,8 +234,8 @@ const AlunoHome = () => {
           </h1>
           <Button
             onClick={handlePlay}
-            disabled={!featured}
-            className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-none tracking-widest"
+            disabled={!featured && !tenant?.hero_url}
+            className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-xl tracking-widest shadow-[0_10px_30px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95"
           >
             <Play className="h-4 w-4 fill-current" /> REPRODUZIR
           </Button>
