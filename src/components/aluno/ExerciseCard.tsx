@@ -367,7 +367,7 @@ export const ExerciseCard = ({
           <div className="grid grid-cols-[auto_1fr] gap-2">
             <button
               onClick={() => setRunning((r) => !r)}
-              className="px-6 py-4 rounded-none bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95"
+              className="px-6 py-4 rounded-xl bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95"
             >
               <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
               <Play className="h-5 w-5 fill-current relative z-10" />
