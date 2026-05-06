@@ -124,7 +124,7 @@ export const AulaAvulsaQuickForm = ({ tenantId, tenantNome, preco, onClose }: Pr
       ) : (
         <div className="bg-primary/10 border border-primary/20 p-4 rounded-lg space-y-3">
           <p className="text-sm text-center">
-            Identificamos um pagamento pendente de agendamento para este e-mail.
+            Identificamos uma aula avulsa vinculada a este e-mail.
           </p>
           <Button type="submit" className="w-full font-bold uppercase tracking-widest">
             <Calendar className="mr-2 h-4 w-4" /> Ir para Agendamento
