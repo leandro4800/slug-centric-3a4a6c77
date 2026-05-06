@@ -11,6 +11,7 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -249,9 +250,12 @@ const Login = () => {
             </div>
           ) : (
             <Tabs defaultValue="login">
-            <TabsList className="grid grid-cols-2 w-full mb-8 bg-transparent p-1 rounded-none border border-white/5">
-              <TabsTrigger value="login" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs py-3">Entrar</TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-xs py-3">Criar conta</TabsTrigger>
+            <TabsList className={`grid ${tenant?.permite_aula_avulsa ? "grid-cols-3" : "grid-cols-2"} w-full mb-8 bg-transparent p-1 rounded-none border border-white/5`}>
+              <TabsTrigger value="login" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Entrar</TabsTrigger>
+              <TabsTrigger value="signup" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Criar conta</TabsTrigger>
+              {tenant?.permite_aula_avulsa && (
+                <TabsTrigger value="avulsa" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Aula Avulsa</TabsTrigger>
+              )}
             </TabsList>
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
@@ -345,6 +349,15 @@ const Login = () => {
                 </Button>
               </form>
             </TabsContent>
+            {tenant?.permite_aula_avulsa && (
+              <TabsContent value="avulsa">
+                <AulaAvulsaQuickForm 
+                  tenantId={tenant.id} 
+                  tenantNome={tenant.nome} 
+                  preco={Number(tenant.preco_aula_avulsa)} 
+                />
+              </TabsContent>
+            )}
             </Tabs>
           )}
         </div>
