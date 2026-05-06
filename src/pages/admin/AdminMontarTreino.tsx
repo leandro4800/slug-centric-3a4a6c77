@@ -233,7 +233,7 @@ const AdminMontarTreino = () => {
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil, biblioteca: biblioteca || [], divisoes, prompt: activePrompt },
+        body: { perfil, biblioteca: biblioteca || [], divisoes, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
