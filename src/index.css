@@ -108,6 +108,15 @@
     background-attachment: fixed;
     background-repeat: no-repeat;
   }
+
+  /* Black Flow - parede preta com salpicos brancos */
+  html[style*="--background: 0 0% 2%"] body {
+    background-image: url("/blackflow-bg.jpg");
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+  }
   h1, h2, h3, .font-display {
     @apply font-bold uppercase;
     font-family: 'Bebas Neue', 'Inter', sans-serif;
