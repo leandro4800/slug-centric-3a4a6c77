@@ -452,7 +452,7 @@ export const ExerciseCard = ({
           <button
             onClick={handleFinalizar}
             disabled={savingAll}
-            className="w-full py-4 rounded-none bg-primary text-primary-foreground font-display text-lg flex items-center justify-center gap-3 relative overflow-hidden border border-white/30 shadow-[0_10px_40px_-10px_rgba(224,0,0,0.4)] transition-all active:scale-[0.98]"
+            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display text-lg flex items-center justify-center gap-3 relative overflow-hidden border border-white/30 shadow-[0_10px_40px_-10px_rgba(224,0,0,0.4)] transition-all active:scale-[0.98]"
           >
             <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-70" />
             {savingAll ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : null}
