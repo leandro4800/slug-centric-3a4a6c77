@@ -251,18 +251,59 @@ const AdminPanel = () => {
 
               <TabsContent value="midia">
                 <div className="grid lg:grid-cols-2 gap-6">
-                  {/* Hero upload */}
-                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
-                    <h3 className="font-display text-2xl mb-4 text-primary uppercase tracking-wider">IMAGEM DE FUNDO</h3>
-                    <div className="aspect-video rounded-xl overflow-hidden border border-border mb-4 relative">
-                      <img src={tenant?.hero_url || heroDefault} alt="" className="w-full h-full object-cover" />
+                  {/* Hero / Login background */}
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
+                    <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">FUNDO DA TELA DE LOGIN</h3>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Aparece atrás da tela de login do seu app. Você pode usar uma <strong>imagem</strong> <strong>OU</strong> enviar um <strong>vídeo</strong> em loop. Se houver vídeo, ele tem prioridade sobre a imagem.
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      {/* Imagem */}
+                      <div className="space-y-3">
+                        <div className="aspect-video rounded-xl overflow-hidden border border-border relative bg-black">
+                          <img src={tenant?.hero_url || heroDefault} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <label className="block">
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "hero")} />
+                          <Button asChild variant="outline" className="w-full" disabled={uploading === "hero"}>
+                            <span>{uploading === "hero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ImagePlus className="h-4 w-4 mr-2" /> Trocar imagem de fundo</>}</span>
+                          </Button>
+                        </label>
+                      </div>
+                      {/* Vídeo */}
+                      <div className="space-y-3">
+                        <div className="aspect-video rounded-xl overflow-hidden border border-border relative bg-black flex items-center justify-center">
+                          {tenant?.login_video_url ? (
+                            <video src={tenant.login_video_url} muted playsInline controls className="w-full h-full object-cover" />
+                          ) : (
+                            <p className="text-xs text-muted-foreground px-4 text-center">Sem vídeo · usará a imagem acima</p>
+                          )}
+                        </div>
+                        <label className="block">
+                          <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "login")} />
+                          <Button asChild className="w-full" disabled={uploading === "login"}>
+                            <span>{uploading === "login" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Enviar vídeo de fundo</>}</span>
+                          </Button>
+                        </label>
+                        {tenant?.login_video_url && (
+                          <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={async () => {
+                              if (!tenant) return;
+                              const { error } = await supabase.from("tenants").update({ login_video_url: null }).eq("id", tenant.id);
+                              if (error) toast.error(error.message);
+                              else { toast.success("Vídeo removido"); await refresh(); }
+                            }}
+                          >
+                            Remover vídeo (usar imagem)
+                          </Button>
+                        )}
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                          Dica: MP4 ≤ 8MB, sem áudio, em loop.
+                        </p>
+                      </div>
                     </div>
-                    <label className="block">
-                      <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "hero")} />
-                      <Button asChild disabled={uploading === "hero"}>
-                        <span>{uploading === "hero" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Trocar imagem de fundo</>}</span>
-                      </Button>
-                    </label>
                   </div>
 
                   {/* Splash (logo do tenant ou vídeo de abertura) */}
