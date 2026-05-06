@@ -1,11 +1,28 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Search, Sparkles, MapPin, Calendar } from "lucide-react";
+import { ArrowRight, Search, Sparkles, MapPin, Calendar, Zap, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
+
+interface CoachCard {
+  id: string;
+  slug: string;
+  nome: string;
+  tagline: string | null;
+  bio: string | null;
+  foto_url: string | null;
+  hero_url: string | null;
+  especialidades: string[] | null;
+  cidade: string | null;
+  estado: string | null;
+  permite_aula_avulsa: boolean | null;
+  preco_aula_avulsa: number | null;
+}
 
 interface CoachCard {
   id: string;
