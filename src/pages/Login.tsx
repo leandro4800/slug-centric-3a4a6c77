@@ -173,8 +173,12 @@ const Login = () => {
       email: cleanEmail,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/login`,
-        data: { nome_completo: nome },
+        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}` : `${window.location.origin}/login`,
+        data: { 
+          nome_completo: nome,
+          tenant_id: tenant?.id || undefined,
+          tenant_slug: urlSlug || undefined,
+        },
       },
     });
     setLoading(false);
@@ -192,7 +196,7 @@ const Login = () => {
       toast.error("Este e-mail já está cadastrado. Faça login.");
       return;
     }
-    toast.success("Conta criada! Verifique seu e-mail.");
+    toast.success("Conta criada! Verifique seu e-mail e depois escolha um plano para começar.");
   };
 
   return (
