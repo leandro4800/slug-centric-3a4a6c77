@@ -409,8 +409,69 @@ const AdminMontarTreino = () => {
                   />
                 </div>
               </div>
-              <div className="text-xs text-muted-foreground">
-                Divisões sugeridas: <strong className="text-foreground">{divisoes.join(" · ")}</strong>
+            </div>
+
+            {/* === ESCOLHA DA DIVISÃO === */}
+            <div className="bg-black/40 border border-primary/30 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-xl">DIVISÃO DO TREINO</h2>
+                <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30">
+                  {presetsDisponiveis.length} opções p/ {perfil.frequencia_semanal}x · {nivel}
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Escolha como o aluno vai estruturar a semana. Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
+              </p>
+
+              <div className="grid md:grid-cols-2 gap-2">
+                {presetsDisponiveis.map((p) => (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => {
+                      setDivisaoSelecionadaId(p.id);
+                      setDivisaoCustom(p.dias);
+                    }}
+                    className={`text-left p-3 rounded-xl border transition-all ${
+                      divisaoSelecionadaId === p.id
+                        ? "bg-primary/15 border-primary shadow-[0_0_15px_rgba(220,38,38,0.25)]"
+                        : "bg-secondary/40 border-border hover:border-primary/40"
+                    }`}
+                  >
+                    <div className="text-sm font-bold mb-1">{p.label}</div>
+                    <div className="text-[11px] text-muted-foreground leading-relaxed">
+                      {p.dias.map((d, i) => <div key={i}>• {d}</div>)}
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {divisaoCustom.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-border/40">
+                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                    Editar nomes dos dias (combinações musculares)
+                  </Label>
+                  {divisaoCustom.map((dia, i) => (
+                    <Input
+                      key={i}
+                      value={dia}
+                      onChange={(e) => {
+                        const novo = [...divisaoCustom];
+                        novo[i] = e.target.value;
+                        setDivisaoCustom(novo);
+                        setDivisaoSelecionadaId(""); // marca como customizado
+                      }}
+                      placeholder={`Dia ${i + 1}`}
+                      className="text-sm"
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
+              <div className="text-xs text-muted-foreground mb-3">
+                Divisão final: <strong className="text-foreground">{divisoes.join(" · ")}</strong>
               </div>
               <div className="flex gap-3">
                 <Button onClick={() => salvarPerfil()} variant="outline">Salvar perfil</Button>
