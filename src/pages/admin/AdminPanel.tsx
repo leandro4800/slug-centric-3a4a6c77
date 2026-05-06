@@ -264,6 +264,49 @@ const AdminPanel = () => {
                     </label>
                   </div>
 
+                  {/* Splash (logo do tenant ou vídeo de abertura) */}
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
+                    <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">TELA DE ABERTURA (SPLASH)</h3>
+                    <p className="text-xs text-muted-foreground mb-4">
+                      Aparece por alguns segundos quando o aluno entra no app. Você pode usar apenas a sua <strong>logo</strong> (já configurada ao lado) <strong>OU</strong> enviar um <strong>vídeo curto</strong> (5–8s, MP4, sem áudio). Se o vídeo for enviado, ele tem prioridade.
+                    </p>
+                    <div className="grid sm:grid-cols-2 gap-4">
+                      <div className="aspect-video rounded-xl overflow-hidden border border-border bg-black flex items-center justify-center">
+                        {tenant?.splash_video_url ? (
+                          <video src={tenant.splash_video_url} muted playsInline controls className="w-full h-full object-cover" />
+                        ) : tenant?.logo_url ? (
+                          <img src={tenant.logo_url} alt="" className="w-24 h-24 object-contain" />
+                        ) : (
+                          <p className="text-xs text-muted-foreground">Sem mídia · usará logo padrão</p>
+                        )}
+                      </div>
+                      <div className="flex flex-col gap-3 justify-center">
+                        <label className="block">
+                          <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "splash")} />
+                          <Button asChild disabled={uploading === "splash"} className="w-full">
+                            <span>{uploading === "splash" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Enviar vídeo de abertura</>}</span>
+                          </Button>
+                        </label>
+                        {tenant?.splash_video_url && (
+                          <Button
+                            variant="outline"
+                            onClick={async () => {
+                              if (!tenant) return;
+                              const { error } = await supabase.from("tenants").update({ splash_video_url: null }).eq("id", tenant.id);
+                              if (error) toast.error(error.message);
+                              else { toast.success("Vídeo removido"); await refresh(); }
+                            }}
+                          >
+                            Remover vídeo (usar só a logo)
+                          </Button>
+                        )}
+                        <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                          Dica: vídeo vertical 9:16 ou quadrado, ≤ 5MB, sem áudio.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Logo & textos */}
                   <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-5">
                     <h3 className="font-display text-2xl text-primary uppercase tracking-wider">LOGO & TEXTOS</h3>
