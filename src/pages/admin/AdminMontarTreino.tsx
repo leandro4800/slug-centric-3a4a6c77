@@ -179,10 +179,29 @@ const AdminMontarTreino = () => {
   }, [alunoId, tenant]);
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
-  const divisoes = useMemo(
-    () => sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo, nivel),
-    [perfil.frequencia_semanal, perfil.sexo, nivel]
-  );
+
+  // Presets aplicáveis ao perfil atual (freq + sexo + nível)
+  const presetsDisponiveis = useMemo(() => {
+    const fem = perfil.sexo?.toLowerCase().startsWith("f");
+    return DIVISOES_PRESETS.filter(
+      (p) =>
+        p.freq === (perfil.frequencia_semanal || 4) &&
+        (fem ? p.publico === "feminino" || p.publico === "unisex" : p.publico === "unisex") &&
+        p.nivel.includes(nivel as any)
+    );
+  }, [perfil.frequencia_semanal, perfil.sexo, nivel]);
+
+  // Auto-seleciona primeiro preset quando muda contexto
+  useEffect(() => {
+    if (presetsDisponiveis.length > 0 && !presetsDisponiveis.find((p) => p.id === divisaoSelecionadaId)) {
+      setDivisaoSelecionadaId(presetsDisponiveis[0].id);
+      setDivisaoCustom(presetsDisponiveis[0].dias);
+    }
+  }, [presetsDisponiveis, divisaoSelecionadaId]);
+
+  const divisoes = divisaoCustom.length > 0
+    ? divisaoCustom
+    : sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
 
   const salvarPerfil = async (silent = false) => {
     if (!alunoId || !tenant) return;
