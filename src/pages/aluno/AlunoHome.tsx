@@ -136,12 +136,19 @@ const AlunoHome = () => {
   };
 
   const handlePlay = () => {
-    if (!featured) return;
-    if (ytId) {
-      setExpanded(true);
-      setMuted(false);
-    } else {
+    if (featured) {
       setPlaying(featured);
+      return;
+    }
+    
+    if (tenant?.hero_url) {
+      setPlaying({
+        id: "hero",
+        url: tenant.hero_url,
+        title: tenant.tagline || tenant.nome || "Apresentação",
+        thumbnail_url: null,
+        platform: "hero"
+      });
     }
   };
 
