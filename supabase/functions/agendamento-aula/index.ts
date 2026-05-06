@@ -30,6 +30,26 @@ Deno.serve(async (req) => {
     if (req.method === "GET") {
       const url = new URL(req.url);
       const token = url.searchParams.get("token");
+      const email = url.searchParams.get("email");
+      const tenant_id = url.searchParams.get("tenant_id");
+
+      if (email && tenant_id) {
+        // Busca agendamento pago mas sem slot para este email
+        const { data: agend, error } = await supabase
+          .from("agendamentos_aula_avulsa")
+          .select("token, status, slot_id")
+          .eq("email", email.toLowerCase())
+          .eq("tenant_id", tenant_id)
+          .eq("status", "pago")
+          .is("slot_id", null)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (error) return json({ error: "error checking email" }, 500);
+        return json({ found: !!agend, token: agend?.token });
+      }
+
       if (!token) return json({ error: "token required" }, 400);
 
       const { data: agend, error } = await supabase
