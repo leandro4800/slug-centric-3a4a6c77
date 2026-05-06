@@ -121,8 +121,8 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                         {(tenant?.tagline || "TREINE COMO CAMPEÃO").slice(0, 22)}
                       </h1>
                     </HotZone>
-                    <HotZone label="Botão" active={isActive("primary")} onClick={pick("primary")} className="rounded inline-flex">
-                      <span className="inline-flex items-center gap-1 text-[8px] font-bold px-2 py-1 tracking-widest" style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}>
+                    <HotZone label="Botão" active={isActive("primary")} onClick={pick("primary")} className="rounded-lg inline-flex">
+                      <span className="inline-flex items-center gap-1 text-[8px] font-bold px-2 py-1 tracking-widest rounded-lg" style={{ background: "hsl(var(--primary))", color: "hsl(var(--primary-foreground))" }}>
                         <Play className="h-2 w-2 fill-current" /> REPRODUZIR
                       </span>
                     </HotZone>
