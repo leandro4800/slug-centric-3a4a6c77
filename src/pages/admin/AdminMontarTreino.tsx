@@ -120,6 +120,7 @@ const AdminMontarTreino = () => {
   const [saving, setSaving] = useState(false);
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
+  const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
 
   useEffect(() => {
     if (!tenant) return;
@@ -232,7 +233,7 @@ const AdminMontarTreino = () => {
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil, biblioteca: biblioteca || [], divisoes, prompt: activePrompt },
+        body: { perfil, biblioteca: biblioteca || [], divisoes, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -467,6 +468,52 @@ const AdminMontarTreino = () => {
                   ))}
                 </div>
               )}
+
+              {/* === ESTÍMULOS EXTRAS === */}
+              <div className="space-y-2 pt-3 border-t border-border/40">
+                <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                  Estímulos extras (opcional)
+                </Label>
+                <p className="text-[11px] text-muted-foreground">Grupos acessórios que a IA vai distribuir nos dias adequados da divisão.</p>
+                <div className="flex flex-wrap gap-2">
+                  {[
+                    "Panturrilha",
+                    "Antebraço",
+                    "Trapézio",
+                    "Ombro Lateral",
+                    "Ombro Posterior",
+                    "Core / Abdômen",
+                    "Glúteo Acessório",
+                    "Lombar",
+                    "Pescoço",
+                  ].map((est) => {
+                    const ativo = estimulosExtras.includes(est);
+                    return (
+                      <button
+                        key={est}
+                        type="button"
+                        onClick={() =>
+                          setEstimulosExtras((prev) =>
+                            ativo ? prev.filter((e) => e !== est) : [...prev, est]
+                          )
+                        }
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-all ${
+                          ativo
+                            ? "bg-primary text-primary-foreground border-primary shadow-[0_0_10px_rgba(220,38,38,0.4)]"
+                            : "bg-secondary/40 border-border hover:border-primary/40"
+                        }`}
+                      >
+                        {ativo ? "✓ " : "+ "}{est}
+                      </button>
+                    );
+                  })}
+                </div>
+                {estimulosExtras.length > 0 && (
+                  <p className="text-[11px] text-primary">
+                    Incluindo: <strong>{estimulosExtras.join(", ")}</strong>
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
