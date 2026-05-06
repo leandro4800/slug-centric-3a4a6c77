@@ -32,6 +32,20 @@ const PRESETS: Preset[] = [
     },
   },
   {
+    id: "cimento",
+    name: "CIMENTO",
+    subtitle: "Industrial · Concreto & Detalhes",
+    swatches: ["#9A9A9A", "#FFFFFF", "#E10600", "#000000"],
+    overrides: {
+      primary: "355 100% 48%",
+      primary_glow: "355 100% 60%",
+      accent: "0 0% 100%",
+      background: "0 0% 60%",
+      card: "0 0% 65%",
+      foreground: "0 0% 5%",
+      border: "0 0% 45%",
+    },
+  {
     id: "gold-rush",
     name: "GOLD MIRROR",
     subtitle: "Premium · Dourado Espelhado",
