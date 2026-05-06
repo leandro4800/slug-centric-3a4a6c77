@@ -185,11 +185,6 @@ const AdminPanel = () => {
                 <Sparkles className="h-4 w-4 mr-2" /> Base de Conhecimento IA
               </Button>
             </Link>
-            <Link to={`/${slug}/admin/montar-treino`}>
-              <Button>
-                <Sparkles className="h-4 w-4 mr-2" /> Montar Treino com IA
-              </Button>
-            </Link>
           </div>
         </div>
 
