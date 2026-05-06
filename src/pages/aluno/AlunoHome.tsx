@@ -159,32 +159,32 @@ const AlunoHome = () => {
 
   return (
     <>
-      {/* Background Hero Fixer */}
-      <div className="hero-mask">
-        {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
-          ytAutoSrc || tenantHeroVideoId ? (
-            <iframe
-              key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
-              src={ytAutoSrc || `https://www.youtube.com/embed/${tenantHeroVideoId}?autoplay=1&mute=1&loop=1&playlist=${tenantHeroVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
-              className="w-full h-full pointer-events-none"
-            />
-          ) : (
-            <video
-              src={(featuredDirectUrl || tenantHeroDirectUrl)!}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          )
-        ) : (
-          <img src={heroImg} alt="" className="w-full h-full object-cover" />
-        )}
-      </div>
-
       {/* Hero Content Section */}
       <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden flex flex-col justify-end pb-8 px-5">
+        {/* Background Hero (contido na seção) */}
+        <div className="hero-mask">
+          {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
+            ytAutoSrc || tenantHeroVideoId ? (
+              <iframe
+                key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
+                src={ytAutoSrc || `https://www.youtube.com/embed/${tenantHeroVideoId}?autoplay=1&mute=1&loop=1&playlist=${tenantHeroVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+                className="w-full h-full pointer-events-none"
+              />
+            ) : (
+              <video
+                src={(featuredDirectUrl || tenantHeroDirectUrl)!}
+                autoPlay
+                muted
+                loop
+                playsInline
+                className="w-full h-full object-cover"
+              />
+            )
+          ) : (
+            <img src={heroImg} alt="" className="w-full h-full object-cover" />
+          )}
+        </div>
+
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black pointer-events-none" />
 
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5 z-10">
