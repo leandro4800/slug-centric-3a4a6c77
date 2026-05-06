@@ -27,3 +27,5 @@ project_id = "iflgryuemsohurtdaawm"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
+  [functions.agendamento-aula]
+    verify_jwt = false
