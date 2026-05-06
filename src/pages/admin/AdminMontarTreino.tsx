@@ -50,24 +50,55 @@ const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" 
   return "Iniciante";
 };
 
+// === PRESETS DE DIVISÃO (baseados no curso "Além da Genética" - Pacholok) ===
+// Cada preset tem id, label amigável, frequência ideal e os dias com combinações musculares já definidas.
+type DivisaoPreset = {
+  id: string;
+  label: string;
+  freq: number;
+  publico: "unisex" | "feminino";
+  nivel: ("Iniciante" | "Intermediário" | "Avançado" | "Atleta de Alto Nível")[];
+  dias: string[];
+};
+
+const DIVISOES_PRESETS: DivisaoPreset[] = [
+  // ===== 2x semana =====
+  { id: "ini-2x-fb", label: "Iniciante 2x — Full Body AB", freq: 2, publico: "unisex", nivel: ["Iniciante"], dias: ["A — Full Body (Quad/Peito/Costas)", "B — Full Body (Post/Ombro/Braços)"] },
+  { id: "fem-2x-ab", label: "Mulher 2x — Inferior/Superior", freq: 2, publico: "feminino", nivel: ["Iniciante", "Intermediário"], dias: ["A — Glúteo/Posterior/Quadríceps", "B — Superior + Glúteo Acessório"] },
+
+  // ===== 3x semana =====
+  { id: "ini-3x-fb", label: "Iniciante 3x — Full Body ABC", freq: 3, publico: "unisex", nivel: ["Iniciante"], dias: ["A — Full Body (ênfase Pernas)", "B — Full Body (ênfase Peito/Costas)", "C — Full Body (ênfase Ombro/Braços)"] },
+  { id: "ppl-3x", label: "PPL 3x — Push / Pull / Legs", freq: 3, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Push — Peito/Ombro/Tríceps", "Pull — Costas/Bíceps", "Legs — Pernas Completas"] },
+  { id: "abc-peitotri", label: "ABC 3x — Peito+Tríceps / Costas+Bíceps / Pernas", freq: 3, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Peito + Tríceps + Ombro Anterior", "B — Costas + Bíceps + Ombro Posterior", "C — Pernas Completas"] },
+  { id: "abc-peitobi", label: "ABC 3x — Peito+Bíceps / Costas+Tríceps / Pernas", freq: 3, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Peito + Bíceps", "B — Costas + Tríceps", "C — Pernas + Ombro"] },
+  { id: "fem-3x-av", label: "Mulher 3x — Avançada (Glúteo 2x)", freq: 3, publico: "feminino", nivel: ["Intermediário", "Avançado"], dias: ["A — Glúteo/Posterior", "B — Quadríceps + Panturrilha", "C — Superior + Glúteo Acessório"] },
+
+  // ===== 4x semana =====
+  { id: "ini-4x-fb", label: "Iniciante 4x — Full Body ABCD", freq: 4, publico: "unisex", nivel: ["Iniciante"], dias: ["A — Full Body (Pernas)", "B — Full Body (Peito/Costas)", "C — Full Body (Ombro/Braços)", "D — Full Body (Posterior/Core)"] },
+  { id: "abcd-peitotri", label: "ABCD 4x — Peito+Tri / Costas+Bi / Pernas / Ombro", freq: 4, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Peito + Tríceps", "B — Costas + Bíceps", "C — Pernas Completas", "D — Ombro + Trapézio + Braços"] },
+  { id: "abcd-peitobi", label: "ABCD 4x — Peito+Bi / Costas+Tri / Pernas / Ombro", freq: 4, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Peito + Bíceps", "B — Costas + Tríceps", "C — Pernas Completas", "D — Ombro + Trapézio + Antebraço"] },
+  { id: "ppl-ul-4x", label: "Upper/Lower 4x — 2x Superior + 2x Inferior", freq: 4, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Upper A — Peito/Costas/Ombro", "Lower A — Quadríceps/Glúteo", "Upper B — Braços/Ombro Lateral", "Lower B — Posterior/Panturrilha"] },
+  { id: "ppl-abc-4x", label: "PPL+1 4x — Push / Pull / Legs / Ênfase Fraco", freq: 4, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Push — Peito/Ombro/Tríceps", "Pull — Costas/Bíceps", "Legs — Pernas", "D — Ênfase Ponto Fraco"] },
+  { id: "fem-4x-ab", label: "Mulher 4x — Glúteo/Quad alternado", freq: 4, publico: "feminino", nivel: ["Intermediário"], dias: ["A — Glúteo/Posterior", "B — Peito/Ombro", "C — Glúteo/Quadríceps", "D — Costas/Braços"] },
+  { id: "fem-4x-ul", label: "Mulher 4x — Upper/Lower com foco Glúteo", freq: 4, publico: "feminino", nivel: ["Intermediário", "Avançado"], dias: ["Lower A — Glúteo/Posterior", "Upper A — Costas/Ombro", "Lower B — Quadríceps/Glúteo", "Upper B — Peito/Braços"] },
+
+  // ===== 5x semana =====
+  { id: "abcde-inf", label: "ABCDE 5x — Ênfase Inferiores (Pacholok)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Quadríceps", "B — Peito + Tríceps", "C — Costas + Bíceps", "D — Posterior + Glúteo", "E — Ombro + Trapézio"] },
+  { id: "abcde-sup", label: "ABCDE 5x — Ênfase Superiores (Pacholok)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Peito (Foco)", "B — Costas (Largura)", "C — Pernas Completas", "D — Ombro Completo", "E — Braços (Bi+Tri)"] },
+  { id: "ppl-ul-5x", label: "PPL+UL 5x — Push/Pull/Legs/Upper/Lower", freq: 5, publico: "unisex", nivel: ["Avançado"], dias: ["Push", "Pull", "Legs", "Upper (Ênfase fraco)", "Lower (Ênfase fraco)"] },
+  { id: "fem-5x-quad", label: "Mulher 5x — Ênfase Quadríceps", freq: 5, publico: "feminino", nivel: ["Avançado"], dias: ["A — Quadríceps", "B — Glúteo/Posterior", "C — Peito/Ombro", "D — Quadríceps + Panturrilha", "E — Costas/Braços"] },
+
+  // ===== 6x semana =====
+  { id: "abcdef-av", label: "ABCDEF 6x — Super Avançado (1 músculo/dia)", freq: 6, publico: "unisex", nivel: ["Avançado", "Atleta de Alto Nível"], dias: ["A — Peito", "B — Costas", "C — Pernas (Quad)", "D — Ombro", "E — Braços (Bi+Tri)", "F — Posterior + Trapézio"] },
+  { id: "ppl-2x", label: "PPL 6x — Push/Pull/Legs 2x semana", freq: 6, publico: "unisex", nivel: ["Avançado"], dias: ["Push A", "Pull A", "Legs A (Quad)", "Push B", "Pull B", "Legs B (Posterior)"] },
+];
+
 const sugerirDivisoes = (frequencia: number, sexo: string | null, nivel: string): string[] => {
   const fem = sexo?.toLowerCase().startsWith("f");
-  
-  if (nivel === "Atleta de Alto Nível" || nivel === "Avançado") {
-    if (frequencia >= 5) {
-      return ["Quadríceps", "Costas (Largura)", "Peito/Ombro", "Posterior/Glúteo", "Costas (Espessura)/Braços"];
-    }
-    if (frequencia === 4) {
-      return ["Membros Inferiores (Foco Quad)", "Peito/Ombro", "Costas/Trapézio", "Membros Inferiores (Foco Post)"];
-    }
-  }
-
-  if (frequencia <= 3) return fem ? ["Glúteo/Posterior", "Peito/Tríceps", "Costas/Bíceps"] : ["Push", "Pull", "Legs"];
-  if (frequencia === 4) return fem
-    ? ["Glúteo/Posterior", "Peito/Ombro", "Glúteo/Quadríceps", "Costas/Braço"]
-    : ["Treino A", "Treino B", "Treino C", "Treino D"];
-  if (frequencia === 5) return ["Treino A", "Treino B", "Treino C", "Treino D", "Treino E"];
-  return ["Treino A", "Treino B", "Treino C", "Treino D", "Treino E", "Treino F"];
+  const candidatos = DIVISOES_PRESETS.filter(
+    (p) => p.freq === frequencia && (fem ? p.publico === "feminino" || p.publico === "unisex" : p.publico === "unisex") && p.nivel.includes(nivel as any)
+  );
+  return candidatos[0]?.dias || ["Treino A", "Treino B", "Treino C", "Treino D"];
 };
 
 const AdminMontarTreino = () => {
