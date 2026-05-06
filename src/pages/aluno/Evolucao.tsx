@@ -73,7 +73,7 @@ const Evolucao = () => {
       <PageHeader icon={TrendingUp} title="EVOLUÇÃO…" subtitle={tenant?.nome || "MEU TIME"} />
       
       <div className="px-5">
-        <div className="bg-primary/10 border border-primary/30 rounded-none px-4 py-3 flex items-center justify-center gap-2 text-[10px] text-primary mb-5 uppercase tracking-widest font-bold">
+        <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-[10px] text-primary mb-5 uppercase tracking-widest font-bold">
           <TenantSymbol size={16} /> Painel de Conquistas Alpha
         </div>
 
@@ -94,15 +94,15 @@ const Evolucao = () => {
         </div>
 
         {/* Gráfico de Performance */}
-        <div className="bg-card/40 border border-border rounded-none p-5">
+        <div className="bg-card/40 border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <h3 className="font-display text-lg text-primary tracking-widest uppercase">{tab === "PESO" ? "Peso Corporal" : "Gordura Corporal"}</h3>
-            <div className="flex bg-card/80 border border-border rounded-none p-0.5">
+            <div className="flex bg-card/80 border border-border rounded-xl p-0.5">
               {(["PESO", "BF%"] as const).map((t) => (
                 <button
                   key={t}
                   onClick={() => setTab(t)}
-                  className={`px-3 py-1 rounded-none text-xs font-semibold uppercase tracking-widest transition-all duration-300 ${
+                  className={`px-3 py-1 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all duration-300 ${
                     tab === t ? "bg-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-white"
                   }`}
                 >
@@ -116,9 +116,9 @@ const Evolucao = () => {
         </div>
 
         {/* Inteligência Alpha */}
-        <div className="bg-card/40 border border-border rounded-none p-5 mt-5">
+        <div className="bg-card/40 border border-border rounded-xl p-5 mt-5">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-none bg-primary/15 border border-primary/40 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/40 flex items-center justify-center">
               <Brain className="h-4 w-4 text-primary" />
             </div>
             <p className="font-display text-lg text-primary tracking-widest uppercase">Análise de Performance</p>
