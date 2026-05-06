@@ -47,6 +47,7 @@ const PRESETS: Preset[] = [
       card: "0 0% 65%",
       foreground: "0 0% 5%",
       border: "0 0% 45%",
+      bg_texture: "url('/cimento-texture.jpg')",
     },
   },
   {
@@ -63,6 +64,7 @@ const PRESETS: Preset[] = [
       card: "0 0% 6%",
       foreground: "0 0% 98%",
       border: "0 0% 15%",
+      bg_texture: "url('/black-gold-cement-bg.jpg')",
     },
   },
   {
@@ -170,6 +172,7 @@ const PRESETS: Preset[] = [
       card: "0 0% 5%",
       foreground: "0 0% 98%",
       border: "0 0% 15%",
+      bg_texture: "url('/blackflow-bg.jpg')",
     },
   },
 ];

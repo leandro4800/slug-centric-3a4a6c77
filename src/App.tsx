@@ -110,7 +110,8 @@ const App = () => (
             </Route>
 
             {/* Painel do coach */}
-            <Route path="/:slug/admin" element={<SlugRedirect to="app/controle" />} />
+            <Route path="/:slug/admin" element={<SlugRedirect to="app" />} />
+            <Route path="/:slug/admin/controle" element={<SlugRedirect to="app/controle" />} />
             <Route path="/:slug/admin/atletas" element={<RequireAuth><MeusAtletas /></RequireAuth>} />
             <Route path="/:slug/admin/aparencia" element={<RequireAuth><AdminPanel /></RequireAuth>} />
             <Route path="/:slug/admin/montar-treino" element={<RequireAuth><AdminMontarTreino /></RequireAuth>} />

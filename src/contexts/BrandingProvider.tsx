@@ -12,6 +12,7 @@ export type ThemeOverrides = Partial<{
   card: string;
   foreground: string;
   border: string;
+  bg_texture: string; // ex: url('/blackflow-bg.jpg')
 }>;
 
 export interface Tenant {
@@ -80,6 +81,7 @@ const SAFE_KEYS = Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[];
 const clearTokens = (root: HTMLElement) => {
   Object.values(TOKEN_TO_VAR).flat().forEach((v) => root.style.removeProperty(v));
   root.style.removeProperty("--hero-url");
+  root.style.removeProperty("--bg-texture");
 };
 
 // Referência global para evitar re-aplicar o mesmo tema e causar flicker
@@ -116,6 +118,16 @@ export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl
     }
   } else {
     root.style.removeProperty("--hero-url");
+  }
+
+  // bg-texture: textura de fundo opcional vinda do tenant. Sem isso, nenhuma textura é aplicada.
+  const bgTexture = (overrides as ThemeOverrides | null | undefined)?.bg_texture;
+  if (bgTexture) {
+    if (root.style.getPropertyValue("--bg-texture") !== bgTexture) {
+      root.style.setProperty("--bg-texture", bgTexture);
+    }
+  } else {
+    root.style.removeProperty("--bg-texture");
   }
 };
 
