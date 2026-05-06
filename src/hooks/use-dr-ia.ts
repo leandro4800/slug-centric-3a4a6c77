@@ -30,8 +30,27 @@ export const useDrIA = () => {
       });
 
       if (functionError) {
-        // Handle specific error codes
+        // Tenta extrair payload de erro estruturado da Edge Function
+        const ctx: any = (functionError as any).context;
+        let payload: any = null;
+        try {
+          if (ctx?.json) payload = await ctx.json();
+          else if (ctx?.body) payload = JSON.parse(await new Response(ctx.body).text());
+        } catch (_) {}
+
         if (functionError.status === 429) {
+          if (payload?.error === "limite_mensal_atingido") {
+            const proxima = payload.proxima_disponivel_em
+              ? new Date(payload.proxima_disponivel_em).toLocaleDateString("pt-BR", {
+                  day: "2-digit", month: "long",
+                })
+              : "o próximo mês";
+            toast.info(payload.message || "Você já fez sua leitura deste mês.", {
+              description: `Sua próxima análise estará liberada em ${proxima}. Aproveite para aplicar as condutas sugeridas no exame anterior. 💪`,
+              duration: 8000,
+            });
+            return null;
+          }
           throw new Error("Muitas requisições. O Dr. IA está descansando um pouco, tente em instantes.");
         }
         if (functionError.status === 402) {
