@@ -262,14 +262,26 @@ export default function TenantLanding() {
                       )
                     )}
                   </ul>
-                  <Button
-                    onClick={() => handleCheckout(p.id)}
-                    disabled={checkoutLoading === p.id}
-                    className="w-full font-bold uppercase tracking-widest"
-                    variant={destaque ? "default" : "outline"}
-                  >
-                    {checkoutLoading === p.id ? "Redirecionando..." : "Testar 30 dias grátis"}
-                  </Button>
+                  {!p.stripe_price_id ? (
+                    <div className="text-xs text-center text-muted-foreground border border-border/50 p-3">
+                      Plano em configuração — em breve.
+                    </div>
+                  ) : !user ? (
+                    <Link to={`/${slug}/login`} className="block">
+                      <Button className="w-full font-bold uppercase tracking-widest" variant={destaque ? "default" : "outline"}>
+                        Criar conta e assinar
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      onClick={() => handleCheckout(p.id)}
+                      disabled={checkoutLoading === p.id}
+                      className="w-full font-bold uppercase tracking-widest"
+                      variant={destaque ? "default" : "outline"}
+                    >
+                      {checkoutLoading === p.id ? "Redirecionando..." : "Testar 30 dias grátis"}
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -278,6 +290,21 @@ export default function TenantLanding() {
       </>
     )}
       </section>
+
+      <Dialog open={aulaAvulsaOpen} onOpenChange={setAulaAvulsaOpen}>
+        <DialogContent className="bg-card border border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase text-xl">Agendar Aula Avulsa</DialogTitle>
+          </DialogHeader>
+          {tenant?.permite_aula_avulsa && tenant.preco_aula_avulsa && (
+            <AulaAvulsaQuickForm
+              tenantId={tenant.id}
+              tenantNome={tenant.nome}
+              preco={Number(tenant.preco_aula_avulsa)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
