@@ -153,6 +153,23 @@ const PRESETS: Preset[] = [
       border: "270 50% 20%",
     },
   },
+  {
+    id: "black-flow",
+    name: "BLACK FLOW",
+    subtitle: "Cinematográfico · Dark & Red",
+    swatches: ["#000000", "#1A1A1A", "#E10600", "#FFFFFF"],
+    overrides: {
+      primary: "355 100% 48%",
+      primary_glow: "355 100% 60%",
+      primary_foreground: "0 0% 100%",
+      accent: "355 100% 48%",
+      accent_foreground: "0 0% 100%",
+      background: "0 0% 0%",
+      card: "0 0% 5%",
+      foreground: "0 0% 98%",
+      border: "0 0% 15%",
+    },
+  },
 ];
 
 export const IdentidadeVisual = () => {
