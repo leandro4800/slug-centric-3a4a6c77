@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, Search, Sparkles, MapPin, Calendar } from "lucide-react";
+import { ArrowRight, Search, Sparkles, MapPin, Calendar, Zap, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
+
 
 interface CoachCard {
   id: string;
@@ -23,11 +26,14 @@ interface CoachCard {
 }
 
 export default function Marketplace() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [coaches, setCoaches] = useState<CoachCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState(searchParams.get("q") || "");
   const [region, setRegion] = useState(searchParams.get("region") || "");
+  const [selectedCoach, setSelectedCoach] = useState<CoachCard | null>(null);
+  const [modalMode, setModalMode] = useState<"choice" | "aula">("choice");
 
   const stateMap: Record<string, string> = {
     "acre": "AC", "alagoas": "AL", "amapa": "AP", "amazonas": "AM", "bahia": "BA", "ceara": "CE",
@@ -188,10 +194,11 @@ export default function Marketplace() {
         ) : (
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((c) => (
-              <Link
-                to={`/${c.slug}`}
+              <button
+                type="button"
+                onClick={() => { setSelectedCoach(c); setModalMode("choice"); }}
                 key={c.id}
-                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-primary/60 hover:shadow-glow"
+                className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-primary/60 hover:shadow-glow text-left"
               >
                 <div className="relative aspect-[4/5] overflow-hidden bg-zinc-900">
                   {c.hero_url || c.foto_url ? (
@@ -214,7 +221,6 @@ export default function Marketplace() {
                       )}
                     </div>
                     {c.tagline && <p className="mt-1 text-sm text-white/70 line-clamp-1">{c.tagline}</p>}
-                    
                     <div className="mt-2 flex items-center gap-2 text-xs text-white/60">
                       {c.cidade && (
                         <div className="flex items-center gap-1">
@@ -223,7 +229,6 @@ export default function Marketplace() {
                         </div>
                       )}
                     </div>
-
                     {c.especialidades && c.especialidades.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-1">
                         {c.especialidades.slice(0, 2).map((e) => (
@@ -238,7 +243,7 @@ export default function Marketplace() {
                 <div className="flex items-center justify-between p-4">
                   <div className="flex flex-col">
                     <span className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Consultoria</span>
-                    <span className="text-sm font-bold">Ver planos</span>
+                    <span className="text-sm font-bold">Ver opções</span>
                   </div>
                   {c.permite_aula_avulsa && c.preco_aula_avulsa && (
                     <div className="flex flex-col items-end border-l border-border/50 pl-4">
@@ -248,11 +253,62 @@ export default function Marketplace() {
                   )}
                   <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         )}
       </section>
+
+      {/* Modal de intenção */}
+      <Dialog open={!!selectedCoach} onOpenChange={(open) => { if (!open) { setSelectedCoach(null); setModalMode("choice"); } }}>
+        <DialogContent className="bg-card border border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase text-xl">
+              {modalMode === "choice" ? `O que você quer com ${selectedCoach?.nome}?` : "Aula Avulsa"}
+            </DialogTitle>
+          </DialogHeader>
+          {modalMode === "choice" && selectedCoach && (
+            <div className="space-y-3 pt-2">
+              {selectedCoach.permite_aula_avulsa && selectedCoach.preco_aula_avulsa && (
+                <button
+                  onClick={() => setModalMode("aula")}
+                  className="w-full p-4 border-2 border-primary/30 hover:border-primary rounded-none text-left transition group"
+                >
+                  <div className="flex items-center gap-3">
+                    <Zap className="h-6 w-6 text-primary" />
+                    <div className="flex-1">
+                      <div className="font-display uppercase text-base">Quero uma aula avulsa</div>
+                      <div className="text-xs text-muted-foreground">Treino único, pagamento direto. R$ {selectedCoach.preco_aula_avulsa}</div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition" />
+                  </div>
+                </button>
+              )}
+              <button
+                onClick={() => navigate(`/${selectedCoach.slug}`)}
+                className="w-full p-4 border-2 border-border hover:border-primary rounded-none text-left transition group"
+              >
+                <div className="flex items-center gap-3">
+                  <Crown className="h-6 w-6 text-primary" />
+                  <div className="flex-1">
+                    <div className="font-display uppercase text-base">Quero acompanhamento contínuo</div>
+                    <div className="text-xs text-muted-foreground">Ver planos mensais e começar.</div>
+                  </div>
+                  <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition" />
+                </div>
+              </button>
+            </div>
+          )}
+          {modalMode === "aula" && selectedCoach && (
+            <AulaAvulsaQuickForm
+              tenantId={selectedCoach.id}
+              tenantNome={selectedCoach.nome}
+              preco={Number(selectedCoach.preco_aula_avulsa)}
+              onClose={() => setModalMode("choice")}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

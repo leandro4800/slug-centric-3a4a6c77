@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft, Sparkles } from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
 
 interface Tenant {
   id: string;
@@ -30,6 +32,7 @@ interface Plano {
   preco_centavos: number;
   intervalo: "mensal" | "trimestral" | "anual";
   ordem: number;
+  stripe_price_id: string | null;
 }
 
 const intervaloLabel = { mensal: "/mês", trimestral: "/trimestre", anual: "/ano" };
@@ -47,6 +50,7 @@ export default function TenantLanding() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [aulaAvulsaOpen, setAulaAvulsaOpen] = useState(false);
 
   useEffect(() => {
     void load();
@@ -82,7 +86,7 @@ export default function TenantLanding() {
 
       const { data: p } = await supabase
         .from("planos")
-        .select("*")
+        .select("id, nome, descricao, preco_centavos, intervalo, ordem, stripe_price_id")
         .eq("tenant_id", t.id)
         .eq("ativo", true)
         .order("ordem");
@@ -220,11 +224,10 @@ export default function TenantLanding() {
                   <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Suporte pós-treino</li>
                 </ul>
                 <Button 
-                  onClick={() => handleCheckout(undefined, 'aula_avulsa')}
-                  disabled={checkoutLoading === 'aula_avulsa'}
+                  onClick={() => setAulaAvulsaOpen(true)}
                   className="w-full font-bold uppercase tracking-widest"
                 >
-                  {checkoutLoading === 'aula_avulsa' ? "Redirecionando..." : "Agendar Aula"}
+                  Agendar Aula
                 </Button>
               </div>
             )}
@@ -259,14 +262,26 @@ export default function TenantLanding() {
                       )
                     )}
                   </ul>
-                  <Button
-                    onClick={() => handleCheckout(p.id)}
-                    disabled={checkoutLoading === p.id}
-                    className="w-full font-bold uppercase tracking-widest"
-                    variant={destaque ? "default" : "outline"}
-                  >
-                    {checkoutLoading === p.id ? "Redirecionando..." : "Testar 30 dias grátis"}
-                  </Button>
+                  {!p.stripe_price_id ? (
+                    <div className="text-xs text-center text-muted-foreground border border-border/50 p-3">
+                      Plano em configuração — em breve.
+                    </div>
+                  ) : !user ? (
+                    <Link to={`/${slug}/login`} className="block">
+                      <Button className="w-full font-bold uppercase tracking-widest" variant={destaque ? "default" : "outline"}>
+                        Criar conta e assinar
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button
+                      onClick={() => handleCheckout(p.id)}
+                      disabled={checkoutLoading === p.id}
+                      className="w-full font-bold uppercase tracking-widest"
+                      variant={destaque ? "default" : "outline"}
+                    >
+                      {checkoutLoading === p.id ? "Redirecionando..." : "Testar 30 dias grátis"}
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -275,6 +290,21 @@ export default function TenantLanding() {
       </>
     )}
       </section>
+
+      <Dialog open={aulaAvulsaOpen} onOpenChange={setAulaAvulsaOpen}>
+        <DialogContent className="bg-card border border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase text-xl">Agendar Aula Avulsa</DialogTitle>
+          </DialogHeader>
+          {tenant?.permite_aula_avulsa && tenant.preco_aula_avulsa && (
+            <AulaAvulsaQuickForm
+              tenantId={tenant.id}
+              tenantNome={tenant.nome}
+              preco={Number(tenant.preco_aula_avulsa)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

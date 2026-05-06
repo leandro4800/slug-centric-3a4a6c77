@@ -48,7 +48,7 @@ const Login = () => {
       const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
 
       // Determinamos o slug do tenant do usuário
-      let userSlug = "demo";
+      let userSlug = urlSlug || "demo";
       if (ownedTenant?.slug) {
         userSlug = ownedTenant.slug;
       } else if (perfil?.tenant_id) {
@@ -67,6 +67,36 @@ const Login = () => {
             .eq("id", coachRole.tenant_id)
             .maybeSingle();
           userSlug = t?.slug || userSlug;
+        }
+      }
+
+      // Aluno comum: precisa ter assinatura ativa OU comprou aula avulsa para acessar /app
+      // Se não tem assinatura, mandamos para a landing do tenant (planos)
+      if (!isAdmin && !isCoach) {
+        // Resolve tenant alvo (preferindo urlSlug, depois userSlug)
+        const targetSlug = urlSlug || userSlug;
+        let targetTenantId: string | null = null;
+        if (targetSlug && targetSlug !== "demo") {
+          const { data: t } = await supabase.from("tenants").select("id").eq("slug", targetSlug).maybeSingle();
+          targetTenantId = t?.id || null;
+        }
+        if (targetTenantId) {
+          const { data: sub } = await supabase
+            .from("assinaturas")
+            .select("status")
+            .eq("aluno_id", user.id)
+            .eq("tenant_id", targetTenantId)
+            .in("status", ["active", "trialing"])
+            .maybeSingle();
+          if (!sub) {
+            navigate(`/${targetSlug}`, { replace: true });
+            return;
+          }
+          userSlug = targetSlug;
+        } else {
+          // Sem tenant alvo válido: marketplace
+          navigate(`/marketplace`, { replace: true });
+          return;
         }
       }
 
@@ -143,8 +173,12 @@ const Login = () => {
       email: cleanEmail,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/login`,
-        data: { nome_completo: nome },
+        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}` : `${window.location.origin}/login`,
+        data: { 
+          nome_completo: nome,
+          tenant_id: tenant?.id || undefined,
+          tenant_slug: urlSlug || undefined,
+        },
       },
     });
     setLoading(false);
@@ -162,7 +196,7 @@ const Login = () => {
       toast.error("Este e-mail já está cadastrado. Faça login.");
       return;
     }
-    toast.success("Conta criada! Verifique seu e-mail.");
+    toast.success("Conta criada! Verifique seu e-mail e depois escolha um plano para começar.");
   };
 
   return (
