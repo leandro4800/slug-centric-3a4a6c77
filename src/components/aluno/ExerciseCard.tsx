@@ -333,7 +333,7 @@ export const ExerciseCard = ({
         </div>
 
         {!isOpen && (
-          <div className="mt-3 w-full py-3 rounded-none bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2 relative overflow-hidden border border-white/20 shadow-lg">
+          <div className="mt-3 w-full py-3 rounded-xl bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2 relative overflow-hidden border border-white/20 shadow-lg">
             <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
             <span className="relative z-10">▶ EXECUTAR</span>
           </div>
