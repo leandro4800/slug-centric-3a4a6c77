@@ -26,11 +26,14 @@ interface CoachCard {
 }
 
 export default function Marketplace() {
+  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [coaches, setCoaches] = useState<CoachCard[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState(searchParams.get("q") || "");
   const [region, setRegion] = useState(searchParams.get("region") || "");
+  const [selectedCoach, setSelectedCoach] = useState<CoachCard | null>(null);
+  const [modalMode, setModalMode] = useState<"choice" | "aula">("choice");
 
   const stateMap: Record<string, string> = {
     "acre": "AC", "alagoas": "AL", "amapa": "AP", "amazonas": "AM", "bahia": "BA", "ceara": "CE",
