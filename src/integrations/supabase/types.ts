@@ -1954,6 +1954,7 @@ export type Database = {
           preco_aula_avulsa: number | null
           primary_hsl: string
           slug: string
+          splash_video_url: string | null
           status: Database["public"]["Enums"]["tenant_status"]
           stripe_account_id: string | null
           stripe_onboarding_completed: boolean
@@ -1981,6 +1982,7 @@ export type Database = {
           preco_aula_avulsa?: number | null
           primary_hsl?: string
           slug: string
+          splash_video_url?: string | null
           status?: Database["public"]["Enums"]["tenant_status"]
           stripe_account_id?: string | null
           stripe_onboarding_completed?: boolean
@@ -2008,6 +2010,7 @@ export type Database = {
           preco_aula_avulsa?: number | null
           primary_hsl?: string
           slug?: string
+          splash_video_url?: string | null
           status?: Database["public"]["Enums"]["tenant_status"]
           stripe_account_id?: string | null
           stripe_onboarding_completed?: boolean
