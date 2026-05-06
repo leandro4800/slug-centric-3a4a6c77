@@ -130,7 +130,7 @@ const Clinica = () => {
       </div>
 
       <div className="px-5 pb-6">
-        <div className="flex bg-card/80 border border-border rounded-none p-1 mb-5">
+        <div className="flex bg-card/80 border border-border rounded-xl p-1 mb-5">
           <Button
             variant={tab === "nova" ? "default" : "ghost"}
             onClick={() => {
@@ -153,7 +153,7 @@ const Clinica = () => {
         {isAnalyzing ? (
           <div className="py-16 flex flex-col items-center justify-center text-center space-y-6">
             <div className="relative w-32 h-40">
-              <div className="absolute inset-0 bg-card border-2 border-primary/40 rounded-none shadow-lg overflow-hidden">
+              <div className="absolute inset-0 bg-card border-2 border-primary/40 rounded-xl shadow-lg overflow-hidden">
                 <FileText className="absolute inset-0 m-auto h-16 w-16 text-primary/30" strokeWidth={1} />
                 <div className="absolute inset-x-3 top-3 space-y-1.5">
                   <div className="h-1 bg-primary/20 rounded w-3/4" />
@@ -167,7 +167,7 @@ const Clinica = () => {
                 <div className="absolute inset-x-0 h-0.5 bg-primary shadow-[0_0_12px_2px_hsl(var(--primary))] animate-scan" />
                 <div className="absolute inset-x-0 h-8 bg-gradient-to-b from-primary/30 to-transparent animate-scan" />
               </div>
-              <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground rounded-none p-2 shadow-lg animate-pulse">
+              <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground rounded-xl p-2 shadow-lg animate-pulse">
                 <ScanLine className="h-4 w-4" />
               </div>
             </div>
@@ -187,7 +187,7 @@ const Clinica = () => {
                 onClick={a.onClick}
                 className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
               >
-                <div className="w-12 h-12 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
+                <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
                   <a.icon className="h-5 w-5 text-primary" />
                 </div>
                 <div className="flex-1">
@@ -198,7 +198,7 @@ const Clinica = () => {
               </Button>
             ))}
 
-            <div className="bg-card/40 border border-border rounded-none p-5 mt-5">
+            <div className="bg-card/40 border border-border rounded-xl p-5 mt-5">
               <div className="flex items-center gap-2 mb-3">
                 <Stethoscope className="h-4 w-4 text-primary" />
                 <h3 className="font-display text-base uppercase tracking-widest text-primary">Como funciona</h3>
@@ -278,7 +278,7 @@ const Clinica = () => {
                   })}
                   className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
                 >
-                  <div className="w-14 h-14 rounded-none bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-primary font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
+                  <div className="w-14 h-14 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-primary font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
                     {analise.score_performance}
                   </div>
                   <div className="flex-1 min-w-0">
