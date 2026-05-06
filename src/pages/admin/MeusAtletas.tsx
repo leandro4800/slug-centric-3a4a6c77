@@ -206,7 +206,7 @@ const MeusAtletas = () => {
             </div>
             <div className="text-left">
               <h3 className="font-display text-sm uppercase">CONSULTAR METODOLOGIA</h3>
-              <p className="text-[10px] text-muted-foreground uppercase">Pergunte à Dr. IA sobre o Pacholok ou Saúde</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Pergunte à Dr. IA sobre o Coach ou Saúde</p>
             </div>
           </div>
           <ChevronRight className={`h-5 w-5 text-primary transition-transform ${qaOpen ? 'rotate-90' : ''}`} />
@@ -216,7 +216,7 @@ const MeusAtletas = () => {
           <div className="mt-3 bg-card border border-border rounded-2xl p-4 animate-in slide-in-from-top-2 duration-300">
             <div className="flex gap-2">
               <Input 
-                placeholder="Ex: O que o Pacholok diz sobre Dorsal?" 
+                placeholder="Ex: O que o Coach diz sobre Dorsal?" 
                 value={pregunta}
                 onChange={(e) => setPregunta(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAskIA()}

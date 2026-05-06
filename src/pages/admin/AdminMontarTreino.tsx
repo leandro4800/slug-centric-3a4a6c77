@@ -274,7 +274,7 @@ const AdminMontarTreino = () => {
           <AdminBackButton 
           />
           <h1 className="font-display text-2xl">MONTAR TREINO</h1>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">IA Pacho</span>
+          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">IA Coach</span>
         </div>
       </header>
 
@@ -415,7 +415,7 @@ const AdminMontarTreino = () => {
                           <Input placeholder="Reps" value={e.repeticoes} onChange={(ev) => updateEx(globalIdx, { repeticoes: ev.target.value })} />
                         </div>
                         <div className="col-span-3 space-y-2">
-                          <Textarea className="min-h-[40px] text-xs" placeholder="Detalhes de Execução (Pacho style)" value={e.detalhes_execucao} onChange={(ev) => updateEx(globalIdx, { detalhes_execucao: ev.target.value })} />
+                          <Textarea className="min-h-[40px] text-xs" placeholder="Detalhes de Execução (Coach style)" value={e.detalhes_execucao} onChange={(ev) => updateEx(globalIdx, { detalhes_execucao: ev.target.value })} />
                           <Textarea className="min-h-[40px] text-xs" placeholder="Observação" value={e.observacao} onChange={(ev) => updateEx(globalIdx, { observacao: ev.target.value })} />
                         </div>
                         <Button size="icon" variant="ghost" className="col-span-1 self-center" onClick={() => removeEx(globalIdx)}>
