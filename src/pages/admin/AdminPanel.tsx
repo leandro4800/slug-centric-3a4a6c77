@@ -80,7 +80,7 @@ const AdminPanel = () => {
     setLoading(false);
   };
 
-  const handleUpload = async (file: File, kind: "hero" | "logo" | "splash") => {
+  const handleUpload = async (file: File, kind: "hero" | "logo" | "splash" | "login") => {
     if (!tenant) return;
     setUploading(kind);
     const ext = file.name.split(".").pop();
@@ -91,6 +91,7 @@ const AdminPanel = () => {
     const patch =
       kind === "hero" ? { hero_url: publicUrl } :
       kind === "logo" ? { logo_url: publicUrl } :
+      kind === "login" ? { login_video_url: publicUrl } :
       { splash_video_url: publicUrl };
     const { error: upErr } = await supabase.from("tenants").update(patch).eq("id", tenant.id);
     if (upErr) toast.error(upErr.message);
