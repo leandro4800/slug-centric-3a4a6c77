@@ -61,6 +61,22 @@ Deno.serve(async (req) => {
         },
         quantity: 1,
       }];
+      // Pré-cria agendamento pendente para gerar token público
+      const customerEmailForBooking = (email || userEmail || "").trim().toLowerCase();
+      const { data: agend, error: agendErr } = await supabase
+        .from("agendamentos_aula_avulsa")
+        .insert({
+          tenant_id,
+          nome: nome || customerEmailForBooking || "Cliente",
+          email: customerEmailForBooking,
+          telefone: telefone || null,
+          valor_centavos: Math.round(t.preco_aula_avulsa * 100),
+          status: "pendente",
+        })
+        .select("token")
+        .single();
+      if (agendErr || !agend) throw new Error("erro criando agendamento: " + agendErr?.message);
+      agendamento_token = agend.token;
     } else {
       if (!plano_id) throw new Error("plano_id required");
       const { data: plano } = await supabase
