@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft, Sparkles } from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
 
 interface Tenant {
   id: string;
@@ -30,6 +32,7 @@ interface Plano {
   preco_centavos: number;
   intervalo: "mensal" | "trimestral" | "anual";
   ordem: number;
+  stripe_price_id: string | null;
 }
 
 const intervaloLabel = { mensal: "/mês", trimestral: "/trimestre", anual: "/ano" };
@@ -47,6 +50,7 @@ export default function TenantLanding() {
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [aulaAvulsaOpen, setAulaAvulsaOpen] = useState(false);
 
   useEffect(() => {
     void load();
