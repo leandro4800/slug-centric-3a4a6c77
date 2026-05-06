@@ -30,6 +30,7 @@ export interface Tenant {
   permite_aula_avulsa: boolean | null;
   preco_aula_avulsa: number | null;
   login_video_url: string | null;
+  splash_video_url: string | null;
 }
 
 interface BrandingContextValue {
