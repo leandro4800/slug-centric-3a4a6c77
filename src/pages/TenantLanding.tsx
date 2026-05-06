@@ -86,7 +86,7 @@ export default function TenantLanding() {
 
       const { data: p } = await supabase
         .from("planos")
-        .select("*")
+        .select("id, nome, descricao, preco_centavos, intervalo, ordem, stripe_price_id")
         .eq("tenant_id", t.id)
         .eq("ativo", true)
         .order("ordem");
