@@ -180,6 +180,11 @@ const AdminPanel = () => {
                 <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Gestão financeira e saques</span>
               </Button>
             </Link>
+            <Link to={`/${slug}/admin/agenda-avulsa`}>
+              <Button variant="outline" className="border-primary/40">
+                <CalendarClock className="h-4 w-4 mr-2" /> Agenda Aulas Avulsas
+              </Button>
+            </Link>
             <Link to={`/${slug}/admin/base-conhecimento`}>
               <Button variant="outline" className="border-primary/40">
                 <Sparkles className="h-4 w-4 mr-2" /> Base de Conhecimento IA
