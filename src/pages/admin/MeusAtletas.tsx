@@ -216,7 +216,7 @@ const MeusAtletas = () => {
           <div className="mt-3 bg-card border border-border rounded-2xl p-4 animate-in slide-in-from-top-2 duration-300">
             <div className="flex gap-2">
               <Input 
-                placeholder="Ex: O que o Pacholok diz sobre Dorsal?" 
+                placeholder="Ex: O que o Coach diz sobre Dorsal?" 
                 value={pregunta}
                 onChange={(e) => setPregunta(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAskIA()}
