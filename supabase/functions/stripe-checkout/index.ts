@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { plano_id, tenant_id, type, email } = await req.json();
+    const { plano_id, tenant_id, type, email, nome, telefone } = await req.json();
     
     let tenant_to_use;
     let line_items;
@@ -95,6 +95,8 @@ Deno.serve(async (req) => {
         aluno_id: userId ?? "",
         tenant_slug: tenant_to_use.slug,
         type: type ?? 'subscription',
+        nome: nome ?? "",
+        telefone: telefone ?? "",
       },
     };
 

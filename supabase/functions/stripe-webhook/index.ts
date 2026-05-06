@@ -59,6 +59,22 @@ Deno.serve(async (req) => {
           if (perfil) resolvedAlunoId = perfil.id;
         }
 
+        // Aula avulsa: registra na tabela aulas_avulsas
+        if (meta.type === 'aula_avulsa') {
+          await supabase.from("aulas_avulsas").upsert({
+            tenant_id,
+            aluno_id: resolvedAlunoId,
+            nome: meta.nome || s.customer_details?.name || customerEmail || 'Cliente',
+            email: customerEmail || '',
+            telefone: meta.telefone || s.customer_details?.phone || null,
+            valor_centavos: s.amount_total ?? 0,
+            stripe_session_id: s.id,
+            stripe_payment_intent_id: s.payment_intent as string | null,
+            status: 'paid',
+          }, { onConflict: 'stripe_session_id' });
+          break;
+        }
+
         // Cria/atualiza assinatura
         if (s.subscription) {
           const sub = await stripe.subscriptions.retrieve(s.subscription as string);
