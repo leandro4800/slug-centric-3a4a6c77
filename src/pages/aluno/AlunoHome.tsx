@@ -68,6 +68,7 @@ const AlunoHome = () => {
   const { tenant } = useBranding();
   const { user } = useAuth();
   const { slug } = useParams();
+  const tenantSlug = tenant?.slug || slug;
   const [vlogs, setVlogs] = useState<VlogPost[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [expanded, setExpanded] = useState(false);
@@ -202,12 +203,12 @@ const AlunoHome = () => {
               </button>
             )}
             
-            <Link to={`/${slug}/app/perfil`} className="w-10 h-10 rounded-full bg-card/70 border border-border flex items-center justify-center backdrop-blur">
+            <Link to={`/${tenantSlug}/app/perfil`} className="w-10 h-10 rounded-full bg-card/70 border border-border flex items-center justify-center backdrop-blur">
               <User className="h-4 w-4 text-foreground" />
             </Link>
 
             {isAdmin && (
-              <Link to={`/${slug}/app/controle`} className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center backdrop-blur">
+              <Link to={`/${tenantSlug}/app/controle`} className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center backdrop-blur">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   width="16"
@@ -262,7 +263,7 @@ const AlunoHome = () => {
         </h2>
         <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-4 pt-2">
           {sections.map((s) => (
-            <TiltCard key={s.title} to={`/${slug}/app/${s.to}`}>
+            <TiltCard key={s.title} to={`/${tenantSlug}/app/${s.to}`}>
               <img
                 src={s.img}
                 alt={s.title}
