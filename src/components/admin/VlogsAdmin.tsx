@@ -288,7 +288,6 @@ export const VlogsAdmin = () => {
   -d '{
     "secret": "${secret || "SEU_SEGREDO"}",
     "url": "https://www.instagram.com/reel/XXXXXX/",
-    "title": "Treino de pernas brutal",
     "thumbnail_url": "https://...jpg"
   }'`;
 
@@ -332,7 +331,7 @@ export const VlogsAdmin = () => {
         <Textarea readOnly value={exemploCurl} rows={8} className="font-mono text-xs mt-1.5" />
         <p className="text-xs text-muted-foreground mt-2">
           Campos aceitos no JSON: <code>secret</code> (obrigatório), <code>url</code> (obrigatório), <code>platform</code>,
-          <code> title</code>, <code>thumbnail_url</code>, <code>author</code>, <code>description</code>, <code>posted_at</code>, <code>external_id</code>.
+          <code>thumbnail_url</code>, <code>author</code>, <code>description</code>, <code>posted_at</code>, <code>external_id</code>.
         </p>
       </div>
 
