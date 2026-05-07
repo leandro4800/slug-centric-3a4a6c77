@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
-import { BrandingProvider } from "@/contexts/BrandingProvider";
+import { BrandingProvider, useBranding } from "@/contexts/BrandingProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -99,9 +99,11 @@ const App = () => (
               path="/index"
               element={
                 <RequireAuth>
-                  <SubscriptionGuard>
-                    <AlunoLayout />
-                  </SubscriptionGuard>
+                  <IndexTenantRedirect>
+                    <SubscriptionGuard>
+                      <AlunoLayout />
+                    </SubscriptionGuard>
+                  </IndexTenantRedirect>
                 </RequireAuth>
               }
             >
