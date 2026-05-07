@@ -326,10 +326,18 @@ const Login = () => {
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ACESSAR AGORA"}
                 </Button>
-                <div className="text-center">
-                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                <div className="text-center space-y-2">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline block">
                     Esqueceu a senha?
                   </Link>
+                  <button
+                    type="button"
+                    onClick={handleResendConfirmation}
+                    disabled={loading}
+                    className="text-xs text-muted-foreground hover:text-primary underline transition-colors"
+                  >
+                    Reenviar e-mail de confirmação
+                  </button>
                 </div>
               </form>
             </TabsContent>
