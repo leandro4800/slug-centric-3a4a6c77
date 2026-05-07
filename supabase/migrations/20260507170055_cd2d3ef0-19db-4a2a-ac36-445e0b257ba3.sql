@@ -1,0 +1,1 @@
+DELETE FROM auth.users WHERE lower(email) = 'badboyvoltou@gmail.com';
