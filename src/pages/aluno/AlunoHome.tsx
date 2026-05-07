@@ -317,7 +317,7 @@ const AlunoHome = () => {
                     <button
                       type="button"
                       onClick={() => setPlaying(v)}
-                      className="absolute inset-0 w-full h-full"
+                      className="absolute inset-0 w-full h-full group"
                       aria-label={v.title ? `Reproduzir ${v.title}` : "Reproduzir vlog"}
                     >
                       <video
@@ -327,11 +327,11 @@ const AlunoHome = () => {
                         loop
                         playsInline
                         preload="auto"
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
                       />
-                      <div className="absolute inset-0 flex items-center justify-center bg-background/20">
-                        <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
-                          <Play className="h-5 w-5 text-primary-foreground fill-current" />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-colors pointer-events-none">
+                        <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-[0_8px_24px_-4px_hsl(var(--primary)/0.6)] group-hover:scale-110 transition-transform">
+                          <Play className="h-6 w-6 text-primary-foreground fill-current" />
                         </div>
                       </div>
                     </button>
