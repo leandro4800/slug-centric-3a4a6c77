@@ -1,0 +1,1 @@
+UPDATE public.tenants SET logo_url = '/tenants/metodojackson/logo.png', symbol_url = '/tenants/metodojackson/logo.png' WHERE slug = 'metodojackson';
