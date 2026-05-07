@@ -273,7 +273,7 @@ export const VlogsAdmin = () => {
         tenant_id: tenant.id,
         url: downloadedVideoUrl,
         platform: detectPlatform(downloadUrl),
-        title: publishCaption.trim().slice(0, 120) || "Vlog importado",
+        title: publishCaption.trim().slice(0, 120) || null,
         thumbnail_url: null,
         source: "import",
         posted_at: new Date().toISOString(),
