@@ -358,7 +358,6 @@ export const VlogsAdmin = () => {
                   <pre className="bg-background/60 p-2 rounded mt-1 overflow-x-auto">{`secret        → ${secret ? secret.slice(0, 8) + "..." : "SEU_SEGREDO"}
 url           → Video URL  (ou: https://youtube.com/watch?v={{Video Id}})
 platform      → youtube
-title         → Title
 thumbnail_url → Thumbnail Default Url  (ou High/Maxres)
 author        → Channel Title
 description   → Description
