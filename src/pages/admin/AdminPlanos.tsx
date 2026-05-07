@@ -115,8 +115,32 @@ export default function AdminPlanos() {
   };
 
   const remover = async (id: string) => {
-    if (!confirm("Remover este plano?")) return;
-    await supabase.from("planos").delete().eq("id", id);
+    // Verifica assinaturas ativas antes de tentar excluir
+    const { count } = await supabase
+      .from("assinaturas")
+      .select("id", { count: "exact", head: true })
+      .eq("plano_id", id)
+      .in("status", ["active", "trialing", "past_due"]);
+
+    if ((count ?? 0) > 0) {
+      if (!confirm(`Este plano tem ${count} assinatura(s) ativa(s) e não pode ser excluído. Deseja DESATIVAR (ocultar da página pública) em vez disso?`)) return;
+      const { error } = await supabase.from("planos").update({ ativo: false }).eq("id", id);
+      if (error) {
+        toast({ title: "Erro ao desativar", description: error.message, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Plano desativado", description: "O plano foi ocultado, mas permanece para os assinantes atuais." });
+      void load();
+      return;
+    }
+
+    if (!confirm("Excluir este plano permanentemente? Essa ação não pode ser desfeita.")) return;
+    const { error } = await supabase.from("planos").delete().eq("id", id);
+    if (error) {
+      toast({ title: "Não foi possível excluir", description: error.message, variant: "destructive" });
+      return;
+    }
+    toast({ title: "Plano excluído" });
     void load();
   };
 

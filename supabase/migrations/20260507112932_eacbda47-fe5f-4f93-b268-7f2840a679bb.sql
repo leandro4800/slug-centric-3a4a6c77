@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.prevent_plano_delete_if_active_subs() FROM PUBLIC, anon, authenticated;
