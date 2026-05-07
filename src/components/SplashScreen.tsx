@@ -3,9 +3,9 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 // Chave por tenant — assim cada coach tem seu próprio splash garantido
-// (se o usuário trocar de tenant na mesma sessão, o splash do novo tenant aparece)
 const sessionKeyFor = (slug: string | null | undefined) =>
   `splash_shown_session::${slug ?? "_neutral"}`;
 
@@ -25,11 +25,23 @@ export const SplashScreen = () => {
 
   const tenantKey = tenant?.slug ?? null;
 
-  // Só dispara o splash QUANDO:
-  // 1. Estamos numa rota de app
-  // 2. O branding terminou de carregar (evita flash do tenant errado)
-  // 3. Existe um tenant identificado
-  // 4. Esse tenant ainda não mostrou splash nessa sessão
+  // Limpa marcas ao deslogar — assim no próximo login o splash volta a aparecer
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "SIGNED_OUT") {
+        try {
+          Object.keys(sessionStorage)
+            .filter((k) => k.startsWith("splash_shown_session"))
+            .forEach((k) => sessionStorage.removeItem(k));
+        } catch {}
+        startedForTenantRef.current = null;
+        setShouldRender(false);
+        setIsVisible(false);
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
   useEffect(() => {
     if (!isAppRoute) return;
     if (loading) return;
