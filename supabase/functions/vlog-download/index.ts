@@ -73,15 +73,23 @@ Deno.serve(async (req) => {
   if (!url || !/^https?:\/\//i.test(url)) return json(400, { error: "missing or invalid url" });
   if (!tenant_id) return json(400, { error: "missing tenant_id" });
 
-  // Authorization: caller must be coach of this tenant OR global admin
+  // Authorization: caller must be coach of this tenant, tenant owner OR global admin.
+  // Some tenants can be created before user_roles is synced; ownership is the source of truth.
   const { data: roles, error: rolesErr } = await supabase
     .from("user_roles")
     .select("role,tenant_id")
     .eq("user_id", userData.user.id);
   console.log("[vlog-download] roles", { roles, rolesErr: rolesErr?.message });
-  const allowed = (roles ?? []).some(
+  const roleAllowed = (roles ?? []).some(
     (r: any) => r.role === "admin" || (r.role === "coach" && r.tenant_id === tenant_id)
   );
+  const { data: tenant, error: tenantErr } = await supabase
+    .from("tenants")
+    .select("owner_user_id")
+    .eq("id", tenant_id)
+    .maybeSingle();
+  console.log("[vlog-download] tenant", { owner: tenant?.owner_user_id, tenantErr: tenantErr?.message });
+  const allowed = roleAllowed || tenant?.owner_user_id === userData.user.id;
   if (!allowed) return json(403, { error: "not allowed for this tenant" });
 
   // 1) Resolve direct video URL via cobalt
