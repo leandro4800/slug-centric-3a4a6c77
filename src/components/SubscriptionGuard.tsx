@@ -24,7 +24,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
       setLoading(true);
       
       // 1. Check if user is the coach of this tenant
-      const tenant = brandedTenant || (slug
+      const tenant = (brandedTenant as (typeof brandedTenant & { owner_user_id?: string }) | null) || (slug
         ? (await supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle()).data
         : null);
 
