@@ -154,7 +154,36 @@ const Login = () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
-    if (error) toast.error(error.message);
+    if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      if (msg.includes("not confirmed") || msg.includes("confirm")) {
+        toast.error("E-mail ainda não confirmado. Use 'Reenviar confirmação' abaixo.");
+      } else {
+        toast.error(error.message);
+      }
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      toast.error("Digite seu e-mail acima para reenviar a confirmação.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: cleanEmail,
+      options: {
+        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}` : `${window.location.origin}/login`,
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("E-mail de confirmação reenviado! Verifique sua caixa de entrada e spam.");
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
