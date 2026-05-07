@@ -526,53 +526,72 @@ export default function SejaCoach() {
           )}
 
           {step === "product" && (
-            <form onSubmit={handleCreateProduct} className="space-y-4">
-              <h2 className="font-display text-2xl uppercase">4. Seu primeiro produto</h2>
+            <form onSubmit={handleCreateProduct} className="space-y-6">
+              <h2 className="font-display text-2xl uppercase">4. Seus planos</h2>
               <p className="text-sm text-muted-foreground">
-                Crie o plano que seus alunos vão assinar. Você pode adicionar mais depois.
+                Crie até 3 planos de uma vez (mensal, trimestral e anual). Preencha apenas os que quiser oferecer — os vazios serão ignorados. Você pode editar ou adicionar mais depois.
               </p>
-              <div>
-                <Label>Nome do plano</Label>
-                <Input
-                  value={planoNome}
-                  onChange={(e) => setPlanoNome(e.target.value)}
-                  placeholder="Ex: Mentoria Mensal"
-                  required
-                />
-              </div>
-              <div>
-                <Label>Descrição</Label>
-                <Textarea
-                  value={planoDescricao}
-                  onChange={(e) => setPlanoDescricao(e.target.value)}
-                  placeholder="O que está incluso no plano..."
-                  rows={3}
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Valor (R$)</Label>
-                  <Input
-                    type="text"
-                    inputMode="decimal"
-                    value={planoPreco}
-                    onChange={(e) => setPlanoPreco(e.target.value)}
-                    placeholder="297,00"
-                    required
-                  />
+
+              {planos.map((p, i) => (
+                <div key={i} className="space-y-3 rounded-xl border border-white/10 bg-black/30 p-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-display text-sm uppercase text-primary">
+                      Plano {i + 1} — {p.intervalo}
+                    </h3>
+                    <span className="text-xs text-muted-foreground">opcional</span>
+                  </div>
+                  <div>
+                    <Label>Nome do plano</Label>
+                    <Input
+                      value={p.nome}
+                      onChange={(e) => updatePlano(i, { nome: e.target.value })}
+                      placeholder={
+                        p.intervalo === "mensal"
+                          ? "Ex: Mentoria Mensal"
+                          : p.intervalo === "trimestral"
+                          ? "Ex: Mentoria Trimestral"
+                          : "Ex: Mentoria Anual"
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Descrição</Label>
+                    <Textarea
+                      value={p.descricao}
+                      onChange={(e) => updatePlano(i, { descricao: e.target.value })}
+                      placeholder="O que está incluso no plano..."
+                      rows={2}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label>Valor (R$)</Label>
+                      <Input
+                        type="text"
+                        inputMode="decimal"
+                        value={p.preco}
+                        onChange={(e) => updatePlano(i, { preco: e.target.value })}
+                        placeholder="297,00"
+                      />
+                    </div>
+                    <div>
+                      <Label>Período</Label>
+                      <Select
+                        value={p.intervalo}
+                        onValueChange={(v: any) => updatePlano(i, { intervalo: v })}
+                      >
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="mensal">Mensal</SelectItem>
+                          <SelectItem value="trimestral">Trimestral</SelectItem>
+                          <SelectItem value="anual">Anual</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <Label>Período</Label>
-                  <Select value={planoIntervalo} onValueChange={(v: any) => setPlanoIntervalo(v)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="mensal">Mensal</SelectItem>
-                      <SelectItem value="trimestral">Trimestral</SelectItem>
-                      <SelectItem value="anual">Anual</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
+              ))}
+
               <Button type="submit" disabled={busy} className="w-full bg-primary hover:bg-primary/90">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
               </Button>
