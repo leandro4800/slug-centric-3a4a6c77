@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
-import { BrandingProvider } from "@/contexts/BrandingProvider";
+import { BrandingProvider, useBranding } from "@/contexts/BrandingProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { SplashScreen } from "@/components/SplashScreen";
@@ -53,6 +53,15 @@ const SlugRedirect = ({ to }: { to: string }) => {
   return <Navigate to={`/${slug}/${to}`} replace />;
 };
 
+// Em /index, se já temos um tenant resolvido (via perfil/owner/assinatura),
+// redireciona para /{slug}/app para que coach veja painel de coach e aluno veja painel de aluno.
+const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
+  const { tenant, loading } = useBranding();
+  if (loading) return null;
+  if (tenant?.slug) return <Navigate to={`/${tenant.slug}/app`} replace />;
+  return children;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -90,9 +99,11 @@ const App = () => (
               path="/index"
               element={
                 <RequireAuth>
-                  <SubscriptionGuard>
-                    <AlunoLayout />
-                  </SubscriptionGuard>
+                  <IndexTenantRedirect>
+                    <SubscriptionGuard>
+                      <AlunoLayout />
+                    </SubscriptionGuard>
+                  </IndexTenantRedirect>
                 </RequireAuth>
               }
             >
