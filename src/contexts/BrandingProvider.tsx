@@ -196,15 +196,16 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-      // Sem slug na URL: tentamos o tenant do perfil só se for útil (admin global etc.)
+      // Sem slug na URL: usa o tenant do usuário logado para preservar logo/vlogs em /index/PWA.
       if (!targetSlug) {
-        // Limpa qualquer tema customizado para usar defaults Netflix em rotas neutras
+        const t = await loadTenantForCurrentUser();
         if (isMountedRef.current) {
-          setTenant(null);
-          applyTheme(null, null, force);
+          setTenant(t);
+          if (t) writeCache(t.slug, t);
+          applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force);
         }
         lastLoadedSlug.current = null;
-        lastLoadedTenantId.current = null;
+        lastLoadedTenantId.current = t?.id ?? null;
         return;
       }
 
