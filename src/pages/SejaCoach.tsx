@@ -177,6 +177,15 @@ export default function SejaCoach() {
         navigate(`/login?redirect=/seja-coach`);
         return;
       }
+      // Se a confirmação de e-mail está habilitada, não há sessão ainda
+      if (!data?.session) {
+        setStep("verify-email");
+        toast({
+          title: "Confirme seu e-mail",
+          description: "Enviamos um link de confirmação para o seu e-mail. Clique nele para continuar.",
+        });
+        return;
+      }
       toast({ title: "Conta criada!", description: "Continue o cadastro do seu painel." });
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
