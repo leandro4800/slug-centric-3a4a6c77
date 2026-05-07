@@ -27,6 +27,7 @@ export default function SejaCoach() {
   // signup
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [nome, setNome] = useState("");
 
   // personal
@@ -152,7 +153,7 @@ export default function SejaCoach() {
         email: cleanEmail,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/seja-coach`,
+          // Sem emailRedirectTo: força envio de OTP de 6 dígitos em vez de magic link
           data: { nome_completo: nome, is_coach: true },
         },
       });
@@ -412,12 +413,44 @@ export default function SejaCoach() {
           )}
 
           {step === "verify-email" && !user && (
-            <div className="space-y-4 text-center">
+            <form
+              className="space-y-4 text-center"
+              onSubmit={async (e) => {
+                e.preventDefault();
+                setBusy(true);
+                try {
+                  const { error } = await supabase.auth.verifyOtp({
+                    email: email.trim().toLowerCase(),
+                    token: otpCode.trim(),
+                    type: "email",
+                  });
+                  if (error) throw error;
+                  toast({ title: "E-mail confirmado!" });
+                  // onAuthStateChange vai disparar e o useEffect avança a step
+                } catch (err: any) {
+                  toast({ title: "Código inválido", description: err.message, variant: "destructive" });
+                } finally {
+                  setBusy(false);
+                }
+              }}
+            >
               <h2 className="font-display text-2xl uppercase">Confirme seu e-mail</h2>
               <p className="text-sm text-muted-foreground">
-                Enviamos um link de confirmação para <strong className="text-foreground">{email}</strong>.
-                Abra seu e-mail e clique no link para ativar sua conta e continuar o cadastro.
+                Enviamos um código de 6 dígitos para <strong className="text-foreground">{email}</strong>.
+                Digite-o abaixo para ativar sua conta.
               </p>
+              <Input
+                value={otpCode}
+                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                placeholder="000000"
+                inputMode="numeric"
+                maxLength={6}
+                className="text-center text-2xl tracking-[0.5em] font-mono"
+                required
+              />
+              <Button type="submit" disabled={busy || otpCode.length !== 6} className="w-full">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar código"}
+              </Button>
               <p className="text-xs text-muted-foreground">
                 Não recebeu? Verifique a caixa de spam ou{" "}
                 <button
@@ -426,17 +459,17 @@ export default function SejaCoach() {
                   onClick={async () => {
                     const { error } = await supabase.auth.resend({ type: "signup", email });
                     if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
-                    else toast({ title: "E-mail reenviado" });
+                    else toast({ title: "Código reenviado" });
                   }}
                 >
                   reenviar
                 </button>
                 .
               </p>
-              <Button variant="outline" onClick={() => setStep("signup")} className="w-full">
+              <Button type="button" variant="outline" onClick={() => setStep("signup")} className="w-full">
                 Usar outro e-mail
               </Button>
-            </div>
+            </form>
           )}
 
           {step === "personal" && (
