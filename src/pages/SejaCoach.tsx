@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 
-type Step = "signup" | "personal" | "tenant" | "product" | "stripe" | "pending";
+type Step = "signup" | "verify-email" | "personal" | "tenant" | "product" | "stripe" | "pending";
 const STEPS: Step[] = ["signup", "personal", "tenant", "product", "stripe", "pending"];
 
 export default function SejaCoach() {
@@ -175,6 +175,15 @@ export default function SejaCoach() {
           variant: "destructive",
         });
         navigate(`/login?redirect=/seja-coach`);
+        return;
+      }
+      // Se a confirmação de e-mail está habilitada, não há sessão ainda
+      if (!data?.session) {
+        setStep("verify-email");
+        toast({
+          title: "Confirme seu e-mail",
+          description: "Enviamos um link de confirmação para o seu e-mail. Clique nele para continuar.",
+        });
         return;
       }
       toast({ title: "Conta criada!", description: "Continue o cadastro do seu painel." });
@@ -387,6 +396,34 @@ export default function SejaCoach() {
                 Já tem conta? <Link to="/login" className="text-primary">Entrar</Link>
               </p>
             </form>
+          )}
+
+          {step === "verify-email" && !user && (
+            <div className="space-y-4 text-center">
+              <h2 className="font-display text-2xl uppercase">Confirme seu e-mail</h2>
+              <p className="text-sm text-muted-foreground">
+                Enviamos um link de confirmação para <strong className="text-foreground">{email}</strong>.
+                Abra seu e-mail e clique no link para ativar sua conta e continuar o cadastro.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Não recebeu? Verifique a caixa de spam ou{" "}
+                <button
+                  type="button"
+                  className="text-primary underline"
+                  onClick={async () => {
+                    const { error } = await supabase.auth.resend({ type: "signup", email });
+                    if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
+                    else toast({ title: "E-mail reenviado" });
+                  }}
+                >
+                  reenviar
+                </button>
+                .
+              </p>
+              <Button variant="outline" onClick={() => setStep("signup")} className="w-full">
+                Usar outro e-mail
+              </Button>
+            </div>
           )}
 
           {step === "personal" && (
