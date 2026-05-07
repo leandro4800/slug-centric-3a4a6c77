@@ -1,0 +1,1 @@
+UPDATE public.vlog_posts SET title = NULL WHERE title = 'Vlog importado';
