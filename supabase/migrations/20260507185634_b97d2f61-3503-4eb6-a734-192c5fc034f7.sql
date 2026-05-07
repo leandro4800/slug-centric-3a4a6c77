@@ -1,0 +1,2 @@
+ALTER TABLE public.vlog_posts ADD COLUMN IF NOT EXISTS destaque boolean NOT NULL DEFAULT false;
+CREATE UNIQUE INDEX IF NOT EXISTS vlog_posts_one_destaque_per_tenant ON public.vlog_posts (tenant_id) WHERE destaque = true;

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video, Star } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
 
@@ -19,6 +19,7 @@ interface VlogPost {
   posted_at: string | null;
   source: string;
   visivel: boolean;
+  destaque: boolean;
   created_at: string;
 }
 
@@ -70,7 +71,7 @@ export const VlogsAdmin = () => {
     const [{ data: list }, { data: t }] = await Promise.all([
       supabase
         .from("vlog_posts")
-        .select("id, platform, url, title, thumbnail_url, author, posted_at, source, visivel, created_at")
+        .select("id, platform, url, title, thumbnail_url, author, posted_at, source, visivel, destaque, created_at")
         .eq("tenant_id", tenant.id)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false }),
@@ -148,6 +149,18 @@ export const VlogsAdmin = () => {
     setUrl("");
     setTitle("");
     setThumbInput("");
+    void load();
+  };
+
+  const toggleDestaque = async (p: VlogPost) => {
+    if (!tenant) return;
+    if (!p.destaque) {
+      // limpa qualquer outro destaque do mesmo tenant
+      await supabase.from("vlog_posts").update({ destaque: false }).eq("tenant_id", tenant.id).eq("destaque", true);
+    }
+    const { error } = await supabase.from("vlog_posts").update({ destaque: !p.destaque }).eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success(!p.destaque ? "Definido como capa" : "Capa removida — voltando ao automático");
     void load();
   };
 
@@ -572,9 +585,18 @@ Data:
                   <p className="text-sm font-medium line-clamp-2">{p.title || p.url}</p>
                   {p.author && <p className="text-xs text-muted-foreground">@{p.author}</p>}
                   <div className="flex gap-2 pt-1">
-                    <Button size="sm" variant="outline" onClick={() => toggleVisible(p)} className="flex-1">
-                      {p.visivel ? <Eye className="h-3 w-3 mr-1" /> : <EyeOff className="h-3 w-3 mr-1" />}
-                      {p.visivel ? "Visível" : "Oculto"}
+                    <Button
+                      size="sm"
+                      variant={p.destaque ? "default" : "outline"}
+                      onClick={() => toggleDestaque(p)}
+                      className="flex-1"
+                      title={p.destaque ? "Capa fixa — clique para voltar ao automático" : "Usar este vídeo como capa do app"}
+                    >
+                      <Star className={`h-3 w-3 mr-1 ${p.destaque ? "fill-current" : ""}`} />
+                      {p.destaque ? "Capa" : "Definir capa"}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => toggleVisible(p)}>
+                      {p.visivel ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
                     </Button>
                     <Button size="sm" variant="outline" onClick={() => remove(p)} className="text-destructive">
                       <Trash2 className="h-3 w-3" />

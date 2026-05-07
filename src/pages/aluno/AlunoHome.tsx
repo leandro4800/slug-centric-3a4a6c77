@@ -90,9 +90,10 @@ const AlunoHome = () => {
     if (!tenant?.id) return;
     void supabase
       .from("vlog_posts")
-      .select("id, url, title, thumbnail_url, platform")
+      .select("id, url, title, thumbnail_url, platform, destaque")
       .eq("tenant_id", tenant.id)
       .eq("visivel", true)
+      .order("destaque", { ascending: false })
       .order("posted_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(6)
