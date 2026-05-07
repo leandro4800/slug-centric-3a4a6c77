@@ -54,6 +54,32 @@ Deno.serve(async (req) => {
     )
   }
 
+  // Reject anon callers — only signed-in users (or service-role internal callers)
+  // may invoke this endpoint. verify_jwt at the gateway accepts anon JWTs, so we
+  // must enforce real authentication here to prevent email-spoofing abuse.
+  const authHeader = req.headers.get('Authorization') || ''
+  const token = authHeader.replace(/^Bearer\s+/i, '')
+  if (!token) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      status: 401,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    })
+  }
+  // Allow internal service-role callers (other edge functions invoking this one).
+  const isServiceRole = token === supabaseServiceKey
+  if (!isServiceRole) {
+    const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY') || '', {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    })
+    const { data: userData, error: userErr } = await authClient.auth.getUser()
+    if (userErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+  }
+
   // Parse request body
   let templateName: string
   let recipientEmail: string
@@ -95,9 +121,7 @@ Deno.serve(async (req) => {
   if (!template) {
     console.error('Template not found in registry', { templateName })
     return new Response(
-      JSON.stringify({
-        error: `Template '${templateName}' not found. Available: ${Object.keys(TEMPLATES).join(', ')}`,
-      }),
+      JSON.stringify({ error: 'Template not found' }),
       {
         status: 404,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

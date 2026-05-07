@@ -83,6 +83,15 @@ serve(async (req) => {
     const { data: refData } = await supabase.from('referencias_exames').select('*')
     const { data: intelData } = await supabase.from('inteligencia_clinica').select('*')
 
+    // Authorization: file_path MUST be inside the authenticated user's folder.
+    // Storage RLS is bypassed by the service role key, so we enforce ownership here.
+    if (typeof file_path !== 'string' || !file_path.startsWith(`${user.id}/`)) {
+      return new Response(JSON.stringify({ error: 'forbidden' }), {
+        status: 403,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     // Download PDF
     const { data: fileData, error: downloadError } = await supabase.storage
       .from('exames_pdfs')

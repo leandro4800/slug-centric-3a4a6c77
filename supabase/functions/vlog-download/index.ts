@@ -70,6 +70,16 @@ Deno.serve(async (req) => {
   if (!url || !/^https?:\/\//i.test(url)) return json(400, { error: "missing or invalid url" });
   if (!tenant_id) return json(400, { error: "missing tenant_id" });
 
+  // Authorization: caller must be coach of this tenant OR global admin
+  const { data: roleRow } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userData.user.id)
+    .in("role", ["coach", "admin"])
+    .or(`tenant_id.eq.${tenant_id},role.eq.admin`)
+    .maybeSingle();
+  if (!roleRow) return json(403, { error: "not allowed for this tenant" });
+
   // 1) Resolve direct video URL via cobalt
   const directUrl = await fetchVideoUrl(url);
   if (!directUrl) return json(502, { error: "could not extract video — try another URL or upload manually" });
