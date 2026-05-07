@@ -80,8 +80,7 @@ const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
 
   if (loading || authLoading || (tenant?.id && isOwner === null)) return null;
   if (tenant?.slug) {
-    const dest = isOwner ? `/${tenant.slug}/app/controle` : `/${tenant.slug}/app`;
-    return <Navigate to={dest} replace />;
+    return <Navigate to={`/${tenant.slug}/app`} replace />;
   }
   return children;
 };
@@ -158,8 +157,8 @@ const App = () => (
             </Route>
 
             {/* Painel do coach */}
-            <Route path="/:slug/admin" element={<SlugRedirect to="app/controle" />} />
-            <Route path="/:slug/admin/controle" element={<SlugRedirect to="app/controle" />} />
+            <Route path="/:slug/admin" element={<SlugRedirect to="app" />} />
+            <Route path="/:slug/admin/controle" element={<SlugRedirect to="app" />} />
             <Route path="/:slug/admin/atletas" element={<RequireAuth><MeusAtletas /></RequireAuth>} />
             <Route path="/:slug/admin/aparencia" element={<RequireAuth><AdminPanel /></RequireAuth>} />
             <Route path="/:slug/admin/montar-treino" element={<RequireAuth><AdminMontarTreino /></RequireAuth>} />
