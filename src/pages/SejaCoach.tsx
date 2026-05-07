@@ -27,6 +27,7 @@ export default function SejaCoach() {
   // signup
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [nome, setNome] = useState("");
 
   // personal
