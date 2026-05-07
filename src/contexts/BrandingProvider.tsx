@@ -232,6 +232,12 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event) => {
       // Apenas SIGNED_OUT força reload — SIGNED_IN inicial já é tratado pelo getSession
       if (event === "SIGNED_OUT") {
+        // Limpa as marcas de splash de TODOS os tenants para que a logo volte a aparecer no próximo login
+        try {
+          Object.keys(sessionStorage)
+            .filter((k) => k.startsWith("splash_shown_session"))
+            .forEach((k) => sessionStorage.removeItem(k));
+        } catch {}
         void load(slug, true);
       }
     });
