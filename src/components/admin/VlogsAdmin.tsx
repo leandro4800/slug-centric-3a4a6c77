@@ -112,10 +112,9 @@ export const VlogsAdmin = () => {
     const cleanUrl = url.trim();
     const platform = detectPlatform(cleanUrl);
 
-    // Auto-enriquecimento: busca título + thumb via oEmbed (YouTube/TikTok)
+    // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
     const oe = await fetchOEmbed(platform, cleanUrl);
     let thumb: string | null = thumbInput.trim() || oe?.thumbnail_url || null;
-    let autoTitle: string | null = oe?.title || null;
     const author: string | null = oe?.author_name || null;
 
     // Fallback YouTube: thumb direta pelo ID
@@ -134,7 +133,7 @@ export const VlogsAdmin = () => {
         tenant_id: tenant.id,
         url: cleanUrl,
         platform,
-        title: title.trim() || autoTitle || null,
+        title: title.trim() || null,
         thumbnail_url: thumb,
         author,
         source: "manual",
@@ -273,7 +272,7 @@ export const VlogsAdmin = () => {
         tenant_id: tenant.id,
         url: downloadedVideoUrl,
         platform: detectPlatform(downloadUrl),
-        title: publishCaption.trim().slice(0, 120) || null,
+        title: null,
         thumbnail_url: null,
         source: "import",
         posted_at: new Date().toISOString(),
