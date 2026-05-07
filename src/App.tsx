@@ -55,12 +55,34 @@ const SlugRedirect = ({ to }: { to: string }) => {
   return <Navigate to={`/${slug}/${to}`} replace />;
 };
 
-// Em /index, se já temos um tenant resolvido (via perfil/owner/assinatura),
-// redireciona para /{slug}/app para que coach veja painel de coach e aluno veja painel de aluno.
+// Em /index, redireciona conforme o papel do usuário:
+// - Owner do tenant (coach) → /{slug}/app/controle (painel de coach)
+// - Aluno → /{slug}/app (painel de aluno)
 const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
   const { tenant, loading } = useBranding();
-  if (loading) return null;
-  if (tenant?.slug) return <Navigate to={`/${tenant.slug}/app`} replace />;
+  const { user, isLoading: authLoading } = useAuth();
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user || !tenant?.id) { setIsOwner(false); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("tenants")
+        .select("id")
+        .eq("id", tenant.id)
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (!cancelled) setIsOwner(!!data);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, tenant?.id]);
+
+  if (loading || authLoading || (tenant?.id && isOwner === null)) return null;
+  if (tenant?.slug) {
+    const dest = isOwner ? `/${tenant.slug}/app/controle` : `/${tenant.slug}/app`;
+    return <Navigate to={dest} replace />;
+  }
   return children;
 };
 
