@@ -19,7 +19,7 @@ interface Plano {
   nome: string;
   descricao: string | null;
   preco_centavos: number;
-  intervalo: "mensal" | "trimestral" | "anual";
+  intervalo: "mensal" | "trimestral" | "semestral" | "anual";
   stripe_price_id: string | null;
   ativo: boolean;
   ordem: number;
