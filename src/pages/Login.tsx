@@ -108,8 +108,8 @@ const Login = () => {
         return;
       }
       if (ownedTenant && !isAdmin) {
-        // Coach com tenant: vai direto para o painel admin do tenant
-        navigate(`/${ownedTenant.slug}/admin`, { replace: true });
+        // Coach (owner do tenant): vai direto para o painel de controle do coach
+        navigate(`/${ownedTenant.slug}/app/controle`, { replace: true });
         return;
       }
 
