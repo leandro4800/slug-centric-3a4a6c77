@@ -42,11 +42,12 @@ export default function SejaCoach() {
   const [bio, setBio] = useState("");
   const [especialidades, setEspecialidades] = useState("");
 
-  // product (até 3 planos: mensal/trimestral/anual)
-  type PlanoForm = { nome: string; descricao: string; preco: string; intervalo: "mensal" | "trimestral" | "anual" };
+  // product (até 4 planos: mensal/trimestral/semestral/anual)
+  type PlanoForm = { nome: string; descricao: string; preco: string; intervalo: "mensal" | "trimestral" | "semestral" | "anual" };
   const [planos, setPlanos] = useState<PlanoForm[]>([
     { nome: "", descricao: "", preco: "", intervalo: "mensal" },
     { nome: "", descricao: "", preco: "", intervalo: "trimestral" },
+    { nome: "", descricao: "", preco: "", intervalo: "semestral" },
     { nome: "", descricao: "", preco: "", intervalo: "anual" },
   ]);
   const updatePlano = (i: number, patch: Partial<PlanoForm>) =>
@@ -562,7 +563,7 @@ export default function SejaCoach() {
             <form onSubmit={handleCreateProduct} className="space-y-6">
               <h2 className="font-display text-2xl uppercase">4. Seus planos</h2>
               <p className="text-sm text-muted-foreground">
-                Crie até 3 planos de uma vez (mensal, trimestral e anual). Preencha apenas os que quiser oferecer — os vazios serão ignorados. Você pode editar ou adicionar mais depois.
+                Crie até 4 planos de uma vez (mensal, trimestral, semestral e anual). Preencha apenas os que quiser oferecer — os vazios serão ignorados. Você pode editar ou adicionar mais depois.
               </p>
 
               {planos.map((p, i) => (
@@ -583,6 +584,8 @@ export default function SejaCoach() {
                           ? "Ex: Mentoria Mensal"
                           : p.intervalo === "trimestral"
                           ? "Ex: Mentoria Trimestral"
+                          : p.intervalo === "semestral"
+                          ? "Ex: Mentoria Semestral"
                           : "Ex: Mentoria Anual"
                       }
                     />
@@ -617,6 +620,7 @@ export default function SejaCoach() {
                         <SelectContent>
                           <SelectItem value="mensal">Mensal</SelectItem>
                           <SelectItem value="trimestral">Trimestral</SelectItem>
+                          <SelectItem value="semestral">Semestral</SelectItem>
                           <SelectItem value="anual">Anual</SelectItem>
                         </SelectContent>
                       </Select>
