@@ -26,6 +26,20 @@ const config: CapacitorConfig = {
   android: {
     backgroundColor: '#000000',
   },
+  plugins: {
+    SplashScreen: {
+      // Splash NATIVO neutro (AlphaCoach) — some rapidamente
+      // para o splash REACT por tenant assumir dentro do app.
+      launchShowDuration: 600,
+      launchAutoHide: true,
+      backgroundColor: '#000000',
+      androidSplashResourceName: 'splash',
+      androidScaleType: 'CENTER_CROP',
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+  },
 };
 
 export default config;
