@@ -1,5 +1,6 @@
 import { NavLink, useParams } from "react-router-dom";
 import { Home, Dumbbell, Utensils, TrendingUp, Stethoscope, Users, User } from "lucide-react";
+import { useBranding } from "@/contexts/BrandingProvider";
 
 const items = [
   { label: "Início", icon: Home, to: "" },
@@ -13,13 +14,15 @@ const items = [
 
 const BottomNav = () => {
   const { slug } = useParams();
+  const { tenant } = useBranding();
+  const tenantSlug = tenant?.slug || slug;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border">
       <div className="max-w-2xl mx-auto grid grid-cols-7 px-1 pt-2 pb-3">
         {items.map(({ label, icon: Icon, to }) => (
           <NavLink
             key={label}
-            to={`/${slug}/app${to ? `/${to}` : ""}`}
+            to={`/${tenantSlug}/app${to ? `/${to}` : ""}`}
             end={!to}
           >
             {({ isActive }) => (

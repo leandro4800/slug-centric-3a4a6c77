@@ -153,7 +153,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   
   // Extrai o slug do path se useParams falhar
   const pathParts = location.pathname.split("/").filter(Boolean);
-  const reservedKeywords = ["marketplace", "seja-coach", "login", "forgot-password", "reset-password", "checkout", "onboarding", "admin", "unsubscribe"];
+  const reservedKeywords = ["index", "marketplace", "seja-coach", "login", "forgot-password", "reset-password", "checkout", "onboarding", "admin", "unsubscribe"];
   const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
   const slug = params.slug || slugFromPath;
 
@@ -163,22 +163,47 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
 
+  const loadTenantForCurrentUser = async (): Promise<Tenant | null> => {
+    const { data: auth } = await supabase.auth.getUser();
+    const userId = auth.user?.id;
+    if (!userId) return null;
+
+    const [{ data: ownedTenant }, { data: profile }, { data: subscription }] = await Promise.all([
+      supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("owner_user_id", userId).maybeSingle(),
+      supabase.from("perfis").select("tenant_id").eq("id", userId).maybeSingle(),
+      supabase
+        .from("assinaturas")
+        .select("tenant_id")
+        .eq("aluno_id", userId)
+        .in("status", ["active", "trialing"])
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+    ]);
+
+    if (ownedTenant) return ownedTenant as Tenant;
+    const tenantId = profile?.tenant_id || subscription?.tenant_id;
+    if (!tenantId) return null;
+
+    const { data } = await supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("id", tenantId).maybeSingle();
+    return (data as Tenant | null) ?? null;
+  };
+
   const load = async (targetSlug: string | null, force = false) => {
     console.log("[Branding] Iniciando load para slug:", targetSlug);
-    if (targetSlug || force) {
-      setLoading(true);
-    }
+    setLoading(true);
     
     try {
-      // Sem slug na URL: tentamos o tenant do perfil só se for útil (admin global etc.)
+      // Sem slug na URL: usa o tenant do usuário logado para preservar logo/vlogs em /index/PWA.
       if (!targetSlug) {
-        // Limpa qualquer tema customizado para usar defaults Netflix em rotas neutras
+        const t = await loadTenantForCurrentUser();
         if (isMountedRef.current) {
-          setTenant(null);
-          applyTheme(null, null, force);
+          setTenant(t);
+          if (t) writeCache(t.slug, t);
+          applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force);
         }
         lastLoadedSlug.current = null;
-        lastLoadedTenantId.current = null;
+        lastLoadedTenantId.current = t?.id ?? null;
         return;
       }
 

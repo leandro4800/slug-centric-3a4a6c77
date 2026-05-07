@@ -87,8 +87,7 @@ Deno.serve(async (req) => {
 
   const platform = (payload.platform as string | undefined)?.toLowerCase() || detectPlatform(url);
 
-  // Enrichment: thumbnail + author via oEmbed (NUNCA preenche título automaticamente)
-  const title: string | null = (payload.title as string | undefined) || null;
+  // Enrichment: thumbnail + author via oEmbed (NUNCA salva título em vlogs)
   let thumbnail_url = (payload.thumbnail_url as string | undefined) || null;
   let author = (payload.author as string | undefined) || null;
 
@@ -115,7 +114,7 @@ Deno.serve(async (req) => {
         tenant_id: tenant.id,
         platform,
         url,
-        title,
+        title: null,
         description,
         thumbnail_url,
         author,

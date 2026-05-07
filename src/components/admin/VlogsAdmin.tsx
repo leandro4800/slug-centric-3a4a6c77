@@ -44,7 +44,6 @@ export const VlogsAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
-  const [title, setTitle] = useState("");
   const [thumbInput, setThumbInput] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [secret, setSecret] = useState<string | null>(null);
@@ -133,7 +132,7 @@ export const VlogsAdmin = () => {
         tenant_id: tenant.id,
         url: cleanUrl,
         platform,
-        title: title.trim() || null,
+        title: null,
         thumbnail_url: thumb,
         author,
         source: "manual",
@@ -146,7 +145,6 @@ export const VlogsAdmin = () => {
     if (error) return toast.error(error.message);
     toast.success("Vlog adicionado!");
     setUrl("");
-    setTitle("");
     setThumbInput("");
     void load();
   };
@@ -290,7 +288,6 @@ export const VlogsAdmin = () => {
   -d '{
     "secret": "${secret || "SEU_SEGREDO"}",
     "url": "https://www.instagram.com/reel/XXXXXX/",
-    "title": "Treino de pernas brutal",
     "thumbnail_url": "https://...jpg"
   }'`;
 
@@ -334,7 +331,7 @@ export const VlogsAdmin = () => {
         <Textarea readOnly value={exemploCurl} rows={8} className="font-mono text-xs mt-1.5" />
         <p className="text-xs text-muted-foreground mt-2">
           Campos aceitos no JSON: <code>secret</code> (obrigatório), <code>url</code> (obrigatório), <code>platform</code>,
-          <code> title</code>, <code>thumbnail_url</code>, <code>author</code>, <code>description</code>, <code>posted_at</code>, <code>external_id</code>.
+          <code>thumbnail_url</code>, <code>author</code>, <code>description</code>, <code>posted_at</code>, <code>external_id</code>.
         </p>
       </div>
 
@@ -361,7 +358,6 @@ export const VlogsAdmin = () => {
                   <pre className="bg-background/60 p-2 rounded mt-1 overflow-x-auto">{`secret        → ${secret ? secret.slice(0, 8) + "..." : "SEU_SEGREDO"}
 url           → Video URL  (ou: https://youtube.com/watch?v={{Video Id}})
 platform      → youtube
-title         → Title
 thumbnail_url → Thumbnail Default Url  (ou High/Maxres)
 author        → Channel Title
 description   → Description
@@ -389,7 +385,6 @@ Data:
   secret        → ${secret ? secret.slice(0, 8) + "..." : "SEU_SEGREDO"}
   url           → Permalink
   platform      → instagram
-  title         → Caption  (use Formatter para cortar em 80 chars se quiser)
   thumbnail_url → Thumbnail Url  (ou Media Url p/ imagens)
   author        → Username
   posted_at     → Timestamp
@@ -520,23 +515,19 @@ Data:
       {/* Manual add */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
-        <div className="grid md:grid-cols-2 gap-3 items-end">
+        <div className="grid gap-3 items-end">
           <div>
             <Label>URL (YouTube,  TikTok…)</Label>
             <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
           </div>
           <div>
-            <Label>Título (opcional)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Episódio 12 - Coxa" />
-          </div>
-          <div className="md:col-span-2">
             <Label>Thumbnail (opcional · cole URL de uma imagem)</Label>
             <Input value={thumbInput} onChange={(e) => setThumbInput(e.target.value)} placeholder="https://...jpg — útil para Instagram" />
             <p className="text-[11px] text-muted-foreground mt-1">
               Instagram não fornece thumb pública. Se não colar uma imagem, geramos um screenshot automático.
             </p>
           </div>
-          <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow md:col-span-2">
+          <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-2" /> Adicionar</>}
           </Button>
         </div>
@@ -567,7 +558,7 @@ Data:
                       className="w-full h-full object-cover"
                     />
                   ) : p.thumbnail_url ? (
-                    <img src={p.thumbnail_url} alt={p.title || ""} className="w-full h-full object-cover" />
+                    <img src={p.thumbnail_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                       sem thumbnail
@@ -581,7 +572,6 @@ Data:
                   </div>
                 </a>
                 <div className="p-3 space-y-2">
-                  <p className="text-sm font-medium line-clamp-2">{p.title || p.url}</p>
                   {p.author && <p className="text-xs text-muted-foreground">@{p.author}</p>}
                   <div className="flex gap-2 pt-1">
                     <Button

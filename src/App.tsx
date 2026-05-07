@@ -87,6 +87,19 @@ const App = () => (
 
             {/* App do aluno */}
             <Route
+              path="/index"
+              element={
+                <RequireAuth>
+                  <SubscriptionGuard>
+                    <AlunoLayout />
+                  </SubscriptionGuard>
+                </RequireAuth>
+              }
+            >
+              <Route index element={<AlunoHome />} />
+            </Route>
+
+            <Route
               path="/:slug/app"
               element={
                 <RequireAuth>
