@@ -35,11 +35,12 @@ Deno.serve(async (req) => {
   const media_type = body.media_type || "REELS";
   if (!tenant_id || !video_url) return json(400, { error: "missing tenant_id or video_url" });
 
-  // Authorization: user must be coach of the tenant or admin
+  // Authorization: user must be coach of the tenant or admin (NOT student/aluno)
   const { data: roleRow } = await supabase
     .from("user_roles")
     .select("role")
     .eq("user_id", userData.user.id)
+    .in("role", ["coach", "admin"])
     .or(`tenant_id.eq.${tenant_id},role.eq.admin`)
     .maybeSingle();
   if (!roleRow) return json(403, { error: "not allowed for this tenant" });
