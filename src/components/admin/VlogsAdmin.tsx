@@ -386,7 +386,6 @@ Data:
   secret        → ${secret ? secret.slice(0, 8) + "..." : "SEU_SEGREDO"}
   url           → Permalink
   platform      → instagram
-  title         → Caption  (use Formatter para cortar em 80 chars se quiser)
   thumbnail_url → Thumbnail Url  (ou Media Url p/ imagens)
   author        → Username
   posted_at     → Timestamp
