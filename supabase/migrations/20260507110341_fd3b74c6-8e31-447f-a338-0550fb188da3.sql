@@ -1,0 +1,1 @@
+DELETE FROM public.agendamentos_aula_avulsa WHERE email='vozesdamitologia1@gmail.com' AND status='pendente';
