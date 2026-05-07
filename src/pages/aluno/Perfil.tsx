@@ -290,7 +290,7 @@ const Perfil = () => {
           {isCoach && (
             <div className="flex gap-2 pt-1">
               <Button
-                onClick={() => navigate(`/${slug}/admin`)}
+                onClick={() => navigate(`/${slug}/app/controle`)}
                 variant="outline"
                 className="flex-1 border-primary/40 text-primary hover:bg-primary/10"
               >
