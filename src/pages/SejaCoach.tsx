@@ -292,18 +292,27 @@ export default function SejaCoach() {
     if (!tenantId) return;
     setBusy(true);
     try {
-      const preco = Math.round(parseFloat(planoPreco.replace(",", ".")) * 100);
-      if (!preco || preco < 100) throw new Error("Valor inválido");
+      const rows = planos
+        .map((p, i) => ({ p, i }))
+        .filter(({ p }) => p.nome.trim() && p.preco.trim());
 
-      const { error } = await supabase.from("planos").insert({
-        tenant_id: tenantId,
-        nome: planoNome,
-        descricao: planoDescricao,
-        preco_centavos: preco,
-        intervalo: planoIntervalo,
-        ativo: true,
-        ordem: 0,
+      if (rows.length === 0) throw new Error("Preencha ao menos um plano");
+
+      const inserts = rows.map(({ p, i }) => {
+        const preco = Math.round(parseFloat(p.preco.replace(",", ".")) * 100);
+        if (!preco || preco < 100) throw new Error(`Valor inválido no plano ${i + 1}`);
+        return {
+          tenant_id: tenantId,
+          nome: p.nome,
+          descricao: p.descricao,
+          preco_centavos: preco,
+          intervalo: p.intervalo,
+          ativo: true,
+          ordem: i,
+        };
       });
+
+      const { error } = await supabase.from("planos").insert(inserts);
       if (error) throw error;
       setStep("pending");
     } catch (e: any) {
