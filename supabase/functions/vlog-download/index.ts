@@ -71,14 +71,14 @@ Deno.serve(async (req) => {
   if (!tenant_id) return json(400, { error: "missing tenant_id" });
 
   // Authorization: caller must be coach of this tenant OR global admin
-  const { data: roleRow } = await supabase
+  const { data: roles } = await supabase
     .from("user_roles")
-    .select("role")
-    .eq("user_id", userData.user.id)
-    .in("role", ["coach", "admin"])
-    .or(`tenant_id.eq.${tenant_id},role.eq.admin`)
-    .maybeSingle();
-  if (!roleRow) return json(403, { error: "not allowed for this tenant" });
+    .select("role,tenant_id")
+    .eq("user_id", userData.user.id);
+  const allowed = (roles ?? []).some(
+    (r: any) => r.role === "admin" || (r.role === "coach" && r.tenant_id === tenant_id)
+  );
+  if (!allowed) return json(403, { error: "not allowed for this tenant" });
 
   // 1) Resolve direct video URL via cobalt
   const directUrl = await fetchVideoUrl(url);
