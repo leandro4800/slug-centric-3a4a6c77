@@ -61,20 +61,24 @@ Deno.serve(async (req) => {
   // Auth
   const auth = req.headers.get("Authorization");
   if (!auth) return json(401, { error: "missing authorization" });
-  const { data: userData } = await supabase.auth.getUser(auth.replace("Bearer ", ""));
+  const token = auth.replace("Bearer ", "");
+  const { data: userData, error: userErr } = await supabase.auth.getUser(token);
+  console.log("[vlog-download] auth", { hasUser: !!userData?.user, userId: userData?.user?.id, userErr: userErr?.message });
   if (!userData?.user) return json(401, { error: "invalid session" });
 
   let body: { url?: string; tenant_id?: string } = {};
   try { body = await req.json(); } catch { return json(400, { error: "invalid json" }); }
   const { url, tenant_id } = body;
+  console.log("[vlog-download] body", { url, tenant_id });
   if (!url || !/^https?:\/\//i.test(url)) return json(400, { error: "missing or invalid url" });
   if (!tenant_id) return json(400, { error: "missing tenant_id" });
 
   // Authorization: caller must be coach of this tenant OR global admin
-  const { data: roles } = await supabase
+  const { data: roles, error: rolesErr } = await supabase
     .from("user_roles")
     .select("role,tenant_id")
     .eq("user_id", userData.user.id);
+  console.log("[vlog-download] roles", { roles, rolesErr: rolesErr?.message });
   const allowed = (roles ?? []).some(
     (r: any) => r.role === "admin" || (r.role === "coach" && r.tenant_id === tenant_id)
   );
