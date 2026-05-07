@@ -10,7 +10,13 @@ project_id = "iflgryuemsohurtdaawm"
   [functions.gerar-treino-ia]
     verify_jwt = true
   [functions.seed-alunos-demo]
-    verify_jwt = false
+    verify_jwt = true
+  [functions.knowledge-qa]
+    verify_jwt = true
+  [functions.generate-hormone-protocol]
+    verify_jwt = true
+  [functions.import-with-ai]
+    verify_jwt = true
   [functions.stripe-checkout]
     verify_jwt = false
   [functions.stripe-webhook]
