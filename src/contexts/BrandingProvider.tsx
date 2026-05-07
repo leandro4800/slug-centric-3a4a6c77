@@ -191,9 +191,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
   const load = async (targetSlug: string | null, force = false) => {
     console.log("[Branding] Iniciando load para slug:", targetSlug);
-    if (targetSlug || force) {
-      setLoading(true);
-    }
+    setLoading(true);
     
     try {
       // Sem slug na URL: usa o tenant do usuário logado para preservar logo/vlogs em /index/PWA.
