@@ -561,7 +561,7 @@ Data:
                       className="w-full h-full object-cover"
                     />
                   ) : p.thumbnail_url ? (
-                    <img src={p.thumbnail_url} alt={p.title || ""} className="w-full h-full object-cover" />
+                    <img src={p.thumbnail_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                       sem thumbnail
@@ -575,7 +575,6 @@ Data:
                   </div>
                 </a>
                 <div className="p-3 space-y-2">
-                  <p className="text-sm font-medium line-clamp-2">{p.title || p.url}</p>
                   {p.author && <p className="text-xs text-muted-foreground">@{p.author}</p>}
                   <div className="flex gap-2 pt-1">
                     <Button
