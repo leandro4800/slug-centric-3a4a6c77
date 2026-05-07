@@ -7,9 +7,12 @@ const corsHeaders = {
 
 const DEFAULT_SLUG = "demo";
 
-const SENHA = "Demo@1234";
+function genPassword() {
+  // 24-char random password
+  const bytes = crypto.getRandomValues(new Uint8Array(18));
+  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, "").slice(0, 24) + "Aa1!";
+}
 
-// Gera 4 alunos com prefixo único por tenant para evitar conflito de e-mail
 function buildAlunos(slug: string) {
   const p = slug.toLowerCase().replace(/[^a-z0-9]/g, "");
   return [
@@ -23,12 +26,39 @@ function buildAlunos(slug: string) {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
+  const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-  // Slug pode vir via body { slug } ou querystring ?slug=
+  // Authentication: must be a global admin
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const authClient = createClient(SUPABASE_URL, ANON_KEY, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const token = authHeader.replace("Bearer ", "");
+  const { data: userData, error: authErr } = await authClient.auth.getUser(token);
+  if (authErr || !userData?.user) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
+  const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  const { data: isAdmin } = await supabase.rpc("has_role", {
+    _user_id: userData.user.id, _role: "admin",
+  });
+  if (!isAdmin) {
+    return new Response(JSON.stringify({ error: "Forbidden — admin only" }), {
+      status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   let slug = DEFAULT_SLUG;
   try {
     const url = new URL(req.url);
@@ -40,8 +70,8 @@ Deno.serve(async (req) => {
   } catch (_) { /* ignore */ }
 
   const ALUNOS = buildAlunos(slug);
+  const SENHA = genPassword();
 
-  // Resolve tenant by slug
   const { data: tenant, error: tenantErr } = await supabase
     .from("tenants")
     .select("id")
@@ -60,7 +90,6 @@ Deno.serve(async (req) => {
 
   for (const a of ALUNOS) {
     try {
-      // 1. Cria/recupera usuário em auth
       let userId: string | null = null;
       const { data: created, error: createErr } = await supabase.auth.admin.createUser({
         email: a.email,
@@ -77,7 +106,6 @@ Deno.serve(async (req) => {
       if (created?.user) {
         userId = created.user.id;
       } else {
-        // já existe — busca
         const { data: list } = await supabase.auth.admin.listUsers({ page: 1, perPage: 1000 });
         userId = list?.users.find((u) => u.email === a.email)?.id || null;
       }
@@ -87,7 +115,6 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // 2. Garante perfil + tenant (upsert caso o trigger não tenha corrido)
       await supabase
         .from("perfis")
         .upsert(
@@ -95,7 +122,6 @@ Deno.serve(async (req) => {
           { onConflict: "id" } as any,
         );
 
-      // 3. Upsert perfil de treino
       await supabase.from("perfis_treino").upsert(
         {
           aluno_id: userId,
@@ -112,7 +138,6 @@ Deno.serve(async (req) => {
         { onConflict: "aluno_id" } as any,
       );
 
-      // 4. Atribui role 'aluno'
       await supabase.from("user_roles").upsert(
         { user_id: userId, tenant_id: TENANT_ID, role: "aluno" },
         { onConflict: "user_id,tenant_id,role" } as any,

@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,36 +17,72 @@ serve(async (req) => {
   }
 
   try {
-    const { alunoId, tenantId } = await req.json();
+    // 1. Authenticate caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: authErr } = await authClient.auth.getUser(token);
+    if (authErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const callerId = userData.user.id;
 
-    if (!alunoId) {
-      throw new Error("ID do aluno é obrigatório");
+    const { alunoId } = await req.json();
+    if (!alunoId) throw new Error("ID do aluno é obrigatório");
+
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    // 2. Authorization: caller must be the student themselves OR a coach in the student's tenant
+    const { data: aluno } = await admin
+      .from("alunos")
+      .select("id, nome, tenant_id, nivel_experiencia, objetivo")
+      .eq("id", alunoId)
+      .maybeSingle();
+
+    if (!aluno) {
+      return new Response(JSON.stringify({ error: "Aluno não encontrado" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // 1. Buscar dados do aluno
-    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    
-    const response = await fetch(`${supabaseUrl}/rest/v1/anamnese_aluno?aluno_id=eq.${alunoId}&select=*`, {
-      headers: {
-        "apikey": supabaseKey,
-        "Authorization": `Bearer ${supabaseKey}`,
+    let allowed = callerId === alunoId;
+    if (!allowed) {
+      const { data: hasRole } = await admin.rpc("has_role", {
+        _user_id: callerId,
+        _role: "coach",
+        _tenant_id: aluno.tenant_id,
+      });
+      allowed = !!hasRole;
+      if (!allowed) {
+        const { data: isAdmin } = await admin.rpc("has_role", {
+          _user_id: callerId,
+          _role: "admin",
+        });
+        allowed = !!isAdmin;
       }
-    });
-    
-    const anamnesisData = await response.json();
-    const anamnese = anamnesisData[0] || {};
+    }
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    const alunoResp = await fetch(`${supabaseUrl}/rest/v1/alunos?id=eq.${alunoId}&select=*`, {
-      headers: {
-        "apikey": supabaseKey,
-        "Authorization": `Bearer ${supabaseKey}`,
-      }
-    });
-    const alunoData = await alunoResp.json();
-    const aluno = alunoData[0] || {};
+    const { data: anamnesisData } = await admin
+      .from("anamnese_aluno")
+      .select("*")
+      .eq("aluno_id", alunoId)
+      .maybeSingle();
+    const anamnese: any = anamnesisData || {};
 
-    // 2. Construir o contexto para a IA
     const studentContext = `
       Nome: ${aluno.nome || 'Atleta'}
       Nível: ${anamnese.nivel_experiencia || aluno.nivel_experiencia || 'Não informado'}

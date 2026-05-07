@@ -14,11 +14,66 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
 
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error("Supabase credentials not configured");
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY || !ANON_KEY) throw new Error("Supabase credentials not configured");
+
+    // Auth check
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userData, error: authErr } = await authClient.auth.getUser(token);
+    if (authErr || !userData?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const callerId = userData.user.id;
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // Authorization: caller must be the student or a coach in tenantId (or global admin)
+    if (!alunoId || !tenantId) {
+      return new Response(JSON.stringify({ error: "alunoId e tenantId são obrigatórios" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let allowed = callerId === alunoId;
+    if (!allowed) {
+      const { data: isCoach } = await supabase.rpc("has_role", {
+        _user_id: callerId, _role: "coach", _tenant_id: tenantId,
+      });
+      allowed = !!isCoach;
+      if (!allowed) {
+        const { data: isAdmin } = await supabase.rpc("has_role", {
+          _user_id: callerId, _role: "admin",
+        });
+        allowed = !!isAdmin;
+      }
+    }
+    if (!allowed) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify the student actually belongs to that tenant
+    const { data: alunoRow } = await supabase
+      .from("alunos").select("tenant_id").eq("id", alunoId).maybeSingle();
+    if (!alunoRow || alunoRow.tenant_id !== tenantId) {
+      return new Response(JSON.stringify({ error: "Aluno não pertence ao tenant" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const isImage = fileType.startsWith("image/");
     const messages = [
@@ -71,12 +126,10 @@ serve(async (req) => {
     const aiData = await response.json();
     const result = JSON.parse(aiData.choices[0].message.content);
 
-    // Persist data
     if (importType === "treino") {
-      // Clear existing workouts for this student
       await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenantId);
       
-      const rows = [];
+      const rows: any[] = [];
       result.dias.forEach((dia: any) => {
         dia.exercicios.forEach((ex: any, idx: number) => {
           rows.push({
@@ -99,8 +152,6 @@ serve(async (req) => {
         if (error) throw error;
       }
     } else {
-      // Import Dieta
-      // Clear existing diets for this user
       await supabase.from("dietas").delete().eq("user_id", alunoId);
 
       const { data: dieta, error: dError } = await supabase
@@ -133,7 +184,7 @@ serve(async (req) => {
         if (ref.itens && ref.itens.length > 0) {
           const itemRows = ref.itens.map((item: any) => ({
             refeicao_id: refeicao.id,
-            substituicoes: item.nome, // Store name in substitutions for now as it's the only text field
+            substituicoes: item.nome,
             quantidade_g: item.quantidade_g,
           }));
           const { error: iError } = await supabase.from("itens_refeicao").insert(itemRows);
@@ -147,7 +198,7 @@ serve(async (req) => {
     });
   } catch (e) {
     console.error("Error:", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: (e as Error).message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

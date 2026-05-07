@@ -4,6 +4,7 @@
 // Retorna: { dias: [{ dia: "Treino A", exercicios: [{nome, series, repeticoes, cadencia, detalhes_execucao, observacao}] }], cardio: string }
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,9 +18,60 @@ serve(async (req) => {
   }
 
   try {
+    const SUPABASE_URL_E = Deno.env.get("SUPABASE_URL")!;
+    const SERVICE_KEY_E = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const ANON_KEY_E = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Authenticate caller
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(SUPABASE_URL_E, ANON_KEY_E, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const tokenE = authHeader.replace("Bearer ", "");
+    const { data: userDataE, error: authErrE } = await authClient.auth.getUser(tokenE);
+    if (authErrE || !userDataE?.user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const callerIdE = userDataE.user.id;
+    const adminE = createClient(SUPABASE_URL_E, SERVICE_KEY_E);
+
     const { perfil, biblioteca, divisoes, tenant_id, prompt: customPrompt, estimulos_extras } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
+
+    // Authorization for body-supplied target user
+    const requestedTarget = perfil?.aluno_id || perfil?.user_id;
+    let resolvedUserId = callerIdE;
+    if (requestedTarget && requestedTarget !== callerIdE) {
+      const { data: alunoRow } = await adminE
+        .from("alunos").select("tenant_id").eq("id", requestedTarget).maybeSingle();
+      if (!alunoRow) {
+        return new Response(JSON.stringify({ error: "Aluno não encontrado" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: isCoach } = await adminE.rpc("has_role", {
+        _user_id: callerIdE, _role: "coach", _tenant_id: alunoRow.tenant_id,
+      });
+      let allowed = !!isCoach;
+      if (!allowed) {
+        const { data: isAdmin } = await adminE.rpc("has_role", { _user_id: callerIdE, _role: "admin" });
+        allowed = !!isAdmin;
+      }
+      if (!allowed) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      resolvedUserId = requestedTarget;
+    }
 
     const lesoes = (perfil?.lesoes || []).join(", ") || "nenhuma";
     const limitacoes = (perfil?.limitacoes || []).join(", ") || "nenhuma";
@@ -80,17 +132,7 @@ serve(async (req) => {
 
     // === 2. PARECER DE SAÚDE (EXAMES) ===
     let saudeContext = "";
-    let userId: string | null = perfil?.aluno_id || perfil?.user_id || null;
-    if (!userId) {
-      try {
-        const authHeader = req.headers.get("Authorization");
-        if (authHeader?.startsWith("Bearer ")) {
-          const token = authHeader.slice(7);
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          userId = payload?.sub || null;
-        }
-      } catch (_) { /* ignore */ }
-    }
+    const userId: string = resolvedUserId;
 
     if (userId) {
       try {
