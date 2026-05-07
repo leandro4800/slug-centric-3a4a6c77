@@ -27,14 +27,49 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
+    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
     const authHeader = req.headers.get("Authorization");
-    if (!authHeader) throw new Error("Não autenticado");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const authClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: authHeader } },
+    });
     const token = authHeader.replace("Bearer ", "");
-    const { data: { user } } = await supabase.auth.getUser(token);
-    if (!user) throw new Error("Usuário inválido");
+    const { data: { user } } = await authClient.auth.getUser(token);
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const body: DietRequest = await req.json().catch(() => ({}));
-    const targetUserId = body.aluno_id || user.id;
+    let targetUserId = user.id;
+    if (body.aluno_id && body.aluno_id !== user.id) {
+      const { data: alunoRow } = await supabase
+        .from("alunos").select("tenant_id").eq("id", body.aluno_id).maybeSingle();
+      if (!alunoRow) {
+        return new Response(JSON.stringify({ error: "Aluno não encontrado" }), {
+          status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const { data: isCoach } = await supabase.rpc("has_role", {
+        _user_id: user.id, _role: "coach", _tenant_id: alunoRow.tenant_id,
+      });
+      let allowed = !!isCoach;
+      if (!allowed) {
+        const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
+        allowed = !!isAdmin;
+      }
+      if (!allowed) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      targetUserId = body.aluno_id;
+    }
     const objetivo = body.objetivo || "hipertrofia";
     const peso = Number(body.peso_kg) || 75;
     const altura = Number(body.altura_cm) || 175;
