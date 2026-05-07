@@ -19,7 +19,7 @@ interface Plano {
   nome: string;
   descricao: string | null;
   preco_centavos: number;
-  intervalo: "mensal" | "trimestral" | "anual";
+  intervalo: "mensal" | "trimestral" | "semestral" | "anual";
   stripe_price_id: string | null;
   ativo: boolean;
   ordem: number;
@@ -39,7 +39,7 @@ export default function AdminPlanos() {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [precoReais, setPrecoReais] = useState("");
-  const [intervalo, setIntervalo] = useState<"mensal" | "trimestral" | "anual">("mensal");
+  const [intervalo, setIntervalo] = useState<"mensal" | "trimestral" | "semestral" | "anual">("mensal");
 
   useEffect(() => {
     if (isLoading) return;
@@ -176,6 +176,7 @@ export default function AdminPlanos() {
                 <SelectContent>
                   <SelectItem value="mensal">Mensal</SelectItem>
                   <SelectItem value="trimestral">Trimestral</SelectItem>
+                  <SelectItem value="semestral">Semestral</SelectItem>
                   <SelectItem value="anual">Anual</SelectItem>
                 </SelectContent>
               </Select>

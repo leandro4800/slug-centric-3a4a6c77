@@ -30,12 +30,12 @@ interface Plano {
   nome: string;
   descricao: string | null;
   preco_centavos: number;
-  intervalo: "mensal" | "trimestral" | "anual";
+  intervalo: "mensal" | "trimestral" | "semestral" | "anual";
   ordem: number;
   stripe_price_id: string | null;
 }
 
-const intervaloLabel = { mensal: "/mês", trimestral: "/trimestre", anual: "/ano" };
+const intervaloLabel = { mensal: "/mês", trimestral: "/trimestre", semestral: "/semestre", anual: "/ano" };
 
 const TENANT_PUBLIC_COLUMNS =
   "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";

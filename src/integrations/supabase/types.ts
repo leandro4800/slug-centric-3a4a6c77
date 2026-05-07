@@ -2285,7 +2285,7 @@ export type Database = {
         | "trialing"
         | "incomplete"
         | "unpaid"
-      plano_intervalo: "mensal" | "trimestral" | "anual"
+      plano_intervalo: "mensal" | "trimestral" | "anual" | "semestral"
       tenant_status: "pending" | "approved" | "rejected" | "suspended"
       vlog_platform: "youtube" | "instagram" | "tiktok" | "other"
     }
@@ -2424,7 +2424,7 @@ export const Constants = {
         "incomplete",
         "unpaid",
       ],
-      plano_intervalo: ["mensal", "trimestral", "anual"],
+      plano_intervalo: ["mensal", "trimestral", "anual", "semestral"],
       tenant_status: ["pending", "approved", "rejected", "suspended"],
       vlog_platform: ["youtube", "instagram", "tiktok", "other"],
     },

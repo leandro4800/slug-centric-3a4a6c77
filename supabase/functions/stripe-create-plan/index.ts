@@ -10,6 +10,7 @@ const corsHeaders = {
 const intervalMap: Record<string, { interval: "month" | "year"; interval_count: number }> = {
   mensal: { interval: "month", interval_count: 1 },
   trimestral: { interval: "month", interval_count: 3 },
+  semestral: { interval: "month", interval_count: 6 },
   anual: { interval: "year", interval_count: 1 },
 };
 
