@@ -152,7 +152,7 @@ export default function SejaCoach() {
         email: cleanEmail,
         password,
         options: {
-          emailRedirectTo: `${window.location.origin}/seja-coach`,
+          // Sem emailRedirectTo: força envio de OTP de 6 dígitos em vez de magic link
           data: { nome_completo: nome, is_coach: true },
         },
       });
