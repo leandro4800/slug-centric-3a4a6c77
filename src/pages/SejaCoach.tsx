@@ -398,6 +398,34 @@ export default function SejaCoach() {
             </form>
           )}
 
+          {step === "verify-email" && !user && (
+            <div className="space-y-4 text-center">
+              <h2 className="font-display text-2xl uppercase">Confirme seu e-mail</h2>
+              <p className="text-sm text-muted-foreground">
+                Enviamos um link de confirmação para <strong className="text-foreground">{email}</strong>.
+                Abra seu e-mail e clique no link para ativar sua conta e continuar o cadastro.
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Não recebeu? Verifique a caixa de spam ou{" "}
+                <button
+                  type="button"
+                  className="text-primary underline"
+                  onClick={async () => {
+                    const { error } = await supabase.auth.resend({ type: "signup", email });
+                    if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
+                    else toast({ title: "E-mail reenviado" });
+                  }}
+                >
+                  reenviar
+                </button>
+                .
+              </p>
+              <Button variant="outline" onClick={() => setStep("signup")} className="w-full">
+                Usar outro e-mail
+              </Button>
+            </div>
+          )}
+
           {step === "personal" && (
             <form onSubmit={handleSavePersonal} className="space-y-4">
               <h2 className="font-display text-2xl uppercase">2. Seus dados pessoais</h2>
