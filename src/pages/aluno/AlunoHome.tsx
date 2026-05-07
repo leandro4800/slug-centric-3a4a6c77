@@ -353,11 +353,11 @@ const AlunoHome = () => {
                       </div>
                     </button>
                   )}
-                  <div className="absolute top-2 right-2 bg-background/70 backdrop-blur rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wider z-10">
+                  <div className="pointer-events-none absolute top-2 right-2 bg-background/70 backdrop-blur rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wider z-10">
                     {v.platform}
                   </div>
                   {v.title && (
-                    <p className="absolute bottom-0 left-0 right-0 px-2 py-1.5 text-xs font-semibold line-clamp-2 bg-gradient-to-t from-black via-black/70 to-transparent">
+                    <p className="pointer-events-none absolute bottom-0 left-0 right-0 px-2 py-1.5 text-xs font-semibold line-clamp-2 bg-gradient-to-t from-black via-black/70 to-transparent">
                       {v.title}
                     </p>
                   )}
