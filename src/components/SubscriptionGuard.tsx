@@ -3,6 +3,7 @@ import { Navigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
+import { useBranding } from "@/contexts/BrandingProvider";
 
 interface Props {
   children: ReactNode;
@@ -11,22 +12,21 @@ interface Props {
 export const SubscriptionGuard = ({ children }: Props) => {
   const { user, isLoading: authLoading } = useAuth();
   const { slug } = useParams();
+  const { tenant: brandedTenant, loading: brandingLoading } = useBranding();
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCoach, setIsCoach] = useState(false);
 
   useEffect(() => {
-    if (authLoading || !user || !slug) return;
+    if (authLoading || brandingLoading || !user) return;
 
     const checkSubscriptionAndCompletion = async () => {
       setLoading(true);
       
       // 1. Check if user is the coach of this tenant
-      const { data: tenant } = await supabase
-        .from("tenants")
-        .select("id, owner_user_id")
-        .eq("slug", slug)
-        .maybeSingle();
+      const tenant = brandedTenant || (slug
+        ? (await supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle()).data
+        : null);
 
       if (tenant?.owner_user_id === user.id) {
         setIsCoach(true);
@@ -73,7 +73,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
     };
 
     void checkSubscriptionAndCompletion();
-  }, [user, authLoading, slug]);
+  }, [user, authLoading, brandingLoading, slug, brandedTenant?.id]);
 
   if (authLoading || loading) {
     return (
