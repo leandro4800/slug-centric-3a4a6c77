@@ -518,23 +518,19 @@ Data:
       {/* Manual add */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
-        <div className="grid md:grid-cols-2 gap-3 items-end">
+        <div className="grid gap-3 items-end">
           <div>
             <Label>URL (YouTube,  TikTok…)</Label>
             <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
           </div>
           <div>
-            <Label>Título (opcional)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Episódio 12 - Coxa" />
-          </div>
-          <div className="md:col-span-2">
             <Label>Thumbnail (opcional · cole URL de uma imagem)</Label>
             <Input value={thumbInput} onChange={(e) => setThumbInput(e.target.value)} placeholder="https://...jpg — útil para Instagram" />
             <p className="text-[11px] text-muted-foreground mt-1">
               Instagram não fornece thumb pública. Se não colar uma imagem, geramos um screenshot automático.
             </p>
           </div>
-          <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow md:col-span-2">
+          <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow">
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-2" /> Adicionar</>}
           </Button>
         </div>
