@@ -132,17 +132,7 @@ serve(async (req) => {
 
     // === 2. PARECER DE SAÚDE (EXAMES) ===
     let saudeContext = "";
-    let userId: string | null = perfil?.aluno_id || perfil?.user_id || null;
-    if (!userId) {
-      try {
-        const authHeader = req.headers.get("Authorization");
-        if (authHeader?.startsWith("Bearer ")) {
-          const token = authHeader.slice(7);
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          userId = payload?.sub || null;
-        }
-      } catch (_) { /* ignore */ }
-    }
+    const userId: string = resolvedUserId;
 
     if (userId) {
       try {
