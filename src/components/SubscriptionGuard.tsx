@@ -23,10 +23,13 @@ export const SubscriptionGuard = ({ children }: Props) => {
     const checkSubscriptionAndCompletion = async () => {
       setLoading(true);
       
-      // 1. Check if user is the coach of this tenant
-      const tenant = (brandedTenant as (typeof brandedTenant & { owner_user_id?: string }) | null) || (slug
-        ? (await supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle()).data
-        : null);
+      // 1. Resolve tenant with ownership explicitly.
+      // Branding only loads public columns, so owner_user_id must be fetched here.
+      const { data: tenant } = brandedTenant?.id
+        ? await supabase.from("tenants").select("id, owner_user_id").eq("id", brandedTenant.id).maybeSingle()
+        : slug
+          ? await supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle()
+          : { data: null };
 
       if (tenant?.owner_user_id === user.id) {
         setIsCoach(true);
