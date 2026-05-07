@@ -2178,6 +2178,7 @@ export type Database = {
           author: string | null
           created_at: string
           description: string | null
+          destaque: boolean
           external_id: string | null
           id: string
           ordem: number
@@ -2195,6 +2196,7 @@ export type Database = {
           author?: string | null
           created_at?: string
           description?: string | null
+          destaque?: boolean
           external_id?: string | null
           id?: string
           ordem?: number
@@ -2212,6 +2214,7 @@ export type Database = {
           author?: string | null
           created_at?: string
           description?: string | null
+          destaque?: boolean
           external_id?: string | null
           id?: string
           ordem?: number
