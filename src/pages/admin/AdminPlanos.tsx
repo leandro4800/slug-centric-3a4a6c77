@@ -39,7 +39,7 @@ export default function AdminPlanos() {
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [precoReais, setPrecoReais] = useState("");
-  const [intervalo, setIntervalo] = useState<"mensal" | "trimestral" | "anual">("mensal");
+  const [intervalo, setIntervalo] = useState<"mensal" | "trimestral" | "semestral" | "anual">("mensal");
 
   useEffect(() => {
     if (isLoading) return;
