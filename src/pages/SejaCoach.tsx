@@ -41,11 +41,15 @@ export default function SejaCoach() {
   const [bio, setBio] = useState("");
   const [especialidades, setEspecialidades] = useState("");
 
-  // product
-  const [planoNome, setPlanoNome] = useState("");
-  const [planoDescricao, setPlanoDescricao] = useState("");
-  const [planoPreco, setPlanoPreco] = useState("");
-  const [planoIntervalo, setPlanoIntervalo] = useState<"mensal" | "trimestral" | "anual">("mensal");
+  // product (até 3 planos: mensal/trimestral/anual)
+  type PlanoForm = { nome: string; descricao: string; preco: string; intervalo: "mensal" | "trimestral" | "anual" };
+  const [planos, setPlanos] = useState<PlanoForm[]>([
+    { nome: "", descricao: "", preco: "", intervalo: "mensal" },
+    { nome: "", descricao: "", preco: "", intervalo: "trimestral" },
+    { nome: "", descricao: "", preco: "", intervalo: "anual" },
+  ]);
+  const updatePlano = (i: number, patch: Partial<PlanoForm>) =>
+    setPlanos((arr) => arr.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
 
   const [tenantId, setTenantId] = useState<string | null>(null);
 
