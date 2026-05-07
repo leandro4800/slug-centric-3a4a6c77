@@ -154,7 +154,36 @@ const Login = () => {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
-    if (error) toast.error(error.message);
+    if (error) {
+      const msg = error.message?.toLowerCase() || "";
+      if (msg.includes("not confirmed") || msg.includes("confirm")) {
+        toast.error("E-mail ainda não confirmado. Use 'Reenviar confirmação' abaixo.");
+      } else {
+        toast.error(error.message);
+      }
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      toast.error("Digite seu e-mail acima para reenviar a confirmação.");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: cleanEmail,
+      options: {
+        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}` : `${window.location.origin}/login`,
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success("E-mail de confirmação reenviado! Verifique sua caixa de entrada e spam.");
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -297,10 +326,18 @@ const Login = () => {
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ACESSAR AGORA"}
                 </Button>
-                <div className="text-center">
-                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                <div className="text-center space-y-2">
+                  <Link to="/forgot-password" className="text-sm text-primary hover:underline block">
                     Esqueceu a senha?
                   </Link>
+                  <button
+                    type="button"
+                    onClick={handleResendConfirmation}
+                    disabled={loading}
+                    className="text-xs text-muted-foreground hover:text-primary underline transition-colors"
+                  >
+                    Reenviar e-mail de confirmação
+                  </button>
                 </div>
               </form>
             </TabsContent>
