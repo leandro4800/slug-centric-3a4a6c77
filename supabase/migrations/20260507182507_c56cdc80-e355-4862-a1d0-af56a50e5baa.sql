@@ -1,0 +1,1 @@
+ALTER TYPE public.plano_intervalo ADD VALUE IF NOT EXISTS 'semestral';
