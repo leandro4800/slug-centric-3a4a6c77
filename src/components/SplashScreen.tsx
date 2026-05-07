@@ -4,8 +4,10 @@ import { useLocation } from "react-router-dom";
 import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
 
-// Marca que o splash já foi mostrado nessa sessão (evita re-trigger ao navegar entre telas internas)
-const SESSION_KEY = "splash_shown_session";
+// Chave por tenant — assim cada coach tem seu próprio splash garantido
+// (se o usuário trocar de tenant na mesma sessão, o splash do novo tenant aparece)
+const sessionKeyFor = (slug: string | null | undefined) =>
+  `splash_shown_session::${slug ?? "_neutral"}`;
 
 export const SplashScreen = () => {
   const { tenant, loading } = useBranding();
@@ -19,26 +21,36 @@ export const SplashScreen = () => {
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
-  const startedRef = useRef(false);
+  const startedForTenantRef = useRef<string | null>(null);
 
-  // Dispara o splash quando ENTRAMOS numa rota de app pela primeira vez na sessão
+  const tenantKey = tenant?.slug ?? null;
+
+  // Só dispara o splash QUANDO:
+  // 1. Estamos numa rota de app
+  // 2. O branding terminou de carregar (evita flash do tenant errado)
+  // 3. Existe um tenant identificado
+  // 4. Esse tenant ainda não mostrou splash nessa sessão
   useEffect(() => {
     if (!isAppRoute) return;
+    if (loading) return;
+    if (!tenantKey) return;
     if (typeof window === "undefined") return;
-    if (sessionStorage.getItem(SESSION_KEY) === "1") return;
-    if (startedRef.current) return;
 
-    startedRef.current = true;
+    const key = sessionKeyFor(tenantKey);
+    if (sessionStorage.getItem(key) === "1") return;
+    if (startedForTenantRef.current === tenantKey) return;
+
+    startedForTenantRef.current = tenantKey;
     setShouldRender(true);
     setIsVisible(true);
-  }, [isAppRoute]);
+  }, [isAppRoute, loading, tenantKey]);
 
-  // Após o branding carregar, agenda o fade-out
+  // Agenda o fade-out
   useEffect(() => {
     if (!shouldRender) return;
     if (loading) return;
 
-    sessionStorage.setItem(SESSION_KEY, "1");
+    sessionStorage.setItem(sessionKeyFor(tenantKey), "1");
 
     const hasVideo = !!tenant?.splash_video_url;
     const showMs = hasVideo ? 3200 : 1600;
