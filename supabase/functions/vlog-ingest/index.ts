@@ -87,15 +87,14 @@ Deno.serve(async (req) => {
 
   const platform = (payload.platform as string | undefined)?.toLowerCase() || detectPlatform(url);
 
-  // Enrichment: oEmbed + YouTube thumbnail fallback
-  let title = (payload.title as string | undefined) || null;
+  // Enrichment: thumbnail + author via oEmbed (NUNCA preenche título automaticamente)
+  const title: string | null = (payload.title as string | undefined) || null;
   let thumbnail_url = (payload.thumbnail_url as string | undefined) || null;
   let author = (payload.author as string | undefined) || null;
 
-  if (!title || !thumbnail_url || !author) {
+  if (!thumbnail_url || !author) {
     const oe = await fetchOEmbed(platform, url);
     if (oe) {
-      title = title || oe.title || null;
       thumbnail_url = thumbnail_url || oe.thumbnail_url || null;
       author = author || oe.author_name || null;
     }
