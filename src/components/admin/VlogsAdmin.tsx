@@ -44,7 +44,6 @@ export const VlogsAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
-  const [title, setTitle] = useState("");
   const [thumbInput, setThumbInput] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [secret, setSecret] = useState<string | null>(null);
@@ -133,7 +132,7 @@ export const VlogsAdmin = () => {
         tenant_id: tenant.id,
         url: cleanUrl,
         platform,
-        title: title.trim() || null,
+        title: null,
         thumbnail_url: thumb,
         author,
         source: "manual",
@@ -146,7 +145,6 @@ export const VlogsAdmin = () => {
     if (error) return toast.error(error.message);
     toast.success("Vlog adicionado!");
     setUrl("");
-    setTitle("");
     setThumbInput("");
     void load();
   };
