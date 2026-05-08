@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Upload, Sparkles, Pencil, Save, X } from "lucide-react";
+import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft } from "lucide-react";
 import { AthleteCard, type CartaData, type AtributosCarta } from "./AthleteCard";
 
 const ATR_FIELDS: Array<{ key: keyof AtributosCarta; label: string }> = [
