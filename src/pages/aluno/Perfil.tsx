@@ -87,9 +87,9 @@ const Perfil = () => {
           nome_completo: p.nome_completo || "",
           telefone: p.telefone || "",
           data_nascimento: p.data_nascimento || "",
-          sexo: p.sexo as "M" | "F" || "M",
+          sexo: (p.sexo as "M" | "F") || "M",
           avatar_url: p.avatar_url || "",
-          music_url: p.music_url || "",
+          music_url: (p as any).music_url || "",
         });
       }
       if (e) {
@@ -181,7 +181,7 @@ const Perfil = () => {
       ...formProfile,
       tenant_id: profile?.tenant_id || tenant?.id,
       updated_at: new Date().toISOString()
-    });
+    } as any);
 
     setSaving(false);
     if (error) {
@@ -251,11 +251,11 @@ const Perfil = () => {
 
   return (
     <>
-      <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
+      <ProfileMusicPlayer url={(profile as any)?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img
-          src={profile?.avatar_url || hero}
+          src={profile?.avatar_url || heroDefault}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{ objectPosition: `center ${imgPosY}%` }}
