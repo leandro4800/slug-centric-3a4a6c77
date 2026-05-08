@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Upload, Sparkles, Pencil, Save, X } from "lucide-react";
+import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft } from "lucide-react";
 import { AthleteCard, type CartaData, type AtributosCarta } from "./AthleteCard";
 
 const ATR_FIELDS: Array<{ key: keyof AtributosCarta; label: string }> = [
@@ -38,6 +39,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
   const [perfilNome, setPerfilNome] = useState<string>("");
   const [perfilSexo, setPerfilSexo] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     (async () => {
@@ -192,6 +194,16 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
 
   return (
     <div className="min-h-screen bg-fut-deep py-8 px-4">
+      <div className="max-w-6xl mx-auto mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="font-gaming border-[hsl(180_100%_60%/0.4)] hover:bg-[hsl(180_100%_50%/0.1)]"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+        </Button>
+      </div>
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Carta */}
         <motion.div
