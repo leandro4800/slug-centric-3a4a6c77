@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useParams } from "react-router-dom";
@@ -306,6 +306,12 @@ const Perfil = () => {
               className="flex-1 shadow-glow"
             >
               <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
+            </Button>
+            <Button
+              onClick={() => navigate(`/${slug}/app/carta`)}
+              className="flex-1 bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black hover:brightness-110 font-bold"
+            >
+              <Sparkles className="h-4 w-4" /> Minha Carta
             </Button>
           </div>
           

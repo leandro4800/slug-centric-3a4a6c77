@@ -441,12 +441,20 @@ const AtletaDetalhe = () => {
           {aluno.email && (
             <p className="text-xs text-muted-foreground mt-1">{aluno.email}</p>
           )}
-          <button
-            onClick={() => toast.warning("Alerta clínico registrado")}
-            className="mt-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/40 text-accent text-[10px] font-bold uppercase tracking-wider"
-          >
-            <AlertTriangle className="h-3 w-3" /> Alerta clínico
-          </button>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              onClick={() => toast.warning("Alerta clínico registrado")}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/40 text-accent text-[10px] font-bold uppercase tracking-wider"
+            >
+              <AlertTriangle className="h-3 w-3" /> Alerta clínico
+            </button>
+            <button
+              onClick={() => navigate(`/${slug}/admin/atleta/${atletaId}/carta`)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black text-[10px] font-bold uppercase tracking-wider hover:brightness-110"
+            >
+              <Sparkles className="h-3 w-3" /> Carta do atleta
+            </button>
+          </div>
         </div>
       </div>
 
