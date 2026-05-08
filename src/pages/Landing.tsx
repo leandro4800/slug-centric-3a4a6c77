@@ -652,8 +652,12 @@ const Landing = () => {
               key={i} 
               className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-card border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
             >
-              {/* Video Background */}
-              {coach.video.includes('instagram.com') ? (
+              {/* Media Background */}
+              {!coach.video ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary/30 to-zinc-900">
+                  <span className="font-display text-7xl text-white/30">{coach.name.charAt(0)}</span>
+                </div>
+              ) : coach.video.includes('instagram.com') ? (
                 <div className="absolute inset-0 w-full h-full overflow-hidden pointer-events-none">
                   <iframe
                     src={`https://www.social-embed.com/api/instagram/reel?url=${encodeURIComponent(coach.video)}&autoplay=true&muted=true&loop=true`}
@@ -661,13 +665,19 @@ const Landing = () => {
                     frameBorder="0"
                   />
                 </div>
-              ) : (
+              ) : /\.(mp4|webm|ogg|mov)(\?|$)/i.test(coach.video) ? (
                 <video 
                   src={coach.video} 
                   autoPlay 
                   muted 
                   loop 
                   playsInline
+                  className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
+                />
+              ) : (
+                <img
+                  src={coach.video}
+                  alt={coach.name}
                   className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-500"
                 />
               )}
