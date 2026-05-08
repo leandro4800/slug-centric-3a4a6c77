@@ -363,6 +363,37 @@ const MeusAtletas = () => {
                 </Button>
               </Link>
             </div>
+            {slug && (
+              <div className="bg-primary/5 border border-primary/30 rounded-2xl p-4 space-y-3">
+                <div>
+                  <p className="text-[10px] uppercase tracking-widest text-primary font-bold">Link do seu app</p>
+                  <p className="text-sm font-mono mt-1 break-all">https://alpha-coach.app/{slug}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-primary/40"
+                    onClick={() => {
+                      navigator.clipboard.writeText(`https://alpha-coach.app/${slug}`);
+                      toast.success("Link copiado!");
+                    }}
+                  >
+                    <Copy className="h-4 w-4" /> Copiar link
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2 border-primary/40"
+                    onClick={() => {
+                      const url = `https://alpha-coach.app/${slug}`;
+                      const msg = encodeURIComponent(`Olá! Acesse meu app de coach: ${url}`);
+                      window.open(`https://wa.me/?text=${msg}`, "_blank");
+                    }}
+                  >
+                    <Share2 className="h-4 w-4" /> WhatsApp
+                  </Button>
+                </div>
+              </div>
+            )}
             <Link to={`/${slug}/app`}>
               <Button variant="outline" className="w-full gap-2 border-primary/40">
                 <User className="h-4 w-4" /> Meu cadastro (perfil, anamnese e avaliação)
