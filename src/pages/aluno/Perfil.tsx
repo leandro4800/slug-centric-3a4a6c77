@@ -240,12 +240,12 @@ const Perfil = () => {
   return (
     <>
       {/* Hero estilo Netflix */}
-      <section className="relative h-[60vh] min-h-[450px] -mt-0">
-        <img src={profile?.avatar_url || hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/50 via-transparent to-transparent" />
+      <section className="relative h-[88vh] min-h-[680px] -mt-0">
+        <img src={profile?.avatar_url || hero} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent" />
 
-        <div className="absolute bottom-0 left-0 right-0 px-5 pb-6 space-y-3">
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 space-y-3">
           <div className="flex items-center gap-3">
             <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">FILME</span>
             <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
