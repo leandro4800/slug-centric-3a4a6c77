@@ -151,6 +151,55 @@ const Clinica = () => {
             />
           </div>
           <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-300 to-transparent animate-scan shadow-[0_0_16px_4px_rgba(34,211,238,0.8)]" />
+
+          {/* HUD: métricas computacionais flutuando ao redor */}
+          <div className="absolute inset-0 font-mono text-[9px] text-cyan-300/90 select-none">
+            {/* Cantos com blocos de telemetria */}
+            <div className="absolute top-3 left-3 space-y-0.5 leading-tight">
+              <p className="text-cyan-400/60 tracking-[0.2em]">// SYS.SCAN</p>
+              <p>VO2_MAX <span className="text-cyan-200">52.4</span> ml/kg</p>
+              <p>HRV     <span className="text-cyan-200 animate-pulse">68</span> ms</p>
+              <p>BPM     <span className="text-cyan-200">62</span></p>
+              <p>SpO2    <span className="text-cyan-200">98%</span></p>
+            </div>
+            <div className="absolute top-3 right-3 text-right space-y-0.5 leading-tight">
+              <p className="text-cyan-400/60 tracking-[0.2em]">// BIO.MARK</p>
+              <p>TST  <span className="text-cyan-200">842</span> ng/dL</p>
+              <p>CORT <span className="text-cyan-200">14.2</span> µg/dL</p>
+              <p>GLU  <span className="text-cyan-200">88</span> mg/dL</p>
+              <p>HB1c <span className="text-cyan-200">5.1%</span></p>
+            </div>
+            <div className="absolute bottom-24 left-3 space-y-0.5 leading-tight">
+              <p className="text-cyan-400/60 tracking-[0.2em]">// MUSC.IDX</p>
+              <p>LBM  <span className="text-cyan-200">71.8</span> kg</p>
+              <p>BF%  <span className="text-cyan-200">12.4</span></p>
+              <p>FFMI <span className="text-cyan-200">22.6</span></p>
+            </div>
+            <div className="absolute bottom-24 right-3 text-right space-y-0.5 leading-tight">
+              <p className="text-cyan-400/60 tracking-[0.2em]">// NEURO</p>
+              <p>RT   <span className="text-cyan-200 animate-pulse">214</span> ms</p>
+              <p>FOC  <span className="text-cyan-200">94%</span></p>
+              <p>SLP  <span className="text-cyan-200">7h32</span></p>
+            </div>
+
+            {/* Brackets de targeting */}
+            <div className="absolute top-1/2 left-6 -translate-y-1/2 text-cyan-300/70">
+              <div className="w-3 h-3 border-l-2 border-t-2" />
+              <div className="w-3 h-3 border-l-2 border-b-2 mt-12" />
+            </div>
+            <div className="absolute top-1/2 right-6 -translate-y-1/2 text-cyan-300/70 flex flex-col items-end">
+              <div className="w-3 h-3 border-r-2 border-t-2" />
+              <div className="w-3 h-3 border-r-2 border-b-2 mt-12" />
+            </div>
+
+            {/* Stream de dados binários */}
+            <p className="absolute top-1/3 left-1/2 -translate-x-1/2 text-cyan-400/40 tracking-widest animate-pulse text-[8px]">
+              01001000 11010110 10110011 ▮ANALYZING
+            </p>
+            <p className="absolute bottom-[88px] left-1/2 -translate-x-1/2 text-cyan-400/40 tracking-widest text-[8px]">
+              ◢ DEEP_NEURAL_SCAN ▸ {Math.floor(Math.random() * 30) + 70}.{Math.floor(Math.random() * 99)}% ◣
+            </p>
+          </div>
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
