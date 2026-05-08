@@ -38,6 +38,14 @@ const Perfil = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [imgPosY, setImgPosY] = useState<number>(() => {
+    const v = typeof window !== "undefined" ? localStorage.getItem("perfil_img_pos_y") : null;
+    return v ? Number(v) : 20;
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("perfil_img_pos_y", String(imgPosY));
+  }, [imgPosY]);
 
   // Profile form
   const [formProfile, setFormProfile] = useState({
