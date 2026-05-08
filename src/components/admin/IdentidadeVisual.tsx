@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useBranding, type ThemeOverrides } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { PhonePreview } from "./PhonePreview";
 import { Button } from "@/components/ui/button";
-import { Loader2, RotateCcw, Save, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, RotateCcw, Save, Check, Music } from "lucide-react";
 import { toast } from "sonner";
 
 type Preset = {
