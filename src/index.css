@@ -220,9 +220,12 @@
     pointer-events: none;
   }
 
-  @keyframes spin-y-360 {
-    0% { transform: rotateY(0deg); }
-    100% { transform: rotateY(360deg); }
+  @keyframes holo-turn {
+    0%   { transform: rotateY(-28deg) translateY(0px); filter: brightness(0.9); }
+    25%  { transform: rotateY(0deg) translateY(-6px); filter: brightness(1.1); }
+    50%  { transform: rotateY(28deg) translateY(0px); filter: brightness(0.9); }
+    75%  { transform: rotateY(0deg) translateY(-6px); filter: brightness(1.1); }
+    100% { transform: rotateY(-28deg) translateY(0px); filter: brightness(0.9); }
   }
-  .animate-spin-y { animation: spin-y-360 8s linear infinite; transform-style: preserve-3d; backface-visibility: visible; }
+  .animate-holo-turn { animation: holo-turn 6s ease-in-out infinite; transform-style: preserve-3d; }
 }
