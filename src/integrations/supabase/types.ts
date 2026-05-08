@@ -2002,6 +2002,7 @@ export type Database = {
           id: string
           login_video_url: string | null
           logo_url: string | null
+          music_url: string | null
           nome: string
           owner_user_id: string | null
           permite_aula_avulsa: boolean | null
@@ -2027,6 +2028,7 @@ export type Database = {
           id?: string
           login_video_url?: string | null
           logo_url?: string | null
+          music_url?: string | null
           nome: string
           owner_user_id?: string | null
           permite_aula_avulsa?: boolean | null
@@ -2052,6 +2054,7 @@ export type Database = {
           id?: string
           login_video_url?: string | null
           logo_url?: string | null
+          music_url?: string | null
           nome?: string
           owner_user_id?: string | null
           permite_aula_avulsa?: boolean | null

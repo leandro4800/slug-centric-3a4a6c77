@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useBranding, type ThemeOverrides } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { PhonePreview } from "./PhonePreview";
 import { Button } from "@/components/ui/button";
-import { Loader2, RotateCcw, Save, Check } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Loader2, RotateCcw, Save, Check, Music } from "lucide-react";
 import { toast } from "sonner";
 
 type Preset = {
@@ -181,8 +182,26 @@ export const IdentidadeVisual = () => {
   const { tenant, refresh, applyPreview, clearPreview } = useBranding();
   const [selected, setSelected] = useState<Preset | null>(null);
   const [busy, setBusy] = useState(false);
+  const [musicUrl, setMusicUrl] = useState<string>("");
+  const [savingMusic, setSavingMusic] = useState(false);
+
+  useEffect(() => {
+    setMusicUrl((tenant as any)?.music_url ?? "");
+  }, [tenant?.id, (tenant as any)?.music_url]);
 
   if (!tenant) return null;
+
+  const saveMusic = async () => {
+    setSavingMusic(true);
+    const { error } = await supabase
+      .from("tenants")
+      .update({ music_url: musicUrl.trim() || null })
+      .eq("id", tenant.id);
+    setSavingMusic(false);
+    if (error) return toast.error(error.message);
+    toast.success(musicUrl.trim() ? "Música de fundo salva!" : "Música removida");
+    await refresh();
+  };
 
   const handlePick = (p: Preset) => {
     setSelected(p);
@@ -301,6 +320,27 @@ export const IdentidadeVisual = () => {
                 </button>
               );
             })}
+          </div>
+        </div>
+
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
+          <div className="flex items-center gap-2">
+            <Music className="h-4 w-4 text-primary" />
+            <h3 className="font-display text-base">MÚSICA DE FUNDO DO PERFIL</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Cole o link de uma música do <strong>YouTube</strong>, <strong>Spotify</strong>, <strong>SoundCloud</strong> ou arquivo direto (.mp3). Ela tocará quando o aluno abrir a tela Perfil.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="https://youtu.be/... ou https://open.spotify.com/track/..."
+              value={musicUrl}
+              onChange={(e) => setMusicUrl(e.target.value)}
+              className="bg-secondary/50"
+            />
+            <Button onClick={saveMusic} disabled={savingMusic} className="bg-gradient-primary shadow-glow">
+              {savingMusic ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Save className="h-3 w-3 mr-1" /> Salvar</>}
+            </Button>
           </div>
         </div>
 

@@ -32,6 +32,7 @@ export interface Tenant {
   preco_aula_avulsa: number | null;
   login_video_url: string | null;
   splash_video_url: string | null;
+  music_url: string | null;
 }
 
 interface BrandingContextValue {
@@ -132,7 +133,7 @@ export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl
 };
 
 const TENANT_PUBLIC_COLUMNS =
-  "id, slug, nome, tagline, logo_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, login_video_url, splash_video_url";
+  "id, slug, nome, tagline, logo_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, login_video_url, splash_video_url, music_url";
 
 // O cache local foi desativado para garantir que o tema venha sempre do Supabase
 const readCache = (slug: string) => {
