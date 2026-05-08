@@ -197,14 +197,17 @@ const Landing = () => {
   // - qualquer outro domínio do app (alpha-coach.app, www, lovable.app, preview)
   //   -> "/" não é landing, manda pro /login (que joga pro app se tiver sessão).
   // Também cobre PWA já instalado no domínio do app (display-mode: standalone).
+  // Roteamento:
+  // - /site  -> mostra a landing institucional (marketing)
+  // - /      -> redireciona pro /login (que joga pro app se tiver sessão)
+  // Cobre também PWA instalado (display-mode: standalone).
   useEffect(() => {
-    const host = window.location.hostname;
-    const isMarketingHost = host.startsWith("site.");
+    const isMarketingPath = window.location.pathname.startsWith("/site");
     const isStandalone =
       window.matchMedia?.("(display-mode: standalone)").matches ||
       (window.navigator as any).standalone === true ||
       new URLSearchParams(window.location.search).get("pwa") === "1";
-    if (!isMarketingHost || isStandalone) {
+    if (!isMarketingPath || isStandalone) {
       navigate("/login", { replace: true });
     }
   }, [navigate]);
