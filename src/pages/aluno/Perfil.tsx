@@ -498,6 +498,43 @@ const Perfil = () => {
           </form>
         </DialogContent>
       </Dialog>
+      {/* Adjust photo position dialog */}
+      <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajustar foto</DialogTitle>
+            <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative w-full h-64 rounded-xl overflow-hidden border border-border bg-muted">
+              <img
+                src={profile?.avatar_url || hero}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: `center ${imgPosY}%` }}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
+                <span>Topo</span>
+                <span>Posição: {imgPosY}%</span>
+                <span>Base</span>
+              </div>
+              <Slider
+                value={[imgPosY]}
+                min={0}
+                max={100}
+                step={1}
+                onValueChange={(v) => setImgPosY(v[0])}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
+            <Button variant="default" onClick={() => { setAdjustOpen(false); toast.success("Foto ajustada!"); }}>Concluir</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
