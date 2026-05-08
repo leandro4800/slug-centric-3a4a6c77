@@ -156,7 +156,9 @@ const App = () => (
               <Route path="perfil" element={<Perfil />} />
               <Route path="anamnese" element={<Anamnese />} />
               <Route path="controle" element={<ControleCentral />} />
+              <Route path="carta" element={<Carta />} />
             </Route>
+
 
             {/* Painel do coach */}
             <Route path="/:slug/admin" element={<SlugRedirect to="app" />} />
