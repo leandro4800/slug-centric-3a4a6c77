@@ -62,6 +62,7 @@ export default function AdminCoaches() {
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "other">("all");
   const [selected, setSelected] = useState<PendingTenant | null>(null);
   const [seeding, setSeeding] = useState<string | null>(null);
+  const [mySlug, setMySlug] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoading) return;
