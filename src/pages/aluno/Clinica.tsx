@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { Stethoscope, Upload, FlaskConical, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
-import heroDefault from "@/assets/hero-default.jpg";
+import heroDefault from "@/assets/clinica-hero-default.jpg";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
