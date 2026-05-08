@@ -160,7 +160,22 @@ const Perfil = () => {
         .getPublicUrl(filePath);
 
       setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
-      toast.success("Foto carregada com sucesso!");
+
+      // Persistir imediatamente no banco para garantir que a foto seja salva
+      const { error: updateError } = await supabase.from("perfis").upsert({
+        id: user.id,
+        email: user.email,
+        avatar_url: publicUrl,
+        tenant_id: profile?.tenant_id || tenant?.id,
+        updated_at: new Date().toISOString(),
+      } as any);
+      if (updateError) {
+        console.error("Erro ao salvar avatar:", updateError);
+        toast.error("Foto carregada, mas falhou ao salvar: " + updateError.message);
+      } else {
+        setProfile((prev: any) => ({ ...(prev || {}), avatar_url: publicUrl }));
+        toast.success("Foto salva com sucesso!");
+      }
     } catch (error: any) {
       console.error("Erro no upload:", error);
       toast.error("Erro ao carregar imagem: " + error.message);
