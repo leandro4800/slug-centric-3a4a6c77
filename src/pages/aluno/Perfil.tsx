@@ -132,26 +132,45 @@ const Perfil = () => {
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+    const original = e.target.files?.[0];
+    if (!original || !user) return;
 
-    if (!file.type.startsWith('image/')) {
+    let file: File | Blob = original;
+    let fileExt = (original.name.split('.').pop() || 'jpg').toLowerCase();
+
+    const isHeic = /heic|heif/i.test(original.type) || /\.(heic|heif)$/i.test(original.name);
+
+    if (!isHeic && !original.type.startsWith('image/')) {
       return toast.error("Por favor, selecione uma imagem.");
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      return toast.error("A imagem deve ter no máximo 2MB.");
+    if (original.size > 8 * 1024 * 1024) {
+      return toast.error("A imagem deve ter no máximo 8MB.");
     }
 
     try {
       setUploading(true);
-      const fileExt = file.name.split('.').pop();
+
+      if (isHeic) {
+        try {
+          const heic2any = (await import('heic2any')).default;
+          const converted = await heic2any({ blob: original, toType: 'image/jpeg', quality: 0.9 });
+          file = Array.isArray(converted) ? converted[0] : converted;
+          fileExt = 'jpg';
+        } catch (err) {
+          console.error('Erro convertendo HEIC:', err);
+          toast.error("Não foi possível converter a foto HEIC. Tente enviar como JPG ou PNG.");
+          setUploading(false);
+          return;
+        }
+      }
+
       const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file);
+        .upload(filePath, file, { contentType: isHeic ? 'image/jpeg' : (original.type || undefined) });
 
       if (uploadError) throw uploadError;
 
