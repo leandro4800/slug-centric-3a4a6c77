@@ -115,10 +115,10 @@ const Clinica = () => {
         onChange={handleFileChange}
       />
 
-      <div className="relative h-56">
-        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/70 to-background/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-transparent to-background/40" />
+      <div className="relative h-[460px] min-h-[58vh]">
+        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/30" />
         <div className="absolute bottom-5 left-5 right-5">
           <p className="text-[11px] text-primary font-bold tracking-[0.25em] uppercase drop-shadow-lg">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
           <h1 className="font-display text-4xl mt-1.5 leading-[0.95] drop-shadow-2xl">CENTRO DE ANÁLISE<br />METABÓLICA</h1>
