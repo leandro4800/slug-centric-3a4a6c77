@@ -15,7 +15,6 @@ const Clinica = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
-  const hero = tenant?.hero_url || heroDefault;
 
   // Fetch past analyses
   const { data: analyses, isLoading: isLoadingAnalyses } = useQuery({
@@ -115,8 +114,9 @@ const Clinica = () => {
         onChange={handleFileChange}
       />
 
-      <div className="relative h-[460px] min-h-[58vh] overflow-hidden">
-        <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+      <div className="relative h-[460px] min-h-[58vh] overflow-hidden bg-gradient-to-b from-background via-[hsl(0_0%_4%)] to-background">
+        {/* Fundo travado: scan de anéis sólidos. Não usa hero do tenant para não trocar com a foto de perfil. */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(34,211,238,0.08)_0%,_transparent_60%)]" />
 
         {/* Rotating tech rings overlay */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
