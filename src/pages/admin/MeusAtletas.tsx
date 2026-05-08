@@ -54,6 +54,20 @@ const MeusAtletas = () => {
   const [pregunta, setPregunta] = useState("");
   const [resposta, setResposta] = useState("");
   const [isAsking, setIsAsking] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin");
+      setIsSuperAdmin((data?.length ?? 0) > 0);
+    })();
+  }, []);
 
   useEffect(() => {
     if (tenant) {
@@ -161,8 +175,22 @@ const MeusAtletas = () => {
         </div>
       </header>
 
+      {/* Tabs Coaches/Atletas */}
+      {isSuperAdmin && (
+        <div className="px-5 pt-3 pb-2 flex gap-2 border-b border-white/5">
+          <Link to="/admin/coaches">
+            <button className="text-xs uppercase tracking-widest px-4 py-2 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors">
+              Coaches
+            </button>
+          </Link>
+          <button className="text-xs uppercase tracking-widest px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold">
+            Atletas
+          </button>
+        </div>
+      )}
+
       {/* Search */}
-      <div className="px-5 pb-4">
+      <div className="px-5 pt-4 pb-4">
         <div className="relative">
           <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
