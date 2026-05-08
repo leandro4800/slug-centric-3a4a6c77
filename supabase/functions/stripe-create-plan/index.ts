@@ -26,16 +26,26 @@ Deno.serve(async (req) => {
     );
 
     const authHeader = req.headers.get("Authorization");
-    const { data: claimsRes } = await supabase.auth.getClaims(authHeader!.replace("Bearer ", ""));
-    if (!claimsRes?.claims) throw new Error("unauthorized");
-    const userId = claimsRes.claims.sub as string;
+    if (!authHeader) throw new Error("missing authorization header");
+    const token = authHeader.replace("Bearer ", "");
+    const { data: userRes, error: userErr } = await supabase.auth.getUser(token);
+    if (userErr || !userRes?.user) {
+      console.error("auth error", userErr);
+      throw new Error("unauthorized");
+    }
+    const userId = userRes.user.id;
 
     const { plano_id } = await req.json();
-    const { data: plano } = await supabase
+    console.log("create-plan request", { plano_id, userId });
+    const { data: plano, error: planoErr } = await supabase
       .from("planos")
       .select("*, tenants!inner(id,nome,owner_user_id,stripe_account_id)")
       .eq("id", plano_id)
       .maybeSingle();
+    if (planoErr) {
+      console.error("plano fetch error", planoErr);
+      throw new Error(`plano fetch: ${planoErr.message}`);
+    }
     if (!plano) throw new Error("plano not found");
     // @ts-ignore
     if (plano.tenants.owner_user_id !== userId) throw new Error("not owner");
