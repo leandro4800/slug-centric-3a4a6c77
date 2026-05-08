@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
     console.log("create-plan request", { plano_id, userId });
     const { data: plano, error: planoErr } = await supabase
       .from("planos")
-      .select("*, tenants!inner(id,nome,owner_user_id,stripe_account_id)")
+      .select("*, tenants!inner(id,nome,owner_user_id)")
       .eq("id", plano_id)
       .maybeSingle();
     if (planoErr) {
