@@ -114,7 +114,7 @@ const AlunoHome = () => {
   const buildEmbed = (v: VlogPost): string | null => {
     const u = v.url;
     const yt = extractYouTubeId(u);
-    if (yt) return `https://www.youtube.com/embed/${yt}?autoplay=1&rel=0&modestbranding=1&playsinline=1`;
+    if (yt) return `https://www.youtube.com/embed/${yt}?autoplay=1&mute=1&loop=1&playlist=${yt}&controls=0&rel=0&modestbranding=1&playsinline=1`;
     if (u.includes("instagram.com")) {
       // Normaliza: /reels/ → /reel/, remove query, garante trailing slash, usa /embed/captioned/
       let clean = u.split("?")[0].split("#")[0];
