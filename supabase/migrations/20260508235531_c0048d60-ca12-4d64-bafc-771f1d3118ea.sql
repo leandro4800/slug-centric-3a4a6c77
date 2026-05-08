@@ -1,0 +1,1 @@
+UPDATE public.perfis SET avatar_url = NULL WHERE id = '0388f418-2279-4b7e-81e2-e6df66b1a2fa';
