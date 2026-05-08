@@ -240,7 +240,7 @@ const Perfil = () => {
   return (
     <>
       {/* Hero estilo Netflix */}
-      <section className="relative h-[88vh] min-h-[680px] -mt-0">
+      <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img src={profile?.avatar_url || hero} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent" />
