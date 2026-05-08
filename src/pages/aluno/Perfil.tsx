@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useParams } from "react-router-dom";
@@ -20,7 +20,7 @@ const Perfil = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
   const { tenant } = useBranding();
-  const hero = tenant?.hero_url || heroDefault;
+  const hero = heroDefault;
 
   // Profile data
   const [profile, setProfile] = useState<any>(null);
@@ -55,6 +55,7 @@ const Perfil = () => {
     data_nascimento: "",
     sexo: "M" as "M" | "F",
     avatar_url: "",
+    music_url: "",
   });
 
   // Evaluation form
@@ -88,6 +89,7 @@ const Perfil = () => {
           data_nascimento: p.data_nascimento || "",
           sexo: p.sexo as "M" | "F" || "M",
           avatar_url: p.avatar_url || "",
+          music_url: p.music_url || "",
         });
       }
       if (e) {
@@ -249,7 +251,7 @@ const Perfil = () => {
 
   return (
     <>
-      <ProfileMusicPlayer url={tenant?.music_url} />
+      <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img
@@ -426,6 +428,22 @@ const Perfil = () => {
                   <SelectItem value="F">Feminino</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="music">Minha Música de Perfil (YouTube ou MP3)</Label>
+              <div className="relative">
+                <Input 
+                  id="music" 
+                  value={formProfile.music_url} 
+                  onChange={(e) => setFormProfile({...formProfile, music_url: e.target.value})} 
+                  placeholder="Link do YouTube ou MP3" 
+                  className="pl-9"
+                />
+                <Music className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              </div>
+              <p className="text-[10px] text-muted-foreground mt-1 uppercase tracking-widest">
+                Esta música tocará quando você abrir seu perfil.
+              </p>
             </div>
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setProfileOpen(false)}>Cancelar</Button>
