@@ -32,6 +32,7 @@ export interface Tenant {
   preco_aula_avulsa: number | null;
   login_video_url: string | null;
   splash_video_url: string | null;
+  music_url: string | null;
 }
 
 interface BrandingContextValue {
