@@ -824,6 +824,60 @@ export type Database = {
           },
         ]
       }
+      cartas_atleta: {
+        Row: {
+          aluno_id: string
+          atributos: Json
+          avatar_carta_url: string | null
+          bio: string | null
+          conquistas: Json | null
+          created_at: string
+          estilo_dominante: string | null
+          estilo_secundario: string | null
+          foto_original_url: string | null
+          id: string
+          nivel: number
+          numero: number
+          posicao: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          atributos?: Json
+          avatar_carta_url?: string | null
+          bio?: string | null
+          conquistas?: Json | null
+          created_at?: string
+          estilo_dominante?: string | null
+          estilo_secundario?: string | null
+          foto_original_url?: string | null
+          id?: string
+          nivel?: number
+          numero?: number
+          posicao?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          atributos?: Json
+          avatar_carta_url?: string | null
+          bio?: string | null
+          conquistas?: Json | null
+          created_at?: string
+          estilo_dominante?: string | null
+          estilo_secundario?: string | null
+          foto_original_url?: string | null
+          id?: string
+          nivel?: number
+          numero?: number
+          posicao?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       comunidade_comentarios: {
         Row: {
           comentario: string

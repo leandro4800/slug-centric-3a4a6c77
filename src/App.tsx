@@ -38,6 +38,8 @@ import AdminMontarTreino from "./pages/admin/AdminMontarTreino";
 import AdminMontarDieta from "./pages/admin/AdminMontarDieta";
 import MeusAtletas from "./pages/admin/MeusAtletas";
 import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
+import AtletaCarta from "./pages/admin/AtletaCarta";
+import Carta from "./pages/aluno/Carta";
 import AdminCoaches from "./pages/admin/AdminCoaches";
 import AdminPlanos from "./pages/admin/AdminPlanos";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
@@ -154,7 +156,9 @@ const App = () => (
               <Route path="perfil" element={<Perfil />} />
               <Route path="anamnese" element={<Anamnese />} />
               <Route path="controle" element={<ControleCentral />} />
+              <Route path="carta" element={<Carta />} />
             </Route>
+
 
             {/* Painel do coach */}
             <Route path="/:slug/admin" element={<SlugRedirect to="app" />} />
@@ -164,6 +168,7 @@ const App = () => (
             <Route path="/:slug/admin/montar-treino" element={<RequireAuth><AdminMontarTreino /></RequireAuth>} />
             <Route path="/:slug/admin/montar-dieta" element={<RequireAuth><AdminMontarDieta /></RequireAuth>} />
             <Route path="/:slug/admin/atleta/:atletaId" element={<RequireAuth><AtletaDetalhe /></RequireAuth>} />
+            <Route path="/:slug/admin/atleta/:atletaId/carta" element={<RequireAuth><AtletaCarta /></RequireAuth>} />
             <Route path="/:slug/admin/planos" element={<RequireAuth><AdminPlanos /></RequireAuth>} />
             <Route path="/:slug/admin/faturamento" element={<RequireAuth><AdminFaturamento /></RequireAuth>} />
             <Route path="/:slug/admin/base-conhecimento" element={<RequireAuth><AdminBaseConhecimento /></RequireAuth>} />
