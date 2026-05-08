@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
+import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
 
 const Perfil = () => {
   const { user, signOut } = useAuth();
