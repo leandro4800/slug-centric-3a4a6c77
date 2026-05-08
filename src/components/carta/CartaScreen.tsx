@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft } from "lucide-react";
 import { AthleteCard, type CartaData, type AtributosCarta } from "./AthleteCard";
+import { PainelEvolucao } from "./PainelEvolucao";
 
 const ATR_FIELDS: Array<{ key: keyof AtributosCarta; label: string }> = [
   { key: "forca", label: "Força" },
@@ -324,6 +325,18 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Painel 360° de evolução — visível para coach e atleta */}
+      <div className="max-w-6xl mx-auto mt-10">
+        <div className="fut-divider mb-6" />
+        <h2 className="font-display-fut text-xl uppercase tracking-widest fut-text-glow mb-1">
+          Painel 360° • Evolução do atleta
+        </h2>
+        <p className="font-body-fut text-sm text-muted-foreground mb-6">
+          Histórico completo de medidas, treinos, exames e anamnese — sincronizado em tempo real entre coach e atleta.
+        </p>
+        <PainelEvolucao alunoId={alunoId} />
       </div>
     </div>
   );
