@@ -380,23 +380,6 @@ const MeusAtletas = () => {
                   <Settings className="h-4 w-4" /> Painel completo
                 </Button>
               </Link>
-              {alunos.length > 0 && (
-                <Link to={`/${slug}/admin/montar-treino`}>
-                  <Button variant="outline" className="w-full gap-2 border-primary/40">
-                    <Sparkles className="h-4 w-4" /> Montar treino IA
-                  </Button>
-                </Link>
-              )}
-              <Link to={`/${slug}/admin/planos`}>
-                <Button variant="outline" className="w-full gap-2 border-primary/40">
-                  <DollarSign className="h-4 w-4" /> Planos
-                </Button>
-              </Link>
-              <Link to={`/${slug}/admin/faturamento`}>
-                <Button variant="outline" className="w-full gap-2 border-primary/40">
-                  <Wallet className="h-4 w-4" /> Faturamento
-                </Button>
-              </Link>
             </div>
             <Link to={`/${slug}/app`}>
               <Button variant="outline" className="w-full gap-2 border-primary/40">
