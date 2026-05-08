@@ -182,8 +182,26 @@ export const IdentidadeVisual = () => {
   const { tenant, refresh, applyPreview, clearPreview } = useBranding();
   const [selected, setSelected] = useState<Preset | null>(null);
   const [busy, setBusy] = useState(false);
+  const [musicUrl, setMusicUrl] = useState<string>("");
+  const [savingMusic, setSavingMusic] = useState(false);
+
+  useEffect(() => {
+    setMusicUrl((tenant as any)?.music_url ?? "");
+  }, [tenant?.id, (tenant as any)?.music_url]);
 
   if (!tenant) return null;
+
+  const saveMusic = async () => {
+    setSavingMusic(true);
+    const { error } = await supabase
+      .from("tenants")
+      .update({ music_url: musicUrl.trim() || null })
+      .eq("id", tenant.id);
+    setSavingMusic(false);
+    if (error) return toast.error(error.message);
+    toast.success(musicUrl.trim() ? "Música de fundo salva!" : "Música removida");
+    await refresh();
+  };
 
   const handlePick = (p: Preset) => {
     setSelected(p);
