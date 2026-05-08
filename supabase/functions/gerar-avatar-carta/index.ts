@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
       ? "vestindo legging preta justa e top fitness preto"
       : "vestindo bermuda de treino preta e camisa preta justa";
 
-    const prompt = `Gere um avatar 3D realista estilo EA FC / FIFA Ultimate Team da pessoa nesta foto, mantendo fielmente o rosto, traços e tom de pele. A pessoa deve estar ${uniforme}, em pose atlética de musculação, fundo neutro escuro com leve glow ciano-verde estilo cyber. Iluminação cinematográfica, qualidade AAA PS5, foco no torso e cabeça, enquadramento vertical 3:4.`;
+    const prompt = `Gere um avatar 3D realista de CORPO INTEIRO estilo EA FC / FIFA Ultimate Team da pessoa nesta foto, mantendo fielmente o rosto, traços e tom de pele. A pessoa deve estar ${uniforme}, em pose atlética de musculação em pé, mostrando da cabeça aos pés. Fundo neutro escuro com leve glow dourado/prata cinematográfico. Iluminação AAA PS5, enquadramento vertical 3:5, corpo inteiro centralizado, sem cortes nas pernas ou cabeça.`;
 
     const aiResp = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",

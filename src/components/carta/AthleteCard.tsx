@@ -40,7 +40,8 @@ const ratingColor = (n: number) => {
 };
 
 export const AthleteCard = ({ carta }: { carta: CartaData }) => {
-  const avatar = carta.avatar_carta_url || carta.foto_original_url;
+  // Carta sempre exibe a foto real do atleta (não o avatar IA)
+  const avatar = carta.foto_original_url || carta.avatar_carta_url;
   return (
     <motion.div
       initial={{ opacity: 0, y: 20, rotateY: -8 }}

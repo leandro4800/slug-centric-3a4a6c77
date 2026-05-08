@@ -271,44 +271,41 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
                 A IA gera uma réplica 3D estilo EA FC mantendo seu rosto, com uniforme preto padrão.
               </p>
 
-              {/* Preview da foto enviada e do avatar gerado */}
-              <div className="grid grid-cols-2 gap-3 pt-3">
-                <div className="space-y-2">
-                  <span className="font-gaming text-[10px] tracking-widest text-muted-foreground uppercase">
-                    Foto enviada
-                  </span>
-                  <div className="aspect-[3/4] rounded-md overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
-                    {view.foto_original_url ? (
-                      <img
-                        src={view.foto_original_url}
-                        alt="Foto original"
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-xs text-muted-foreground px-2 text-center">
-                        Nenhuma foto enviada
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <span className="font-gaming text-[10px] tracking-widest text-muted-foreground uppercase">
-                    Avatar IA
-                  </span>
-                  <div className="aspect-[3/4] rounded-md overflow-hidden border border-[hsl(42_70%_62%/0.4)] bg-black/40 flex items-center justify-center fut-gold-glow">
-                    {view.avatar_carta_url ? (
+              {/* Avatar IA gerado — corpo inteiro, com animação ao tocar */}
+              <div className="pt-3">
+                <span className="font-gaming text-[10px] tracking-widest text-muted-foreground uppercase">
+                  Avatar IA — corpo inteiro
+                </span>
+                <motion.div
+                  whileTap={{ scale: 0.96, rotate: -1 }}
+                  whileHover={{ scale: 1.02, rotateY: 4 }}
+                  animate={
+                    view.avatar_carta_url
+                      ? { y: [0, -6, 0] }
+                      : { y: 0 }
+                  }
+                  transition={{
+                    y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+                    scale: { type: "spring", stiffness: 300, damping: 20 },
+                  }}
+                  className="mt-2 aspect-[3/5] max-w-[260px] rounded-lg overflow-hidden border border-[hsl(42_70%_62%/0.4)] bg-gradient-to-b from-black/60 to-black/90 flex items-center justify-center fut-gold-glow cursor-pointer relative"
+                  style={{ transformStyle: "preserve-3d" }}
+                >
+                  {view.avatar_carta_url ? (
+                    <>
                       <img
                         src={view.avatar_carta_url}
-                        alt="Avatar gerado por IA"
-                        className="w-full h-full object-cover"
+                        alt="Avatar IA corpo inteiro"
+                        className="w-full h-full object-contain drop-shadow-[0_8px_30px_hsla(42_70%_62%_/_0.5)]"
                       />
-                    ) : (
-                      <span className="text-xs text-muted-foreground px-2 text-center">
-                        Gere o avatar IA
-                      </span>
-                    )}
-                  </div>
-                </div>
+                      <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground px-4 text-center">
+                      Envie uma foto e gere o avatar IA
+                    </span>
+                  )}
+                </motion.div>
               </div>
             </div>
           )}
