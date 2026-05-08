@@ -102,7 +102,7 @@ export default function AdminCoaches() {
           .eq("id", tenant.owner_user_id)
           .maybeSingle();
         if (ownerPerfil?.email) {
-          await supabase.functions.invoke("send-transactional-email", {
+          const { error: mailErr } = await supabase.functions.invoke("send-transactional-email", {
             body: {
               templateName: "coach-approved",
               recipientEmail: ownerPerfil.email,
@@ -113,7 +113,11 @@ export default function AdminCoaches() {
               },
             },
           });
-          toast({ title: "E-mail de aprovação enviado" });
+          if (mailErr) {
+            console.warn("E-mail de aprovação não enviado (infra de e-mail não configurada):", mailErr.message);
+          } else {
+            toast({ title: "E-mail de aprovação enviado" });
+          }
         }
       } catch (e) {
         console.error("Failed to send approval email", e);
