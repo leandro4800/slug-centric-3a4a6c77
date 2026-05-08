@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft } from "lucide-react";
 import { AthleteCard, type CartaData, type AtributosCarta } from "./AthleteCard";
+import { HolographicCard } from "./HolographicCard";
 import { PainelEvolucao } from "./PainelEvolucao";
 
 const ATR_FIELDS: Array<{ key: keyof AtributosCarta; label: string }> = [
@@ -211,7 +212,9 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
           className="lg:col-span-5 flex justify-center"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         >
-          <AthleteCard carta={view} />
+          <HolographicCard hue="0 85% 50%">
+            <AthleteCard carta={view} />
+          </HolographicCard>
         </motion.div>
 
         {/* Painel de info / edição */}

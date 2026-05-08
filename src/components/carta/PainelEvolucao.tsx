@@ -121,16 +121,36 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
     return Math.floor((Date.now() - last.getTime()) / (1000 * 60 * 60 * 24));
   })();
 
-  // Top 5 exercícios por carga máxima recente
-  const cargasMap = new Map<string, { max: number; ultima: number; data: string }>();
-  for (const c of cargas) {
-    const cur = cargasMap.get(c.exercicio_nome);
-    if (!cur) cargasMap.set(c.exercicio_nome, { max: c.carga_kg, ultima: c.carga_kg, data: c.data_treino });
-    else if (c.carga_kg > cur.max) cargasMap.set(c.exercicio_nome, { ...cur, max: c.carga_kg });
+  // Progressão completa de cargas por exercício (ordenada cronologicamente)
+  const cargasPorExercicio = new Map<
+    string,
+    { data: string; carga: number }[]
+  >();
+  // copia + ordena ASC
+  const cargasAsc = [...cargas].sort(
+    (a, b) => new Date(a.data_treino).getTime() - new Date(b.data_treino).getTime()
+  );
+  for (const c of cargasAsc) {
+    const arr = cargasPorExercicio.get(c.exercicio_nome) ?? [];
+    arr.push({ data: c.data_treino, carga: c.carga_kg });
+    cargasPorExercicio.set(c.exercicio_nome, arr);
   }
-  const topCargas = Array.from(cargasMap.entries())
-    .sort((a, b) => b[1].max - a[1].max)
-    .slice(0, 5);
+  const exerciciosProgressao = Array.from(cargasPorExercicio.entries())
+    .map(([nome, pontos]) => {
+      const max = Math.max(...pontos.map((p) => p.carga));
+      const inicial = pontos[0].carga;
+      const atual = pontos[pontos.length - 1].carga;
+      return {
+        nome,
+        pontos,
+        max,
+        inicial,
+        atual,
+        delta: atual - inicial,
+        registros: pontos.length,
+      };
+    })
+    .sort((a, b) => b.max - a.max);
 
   if (loading) {
     return (
@@ -206,21 +226,86 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
         )}
       </div>
 
-      {/* Top cargas */}
+      {/* Progressão de cargas — todos os exercícios */}
       <div className="fut-glass p-5">
         <h3 className="font-gaming text-xs tracking-widest uppercase text-muted-foreground mb-4 flex items-center gap-2">
-          <Dumbbell className="w-4 h-4" /> Cargas máximas
+          <Dumbbell className="w-4 h-4" /> Progressão de cargas
+          <span className="ml-auto text-[10px] normal-case tracking-normal text-muted-foreground/70">
+            {exerciciosProgressao.length} exercícios
+          </span>
         </h3>
-        {topCargas.length === 0 ? (
+        {exerciciosProgressao.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-6">
             Sem registros de carga ainda.
           </p>
         ) : (
-          <div className="space-y-2">
-            {topCargas.map(([nome, info]) => (
-              <div key={nome} className="flex items-center justify-between border-b border-white/5 pb-2 last:border-0">
-                <span className="font-body-fut text-sm">{nome}</span>
-                <span className="font-display-fut text-lg fut-gold">{info.max} <span className="text-xs text-muted-foreground">kg</span></span>
+          <div className="space-y-4 max-h-[520px] overflow-y-auto pr-1">
+            {exerciciosProgressao.map((ex) => (
+              <div
+                key={ex.nome}
+                className="border border-white/5 rounded-md p-3 bg-black/20"
+              >
+                <div className="flex items-baseline justify-between gap-3 mb-2">
+                  <span className="font-body-fut text-sm truncate">{ex.nome}</span>
+                  <div className="flex items-baseline gap-3 shrink-0">
+                    <span className="font-display-fut text-lg fut-gold">
+                      {ex.atual}
+                      <span className="text-xs text-muted-foreground"> kg</span>
+                    </span>
+                    <span
+                      className={`flex items-center gap-1 text-xs font-gaming ${
+                        ex.delta < 0
+                          ? "text-[hsl(0_70%_60%)]"
+                          : ex.delta > 0
+                          ? "text-[hsl(140_50%_60%)]"
+                          : "text-muted-foreground"
+                      }`}
+                    >
+                      {ex.delta > 0 ? (
+                        <TrendingUp className="w-3 h-3" />
+                      ) : ex.delta < 0 ? (
+                        <TrendingDown className="w-3 h-3" />
+                      ) : null}
+                      {ex.delta > 0 ? "+" : ""}
+                      {ex.delta} kg
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="text-[10px] text-muted-foreground font-gaming uppercase tracking-widest shrink-0">
+                    <div>Inicial {ex.inicial}kg</div>
+                    <div>Máx {ex.max}kg</div>
+                    <div>{ex.registros} reg.</div>
+                  </div>
+                  <div className="flex-1 h-16">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart
+                        data={ex.pontos.map((p) => ({
+                          d: fmtDate(p.data),
+                          carga: p.carga,
+                        }))}
+                      >
+                        <XAxis dataKey="d" hide />
+                        <YAxis hide domain={["dataMin - 2", "dataMax + 2"]} />
+                        <Tooltip
+                          contentStyle={{
+                            background: "hsl(0 0% 6%)",
+                            border: "1px solid hsl(0 0% 20%)",
+                            fontSize: 11,
+                          }}
+                          formatter={(v: number) => [`${v} kg`, "Carga"]}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="carga"
+                          stroke="hsl(42 70% 62%)"
+                          strokeWidth={2}
+                          dot={{ r: 2 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
