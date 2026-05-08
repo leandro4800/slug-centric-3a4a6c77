@@ -192,6 +192,20 @@ const Landing = () => {
 
   const formatBRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
+  // Se o app foi aberto a partir do ícone na tela de início (PWA standalone),
+  // pula a landing institucional e manda para /login (que redireciona para o
+  // app do coach/aluno se já houver sessão ativa).
+  useEffect(() => {
+    const isStandalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      // iOS Safari
+      (window.navigator as any).standalone === true ||
+      new URLSearchParams(window.location.search).get("pwa") === "1";
+    if (isStandalone) {
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
+
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
