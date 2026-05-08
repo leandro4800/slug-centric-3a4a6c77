@@ -212,7 +212,9 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
           className="lg:col-span-5 flex justify-center"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         >
-          <AthleteCard carta={view} />
+          <HolographicCard hue="0 85% 50%">
+            <AthleteCard carta={view} />
+          </HolographicCard>
         </motion.div>
 
         {/* Painel de info / edição */}
