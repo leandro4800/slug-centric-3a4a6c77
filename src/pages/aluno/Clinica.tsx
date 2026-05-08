@@ -140,14 +140,16 @@ const Clinica = () => {
             style={{ boxShadow: "0 0 30px rgba(34,211,238,0.5)" }}
           />
           <div className="absolute w-[300px] h-[300px] max-w-[70%] max-h-[70%] rounded-full bg-cyan-400/10 animate-pulse" />
-          <img
-            src={scanFigure}
-            alt="Boneco holográfico de scan corporal"
-            width={512}
-            height={896}
-            loading="lazy"
-            className="absolute h-[78%] w-auto object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.7)] animate-pulse"
-          />
+          <div className="absolute h-[78%] flex items-center justify-center" style={{ perspective: "1200px" }}>
+            <img
+              src={scanFigure}
+              alt="Boneco holográfico de scan corporal"
+              width={512}
+              height={896}
+              loading="lazy"
+              className="h-full w-auto object-contain drop-shadow-[0_0_30px_rgba(34,211,238,0.7)] animate-spin-y"
+            />
+          </div>
           <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-300 to-transparent animate-scan shadow-[0_0_16px_4px_rgba(34,211,238,0.8)]" />
         </div>
 
