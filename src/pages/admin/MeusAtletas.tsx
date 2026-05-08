@@ -54,6 +54,20 @@ const MeusAtletas = () => {
   const [pregunta, setPregunta] = useState("");
   const [resposta, setResposta] = useState("");
   const [isAsking, setIsAsking] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin");
+      setIsSuperAdmin((data?.length ?? 0) > 0);
+    })();
+  }, []);
 
   useEffect(() => {
     if (tenant) {
