@@ -86,6 +86,13 @@ export default function AdminCoaches() {
       return;
     }
     setIsAdmin(true);
+    // pega slug do tenant do próprio admin (se tiver) para link "Meus Atletas"
+    const { data: ownTenant } = await supabase
+      .from("tenants")
+      .select("slug")
+      .eq("owner_user_id", user.id)
+      .maybeSingle();
+    if (ownTenant?.slug) setMySlug(ownTenant.slug);
     void load();
   };
 
