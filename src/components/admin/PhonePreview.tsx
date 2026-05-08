@@ -130,7 +130,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                 </div>
 
                 {/* Links úteis */}
-                <div className="px-3 mt-3 space-y-2">
+                <div className="px-3 pt-3 pb-1 space-y-2" style={{ background: "hsl(var(--background))" }}>
                   <HotZone label="Cartões" active={isActive("card")} onClick={pick("card")} className="rounded-xl block w-full">
                     <div className="rounded-xl p-2 flex items-center gap-2" style={{ background: "hsl(var(--card)/0.6)", border: "1px solid hsl(var(--primary)/0.2)" }}>
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.1)", border: "1px solid hsl(var(--primary)/0.2)" }}>
@@ -144,7 +144,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                     </div>
                   </HotZone>
                   <HotZone label="Cartões" active={isActive("card")} onClick={pick("card")} className="rounded-xl block w-full">
-                    <div className="rounded-xl p-2 flex items-center gap-2" style={{ background: "hsl(var(--card)/0.4)", border: "1px solid hsl(var(--border))" }}>
+                    <div className="rounded-xl p-2 flex items-center gap-2" style={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}>
                       <div className="w-7 h-7 rounded-lg" style={{ background: "hsl(var(--card)/0.5)", border: "1px solid hsl(var(--border))" }} />
                       <div className="text-left">
                         <p className="font-display text-[10px] uppercase" style={{ color: "hsl(var(--foreground)/0.8)" }}>Links Úteis</p>
