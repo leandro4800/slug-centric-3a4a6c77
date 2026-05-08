@@ -192,16 +192,19 @@ const Landing = () => {
 
   const formatBRL = (n: number) => n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
 
-  // Se o app foi aberto a partir do ícone na tela de início (PWA standalone),
-  // pula a landing institucional e manda para /login (que redireciona para o
-  // app do coach/aluno se já houver sessão ativa).
+  // Roteamento por hostname:
+  // - site.alpha-coach.app  -> mostra a landing institucional (marketing)
+  // - qualquer outro domínio do app (alpha-coach.app, www, lovable.app, preview)
+  //   -> "/" não é landing, manda pro /login (que joga pro app se tiver sessão).
+  // Também cobre PWA já instalado no domínio do app (display-mode: standalone).
   useEffect(() => {
+    const host = window.location.hostname;
+    const isMarketingHost = host.startsWith("site.");
     const isStandalone =
       window.matchMedia?.("(display-mode: standalone)").matches ||
-      // iOS Safari
       (window.navigator as any).standalone === true ||
       new URLSearchParams(window.location.search).get("pwa") === "1";
-    if (isStandalone) {
+    if (!isMarketingHost || isStandalone) {
       navigate("/login", { replace: true });
     }
   }, [navigate]);
