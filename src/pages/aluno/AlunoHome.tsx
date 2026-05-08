@@ -383,7 +383,7 @@ const AlunoHome = () => {
             onClick={(e) => e.stopPropagation()}
           >
             {(() => {
-              const embed = buildEmbed(playing);
+              const embed = buildEmbed(playing, { muted: false, controls: true });
               if (embed) {
                 return (
                   <iframe
