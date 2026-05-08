@@ -270,6 +270,46 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
               <p className="font-body-fut text-xs text-muted-foreground">
                 A IA gera uma réplica 3D estilo EA FC mantendo seu rosto, com uniforme preto padrão.
               </p>
+
+              {/* Preview da foto enviada e do avatar gerado */}
+              <div className="grid grid-cols-2 gap-3 pt-3">
+                <div className="space-y-2">
+                  <span className="font-gaming text-[10px] tracking-widest text-muted-foreground uppercase">
+                    Foto enviada
+                  </span>
+                  <div className="aspect-[3/4] rounded-md overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
+                    {view.foto_original_url ? (
+                      <img
+                        src={view.foto_original_url}
+                        alt="Foto original"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs text-muted-foreground px-2 text-center">
+                        Nenhuma foto enviada
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <span className="font-gaming text-[10px] tracking-widest text-muted-foreground uppercase">
+                    Avatar IA
+                  </span>
+                  <div className="aspect-[3/4] rounded-md overflow-hidden border border-[hsl(42_70%_62%/0.4)] bg-black/40 flex items-center justify-center fut-gold-glow">
+                    {view.avatar_carta_url ? (
+                      <img
+                        src={view.avatar_carta_url}
+                        alt="Avatar gerado por IA"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-xs text-muted-foreground px-2 text-center">
+                        Gere o avatar IA
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

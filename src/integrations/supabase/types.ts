@@ -2322,6 +2322,10 @@ export type Database = {
           titulo: string
         }[]
       }
+      can_manage_athlete_avatar: {
+        Args: { _athlete_id: string; _caller: string }
+        Returns: boolean
+      }
       current_user_tenant: { Args: never; Returns: string }
       email_is_registered: { Args: { _email: string }; Returns: boolean }
       has_active_subscription_for_tenant: {
