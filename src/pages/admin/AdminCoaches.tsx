@@ -62,6 +62,7 @@ export default function AdminCoaches() {
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "other">("all");
   const [selected, setSelected] = useState<PendingTenant | null>(null);
   const [seeding, setSeeding] = useState<string | null>(null);
+  const [mySlug, setMySlug] = useState<string | null>(null);
 
   useEffect(() => {
     if (isLoading) return;
@@ -85,6 +86,13 @@ export default function AdminCoaches() {
       return;
     }
     setIsAdmin(true);
+    // pega slug do tenant do próprio admin (se tiver) para link "Meus Atletas"
+    const { data: ownTenant } = await supabase
+      .from("tenants")
+      .select("slug")
+      .eq("owner_user_id", user.id)
+      .maybeSingle();
+    if (ownTenant?.slug) setMySlug(ownTenant.slug);
     void load();
   };
 
@@ -203,7 +211,27 @@ export default function AdminCoaches() {
             {filtrados.length} {filtrados.length === 1 ? "coach" : "coaches"}
           </p>
         </div>
+        {mySlug && (
+          <Link to={`/${mySlug}/admin/atletas`}>
+            <Button size="sm" variant="outline" className="border-primary/40 gap-1">
+              <Users className="h-4 w-4" /> Meus Atletas
+            </Button>
+          </Link>
+        )}
       </header>
+
+      <div className="px-5 pt-3 pb-2 flex gap-2 border-b border-white/5">
+        <button className="text-xs uppercase tracking-widest px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold">
+          Coaches
+        </button>
+        {mySlug && (
+          <Link to={`/${mySlug}/admin/atletas`}>
+            <button className="text-xs uppercase tracking-widest px-4 py-2 rounded-full border border-border text-muted-foreground hover:text-foreground transition-colors">
+              Atletas
+            </button>
+          </Link>
+        )}
+      </div>
 
       <div className="px-5 pb-3">
         <div className="relative">
