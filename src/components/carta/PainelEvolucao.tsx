@@ -121,16 +121,36 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
     return Math.floor((Date.now() - last.getTime()) / (1000 * 60 * 60 * 24));
   })();
 
-  // Top 5 exercícios por carga máxima recente
-  const cargasMap = new Map<string, { max: number; ultima: number; data: string }>();
-  for (const c of cargas) {
-    const cur = cargasMap.get(c.exercicio_nome);
-    if (!cur) cargasMap.set(c.exercicio_nome, { max: c.carga_kg, ultima: c.carga_kg, data: c.data_treino });
-    else if (c.carga_kg > cur.max) cargasMap.set(c.exercicio_nome, { ...cur, max: c.carga_kg });
+  // Progressão completa de cargas por exercício (ordenada cronologicamente)
+  const cargasPorExercicio = new Map<
+    string,
+    { data: string; carga: number }[]
+  >();
+  // copia + ordena ASC
+  const cargasAsc = [...cargas].sort(
+    (a, b) => new Date(a.data_treino).getTime() - new Date(b.data_treino).getTime()
+  );
+  for (const c of cargasAsc) {
+    const arr = cargasPorExercicio.get(c.exercicio_nome) ?? [];
+    arr.push({ data: c.data_treino, carga: c.carga_kg });
+    cargasPorExercicio.set(c.exercicio_nome, arr);
   }
-  const topCargas = Array.from(cargasMap.entries())
-    .sort((a, b) => b[1].max - a[1].max)
-    .slice(0, 5);
+  const exerciciosProgressao = Array.from(cargasPorExercicio.entries())
+    .map(([nome, pontos]) => {
+      const max = Math.max(...pontos.map((p) => p.carga));
+      const inicial = pontos[0].carga;
+      const atual = pontos[pontos.length - 1].carga;
+      return {
+        nome,
+        pontos,
+        max,
+        inicial,
+        atual,
+        delta: atual - inicial,
+        registros: pontos.length,
+      };
+    })
+    .sort((a, b) => b.max - a.max);
 
   if (loading) {
     return (
