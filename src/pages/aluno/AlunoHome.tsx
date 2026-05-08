@@ -163,7 +163,7 @@ const AlunoHome = () => {
   return (
     <>
       {/* Hero Content Section */}
-      <section className="relative h-[55vh] min-h-[420px] w-full overflow-hidden flex flex-col justify-end pb-8 px-5">
+      <section className="relative h-[60vh] min-h-[460px] w-full overflow-hidden flex flex-col justify-end pb-2 px-5">
         {/* Background Hero (contido na seção) */}
         <div className="hero-mask">
           {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
@@ -232,7 +232,7 @@ const AlunoHome = () => {
         
         <div className="relative z-10">
           <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "Alpha Coach"}</p>
-          <h1 className="font-display text-5xl text-foreground mb-5 leading-none drop-shadow-lg">
+          <h1 className="font-display text-4xl text-foreground mb-4 leading-none drop-shadow-lg">
             {tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
           </h1>
           <Button
@@ -245,7 +245,7 @@ const AlunoHome = () => {
         </div>
       </section>
 
-      <section className="relative z-20 px-5 pt-8 pb-1 space-y-3 bg-background">
+      <section className="relative z-20 px-5 pt-10 pb-1 mt-4 space-y-3 bg-background">
         <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-card/50 border border-border flex items-center justify-center">
             <TenantSymbol size={28} />
