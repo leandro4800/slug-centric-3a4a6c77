@@ -255,7 +255,7 @@ const Perfil = () => {
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img
-          src={profile?.avatar_url || heroDefault}
+          src={profile?.avatar_url || (isCoach ? tenant?.hero_url : null) || heroDefault}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{ objectPosition: `center ${imgPosY}%` }}
@@ -534,7 +534,7 @@ const Perfil = () => {
           <div className="space-y-4">
             <div className="relative w-full h-64 rounded-xl overflow-hidden border border-border bg-muted">
               <img
-                src={profile?.avatar_url || hero}
+                src={profile?.avatar_url || (isCoach ? tenant?.hero_url : null) || hero}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{ objectPosition: `center ${imgPosY}%` }}
