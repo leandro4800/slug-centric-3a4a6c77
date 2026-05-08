@@ -242,7 +242,7 @@ const Landing = () => {
           name: d.nome,
           specialty: (d.especialidades && d.especialidades.length > 0) ? d.especialidades[0] : (d.tagline || ""),
           bio: d.bio || "",
-          video: d.hero_url || d.foto_url || "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4",
+          video: d.hero_url || d.foto_url || "",
           tag: "VERIFICADO",
           cidade: d.cidade || "",
           estado: d.estado || "",
