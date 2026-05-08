@@ -115,8 +115,29 @@ const Clinica = () => {
         onChange={handleFileChange}
       />
 
-      <div className="relative h-[460px] min-h-[58vh]">
+      <div className="relative h-[460px] min-h-[58vh] overflow-hidden">
         <img src={hero} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+
+        {/* Rotating tech rings overlay (não altera a imagem base) */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div
+            className="w-[520px] h-[520px] max-w-[95%] max-h-[95%] rounded-full border border-dashed border-cyan-300/30 animate-[spin_18s_linear_infinite]"
+            style={{ boxShadow: "0 0 40px rgba(34,211,238,0.15) inset, 0 0 30px rgba(34,211,238,0.15)" }}
+          />
+          <div
+            className="absolute w-[400px] h-[400px] max-w-[80%] max-h-[80%] rounded-full border-2 animate-[spin_28s_linear_infinite_reverse]"
+            style={{
+              borderTopColor: "rgba(34,211,238,0.7)",
+              borderRightColor: "transparent",
+              borderBottomColor: "rgba(34,211,238,0.4)",
+              borderLeftColor: "transparent",
+            }}
+          />
+          <div className="absolute w-[280px] h-[280px] max-w-[65%] max-h-[65%] rounded-full border border-cyan-200/30 animate-[spin_12s_linear_infinite]" />
+          <div className="absolute w-[300px] h-[300px] max-w-[70%] max-h-[70%] rounded-full bg-cyan-400/5 animate-pulse" />
+          <div className="absolute inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-300/70 to-transparent animate-scan shadow-[0_0_12px_2px_rgba(34,211,238,0.6)]" />
+        </div>
+
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/30" />
         <div className="absolute bottom-5 left-5 right-5">
