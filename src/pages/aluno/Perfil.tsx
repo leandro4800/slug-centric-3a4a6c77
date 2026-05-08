@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -37,6 +38,14 @@ const Perfil = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [adjustOpen, setAdjustOpen] = useState(false);
+  const [imgPosY, setImgPosY] = useState<number>(() => {
+    const v = typeof window !== "undefined" ? localStorage.getItem("perfil_img_pos_y") : null;
+    return v ? Number(v) : 20;
+  });
+  useEffect(() => {
+    if (typeof window !== "undefined") localStorage.setItem("perfil_img_pos_y", String(imgPosY));
+  }, [imgPosY]);
 
   // Profile form
   const [formProfile, setFormProfile] = useState({
@@ -241,9 +250,23 @@ const Perfil = () => {
     <>
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
-        <img src={profile?.avatar_url || hero} alt="" className="absolute inset-0 w-full h-full object-cover object-top" />
+        <img
+          src={profile?.avatar_url || hero}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ objectPosition: `center ${imgPosY}%` }}
+        />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent" />
+
+        <button
+          type="button"
+          onClick={() => setAdjustOpen(true)}
+          className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur border border-white/20 text-white text-[11px] uppercase tracking-widest font-bold px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-black/80 transition"
+          aria-label="Ajustar foto"
+        >
+          <Move className="h-3.5 w-3.5" /> Ajustar foto
+        </button>
 
         <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 space-y-3">
           <div className="flex items-center gap-3">
@@ -473,6 +496,43 @@ const Perfil = () => {
               </Button>
             </DialogFooter>
           </form>
+        </DialogContent>
+      </Dialog>
+      {/* Adjust photo position dialog */}
+      <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Ajustar foto</DialogTitle>
+            <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="relative w-full h-64 rounded-xl overflow-hidden border border-border bg-muted">
+              <img
+                src={profile?.avatar_url || hero}
+                alt=""
+                className="absolute inset-0 w-full h-full object-cover"
+                style={{ objectPosition: `center ${imgPosY}%` }}
+              />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
+                <span>Topo</span>
+                <span>Posição: {imgPosY}%</span>
+                <span>Base</span>
+              </div>
+              <Slider
+                value={[imgPosY]}
+                min={0}
+                max={100}
+                step={1}
+                onValueChange={(v) => setImgPosY(v[0])}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
+            <Button variant="default" onClick={() => { setAdjustOpen(false); toast.success("Foto ajustada!"); }}>Concluir</Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
