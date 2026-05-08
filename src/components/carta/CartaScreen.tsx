@@ -194,6 +194,16 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
 
   return (
     <div className="min-h-screen bg-fut-deep py-8 px-4">
+      <div className="max-w-6xl mx-auto mb-4">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => navigate(-1)}
+          className="font-gaming border-[hsl(180_100%_60%/0.4)] hover:bg-[hsl(180_100%_50%/0.1)]"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
+        </Button>
+      </div>
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Carta */}
         <motion.div
