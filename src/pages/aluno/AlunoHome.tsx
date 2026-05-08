@@ -245,8 +245,8 @@ const AlunoHome = () => {
         </div>
       </section>
 
-      <section className="px-5 mt-6 space-y-3">
-        <div className="bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4">
+      <section className="relative z-20 px-5 pt-8 pb-1 space-y-3 bg-background">
+        <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4">
           <div className="w-12 h-12 rounded-lg bg-card/50 border border-border flex items-center justify-center">
             <TenantSymbol size={28} />
           </div>
