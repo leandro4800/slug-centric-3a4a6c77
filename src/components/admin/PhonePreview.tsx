@@ -117,7 +117,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                   <div className="absolute bottom-3 left-3 right-3 z-10">
                     <p className="text-[7px] uppercase tracking-widest mb-1" style={{ color: "hsl(var(--primary))" }}>{tenant?.nome || "AlphaCoach"}</p>
                     <HotZone label="Texto" active={isActive("foreground")} onClick={pick("foreground")} className="rounded inline-block">
-                      <h1 className="font-display text-base leading-none mb-1.5" style={{ color: "hsl(var(--foreground))" }}>
+                      <h1 className="font-display text-[11px] leading-none mb-1.5" style={{ color: "hsl(var(--foreground))" }}>
                         {(tenant?.tagline || "TREINE COMO CAMPEÃO").slice(0, 22)}
                       </h1>
                     </HotZone>
