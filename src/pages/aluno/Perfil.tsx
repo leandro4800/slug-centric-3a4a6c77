@@ -430,7 +430,7 @@ const Perfil = () => {
                 type="file"
                 ref={fileInputRef}
                 className="hidden"
-                accept="image/*"
+                accept="image/*,.heic,.heif"
                 onChange={handleImageUpload}
               />
               <p className="text-xs text-muted-foreground">Toque no ícone para alterar sua foto</p>
