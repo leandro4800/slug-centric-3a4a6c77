@@ -345,11 +345,13 @@ const MeusAtletas = () => {
                   <Settings className="h-4 w-4" /> Painel completo
                 </Button>
               </Link>
-              <Link to={`/${slug}/admin/montar-treino`}>
-                <Button variant="outline" className="w-full gap-2 border-primary/40">
-                  <Sparkles className="h-4 w-4" /> Montar treino IA
-                </Button>
-              </Link>
+              {alunos.length > 0 && (
+                <Link to={`/${slug}/admin/montar-treino`}>
+                  <Button variant="outline" className="w-full gap-2 border-primary/40">
+                    <Sparkles className="h-4 w-4" /> Montar treino IA
+                  </Button>
+                </Link>
+              )}
               <Link to={`/${slug}/admin/planos`}>
                 <Button variant="outline" className="w-full gap-2 border-primary/40">
                   <DollarSign className="h-4 w-4" /> Planos
