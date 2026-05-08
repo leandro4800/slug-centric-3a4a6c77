@@ -254,7 +254,6 @@ const Perfil = () => {
           <div className="flex items-center gap-3 text-sm">
             <span className="text-[hsl(142_70%_55%)] font-semibold">98% compatível</span>
             <span className="text-muted-foreground">{new Date().getFullYear()}</span>
-            <span className="px-2 py-0.5 border border-muted-foreground/40 rounded text-xs uppercase">{profile?.sexo === "M" ? "MASCULINO" : "FEMININO"}</span>
           </div>
           <p className="text-sm text-muted-foreground line-clamp-3 max-w-md">
             {user?.email}. {profile?.telefone ? `Contato: ${profile.telefone}.` : ""} Próximo passo: manter a constância e evoluir.
