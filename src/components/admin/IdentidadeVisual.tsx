@@ -323,6 +323,27 @@ export const IdentidadeVisual = () => {
           </div>
         </div>
 
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
+          <div className="flex items-center gap-2">
+            <Music className="h-4 w-4 text-primary" />
+            <h3 className="font-display text-base">MÚSICA DE FUNDO DO PERFIL</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Cole o link de uma música do <strong>YouTube</strong>, <strong>Spotify</strong>, <strong>SoundCloud</strong> ou arquivo direto (.mp3). Ela tocará quando o aluno abrir a tela Perfil.
+          </p>
+          <div className="flex gap-2">
+            <Input
+              placeholder="https://youtu.be/... ou https://open.spotify.com/track/..."
+              value={musicUrl}
+              onChange={(e) => setMusicUrl(e.target.value)}
+              className="bg-secondary/50"
+            />
+            <Button onClick={saveMusic} disabled={savingMusic} className="bg-gradient-primary shadow-glow">
+              {savingMusic ? <Loader2 className="h-3 w-3 animate-spin" /> : <><Save className="h-3 w-3 mr-1" /> Salvar</>}
+            </Button>
+          </div>
+        </div>
+
         <div className="bg-black/40 border border-white/10 rounded-2xl p-4 shadow-2xl backdrop-blur-sm flex items-center justify-between gap-3">
           <div>
             <p className="font-medium text-sm">Restaurar padrão</p>
