@@ -1496,6 +1496,7 @@ export type Database = {
           data_nascimento: string | null
           email: string | null
           id: string
+          music_url: string | null
           nome_completo: string | null
           onboarding_completo: boolean
           sexo: string | null
@@ -1509,6 +1510,7 @@ export type Database = {
           data_nascimento?: string | null
           email?: string | null
           id: string
+          music_url?: string | null
           nome_completo?: string | null
           onboarding_completo?: boolean
           sexo?: string | null
@@ -1522,6 +1524,7 @@ export type Database = {
           data_nascimento?: string | null
           email?: string | null
           id?: string
+          music_url?: string | null
           nome_completo?: string | null
           onboarding_completo?: boolean
           sexo?: string | null

@@ -181,7 +181,7 @@ const Perfil = () => {
       ...formProfile,
       tenant_id: profile?.tenant_id || tenant?.id,
       updated_at: new Date().toISOString()
-    });
+    } as any);
 
     setSaving(false);
     if (error) {
@@ -251,7 +251,7 @@ const Perfil = () => {
 
   return (
     <>
-      <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
+      <ProfileMusicPlayer url={(profile as any)?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img
