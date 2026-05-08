@@ -34,14 +34,67 @@ const ProfileMusicPlayer = ({ url }: { url: string | null | undefined }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
   const ytRef = useRef<HTMLIFrameElement>(null);
 
-  // Tenta dar play assim que monta; se o navegador bloquear (autoplay com som),
-  // o usuário pode clicar no botão flutuante.
+  // Tenta dar play assim que monta. Se o navegador bloquear o autoplay com som,
+  // registra um listener global que dispara o play no primeiro gesto do usuário
+  // (toque/clique em qualquer lugar) — sem precisar clicar no ícone do player.
   useEffect(() => {
     if (!source) return;
-    if (source.kind === "audio" && audioRef.current) {
-      audioRef.current.muted = muted;
-      audioRef.current.play().catch(() => setPlaying(false));
-    }
+
+    const ytPlay = () => {
+      ytRef.current?.contentWindow?.postMessage(
+        JSON.stringify({ event: "command", func: "playVideo", args: [] }),
+        "*"
+      );
+    };
+
+    const tryPlay = async () => {
+      if (source.kind === "audio" && audioRef.current) {
+        audioRef.current.muted = muted;
+        try {
+          await audioRef.current.play();
+          setPlaying(true);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+      if (source.kind === "youtube") {
+        ytPlay();
+        return true;
+      }
+      return true;
+    };
+
+    let cancelled = false;
+    let cleanup: (() => void) | null = null;
+
+    tryPlay().then((ok) => {
+      if (cancelled || ok) return;
+      const handler = () => {
+        tryPlay();
+        cleanup?.();
+      };
+      const events: (keyof DocumentEventMap)[] = [
+        "pointerdown",
+        "touchstart",
+        "click",
+        "keydown",
+      ];
+      events.forEach((ev) =>
+        document.addEventListener(ev, handler, { once: true, capture: true })
+      );
+      cleanup = () => {
+        events.forEach((ev) =>
+          document.removeEventListener(ev, handler, true)
+        );
+      };
+    });
+
+    return () => {
+      cancelled = true;
+      cleanup?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [source]);
 
   if (!source) return null;
