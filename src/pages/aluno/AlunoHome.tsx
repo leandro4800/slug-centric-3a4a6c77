@@ -163,7 +163,7 @@ const AlunoHome = () => {
   return (
     <>
       {/* Hero Content Section */}
-      <section className="relative h-[60vh] min-h-[460px] w-full overflow-hidden flex flex-col justify-end pb-2 px-5">
+      <section className="relative h-[68vh] min-h-[520px] w-full overflow-hidden flex flex-col justify-end pb-0 px-5">
         {/* Background Hero (contido na seção) */}
         <div className="hero-mask">
           {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
