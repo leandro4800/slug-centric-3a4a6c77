@@ -307,6 +307,12 @@ const Perfil = () => {
             >
               <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
             </Button>
+            <Button
+              onClick={() => navigate(`/${slug}/app/carta`)}
+              className="flex-1 bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black hover:brightness-110 font-bold"
+            >
+              <Sparkles className="h-4 w-4" /> Minha Carta
+            </Button>
           </div>
           
           {isCoach && (
