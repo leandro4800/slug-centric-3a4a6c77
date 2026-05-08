@@ -38,6 +38,8 @@ import AdminMontarTreino from "./pages/admin/AdminMontarTreino";
 import AdminMontarDieta from "./pages/admin/AdminMontarDieta";
 import MeusAtletas from "./pages/admin/MeusAtletas";
 import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
+import AtletaCarta from "./pages/admin/AtletaCarta";
+import Carta from "./pages/aluno/Carta";
 import AdminCoaches from "./pages/admin/AdminCoaches";
 import AdminPlanos from "./pages/admin/AdminPlanos";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
