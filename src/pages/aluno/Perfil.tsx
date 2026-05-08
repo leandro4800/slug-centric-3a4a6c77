@@ -248,6 +248,7 @@ const Perfil = () => {
 
   return (
     <>
+      <ProfileMusicPlayer url={tenant?.music_url} />
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img
