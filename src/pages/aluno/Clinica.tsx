@@ -1,7 +1,8 @@
 import { useState, useRef } from "react";
 import { Stethoscope, Upload, FlaskConical, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
-// Fundo do Centro de Análise Metabólica é fixo (anéis de scan). Hero do tenant não é usado aqui.
+import scanFigure from "@/assets/scan-figure.png";
+// Fundo do Centro de Análise Metabólica é fixo (anéis de scan + boneco holográfico). Hero do tenant não é usado aqui.
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
