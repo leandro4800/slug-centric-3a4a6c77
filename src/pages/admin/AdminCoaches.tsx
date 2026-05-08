@@ -394,6 +394,29 @@ export default function AdminCoaches() {
                     <Button size="sm" variant="outline" onClick={() => copyCreds(selected.slug)}>
                       <Copy className="mr-1 h-3 w-3" /> Credenciais aluno
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-primary/40"
+                      onClick={() => {
+                        const url = `https://alpha-coach.app/${selected.slug}`;
+                        navigator.clipboard.writeText(url);
+                        toast({ title: "Link copiado", description: url });
+                      }}
+                    >
+                      <Copy className="mr-1 h-3 w-3" /> Copiar link do coach
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const url = `https://alpha-coach.app/${selected.slug}`;
+                        const msg = `Olá! Acesse o app do seu coach: ${url}`;
+                        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, "_blank");
+                      }}
+                    >
+                      <ExternalLink className="mr-1 h-3 w-3" /> Enviar via WhatsApp
+                    </Button>
                   </div>
                 )}
               </div>
