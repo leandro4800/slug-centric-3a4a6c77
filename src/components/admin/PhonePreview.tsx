@@ -130,7 +130,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
                 </div>
 
                 {/* Links úteis */}
-                <div className="px-3 pt-3 pb-1 space-y-2" style={{ background: "hsl(var(--background))" }}>
+                <div className="px-3 pt-5 pb-1 mt-2 space-y-2" style={{ background: "hsl(var(--background))" }}>
                   <HotZone label="Cartões" active={isActive("card")} onClick={pick("card")} className="rounded-xl block w-full">
                     <div className="rounded-xl p-2 flex items-center gap-2" style={{ background: "hsl(var(--card)/0.6)", border: "1px solid hsl(var(--primary)/0.2)" }}>
                       <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: "hsl(var(--primary)/0.1)", border: "1px solid hsl(var(--primary)/0.2)" }}>
