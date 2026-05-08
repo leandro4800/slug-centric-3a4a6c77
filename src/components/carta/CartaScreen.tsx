@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft } from "lucide-react";
 import { AthleteCard, type CartaData, type AtributosCarta } from "./AthleteCard";
+import { PainelEvolucao } from "./PainelEvolucao";
 
 const ATR_FIELDS: Array<{ key: keyof AtributosCarta; label: string }> = [
   { key: "forca", label: "Força" },
