@@ -149,7 +149,7 @@ const Perfil = () => {
           data_nascimento: p.data_nascimento || "",
           sexo: (p.sexo as "M" | "F") || "M",
           avatar_url: p.avatar_url || "",
-          music_url: (p as any).music_url || "",
+          music_url: p.music_url || "",
         });
       }
       if (e) {
@@ -241,11 +241,11 @@ const Perfil = () => {
       }
 
       setFormProfile(prev => ({ ...prev, avatar_url: finalUrl }));
-      setProfile((prev: any) => ({ ...(prev || {}), avatar_url: finalUrl }));
+      setProfile((prev) => ({ ...(prev || {}), avatar_url: finalUrl }));
       toast.success("Foto salva com sucesso!", { id: toastId });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erro detalhado no upload:", error);
-      toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"), { id: toastId });
+      toast.error("Erro ao carregar imagem: " + (error instanceof Error ? error.message : "Erro desconhecido"), { id: toastId });
     } finally {
       setUploading(false);
       e.target.value = "";
