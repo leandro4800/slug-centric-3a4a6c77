@@ -39,6 +39,7 @@ const Scheduling = () => {
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [academiaConfirmada, setAcademiaConfirmada] = useState("");
   const selectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
