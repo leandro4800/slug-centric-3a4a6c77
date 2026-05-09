@@ -270,13 +270,42 @@ C) AVANÇADO / ATLETA (Intensidade Máxima):
 - MARCAÇÃO: No campo "observacao" do exercício, mencione explicitamente quando ele faz parte da estratégia de ponto fraco.
 
 ═══════════════════════════════════════════════
-6. EXECUÇÃO E CADÊNCIA
+6. EXECUÇÃO PACHO ELITE — 3 FASES POR EXERCÍCIO (OBRIGATÓRIO)
 ═══════════════════════════════════════════════
-- Forneça cadência específica (ex: 4-0-2-0) em cada exercício.
-- Detalhes biomecânicos profundos no campo "detalhes_execucao" (ângulo, ponto de contração, controle excêntrico).
-- Proibido alterar repetições/intervalos definidos pelo Pacholok.
+Para CADA exercício, descreva no campo "detalhes_execucao" as 3 fases:
+- WARM-UP SET (~50% da carga de trabalho, 10-15 reps, longe da falha) — preparar tecido conjuntivo.
+- FEEDER SET (~75% da carga, 4-6 reps, sem falha) — calibrar carga real e padrão neural.
+- WORK SETS (carga máxima, 6-12 reps até a FALHA TÉCNICA absoluta) — estímulo principal.
+CADÊNCIA EXCÊNTRICA: SEMPRE 3 segundos na descida controlada. Padrão de cadência DEFAULT: "3-1-X-0" (3s desc, 1s pausa, explosivo concêntrico, 0s topo). Exceções permitidas apenas se a base Pacho indicar.
 
-ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição completa (7 dias). Se houver dados clínicos no contexto, adicione um campo "observacao_clinica" ao final (fora do array de dias) com um parecer estratégico baseado nos biomarcadores. Respeite TODAS as regras acima sem exceção.`;
+TOP SET / BACK-OFF (compostos básicos: agachamento, supino, levantamento terra, desenvolvimento, remada curvada):
+- 1ª Work Set: PESADA — 6 a 8 reps até falha.
+- 2ª Work Set (Back-off): MESMO exercício com -20% de carga, 10-12 reps até falha.
+Inclua isso explicitamente no campo "series" e "repeticoes".
+
+PSE (Percepção de Esforço) por nível — informe no campo "observacao":
+- Iniciante: PSE 7-8 (deixar 2-3 reps na reserva).
+- Intermediário: PSE 8-9 (deixar 1 rep na reserva).
+- Avançado/Atleta: PSE 9-10 (falha técnica absoluta, sempre).
+
+═══════════════════════════════════════════════
+7. AJUSTE POR BIOMARCADORES (SE FORNECIDO)
+═══════════════════════════════════════════════
+- Tier ELITE (Testo > 800 ng/dL E CPK > 250): libere protocolo "ABCDEF" — máximo volume, técnicas avançadas obrigatórias em todos exercícios, divisão 1 músculo/dia.
+- Tier RECUPERAÇÃO (Testo < 500): REDUZA volume em 30%, evite técnicas de intensificação, foque em frequência e qualidade ao invés de exaustão.
+- Tier MODERADO (ALT/AST > 60 U/L — alteração hepática/cardíaca): corte volume e intensidade em 25%, ZERO técnicas avançadas, descanso extra obrigatório.
+- Sempre cite o tier no campo "observacao_clinica".
+
+═══════════════════════════════════════════════
+8. TRAVAS DE SEGURANÇA (NÃO VIOLE)
+═══════════════════════════════════════════════
+- PROIBIDO treinar Peito e Costas no mesmo dia (exceto Full Body iniciante).
+- Frequências de 5x/semana DEVEM ter pelo menos 1 dia de OFF na quarta OU quinta-feira.
+- Volume MÍNIMO para grandes grupos (Peito, Costas, Quadríceps): 4 exercícios em divisão.
+- Avançado treinando 1 músculo/dia: MÍNIMO 4-5 exercícios + técnicas avançadas obrigatórias.
+- Anti-repetição: respeite o histórico — varie pelo menos 60% dos exercícios protagonistas em relação ao último ciclo, mantendo o padrão/divisão do coach se existente.
+
+ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição completa (7 dias). Sempre preencha "observacao_clinica" com parecer baseado em biomarcadores (tier) e estratégia de variação vs treino anterior. Respeite TODAS as regras acima sem exceção.`;
 
     const userPrompt = `Monte o treino Pacho-style para:
 - Sexo: ${perfil?.sexo || "não informado"}
@@ -286,7 +315,7 @@ ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição complet
 - Frequência semanal: ${perfil?.frequencia_semanal || 4}x
 - Ênfase desejada: ${perfil?.enfase || "Geral"}
 - Lesões/Limitações: ${lesoes} / ${limitacoes}
-${divisoesEscolhidas ? `\n⚠️ DIVISÃO OBRIGATÓRIA (não invente outra): ${divisoesEscolhidas.map((d: string, i: number) => `Dia ${i + 1} = "${d}"`).join(" | ")}\n` : ""}
+${biomarkerTier ? `- Tier biomarcador: ${biomarkerTier.toUpperCase()} (aplique a Regra 7)\n` : ""}${divisoesEscolhidas ? `\n⚠️ DIVISÃO OBRIGATÓRIA (não invente outra): ${divisoesEscolhidas.map((d: string, i: number) => `Dia ${i + 1} = "${d}"`).join(" | ")}\n` : ""}
 ${Array.isArray(estimulos_extras) && estimulos_extras.length > 0 ? `\n🎯 ESTÍMULOS EXTRAS (acessórios obrigatórios): ${estimulos_extras.join(", ")}.\nDistribua esses grupos como exercícios ACESSÓRIOS (1-2 exercícios por grupo) ao FINAL dos dias mais coerentes da divisão (ex: panturrilha em dia de pernas, ombro lateral em dia de ombro/peito, core em 3 dias separados). NÃO substituem os grupos principais do dia — são adições.\n` : ""}
 ${customPrompt ? `\n=== PEDIDO ESPECÍFICO DO COACH (PRIORIDADE MÁXIMA) ===\n"${customPrompt}"\n\nINTERPRETE este pedido e aplique a Diretriz #6 (Ênfase/Pontos Fracos): aumente o volume e a frequência semanal dos grupos mencionados.\n` : ""}
 Use exercícios desta biblioteca:
@@ -313,11 +342,11 @@ ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("
                         type: "object",
                         properties: {
                           nome: { type: "string" },
-                          series: { type: "string", description: "Ex: 2 Séries de Aquecimento + 1 Série de Ajuste + 3 Séries de Trabalho" },
-                          repeticoes: { type: "string", description: "Ex: 8-12 + Drop-set final" },
-                          cadencia: { type: "string", description: "Ex: 4-0-2-0" },
-                          detalhes_execucao: { type: "string" },
-                          observacao: { type: "string" },
+                          series: { type: "string", description: "Ex: 1 Warm-up + 1 Feeder + 2 Work Sets (Top Set 6-8 + Back-off 10-12)" },
+                          repeticoes: { type: "string", description: "Ex: 6-8 (top) / 10-12 (back-off)" },
+                          cadencia: { type: "string", description: "Padrão 3-1-X-0 (excêntrica 3s sempre)" },
+                          detalhes_execucao: { type: "string", description: "Descreva as 3 fases: Warm-up (~50%), Feeder (~75%), Work Sets até falha + biomecânica" },
+                          observacao: { type: "string", description: "Inclua PSE alvo e marcação de ponto fraco se aplicável" },
                         },
                         required: ["nome", "series", "repeticoes", "cadencia", "detalhes_execucao", "observacao"],
                       },
@@ -327,7 +356,7 @@ ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("
                 },
               },
               cardio: { type: "string" },
-              observacao_clinica: { type: "string", description: "Parecer clínico baseado nos exames de sangue do aluno (se disponíveis)." },
+              observacao_clinica: { type: "string", description: "Parecer clínico baseado em biomarcadores (tier) e estratégia de variação vs treino anterior." },
             },
             required: ["dias", "cardio"],
           },
