@@ -14,6 +14,9 @@ import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
+import heic2any from "heic2any";
+
+// ... rest of the file
 
 const Perfil = () => {
   const { user, signOut } = useAuth();
@@ -135,42 +138,63 @@ const Perfil = () => {
     const original = e.target.files?.[0];
     if (!original || !user) return;
 
+    console.log("Iniciando upload de imagem:", {
+      name: original.name,
+      type: original.type,
+      size: original.size
+    });
+
     let file: File | Blob = original;
     let fileExt = (original.name.split('.').pop() || 'jpg').toLowerCase();
 
-    const isHeic = /heic|heif/i.test(original.type) || /\.(heic|heif)$/i.test(original.name);
+    // Detecção mais robusta de HEIC/HEIF
+    const isHeic = 
+      /heic|heif/i.test(original.type) || 
+      /\.(heic|heif)$/i.test(original.name) ||
+      (original.type === "" && /\.(heic|heif)$/i.test(original.name));
 
     if (!isHeic && !original.type.startsWith('image/')) {
       return toast.error("Por favor, selecione uma imagem.");
     }
 
-    if (original.size > 8 * 1024 * 1024) {
-      return toast.error("A imagem deve ter no máximo 8MB.");
+    if (original.size > 10 * 1024 * 1024) {
+      return toast.error("A imagem deve ter no máximo 10MB.");
     }
+
+    const toastId = toast.loading(isHeic ? "Convertendo foto do iPhone/Samsung..." : "Carregando foto...");
 
     try {
       setUploading(true);
 
       if (isHeic) {
         try {
-          const heic2any = (await import('heic2any')).default;
-          const converted = await heic2any({ blob: original, toType: 'image/jpeg', quality: 0.9 });
+          console.log("Convertendo HEIC para JPEG...");
+          const converted = await heic2any({ 
+            blob: original, 
+            toType: 'image/jpeg', 
+            quality: 0.8 
+          });
           file = Array.isArray(converted) ? converted[0] : converted;
           fileExt = 'jpg';
+          console.log("Conversão concluída com sucesso.");
         } catch (err) {
-          console.error('Erro convertendo HEIC:', err);
-          toast.error("Não foi possível converter a foto HEIC. Tente enviar como JPG ou PNG.");
+          console.error('Erro detalhado convertendo HEIC:', err);
+          toast.error("Não foi possível converter a foto HEIC automaticamente. Tente salvar como JPG antes de enviar.", { id: toastId });
           setUploading(false);
           return;
         }
       }
 
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
+      console.log("Enviando para o Storage:", filePath);
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { contentType: isHeic ? 'image/jpeg' : (original.type || undefined) });
+        .upload(filePath, file, { 
+          contentType: isHeic ? 'image/jpeg' : (original.type || 'image/jpeg'),
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -178,26 +202,41 @@ const Perfil = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
+      console.log("Upload concluído. URL pública:", publicUrl);
       setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      toast.success("Foto carregada!", { id: toastId });
 
       // Persistir imediatamente no banco para garantir que a foto seja salva
-      const { error: updateError } = await supabase.from("perfis").upsert({
-        id: user.id,
-        email: user.email,
+      // Usamos update em vez de upsert para não sobrescrever outros campos com NULL
+      const { error: updateError } = await supabase.from("perfis").update({
         avatar_url: publicUrl,
-        tenant_id: profile?.tenant_id || tenant?.id,
         updated_at: new Date().toISOString(),
-      } as any);
+      }).eq('id', user.id);
+
       if (updateError) {
-        console.error("Erro ao salvar avatar:", updateError);
-        toast.error("Foto carregada, mas falhou ao salvar: " + updateError.message);
-      } else {
-        setProfile((prev: any) => ({ ...(prev || {}), avatar_url: publicUrl }));
-        toast.success("Foto salva com sucesso!");
+        console.error("Erro ao salvar avatar no banco:", updateError);
+        // Se falhar o update, tentamos um upsert mais completo como fallback
+        const { error: upsertError } = await supabase.from("perfis").upsert({
+          id: user.id,
+          email: user.email,
+          avatar_url: publicUrl,
+          tenant_id: profile?.tenant_id || tenant?.id,
+          updated_at: new Date().toISOString(),
+          nome_completo: formProfile.nome_completo,
+          telefone: formProfile.telefone,
+        } as any);
+        
+        if (upsertError) {
+          console.error("Erro no fallback do upsert:", upsertError);
+          throw upsertError;
+        }
       }
+
+      setProfile((prev: any) => ({ ...(prev || {}), avatar_url: publicUrl }));
+      toast.success("Foto salva com sucesso!");
     } catch (error: any) {
-      console.error("Erro no upload:", error);
-      toast.error("Erro ao carregar imagem: " + error.message);
+      console.error("Erro detalhado no upload:", error);
+      toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"));
     } finally {
       setUploading(false);
     }
