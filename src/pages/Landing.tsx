@@ -202,12 +202,12 @@ const Landing = () => {
   // - /      -> redireciona pro /login (que joga pro app se tiver sessão)
   // Cobre também PWA instalado (display-mode: standalone).
   useEffect(() => {
+    // Se o usuário clicar em alpha-coach.app (raiz), e não for o path de marketing (/site),
+    // devemos redirecionar para o login. O Login.tsx já tem a lógica para levar o usuário
+    // logado para o seu respectivo app/tenant sem precisar limpar cache.
     const isMarketingPath = window.location.pathname.startsWith("/site");
-    const isStandalone =
-      window.matchMedia?.("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true ||
-      new URLSearchParams(window.location.search).get("pwa") === "1";
-    if (!isMarketingPath || isStandalone) {
+    
+    if (!isMarketingPath) {
       navigate("/login", { replace: true });
     }
   }, [navigate]);
