@@ -400,7 +400,7 @@ const Perfil = () => {
         <img
           src={profileHeroSrc}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-700 ease-in-out"
+          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-300 ease-in-out"
           style={{ objectPosition: `center ${imgPosY}%` }}
           onError={() => setProfileImageFailed(true)}
         />
