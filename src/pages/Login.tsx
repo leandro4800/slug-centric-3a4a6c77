@@ -175,7 +175,7 @@ const Login = () => {
       type: "signup",
       email: cleanEmail,
       options: {
-        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}` : `${window.location.origin}/login`,
+        emailRedirectTo: `${window.location.origin}/${urlSlug || "login"}/login?confirmed=1`,
       },
     });
     setLoading(false);
