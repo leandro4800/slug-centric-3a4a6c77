@@ -404,8 +404,8 @@ const Perfil = () => {
           style={{ objectPosition: `center ${imgPosY}%` }}
           onError={() => setProfileImageFailed(true)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent" />
 
         <button
           type="button"
