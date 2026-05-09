@@ -255,8 +255,19 @@ Gere o plano em JSON aplicando Nutrient Timing, Proteína Rotativa, metas de Fib
         objetivo,
         tmb_estimada: Math.round(tmb),
         kcal_alvo: kcalAlvo,
-        macros_alvo: { proteina_g: proteinaG, carboidrato_g: carboG, lipideos_g: gorduraG, badge: plano.ajuste_clinico_badge || null },
-        observacoes_clinicas: plano.observacoes_clinicas || null,
+        macros_alvo: {
+          proteina_g: proteinaG,
+          carboidrato_g: carboG,
+          lipideos_g: gorduraG,
+          fibras_g: plano.fibras_alvo_g || Math.round((fibrasMin + fibrasMax) / 2),
+          hidratacao_ml: hidratacaoMl,
+          badge: plano.ajuste_clinico_badge || null,
+        },
+        observacoes_clinicas: [
+          plano.observacoes_clinicas,
+          plano.estrategia_timing ? `\n📍 Timing: ${plano.estrategia_timing}` : "",
+          plano.recomendacao_hidratacao ? `\n💧 Hidratação: ${plano.recomendacao_hidratacao}` : "",
+        ].filter(Boolean).join("") || null,
       })
       .select()
       .single();
