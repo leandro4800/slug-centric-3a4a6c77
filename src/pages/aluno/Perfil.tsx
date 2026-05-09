@@ -138,42 +138,63 @@ const Perfil = () => {
     const original = e.target.files?.[0];
     if (!original || !user) return;
 
+    console.log("Iniciando upload de imagem:", {
+      name: original.name,
+      type: original.type,
+      size: original.size
+    });
+
     let file: File | Blob = original;
     let fileExt = (original.name.split('.').pop() || 'jpg').toLowerCase();
 
-    const isHeic = /heic|heif/i.test(original.type) || /\.(heic|heif)$/i.test(original.name);
+    // Detecção mais robusta de HEIC/HEIF
+    const isHeic = 
+      /heic|heif/i.test(original.type) || 
+      /\.(heic|heif)$/i.test(original.name) ||
+      (original.type === "" && /\.(heic|heif)$/i.test(original.name));
 
     if (!isHeic && !original.type.startsWith('image/')) {
       return toast.error("Por favor, selecione uma imagem.");
     }
 
-    if (original.size > 8 * 1024 * 1024) {
-      return toast.error("A imagem deve ter no máximo 8MB.");
+    if (original.size > 10 * 1024 * 1024) {
+      return toast.error("A imagem deve ter no máximo 10MB.");
     }
+
+    const toastId = toast.loading(isHeic ? "Convertendo foto do iPhone/Samsung..." : "Carregando foto...");
 
     try {
       setUploading(true);
 
       if (isHeic) {
         try {
-          const heic2any = (await import('heic2any')).default;
-          const converted = await heic2any({ blob: original, toType: 'image/jpeg', quality: 0.9 });
+          console.log("Convertendo HEIC para JPEG...");
+          const converted = await heic2any({ 
+            blob: original, 
+            toType: 'image/jpeg', 
+            quality: 0.8 
+          });
           file = Array.isArray(converted) ? converted[0] : converted;
           fileExt = 'jpg';
+          console.log("Conversão concluída com sucesso.");
         } catch (err) {
-          console.error('Erro convertendo HEIC:', err);
-          toast.error("Não foi possível converter a foto HEIC. Tente enviar como JPG ou PNG.");
+          console.error('Erro detalhado convertendo HEIC:', err);
+          toast.error("Não foi possível converter a foto HEIC automaticamente. Tente salvar como JPG antes de enviar.", { id: toastId });
           setUploading(false);
           return;
         }
       }
 
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const fileName = `${user.id}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
       const filePath = `${user.id}/${fileName}`;
 
+      console.log("Enviando para o Storage:", filePath);
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { contentType: isHeic ? 'image/jpeg' : (original.type || undefined) });
+        .upload(filePath, file, { 
+          contentType: isHeic ? 'image/jpeg' : (original.type || 'image/jpeg'),
+          upsert: true
+        });
 
       if (uploadError) throw uploadError;
 
@@ -181,7 +202,9 @@ const Perfil = () => {
         .from('avatars')
         .getPublicUrl(filePath);
 
+      console.log("Upload concluído. URL pública:", publicUrl);
       setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
+      toast.success("Foto carregada!", { id: toastId });
 
       // Persistir imediatamente no banco para garantir que a foto seja salva
       // Usamos update em vez de upsert para não sobrescrever outros campos com NULL
