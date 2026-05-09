@@ -26,6 +26,7 @@ type ProfileData = {
   avatar_url?: string | null;
   music_url?: string | null;
   tenant_id?: string | null;
+  avatar_pos_y?: number | null;
 };
 
 type LastEvalData = {
@@ -63,13 +64,13 @@ const Perfil = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [imgPosY, setImgPosY] = useState<number>(() => {
-    const v = typeof window !== "undefined" ? localStorage.getItem("perfil_img_pos_y") : null;
-    return v ? Number(v) : 20;
-  });
+  const [imgPosY, setImgPosY] = useState<number>(20);
+
   useEffect(() => {
-    if (typeof window !== "undefined") localStorage.setItem("perfil_img_pos_y", String(imgPosY));
-  }, [imgPosY]);
+    if (profile?.avatar_pos_y !== undefined && profile?.avatar_pos_y !== null) {
+      setImgPosY(profile.avatar_pos_y);
+    }
+  }, [profile?.avatar_pos_y]);
   const [profileImageFailed, setProfileImageFailed] = useState(false);
   const [formImageFailed, setFormImageFailed] = useState(false);
 
@@ -699,7 +700,22 @@ const Perfil = () => {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
-            <Button variant="default" onClick={() => { setAdjustOpen(false); toast.success("Foto ajustada!"); }}>Concluir</Button>
+            <Button variant="default" onClick={async () => {
+              try {
+                const { error } = await supabase
+                  .from("perfis")
+                  .update({ avatar_pos_y: imgPosY })
+                  .eq("id", user?.id);
+                
+                if (error) throw error;
+                
+                setProfile(prev => prev ? { ...prev, avatar_pos_y: imgPosY } : null);
+                setAdjustOpen(false);
+                toast.success("Ajuste de foto salvo!");
+              } catch (err: any) {
+                toast.error("Erro ao salvar ajuste: " + err.message);
+              }
+            }}>Concluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
