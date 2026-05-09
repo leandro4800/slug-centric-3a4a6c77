@@ -124,13 +124,15 @@ const Login = () => {
       // VOUCHER REDEMPTION: Se houver um voucher pendente, tentamos resgatar antes de qualquer verificação de assinatura
       const pending = sessionStorage.getItem("pending_voucher");
       if (pending) {
-        sessionStorage.removeItem("pending_voucher");
         const ok = await redeemVoucherCode(pending);
         if (ok) {
+          sessionStorage.removeItem("pending_voucher");
           const targetSlug = urlSlug || userSlug;
           navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
           return;
         }
+        // Se falhou (código inválido), removemos para não ficar em loop
+        sessionStorage.removeItem("pending_voucher");
       }
 
       // Aluno comum: precisa ter assinatura ativa OU comprou aula avulsa para acessar /app
