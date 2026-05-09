@@ -62,6 +62,65 @@ export type Database = {
         }
         Relationships: []
       }
+      agenda_presencial_slots: {
+        Row: {
+          ativo: boolean
+          capacidade: number
+          created_at: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id: string
+          local_endereco: string | null
+          local_lat: number | null
+          local_lng: number | null
+          local_nome: string
+          reservados: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          capacidade?: number
+          created_at?: string
+          data: string
+          hora_fim: string
+          hora_inicio: string
+          id?: string
+          local_endereco?: string | null
+          local_lat?: number | null
+          local_lng?: number | null
+          local_nome?: string
+          reservados?: number
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          capacidade?: number
+          created_at?: string
+          data?: string
+          hora_fim?: string
+          hora_inicio?: string
+          id?: string
+          local_endereco?: string | null
+          local_lat?: number | null
+          local_lng?: number | null
+          local_nome?: string
+          reservados?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agenda_presencial_slots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       agendamentos_aula_avulsa: {
         Row: {
           created_at: string
@@ -111,6 +170,57 @@ export type Database = {
             columns: ["slot_id"]
             isOneToOne: false
             referencedRelation: "agenda_aula_avulsa_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      agendamentos_presenciais: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          notificado_em: string | null
+          observacoes: string | null
+          slot_id: string
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          notificado_em?: string | null
+          observacoes?: string | null
+          slot_id: string
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          notificado_em?: string | null
+          observacoes?: string | null
+          slot_id?: string
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "agendamentos_presenciais_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "agenda_presencial_slots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "agendamentos_presenciais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
