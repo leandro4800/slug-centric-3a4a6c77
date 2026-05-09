@@ -22,9 +22,23 @@ interface PerfilTreino {
   peso_kg: number | null;
   altura_cm: number | null;
   bf_pct: number | null;
+  pescoco_cm: number | null;
+  cintura_cm: number | null;
+  quadril_cm: number | null;
   objetivo: string | null;
   tempo_treino: string | null;
 }
+
+// Normaliza nível para os valores aceitos pelo select e edge function
+const normalizarNivel = (v: string | null | undefined): string => {
+  if (!v) return "intermediario";
+  const t = v.toLowerCase();
+  if (t.includes("alto")) return "alto_nivel";
+  if (t.includes("avan")) return "avancado";
+  if (t.includes("inter")) return "intermediario";
+  if (t.includes("inic")) return "iniciante";
+  return "intermediario";
+};
 
 const AdminMontarDieta = () => {
   const { slug } = useParams();
@@ -35,6 +49,7 @@ const AdminMontarDieta = () => {
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
+    pescoco_cm: null, cintura_cm: null, quadril_cm: null,
     objetivo: "hipertrofia", tempo_treino: "intermediario",
   });
   const [generating, setGenerating] = useState(false);
@@ -55,22 +70,37 @@ const AdminMontarDieta = () => {
     if (!alunoId) return;
     void (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("perfis_treino")
-        .select("*")
-        .eq("aluno_id", alunoId)
-        .maybeSingle();
-      if (data) {
-        setPerfil({
-          sexo: data.sexo,
-          idade: data.idade,
-          peso_kg: data.peso_kg,
-          altura_cm: data.altura_cm,
-          bf_pct: data.bf_pct,
-          objetivo: data.objetivo,
-          tempo_treino: data.tempo_treino,
-        });
+      // Mescla as 4 fontes do perfil real do aluno
+      const [perfilTreinoRes, perfilRes, avaliacaoRes, anamneseRes] = await Promise.all([
+        supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
+        supabase.from("perfis").select("sexo, data_nascimento").eq("id", alunoId).maybeSingle(),
+        supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, pescoco_cm, cintura_cm, quadril_cm, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("anamnese_aluno").select("nivel_experiencia").eq("aluno_id", alunoId).maybeSingle(),
+      ]);
+
+      const pt = perfilTreinoRes.data as any;
+      const pr = perfilRes.data as any;
+      const av = avaliacaoRes.data as any;
+      const an = anamneseRes.data as any;
+
+      let idadeCalc: number | null = null;
+      if (pr?.data_nascimento) {
+        const nasc = new Date(pr.data_nascimento);
+        idadeCalc = Math.floor((Date.now() - nasc.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
       }
+
+      setPerfil({
+        sexo: pt?.sexo || pr?.sexo || av?.sexo || "",
+        idade: pt?.idade ?? av?.idade ?? idadeCalc,
+        peso_kg: pt?.peso_kg ?? av?.peso_kg ?? null,
+        altura_cm: pt?.altura_cm ?? av?.altura_cm ?? null,
+        bf_pct: pt?.bf_pct ?? av?.bf_pct_calculado ?? null,
+        pescoco_cm: av?.pescoco_cm ?? null,
+        cintura_cm: av?.cintura_cm ?? null,
+        quadril_cm: av?.quadril_cm ?? null,
+        objetivo: pt?.objetivo || "hipertrofia",
+        tempo_treino: normalizarNivel(pt?.tempo_treino || an?.nivel_experiencia),
+      });
       setLoading(false);
     })();
   }, [alunoId]);
@@ -80,11 +110,18 @@ const AdminMontarDieta = () => {
       toast.error("Selecione um aluno.");
       return;
     }
+    if (!perfil.peso_kg || !perfil.altura_cm) {
+      toast.error("Peso e altura são obrigatórios. Peça ao aluno para preencher a avaliação física.");
+      return;
+    }
     setGenerating(true);
     const toastId = toast.loading("Gerando dieta com IA...");
     try {
       const promptFromUrl = searchParams.get("prompt");
       const activePrompt = customPrompt || promptFromUrl || "";
+
+      const sexoNorm = (perfil.sexo || "").toLowerCase();
+      const sexoEnvio = sexoNorm.startsWith("f") ? "F" : "M";
 
       const { data, error } = await supabase.functions.invoke("gerar-dieta", {
         body: { 
@@ -93,15 +130,17 @@ const AdminMontarDieta = () => {
           peso_kg: perfil.peso_kg,
           altura_cm: perfil.altura_cm,
           idade: perfil.idade,
-          sexo: perfil.sexo === "masculino" ? "M" : "F",
+          sexo: sexoEnvio,
           nivel: perfil.tempo_treino,
+          bf_pct: perfil.bf_pct,
+          pescoco_cm: perfil.pescoco_cm,
+          cintura_cm: perfil.cintura_cm,
+          quadril_cm: perfil.quadril_cm,
           prompt: activePrompt
         },
       });
       if (error) throw error;
       toast.success("Dieta gerada com sucesso!", { id: toastId });
-      // Redirect to athlete detail or stay here? 
-      // For now, let's just show success.
     } catch (e: any) {
       toast.error(e.message || "Falha ao gerar.", { id: toastId });
     } finally {
