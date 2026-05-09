@@ -209,7 +209,7 @@ const Scheduling = () => {
             <p className="text-sm text-white/70 mb-5 max-w-md font-light">
               Treine ao lado do seu Coach. Escolha o dia, o horário e prepare-se para uma sessão de alto nível.
             </p>
-            <Button onClick={openSchedulingChat} variant="default" size="lg" className="rounded-full px-8">
+            <Button onClick={openSchedulingChat} variant="default" size="lg" className="rounded-md px-8">
               <MessageCircle className="mr-1" /> MARCAR AGORA
             </Button>
           </motion.div>
