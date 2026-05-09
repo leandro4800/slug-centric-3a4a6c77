@@ -1,5 +1,8 @@
-import { AlertCircle, CheckCircle2, Info, Pill } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, Pill, Volume2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface MarkerCardProps {
   nome: string;
