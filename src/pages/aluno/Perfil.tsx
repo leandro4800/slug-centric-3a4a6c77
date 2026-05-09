@@ -172,7 +172,7 @@ const Perfil = () => {
           sexo: (p.sexo as "M" | "F") || "M",
           avatar_url: p.avatar_url || "",
           music_url: p.music_url || "",
-          avatar_pos_y: p.avatar_pos_y ?? 30,
+          avatar_pos_y: p.avatar_pos_y ?? 20,
         });
       }
       if (e) {
