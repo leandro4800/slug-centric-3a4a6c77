@@ -134,8 +134,18 @@ const Scheduling = () => {
     setChatOpen(true);
   };
 
+  // Ao escolher um slot, pré-preenche a academia com o local cadastrado pelo coach
+  useEffect(() => {
+    const s = slots.find(x => x.id === selectedSlot);
+    if (s && !academiaConfirmada) setAcademiaConfirmada(s.local_nome || "");
+  }, [selectedSlot]);
+
   const confirmar = async () => {
     if (!selectedSlot || !user?.id || !tenant?.id) return false;
+    if (!academiaConfirmada.trim()) {
+      toast({ title: "Confirme em qual academia você vai treinar", variant: "destructive" });
+      return false;
+    }
     if (jaAgendado) {
       toast({ title: "Você já está agendado neste horário" });
       return false;
@@ -148,7 +158,12 @@ const Scheduling = () => {
     setConfirming(true);
     const { data, error } = await supabase
       .from("agendamentos_presenciais")
-      .insert({ aluno_id: user.id, tenant_id: tenant.id, slot_id: selectedSlot })
+      .insert({
+        aluno_id: user.id,
+        tenant_id: tenant.id,
+        slot_id: selectedSlot,
+        academia_confirmada: academiaConfirmada.trim(),
+      })
       .select("id, slot_id")
       .single();
     setConfirming(false);
@@ -161,7 +176,7 @@ const Scheduling = () => {
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
       Notification.requestPermission();
     }
-    toast({ title: "✅ Agendamento confirmado!", description: "Você receberá um lembrete 1h antes." });
+    toast({ title: "✅ Agendamento confirmado!", description: `${academiaConfirmada} • Lembrete 1h antes.` });
     return true;
   };
 
