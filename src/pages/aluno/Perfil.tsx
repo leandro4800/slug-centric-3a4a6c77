@@ -701,7 +701,7 @@ const Perfil = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImgPosY(30)}>Resetar</Button>
+            <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
             <Button variant="default" onClick={async () => {
               try {
                 const { error } = await supabase
