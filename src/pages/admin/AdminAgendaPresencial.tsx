@@ -28,6 +28,7 @@ interface Reserva {
   slot_id: string;
   aluno_id: string;
   status: string;
+  academia_confirmada: string | null;
   created_at: string;
   aluno?: { nome_completo: string | null; email: string | null };
 }
