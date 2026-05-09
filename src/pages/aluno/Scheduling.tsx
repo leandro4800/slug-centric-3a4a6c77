@@ -546,7 +546,7 @@ const Scheduling = () => {
             <button
               onClick={confirmar}
               disabled={confirming}
-              className="w-full max-w-2xl mx-auto block bg-primary text-white font-display text-2xl tracking-[0.2em] py-5 rounded-md shadow-[0_0_50px_-5px_hsl(var(--primary)/0.8)] animate-pulse disabled:opacity-60"
+              className="w-full max-w-2xl mx-auto block bg-primary text-white font-display text-2xl tracking-[0.2em] py-5 rounded-xl shadow-[0_10px_30px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95 animate-pulse disabled:opacity-60"
             >
               {confirming ? "CONFIRMANDO..." : "CONFIRMAR AGENDAMENTO"}
             </button>
