@@ -1604,6 +1604,7 @@ export type Database = {
       }
       perfis: {
         Row: {
+          avatar_pos_y: number | null
           avatar_url: string | null
           created_at: string
           data_nascimento: string | null
@@ -1618,6 +1619,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_pos_y?: number | null
           avatar_url?: string | null
           created_at?: string
           data_nascimento?: string | null
@@ -1632,6 +1634,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_pos_y?: number | null
           avatar_url?: string | null
           created_at?: string
           data_nascimento?: string | null

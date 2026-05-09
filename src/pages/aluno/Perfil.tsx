@@ -26,6 +26,7 @@ type ProfileData = {
   avatar_url?: string | null;
   music_url?: string | null;
   tenant_id?: string | null;
+  avatar_pos_y?: number | null;
 };
 
 type LastEvalData = {
