@@ -187,7 +187,7 @@ const Scheduling = () => {
             <p className="text-sm text-white/70 mb-5 max-w-md font-light">
               Treine ao lado do seu Coach. Escolha o dia, o horário e prepare-se para uma sessão de alto nível.
             </p>
-            <Button onClick={scrollToSelector} variant="default" size="lg" className="rounded-none">
+            <Button onClick={scrollToSelector} variant="default" size="lg" className="rounded-full px-8">
               <CalendarCheck className="mr-1" /> MARCAR AGORA
             </Button>
           </motion.div>
@@ -380,7 +380,7 @@ const Scheduling = () => {
             <button
               onClick={confirmar}
               disabled={confirming}
-              className="w-full max-w-2xl mx-auto block bg-primary text-white font-display text-2xl tracking-[0.2em] py-5 rounded-md shadow-[0_0_50px_-5px_hsl(var(--primary)/0.8)] animate-pulse disabled:opacity-60"
+              className="w-full max-w-2xl mx-auto block bg-primary text-white font-display text-2xl tracking-[0.2em] py-5 rounded-full shadow-[0_0_50px_-5px_hsl(var(--primary)/0.8)] animate-pulse disabled:opacity-60"
             >
               {confirming ? "CONFIRMANDO..." : "CONFIRMAR AGENDAMENTO"}
             </button>
