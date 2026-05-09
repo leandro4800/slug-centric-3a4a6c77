@@ -190,11 +190,22 @@ const Perfil = () => {
 
       console.log("Enviando para o Storage:", filePath);
       
-      // Tentar upload com fallback de contentType
+      // Comprime imagens grandes (>1.2MB) para acelerar upload em conexões lentas
+      const sizeMB = (file as Blob).size / (1024 * 1024);
+      if (!isHeic && sizeMB > 1.2 && (original.type || '').startsWith('image/')) {
+        try {
+          const compressed = await compressImage(file as Blob, 1600, 0.82);
+          if (compressed) { file = compressed; fileExt = 'jpg'; }
+        } catch (err) {
+          console.warn('Falha ao comprimir imagem, enviando original:', err);
+        }
+      }
+
+      let finalPath = filePath;
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { 
-          contentType: isHeic ? 'image/jpeg' : (original.type || 'image/jpeg'),
+        .upload(finalPath, file, { 
+          contentType: isHeic ? 'image/jpeg' : ((file as any).type || original.type || 'image/jpeg'),
           upsert: true,
           cacheControl: '3600'
         });
@@ -202,16 +213,17 @@ const Perfil = () => {
       if (uploadError) {
         console.error("Erro no upload para o Storage:", uploadError);
         // Fallback: tentar sem contentType se falhar
+        finalPath = filePath + "-retry";
         const { error: retryError } = await supabase.storage
           .from('avatars')
-          .upload(filePath + "-retry", file, { upsert: true });
+          .upload(finalPath, file, { upsert: true });
         
         if (retryError) throw retryError;
       }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(finalPath);
 
       console.log("Upload concluído. URL pública:", publicUrl);
       setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
