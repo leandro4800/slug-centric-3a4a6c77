@@ -676,20 +676,29 @@ const Perfil = () => {
             <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative w-full aspect-[2/3] max-h-[450px] rounded-xl overflow-hidden border border-border bg-muted">
+            {/* Preview com a MESMA proporção da tela hero (largura da viewport x 85vh) */}
+            <div
+              className="relative w-full rounded-xl overflow-hidden border border-border bg-muted mx-auto"
+              style={{
+                aspectRatio: `${typeof window !== 'undefined' ? window.innerWidth : 390} / ${typeof window !== 'undefined' ? Math.max(window.innerHeight * 0.85, 500) : 700}`,
+                maxHeight: '60vh',
+              }}
+            >
               <img
                 src={profileHeroSrc}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-200 ease-in-out"
+                className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-150 ease-out"
                 style={{ objectPosition: `center ${imgPosY}%` }}
                 onError={() => setProfileImageFailed(true)}
               />
+              {/* Marcador do centro visual da hero (onde o rosto deve ficar) */}
+              <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-white/40 pointer-events-none" />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
-                <span>Ver Topo</span>
-                <span>Ajuste: {imgPosY}%</span>
-                <span>Ver Base</span>
+                <span>↑ Subir</span>
+                <span>Centro: {imgPosY}%</span>
+                <span>Descer ↓</span>
               </div>
               <Slider
                 value={[imgPosY]}
@@ -698,6 +707,9 @@ const Perfil = () => {
                 step={1}
                 onValueChange={(v) => setImgPosY(v[0])}
               />
+              <p className="text-[10px] text-muted-foreground text-center">
+                Use o slider para alinhar o rosto com a linha branca (centro da tela).
+              </p>
             </div>
           </div>
           <DialogFooter>
