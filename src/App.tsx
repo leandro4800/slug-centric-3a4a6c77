@@ -50,6 +50,7 @@ import NotFound from "./pages/NotFound";
 import Unsubscribe from "./pages/Unsubscribe";
 import AgendarAulaAvulsa from "./pages/AgendarAulaAvulsa";
 import AdminAgendaAvulsa from "./pages/admin/AdminAgendaAvulsa";
+import AdminAgendaPresencial from "./pages/admin/AdminAgendaPresencial";
 
 const queryClient = new QueryClient();
 
