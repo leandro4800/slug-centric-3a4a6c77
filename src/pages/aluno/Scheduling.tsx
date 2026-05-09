@@ -209,8 +209,11 @@ const Scheduling = () => {
             <p className="text-sm text-white/70 mb-5 max-w-md font-light">
               Treine ao lado do seu Coach. Escolha o dia, o horário e prepare-se para uma sessão de alto nível.
             </p>
-            <Button onClick={openSchedulingChat} variant="default" size="lg" className="rounded-md px-8">
-              <MessageCircle className="mr-1" /> MARCAR AGORA
+            <Button
+              onClick={openSchedulingChat}
+              className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-xl tracking-widest shadow-[0_10px_30px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95"
+            >
+              <MessageCircle className="h-4 w-4" /> MARCAR AGORA
             </Button>
           </motion.div>
         </div>
@@ -523,7 +526,7 @@ const Scheduling = () => {
                 if (ok) setChatOpen(false);
               }}
               disabled={!selectedSlot || !!jaAgendado || confirming}
-              className="w-full rounded-md bg-primary py-4 font-display text-2xl tracking-[0.18em] text-white shadow-[0_0_35px_-6px_hsl(var(--primary)/0.8)] disabled:opacity-40 disabled:shadow-none"
+              className="w-full rounded-xl bg-primary py-4 font-display text-2xl tracking-[0.18em] text-white shadow-[0_10px_30px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95 disabled:opacity-40 disabled:shadow-none"
             >
               {jaAgendado ? "JÁ AGENDADO" : confirming ? "CONFIRMANDO..." : "CONFIRMAR"}
             </button>
@@ -543,7 +546,7 @@ const Scheduling = () => {
             <button
               onClick={confirmar}
               disabled={confirming}
-              className="w-full max-w-2xl mx-auto block bg-primary text-white font-display text-2xl tracking-[0.2em] py-5 rounded-md shadow-[0_0_50px_-5px_hsl(var(--primary)/0.8)] animate-pulse disabled:opacity-60"
+              className="w-full max-w-2xl mx-auto block bg-primary text-white font-display text-2xl tracking-[0.2em] py-5 rounded-xl shadow-[0_10px_30px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95 animate-pulse disabled:opacity-60"
             >
               {confirming ? "CONFIRMANDO..." : "CONFIRMAR AGENDAMENTO"}
             </button>
