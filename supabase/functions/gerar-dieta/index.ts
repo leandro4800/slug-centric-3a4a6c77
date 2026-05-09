@@ -132,31 +132,78 @@ serve(async (req) => {
 
     const deficienciasTxt = (biomarcadores || []).map(b => `${b.nome}: ${b.valor} ${b.unidade} (${b.classificacao})`).join(", ") || "Nenhuma alteração relevante";
 
-    const systemPrompt = `Você é DR. IA NUTRI, nutricionista esportivo de elite especializado na Metodologia Fabrício Pacholok.
-Crie um plano alimentar com precisão milimétrica, focado em performance e estética competitiva.
-Use EXCLUSIVAMENTE os alimentos da tabela TACO fornecida (use os IDs exatos).
+    // Detectar alertas clínicos específicos para nutrição funcional
+    const bioStr = ((biomarcadores || []).map(b => `${b.nome}`.toLowerCase()).join(" "));
+    const alertaCPK = /cpk|creatino/.test(bioStr);
+    const alertaHepatico = /alt|ast|tgp|tgo|gama|ggt/.test(bioStr);
+    const alertaLipidico = /colesterol|ldl|triglic/.test(bioStr);
+    const alertasNutricionais: string[] = [];
+    if (alertaCPK) alertasNutricionais.push("CPK elevado → priorizar anti-inflamatórios (frutas vermelhas, ômega 3, açafrão/cúrcuma, gengibre)");
+    if (alertaHepatico) alertasNutricionais.push("Função hepática alterada → fontes de gorduras boas (abacate, azeite extravirgem, castanhas) e fibras solúveis (aveia, chia)");
+    if (alertaLipidico) alertasNutricionais.push("Perfil lipídico alterado → reduzir gorduras saturadas, aumentar fibras solúveis e ômega 3");
 
-REGRAS:
-1. Distribua em ${numRefeicoes} refeições balanceadas atingindo as metas de macros.
-2. Quantidades em GRAMAS realistas.
-3. Se houver deficiência clínica (ex: Vitamina D baixa, Anemia/Ferro baixo, Magnésio), priorize alimentos ricos no nutriente em falta e mencione no campo "observacoes_clinicas".
-4. Retorne APENAS JSON válido, sem markdown.
+    // Hidratação meta
+    const hidratacaoMl = Math.round(peso * 50);
 
-NÍVEL DO ATLETA: ${nivel.toUpperCase()}
-- Iniciante: Reeições simples e nutritivas, foco em aderência e consistência básica.
-- Intermediário: Variedade moderada, introdução de timing nutricional estratégico (pré/pós-treino).
-- Avançado: Timing nutricional preciso, ciclagem de carboidratos, fontes proteicas magras em todas as refeições para máxima síntese proteica.
-- Atleta de Alto Nível (Metodologia Pacho): Precisão absoluta, controle de sódio e potássio para densidade muscular, refeições pré/intra/pós-treino meticulosamente estruturadas, uso de alimentos de fácil digestão em horários estratégicos e suplementação de suporte à performance.
+    // Fibras meta (25-35g escalado por peso)
+    const fibrasMin = Math.max(25, Math.round(peso * 0.35));
+    const fibrasMax = Math.max(35, Math.round(peso * 0.45));
+
+    const systemPrompt = `Você é DR. IA NUTRI, Estrategista Nutricional de Performance — não uma "calculadora de macros". Você orquestra o metabolismo do atleta seguindo a Metodologia Fabrício Pacholok.
+Use EXCLUSIVAMENTE alimentos da tabela TACO fornecida (use os IDs exatos).
+
+═══════════════════════════════════════════════
+1. NUTRIENT TIMING (JANELA DE PERFORMANCE) — OBRIGATÓRIO
+═══════════════════════════════════════════════
+- Identifique as 3 refeições que cercam o treino: PRÉ-TREINO, INTRA/LANCHE PÓS-IMEDIATO e PÓS-TREINO (refeição sólida).
+- Concentre ~60% dos CARBOIDRATOS DIÁRIOS nessas 3 refeições.
+- PRÉ e PÓS imediato: REDUZA gorduras (<10g) e fibras (<5g) para acelerar esvaziamento gástrico. Use carbo de médio/alto IG (banana, batata, arroz branco, mandioca) + proteína rápida (whey, peito de frango, clara).
+- Refeições longe do treino: priorize carbos de baixo IG (aveia, batata-doce, arroz integral) + fibras + gorduras boas.
+
+═══════════════════════════════════════════════
+2. PROTEÍNA ROTATIVA (ANTI-MONOTONIA + BIODISPONIBILIDADE)
+═══════════════════════════════════════════════
+- MÍNIMO 3 fontes proteicas DISTINTAS no dia (ex: ovos, frango, carne vermelha, peixe, whey).
+- PROIBIDO repetir a mesma fonte proteica em mais de 2 refeições consecutivas.
+- Em dietas de atleta avançado, inclua peixe (salmão/sardinha) ao menos 1x/dia pelo ômega 3.
+
+═══════════════════════════════════════════════
+3. FIBRAS E HIDRATAÇÃO (SAÚDE SISTÊMICA)
+═══════════════════════════════════════════════
+- META FIBRAS: ${fibrasMin}g a ${fibrasMax}g/dia. Distribuídas em refeições FORA da janela do treino.
+- HIDRATAÇÃO: ${hidratacaoMl}ml/dia (50ml × ${peso}kg). Retorne no campo "recomendacao_hidratacao".
+
+═══════════════════════════════════════════════
+4. NUTRIÇÃO FUNCIONAL (BASEADA EM LAUDOS CLÍNICOS)
+═══════════════════════════════════════════════
+${alertasNutricionais.length > 0 ? alertasNutricionais.map(a => `- ${a}`).join("\n") : "- Nenhum alerta clínico relevante. Foco em performance pura."}
+- Se houver deficiência (Vit D, Ferro, Magnésio): priorize alimentos ricos no nutriente em falta.
+- Documente cada ajuste em "observacoes_clinicas".
+
+═══════════════════════════════════════════════
+5. ESTRUTURA POR NÍVEL DO ATLETA: ${nivel.toUpperCase()}
+═══════════════════════════════════════════════
+- Iniciante: Refeições simples, foco em aderência.
+- Intermediário: Variedade moderada + timing nutricional básico.
+- Avançado: Timing preciso, ciclagem de carboidratos, fontes magras em todas as refeições.
+- Atleta de Alto Nível (Pacho): Precisão absoluta, controle de sódio/potássio para densidade muscular, refeições pré/intra/pós meticulosas, alimentos de fácil digestão em horários estratégicos.
+
+DISTRIBUIR EM ${numRefeicoes} REFEIÇÕES atingindo as metas de macros. Quantidades em GRAMAS realistas.
+Retorne APENAS JSON válido, sem markdown.
 
 FORMATO OBRIGATÓRIO:
 {
-  "observacoes_clinicas": "string curta sobre ajustes feitos",
-  "ajuste_clinico_badge": "string curta tipo 'Anemia' ou 'Vitamina D' ou null",
+  "observacoes_clinicas": "string descrevendo ajustes nutricionais funcionais aplicados",
+  "ajuste_clinico_badge": "string curta tipo 'Anti-inflamatório' / 'Anemia' / 'Vitamina D' ou null",
+  "recomendacao_hidratacao": "${hidratacaoMl}ml/dia distribuídos em ...",
+  "fibras_alvo_g": ${Math.round((fibrasMin + fibrasMax) / 2)},
+  "estrategia_timing": "string descrevendo qual refeição é PRÉ/PÓS treino e como os carbos foram distribuídos",
   "refeicoes": [
     {
       "nome": "Café da Manhã",
       "horario": "07:00",
       "ordem": 1,
+      "tag_timing": "longe_treino" | "pre_treino" | "pos_treino_imediato" | "pos_treino_solida",
       "itens": [
         { "alimento_id": "uuid-da-tabela", "quantidade_g": 100, "substituicoes": "sugestão livre opcional" }
       ]
@@ -166,13 +213,15 @@ FORMATO OBRIGATÓRIO:
 
     const userPrompt = `META: ${kcalAlvo} kcal | P:${proteinaG}g C:${carboG}g G:${gorduraG}g
 OBJETIVO: ${objetivo}
+HORÁRIO DO TREINO (presumido): ${nivel.includes("alto") || nivel.includes("avan") ? "17:00-19:00" : "manhã ou tarde — você decide e marque tag_timing"}
 DEFICIÊNCIAS CLÍNICAS: ${deficienciasTxt}
+ALERTAS NUTRICIONAIS DETECTADOS: ${alertasNutricionais.join(" | ") || "nenhum"}
 RESUMO CLÍNICO: ${ultimaAnalise?.resumo_clinico || "Nenhum exame disponível"}
 
 ALIMENTOS DISPONÍVEIS (id|nome|categoria|kcal|P|C|G por 100g):
 ${alimentosLista}
 
-Gere o plano em JSON.`;
+Gere o plano em JSON aplicando Nutrient Timing, Proteína Rotativa, metas de Fibras (${fibrasMin}-${fibrasMax}g) e Hidratação (${hidratacaoMl}ml).`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
