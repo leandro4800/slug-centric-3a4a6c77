@@ -463,7 +463,7 @@ const Scheduling = () => {
                           key={h.id}
                           disabled={cheio && !meu}
                           onClick={() => !cheio && setSelectedSlot(h.id)}
-                          className={`rounded-full border px-4 py-3 font-display text-xl tracking-wider transition ${ativo ? "border-white bg-primary text-white" : meu ? "border-emerald-500/60 bg-emerald-600/25 text-emerald-200" : cheio ? "border-white/10 bg-white/5 text-white/30 line-through" : "border-white/10 bg-white/5 text-white hover:border-primary/60"}`}
+                          className={`rounded-md border px-4 py-3 font-display text-xl tracking-wider transition ${ativo ? "border-white bg-primary text-white" : meu ? "border-emerald-500/60 bg-emerald-600/25 text-emerald-200" : cheio ? "border-white/10 bg-white/5 text-white/30 line-through" : "border-white/10 bg-white/5 text-white hover:border-primary/60"}`}
                         >
                           {fmtHora(h.hora_inicio)}
                         </button>
