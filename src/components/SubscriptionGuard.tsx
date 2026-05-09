@@ -24,12 +24,20 @@ export const SubscriptionGuard = ({ children }: Props) => {
       setLoading(true);
       
       // 1. Resolve tenant with ownership explicitly.
-      // Branding only loads public columns, so owner_user_id must be fetched here.
       const { data: tenant } = brandedTenant?.id
-        ? await supabase.from("tenants").select("id, owner_user_id").eq("id", brandedTenant.id).maybeSingle()
-        : slug
-          ? await supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle()
+        ? await supabase.from(\"tenants\").select(\"id, owner_user_id\").eq(\"id\", brandedTenant.id).maybeSingle()
+        : slug && slug !== \"demo\"
+          ? await supabase.from(\"tenants\").select(\"id, owner_user_id\").eq(\"slug\", slug).maybeSingle()
           : { data: null };
+
+      // Se estamos em um tenant específico, e o usuário não tem assinatura,
+      // mas temos um voucher pendente, permitimos o acesso para que o Login.tsx processe
+      const pendingVoucher = sessionStorage.getItem(\"pending_voucher\");
+      if (pendingVoucher && slug && slug !== \"demo\") {
+        setIsCoach(false);
+        setLoading(false);
+        return;
+      }
 
       if (tenant?.owner_user_id === user.id) {
         setIsCoach(true);
