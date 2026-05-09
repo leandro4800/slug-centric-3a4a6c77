@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft, Sparkles } from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Loader2, KeyRound } from "lucide-react";
 import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
 
 interface Tenant {
@@ -51,6 +53,44 @@ export default function TenantLanding() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [aulaAvulsaOpen, setAulaAvulsaOpen] = useState(false);
+  const [voucherOpen, setVoucherOpen] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherLoading, setVoucherLoading] = useState(false);
+
+  const handleRedeemVoucher = async () => {
+    const code = voucherCode.trim();
+    if (!code) {
+      toast({ title: "Digite o código", variant: "destructive" });
+      return;
+    }
+    if (!user) {
+      navigate(`/${slug}/login?redirect=/${slug}`);
+      return;
+    }
+    setVoucherLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("redeem_voucher", { _code: code });
+      if (error) throw error;
+      const result = data as { ok: boolean; error?: string };
+      if (!result?.ok) {
+        const msg = result?.error === "invalid_code" ? "Código inválido"
+          : result?.error === "already_used" ? "Código já utilizado"
+          : result?.error === "expired" ? "Código expirado"
+          : result?.error === "not_authenticated" ? "Faça login primeiro"
+          : "Não foi possível resgatar o código";
+        toast({ title: msg, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Acesso liberado!", description: "Redirecionando para o app..." });
+      setVoucherOpen(false);
+      setTimeout(() => navigate(`/${slug}/app`, { replace: true }), 800);
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } finally {
+      setVoucherLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     void load();
@@ -144,7 +184,14 @@ export default function TenantLanding() {
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Marketplace
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setVoucherOpen(true)}
+              className="text-white hover:bg-white/10 font-bold uppercase tracking-wider"
+            >
+              <KeyRound className="mr-1 h-4 w-4" /> Tenho código
+            </Button>
             <Link to={`/${slug}/login`}>
               <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">Entrar</Button>
             </Link>
@@ -303,6 +350,43 @@ export default function TenantLanding() {
               preco={Number(tenant.preco_aula_avulsa)}
             />
           )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={voucherOpen} onOpenChange={setVoucherOpen}>
+        <DialogContent className="bg-card border border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase text-xl flex items-center gap-2">
+              <KeyRound className="h-5 w-5" /> Código de acesso
+            </DialogTitle>
+            <DialogDescription>
+              {user
+                ? "Digite o código fornecido pelo coach para liberar acesso ilimitado sem cobrança."
+                : "Faça login ou cadastre-se primeiro. Depois volte aqui para resgatar seu código."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              value={voucherCode}
+              onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+              placeholder="EX: ALPHA-XXXXXX"
+              className="uppercase tracking-widest"
+              disabled={!user || voucherLoading}
+            />
+            {user ? (
+              <Button
+                onClick={handleRedeemVoucher}
+                disabled={voucherLoading}
+                className="w-full font-bold uppercase tracking-widest"
+              >
+                {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar acesso"}
+              </Button>
+            ) : (
+              <Link to={`/${slug}/login`} className="block">
+                <Button className="w-full font-bold uppercase tracking-widest">Entrar / Cadastrar</Button>
+              </Link>
+            )}
+          </div>
         </DialogContent>
       </Dialog>
     </div>

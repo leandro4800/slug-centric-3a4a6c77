@@ -2411,6 +2411,39 @@ export type Database = {
           },
         ]
       }
+      vouchers: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          plano_id: string
+          tenant_id: string
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plano_id: string
+          tenant_id: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          plano_id?: string
+          tenant_id?: string
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -2459,6 +2492,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      redeem_voucher: { Args: { _code: string }; Returns: Json }
       user_belongs_to_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean

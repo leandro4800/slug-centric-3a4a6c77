@@ -24,7 +24,16 @@ const Login = () => {
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("confirmed") === "1") {
+      toast.success("E-mail confirmado! Faça login para continuar.");
+      const url = new URL(window.location.href);
+      url.searchParams.delete("confirmed");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   // Redirect logged-in user
   useEffect(() => {
@@ -175,7 +184,7 @@ const Login = () => {
       type: "signup",
       email: cleanEmail,
       options: {
-        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}` : `${window.location.origin}/login`,
+        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}/login?confirmed=1` : `${window.location.origin}/login?confirmed=1`,
       },
     });
     setLoading(false);
@@ -203,7 +212,7 @@ const Login = () => {
       email: cleanEmail,
       password,
       options: {
-        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}` : `${window.location.origin}/login`,
+        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}/login?confirmed=1` : `${window.location.origin}/login?confirmed=1`,
         data: { 
           nome_completo: nome,
           tenant_id: tenant?.id || undefined,
