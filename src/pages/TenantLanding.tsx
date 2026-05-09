@@ -184,7 +184,14 @@ export default function TenantLanding() {
           <Link to="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
             <ArrowLeft className="h-4 w-4" /> Marketplace
           </Link>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              onClick={() => setVoucherOpen(true)}
+              className="text-white hover:bg-white/10 font-bold uppercase tracking-wider"
+            >
+              <KeyRound className="mr-1 h-4 w-4" /> Tenho código
+            </Button>
             <Link to={`/${slug}/login`}>
               <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">Entrar</Button>
             </Link>
