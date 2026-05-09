@@ -14,6 +14,9 @@ import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
+import heic2any from "heic2any";
+
+// ... rest of the file
 
 const Perfil = () => {
   const { user, signOut } = useAuth();
