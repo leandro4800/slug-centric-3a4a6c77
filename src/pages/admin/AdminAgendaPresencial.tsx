@@ -70,7 +70,7 @@ const AdminAgendaPresencial = () => {
     if (slotIds.length) {
       const { data: r } = await supabase
         .from("agendamentos_presenciais")
-        .select("id, slot_id, aluno_id, status, created_at")
+        .select("id, slot_id, aluno_id, status, academia_confirmada, created_at")
         .in("slot_id", slotIds);
       const alunoIds = Array.from(new Set((r || []).map((x: any) => x.aluno_id)));
       let perfis: Record<string, any> = {};
