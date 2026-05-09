@@ -700,7 +700,22 @@ const Perfil = () => {
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
-            <Button variant="default" onClick={() => { setAdjustOpen(false); toast.success("Foto ajustada!"); }}>Concluir</Button>
+            <Button variant="default" onClick={async () => {
+              try {
+                const { error } = await supabase
+                  .from("perfis")
+                  .update({ avatar_pos_y: imgPosY })
+                  .eq("id", user?.id);
+                
+                if (error) throw error;
+                
+                setProfile(prev => prev ? { ...prev, avatar_pos_y: imgPosY } : null);
+                setAdjustOpen(false);
+                toast.success("Ajuste de foto salvo!");
+              } catch (err: any) {
+                toast.error("Erro ao salvar ajuste: " + err.message);
+              }
+            }}>Concluir</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
