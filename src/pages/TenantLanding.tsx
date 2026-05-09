@@ -45,6 +45,7 @@ const TENANT_PUBLIC_COLUMNS =
 export default function TenantLanding() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [planos, setPlanos] = useState<Plano[]>([]);
