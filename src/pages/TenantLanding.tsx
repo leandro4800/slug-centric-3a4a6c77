@@ -113,6 +113,14 @@ export default function TenantLanding() {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     setUser(currentUser);
 
+    // Se o aluno já tem código (chegou pelo link com ?codigo / ?voucher),
+    // pula a tela de planos e vai direto para o login do coach.
+    const temCodigo = searchParams.get("codigo") !== null || searchParams.get("voucher") !== null;
+    if (temCodigo && !currentUser) {
+      navigate(`/${slug}/login?redirect=/${slug}?voucher=1`, { replace: true });
+      return;
+    }
+
     const { data: t } = await supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("slug", slug).maybeSingle();
     setTenant(t as Tenant);
     
