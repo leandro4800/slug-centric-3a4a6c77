@@ -78,6 +78,17 @@ const Login = () => {
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
+      // Auto-redeem pending voucher (set on Login page before signup/login)
+      const pending = sessionStorage.getItem("pending_voucher");
+      if (pending) {
+        sessionStorage.removeItem("pending_voucher");
+        const ok = await redeemVoucherCode(pending);
+        if (ok) {
+          const targetSlug = urlSlug || tenant?.slug;
+          navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
+          return;
+        }
+      }
       // Priority 1: Check if there's a redirect in state (from RequireAuth)
       const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
       const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
