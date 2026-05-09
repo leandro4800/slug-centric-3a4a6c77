@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, CalendarCheck, Clock, ChevronRight, Bell } from "lucide-react";
+import { MapPin, Navigation, CalendarCheck, Clock, ChevronRight, Bell, Bot, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import heroCoach from "@/assets/coach-presencial-hero.jpg";
 
 interface Slot {
@@ -37,6 +38,7 @@ const Scheduling = () => {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,18 +128,21 @@ const Scheduling = () => {
   const slotInfo = slots.find(s => s.id === selectedSlot);
   const jaAgendado = selectedSlot && meusAgendamentos.some(m => m.slot_id === selectedSlot);
 
-  const scrollToSelector = () => selectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  const openSchedulingChat = () => {
+    if (!selectedDate && dias[0]) setSelectedDate(dias[0].data);
+    setChatOpen(true);
+  };
 
   const confirmar = async () => {
-    if (!selectedSlot || !user?.id || !tenant?.id) return;
+    if (!selectedSlot || !user?.id || !tenant?.id) return false;
     if (jaAgendado) {
       toast({ title: "Você já está agendado neste horário" });
-      return;
+      return false;
     }
     const slot = slots.find(s => s.id === selectedSlot);
     if (slot && slot.reservados >= slot.capacidade) {
       toast({ title: "Horário esgotado", variant: "destructive" });
-      return;
+      return false;
     }
     setConfirming(true);
     const { data, error } = await supabase
@@ -148,7 +153,7 @@ const Scheduling = () => {
     setConfirming(false);
     if (error) {
       toast({ title: "Erro ao agendar", description: error.message, variant: "destructive" });
-      return;
+      return false;
     }
     setMeusAgendamentos(prev => [...prev, data!]);
     setSlots(prev => prev.map(s => s.id === selectedSlot ? { ...s, reservados: s.reservados + 1 } : s));
@@ -156,6 +161,7 @@ const Scheduling = () => {
       Notification.requestPermission();
     }
     toast({ title: "✅ Agendamento confirmado!", description: "Você receberá um lembrete 1h antes." });
+    return true;
   };
 
   const mapsUrl = slotInfo?.local_lat && slotInfo?.local_lng
@@ -187,8 +193,8 @@ const Scheduling = () => {
             <p className="text-sm text-white/70 mb-5 max-w-md font-light">
               Treine ao lado do seu Coach. Escolha o dia, o horário e prepare-se para uma sessão de alto nível.
             </p>
-            <Button onClick={scrollToSelector} variant="default" size="lg" className="rounded-full px-8">
-              <CalendarCheck className="mr-1" /> MARCAR AGORA
+            <Button onClick={openSchedulingChat} variant="default" size="lg" className="rounded-full px-8">
+              <MessageCircle className="mr-1" /> MARCAR AGORA
             </Button>
           </motion.div>
         </div>
@@ -367,6 +373,117 @@ const Scheduling = () => {
           )}
         </div>
       )}
+
+      <Dialog open={chatOpen} onOpenChange={setChatOpen}>
+        <DialogContent className="max-w-md border-primary/30 bg-black text-white rounded-2xl p-0 overflow-hidden shadow-[0_0_60px_-10px_hsl(var(--primary)/0.8)]">
+          <DialogHeader className="px-5 pt-5 pb-3 text-left border-b border-white/10 bg-gradient-to-r from-primary/25 to-transparent">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center">
+                <Bot className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <DialogTitle className="font-display text-2xl tracking-wider text-white">DR. AGENDA</DialogTitle>
+                <DialogDescription className="text-xs text-white/60">
+                  Escolha seu horário presencial com o Coach.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="max-h-[70vh] overflow-y-auto px-5 py-4 space-y-5">
+            <div className="flex gap-3">
+              <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                <Bot className="h-4 w-4 text-white" />
+              </div>
+              <div className="rounded-2xl rounded-tl-sm bg-white/10 border border-white/10 px-4 py-3 text-sm text-white/80">
+                {loading
+                  ? "Estou buscando os horários disponíveis..."
+                  : dias.length === 0
+                    ? "Ainda não existe nenhum horário liberado pelo Coach. Assim que ele cadastrar, você agenda por aqui."
+                    : "Primeiro escolha o dia. Depois eu libero os horários disponíveis."}
+              </div>
+            </div>
+
+            {!loading && dias.length > 0 && (
+              <>
+                <div className="space-y-2">
+                  <div className="text-[10px] font-bold tracking-[0.3em] text-white/40">DIAS</div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {dias.map(d => {
+                      const ativo = d.data === selectedDate;
+                      return (
+                        <button
+                          key={d.data}
+                          onClick={() => { setSelectedDate(d.data); setSelectedSlot(null); }}
+                          className={`rounded-2xl border px-3 py-3 text-center transition ${ativo ? "border-primary bg-primary text-white" : "border-white/10 bg-white/5 text-white/70 hover:border-primary/60"}`}
+                        >
+                          <div className="text-[10px] tracking-widest">{d.weekday}</div>
+                          <div className="font-display text-3xl leading-none">{d.day}</div>
+                          <div className="text-[10px] tracking-widest">{d.month}</div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                    <Bot className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="rounded-2xl rounded-tl-sm bg-white/10 border border-white/10 px-4 py-3 text-sm text-white/80">
+                    Agora selecione o horário da sua sessão presencial.
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-[10px] font-bold tracking-[0.3em] text-white/40">HORÁRIOS</div>
+                  <div className="grid grid-cols-2 gap-2">
+                    {horariosDoDia.map(h => {
+                      const ativo = h.id === selectedSlot;
+                      const cheio = h.reservados >= h.capacidade;
+                      const meu = meusAgendamentos.some(m => m.slot_id === h.id);
+                      return (
+                        <button
+                          key={h.id}
+                          disabled={cheio && !meu}
+                          onClick={() => !cheio && setSelectedSlot(h.id)}
+                          className={`rounded-full border px-4 py-3 font-display text-xl tracking-wider transition ${ativo ? "border-white bg-primary text-white" : meu ? "border-emerald-500/60 bg-emerald-600/25 text-emerald-200" : cheio ? "border-white/10 bg-white/5 text-white/30 line-through" : "border-white/10 bg-white/5 text-white hover:border-primary/60"}`}
+                        >
+                          {fmtHora(h.hora_inicio)}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {slotInfo && (
+                  <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 space-y-2">
+                    <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] text-primary">
+                      <MapPin className="h-3 w-3" /> LOCAL
+                    </div>
+                    <div className="font-display text-2xl">{slotInfo.local_nome}</div>
+                    {slotInfo.local_endereco && <div className="text-xs text-white/60">{slotInfo.local_endereco}</div>}
+                    <div className="text-xs text-white/60">{fmtHora(slotInfo.hora_inicio)} – {fmtHora(slotInfo.hora_fim)}</div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="p-4 border-t border-white/10 bg-black">
+            <button
+              onClick={async () => {
+                const ok = await confirmar();
+                if (ok) setChatOpen(false);
+              }}
+              disabled={!selectedSlot || !!jaAgendado || confirming}
+              className="w-full rounded-full bg-primary py-4 font-display text-2xl tracking-[0.18em] text-white shadow-[0_0_35px_-6px_hsl(var(--primary)/0.8)] disabled:opacity-40 disabled:shadow-none"
+            >
+              {jaAgendado ? "JÁ AGENDADO" : confirming ? "CONFIRMANDO..." : "CONFIRMAR"}
+            </button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* FOOTER FIXO DE CONFIRMAÇÃO */}
       <AnimatePresence>
