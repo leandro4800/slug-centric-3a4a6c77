@@ -97,8 +97,8 @@ const AdminPanel = () => {
         uploadFile = await normalizeImage(Array.isArray(source) ? source[0] : source, kind === "logo" ? 900 : 1800, 0.84);
         ext = "jpg";
         contentType = "image/jpeg";
-      } catch (err: any) {
-        toast.error(err?.message || "Não foi possível preparar a imagem. Tente JPG, PNG ou WEBP.");
+      } catch (err: unknown) {
+        toast.error(err instanceof Error ? err.message : "Não foi possível preparar a imagem. Tente JPG, PNG ou WEBP.");
         setUploading(null);
         return;
       }
@@ -130,7 +130,8 @@ const AdminPanel = () => {
       canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
       canvas.toBlob((out) => {
         URL.revokeObjectURL(url);
-        out ? resolve(out) : reject(new Error("Imagem inválida."));
+        if (out) resolve(out);
+        else reject(new Error("Imagem inválida."));
       }, "image/jpeg", quality);
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Imagem inválida ou não suportada.")); };
