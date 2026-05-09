@@ -40,6 +40,7 @@ import MeusAtletas from "./pages/admin/MeusAtletas";
 import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
 import AtletaCarta from "./pages/admin/AtletaCarta";
 import Carta from "./pages/aluno/Carta";
+import Scheduling from "./pages/aluno/Scheduling";
 import AdminCoaches from "./pages/admin/AdminCoaches";
 import AdminPlanos from "./pages/admin/AdminPlanos";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
@@ -158,6 +159,7 @@ const App = () => (
               <Route path="anamnese" element={<Anamnese />} />
               <Route path="controle" element={<ControleCentral />} />
               <Route path="carta" element={<Carta />} />
+              <Route path="presencial" element={<Scheduling />} />
             </Route>
 
 

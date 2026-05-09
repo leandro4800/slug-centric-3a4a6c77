@@ -1,5 +1,5 @@
 import { NavLink, useParams } from "react-router-dom";
-import { Home, Dumbbell, Utensils, TrendingUp, Stethoscope, Users, User } from "lucide-react";
+import { Home, Dumbbell, Utensils, TrendingUp, Stethoscope, CalendarCheck, User } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 
 const items = [
@@ -8,7 +8,7 @@ const items = [
   { label: "Dieta", icon: Utensils, to: "dieta" },
   { label: "Evolução", icon: TrendingUp, to: "evolucao" },
   { label: "Clínica", icon: Stethoscope, to: "clinica" },
-  { label: "Comuni…", icon: Users, to: "comunidade" },
+  { label: "Presen…", icon: CalendarCheck, to: "presencial" },
   { label: "Perfil", icon: User, to: "perfil" },
 ];
 
