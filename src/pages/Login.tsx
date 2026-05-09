@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -24,6 +24,45 @@ const Login = () => {
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherLoading, setVoucherLoading] = useState(false);
+
+  const redeemVoucherCode = async (code: string): Promise<boolean> => {
+    const { data, error } = await supabase.rpc("redeem_voucher", { _code: code });
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    const result = data as { ok: boolean; error?: string };
+    if (!result?.ok) {
+      const msg = result?.error === "invalid_code" ? "Código inválido"
+        : result?.error === "already_used" ? "Código já utilizado"
+        : result?.error === "expired" ? "Código expirado"
+        : "Não foi possível resgatar o código";
+      toast.error(msg);
+      return false;
+    }
+    toast.success("Acesso liberado!");
+    return true;
+  };
+
+  const handleRedeemClick = async () => {
+    const code = voucherCode.trim();
+    if (!code) { toast.error("Digite o código"); return; }
+    if (!user) {
+      sessionStorage.setItem("pending_voucher", code);
+      toast.message("Faça login ou crie sua conta — vamos liberar seu acesso automaticamente.");
+      return;
+    }
+    setVoucherLoading(true);
+    const ok = await redeemVoucherCode(code);
+    setVoucherLoading(false);
+    if (ok) {
+      sessionStorage.removeItem("pending_voucher");
+      const targetSlug = urlSlug || tenant?.slug;
+      navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -39,6 +78,17 @@ const Login = () => {
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
+      // Auto-redeem pending voucher (set on Login page before signup/login)
+      const pending = sessionStorage.getItem("pending_voucher");
+      if (pending) {
+        sessionStorage.removeItem("pending_voucher");
+        const ok = await redeemVoucherCode(pending);
+        if (ok) {
+          const targetSlug = urlSlug || tenant?.slug;
+          navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
+          return;
+        }
+      }
       // Priority 1: Check if there's a redirect in state (from RequireAuth)
       const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
       const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
@@ -406,6 +456,37 @@ const Login = () => {
             )}
             </Tabs>
           )}
+
+          {/* Voucher / código de acesso */}
+          <div className="mt-8 pt-6 border-t border-white/10">
+            <Label htmlFor="voucher" className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground mb-2">
+              <KeyRound className="h-4 w-4" /> Tem um código de acesso?
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="voucher"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                placeholder="EX: ALPHA-XXXXXX"
+                className="bg-white/5 border-white/10 uppercase tracking-widest"
+                disabled={voucherLoading}
+              />
+              <Button
+                type="button"
+                onClick={handleRedeemClick}
+                disabled={voucherLoading}
+                variant="outline"
+                className="font-bold uppercase tracking-widest whitespace-nowrap"
+              >
+                {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar"}
+              </Button>
+            </div>
+            {!user && (
+              <p className="text-[11px] text-muted-foreground mt-2">
+                Sem conta? Crie uma na aba acima — o código será aplicado automaticamente após o login.
+              </p>
+            )}
+          </div>
         </div>
         <p className="text-center text-xs text-muted-foreground mt-6">
           {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
