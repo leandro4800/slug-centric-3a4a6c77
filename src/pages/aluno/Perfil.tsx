@@ -190,11 +190,22 @@ const Perfil = () => {
 
       console.log("Enviando para o Storage:", filePath);
       
-      // Tentar upload com fallback de contentType
+      // Comprime imagens grandes (>1.2MB) para acelerar upload em conexões lentas
+      const sizeMB = (file as Blob).size / (1024 * 1024);
+      if (!isHeic && sizeMB > 1.2 && (original.type || '').startsWith('image/')) {
+        try {
+          const compressed = await compressImage(file as Blob, 1600, 0.82);
+          if (compressed) { file = compressed; fileExt = 'jpg'; }
+        } catch (err) {
+          console.warn('Falha ao comprimir imagem, enviando original:', err);
+        }
+      }
+
+      let finalPath = filePath;
       const { error: uploadError } = await supabase.storage
         .from('avatars')
-        .upload(filePath, file, { 
-          contentType: isHeic ? 'image/jpeg' : (original.type || 'image/jpeg'),
+        .upload(finalPath, file, { 
+          contentType: isHeic ? 'image/jpeg' : ((file as any).type || original.type || 'image/jpeg'),
           upsert: true,
           cacheControl: '3600'
         });
@@ -202,16 +213,17 @@ const Perfil = () => {
       if (uploadError) {
         console.error("Erro no upload para o Storage:", uploadError);
         // Fallback: tentar sem contentType se falhar
+        finalPath = filePath + "-retry";
         const { error: retryError } = await supabase.storage
           .from('avatars')
-          .upload(filePath + "-retry", file, { upsert: true });
+          .upload(finalPath, file, { upsert: true });
         
         if (retryError) throw retryError;
       }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
-        .getPublicUrl(filePath);
+        .getPublicUrl(finalPath);
 
       console.log("Upload concluído. URL pública:", publicUrl);
       setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
@@ -244,10 +256,33 @@ const Perfil = () => {
       toast.success("Foto salva com sucesso!");
     } catch (error: any) {
       console.error("Erro detalhado no upload:", error);
-      toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"));
+      toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"), { id: toastId });
     } finally {
       setUploading(false);
     }
+  };
+
+  // Comprime/redimensiona imagem via canvas para reduzir tamanho antes do upload
+  const compressImage = (blob: Blob, maxDim: number, quality: number): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(null);
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((b) => { URL.revokeObjectURL(url); resolve(b); }, 'image/jpeg', quality);
+        } catch { URL.revokeObjectURL(url); resolve(null); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
