@@ -179,6 +179,7 @@ const App = () => (
             <Route path="/:slug/admin/vlogs" element={<RequireAuth><AdminVlogs /></RequireAuth>} />
             <Route path="/:slug/admin/videos-tecnicos" element={<RequireAuth><AdminVideosTecnicos /></RequireAuth>} />
             <Route path="/:slug/admin/agenda-avulsa" element={<RequireAuth><AdminAgendaAvulsa /></RequireAuth>} />
+            <Route path="/:slug/admin/agenda-presencial" element={<RequireAuth><AdminAgendaPresencial /></RequireAuth>} />
 
             {/* Agendamento pós-pagamento (público, via token) */}
             <Route path="/:slug/agendar-aula/:token" element={<AgendarAulaAvulsa />} />
