@@ -262,12 +262,19 @@ const Perfil = () => {
       ...formProfile,
       tenant_id: profile?.tenant_id || tenant?.id,
       updated_at: new Date().toISOString()
-    } as any);
+    }, { onConflict: 'id' });
 
     setSaving(false);
     if (error) {
       console.error("Erro ao salvar perfil:", error);
-      return toast.error("Erro ao salvar: " + error.message);
+      // Fallback: tentar update se upsert falhar
+      const { error: updateError } = await supabase.from("perfis")
+        .update({ ...formProfile, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+        
+      if (updateError) {
+        return toast.error("Erro ao salvar: " + updateError.message);
+      }
     }
     
     toast.success("Perfil atualizado!");
