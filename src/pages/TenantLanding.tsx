@@ -352,6 +352,43 @@ export default function TenantLanding() {
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={voucherOpen} onOpenChange={setVoucherOpen}>
+        <DialogContent className="bg-card border border-border">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase text-xl flex items-center gap-2">
+              <KeyRound className="h-5 w-5" /> Código de acesso
+            </DialogTitle>
+            <DialogDescription>
+              {user
+                ? "Digite o código fornecido pelo coach para liberar acesso ilimitado sem cobrança."
+                : "Faça login ou cadastre-se primeiro. Depois volte aqui para resgatar seu código."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              value={voucherCode}
+              onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+              placeholder="EX: ALPHA-XXXXXX"
+              className="uppercase tracking-widest"
+              disabled={!user || voucherLoading}
+            />
+            {user ? (
+              <Button
+                onClick={handleRedeemVoucher}
+                disabled={voucherLoading}
+                className="w-full font-bold uppercase tracking-widest"
+              >
+                {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar acesso"}
+              </Button>
+            ) : (
+              <Link to={`/${slug}/login`} className="block">
+                <Button className="w-full font-bold uppercase tracking-widest">Entrar / Cadastrar</Button>
+              </Link>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
