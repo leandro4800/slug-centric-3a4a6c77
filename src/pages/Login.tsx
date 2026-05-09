@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
-import { Loader2, Eye, EyeOff } from "lucide-react";
+import { Loader2, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
