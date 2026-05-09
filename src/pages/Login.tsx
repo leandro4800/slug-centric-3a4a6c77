@@ -152,8 +152,12 @@ const Login = () => {
             .in("status", ["active", "trialing"])
             .maybeSingle();
           if (!sub) {
-            navigate(`/${targetSlug}`, { replace: true });
-            return;
+            // Se NÃO tem assinatura mas tem voucher pendente, o fluxo de voucher acima cuidará do redirecionamento.
+            // Se já tentamos o voucher e falhou, ou não tinha, então sim vai para a landing.
+            if (!sessionStorage.getItem("pending_voucher")) {
+              navigate(`/${targetSlug}`, { replace: true });
+              return;
+            }
           }
           userSlug = targetSlug;
         } else {
