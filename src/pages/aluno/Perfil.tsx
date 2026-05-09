@@ -86,7 +86,7 @@ const Perfil = () => {
     sexo: "M" as "M" | "F",
     avatar_url: "",
     music_url: "",
-    avatar_pos_y: 30,
+    avatar_pos_y: 20,
   });
 
   // Evaluation form
