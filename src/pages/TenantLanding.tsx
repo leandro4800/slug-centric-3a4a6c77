@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Check, ArrowLeft, Sparkles } from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Loader2, KeyRound } from "lucide-react";
 import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
 
 interface Tenant {
