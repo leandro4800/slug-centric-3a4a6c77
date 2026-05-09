@@ -194,11 +194,16 @@ const Scheduling = () => {
         </div>
       </div>
 
+      <div ref={selectorRef} className="scroll-mt-4" />
+
       {loading ? (
         <div className="p-10 text-center text-white/50 text-xs tracking-widest">CARREGANDO AGENDA...</div>
       ) : dias.length === 0 ? (
         <div className="p-10 text-center text-white/50 text-xs tracking-widest">
           NENHUMA SESSÃO DISPONÍVEL NO MOMENTO
+        </div>
+      ) : (
+        <div className="px-5 pt-10 pb-40 space-y-10">
         </div>
       ) : (
         <div ref={selectorRef} className="px-5 pt-10 pb-40 space-y-10">
