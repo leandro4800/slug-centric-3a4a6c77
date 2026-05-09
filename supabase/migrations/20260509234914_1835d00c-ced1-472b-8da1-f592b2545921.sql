@@ -1,0 +1,1 @@
+DELETE FROM tenants WHERE id = 'e1f09eca-3d25-4cc5-8b02-ee7511b9e7af';
