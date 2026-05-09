@@ -53,6 +53,44 @@ export default function TenantLanding() {
   const [hasSubscription, setHasSubscription] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [aulaAvulsaOpen, setAulaAvulsaOpen] = useState(false);
+  const [voucherOpen, setVoucherOpen] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherLoading, setVoucherLoading] = useState(false);
+
+  const handleRedeemVoucher = async () => {
+    const code = voucherCode.trim();
+    if (!code) {
+      toast({ title: "Digite o código", variant: "destructive" });
+      return;
+    }
+    if (!user) {
+      navigate(`/${slug}/login?redirect=/${slug}`);
+      return;
+    }
+    setVoucherLoading(true);
+    try {
+      const { data, error } = await supabase.rpc("redeem_voucher", { _code: code });
+      if (error) throw error;
+      const result = data as { ok: boolean; error?: string };
+      if (!result?.ok) {
+        const msg = result?.error === "invalid_code" ? "Código inválido"
+          : result?.error === "already_used" ? "Código já utilizado"
+          : result?.error === "expired" ? "Código expirado"
+          : result?.error === "not_authenticated" ? "Faça login primeiro"
+          : "Não foi possível resgatar o código";
+        toast({ title: msg, variant: "destructive" });
+        return;
+      }
+      toast({ title: "Acesso liberado!", description: "Redirecionando para o app..." });
+      setVoucherOpen(false);
+      setTimeout(() => navigate(`/${slug}/app`, { replace: true }), 800);
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } finally {
+      setVoucherLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     void load();
