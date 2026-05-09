@@ -64,13 +64,13 @@ const Perfil = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [imgPosY, setImgPosY] = useState<number>(() => {
-    const v = typeof window !== "undefined" ? localStorage.getItem("perfil_img_pos_y") : null;
-    return v ? Number(v) : 20;
-  });
+  const [imgPosY, setImgPosY] = useState<number>(20);
+
   useEffect(() => {
-    if (typeof window !== "undefined") localStorage.setItem("perfil_img_pos_y", String(imgPosY));
-  }, [imgPosY]);
+    if (profile?.avatar_pos_y !== undefined && profile?.avatar_pos_y !== null) {
+      setImgPosY(profile.avatar_pos_y);
+    }
+  }, [profile?.avatar_pos_y]);
   const [profileImageFailed, setProfileImageFailed] = useState(false);
   const [formImageFailed, setFormImageFailed] = useState(false);
 
