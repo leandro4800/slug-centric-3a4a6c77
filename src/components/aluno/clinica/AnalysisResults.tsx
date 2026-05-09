@@ -1,6 +1,9 @@
 import { MarkerCard } from "./MarkerCard";
 import { cn } from "@/lib/utils";
-import { Pill, ShieldAlert, Stethoscope } from "lucide-react";
+import { Pill, ShieldAlert, Stethoscope, Volume2, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Marker {
   codigo: string;
