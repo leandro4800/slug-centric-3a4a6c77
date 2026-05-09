@@ -256,10 +256,33 @@ const Perfil = () => {
       toast.success("Foto salva com sucesso!");
     } catch (error: any) {
       console.error("Erro detalhado no upload:", error);
-      toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"));
+      toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"), { id: toastId });
     } finally {
       setUploading(false);
     }
+  };
+
+  // Comprime/redimensiona imagem via canvas para reduzir tamanho antes do upload
+  const compressImage = (blob: Blob, maxDim: number, quality: number): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(null);
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((b) => { URL.revokeObjectURL(url); resolve(b); }, 'image/jpeg', quality);
+        } catch { URL.revokeObjectURL(url); resolve(null); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
   };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
