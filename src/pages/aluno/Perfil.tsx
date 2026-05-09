@@ -64,7 +64,7 @@ const Perfil = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [imgPosY, setImgPosY] = useState<number>(30);
+  const [imgPosY, setImgPosY] = useState<number>(20);
 
   useEffect(() => {
     if (profile?.avatar_pos_y !== undefined && profile?.avatar_pos_y !== null) {
@@ -86,7 +86,7 @@ const Perfil = () => {
     sexo: "M" as "M" | "F",
     avatar_url: "",
     music_url: "",
-    avatar_pos_y: 30,
+    avatar_pos_y: 20,
   });
 
   // Evaluation form
@@ -172,7 +172,7 @@ const Perfil = () => {
           sexo: (p.sexo as "M" | "F") || "M",
           avatar_url: p.avatar_url || "",
           music_url: p.music_url || "",
-          avatar_pos_y: p.avatar_pos_y ?? 30,
+          avatar_pos_y: p.avatar_pos_y ?? 20,
         });
       }
       if (e) {
@@ -396,16 +396,16 @@ const Perfil = () => {
     <>
       <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
-      <section className="relative h-[85vh] min-h-[600px] -mt-0">
+      <section className="relative h-[65vh] min-h-[500px] -mt-0">
         <img
           src={profileHeroSrc}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-700 ease-in-out"
           style={{ objectPosition: `center ${imgPosY}%` }}
           onError={() => setProfileImageFailed(true)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent" />
 
         <button
           type="button"
@@ -416,7 +416,7 @@ const Perfil = () => {
           <Move className="h-3.5 w-3.5" /> Ajustar foto
         </button>
 
-        <div className="absolute bottom-0 left-0 right-0 px-5 pb-4 space-y-3">
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-10 space-y-4">
           <div className="flex items-center gap-3">
             <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">FILME</span>
             <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
@@ -676,11 +676,11 @@ const Perfil = () => {
             <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative w-full h-80 rounded-xl overflow-hidden border border-border bg-muted">
+            <div className="relative w-full aspect-[4/5] max-h-[400px] rounded-xl overflow-hidden border border-border bg-muted">
               <img
                 src={profileHeroSrc}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover"
+                className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-300 ease-in-out"
                 style={{ objectPosition: `center ${imgPosY}%` }}
                 onError={() => setProfileImageFailed(true)}
               />
@@ -701,7 +701,7 @@ const Perfil = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImgPosY(30)}>Resetar</Button>
+            <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
             <Button variant="default" onClick={async () => {
               try {
                 const { error } = await supabase
