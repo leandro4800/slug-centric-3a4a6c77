@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { MapPin, Navigation, CalendarCheck, Clock, ChevronRight, Bell } from "lucide-react";
+import { MapPin, Navigation, CalendarCheck, Clock, ChevronRight, Bell, Bot, MessageCircle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { toast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import heroCoach from "@/assets/coach-presencial-hero.jpg";
 
 interface Slot {
@@ -37,6 +38,7 @@ const Scheduling = () => {
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
   const selectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -126,18 +128,23 @@ const Scheduling = () => {
   const slotInfo = slots.find(s => s.id === selectedSlot);
   const jaAgendado = selectedSlot && meusAgendamentos.some(m => m.slot_id === selectedSlot);
 
+  const openSchedulingChat = () => {
+    if (!selectedDate && dias[0]) setSelectedDate(dias[0].data);
+    setChatOpen(true);
+  };
+
   const scrollToSelector = () => selectorRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
 
   const confirmar = async () => {
-    if (!selectedSlot || !user?.id || !tenant?.id) return;
+    if (!selectedSlot || !user?.id || !tenant?.id) return false;
     if (jaAgendado) {
       toast({ title: "Você já está agendado neste horário" });
-      return;
+      return false;
     }
     const slot = slots.find(s => s.id === selectedSlot);
     if (slot && slot.reservados >= slot.capacidade) {
       toast({ title: "Horário esgotado", variant: "destructive" });
-      return;
+      return false;
     }
     setConfirming(true);
     const { data, error } = await supabase
@@ -148,7 +155,7 @@ const Scheduling = () => {
     setConfirming(false);
     if (error) {
       toast({ title: "Erro ao agendar", description: error.message, variant: "destructive" });
-      return;
+      return false;
     }
     setMeusAgendamentos(prev => [...prev, data!]);
     setSlots(prev => prev.map(s => s.id === selectedSlot ? { ...s, reservados: s.reservados + 1 } : s));
@@ -156,6 +163,7 @@ const Scheduling = () => {
       Notification.requestPermission();
     }
     toast({ title: "✅ Agendamento confirmado!", description: "Você receberá um lembrete 1h antes." });
+    return true;
   };
 
   const mapsUrl = slotInfo?.local_lat && slotInfo?.local_lng
