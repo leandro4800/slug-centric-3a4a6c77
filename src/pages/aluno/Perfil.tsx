@@ -64,7 +64,7 @@ const Perfil = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [imgPosY, setImgPosY] = useState<number>(30);
+  const [imgPosY, setImgPosY] = useState<number>(20);
 
   useEffect(() => {
     if (profile?.avatar_pos_y !== undefined && profile?.avatar_pos_y !== null) {
