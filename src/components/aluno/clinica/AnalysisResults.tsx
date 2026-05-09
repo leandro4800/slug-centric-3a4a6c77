@@ -101,7 +101,21 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
 
       {/* RESUMO */}
       <div className="bg-gradient-to-br from-card/70 to-card/30 border border-border rounded-none p-6">
-        <h3 className="font-display text-lg mb-4 uppercase tracking-[0.2em] text-primary border-b border-primary/20 pb-2">Resumo Executivo</h3>
+        <div className="flex items-center justify-between mb-4 border-b border-primary/20 pb-2">
+          <h3 className="font-display text-lg uppercase tracking-[0.2em] text-primary">Resumo Executivo</h3>
+          <button 
+            onClick={handleSpeak}
+            disabled={isPlaying}
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+          >
+            {isPlaying ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
+            {isPlaying ? "Ouvindo..." : "Parecer em Áudio"}
+          </button>
+        </div>
         <div className="prose prose-invert prose-sm max-w-none text-muted-foreground leading-relaxed">
           {(parecer ?? "").split('\n').map((para, i) => (
             para.trim() ? <p key={i} className="mb-4 last:mb-0">{para}</p> : null
