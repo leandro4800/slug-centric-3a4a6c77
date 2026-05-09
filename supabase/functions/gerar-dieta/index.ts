@@ -228,6 +228,8 @@ FORMATO OBRIGATÓRIO:
 
     const userPrompt = `META: ${kcalAlvo} kcal | P:${proteinaG}g C:${carboG}g G:${gorduraG}g
 OBJETIVO: ${objetivo}
+DADOS DO ATLETA: Sexo ${sexo} · ${idade} anos · ${peso}kg · ${altura}cm · Nível ${nivel}
+COMPOSIÇÃO CORPORAL: ${composicaoTxt}
 HORÁRIO DO TREINO (presumido): ${nivel.includes("alto") || nivel.includes("avan") ? "17:00-19:00" : "manhã ou tarde — você decide e marque tag_timing"}
 DEFICIÊNCIAS CLÍNICAS: ${deficienciasTxt}
 ALERTAS NUTRICIONAIS DETECTADOS: ${alertasNutricionais.join(" | ") || "nenhum"}
