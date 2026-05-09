@@ -203,7 +203,7 @@ const Login = () => {
       email: cleanEmail,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/${urlSlug || "login"}/login?confirmed=1`,
+        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}/login?confirmed=1` : `${window.location.origin}/login?confirmed=1`,
         data: { 
           nome_completo: nome,
           tenant_id: tenant?.id || undefined,
