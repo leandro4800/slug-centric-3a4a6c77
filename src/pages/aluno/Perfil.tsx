@@ -50,6 +50,12 @@ const Perfil = () => {
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem("perfil_img_pos_y", String(imgPosY));
   }, [imgPosY]);
+  const [profileImageFailed, setProfileImageFailed] = useState(false);
+  const [formImageFailed, setFormImageFailed] = useState(false);
+
+  useEffect(() => {
+    setProfileImageFailed(false);
+  }, [profile?.avatar_url, tenant?.hero_url]);
 
   // Profile form
   const [formProfile, setFormProfile] = useState({
@@ -69,6 +75,57 @@ const Perfil = () => {
     cintura_cm: "",
     quadril_cm: "",
   });
+
+  const isUnsupportedProfileImage = (url?: string | null) => /\.(heic|heif)(\?|#|$)/i.test((url || "").trim());
+
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms);
+    });
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  };
+
+  const prepareAvatarImage = async (original: File) => {
+    const isHeic =
+      /heic|heif/i.test(original.type) ||
+      /\.(heic|heif)$/i.test(original.name) ||
+      (original.type === "" && /\.(heic|heif)$/i.test(original.name));
+
+    if (!isHeic && !original.type.startsWith("image/")) {
+      throw new Error("Por favor, selecione uma imagem.");
+    }
+
+    if (original.size > 10 * 1024 * 1024) {
+      throw new Error("A imagem deve ter no máximo 10MB.");
+    }
+
+    let source: Blob = original;
+    if (isHeic) {
+      const converted = await withTimeout(
+        heic2any({ blob: original, toType: "image/jpeg", quality: 0.82 }) as Promise<Blob | Blob[]>,
+        30000,
+        "A conversão da foto demorou demais. Tente uma imagem JPG, PNG ou WEBP."
+      );
+      source = Array.isArray(converted) ? converted[0] : converted;
+    }
+
+    const normalized = await withTimeout(
+      compressImage(source, 1600, 0.82),
+      30000,
+      "A preparação da foto demorou demais. Tente uma imagem menor."
+    );
+
+    if (!normalized) {
+      throw new Error("Não foi possível preparar essa imagem. Tente salvar a foto como JPG e enviar novamente.");
+    }
+
+    return { blob: normalized, extension: "jpg", contentType: "image/jpeg" };
+  };
 
   useEffect(() => {
     if (user) loadData();
