@@ -18,6 +18,11 @@ interface DietRequest {
   sexo?: string;
   nivel_atividade?: number; // 1.2 - 1.9
   nivel?: string; // "iniciante" | "intermediario" | "avancado" | "alto_nivel"
+  bf_pct?: number;
+  pescoco_cm?: number;
+  cintura_cm?: number;
+  quadril_cm?: number;
+  prompt?: string;
   aluno_id?: string;
   tenant_id?: string;
 }
