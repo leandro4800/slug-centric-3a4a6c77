@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard, Wallet, Video } from "lucide-react";
+import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard, Wallet, Video, CalendarClock, MapPin } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
@@ -135,6 +135,34 @@ const ControleCentral = () => {
           <div className="flex-1">
             <p className="font-display text-lg text-white group-hover:text-primary transition-all">IDENTIDADE VISUAL</p>
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Logo, cores e fontes · 1x/mês</p>
+          </div>
+          <span className="text-primary">→</span>
+        </Link>
+
+        <Link
+          to={`/${slug}/admin/agenda-presencial`}
+          className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
+        >
+          <div className="w-12 h-12 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+            <MapPin className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="font-display text-lg text-white group-hover:text-primary transition-all">AGENDA PRESENCIAL</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Cadastrar horários e locais para os alunos</p>
+          </div>
+          <span className="text-primary">→</span>
+        </Link>
+
+        <Link
+          to={`/${slug}/admin/agenda-avulsa`}
+          className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
+        >
+          <div className="w-12 h-12 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+            <CalendarClock className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="font-display text-lg text-white group-hover:text-primary transition-all">AGENDA AULAS AVULSAS</p>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Horários para aulas pagas</p>
           </div>
           <span className="text-primary">→</span>
         </Link>
