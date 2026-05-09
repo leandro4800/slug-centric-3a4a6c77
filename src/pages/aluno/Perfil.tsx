@@ -194,128 +194,61 @@ const Perfil = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const original = e.target.files?.[0];
     if (!original || !user) return;
-
-    console.log("Iniciando upload de imagem:", {
-      name: original.name,
-      type: original.type,
-      size: original.size
-    });
-
-    let file: File | Blob = original;
-    let fileExt = (original.name.split('.').pop() || 'jpg').toLowerCase();
-
-    // Detecção mais robusta de HEIC/HEIF
-    const isHeic = 
-      /heic|heif/i.test(original.type) || 
-      /\.(heic|heif)$/i.test(original.name) ||
-      (original.type === "" && /\.(heic|heif)$/i.test(original.name));
-
-    if (!isHeic && !original.type.startsWith('image/')) {
-      return toast.error("Por favor, selecione uma imagem.");
-    }
-
-    if (original.size > 10 * 1024 * 1024) {
-      return toast.error("A imagem deve ter no máximo 10MB.");
-    }
-
-    const toastId = toast.loading(isHeic ? "Convertendo foto do iPhone/Samsung..." : "Carregando foto...");
+    const toastId = toast.loading("Preparando foto...");
 
     try {
       setUploading(true);
-
-      if (isHeic) {
-        try {
-          console.log("Convertendo HEIC para JPEG...");
-          const converted = await heic2any({ 
-            blob: original, 
-            toType: 'image/jpeg', 
-            quality: 0.8 
-          });
-          file = Array.isArray(converted) ? converted[0] : converted;
-          fileExt = 'jpg';
-          console.log("Conversão concluída com sucesso.");
-        } catch (err) {
-          console.error('Erro detalhado convertendo HEIC:', err);
-          toast.error("Não foi possível converter a foto HEIC automaticamente. Tente salvar como JPG antes de enviar.", { id: toastId });
-          setUploading(false);
-          return;
-        }
-      }
-
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      setFormImageFailed(false);
+      const prepared = await prepareAvatarImage(original);
+      const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const fileName = `avatar-${stamp}.${prepared.extension}`;
       const filePath = `${user.id}/${fileName}`;
-
-      console.log("Enviando para o Storage:", filePath);
-      
-      // Comprime imagens grandes (>1.2MB) para acelerar upload em conexões lentas
-      const sizeMB = (file as Blob).size / (1024 * 1024);
-      if (!isHeic && sizeMB > 1.2 && (original.type || '').startsWith('image/')) {
-        try {
-          const compressed = await compressImage(file as Blob, 1600, 0.82);
-          if (compressed) { file = compressed; fileExt = 'jpg'; }
-        } catch (err) {
-          console.warn('Falha ao comprimir imagem, enviando original:', err);
-        }
-      }
-
-      let finalPath = filePath;
+      toast.loading("Enviando foto...", { id: toastId });
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(finalPath, file, { 
-          contentType: isHeic ? 'image/jpeg' : ((file as any).type || original.type || 'image/jpeg'),
-          upsert: true,
-          cacheControl: '3600'
+        .from("avatars")
+        .upload(filePath, prepared.blob, {
+          contentType: prepared.contentType,
+          cacheControl: "3600",
+          upsert: false,
         });
 
       if (uploadError) {
-        console.error("Erro no upload para o Storage:", uploadError);
-        // Fallback: tentar sem contentType se falhar
-        finalPath = filePath + "-retry";
-        const { error: retryError } = await supabase.storage
-          .from('avatars')
-          .upload(finalPath, file, { upsert: true });
-        
-        if (retryError) throw retryError;
+        throw uploadError;
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(finalPath);
+        .from("avatars")
+        .getPublicUrl(filePath);
 
-      console.log("Upload concluído. URL pública:", publicUrl);
-      setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
-      toast.success("Foto carregada!", { id: toastId });
-
-      // Persistir imediatamente no banco para garantir que a foto seja salva
-      // Usamos update se já existir dados ou upsert seguro
+      const finalUrl = `${publicUrl}?v=${Date.now()}`;
+      toast.loading("Salvando no perfil...", { id: toastId });
       const { error: updateError } = await supabase.from("perfis").update({
-        avatar_url: publicUrl,
+        avatar_url: finalUrl,
         updated_at: new Date().toISOString(),
-      }).eq('id', user.id);
+      }).eq("id", user.id);
 
       if (updateError) {
-        console.error("Erro ao salvar avatar no banco (update):", updateError);
-        // Fallback: upsert apenas os campos essenciais para evitar erros de constraint
         const { error: upsertError } = await supabase.from("perfis").upsert({
           id: user.id,
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString(),
           email: user.email,
-        }, { onConflict: 'id' });
-        
-        if (upsertError) {
-          console.error("Erro no fallback do upsert:", upsertError);
-          throw upsertError;
-        }
+          nome_completo: formProfile.nome_completo || user.email || "Usuário",
+          avatar_url: finalUrl,
+          tenant_id: profile?.tenant_id || tenant?.id,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "id" });
+
+        if (upsertError) throw upsertError;
       }
 
-      setProfile((prev: any) => ({ ...(prev || {}), avatar_url: publicUrl }));
-      toast.success("Foto salva com sucesso!");
+      setFormProfile(prev => ({ ...prev, avatar_url: finalUrl }));
+      setProfile((prev: any) => ({ ...(prev || {}), avatar_url: finalUrl }));
+      toast.success("Foto salva com sucesso!", { id: toastId });
     } catch (error: any) {
       console.error("Erro detalhado no upload:", error);
       toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"), { id: toastId });
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   };
 
