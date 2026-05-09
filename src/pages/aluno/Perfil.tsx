@@ -676,7 +676,7 @@ const Perfil = () => {
             <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative w-full h-80 rounded-xl overflow-hidden border border-border bg-muted">
+            <div className="relative w-full aspect-[4/5] max-h-[400px] rounded-xl overflow-hidden border border-border bg-muted">
               <img
                 src={profileHeroSrc}
                 alt=""
