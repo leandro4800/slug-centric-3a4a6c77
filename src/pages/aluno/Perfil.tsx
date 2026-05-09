@@ -64,13 +64,14 @@ const Perfil = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [imgPosY, setImgPosY] = useState<number>(20);
+  const [imgPosY, setImgPosY] = useState<number>(50);
 
   useEffect(() => {
     if (profile?.avatar_pos_y !== undefined && profile?.avatar_pos_y !== null) {
       setImgPosY(profile.avatar_pos_y);
     }
   }, [profile?.avatar_pos_y]);
+
   const [profileImageFailed, setProfileImageFailed] = useState(false);
   const [formImageFailed, setFormImageFailed] = useState(false);
 
@@ -86,7 +87,7 @@ const Perfil = () => {
     sexo: "M" as "M" | "F",
     avatar_url: "",
     music_url: "",
-    avatar_pos_y: 20,
+    avatar_pos_y: 50,
   });
 
   // Evaluation form
@@ -162,7 +163,6 @@ const Perfil = () => {
       const { data: ownedTenant } = await supabase.from("tenants").select("id").eq("owner_user_id", user?.id).maybeSingle();
       
       setIsCoach(roles?.some(r => r.role === "coach" || r.role === "admin") || !!ownedTenant);
-      
       if (p) {
         setProfile(p);
         setFormProfile({
@@ -172,7 +172,7 @@ const Perfil = () => {
           sexo: (p.sexo as "M" | "F") || "M",
           avatar_url: p.avatar_url || "",
           music_url: p.music_url || "",
-          avatar_pos_y: p.avatar_pos_y ?? 20,
+          avatar_pos_y: p.avatar_pos_y ?? 50,
         });
       }
       if (e) {
@@ -396,11 +396,11 @@ const Perfil = () => {
     <>
       <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
-      <section className="relative h-[65vh] min-h-[500px] -mt-0">
+      <section className="relative h-[85vh] min-h-[500px] -mt-0">
         <img
           src={profileHeroSrc}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-700 ease-in-out"
+          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-300 ease-in-out"
           style={{ objectPosition: `center ${imgPosY}%` }}
           onError={() => setProfileImageFailed(true)}
         />
@@ -676,20 +676,20 @@ const Perfil = () => {
             <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative w-full aspect-[4/5] max-h-[400px] rounded-xl overflow-hidden border border-border bg-muted">
+            <div className="relative w-full aspect-[2/3] max-h-[450px] rounded-xl overflow-hidden border border-border bg-muted">
               <img
                 src={profileHeroSrc}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-300 ease-in-out"
+                className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-200 ease-in-out"
                 style={{ objectPosition: `center ${imgPosY}%` }}
                 onError={() => setProfileImageFailed(true)}
               />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
-                <span>Topo</span>
-                <span>Posição: {imgPosY}%</span>
-                <span>Base</span>
+                <span>Ver Topo</span>
+                <span>Ajuste: {imgPosY}%</span>
+                <span>Ver Base</span>
               </div>
               <Slider
                 value={[imgPosY]}
@@ -701,7 +701,7 @@ const Perfil = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
+            <Button variant="ghost" onClick={() => setImgPosY(50)}>Resetar</Button>
             <Button variant="default" onClick={async () => {
               try {
                 const { error } = await supabase
