@@ -25,6 +25,7 @@ import {
 import heroDefault from "@/assets/hero-default.jpg";
 import { IdentidadeVisual } from "@/components/admin/IdentidadeVisual";
 import { VlogsAdmin } from "@/components/admin/VlogsAdmin";
+import heic2any from "heic2any";
 
 interface Aluno { id: string; nome_completo: string | null; email: string | null; avatar_url: string | null; }
 
@@ -83,14 +84,33 @@ const AdminPanel = () => {
   const handleUpload = async (file: File, kind: "hero" | "logo" | "splash" | "login") => {
     if (!tenant) return;
     setUploading(kind);
-    const ext = file.name.split(".").pop();
+    const isImage = kind === "hero" || kind === "logo";
+    const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+    let uploadFile: Blob = file;
+    let ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+    let contentType = file.type || "application/octet-stream";
+    if (isImage) {
+      try {
+        const source = isHeic
+          ? await heic2any({ blob: file, toType: "image/jpeg", quality: 0.82 })
+          : file;
+        uploadFile = await normalizeImage(Array.isArray(source) ? source[0] : source, kind === "logo" ? 900 : 1800, 0.84);
+        ext = "jpg";
+        contentType = "image/jpeg";
+      } catch (err: any) {
+        toast.error(err?.message || "Não foi possível preparar a imagem. Tente JPG, PNG ou WEBP.");
+        setUploading(null);
+        return;
+      }
+    }
     const path = `${tenant.id}/${kind}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from("branding").upload(path, file, { upsert: true });
+    const { error } = await supabase.storage.from("branding").upload(path, uploadFile, { upsert: false, contentType });
     if (error) { toast.error(error.message); setUploading(null); return; }
     const { data: { publicUrl } } = supabase.storage.from("branding").getPublicUrl(path);
+    const finalUrl = isImage ? `${publicUrl}?v=${Date.now()}` : publicUrl;
     const patch =
-      kind === "hero" ? { hero_url: publicUrl } :
-      kind === "logo" ? { logo_url: publicUrl } :
+      kind === "hero" ? { hero_url: finalUrl } :
+      kind === "logo" ? { logo_url: finalUrl } :
       kind === "login" ? { login_video_url: publicUrl } :
       { splash_video_url: publicUrl };
     const { error: upErr } = await supabase.from("tenants").update(patch).eq("id", tenant.id);
@@ -98,6 +118,24 @@ const AdminPanel = () => {
     else { toast.success("Atualizado!"); await refresh(); }
     setUploading(null);
   };
+
+  const normalizeImage = (blob: Blob, maxDim: number, quality: number): Promise<Blob> => new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.width * ratio));
+      canvas.height = Math.max(1, Math.round(img.height * ratio));
+      canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
+      canvas.toBlob((out) => {
+        URL.revokeObjectURL(url);
+        out ? resolve(out) : reject(new Error("Imagem inválida."));
+      }, "image/jpeg", quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Imagem inválida ou não suportada.")); };
+    img.src = url;
+  });
 
   const handleSaveAppearance = async () => {
     if (!tenant) return;
