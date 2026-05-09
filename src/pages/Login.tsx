@@ -99,36 +99,36 @@ const Login = () => {
       const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
 
       // Determinamos o slug do tenant do usuário
-      let userSlug = urlSlug || \"demo\";
+      let userSlug = urlSlug || "demo";
       if (ownedTenant?.slug) {
         userSlug = ownedTenant.slug;
       } else if (perfil?.tenant_id) {
         const { data: tenantData } = await supabase
-          .from(\"tenants\")
-          .select(\"slug\")
-          .eq(\"id\", perfil.tenant_id)
+          .from("tenants")
+          .select("slug")
+          .eq("id", perfil.tenant_id)
           .maybeSingle();
         userSlug = tenantData?.slug || userSlug;
       } else {
-        const coachRole = roles?.find((r) => r.role === \"coach\");
+        const coachRole = roles?.find((r) => r.role === "coach");
         if (coachRole?.tenant_id) {
           const { data: t } = await supabase
-            .from(\"tenants\")
-            .select(\"slug\")
-            .eq(\"id\", coachRole.tenant_id)
+            .from("tenants")
+            .select("slug")
+            .eq("id", coachRole.tenant_id)
             .maybeSingle();
           userSlug = t?.slug || userSlug;
         }
       }
 
       // VOUCHER REDEMPTION: Se houver um voucher pendente, tentamos resgatar antes de qualquer verificação de assinatura
-      const pending = sessionStorage.getItem(\"pending_voucher\");
+      const pending = sessionStorage.getItem("pending_voucher");
       if (pending) {
-        sessionStorage.removeItem(\"pending_voucher\");
+        sessionStorage.removeItem("pending_voucher");
         const ok = await redeemVoucherCode(pending);
         if (ok) {
           const targetSlug = urlSlug || userSlug;
-          navigate(targetSlug ? `/${targetSlug}/app` : \"/marketplace\", { replace: true });
+          navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
           return;
         }
       }
