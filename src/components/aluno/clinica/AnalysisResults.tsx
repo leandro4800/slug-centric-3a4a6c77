@@ -25,6 +25,37 @@ interface AnalysisResultsProps {
 }
 
 export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes_medicamentos, aviso_medico }: AnalysisResultsProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handleSpeak = async () => {
+    if (isPlaying) return;
+    
+    setIsPlaying(true);
+    try {
+      // Unificamos o parecer para o áudio
+      const textToSpeak = parecer || "Análise metabólica processada.";
+      
+      const { data, error } = await supabase.functions.invoke('knowledge-qa', {
+        body: { 
+          action: 'text-to-speech',
+          text: textToSpeak
+        }
+      });
+
+      if (error) throw error;
+      if (!data?.audioContent) throw new Error("Falha ao gerar áudio");
+
+      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => setIsPlaying(false);
+      await audio.play();
+    } catch (err: any) {
+      console.error("Erro ao gerar áudio:", err);
+      toast.error("Não foi possível gerar o áudio do parecer.");
+      setIsPlaying(false);
+    }
+  };
+
   const getScoreColor = (s: number) => {
     if (s >= 80) return "text-green-500";
     if (s >= 50) return "text-primary";
