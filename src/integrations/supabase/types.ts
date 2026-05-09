@@ -176,6 +176,7 @@ export type Database = {
       }
       agendamentos_presenciais: {
         Row: {
+          academia_confirmada: string | null
           aluno_id: string
           created_at: string
           id: string
@@ -187,6 +188,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          academia_confirmada?: string | null
           aluno_id: string
           created_at?: string
           id?: string
@@ -198,6 +200,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          academia_confirmada?: string | null
           aluno_id?: string
           created_at?: string
           id?: string

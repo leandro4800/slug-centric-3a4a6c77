@@ -28,6 +28,7 @@ interface Reserva {
   slot_id: string;
   aluno_id: string;
   status: string;
+  academia_confirmada: string | null;
   created_at: string;
   aluno?: { nome_completo: string | null; email: string | null };
 }
@@ -69,7 +70,7 @@ const AdminAgendaPresencial = () => {
     if (slotIds.length) {
       const { data: r } = await supabase
         .from("agendamentos_presenciais")
-        .select("id, slot_id, aluno_id, status, created_at")
+        .select("id, slot_id, aluno_id, status, academia_confirmada, created_at")
         .in("slot_id", slotIds);
       const alunoIds = Array.from(new Set((r || []).map((x: any) => x.aluno_id)));
       let perfis: Record<string, any> = {};
@@ -221,6 +222,7 @@ const AdminAgendaPresencial = () => {
                         {rs.map((r) => (
                           <p key={r.id} className="text-xs text-muted-foreground">
                             <span className="text-white">{r.aluno?.nome_completo || "Aluno"}</span> · {r.aluno?.email || r.aluno_id.slice(0, 8)}
+                            {r.academia_confirmada && <span className="ml-2 text-primary">📍 {r.academia_confirmada}</span>}
                           </p>
                         ))}
                       </div>

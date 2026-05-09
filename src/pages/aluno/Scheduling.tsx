@@ -39,6 +39,7 @@ const Scheduling = () => {
   const [loading, setLoading] = useState(true);
   const [confirming, setConfirming] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+  const [academiaConfirmada, setAcademiaConfirmada] = useState("");
   const selectorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -133,8 +134,18 @@ const Scheduling = () => {
     setChatOpen(true);
   };
 
+  // Ao escolher um slot, pré-preenche a academia com o local cadastrado pelo coach
+  useEffect(() => {
+    const s = slots.find(x => x.id === selectedSlot);
+    if (s && !academiaConfirmada) setAcademiaConfirmada(s.local_nome || "");
+  }, [selectedSlot]);
+
   const confirmar = async () => {
     if (!selectedSlot || !user?.id || !tenant?.id) return false;
+    if (!academiaConfirmada.trim()) {
+      toast({ title: "Confirme em qual academia você vai treinar", variant: "destructive" });
+      return false;
+    }
     if (jaAgendado) {
       toast({ title: "Você já está agendado neste horário" });
       return false;
@@ -147,7 +158,12 @@ const Scheduling = () => {
     setConfirming(true);
     const { data, error } = await supabase
       .from("agendamentos_presenciais")
-      .insert({ aluno_id: user.id, tenant_id: tenant.id, slot_id: selectedSlot })
+      .insert({
+        aluno_id: user.id,
+        tenant_id: tenant.id,
+        slot_id: selectedSlot,
+        academia_confirmada: academiaConfirmada.trim(),
+      })
       .select("id, slot_id")
       .single();
     setConfirming(false);
@@ -160,7 +176,7 @@ const Scheduling = () => {
     if (typeof Notification !== "undefined" && Notification.permission === "default") {
       Notification.requestPermission();
     }
-    toast({ title: "✅ Agendamento confirmado!", description: "Você receberá um lembrete 1h antes." });
+    toast({ title: "✅ Agendamento confirmado!", description: `${academiaConfirmada} • Lembrete 1h antes.` });
     return true;
   };
 
@@ -193,7 +209,7 @@ const Scheduling = () => {
             <p className="text-sm text-white/70 mb-5 max-w-md font-light">
               Treine ao lado do seu Coach. Escolha o dia, o horário e prepare-se para uma sessão de alto nível.
             </p>
-            <Button onClick={openSchedulingChat} variant="default" size="lg" className="rounded-full px-8">
+            <Button onClick={openSchedulingChat} variant="default" size="lg" className="rounded-md px-8">
               <MessageCircle className="mr-1" /> MARCAR AGORA
             </Button>
           </motion.div>
@@ -415,7 +431,7 @@ const Scheduling = () => {
                         <button
                           key={d.data}
                           onClick={() => { setSelectedDate(d.data); setSelectedSlot(null); }}
-                          className={`rounded-2xl border px-3 py-3 text-center transition ${ativo ? "border-primary bg-primary text-white" : "border-white/10 bg-white/5 text-white/70 hover:border-primary/60"}`}
+                          className={`rounded-md border px-3 py-3 text-center transition ${ativo ? "border-primary bg-primary text-white" : "border-white/10 bg-white/5 text-white/70 hover:border-primary/60"}`}
                         >
                           <div className="text-[10px] tracking-widest">{d.weekday}</div>
                           <div className="font-display text-3xl leading-none">{d.day}</div>
@@ -447,7 +463,7 @@ const Scheduling = () => {
                           key={h.id}
                           disabled={cheio && !meu}
                           onClick={() => !cheio && setSelectedSlot(h.id)}
-                          className={`rounded-full border px-4 py-3 font-display text-xl tracking-wider transition ${ativo ? "border-white bg-primary text-white" : meu ? "border-emerald-500/60 bg-emerald-600/25 text-emerald-200" : cheio ? "border-white/10 bg-white/5 text-white/30 line-through" : "border-white/10 bg-white/5 text-white hover:border-primary/60"}`}
+                          className={`rounded-md border px-4 py-3 font-display text-xl tracking-wider transition ${ativo ? "border-white bg-primary text-white" : meu ? "border-emerald-500/60 bg-emerald-600/25 text-emerald-200" : cheio ? "border-white/10 bg-white/5 text-white/30 line-through" : "border-white/10 bg-white/5 text-white hover:border-primary/60"}`}
                         >
                           {fmtHora(h.hora_inicio)}
                         </button>
@@ -457,14 +473,44 @@ const Scheduling = () => {
                 </div>
 
                 {slotInfo && (
-                  <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 space-y-2">
-                    <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] text-primary">
-                      <MapPin className="h-3 w-3" /> LOCAL
+                  <>
+                    <div className="rounded-md border border-primary/30 bg-primary/10 p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] text-primary">
+                        <MapPin className="h-3 w-3" /> LOCAL SUGERIDO PELO COACH
+                      </div>
+                      <div className="font-display text-2xl">{slotInfo.local_nome}</div>
+                      {slotInfo.local_endereco && <div className="text-xs text-white/60">{slotInfo.local_endereco}</div>}
+                      <div className="text-xs text-white/60">{fmtHora(slotInfo.hora_inicio)} – {fmtHora(slotInfo.hora_fim)}</div>
                     </div>
-                    <div className="font-display text-2xl">{slotInfo.local_nome}</div>
-                    {slotInfo.local_endereco && <div className="text-xs text-white/60">{slotInfo.local_endereco}</div>}
-                    <div className="text-xs text-white/60">{fmtHora(slotInfo.hora_inicio)} – {fmtHora(slotInfo.hora_fim)}</div>
-                  </div>
+
+                    <div className="flex gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                        <Bot className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="rounded-md rounded-tl-sm bg-white/10 border border-white/10 px-4 py-3 text-sm text-white/80">
+                        Confirme em qual academia você vai treinar nesse dia. Você pode usar o local sugerido pelo Coach ou digitar outra unidade.
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-bold tracking-[0.3em] text-white/40">ACADEMIA / UNIDADE</div>
+                      <input
+                        value={academiaConfirmada}
+                        onChange={(e) => setAcademiaConfirmada(e.target.value)}
+                        placeholder="Ex: Smart Fit Centro"
+                        className="w-full rounded-md bg-white/5 border border-white/15 px-4 py-3 text-white placeholder:text-white/30 focus:border-primary outline-none"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAcademiaConfirmada(slotInfo.local_nome || "")}
+                          className="text-[10px] tracking-widest px-3 py-1 rounded-md border border-primary/40 text-primary hover:bg-primary/10"
+                        >
+                          USAR LOCAL DO COACH
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </>
             )}
@@ -477,7 +523,7 @@ const Scheduling = () => {
                 if (ok) setChatOpen(false);
               }}
               disabled={!selectedSlot || !!jaAgendado || confirming}
-              className="w-full rounded-full bg-primary py-4 font-display text-2xl tracking-[0.18em] text-white shadow-[0_0_35px_-6px_hsl(var(--primary)/0.8)] disabled:opacity-40 disabled:shadow-none"
+              className="w-full rounded-md bg-primary py-4 font-display text-2xl tracking-[0.18em] text-white shadow-[0_0_35px_-6px_hsl(var(--primary)/0.8)] disabled:opacity-40 disabled:shadow-none"
             >
               {jaAgendado ? "JÁ AGENDADO" : confirming ? "CONFIRMANDO..." : "CONFIRMAR"}
             </button>
@@ -497,7 +543,7 @@ const Scheduling = () => {
             <button
               onClick={confirmar}
               disabled={confirming}
-              className="w-full max-w-2xl mx-auto block bg-primary text-white font-display text-2xl tracking-[0.2em] py-5 rounded-full shadow-[0_0_50px_-5px_hsl(var(--primary)/0.8)] animate-pulse disabled:opacity-60"
+              className="w-full max-w-2xl mx-auto block bg-primary text-white font-display text-2xl tracking-[0.2em] py-5 rounded-md shadow-[0_0_50px_-5px_hsl(var(--primary)/0.8)] animate-pulse disabled:opacity-60"
             >
               {confirming ? "CONFIRMANDO..." : "CONFIRMAR AGENDAMENTO"}
             </button>
