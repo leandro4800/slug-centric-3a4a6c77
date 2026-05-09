@@ -78,17 +78,8 @@ const Login = () => {
   useEffect(() => {
     if (authLoading || !user) return;
     (async () => {
-      // Auto-redeem pending voucher (set on Login page before signup/login)
-      const pending = sessionStorage.getItem("pending_voucher");
-      if (pending) {
-        sessionStorage.removeItem("pending_voucher");
-        const ok = await redeemVoucherCode(pending);
-        if (ok) {
-          const targetSlug = urlSlug || tenant?.slug;
-          navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
-          return;
-        }
-      }
+      // Auto-redeem pending voucher will be handled below after determining user roles and slugs
+      // to ensure we redirect to the correct place.
       // Priority 1: Check if there's a redirect in state (from RequireAuth)
       const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
       const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
@@ -112,12 +103,12 @@ const Login = () => {
       if (ownedTenant?.slug) {
         userSlug = ownedTenant.slug;
       } else if (perfil?.tenant_id) {
-        const { data: tenant } = await supabase
+        const { data: tenantData } = await supabase
           .from("tenants")
           .select("slug")
           .eq("id", perfil.tenant_id)
           .maybeSingle();
-        userSlug = tenant?.slug || userSlug;
+        userSlug = tenantData?.slug || userSlug;
       } else {
         const coachRole = roles?.find((r) => r.role === "coach");
         if (coachRole?.tenant_id) {
@@ -127,6 +118,18 @@ const Login = () => {
             .eq("id", coachRole.tenant_id)
             .maybeSingle();
           userSlug = t?.slug || userSlug;
+        }
+      }
+
+      // VOUCHER REDEMPTION: Se houver um voucher pendente, tentamos resgatar antes de qualquer verificação de assinatura
+      const pending = sessionStorage.getItem("pending_voucher");
+      if (pending) {
+        sessionStorage.removeItem("pending_voucher");
+        const ok = await redeemVoucherCode(pending);
+        if (ok) {
+          const targetSlug = urlSlug || userSlug;
+          navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
+          return;
         }
       }
 
