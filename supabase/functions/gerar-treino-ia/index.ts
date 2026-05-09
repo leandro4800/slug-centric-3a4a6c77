@@ -130,8 +130,9 @@ serve(async (req) => {
       console.error("Erro ao buscar dados da biblioteca:", err);
     }
 
-    // === 2. PARECER DE SAÚDE (EXAMES) ===
+    // === 2. PARECER DE SAÚDE (EXAMES + BIOMARCADORES) ===
     let saudeContext = "";
+    let biomarkerTier = ""; // "elite" | "moderado" | "recuperacao" | ""
     const userId: string = resolvedUserId;
 
     if (userId) {
@@ -145,12 +146,61 @@ serve(async (req) => {
             saudeContext = `\n\n=== DADOS CLÍNICOS RECENTES DO ALUNO ===\n${exames[0].parecer_ia || exames[0].resumo_clinico}\nScore Performance: ${exames[0].score_performance}%\n`;
           }
         }
+        // Biomarcadores chave: Testosterona, CPK, ALT/AST, Colesterol
+        const bioResp = await fetch(`${SUPABASE_URL}/rest/v1/exames_biomarcadores?user_id=eq.${userId}&order=created_at.desc&limit=40`, {
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+        });
+        if (bioResp.ok) {
+          const bios: any[] = await bioResp.json();
+          const findVal = (re: RegExp) => {
+            const b = bios.find((x) => re.test((x.nome || x.codigo || "").toString()));
+            return b ? Number(b.valor) : null;
+          };
+          const test = findVal(/testoster/i);
+          const cpk = findVal(/\bcpk\b|creatino.?fosfo/i);
+          const alt = findVal(/\balt\b|tgp/i);
+          const ast = findVal(/\bast\b|tgo/i);
+          if (test && cpk && test > 800 && cpk > 250) biomarkerTier = "elite";
+          else if (test && test < 500) biomarkerTier = "recuperacao";
+          else if ((alt && alt > 60) || (ast && ast > 60)) biomarkerTier = "moderado";
+          if (biomarkerTier) {
+            saudeContext += `\n[CLASSIFICAÇÃO BIOMARCADORES] Tier: ${biomarkerTier.toUpperCase()} | Testo: ${test ?? "?"} | CPK: ${cpk ?? "?"} | ALT: ${alt ?? "?"} | AST: ${ast ?? "?"}\n`;
+          }
+        }
       } catch (err) {
         console.error("Erro ao buscar exames:", err);
       }
     }
 
-    const knowledgeContext = bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext;
+    // === 3. HISTÓRICO DE TREINOS ANTERIORES (anti-repetição + leitura do padrão do coach) ===
+    let historicoTreinoContext = "";
+    if (userId) {
+      try {
+        const histResp = await fetch(`${SUPABASE_URL}/rest/v1/treinos_prescritos?aluno_id=eq.${userId}&order=created_at.desc&limit=80`, {
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+        });
+        if (histResp.ok) {
+          const hist: any[] = await histResp.json();
+          if (hist.length > 0) {
+            const exNomes = Array.from(new Set(hist.map((h) => h.exercicio).filter(Boolean))).slice(0, 40);
+            const porDia: Record<string, string[]> = {};
+            for (const h of hist) {
+              const d = h.dia_semana || "?";
+              if (!porDia[d]) porDia[d] = [];
+              if (porDia[d].length < 6 && h.exercicio) porDia[d].push(h.exercicio);
+            }
+            const padraoCoach = Object.entries(porDia)
+              .map(([d, exs]) => `  • ${d}: ${exs.join(", ")}`)
+              .join("\n");
+            historicoTreinoContext = `\n\n=== HISTÓRICO DO ALUNO (ANTI-REPETIÇÃO + PADRÃO DO COACH) ===\nExercícios já prescritos recentemente (EVITE repetir como protagonistas; varie ângulos/equipamentos):\n${exNomes.join(", ")}\n\nPadrão de divisão usado pelo coach (RESPEITE este estilo se existir — mesma lógica de divisão e ordem dos grupos):\n${padraoCoach}\n\nREGRA: Substitua pelo menos 60% dos exercícios protagonistas por variações novas (ângulos, equipamentos, unilateral vs bilateral) MANTENDO o mesmo padrão de divisão e estímulos do coach.`;
+          }
+        }
+      } catch (err) {
+        console.error("Erro ao buscar histórico de treinos:", err);
+      }
+    }
+
+    const knowledgeContext = bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
 
     const divisoesEscolhidas = Array.isArray(divisoes) && divisoes.length > 0
       ? divisoes
