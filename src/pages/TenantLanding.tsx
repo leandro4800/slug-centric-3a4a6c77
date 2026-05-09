@@ -392,7 +392,7 @@ export default function TenantLanding() {
                 {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar acesso"}
               </Button>
             ) : (
-              <Link to={`/${slug}/login`} className="block">
+              <Link to={`/${slug}/login?redirect=/${slug}?voucher=1`} className="block">
                 <Button className="w-full font-bold uppercase tracking-widest">Entrar / Cadastrar</Button>
               </Link>
             )}
