@@ -16,7 +16,27 @@ import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
 import heic2any from "heic2any";
 
-// ... rest of the file
+type ProfileData = {
+  id?: string;
+  email?: string | null;
+  nome_completo?: string | null;
+  telefone?: string | null;
+  data_nascimento?: string | null;
+  sexo?: string | null;
+  avatar_url?: string | null;
+  music_url?: string | null;
+  tenant_id?: string | null;
+};
+
+type LastEvalData = {
+  peso_kg?: number | null;
+  altura_cm?: number | null;
+  pescoco_cm?: number | null;
+  cintura_cm?: number | null;
+  quadril_cm?: number | null;
+  bf_pct_calculado?: number | null;
+  imc?: number | null;
+};
 
 const Perfil = () => {
   const { user, signOut } = useAuth();
@@ -26,8 +46,8 @@ const Perfil = () => {
   const hero = heroDefault;
 
   // Profile data
-  const [profile, setProfile] = useState<any>(null);
-  const [lastEval, setLastEval] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [lastEval, setLastEval] = useState<LastEvalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCoach, setIsCoach] = useState(false);
 
@@ -371,7 +391,7 @@ const Perfil = () => {
 
   return (
     <>
-      <ProfileMusicPlayer url={(profile as any)?.music_url || tenant?.music_url} />
+      <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img
