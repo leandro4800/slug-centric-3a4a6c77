@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,6 +45,7 @@ const TENANT_PUBLIC_COLUMNS =
 export default function TenantLanding() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [planos, setPlanos] = useState<Plano[]>([]);
@@ -64,7 +65,7 @@ export default function TenantLanding() {
       return;
     }
     if (!user) {
-      navigate(`/${slug}/login?redirect=/${slug}`);
+      navigate(`/${slug}/login?redirect=/${slug}?voucher=1`);
       return;
     }
     setVoucherLoading(true);
@@ -95,6 +96,15 @@ export default function TenantLanding() {
   useEffect(() => {
     void load();
   }, [slug]);
+
+  // Auto-abre o modal de código quando voltar do login com ?voucher=1
+  useEffect(() => {
+    if (!loading && user && !hasSubscription && searchParams.get("voucher") === "1") {
+      setVoucherOpen(true);
+      searchParams.delete("voucher");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [loading, user, hasSubscription, searchParams, setSearchParams]);
 
   const load = async () => {
     if (!slug) return;
@@ -382,7 +392,7 @@ export default function TenantLanding() {
                 {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar acesso"}
               </Button>
             ) : (
-              <Link to={`/${slug}/login`} className="block">
+              <Link to={`/${slug}/login?redirect=/${slug}?voucher=1`} className="block">
                 <Button className="w-full font-bold uppercase tracking-widest">Entrar / Cadastrar</Button>
               </Link>
             )}
