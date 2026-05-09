@@ -1,5 +1,8 @@
-import { AlertCircle, CheckCircle2, Info, Pill } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, Pill, Volume2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface MarkerCardProps {
   nome: string;
@@ -11,6 +14,36 @@ interface MarkerCardProps {
 }
 
 export const MarkerCard = ({ nome, valor, unidade, status, observacao, sugestao_medicamento }: MarkerCardProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handleSpeak = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPlaying) return;
+    
+    setIsPlaying(true);
+    try {
+      const textToSpeak = `${nome}: ${valor} ${unidade}. Status: ${status}. ${observacao || ""}`;
+      
+      const { data, error } = await supabase.functions.invoke('knowledge-qa', {
+        body: { 
+          action: 'text-to-speech',
+          text: textToSpeak
+        }
+      });
+
+      if (error) throw error;
+      if (!data?.audioContent) throw new Error("Falha ao gerar áudio");
+
+      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => setIsPlaying(false);
+      await audio.play();
+    } catch (err: any) {
+      console.error("Erro ao gerar áudio:", err);
+      toast.error("Não foi possível gerar o áudio.");
+      setIsPlaying(false);
+    }
+  };
   const statusConfig = {
     Otimizado: {
       icon: CheckCircle2,
@@ -70,9 +103,25 @@ export const MarkerCard = ({ nome, valor, unidade, status, observacao, sugestao_
       {observacao && (
         <div className="mt-3 flex gap-2 items-start">
           <Icon className={cn("h-4 w-4 shrink-0 mt-0.5", config.color)} />
-          <p className="text-xs leading-relaxed text-muted-foreground italic">
-            {observacao}
-          </p>
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs leading-relaxed text-muted-foreground italic">
+              {observacao}
+            </p>
+            <button 
+              onClick={handleSpeak}
+              disabled={isPlaying}
+              className="p-1.5 rounded-full hover:bg-primary/10 transition-colors disabled:opacity-50 shrink-0"
+              title="Ouvir parecer"
+            >
+              {isPlaying ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              ) : (
+                <Volume2 className="h-3.5 w-3.5 text-primary" />
+              )}
+            </button>
+          </div>
+        </div>
         </div>
       )}
 

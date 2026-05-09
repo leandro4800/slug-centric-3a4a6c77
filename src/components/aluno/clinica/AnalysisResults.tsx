@@ -1,6 +1,9 @@
 import { MarkerCard } from "./MarkerCard";
 import { cn } from "@/lib/utils";
-import { Pill, ShieldAlert, Stethoscope } from "lucide-react";
+import { Pill, ShieldAlert, Stethoscope, Volume2, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Marker {
   codigo: string;
@@ -22,6 +25,37 @@ interface AnalysisResultsProps {
 }
 
 export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes_medicamentos, aviso_medico }: AnalysisResultsProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handleSpeak = async () => {
+    if (isPlaying) return;
+    
+    setIsPlaying(true);
+    try {
+      // Unificamos o parecer para o áudio
+      const textToSpeak = parecer || "Análise metabólica processada.";
+      
+      const { data, error } = await supabase.functions.invoke('knowledge-qa', {
+        body: { 
+          action: 'text-to-speech',
+          text: textToSpeak
+        }
+      });
+
+      if (error) throw error;
+      if (!data?.audioContent) throw new Error("Falha ao gerar áudio");
+
+      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => setIsPlaying(false);
+      await audio.play();
+    } catch (err: any) {
+      console.error("Erro ao gerar áudio:", err);
+      toast.error("Não foi possível gerar o áudio do parecer.");
+      setIsPlaying(false);
+    }
+  };
+
   const getScoreColor = (s: number) => {
     if (s >= 80) return "text-green-500";
     if (s >= 50) return "text-primary";
@@ -67,7 +101,21 @@ export const AnalysisResults = ({ score, parecer, marcadores, conduta, sugestoes
 
       {/* RESUMO */}
       <div className="bg-gradient-to-br from-card/70 to-card/30 border border-border rounded-none p-6">
-        <h3 className="font-display text-lg mb-4 uppercase tracking-[0.2em] text-primary border-b border-primary/20 pb-2">Resumo Executivo</h3>
+        <div className="flex items-center justify-between mb-4 border-b border-primary/20 pb-2">
+          <h3 className="font-display text-lg uppercase tracking-[0.2em] text-primary">Resumo Executivo</h3>
+          <button 
+            onClick={handleSpeak}
+            disabled={isPlaying}
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary hover:text-primary/80 transition-colors disabled:opacity-50"
+          >
+            {isPlaying ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Volume2 className="h-4 w-4" />
+            )}
+            {isPlaying ? "Ouvindo..." : "Parecer em Áudio"}
+          </button>
+        </div>
         <div className="prose prose-invert prose-sm max-w-none text-muted-foreground leading-relaxed">
           {(parecer ?? "").split('\n').map((para, i) => (
             para.trim() ? <p key={i} className="mb-4 last:mb-0">{para}</p> : null
