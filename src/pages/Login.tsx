@@ -85,8 +85,8 @@ const Login = () => {
       const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
       
       if (redirectPath && !redirectPath.includes("/login")) {
-        navigate(redirectPath, { replace: true });
-        return;
+        // Se já houver um redirectPath para o app ou algo específico, não precisamos forçar o redirecionamento aqui.
+        // O fluxo abaixo já lida com resgate de voucher e verificação de assinatura.
       }
 
       const [{ data: perfil }, { data: roles }, { data: ownedTenant }] = await Promise.all([
