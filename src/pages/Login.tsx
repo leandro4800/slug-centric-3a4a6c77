@@ -24,6 +24,45 @@ const Login = () => {
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [voucherLoading, setVoucherLoading] = useState(false);
+
+  const redeemVoucherCode = async (code: string): Promise<boolean> => {
+    const { data, error } = await supabase.rpc("redeem_voucher", { _code: code });
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    const result = data as { ok: boolean; error?: string };
+    if (!result?.ok) {
+      const msg = result?.error === "invalid_code" ? "Código inválido"
+        : result?.error === "already_used" ? "Código já utilizado"
+        : result?.error === "expired" ? "Código expirado"
+        : "Não foi possível resgatar o código";
+      toast.error(msg);
+      return false;
+    }
+    toast.success("Acesso liberado!");
+    return true;
+  };
+
+  const handleRedeemClick = async () => {
+    const code = voucherCode.trim();
+    if (!code) { toast.error("Digite o código"); return; }
+    if (!user) {
+      sessionStorage.setItem("pending_voucher", code);
+      toast.message("Faça login ou crie sua conta — vamos liberar seu acesso automaticamente.");
+      return;
+    }
+    setVoucherLoading(true);
+    const ok = await redeemVoucherCode(code);
+    setVoucherLoading(false);
+    if (ok) {
+      sessionStorage.removeItem("pending_voucher");
+      const targetSlug = urlSlug || tenant?.slug;
+      navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
