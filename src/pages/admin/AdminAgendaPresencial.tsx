@@ -222,6 +222,7 @@ const AdminAgendaPresencial = () => {
                         {rs.map((r) => (
                           <p key={r.id} className="text-xs text-muted-foreground">
                             <span className="text-white">{r.aluno?.nome_completo || "Aluno"}</span> · {r.aluno?.email || r.aluno_id.slice(0, 8)}
+                            {r.academia_confirmada && <span className="ml-2 text-primary">📍 {r.academia_confirmada}</span>}
                           </p>
                         ))}
                       </div>
