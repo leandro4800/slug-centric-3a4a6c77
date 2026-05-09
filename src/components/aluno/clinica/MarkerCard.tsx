@@ -14,6 +14,36 @@ interface MarkerCardProps {
 }
 
 export const MarkerCard = ({ nome, valor, unidade, status, observacao, sugestao_medicamento }: MarkerCardProps) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  const handleSpeak = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isPlaying) return;
+    
+    setIsPlaying(true);
+    try {
+      const textToSpeak = `${nome}: ${valor} ${unidade}. Status: ${status}. ${observacao || ""}`;
+      
+      const { data, error } = await supabase.functions.invoke('knowledge-qa', {
+        body: { 
+          action: 'text-to-speech',
+          text: textToSpeak
+        }
+      });
+
+      if (error) throw error;
+      if (!data?.audioContent) throw new Error("Falha ao gerar áudio");
+
+      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+      audio.onended = () => setIsPlaying(false);
+      audio.onerror = () => setIsPlaying(false);
+      await audio.play();
+    } catch (err: any) {
+      console.error("Erro ao gerar áudio:", err);
+      toast.error("Não foi possível gerar o áudio.");
+      setIsPlaying(false);
+    }
+  };
   const statusConfig = {
     Otimizado: {
       icon: CheckCircle2,
