@@ -431,7 +431,7 @@ const Scheduling = () => {
                         <button
                           key={d.data}
                           onClick={() => { setSelectedDate(d.data); setSelectedSlot(null); }}
-                          className={`rounded-2xl border px-3 py-3 text-center transition ${ativo ? "border-primary bg-primary text-white" : "border-white/10 bg-white/5 text-white/70 hover:border-primary/60"}`}
+                          className={`rounded-md border px-3 py-3 text-center transition ${ativo ? "border-primary bg-primary text-white" : "border-white/10 bg-white/5 text-white/70 hover:border-primary/60"}`}
                         >
                           <div className="text-[10px] tracking-widest">{d.weekday}</div>
                           <div className="font-display text-3xl leading-none">{d.day}</div>
