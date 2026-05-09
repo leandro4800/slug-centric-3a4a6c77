@@ -189,6 +189,11 @@ const AdminPanel = () => {
                 <CalendarClock className="h-4 w-4 mr-2" /> Agenda Aulas Avulsas
               </Button>
             </Link>
+            <Link to={`/${slug}/admin/agenda-presencial`}>
+              <Button variant="outline" className="border-primary/40">
+                <CalendarClock className="h-4 w-4 mr-2" /> Agenda Presencial
+              </Button>
+            </Link>
             <Link to={`/${slug}/admin/base-conhecimento`}>
               <Button variant="outline" className="border-primary/40">
                 <Sparkles className="h-4 w-4 mr-2" /> Base de Conhecimento IA
