@@ -83,37 +83,164 @@ serve(async (req) => {
       .maybeSingle();
     const anamnese: any = anamnesisData || {};
 
+    // Buscar exames recentes para contexto clínico
+    const { data: ultimaAnalise } = await admin
+      .from("analises_clinicas")
+      .select("resumo_clinico, parecer_ia, score_performance")
+      .eq("user_id", alunoId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const { data: biomarcadores } = await admin
+      .from("exames_biomarcadores")
+      .select("nome, valor, unidade, classificacao")
+      .eq("user_id", alunoId)
+      .order("created_at", { ascending: false })
+      .limit(40);
+
+    const bioRelevantes = (biomarcadores || []).filter((b: any) =>
+      /testoster|estradiol|lh|fsh|hematócrito|hemoglobina|alt|ast|tgp|tgo|gama|ggt|colesterol|ldl|hdl|triglic|psa|prolactina|tsh|t4/i.test(b.nome || "")
+    ).slice(0, 25);
+
+    const examesContext = bioRelevantes.length > 0
+      ? `\nEXAMES CHAVE:\n${bioRelevantes.map((b: any) => `- ${b.nome}: ${b.valor} ${b.unidade || ""} (${b.classificacao || "ref"})`).join("\n")}`
+      : "\nEXAMES: Sem exames hormonais/hepáticos recentes — RECOMENDAR painel pré-ciclo.";
+
     const studentContext = `
-      Nome: ${aluno.nome || 'Atleta'}
-      Nível: ${anamnese.nivel_experiencia || aluno.nivel_experiencia || 'Não informado'}
-      Objetivo: ${aluno.objetivo || 'Não informado'}
-      Peso: ${anamnese.peso_kg || 'Não informado'} kg
-      Anos de Treino: ${anamnese.anos_treino || '0'}
-      Uso de Ergogênicos: ${anamnese.faz_uso_ergogenicos ? 'Sim' : 'Não'}
-      Detalhes/Objetivo Ergogênicos: ${anamnese.detalhes_ergogenicos || 'Nenhum'}
-      Medicamentos em uso: ${anamnese.medicamentos || 'Nenhum'}
-      Doenças: ${anamnese.doencas ? anamnese.doencas.join(', ') : 'Nenhuma'}
-    `;
+Nome: ${aluno.nome || 'Atleta'}
+Sexo: ${anamnese.sexo || 'M'}
+Idade: ${anamnese.idade || 'Não informado'}
+Nível: ${anamnese.nivel_experiencia || aluno.nivel_experiencia || 'Não informado'}
+Objetivo: ${aluno.objetivo || 'Não informado'}
+Peso: ${anamnese.peso_kg || 'Não informado'} kg
+Anos de Treino: ${anamnese.anos_treino || '0'}
+Uso de Ergogênicos: ${anamnese.faz_uso_ergogenicos ? 'Sim' : 'Não (FIRST CYCLE)'}
+Detalhes/Objetivo Ergogênicos: ${anamnese.detalhes_ergogenicos || 'Nenhum'}
+Medicamentos em uso: ${anamnese.medicamentos || 'Nenhum'}
+Doenças: ${anamnese.doencas ? anamnese.doencas.join(', ') : 'Nenhuma'}
+Resumo clínico: ${ultimaAnalise?.resumo_clinico || 'Sem análise prévia'}
+${examesContext}
+`;
 
-    const systemPrompt = `Você é o DR. IA, um especialista em endocrinologia esportiva e protocolos hormonais para fisiculturismo.
-Sua base de conhecimento principal é o livro "Hormônios no Fisiculturismo" de Dudu Haluch.
+    const systemPrompt = `Você é o DR. IA HORMONAL, especialista em endocrinologia esportiva e farmacologia do fisiculturismo.
+Sua base de conhecimento principal é o livro "Hormônios no Fisiculturismo" de Dudu Haluch + literatura de William Llewellyn (Anabolics).
 
-INSTRUÇÕES:
-1. Analise os dados do aluno fornecidos.
-2. Gere um protocolo sugerido completo incluindo:
-   - Drogas (substâncias)
-   - Meias-vidas
-   - Semanas de uso (duração do ciclo)
-   - Dosagens sugeridas
-   - TPC (Terapia Pós-Ciclo) detalhada baseada na literatura do Dudu Haluch.
-3. Use o nível do atleta para ajustar a agressividade do protocolo (Iniciante deve ser conservador, Atleta de Alto Nível pode ser mais complexo).
-4. BUSQUE SEMPRE AS RESPOSTAS NA LITERATURA ESPORTIVA (Dudu Haluch).
+═══════════════════════════════════════════════
+1. ESTRATÉGIA POR NÍVEL DO ATLETA (OBRIGATÓRIO)
+═══════════════════════════════════════════════
+- INICIANTE / FIRST CYCLE: SOMENTE Testosterona (Cipionato/Enantato 250-500mg/sem) por 12-16 semanas. ZERO orais nos primeiros ciclos. TPC clássica (Tamox + Clomid).
+- INTERMEDIÁRIO: Testo base + 1 secundário (Boldenona, Deca, Primobolan ou Masteron conforme objetivo). Possível 1 oral curto (4-6 sem).
+- AVANÇADO/ATLETA: Stack 2-3 compostos + uso estratégico de orais e GH (se aplicável). TPC robusta com transição via cruise se uso contínuo.
 
-REGRA INEGOCIÁVEL DE SEGURANÇA:
-Você DEVE obrigatoriamente incluir no INÍCIO e no FINAL do texto o seguinte aviso em destaque:
-"⚠️ ATENÇÃO: Esta é apenas uma sugestão educacional baseada em literatura esportiva para auxiliar o treinador. O uso de esteróides anabolizantes apresenta graves riscos à saúde. Este protocolo DEVE ser encaminhado e avaliado por um Médico Endocrinologista. Não inicie nenhum uso sem exames de sangue e acompanhamento médico adequado."
+═══════════════════════════════════════════════
+2. ESTRATÉGIA POR OBJETIVO
+═══════════════════════════════════════════════
+- HIPERTROFIA/BULK: Testo + Deca/Boldenona + Dianabol (oral inicial). Foco em aromatizáveis com IA controlado.
+- CUTTING/DEFINIÇÃO: Testo (dose menor) + Masteron + Trembolona (avançado) + Winstrol/Oxandrolona (oral final). Baixa retenção.
+- FORÇA/PERFORMANCE: Testo + Anadrol + Halotestin (avançado). Ciclos curtos.
+- RECOMP: Testo TRT + Primobolan + Oxandrolona.
 
-Seja técnico, utilize termos da farmacologia esportiva (ésteres, aromatização, inibidores de aromatase, etc).`;
+═══════════════════════════════════════════════
+3. AJUSTE POR EXAMES (LEITURA CLÍNICA)
+═══════════════════════════════════════════════
+- ALT/AST > 60: PROIBIR orais 17-aa. Sugerir TUDCA + Liv-52.
+- Hematócrito > 52% / Hemoglobina alta: REDUZIR dose, recomendar doação de sangue, evitar Boldenona/Trembolona.
+- LDL alto / HDL baixo: evitar orais; priorizar testo+primo. Recomendar berberina/ômega 3.
+- Estradiol previamente alto: incluir Anastrozol 0.5mg E3D desde semana 1.
+- Sem exames: incluir aviso explícito de que protocolo é genérico e PROIBIDO iniciar sem exames basais.
+
+═══════════════════════════════════════════════
+4. ESTRUTURA DO PROTOCOLO (DEVE INCLUIR)
+═══════════════════════════════════════════════
+- ON-CYCLE: drogas, ésteres, meias-vidas, dose semanal, frequência (E2D/E3D), via (IM/SC/oral), duração em semanas.
+- AUXILIARES: IA (Anastrozol/Letrozol), HCG, suporte hepático, suporte cardiovascular.
+- TPC (Terapia Pós-Ciclo): cronograma semanal com Tamoxifeno (Nolvadex), Clomifeno (Clomid), HCG, duração 4-6 semanas. Início baseado em meia-vida do éster mais longo.
+- MONITORAMENTO: lista de exames a repetir no meio (semana 6) e ao fim do ciclo + na TPC (perfil hormonal completo, hepático, lipídico, hemograma).
+- SINAIS DE ALERTA: ginecomastia, hipertensão, queda de libido, alteração de humor — quando interromper.
+
+═══════════════════════════════════════════════
+5. AVISO INEGOCIÁVEL DE SEGURANÇA
+═══════════════════════════════════════════════
+Inclua no INÍCIO e FINAL do "resumo_executivo":
+"⚠️ ATENÇÃO: Sugestão educacional baseada em literatura esportiva (Dudu Haluch / William Llewellyn). O uso de EAAs apresenta riscos graves à saúde. Este protocolo DEVE ser avaliado por Médico Endocrinologista. NÃO inicie sem exames basais e acompanhamento médico."
+
+Use terminologia técnica: ésteres, aromatização, virilização (mulheres), shutdown HPTA, recovery, AI, SERM, etc.`;
+
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "montar_protocolo_hormonal",
+          description: "Retorna protocolo hormonal estruturado.",
+          parameters: {
+            type: "object",
+            properties: {
+              tier_protocolo: { type: "string", enum: ["iniciante", "intermediario", "avancado", "atleta_alto_nivel"] },
+              objetivo_ciclo: { type: "string" },
+              duracao_total_semanas: { type: "integer" },
+              resumo_executivo: { type: "string", description: "Visão geral do protocolo, com avisos de segurança no início e fim." },
+              on_cycle: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    droga: { type: "string" },
+                    ester: { type: "string" },
+                    meia_vida: { type: "string" },
+                    dose_semanal: { type: "string" },
+                    frequencia: { type: "string", description: "Ex: E3D, 2x/semana" },
+                    via: { type: "string", enum: ["IM", "SC", "Oral"] },
+                    semanas: { type: "string", description: "Ex: 1-12" },
+                    observacao: { type: "string" },
+                  },
+                  required: ["droga", "dose_semanal", "frequencia", "via", "semanas"],
+                },
+              },
+              auxiliares: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    item: { type: "string", description: "Ex: Anastrozol, HCG, TUDCA" },
+                    dose: { type: "string" },
+                    frequencia: { type: "string" },
+                    finalidade: { type: "string" },
+                  },
+                  required: ["item", "dose", "finalidade"],
+                },
+              },
+              tpc: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    semana: { type: "string", description: "Ex: Semana 1, Semana 2-4" },
+                    droga: { type: "string" },
+                    dose: { type: "string" },
+                  },
+                  required: ["semana", "droga", "dose"],
+                },
+              },
+              monitoramento: {
+                type: "array",
+                items: { type: "string" },
+                description: "Exames a repetir e quando.",
+              },
+              sinais_alerta: {
+                type: "array",
+                items: { type: "string" },
+              },
+              ajustes_clinicos_aplicados: {
+                type: "string",
+                description: "O que foi adaptado do protocolo padrão por causa dos exames do aluno.",
+              },
+            },
+            required: ["tier_protocolo", "duracao_total_semanas", "resumo_executivo", "on_cycle", "auxiliares", "tpc", "monitoramento", "sinais_alerta"],
+          },
+        },
+      },
+    ];
 
     const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -122,19 +249,30 @@ Seja técnico, utilize termos da farmacologia esportiva (ésteres, aromatizaçã
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: "openai/gpt-5-mini",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: `Gere um protocolo para o seguinte atleta:\n${studentContext}` }
+          { role: "user", content: `Gere o protocolo para:\n${studentContext}` }
         ],
-        temperature: 0.7,
+        tools,
+        tool_choice: { type: "function", function: { name: "montar_protocolo_hormonal" } },
       }),
     });
 
-    const aiData = await aiResponse.json();
-    const resultText = aiData.choices[0].message.content;
+    if (!aiResponse.ok) {
+      const t = await aiResponse.text();
+      console.error("AI gateway:", aiResponse.status, t);
+      throw new Error("Falha na IA");
+    }
 
-    return new Response(JSON.stringify({ protocol: resultText }), {
+    const aiData = await aiResponse.json();
+    const call = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    const protocolo = call?.function?.arguments ? JSON.parse(call.function.arguments) : null;
+
+    // Renderizar texto markdown a partir do JSON estruturado para compatibilidade com UI atual
+    const md = protocolo ? renderProtocolMarkdown(protocolo) : "Erro ao gerar protocolo.";
+
+    return new Response(JSON.stringify({ protocol: md, structured: protocolo }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error: any) {
@@ -144,3 +282,29 @@ Seja técnico, utilize termos da farmacologia esportiva (ésteres, aromatizaçã
     });
   }
 });
+
+function renderProtocolMarkdown(p: any): string {
+  const lines: string[] = [];
+  lines.push(`# Protocolo Hormonal — Tier: ${p.tier_protocolo?.toUpperCase()}`);
+  if (p.objetivo_ciclo) lines.push(`**Objetivo:** ${p.objetivo_ciclo}`);
+  lines.push(`**Duração:** ${p.duracao_total_semanas} semanas\n`);
+  lines.push(`## Resumo Executivo\n${p.resumo_executivo}\n`);
+  if (p.ajustes_clinicos_aplicados) lines.push(`## Ajustes Clínicos Aplicados\n${p.ajustes_clinicos_aplicados}\n`);
+  lines.push(`## On-Cycle`);
+  for (const d of p.on_cycle || []) {
+    lines.push(`- **${d.droga}**${d.ester ? ` (${d.ester})` : ""} — ${d.dose_semanal}, ${d.frequencia}, ${d.via}, semanas ${d.semanas}${d.meia_vida ? ` | meia-vida: ${d.meia_vida}` : ""}${d.observacao ? `\n  > ${d.observacao}` : ""}`);
+  }
+  lines.push(`\n## Auxiliares (IA, HCG, suporte)`);
+  for (const a of p.auxiliares || []) {
+    lines.push(`- **${a.item}** — ${a.dose}${a.frequencia ? ` (${a.frequencia})` : ""} → ${a.finalidade}`);
+  }
+  lines.push(`\n## TPC (Terapia Pós-Ciclo)`);
+  for (const t of p.tpc || []) {
+    lines.push(`- ${t.semana}: **${t.droga}** ${t.dose}`);
+  }
+  lines.push(`\n## Monitoramento (Exames)`);
+  for (const m of p.monitoramento || []) lines.push(`- ${m}`);
+  lines.push(`\n## Sinais de Alerta`);
+  for (const s of p.sinais_alerta || []) lines.push(`- ⚠️ ${s}`);
+  return lines.join("\n");
+}
