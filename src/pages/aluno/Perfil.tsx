@@ -16,7 +16,27 @@ import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
 import heic2any from "heic2any";
 
-// ... rest of the file
+type ProfileData = {
+  id?: string;
+  email?: string | null;
+  nome_completo?: string | null;
+  telefone?: string | null;
+  data_nascimento?: string | null;
+  sexo?: string | null;
+  avatar_url?: string | null;
+  music_url?: string | null;
+  tenant_id?: string | null;
+};
+
+type LastEvalData = {
+  peso_kg?: number | null;
+  altura_cm?: number | null;
+  pescoco_cm?: number | null;
+  cintura_cm?: number | null;
+  quadril_cm?: number | null;
+  bf_pct_calculado?: number | null;
+  imc?: number | null;
+};
 
 const Perfil = () => {
   const { user, signOut } = useAuth();
@@ -26,8 +46,8 @@ const Perfil = () => {
   const hero = heroDefault;
 
   // Profile data
-  const [profile, setProfile] = useState<any>(null);
-  const [lastEval, setLastEval] = useState<any>(null);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [lastEval, setLastEval] = useState<LastEvalData | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCoach, setIsCoach] = useState(false);
 
@@ -50,6 +70,12 @@ const Perfil = () => {
   useEffect(() => {
     if (typeof window !== "undefined") localStorage.setItem("perfil_img_pos_y", String(imgPosY));
   }, [imgPosY]);
+  const [profileImageFailed, setProfileImageFailed] = useState(false);
+  const [formImageFailed, setFormImageFailed] = useState(false);
+
+  useEffect(() => {
+    setProfileImageFailed(false);
+  }, [profile?.avatar_url, tenant?.hero_url]);
 
   // Profile form
   const [formProfile, setFormProfile] = useState({
@@ -69,6 +95,57 @@ const Perfil = () => {
     cintura_cm: "",
     quadril_cm: "",
   });
+
+  const isUnsupportedProfileImage = (url?: string | null) => /\.(heic|heif)(\?|#|$)/i.test((url || "").trim());
+
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms);
+    });
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  };
+
+  const prepareAvatarImage = async (original: File) => {
+    const isHeic =
+      /heic|heif/i.test(original.type) ||
+      /\.(heic|heif)$/i.test(original.name) ||
+      (original.type === "" && /\.(heic|heif)$/i.test(original.name));
+
+    if (!isHeic && !original.type.startsWith("image/")) {
+      throw new Error("Por favor, selecione uma imagem.");
+    }
+
+    if (original.size > 10 * 1024 * 1024) {
+      throw new Error("A imagem deve ter no máximo 10MB.");
+    }
+
+    let source: Blob = original;
+    if (isHeic) {
+      const converted = await withTimeout(
+        heic2any({ blob: original, toType: "image/jpeg", quality: 0.82 }) as Promise<Blob | Blob[]>,
+        30000,
+        "A conversão da foto demorou demais. Tente uma imagem JPG, PNG ou WEBP."
+      );
+      source = Array.isArray(converted) ? converted[0] : converted;
+    }
+
+    const normalized = await withTimeout(
+      compressImage(source, 1600, 0.82),
+      30000,
+      "A preparação da foto demorou demais. Tente uma imagem menor."
+    );
+
+    if (!normalized) {
+      throw new Error("Não foi possível preparar essa imagem. Tente salvar a foto como JPG e enviar novamente.");
+    }
+
+    return { blob: normalized, extension: "jpg", contentType: "image/jpeg" };
+  };
 
   useEffect(() => {
     if (user) loadData();
@@ -92,7 +169,7 @@ const Perfil = () => {
           data_nascimento: p.data_nascimento || "",
           sexo: (p.sexo as "M" | "F") || "M",
           avatar_url: p.avatar_url || "",
-          music_url: (p as any).music_url || "",
+          music_url: p.music_url || "",
         });
       }
       if (e) {
@@ -137,128 +214,61 @@ const Perfil = () => {
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const original = e.target.files?.[0];
     if (!original || !user) return;
-
-    console.log("Iniciando upload de imagem:", {
-      name: original.name,
-      type: original.type,
-      size: original.size
-    });
-
-    let file: File | Blob = original;
-    let fileExt = (original.name.split('.').pop() || 'jpg').toLowerCase();
-
-    // Detecção mais robusta de HEIC/HEIF
-    const isHeic = 
-      /heic|heif/i.test(original.type) || 
-      /\.(heic|heif)$/i.test(original.name) ||
-      (original.type === "" && /\.(heic|heif)$/i.test(original.name));
-
-    if (!isHeic && !original.type.startsWith('image/')) {
-      return toast.error("Por favor, selecione uma imagem.");
-    }
-
-    if (original.size > 10 * 1024 * 1024) {
-      return toast.error("A imagem deve ter no máximo 10MB.");
-    }
-
-    const toastId = toast.loading(isHeic ? "Convertendo foto do iPhone/Samsung..." : "Carregando foto...");
+    const toastId = toast.loading("Preparando foto...");
 
     try {
       setUploading(true);
-
-      if (isHeic) {
-        try {
-          console.log("Convertendo HEIC para JPEG...");
-          const converted = await heic2any({ 
-            blob: original, 
-            toType: 'image/jpeg', 
-            quality: 0.8 
-          });
-          file = Array.isArray(converted) ? converted[0] : converted;
-          fileExt = 'jpg';
-          console.log("Conversão concluída com sucesso.");
-        } catch (err) {
-          console.error('Erro detalhado convertendo HEIC:', err);
-          toast.error("Não foi possível converter a foto HEIC automaticamente. Tente salvar como JPG antes de enviar.", { id: toastId });
-          setUploading(false);
-          return;
-        }
-      }
-
-      const fileName = `${user.id}-${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+      setFormImageFailed(false);
+      const prepared = await prepareAvatarImage(original);
+      const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+      const fileName = `avatar-${stamp}.${prepared.extension}`;
       const filePath = `${user.id}/${fileName}`;
-
-      console.log("Enviando para o Storage:", filePath);
-      
-      // Comprime imagens grandes (>1.2MB) para acelerar upload em conexões lentas
-      const sizeMB = (file as Blob).size / (1024 * 1024);
-      if (!isHeic && sizeMB > 1.2 && (original.type || '').startsWith('image/')) {
-        try {
-          const compressed = await compressImage(file as Blob, 1600, 0.82);
-          if (compressed) { file = compressed; fileExt = 'jpg'; }
-        } catch (err) {
-          console.warn('Falha ao comprimir imagem, enviando original:', err);
-        }
-      }
-
-      let finalPath = filePath;
+      toast.loading("Enviando foto...", { id: toastId });
       const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(finalPath, file, { 
-          contentType: isHeic ? 'image/jpeg' : ((file as any).type || original.type || 'image/jpeg'),
-          upsert: true,
-          cacheControl: '3600'
+        .from("avatars")
+        .upload(filePath, prepared.blob, {
+          contentType: prepared.contentType,
+          cacheControl: "3600",
+          upsert: false,
         });
 
       if (uploadError) {
-        console.error("Erro no upload para o Storage:", uploadError);
-        // Fallback: tentar sem contentType se falhar
-        finalPath = filePath + "-retry";
-        const { error: retryError } = await supabase.storage
-          .from('avatars')
-          .upload(finalPath, file, { upsert: true });
-        
-        if (retryError) throw retryError;
+        throw uploadError;
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(finalPath);
+        .from("avatars")
+        .getPublicUrl(filePath);
 
-      console.log("Upload concluído. URL pública:", publicUrl);
-      setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
-      toast.success("Foto carregada!", { id: toastId });
-
-      // Persistir imediatamente no banco para garantir que a foto seja salva
-      // Usamos update se já existir dados ou upsert seguro
+      const finalUrl = `${publicUrl}?v=${Date.now()}`;
+      toast.loading("Salvando no perfil...", { id: toastId });
       const { error: updateError } = await supabase.from("perfis").update({
-        avatar_url: publicUrl,
+        avatar_url: finalUrl,
         updated_at: new Date().toISOString(),
-      }).eq('id', user.id);
+      }).eq("id", user.id);
 
       if (updateError) {
-        console.error("Erro ao salvar avatar no banco (update):", updateError);
-        // Fallback: upsert apenas os campos essenciais para evitar erros de constraint
         const { error: upsertError } = await supabase.from("perfis").upsert({
           id: user.id,
-          avatar_url: publicUrl,
-          updated_at: new Date().toISOString(),
           email: user.email,
-        }, { onConflict: 'id' });
-        
-        if (upsertError) {
-          console.error("Erro no fallback do upsert:", upsertError);
-          throw upsertError;
-        }
+          nome_completo: formProfile.nome_completo || user.email || "Usuário",
+          avatar_url: finalUrl,
+          tenant_id: profile?.tenant_id || tenant?.id,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "id" });
+
+        if (upsertError) throw upsertError;
       }
 
-      setProfile((prev: any) => ({ ...(prev || {}), avatar_url: publicUrl }));
-      toast.success("Foto salva com sucesso!");
-    } catch (error: any) {
+      setFormProfile(prev => ({ ...prev, avatar_url: finalUrl }));
+      setProfile((prev) => ({ ...(prev || {}), avatar_url: finalUrl }));
+      toast.success("Foto salva com sucesso!", { id: toastId });
+    } catch (error: unknown) {
       console.error("Erro detalhado no upload:", error);
-      toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"), { id: toastId });
+      toast.error("Erro ao carregar imagem: " + (error instanceof Error ? error.message : "Erro desconhecido"), { id: toastId });
     } finally {
       setUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -363,6 +373,13 @@ const Perfil = () => {
   };
 
   const nomeDisplay = profile?.nome_completo || user?.email?.split("@")[0]?.toUpperCase() || "ATLETA";
+  const profileAvatarSrc = !profileImageFailed && !isUnsupportedProfileImage(profile?.avatar_url) && profile?.avatar_url
+    ? profile.avatar_url
+    : null;
+  const profileHeroSrc = profileAvatarSrc || (isCoach ? tenant?.hero_url : null) || heroDefault;
+  const formAvatarSrc = !formImageFailed && !isUnsupportedProfileImage(formProfile.avatar_url) && formProfile.avatar_url
+    ? formProfile.avatar_url
+    : "";
 
   if (loading) {
     return (
@@ -374,14 +391,15 @@ const Perfil = () => {
 
   return (
     <>
-      <ProfileMusicPlayer url={(profile as any)?.music_url || tenant?.music_url} />
+      <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img
-          src={profile?.avatar_url || (isCoach ? tenant?.hero_url : null) || heroDefault}
+          src={profileHeroSrc}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{ objectPosition: `center ${imgPosY}%` }}
+          onError={() => setProfileImageFailed(true)}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent" />
@@ -495,8 +513,8 @@ const Perfil = () => {
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20 bg-muted flex items-center justify-center">
-                  {formProfile.avatar_url ? (
-                    <img src={formProfile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  {formAvatarSrc ? (
+                    <img src={formAvatarSrc} alt="Avatar" className="w-full h-full object-cover" onError={() => setFormImageFailed(true)} />
                   ) : (
                     <User className="w-12 h-12 text-muted-foreground" />
                   )}
@@ -526,7 +544,7 @@ const Perfil = () => {
             </div>
             <div>
               <Label htmlFor="avatar">Link da Imagem (Opcional)</Label>
-              <Input id="avatar" value={formProfile.avatar_url} onChange={(e) => setFormProfile({...formProfile, avatar_url: e.target.value})} placeholder="https://..." />
+              <Input id="avatar" value={formProfile.avatar_url} onChange={(e) => { setFormImageFailed(false); setFormProfile({...formProfile, avatar_url: e.target.value}); }} placeholder="https://..." />
             </div>
             <div>
               <Label htmlFor="nome">Nome Completo</Label>
@@ -657,10 +675,11 @@ const Perfil = () => {
           <div className="space-y-4">
             <div className="relative w-full h-64 rounded-xl overflow-hidden border border-border bg-muted">
               <img
-                src={profile?.avatar_url || (isCoach ? tenant?.hero_url : null) || hero}
+                src={profileHeroSrc}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{ objectPosition: `center ${imgPosY}%` }}
+                onError={() => setProfileImageFailed(true)}
               />
             </div>
             <div className="space-y-2">
