@@ -137,25 +137,43 @@ const AdminMontarTreino = () => {
   useEffect(() => {
     if (!alunoId || !tenant) return;
     void (async () => {
-      const { data } = await supabase
-        .from("perfis_treino")
-        .select("*")
-        .eq("aluno_id", alunoId)
-        .maybeSingle();
-      if (data) {
-        setPerfil({
-          sexo: data.sexo,
-          idade: data.idade,
-          peso_kg: data.peso_kg,
-          altura_cm: data.altura_cm,
-          bf_pct: data.bf_pct,
-          objetivo: data.objetivo,
-          frequencia_semanal: data.frequencia_semanal,
-          tempo_treino: data.tempo_treino,
-          lesoes: data.lesoes || [],
-          limitacoes: data.limitacoes || [],
-        });
+      // Buscar em paralelo todas as fontes do perfil real do aluno
+      const [perfilTreinoRes, perfilRes, avaliacaoRes, anamneseRes] = await Promise.all([
+        supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
+        supabase.from("perfis").select("sexo, data_nascimento").eq("id", alunoId).maybeSingle(),
+        supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("anamnese_aluno").select("nivel_experiencia, anos_treino, lesoes_atuais, doencas").eq("aluno_id", alunoId).maybeSingle(),
+      ]);
+
+      const pt = perfilTreinoRes.data as any;
+      const pr = perfilRes.data as any;
+      const av = avaliacaoRes.data as any;
+      const an = anamneseRes.data as any;
+
+      // Calcular idade a partir de data_nascimento se necessário
+      let idadeCalc: number | null = null;
+      if (pr?.data_nascimento) {
+        const nasc = new Date(pr.data_nascimento);
+        idadeCalc = Math.floor((Date.now() - nasc.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
       }
+
+      // Mesclar: perfis_treino (overrides do coach) > avaliacao/anamnese/perfis
+      const sexoMesclado = pt?.sexo || pr?.sexo || av?.sexo || "";
+      const tempoMesclado = pt?.tempo_treino || an?.nivel_experiencia || "Iniciante";
+
+      setPerfil({
+        sexo: sexoMesclado,
+        idade: pt?.idade ?? av?.idade ?? idadeCalc,
+        peso_kg: pt?.peso_kg ?? av?.peso_kg ?? null,
+        altura_cm: pt?.altura_cm ?? av?.altura_cm ?? null,
+        bf_pct: pt?.bf_pct ?? av?.bf_pct_calculado ?? null,
+        objetivo: pt?.objetivo || "hipertrofia",
+        frequencia_semanal: pt?.frequencia_semanal || 4,
+        tempo_treino: tempoMesclado,
+        lesoes: pt?.lesoes && pt.lesoes.length > 0 ? pt.lesoes : (an?.lesoes_atuais ? [an.lesoes_atuais] : []),
+        limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
+      });
+
       const { data: tp } = await supabase
         .from("treinos_prescritos")
         .select("dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
