@@ -57,7 +57,7 @@ export const AthleteCard = ({ carta }: { carta: CartaData }) => {
           {carta.nivel}
         </div>
         <div className="font-gaming text-sm tracking-widest mt-1 fut-cyan">
-          {carta.posicao}
+          ATL
         </div>
         <div className="fut-divider w-10 mx-auto mt-2" />
         <div className="font-gaming text-xs mt-2 text-muted-foreground">
