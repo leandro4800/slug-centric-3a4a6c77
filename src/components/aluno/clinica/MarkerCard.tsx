@@ -103,9 +103,25 @@ export const MarkerCard = ({ nome, valor, unidade, status, observacao, sugestao_
       {observacao && (
         <div className="mt-3 flex gap-2 items-start">
           <Icon className={cn("h-4 w-4 shrink-0 mt-0.5", config.color)} />
-          <p className="text-xs leading-relaxed text-muted-foreground italic">
-            {observacao}
-          </p>
+        <div className="flex-1">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs leading-relaxed text-muted-foreground italic">
+              {observacao}
+            </p>
+            <button 
+              onClick={handleSpeak}
+              disabled={isPlaying}
+              className="p-1.5 rounded-full hover:bg-primary/10 transition-colors disabled:opacity-50 shrink-0"
+              title="Ouvir parecer"
+            >
+              {isPlaying ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+              ) : (
+                <Volume2 className="h-3.5 w-3.5 text-primary" />
+              )}
+            </button>
+          </div>
+        </div>
         </div>
       )}
 
