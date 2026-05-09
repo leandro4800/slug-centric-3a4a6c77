@@ -204,9 +204,6 @@ const Scheduling = () => {
         </div>
       ) : (
         <div className="px-5 pt-10 pb-40 space-y-10">
-        </div>
-      ) : (
-        <div ref={selectorRef} className="px-5 pt-10 pb-40 space-y-10">
           {/* CARROSSEL DE DIAS */}
           <section>
             <div className="flex items-center justify-between mb-4 px-1">
