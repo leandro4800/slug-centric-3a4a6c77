@@ -64,7 +64,7 @@ const Perfil = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
-  const [imgPosY, setImgPosY] = useState<number>(20);
+  const [imgPosY, setImgPosY] = useState<number>(30);
 
   useEffect(() => {
     if (profile?.avatar_pos_y !== undefined && profile?.avatar_pos_y !== null) {
@@ -86,6 +86,7 @@ const Perfil = () => {
     sexo: "M" as "M" | "F",
     avatar_url: "",
     music_url: "",
+    avatar_pos_y: 30,
   });
 
   // Evaluation form
@@ -171,6 +172,7 @@ const Perfil = () => {
           sexo: (p.sexo as "M" | "F") || "M",
           avatar_url: p.avatar_url || "",
           music_url: p.music_url || "",
+          avatar_pos_y: p.avatar_pos_y ?? 30,
         });
       }
       if (e) {
@@ -394,7 +396,7 @@ const Perfil = () => {
     <>
       <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
-      <section className="relative h-[110vh] min-h-[860px] -mt-0">
+      <section className="relative h-[85vh] min-h-[600px] -mt-0">
         <img
           src={profileHeroSrc}
           alt=""
@@ -674,7 +676,7 @@ const Perfil = () => {
             <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative w-full h-64 rounded-xl overflow-hidden border border-border bg-muted">
+            <div className="relative w-full h-80 rounded-xl overflow-hidden border border-border bg-muted">
               <img
                 src={profileHeroSrc}
                 alt=""
@@ -699,7 +701,7 @@ const Perfil = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
+            <Button variant="ghost" onClick={() => setImgPosY(30)}>Resetar</Button>
             <Button variant="default" onClick={async () => {
               try {
                 const { error } = await supabase
@@ -710,6 +712,7 @@ const Perfil = () => {
                 if (error) throw error;
                 
                 setProfile(prev => prev ? { ...prev, avatar_pos_y: imgPosY } : null);
+                setFormProfile(prev => ({ ...prev, avatar_pos_y: imgPosY }));
                 setAdjustOpen(false);
                 toast.success("Ajuste de foto salvo!");
               } catch (err: any) {
