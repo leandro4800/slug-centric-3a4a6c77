@@ -353,6 +353,13 @@ const Perfil = () => {
   };
 
   const nomeDisplay = profile?.nome_completo || user?.email?.split("@")[0]?.toUpperCase() || "ATLETA";
+  const profileAvatarSrc = !profileImageFailed && !isUnsupportedProfileImage(profile?.avatar_url) && profile?.avatar_url
+    ? profile.avatar_url
+    : null;
+  const profileHeroSrc = profileAvatarSrc || (isCoach ? tenant?.hero_url : null) || heroDefault;
+  const formAvatarSrc = !formImageFailed && !isUnsupportedProfileImage(formProfile.avatar_url) && formProfile.avatar_url
+    ? formProfile.avatar_url
+    : "";
 
   if (loading) {
     return (
@@ -368,10 +375,11 @@ const Perfil = () => {
       {/* Hero estilo Netflix */}
       <section className="relative h-[110vh] min-h-[860px] -mt-0">
         <img
-          src={profile?.avatar_url || (isCoach ? tenant?.hero_url : null) || heroDefault}
+          src={profileHeroSrc}
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           style={{ objectPosition: `center ${imgPosY}%` }}
+          onError={() => setProfileImageFailed(true)}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-transparent" />
@@ -485,8 +493,8 @@ const Perfil = () => {
             <div className="flex flex-col items-center gap-4">
               <div className="relative group">
                 <div className="w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20 bg-muted flex items-center justify-center">
-                  {formProfile.avatar_url ? (
-                    <img src={formProfile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  {formAvatarSrc ? (
+                    <img src={formAvatarSrc} alt="Avatar" className="w-full h-full object-cover" onError={() => setFormImageFailed(true)} />
                   ) : (
                     <User className="w-12 h-12 text-muted-foreground" />
                   )}
@@ -516,7 +524,7 @@ const Perfil = () => {
             </div>
             <div>
               <Label htmlFor="avatar">Link da Imagem (Opcional)</Label>
-              <Input id="avatar" value={formProfile.avatar_url} onChange={(e) => setFormProfile({...formProfile, avatar_url: e.target.value})} placeholder="https://..." />
+              <Input id="avatar" value={formProfile.avatar_url} onChange={(e) => { setFormImageFailed(false); setFormProfile({...formProfile, avatar_url: e.target.value}); }} placeholder="https://..." />
             </div>
             <div>
               <Label htmlFor="nome">Nome Completo</Label>
@@ -647,10 +655,11 @@ const Perfil = () => {
           <div className="space-y-4">
             <div className="relative w-full h-64 rounded-xl overflow-hidden border border-border bg-muted">
               <img
-                src={profile?.avatar_url || (isCoach ? tenant?.hero_url : null) || hero}
+                src={profileHeroSrc}
                 alt=""
                 className="absolute inset-0 w-full h-full object-cover"
                 style={{ objectPosition: `center ${imgPosY}%` }}
+                onError={() => setProfileImageFailed(true)}
               />
             </div>
             <div className="space-y-2">
