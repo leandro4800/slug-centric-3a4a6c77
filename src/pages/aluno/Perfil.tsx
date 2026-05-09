@@ -676,20 +676,20 @@ const Perfil = () => {
             <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            <div className="relative w-full aspect-[4/5] max-h-[400px] rounded-xl overflow-hidden border border-border bg-muted">
+            <div className="relative w-full aspect-[2/3] max-h-[450px] rounded-xl overflow-hidden border border-border bg-muted">
               <img
                 src={profileHeroSrc}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-300 ease-in-out"
+                className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-200 ease-in-out"
                 style={{ objectPosition: `center ${imgPosY}%` }}
                 onError={() => setProfileImageFailed(true)}
               />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
-                <span>Topo</span>
-                <span>Posição: {imgPosY}%</span>
-                <span>Base</span>
+                <span>Ver Topo</span>
+                <span>Ajuste: {imgPosY}%</span>
+                <span>Ver Base</span>
               </div>
               <Slider
                 value={[imgPosY]}
@@ -701,7 +701,7 @@ const Perfil = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImgPosY(20)}>Resetar</Button>
+            <Button variant="ghost" onClick={() => setImgPosY(50)}>Resetar</Button>
             <Button variant="default" onClick={async () => {
               try {
                 const { error } = await supabase
