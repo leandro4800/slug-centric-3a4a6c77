@@ -163,7 +163,34 @@ const Perfil = () => {
       const { data: ownedTenant } = await supabase.from("tenants").select("id").eq("owner_user_id", user?.id).maybeSingle();
       
       setIsCoach(roles?.some(r => r.role === "coach" || r.role === "admin") || !!ownedTenant);
-
+      if (p) {
+        setProfile(p);
+        setFormProfile({
+          nome_completo: p.nome_completo || "",
+          telefone: p.telefone || "",
+          data_nascimento: p.data_nascimento || "",
+          sexo: (p.sexo as "M" | "F") || "M",
+          avatar_url: p.avatar_url || "",
+          music_url: p.music_url || "",
+          avatar_pos_y: p.avatar_pos_y ?? 50,
+        });
+      }
+      if (e) {
+        setLastEval(e);
+        setFormEval({
+          peso_kg: String(e.peso_kg || ""),
+          altura_cm: String(e.altura_cm || ""),
+          pescoco_cm: String(e.pescoco_cm || ""),
+          cintura_cm: String(e.cintura_cm || ""),
+          quadril_cm: String(e.quadril_cm || ""),
+        });
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogout = async () => { 
     await signOut(); 
