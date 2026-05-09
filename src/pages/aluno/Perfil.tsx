@@ -416,21 +416,21 @@ const Perfil = () => {
           <Move className="h-3.5 w-3.5" /> Ajustar foto
         </button>
 
-        <div className="absolute bottom-0 left-0 right-0 px-5 pb-10 space-y-4">
-          <div className="flex items-center gap-3">
-            <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">FILME</span>
-            <span className="text-xs uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
+        <div className="absolute bottom-0 left-0 right-0 px-5 pb-6 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">FILME</span>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
           </div>
-          <h1 className="font-display text-5xl leading-none">{nomeDisplay.toUpperCase()}</h1>
-          <div className="flex items-center gap-3 text-sm">
+          <h1 className="font-display text-4xl leading-none">{nomeDisplay.toUpperCase()}</h1>
+          <div className="flex items-center gap-3 text-xs">
             <span className="text-[hsl(142_70%_55%)] font-semibold">98% compatível</span>
             <span className="text-muted-foreground">{new Date().getFullYear()}</span>
           </div>
-          <p className="text-sm text-muted-foreground line-clamp-3 max-w-md">
+          <p className="text-xs text-muted-foreground line-clamp-2 max-w-md">
             {user?.email}. {profile?.telefone ? `Contato: ${profile.telefone}.` : ""} Próximo passo: manter a constância e evoluir.
           </p>
 
-          <div className="flex gap-3 pt-2">
+          <div className="flex gap-2 pt-1">
             <Button 
               onClick={() => setProfileOpen(true)}
               variant="default"
