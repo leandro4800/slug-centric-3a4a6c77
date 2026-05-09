@@ -85,8 +85,8 @@ const Login = () => {
       const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
       
       if (redirectPath && !redirectPath.includes("/login")) {
-        navigate(redirectPath, { replace: true });
-        return;
+        // Se já houver um redirectPath para o app ou algo específico, não precisamos forçar o redirecionamento aqui.
+        // O fluxo abaixo já lida com resgate de voucher e verificação de assinatura.
       }
 
       const [{ data: perfil }, { data: roles }, { data: ownedTenant }] = await Promise.all([
@@ -124,13 +124,15 @@ const Login = () => {
       // VOUCHER REDEMPTION: Se houver um voucher pendente, tentamos resgatar antes de qualquer verificação de assinatura
       const pending = sessionStorage.getItem("pending_voucher");
       if (pending) {
-        sessionStorage.removeItem("pending_voucher");
         const ok = await redeemVoucherCode(pending);
         if (ok) {
+          sessionStorage.removeItem("pending_voucher");
           const targetSlug = urlSlug || userSlug;
           navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
           return;
         }
+        // Se falhou (código inválido), removemos para não ficar em loop
+        sessionStorage.removeItem("pending_voucher");
       }
 
       // Aluno comum: precisa ter assinatura ativa OU comprou aula avulsa para acessar /app
@@ -152,8 +154,12 @@ const Login = () => {
             .in("status", ["active", "trialing"])
             .maybeSingle();
           if (!sub) {
-            navigate(`/${targetSlug}`, { replace: true });
-            return;
+            // Se NÃO tem assinatura mas tem voucher pendente, o fluxo de voucher acima cuidará do redirecionamento.
+            // Se já tentamos o voucher e falhou, ou não tinha, então sim vai para a landing.
+            if (!sessionStorage.getItem("pending_voucher")) {
+              navigate(`/${targetSlug}`, { replace: true });
+              return;
+            }
           }
           userSlug = targetSlug;
         } else {
