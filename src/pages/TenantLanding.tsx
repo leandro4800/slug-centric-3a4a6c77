@@ -65,7 +65,7 @@ export default function TenantLanding() {
       return;
     }
     if (!user) {
-      navigate(`/${slug}/login?redirect=/${slug}`);
+      navigate(`/${slug}/login?redirect=/${slug}?voucher=1`);
       return;
     }
     setVoucherLoading(true);
