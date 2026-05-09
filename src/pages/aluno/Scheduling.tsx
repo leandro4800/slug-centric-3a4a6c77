@@ -526,7 +526,7 @@ const Scheduling = () => {
                 if (ok) setChatOpen(false);
               }}
               disabled={!selectedSlot || !!jaAgendado || confirming}
-              className="w-full rounded-md bg-primary py-4 font-display text-2xl tracking-[0.18em] text-white shadow-[0_0_35px_-6px_hsl(var(--primary)/0.8)] disabled:opacity-40 disabled:shadow-none"
+              className="w-full rounded-xl bg-primary py-4 font-display text-2xl tracking-[0.18em] text-white shadow-[0_10px_30px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95 disabled:opacity-40 disabled:shadow-none"
             >
               {jaAgendado ? "JÁ AGENDADO" : confirming ? "CONFIRMANDO..." : "CONFIRMAR"}
             </button>
