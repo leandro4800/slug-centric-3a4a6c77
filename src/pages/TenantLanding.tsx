@@ -97,6 +97,15 @@ export default function TenantLanding() {
     void load();
   }, [slug]);
 
+  // Auto-abre o modal de código quando voltar do login com ?voucher=1
+  useEffect(() => {
+    if (!loading && user && !hasSubscription && searchParams.get("voucher") === "1") {
+      setVoucherOpen(true);
+      searchParams.delete("voucher");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [loading, user, hasSubscription, searchParams, setSearchParams]);
+
   const load = async () => {
     if (!slug) return;
     setLoading(true);
