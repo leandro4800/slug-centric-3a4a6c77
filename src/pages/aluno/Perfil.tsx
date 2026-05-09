@@ -189,14 +189,25 @@ const Perfil = () => {
       const filePath = `${user.id}/${fileName}`;
 
       console.log("Enviando para o Storage:", filePath);
+      
+      // Tentar upload com fallback de contentType
       const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, { 
           contentType: isHeic ? 'image/jpeg' : (original.type || 'image/jpeg'),
-          upsert: true
+          upsert: true,
+          cacheControl: '3600'
         });
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        console.error("Erro no upload para o Storage:", uploadError);
+        // Fallback: tentar sem contentType se falhar
+        const { error: retryError } = await supabase.storage
+          .from('avatars')
+          .upload(filePath + "-retry", file, { upsert: true });
+        
+        if (retryError) throw retryError;
+      }
 
       const { data: { publicUrl } } = supabase.storage
         .from('avatars')
@@ -207,24 +218,21 @@ const Perfil = () => {
       toast.success("Foto carregada!", { id: toastId });
 
       // Persistir imediatamente no banco para garantir que a foto seja salva
-      // Usamos update em vez de upsert para não sobrescrever outros campos com NULL
+      // Usamos update se já existir dados ou upsert seguro
       const { error: updateError } = await supabase.from("perfis").update({
         avatar_url: publicUrl,
         updated_at: new Date().toISOString(),
       }).eq('id', user.id);
 
       if (updateError) {
-        console.error("Erro ao salvar avatar no banco:", updateError);
-        // Se falhar o update, tentamos um upsert mais completo como fallback
+        console.error("Erro ao salvar avatar no banco (update):", updateError);
+        // Fallback: upsert apenas os campos essenciais para evitar erros de constraint
         const { error: upsertError } = await supabase.from("perfis").upsert({
           id: user.id,
-          email: user.email,
           avatar_url: publicUrl,
-          tenant_id: profile?.tenant_id || tenant?.id,
           updated_at: new Date().toISOString(),
-          nome_completo: formProfile.nome_completo,
-          telefone: formProfile.telefone,
-        } as any);
+          email: user.email,
+        }, { onConflict: 'id' });
         
         if (upsertError) {
           console.error("Erro no fallback do upsert:", upsertError);
