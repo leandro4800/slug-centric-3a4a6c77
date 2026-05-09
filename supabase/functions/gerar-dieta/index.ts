@@ -82,6 +82,16 @@ serve(async (req) => {
     const sexo = (body.sexo || "M").toUpperCase();
     const fa = Number(body.nivel_atividade) || 1.55;
     const nivel = (body.nivel || "intermediario").toLowerCase();
+    const bfPct = Number(body.bf_pct) || null;
+    const pescoco = Number(body.pescoco_cm) || null;
+    const cintura = Number(body.cintura_cm) || null;
+    const quadril = Number(body.quadril_cm) || null;
+    const composicaoTxt = [
+      bfPct ? `BF%: ${bfPct.toFixed(1)}%` : null,
+      pescoco ? `Pescoço: ${pescoco}cm` : null,
+      cintura ? `Cintura: ${cintura}cm` : null,
+      quadril ? `Quadril: ${quadril}cm` : null,
+    ].filter(Boolean).join(" · ") || "Não informada";
 
     // Multiplicador de proteína por nível
     const protPorKg = nivel.includes("alto") ? 2.6
