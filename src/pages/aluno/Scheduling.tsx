@@ -473,14 +473,44 @@ const Scheduling = () => {
                 </div>
 
                 {slotInfo && (
-                  <div className="rounded-2xl border border-primary/30 bg-primary/10 p-4 space-y-2">
-                    <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] text-primary">
-                      <MapPin className="h-3 w-3" /> LOCAL
+                  <>
+                    <div className="rounded-md border border-primary/30 bg-primary/10 p-4 space-y-2">
+                      <div className="flex items-center gap-2 text-[10px] font-bold tracking-[0.25em] text-primary">
+                        <MapPin className="h-3 w-3" /> LOCAL SUGERIDO PELO COACH
+                      </div>
+                      <div className="font-display text-2xl">{slotInfo.local_nome}</div>
+                      {slotInfo.local_endereco && <div className="text-xs text-white/60">{slotInfo.local_endereco}</div>}
+                      <div className="text-xs text-white/60">{fmtHora(slotInfo.hora_inicio)} – {fmtHora(slotInfo.hora_fim)}</div>
                     </div>
-                    <div className="font-display text-2xl">{slotInfo.local_nome}</div>
-                    {slotInfo.local_endereco && <div className="text-xs text-white/60">{slotInfo.local_endereco}</div>}
-                    <div className="text-xs text-white/60">{fmtHora(slotInfo.hora_inicio)} – {fmtHora(slotInfo.hora_fim)}</div>
-                  </div>
+
+                    <div className="flex gap-3">
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center shrink-0">
+                        <Bot className="h-4 w-4 text-white" />
+                      </div>
+                      <div className="rounded-md rounded-tl-sm bg-white/10 border border-white/10 px-4 py-3 text-sm text-white/80">
+                        Confirme em qual academia você vai treinar nesse dia. Você pode usar o local sugerido pelo Coach ou digitar outra unidade.
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <div className="text-[10px] font-bold tracking-[0.3em] text-white/40">ACADEMIA / UNIDADE</div>
+                      <input
+                        value={academiaConfirmada}
+                        onChange={(e) => setAcademiaConfirmada(e.target.value)}
+                        placeholder="Ex: Smart Fit Centro"
+                        className="w-full rounded-md bg-white/5 border border-white/15 px-4 py-3 text-white placeholder:text-white/30 focus:border-primary outline-none"
+                      />
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAcademiaConfirmada(slotInfo.local_nome || "")}
+                          className="text-[10px] tracking-widest px-3 py-1 rounded-md border border-primary/40 text-primary hover:bg-primary/10"
+                        >
+                          USAR LOCAL DO COACH
+                        </button>
+                      </div>
+                    </div>
+                  </>
                 )}
               </>
             )}
