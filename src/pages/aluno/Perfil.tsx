@@ -181,23 +181,36 @@ const Perfil = () => {
       setFormProfile(prev => ({ ...prev, avatar_url: publicUrl }));
 
       // Persistir imediatamente no banco para garantir que a foto seja salva
-      const { error: updateError } = await supabase.from("perfis").upsert({
-        id: user.id,
-        email: user.email,
+      // Usamos update em vez de upsert para não sobrescrever outros campos com NULL
+      const { error: updateError } = await supabase.from("perfis").update({
         avatar_url: publicUrl,
-        tenant_id: profile?.tenant_id || tenant?.id,
         updated_at: new Date().toISOString(),
-      } as any);
+      }).eq('id', user.id);
+
       if (updateError) {
-        console.error("Erro ao salvar avatar:", updateError);
-        toast.error("Foto carregada, mas falhou ao salvar: " + updateError.message);
-      } else {
-        setProfile((prev: any) => ({ ...(prev || {}), avatar_url: publicUrl }));
-        toast.success("Foto salva com sucesso!");
+        console.error("Erro ao salvar avatar no banco:", updateError);
+        // Se falhar o update, tentamos um upsert mais completo como fallback
+        const { error: upsertError } = await supabase.from("perfis").upsert({
+          id: user.id,
+          email: user.email,
+          avatar_url: publicUrl,
+          tenant_id: profile?.tenant_id || tenant?.id,
+          updated_at: new Date().toISOString(),
+          nome_completo: formProfile.nome_completo,
+          telefone: formProfile.telefone,
+        } as any);
+        
+        if (upsertError) {
+          console.error("Erro no fallback do upsert:", upsertError);
+          throw upsertError;
+        }
       }
+
+      setProfile((prev: any) => ({ ...(prev || {}), avatar_url: publicUrl }));
+      toast.success("Foto salva com sucesso!");
     } catch (error: any) {
-      console.error("Erro no upload:", error);
-      toast.error("Erro ao carregar imagem: " + error.message);
+      console.error("Erro detalhado no upload:", error);
+      toast.error("Erro ao carregar imagem: " + (error.message || "Erro desconhecido"));
     } finally {
       setUploading(false);
     }
