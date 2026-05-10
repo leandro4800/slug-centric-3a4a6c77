@@ -117,12 +117,12 @@ const Login = () => {
           
           const currentSlug = urlSlug || tenant?.slug;
           if (currentSlug) {
-            console.log("[Login] Fallback: forçando redirecionamento para o app do slug atual:", currentSlug);
+            console.log("[Login] Fallback: redirecionando para app do slug:", currentSlug);
             window.location.assign(`/${currentSlug}/app`);
           } else {
             setLoading(false);
           }
-        }, 12000); // 12s de limite total para o redirect
+        }, 15000); // 15s de limite total para o redirect
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const urlSearchParams = new URLSearchParams(window.location.search);
@@ -135,9 +135,14 @@ const Login = () => {
           supabase.from("tenants").select("slug").eq("owner_user_id", user.id).maybeSingle(),
         ]);
 
-        console.log("[Login] Dados carregados:", { perfilTenantId: perfil?.tenant_id, ownedTenantSlug: ownedTenant?.slug, urlSlug, brandingSlug: tenant?.slug });
+        console.log("[Login] Dados carregados:", { 
+          perfilTenantId: perfil?.tenant_id, 
+          ownedTenantSlug: ownedTenant?.slug, 
+          urlSlug, 
+          brandingSlug: tenant?.slug 
+        });
 
-        window.clearTimeout(timeoutId);
+        if (timeoutId) window.clearTimeout(timeoutId);
         if (!isMounted) return;
 
         // 2. Prioridade: Coach (Dono de Tenant)
@@ -327,12 +332,15 @@ const Login = () => {
             )}
           </div>
         </Link>
-        <div className="relative bg-black/10 border border-white/20 rounded-none p-8 shadow-card overflow-hidden">
+        <div className="relative bg-black/10 border border-white/20 rounded-none p-8 shadow-card overflow-hidden min-h-[400px]">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           {user ? (
-            <div className="flex flex-col items-center justify-center py-12 gap-4">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-bold uppercase tracking-widest text-primary">Acessando seu Painel...</p>
+            <div className="flex flex-col items-center justify-center py-20 gap-4">
+              <Loader2 className="h-10 w-10 animate-spin text-primary" />
+              <p className="text-sm font-bold uppercase tracking-widest text-primary animate-pulse">Acessando seu Painel...</p>
+              {redirectTimedOut && (
+                <p className="text-[10px] text-muted-foreground mt-4">Redirecionando manualmente em instantes...</p>
+              )}
             </div>
           ) : (
             <Tabs defaultValue="login">
