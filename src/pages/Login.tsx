@@ -77,145 +77,130 @@ const Login = () => {
   // Redirect logged-in user
   useEffect(() => {
     if (authLoading || !user) return;
+    
+    // Flag para evitar múltiplas execuções simultâneas
+    let isMounted = true;
+
     (async () => {
-      // Auto-redeem pending voucher will be handled below after determining user roles and slugs
-      // to ensure we redirect to the correct place.
-      // Priority 1: Check if there's a redirect in state (from RequireAuth)
-      const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
-      const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
-      
-      if (redirectPath && !redirectPath.includes("/login")) {
-        // Se já houver um redirectPath para o app ou algo específico, não precisamos forçar o redirecionamento aqui.
-        // O fluxo abaixo já lida com resgate de voucher e verificação de assinatura.
-      }
+      try {
+        const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
+        const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
+        
+        const [{ data: perfil }, { data: roles }, { data: ownedTenant }] = await Promise.all([
+          supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
+          supabase.from("user_roles").select("role, tenant_id").eq("user_id", user.id),
+          supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle(),
+        ]);
 
-      const [{ data: perfil }, { data: roles }, { data: ownedTenant }] = await Promise.all([
-        supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
-        supabase.from("user_roles").select("role, tenant_id").eq("user_id", user.id),
-        supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle(),
-      ]);
+        if (!isMounted) return;
 
-      const isAdmin = roles?.some((r) => r.role === "admin");
-      const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
+        const isAdmin = roles?.some((r) => r.role === "admin");
+        const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
 
-      // Determinamos o slug do tenant do usuário
-      let userSlug = urlSlug || "demo";
-      if (ownedTenant?.slug) {
-        userSlug = ownedTenant.slug;
-      } else if (perfil?.tenant_id) {
-        const { data: tenantData } = await supabase
-          .from("tenants")
-          .select("slug")
-          .eq("id", perfil.tenant_id)
-          .maybeSingle();
-        userSlug = tenantData?.slug || userSlug;
-      } else {
-        const coachRole = roles?.find((r) => r.role === "coach");
-        if (coachRole?.tenant_id) {
-          const { data: t } = await supabase
+        // Determinamos o slug do tenant do usuário
+        let userSlug = urlSlug || "demo";
+        if (ownedTenant?.slug) {
+          userSlug = ownedTenant.slug;
+        } else if (perfil?.tenant_id) {
+          const { data: tenantData } = await supabase
             .from("tenants")
             .select("slug")
-            .eq("id", coachRole.tenant_id)
+            .eq("id", perfil.tenant_id)
             .maybeSingle();
-          userSlug = t?.slug || userSlug;
+          if (tenantData?.slug) userSlug = tenantData.slug;
         }
-      }
 
-      // VOUCHER REDEMPTION: Se houver um voucher pendente, tentamos resgatar antes de qualquer verificação de assinatura
-      const pending = sessionStorage.getItem("pending_voucher");
-      if (pending) {
-        const ok = await redeemVoucherCode(pending);
-        if (ok) {
+        // VOUCHER REDEMPTION
+        const pending = sessionStorage.getItem("pending_voucher");
+        if (pending) {
+          const ok = await redeemVoucherCode(pending);
+          if (ok && isMounted) {
+            sessionStorage.removeItem("pending_voucher");
+            const targetSlug = urlSlug || userSlug;
+            navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
+            return;
+          }
           sessionStorage.removeItem("pending_voucher");
-          const targetSlug = urlSlug || userSlug;
-          navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
-          return;
         }
-        // Se falhou (código inválido), removemos para não ficar em loop
-        sessionStorage.removeItem("pending_voucher");
-      }
 
-      // Aluno comum: precisa ter assinatura ativa OU comprou aula avulsa para acessar /app
-      // Se não tem assinatura, mandamos para a landing do tenant (planos)
-      if (!isAdmin && !isCoach) {
-        // Resolve tenant alvo (preferindo urlSlug, depois userSlug)
-        const targetSlug = urlSlug || userSlug;
-        let targetTenantId: string | null = null;
-        if (targetSlug && targetSlug !== "demo") {
-          const { data: t } = await supabase.from("tenants").select("id").eq("slug", targetSlug).maybeSingle();
-          targetTenantId = t?.id || null;
-        }
-        if (targetTenantId) {
-          const { data: sub } = await supabase
-            .from("assinaturas")
-            .select("status")
-            .eq("aluno_id", user.id)
-            .eq("tenant_id", targetTenantId)
-            .in("status", ["active", "trialing"])
-            .maybeSingle();
-          if (!sub) {
-            // Se NÃO tem assinatura mas tem voucher pendente, o fluxo de voucher acima cuidará do redirecionamento.
-            // Se já tentamos o voucher e falhou, ou não tinha, então sim vai para a landing.
-            if (!sessionStorage.getItem("pending_voucher")) {
+        // Aluno comum: precisa ter assinatura ativa OU comprou aula avulsa para acessar /app
+        if (!isAdmin && !isCoach) {
+          const targetSlug = urlSlug || userSlug;
+          let targetTenantId: string | null = null;
+          if (targetSlug && targetSlug !== "demo") {
+            const { data: t } = await supabase.from("tenants").select("id").eq("slug", targetSlug).maybeSingle();
+            targetTenantId = t?.id || null;
+          }
+
+          if (targetTenantId) {
+            const { data: sub } = await supabase
+              .from("assinaturas")
+              .select("status")
+              .eq("aluno_id", user.id)
+              .eq("tenant_id", targetTenantId)
+              .in("status", ["active", "trialing"])
+              .maybeSingle();
+            
+            if (!sub && isMounted) {
               navigate(`/${targetSlug}`, { replace: true });
               return;
             }
+            userSlug = targetSlug;
+          } else if (isMounted) {
+            navigate(`/marketplace`, { replace: true });
+            return;
           }
-          userSlug = targetSlug;
+        }
+
+        if (!isMounted) return;
+
+        // Se a flag is_coach existir nos metadados e não tem tenant ainda
+        const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
+        if (isCoachSignup && !ownedTenant) {
+          navigate("/seja-coach", { replace: true });
+          return;
+        }
+
+        // Se for um usuário comum, verifica onboarding
+        if (!isAdmin && !isCoach) {
+          const { count: anamneseCount } = await supabase
+            .from("anamnese_aluno")
+            .select("id", { count: 'exact', head: true })
+            .eq("aluno_id", user.id);
+
+          const { count: avaliacaoCount } = await supabase
+            .from("avaliacoes_fisicas")
+            .select("id", { count: 'exact', head: true })
+            .eq("aluno_id", user.id);
+
+          if (!perfil?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
+            navigate("/onboarding", { replace: true });
+            return;
+          }
+        }
+
+        // REDIRECIONAMENTO FINAL:
+        if (redirectPath && !redirectPath.includes("/login")) {
+          navigate(redirectPath, { replace: true });
+          return;
+        }
+
+        if (isAdmin && !isCoach && !perfil?.tenant_id) {
+          navigate("/admin/coaches", { replace: true });
         } else {
-          // Sem tenant alvo válido: marketplace
-          navigate(`/marketplace`, { replace: true });
-          return;
+          // Garante que não redirecionamos para o login se já estamos logados
+          const finalPath = `/${userSlug}/app`;
+          if (location.pathname !== finalPath) {
+            navigate(finalPath, { replace: true });
+          }
         }
-      }
-
-      // Se a flag is_coach existir nos metadados, redireciona para o cadastro de coach
-      const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
-      if (isCoachSignup && !ownedTenant) {
-        navigate("/seja-coach", { replace: true });
-        return;
-      }
-      if (ownedTenant && !isAdmin) {
-        // Tenant (coach ou aluno): vai para a tela inicial do app
-        navigate(`/${ownedTenant.slug}/app`, { replace: true });
-        return;
-      }
-
-      // Se for um usuário comum, verifica onboarding
-      if (!isAdmin && !isCoach) {
-        const { count: anamneseCount } = await supabase
-          .from("anamnese_aluno")
-          .select("id", { count: 'exact', head: true })
-          .eq("aluno_id", user.id);
-
-        const { count: avaliacaoCount } = await supabase
-          .from("avaliacoes_fisicas")
-          .select("id", { count: 'exact', head: true })
-          .eq("aluno_id", user.id);
-
-        if (!perfil?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
-          navigate("/onboarding", { replace: true });
-          return;
-        }
-      }
-
-      // REDIRECIONAMENTO FINAL:
-      // Se houver um redirectPath explícito, usamos ele.
-      if (redirectPath && !redirectPath.includes("/login")) {
-        navigate(redirectPath, { replace: true });
-        return;
-      }
-
-      // Caso contrário, o usuário SEMPRE vai para o Início do App (Home) por padrão
-      // conforme solicitado (mesmo sendo coach/admin).
-      if (isAdmin && !isCoach && !perfil?.tenant_id) {
-        // Se for um Admin Global sem tenant, vai para o painel de coaches
-        navigate("/admin/coaches", { replace: true });
-      } else {
-        navigate(`/${userSlug}/app`, { replace: true });
+      } catch (err) {
+        console.error("Error in login redirect effect:", err);
       }
     })();
-  }, [user, authLoading, navigate]);
+
+    return () => { isMounted = false; };
+  }, [user, authLoading, navigate, location.pathname, urlSlug]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
