@@ -1819,6 +1819,7 @@ export type Database = {
       }
       refeicoes: {
         Row: {
+          descricao_ia: string | null
           dieta_id: string | null
           horario: string | null
           id: string
@@ -1826,6 +1827,7 @@ export type Database = {
           ordem: number | null
         }
         Insert: {
+          descricao_ia?: string | null
           dieta_id?: string | null
           horario?: string | null
           id?: string
@@ -1833,6 +1835,7 @@ export type Database = {
           ordem?: number | null
         }
         Update: {
+          descricao_ia?: string | null
           dieta_id?: string | null
           horario?: string | null
           id?: string

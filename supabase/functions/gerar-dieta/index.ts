@@ -114,10 +114,10 @@ serve(async (req) => {
     const ajuste = nivel.includes("alto") && objetivo === "hipertrofia" ? ajusteBase + 200 : ajusteBase;
     const kcalAlvo = Math.round(gcd + ajuste);
 
-    // Macros
-    const proteinaG = Math.round(peso * protPorKg);
-    const gorduraG = Math.round((kcalAlvo * 0.25) / 9);
-    const carboG = Math.round((kcalAlvo - proteinaG * 4 - gorduraG * 9) / 4);
+    // Macros baseados na proporção 45/35/20 (Carboidrato/Proteína/Gordura)
+    const carboG = Math.round((kcalAlvo * 0.45) / 4);
+    const proteinaG = Math.round((kcalAlvo * 0.35) / 4);
+    const gorduraG = Math.round((kcalAlvo * 0.20) / 9);
 
     // 2. Última análise clínica (deficiências)
     const { data: ultimaAnalise } = await supabase
@@ -164,32 +164,40 @@ serve(async (req) => {
     const fibrasMin = Math.max(25, Math.round(peso * 0.35));
     const fibrasMax = Math.max(35, Math.round(peso * 0.45));
 
-    const systemPrompt = `Você é DR. IA NUTRI, Estrategista Nutricional de Performance — não uma "calculadora de macros". Você orquestra o metabolismo do atleta seguindo a Metodologia Fabrício Pacholok.
+    const systemPrompt = `Você é DR. IA NUTRI, Estrategista Nutricional de Performance — Seguindo a Metodologia Fabrício Pacholok.
 Use EXCLUSIVAMENTE alimentos da tabela TACO fornecida (use os IDs exatos).
 
 ═══════════════════════════════════════════════
-1. NUTRIENT TIMING (JANELA DE PERFORMANCE) — OBRIGATÓRIO
+REGRAS INVIOLÁVEIS:
+═══════════════════════════════════════════════
+1. Equilíbrio de Macros: Siga estritamente a proporção de 45% Carboidratos, 35% Proteínas e 20% Gorduras.
+2. Proibição de Redundância: É proibido repetir fontes de gordura do mesmo tipo na mesma refeição (ex: não usar amendoim + pasta de amendoim).
+3. Café da Manhã de Elite: Proibido carbo simples de alto índice glicêmico ou 'bombas de açúcar' (como sucos) logo ao acordar. Priorize carbo complexo e proteína.
+4. Volume Humano: Limite as quantidades de fontes de carbo (arroz/batata) a níveis realistas (seguir o calculo de 45% de carbo por refeição). Nao colocar mais do que 1 tipo de carbo, proteína e gordura por refeição. Se precisar de mais calorias, aumente a densidade calórica ou o número de refeições, não apenas o volume de um único prato.
+5. Fidelidade Visual: Retorne descrições de imagens que correspondam EXATAMENTE aos alimentos descritos. Se a refeição é sólida (frango/arroz), a descrição não pode sugerir um shake. Use o campo "descricao_ia".
+
+═══════════════════════════════════════════════
+NUTRIENT TIMING (JANELA DE PERFORMANCE) — OBRIGATÓRIO
 ═══════════════════════════════════════════════
 - Identifique as 3 refeições que cercam o treino: PRÉ-TREINO, INTRA/LANCHE PÓS-IMEDIATO e PÓS-TREINO (refeição sólida).
 - Concentre ~60% dos CARBOIDRATOS DIÁRIOS nessas 3 refeições.
-- PRÉ e PÓS imediato: REDUZA gorduras (<10g) e fibras (<5g) para acelerar esvaziamento gástrico. Use carbo de médio/alto IG (banana, batata, arroz branco, mandioca) + proteína rápida (whey, peito de frango, clara).
+- PRÉ e PÓS imediato: REDUZA gorduras (<10g) e fibras (<5g) para acelerar esvaziamento gástrico.
 - Refeições longe do treino: priorize carbos de baixo IG (aveia, batata-doce, arroz integral) + fibras + gorduras boas.
 
 ═══════════════════════════════════════════════
-2. PROTEÍNA ROTATIVA (ANTI-MONOTONIA + BIODISPONIBILIDADE)
+PROTEÍNA ROTATIVA (ANTI-MONOTONIA + BIODISPONIBILIDADE)
 ═══════════════════════════════════════════════
 - MÍNIMO 3 fontes proteicas DISTINTAS no dia (ex: ovos, frango, carne vermelha, peixe, whey).
 - PROIBIDO repetir a mesma fonte proteica em mais de 2 refeições consecutivas.
-- Em dietas de atleta avançado, inclua peixe (salmão/sardinha) ao menos 1x/dia pelo ômega 3.
 
 ═══════════════════════════════════════════════
-3. FIBRAS E HIDRATAÇÃO (SAÚDE SISTÊMICA)
+FIBRAS E HIDRATAÇÃO (SAÚDE SISTÊMICA)
 ═══════════════════════════════════════════════
 - META FIBRAS: ${fibrasMin}g a ${fibrasMax}g/dia. Distribuídas em refeições FORA da janela do treino.
-- HIDRATAÇÃO: ${hidratacaoMl}ml/dia (50ml × ${peso}kg). Retorne no campo "recomendacao_hidratacao".
+- HIDRATAÇÃO: ${hidratacaoMl}ml/dia (50ml × ${peso}kg).
 
 ═══════════════════════════════════════════════
-4. NUTRIÇÃO FUNCIONAL (BASEADA EM LAUDOS CLÍNICOS)
+NUTRIÇÃO FUNCIONAL (BASEADA EM LAUDOS CLÍNICOS)
 ═══════════════════════════════════════════════
 ${alertasNutricionais.length > 0 ? alertasNutricionais.map(a => `- ${a}`).join("\n") : "- Nenhum alerta clínico relevante. Foco em performance pura."}
 - Se houver deficiência (Vit D, Ferro, Magnésio): priorize alimentos ricos no nutriente em falta.
@@ -218,7 +226,8 @@ FORMATO OBRIGATÓRIO:
       "nome": "Café da Manhã",
       "horario": "07:00",
       "ordem": 1,
-      "tag_timing": "longe_treino" | "pre_treino" | "pos_treino_imediato" | "pos_treino_solida",
+      "tag_timing": "longe_treino",
+      "descricao_ia": "Ovos mexidos com batata doce cozida e abacate fatiado (exemplo sólido)",
       "itens": [
         { "alimento_id": "uuid-da-tabela", "quantidade_g": 100, "substituicoes": "sugestão livre opcional" }
       ]
@@ -244,7 +253,7 @@ Gere o plano em JSON aplicando Nutrient Timing, Proteína Rotativa, metas de Fib
       method: "POST",
       headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "openai/gpt-5-mini",
+        model: "google/gemini-2.0-flash-exp",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -293,7 +302,7 @@ Gere o plano em JSON aplicando Nutrient Timing, Proteína Rotativa, metas de Fib
     for (const ref of plano.refeicoes || []) {
       const { data: refIns, error: refErr } = await supabase
         .from("refeicoes")
-        .insert({ dieta_id: dieta.id, nome: ref.nome, horario: ref.horario, ordem: ref.ordem })
+        .insert({ dieta_id: dieta.id, nome: ref.nome, horario: ref.horario, ordem: ref.ordem, descricao_ia: ref.descricao_ia })
         .select()
         .single();
       if (refErr) continue;
