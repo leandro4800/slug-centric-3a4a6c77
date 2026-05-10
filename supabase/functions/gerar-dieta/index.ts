@@ -265,6 +265,24 @@ NUTRIENT TIMING — HORÁRIO DE TREINO DO ATLETA
 - Marque corretamente "tag_timing" como: "pre_treino", "pos_treino_imediato", "pos_treino_solido" ou "longe_treino".
 
 ═══════════════════════════════════════════════
+SALADA À VONTADE (ALMOÇO E JANTAR)
+═══════════════════════════════════════════════
+- Em TODA refeição de ALMOÇO (~${horarioAlmoco}) e JANTAR (~${horarioJantar}), inclua OBRIGATORIAMENTE uma orientação de "salada de folhas verdes e vegetais crus À VONTADE / a gosto" — não conte essas calorias no fechamento dos macros (volume livre).
+- Use o campo "salada_livre": true nessas refeições e descreva exemplos no "descricao_ia" (ex.: alface, rúcula, agrião, tomate, pepino, cenoura ralada, beterraba).
+
+═══════════════════════════════════════════════
+PREFERÊNCIAS ALIMENTARES DO ATLETA (ANAMNESE)
+═══════════════════════════════════════════════
+- Alimentos básicos em casa: ${prefAlimentos.basicos || "não informado"}
+- Café da manhã / lanche habitual: ${prefAlimentos.cafe_lanche || "não informado"}
+- Proteínas que costuma consumir: ${prefAlimentos.proteinas || "não informado"}
+- Frutas/vegetais preferidos: ${prefAlimentos.frutas_veg || "não informado"}
+- AMA: ${prefAlimentos.ama || "—"} | EVITA: ${prefAlimentos.evita || "—"}
+- Restrições/Alergias: ${prefAlimentos.restricoes || "nenhuma"}
+- Suplementos disponíveis: ${prefAlimentos.suplementos || "nenhum"}
+- PRIORIZE alimentos que o atleta JÁ TEM EM CASA e CONSOME REGULARMENTE para garantir aderência. Use os "AMA" sempre que possível e NUNCA inclua os "EVITA" ou os listados em restrições.
+
+═══════════════════════════════════════════════
 NUTRIÇÃO FUNCIONAL (BASEADA EM LAUDOS CLÍNICOS)
 ═══════════════════════════════════════════════
 ${alertasNutricionais.length > 0 ? alertasNutricionais.map(a => `- ${a}`).join("\n") : "- Nenhum alerta clínico relevante. Foco em performance pura."}
@@ -296,6 +314,7 @@ FORMATO OBRIGATÓRIO:
       "ordem": 1,
       "tag_timing": "longe_treino",
       "descricao_ia": "Ovos mexidos com batata doce cozida e abacate fatiado (exemplo sólido)",
+      "salada_livre": false,
       "itens": [
         { "alimento_id": "uuid-da-tabela", "quantidade_g": 100, "substituicoes": "sugestão livre opcional" }
       ]
@@ -304,6 +323,7 @@ FORMATO OBRIGATÓRIO:
 }`;
 
     const userPrompt = `META: ${kcalAlvo} kcal | P:${proteinaG}g C:${carboG}g G:${gorduraG}g
+ESTRATÉGIA CALÓRICA: ${estrategiaCalorica}
 OBJETIVO: ${objetivo}
 DADOS DO ATLETA: Sexo ${sexo} · ${idade} anos · ${peso}kg · ${altura}cm · Nível ${nivel}
 COMPOSIÇÃO CORPORAL: ${composicaoTxt}
