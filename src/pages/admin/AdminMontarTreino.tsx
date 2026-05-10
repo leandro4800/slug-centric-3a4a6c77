@@ -300,6 +300,8 @@ const AdminMontarTreino = () => {
 
   const autoTriggeredRef = useRef(false);
   useEffect(() => {
+    // Só dispara automático se o coach explicitamente vir de AtletaDetalhe com o parâmetro auto=true
+    // E apenas UMA VEZ por carregamento de página
     if (
       searchParams.get("auto") === "true" &&
       alunoId && tenant &&
@@ -307,8 +309,13 @@ const AdminMontarTreino = () => {
       exercicios.length === 0 &&
       !autoTriggeredRef.current
     ) {
-      autoTriggeredRef.current = true;
-      void gerarComIA();
+      const confirmAction = window.confirm("Deseja gerar o treino agora com a IA?");
+      if (confirmAction) {
+        autoTriggeredRef.current = true;
+        void gerarComIA();
+      } else {
+        autoTriggeredRef.current = true;
+      }
     }
   }, [searchParams, alunoId, tenant, generating, exercicios.length, gerarComIA]);
 

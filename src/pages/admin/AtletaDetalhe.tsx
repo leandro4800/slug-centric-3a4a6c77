@@ -293,16 +293,30 @@ const AtletaDetalhe = () => {
 
   const handleGenerateProtocol = async () => {
     if (!aluno) return;
+    
+    // Verifica se já existe um protocolo e pergunta se quer substituir
+    if (protocolResult) {
+      const confirmReplace = window.confirm("Já existe um protocolo gerado. Deseja analisar o atual e gerar uma nova sugestão com ajustes?");
+      if (!confirmReplace) return;
+    } else {
+      const confirmGen = window.confirm("Deseja que a IA analise os dados do aluno e gere uma sugestão de protocolo?");
+      if (!confirmGen) return;
+    }
+
     setIsGeneratingProtocol(true);
     try {
       const { data, error } = await (supabase.functions as any).invoke("generate-hormone-protocol", {
-        body: { alunoId: aluno.id, tenantId: aluno.tenant_id },
+        body: { 
+          alunoId: aluno.id, 
+          tenantId: aluno.tenant_id,
+          currentProtocol: protocolResult // Envia o protocolo atual para análise
+        },
       });
 
       if (error) throw error;
       setProtocolResult(data.protocol);
       setShowProtocolDialog(true);
-      toast.success("Protocolo gerado pelo DR. IA!");
+      toast.success("Análise de protocolo concluída pelo DR. IA!");
     } catch (e: any) {
       console.error(e);
       toast.error(e.message || "Falha ao gerar protocolo");
@@ -803,7 +817,13 @@ const AtletaDetalhe = () => {
           
           <div className="py-4 space-y-4">
             <Textarea
-              placeholder="Ex: Focar em glúteos e posteriores, dieta sem lactose, incluir jejum intermitente..."
+              placeholder={
+                promptType === 'treino' 
+                  ? "Ex: Focar em glúteos e posteriores, enfatizar ombros, treino com mais drop-sets..." 
+                  : promptType === 'dieta'
+                    ? "Ex: Dieta sem lactose, incluir jejum intermitente, mais opções de lanches práticos..."
+                    : "Ex: Focar em definição máxima para competição, dieta zero carbo nos dias de OFF..."
+              }
               className="min-h-[120px] bg-background border-primary/20 focus:border-primary/50 text-sm"
               value={iaPrompt}
               onChange={(e) => setIaPrompt(e.target.value)}
