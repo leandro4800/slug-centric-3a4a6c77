@@ -48,7 +48,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
       console.warn(`[RequireAuth] User ${user.id} is not a member of tenant: ${tenant.id} (${slug})`);
       // Se ele for coach de OUTRO tenant, talvez devêssemos redirecionar para o tenant dele?
       // Por simplicidade, mandamos para o index que fará o redirecionamento correto.
-      return <Navigate to="/index" replace />;
+      return <Navigate to={slug ? `/${slug}` : "/"} replace />;
     }
   }
 
