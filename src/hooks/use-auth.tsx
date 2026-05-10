@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -29,10 +29,30 @@ const AuthContext = createContext<AuthContextValue>({
 
 export const useAuth = () => useContext(AuthContext);
 
+const ROLE_FETCH_TIMEOUT_MS = 8000;
+
+const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => {
+      console.warn(`[Auth] ${label} demorou demais; seguindo sem travar a tela.`);
+      resolve(fallback);
+    }, ROLE_FETCH_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
-  const [isLoading, setLoading] = useState(true);
+  const [sessionReady, setSessionReady] = useState(false);
+  const [rolesLoading, setRolesLoading] = useState(false);
   const [roles, setRoles] = useState<UserRole[]>([]);
+  const roleRequestId = useRef(0);
 
   const fetchRoles = async (userId: string) => {
     const { data, error } = await supabase
@@ -47,29 +67,48 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return data as UserRole[];
   };
 
+  const loadRolesForSession = (sess: Session | null) => {
+    const requestId = ++roleRequestId.current;
+
+    if (!sess?.user) {
+      setRoles([]);
+      setRolesLoading(false);
+      return;
+    }
+
+    setRolesLoading(true);
+    void withTimeout(fetchRoles(sess.user.id), [], "Busca de permissões")
+      .then((userRoles) => {
+        if (requestId === roleRequestId.current) setRoles(userRoles);
+      })
+      .finally(() => {
+        if (requestId === roleRequestId.current) setRolesLoading(false);
+      });
+  };
+
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange(async (event, sess) => {
+    const applySession = (sess: Session | null) => {
       setSession(sess);
-      if (sess?.user) {
-        const userRoles = await fetchRoles(sess.user.id);
-        setRoles(userRoles);
-      } else {
-        setRoles([]);
-      }
-      setLoading(false);
+      loadRolesForSession(sess);
+      setSessionReady(true);
+    };
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
+      applySession(sess);
       if (event === "SIGNED_OUT") {
         sessionStorage.removeItem("splash_shown_session");
       }
     });
 
-    supabase.auth.getSession().then(async ({ data }) => {
-      setSession(data.session);
-      if (data.session?.user) {
-        const userRoles = await fetchRoles(data.session.user.id);
-        setRoles(userRoles);
-      }
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data }) => applySession(data.session))
+      .catch((error) => {
+        console.error("Error restoring auth session:", error);
+        setSession(null);
+        setRoles([]);
+        setRolesLoading(false);
+        setSessionReady(true);
+      });
 
     return () => sub.subscription.unsubscribe();
   }, []);
@@ -88,6 +127,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       return false;
     });
   };
+
+  const isLoading = !sessionReady || (!!session?.user && rolesLoading);
 
   return (
     <AuthContext.Provider value={{ user: session?.user ?? null, session, isLoading, roles, signOut, hasRole }}>
