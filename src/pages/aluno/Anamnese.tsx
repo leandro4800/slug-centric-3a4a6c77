@@ -367,6 +367,78 @@ export default function Anamnese() {
                 className="bg-secondary/40 border-border"
               />
             </div>
+            <div className="space-y-2">
+              <Label>Alimentos básicos que costuma ter em casa</Label>
+              <Textarea
+                placeholder="Ex: arroz, feijão, ovos, frango, batata-doce, aveia..."
+                value={form.alimentos_basicos_casa}
+                onChange={e => setForm({ ...form, alimentos_basicos_casa: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>O que costuma comer no café da manhã e nos lanches</Label>
+              <Textarea
+                placeholder="Ex: pão integral com ovos, tapioca, fruta com whey..."
+                value={form.cafe_lanche_habitual}
+                onChange={e => setForm({ ...form, cafe_lanche_habitual: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Proteínas que mais consome</Label>
+              <Input
+                placeholder="Ex: frango, ovos, carne vermelha, peixe, whey..."
+                value={form.proteinas_consumidas}
+                onChange={e => setForm({ ...form, proteinas_consumidas: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Frutas e vegetais preferidos</Label>
+              <Input
+                placeholder="Ex: banana, mamão, brócolis, espinafre..."
+                value={form.frutas_vegetais_preferidos}
+                onChange={e => setForm({ ...form, frutas_vegetais_preferidos: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Horário do almoço</Label>
+                <Input
+                  type="time"
+                  value={form.horario_almoco}
+                  onChange={e => setForm({ ...form, horario_almoco: e.target.value })}
+                  className="bg-secondary/40 border-border"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Horário do jantar</Label>
+                <Input
+                  type="time"
+                  value={form.horario_jantar}
+                  onChange={e => setForm({ ...form, horario_jantar: e.target.value })}
+                  className="bg-secondary/40 border-border"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Nível de Atividade Física Diária (fora do treino)</Label>
+              <Select value={form.nivel_atividade_diaria} onValueChange={v => setForm({ ...form, nivel_atividade_diaria: v })}>
+                <SelectTrigger className="bg-secondary/40 border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sedentario">Sedentário (escritório, pouco movimento)</SelectItem>
+                  <SelectItem value="leve">Leve (caminhadas leves 1-3x/sem)</SelectItem>
+                  <SelectItem value="moderado">Moderado (treina 3-5x/sem)</SelectItem>
+                  <SelectItem value="intenso">Intenso (treina 6-7x/sem)</SelectItem>
+                  <SelectItem value="muito_intenso">Muito intenso (atleta, 2x/dia ou trabalho físico)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Usado no cálculo do GET (TMB × Fator de Atividade).</p>
+            </div>
           </div>
         </section>
 
