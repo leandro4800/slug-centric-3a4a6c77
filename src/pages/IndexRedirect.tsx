@@ -31,7 +31,7 @@ const IndexRedirect = () => {
     const targetSlug = safeSlug || tenant?.slug;
     
     if (targetSlug) {
-      const isCoach = hasRole("coach", tenant?.id) || hasRole("admin");
+      const isCoach = hasRole("coach", tenant?.id) || hasRole("admin") || tenant?.owner_user_id === user.id;
       const target = isCoach ? `/${targetSlug}/app/controle` : `/${targetSlug}/app`;
       return <Navigate to={target} replace />;
     }

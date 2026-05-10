@@ -160,6 +160,7 @@ const Login = () => {
                if (t?.slug) targetSlug = t.slug;
             }
             if (targetSlug) {
+              console.log("[Login] Voucher ok, indo para app:", targetSlug);
               window.location.assign(`/${targetSlug}/app`);
               return;
             }
@@ -179,6 +180,7 @@ const Login = () => {
         }
 
         if (userSlug && userSlug !== "demo") {
+          console.log("[Login] Redirecionando para app do tenant:", userSlug);
           goTo(`/${userSlug}/app`);
           return;
         }
@@ -187,10 +189,8 @@ const Login = () => {
         // Evita loop com o /index: se já estiver em /login sem slug, para por aqui.
         if (location.pathname === "/login") {
           setLoading(false);
-          // Mostra algo ao usuário se ele estiver perdido
-          if (!perfil?.tenant_id) {
-            console.log("[Login] Usuário sem tenant vinculado no login geral.");
-          }
+          // Se o usuário não tem nada, redireciona para um lugar seguro ou marketplace se existisse
+          console.log("[Login] Usuário sem destino definido.");
         } else {
           goTo("/login");
         }

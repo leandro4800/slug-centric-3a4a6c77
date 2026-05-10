@@ -101,10 +101,10 @@ const App = () => (
           <BrandingProvider>
             <SplashScreen />
             <Routes>
-            {/* Marketplace público */}
-             <Route path="/" element={<Navigate to="/login" replace />} />
-             <Route path="/site" element={<Navigate to="/login" replace />} />
-            <Route path="/marketplace" element={<Navigate to="/login" replace />} />
+            {/* Redirecionamentos de Raiz */}
+             <Route path="/" element={<IndexRedirect />} />
+             <Route path="/site" element={<Navigate to="/" replace />} />
+            <Route path="/marketplace" element={<Navigate to="/" replace />} />
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
             <Route path="/:slug/login" element={<Login />} />
