@@ -44,20 +44,21 @@ export const SubscriptionGuard = ({ children }: Props) => {
           if (!error && (data as any)?.ok) {
             console.log("[SubscriptionGuard] Voucher resgatado com sucesso!");
             sessionStorage.removeItem("pending_voucher");
-            // Limpa a URL para evitar re-processamento
             const nextUrl = new URL(window.location.href);
             nextUrl.searchParams.delete("voucher");
             nextUrl.searchParams.delete("codigo");
             nextUrl.searchParams.delete("v");
             window.history.replaceState({}, "", nextUrl.toString());
-            // Continua para verificar a assinatura recém-criada
+            
+            // Pequeno delay para o Supabase processar a nova assinatura antes da próxima consulta
+            await new Promise(r => setTimeout(r, 500));
           } else {
             console.warn("[SubscriptionGuard] Falha ao resgatar voucher:", error || (data as any)?.error);
-            // Se falhou, removemos do sessionStorage para evitar loops, mas mantemos na URL caso o usuário queira tentar manualmente
             sessionStorage.removeItem("pending_voucher");
           }
         } catch (err) {
           console.error("[SubscriptionGuard] Erro ao processar voucher:", err);
+          sessionStorage.removeItem("pending_voucher");
         }
       } else if (voucherFromUrl === "1") {
         // Se for apenas o trigger ?voucher=1, redirecionamos para o site para abrir o modal

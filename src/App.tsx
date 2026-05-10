@@ -104,7 +104,7 @@ const App = () => (
             {/* Marketplace público */}
              <Route path="/" element={<Navigate to="/login" replace />} />
              <Route path="/site" element={<Navigate to="/login" replace />} />
-            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/marketplace" element={<Navigate to="/login" replace />} />
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
             <Route path="/:slug/login" element={<Login />} />
