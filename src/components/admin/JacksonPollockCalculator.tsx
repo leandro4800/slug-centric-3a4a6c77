@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Ruler, Info } from "lucide-react";
+import { Loader2, Ruler, Info, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
@@ -79,6 +79,8 @@ export default function JacksonPollockCalculator({
     (sexoInicial?.toUpperCase().startsWith("F") ? "F" : "M") as Sexo,
   );
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const calc = useMemo(() => {
     const soma = DOBRAS.reduce((acc, d) => acc + num(dobras[d.key]), 0);
@@ -130,6 +132,56 @@ export default function JacksonPollockCalculator({
       toast.error(e?.message || "Falha ao salvar");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleImportFile = async (file: File) => {
+    setImporting(true);
+    const toastId = toast.loading("Dr. IA analisando as dobras...");
+    
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(file);
+      });
+      
+      const base64 = await base64Promise;
+      
+      const { data, error } = await supabase.functions.invoke("import-with-ai", {
+        body: { 
+          file: base64, 
+          fileType: file.type,
+          importType: "7dobras",
+          alunoId: alunoId,
+          tenantId: tenantId
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data && data.extractedData) {
+        const ext = data.extractedData;
+        setDobras({
+          peitoral: ext.peitoral ? String(ext.peitoral) : dobras.peitoral,
+          axilarMedia: ext.axilarMedia ? String(ext.axilarMedia) : dobras.axilarMedia,
+          triceps: ext.triceps ? String(ext.triceps) : dobras.triceps,
+          subescapular: ext.subescapular ? String(ext.subescapular) : dobras.subescapular,
+          abdominal: ext.abdominal ? String(ext.abdominal) : dobras.abdominal,
+          suprailiaca: ext.suprailiaca ? String(ext.suprailiaca) : dobras.suprailiaca,
+          coxa: ext.coxa ? String(ext.coxa) : dobras.coxa,
+        });
+        if (ext.peso) setPeso(String(ext.peso));
+        if (ext.idade) setIdade(String(ext.idade));
+        toast.success("Dobras extraídas com sucesso!", { id: toastId });
+      } else {
+        throw new Error("Não foi possível extrair dados do arquivo.");
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Falha ao importar: ${e.message}`, { id: toastId });
+    } finally {
+      setImporting(false);
     }
   };
 
@@ -206,10 +258,37 @@ export default function JacksonPollockCalculator({
 
             {/* Seção 2: Dobras */}
             <section className="space-y-4">
-              <h2 className="text-xs font-bold uppercase tracking-widest text-white/60 flex items-center gap-2">
-                <span className="w-1 h-4 bg-primary rounded-full" />
-                MEDIÇÕES DE ADIPÔMETRO (mm)
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xs font-bold uppercase tracking-widest text-white/60 flex items-center gap-2">
+                  <span className="w-1 h-4 bg-primary rounded-full" />
+                  MEDIÇÕES DE ADIPÔMETRO (mm)
+                </h2>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void handleImportFile(f);
+                    e.target.value = "";
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={importing}
+                  onClick={() => fileInputRef.current?.click()}
+                  className="h-8 border-primary/40 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/5"
+                >
+                  {importing ? (
+                    <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  ) : (
+                    <Upload className="h-3 w-3 mr-1" />
+                  )}
+                  Importar via Foto
+                </Button>
+              </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {DOBRAS.map((d, index) => (
                   <motion.div 

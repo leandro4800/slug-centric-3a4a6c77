@@ -1,61 +1,23 @@
-# Ícones nativos + modelo multi-tenant
+O usuário deseja adicionar botões para importar dados (Anamnese, Avaliação Física e 7 Dobras) através de arquivos/IA em suas respectivas telas.
 
-## Resposta direta sobre os tenants
+### Alterações propostas:
 
-**Os tenants NÃO precisam fazer nada.** O app nativo é UM SÓ — "AlphaCoach" — publicado por você na App Store e Google Play. Cada coach (tenant) é apenas um slug dentro do mesmo app, exatamente como funciona hoje na web:
+1.  **Tela de Anamnese (`src/pages/aluno/Anamnese.tsx`)**:
+    *   Adicionar um botão "Importar Anamnese" ao lado do botão de salvar.
+    *   Implementar a lógica de upload de arquivo (imagem ou PDF).
+    *   Integrar com a Edge Function `import-with-ai` (especificando `importType: "anamnese"`) para preencher os campos do formulário automaticamente após o processamento.
 
-- Aluno baixa "AlphaCoach" da loja
-- Faz login → o app detecta o tenant do usuário (via slug/perfil)
-- BrandingProvider aplica cores e logo do coach
-- SplashScreen React mostra a logo do tenant correto
+2.  **Tela de Avaliação Física (`src/pages/admin/AtletaDetalhe.tsx`)**:
+    *   Adicionar um botão de importação específico para avaliação física (no cabeçalho ou junto às ações do atleta).
+    *   A tela já possui botões de "Importar treino" e "Importar dieta". Adicionaremos "Importar Avaliação".
 
-Ou seja: **ícone da loja = AlphaCoach** (sua marca master). A marca do coach aparece DENTRO do app (splash React + tema + logo nas telas), que já está 100% funcionando.
+3.  **Modal de 7 Dobras (`src/components/admin/JacksonPollockCalculator.tsx`)**:
+    *   Adicionar um botão de importação dentro do modal.
+    *   Permitir que o coach envie uma foto do adipômetro ou de uma ficha de papel para que a IA extraia os valores das 7 dobras.
 
-> Publicar um app nativo POR tenant exigiria: conta Apple Developer separada por coach, build separado, revisão da Apple/Google por coach, manutenção N×. Inviável. O modelo correto é **single-app white-label dinâmico** — que é justamente como o projeto já está arquitetado.
+### Detalhes Técnicos:
+*   Utilizaremos o componente `Input type="file"` oculto e `useRef` para acionar o seletor de arquivos.
+*   Chamaremos a Edge Function `import-with-ai` via `supabase.functions.invoke`.
+*   A IA processará o arquivo e retornará os dados estruturados para preenchimento dos estados dos componentes.
 
-## O que vou gerar (etapa nativa AlphaCoach)
-
-### 1. Configurar `@capacitor/assets`
-- Adicionar `@capacitor/assets` como devDependency
-- Criar pasta `resources/` com:
-  - `icon.png` (1024×1024, logo AlphaCoach sobre fundo preto/vermelho Netflix)
-  - `splash.png` (2732×2732, logo AlphaCoach centralizada sobre preto)
-  - `splash-dark.png` (idem, para dark mode)
-- Adicionar script `npm run cap:assets` que roda `npx capacitor-assets generate`
-
-### 2. Gerar as imagens base
-Usar imagegen para criar:
-- `resources/icon.png` — símbolo AlphaCoach (a definir: letra "A" estilizada vermelha sobre preto, ou logo existente se houver)
-- `resources/splash.png` — logo AlphaCoach centralizada sobre fundo preto sólido
-
-### 3. Documentar no README
-Bloco "Build nativo" explicando:
-```
-npm install
-npm run cap:assets        # gera todos os ícones/splash iOS+Android
-npx cap add ios|android   # primeira vez
-npm run build && npx cap sync
-npx cap run ios|android
-```
-
-### 4. (Opcional) Manter splash nativo neutro
-O splash nativo continua simples (logo AlphaCoach sobre preto, 600ms) e o splash REACT por tenant assume — garantindo que cada coach veja a SUA logo após o boot, sem precisar de build separado.
-
-## O que você precisa decidir
-
-Antes de gerar as imagens, preciso saber:
-1. Você já tem um logo/símbolo AlphaCoach pronto (arquivo)? Ou quero que eu gere um do zero?
-2. Cor de fundo do ícone da loja: **preto puro** (#000) com símbolo vermelho Netflix, ou **vermelho Netflix** (#E50914) com símbolo branco?
-
-Se preferir, eu sigo com o default: **fundo preto + "A" estilizada em vermelho Netflix + acento branco**, alinhado com a identidade master que já está no projeto.
-
-## Arquivos que serão criados/alterados
-
-- `package.json` — devDep `@capacitor/assets` + script
-- `resources/icon.png` (novo, gerado via imagegen)
-- `resources/splash.png` (novo, gerado via imagegen)
-- `resources/splash-dark.png` (novo)
-- `README.md` — seção build nativo
-- `capacitor.config.ts` — sem mudança (já está pronto)
-
-Nenhuma alteração em código de runtime, branding ou tenants.
+**Nota:** Como a Edge Function `import-with-ai` já parece existir e ser usada para treinos/dietas, apenas estenderemos seu uso para os novos tipos de importação no frontend. Se houver necessidade de ajustes no prompt da IA, faremos isso na função.
