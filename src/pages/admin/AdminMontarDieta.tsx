@@ -95,15 +95,41 @@ const AdminMontarDieta = () => {
         peso_kg: pt?.peso_kg ?? av?.peso_kg ?? null,
         altura_cm: pt?.altura_cm ?? av?.altura_cm ?? null,
         bf_pct: pt?.bf_pct ?? av?.bf_pct_calculado ?? null,
-        pescoco_cm: av?.pescoco_cm ?? null,
-        cintura_cm: av?.cintura_cm ?? null,
-        quadril_cm: av?.quadril_cm ?? null,
+        pescoco_cm: pt?.pescoco_cm ?? av?.pescoco_cm ?? null,
+        cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
+        quadril_cm: pt?.quadril_cm ?? av?.quadril_cm ?? null,
         objetivo: pt?.objetivo || "hipertrofia",
         tempo_treino: normalizarNivel(pt?.tempo_treino || an?.nivel_experiencia),
       });
       setLoading(false);
     })();
   }, [alunoId]);
+
+  const salvarPerfil = async (silent = false) => {
+    if (!alunoId || !tenant) return;
+    const { error } = await supabase
+      .from("perfis_treino")
+      .upsert({ 
+        aluno_id: alunoId, 
+        tenant_id: tenant.id, 
+        sexo: perfil.sexo,
+        idade: perfil.idade,
+        peso_kg: perfil.peso_kg,
+        altura_cm: perfil.altura_cm,
+        bf_pct: perfil.bf_pct,
+        pescoco_cm: perfil.pescoco_cm,
+        cintura_cm: perfil.cintura_cm,
+        quadril_cm: perfil.quadril_cm,
+        objetivo: perfil.objetivo,
+        tempo_treino: perfil.tempo_treino
+      } as any, { onConflict: "aluno_id" });
+    
+    if (error) {
+      if (!silent) toast.error("Erro ao salvar perfil: " + error.message);
+    } else if (!silent) {
+      toast.success("Perfil atualizado!");
+    }
+  };
 
   const gerarComIA = useCallback(async (customPrompt?: string) => {
     if (!alunoId) {
@@ -114,9 +140,14 @@ const AdminMontarDieta = () => {
       toast.error("Peso e altura são obrigatórios. Peça ao aluno para preencher a avaliação física.");
       return;
     }
+    
     setGenerating(true);
-    const toastId = toast.loading("Gerando dieta com IA...");
+    const toastId = toast.loading("Salvando perfil e gerando dieta...");
+    
     try {
+      // Salva o perfil antes de gerar para garantir que as alterações manuais persistam
+      await salvarPerfil(true);
+
       const promptFromUrl = searchParams.get("prompt");
       const activePrompt = customPrompt || promptFromUrl || "";
 
@@ -146,7 +177,7 @@ const AdminMontarDieta = () => {
     } finally {
       setGenerating(false);
     }
-  }, [alunoId, perfil]);
+  }, [alunoId, perfil, tenant]);
 
   const autoTriggeredRef = useRef(false);
   useEffect(() => {
@@ -227,14 +258,59 @@ const AdminMontarDieta = () => {
               </div>
             </div>
 
-            <Button 
-              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-widest"
-              onClick={() => gerarComIA()}
-              disabled={generating}
-            >
-              {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
-              Gerar Dieta de Elite com IA
-            </Button>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <Label>Pescoço (cm)</Label>
+                <Input type="number" value={perfil.pescoco_cm || ""} onChange={(e) => setPerfil({...perfil, pescoco_cm: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Cintura (cm)</Label>
+                <Input type="number" value={perfil.cintura_cm || ""} onChange={(e) => setPerfil({...perfil, cintura_cm: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Quadril (cm)</Label>
+                <Input type="number" value={perfil.quadril_cm || ""} onChange={(e) => setPerfil({...perfil, quadril_cm: Number(e.target.value)})} />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>BF (%)</Label>
+                <Input type="number" value={perfil.bf_pct || ""} onChange={(e) => setPerfil({...perfil, bf_pct: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Sexo</Label>
+                <select 
+                  value={perfil.sexo || ""} 
+                  onChange={(e) => setPerfil({...perfil, sexo: e.target.value})}
+                  className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="">Selecione</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                className="flex-1"
+                onClick={() => salvarPerfil()}
+                disabled={loading}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Salvar Perfil
+              </Button>
+              <Button 
+                className="flex-[2] bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-widest"
+                onClick={() => gerarComIA()}
+                disabled={generating}
+              >
+                {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
+                Gerar Dieta de Elite com IA
+              </Button>
+            </div>
           </div>
         )}
       </main>

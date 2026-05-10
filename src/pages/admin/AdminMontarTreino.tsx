@@ -26,6 +26,9 @@ interface PerfilTreino {
   objetivo: string | null;
   frequencia_semanal: number | null;
   tempo_treino: string | null;
+  pescoco_cm: number | null;
+  cintura_cm: number | null;
+  quadril_cm: number | null;
   lesoes: string[];
   limitacoes: string[];
 }
@@ -113,6 +116,7 @@ const AdminMontarTreino = () => {
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
     objetivo: "hipertrofia", frequencia_semanal: 4, tempo_treino: "Iniciante",
+    pescoco_cm: null, cintura_cm: null, quadril_cm: null,
     lesoes: [], limitacoes: [],
   });
   const [exercicios, setExercicios] = useState<ExercicioPrescrito[]>([]);
@@ -167,6 +171,9 @@ const AdminMontarTreino = () => {
         peso_kg: pt?.peso_kg ?? av?.peso_kg ?? null,
         altura_cm: pt?.altura_cm ?? av?.altura_cm ?? null,
         bf_pct: pt?.bf_pct ?? av?.bf_pct_calculado ?? null,
+        pescoco_cm: pt?.pescoco_cm ?? av?.pescoco_cm ?? null,
+        cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
+        quadril_cm: pt?.quadril_cm ?? av?.quadril_cm ?? null,
         objetivo: pt?.objetivo || "hipertrofia",
         frequencia_semanal: pt?.frequencia_semanal || 4,
         tempo_treino: tempoMesclado,
@@ -227,7 +234,7 @@ const AdminMontarTreino = () => {
     if (!alunoId || !tenant) return;
     const { error } = await supabase
       .from("perfis_treino")
-      .upsert({ aluno_id: alunoId, tenant_id: tenant.id, ...perfil }, { onConflict: "aluno_id" });
+      .upsert({ aluno_id: alunoId, tenant_id: tenant.id, ...perfil } as any, { onConflict: "aluno_id" });
     if (error) {
       if (!silent) toast.error(error.message);
     } else {
@@ -408,7 +415,10 @@ const AdminMontarTreino = () => {
                 <div><Label>Peso (kg)</Label><Input type="number" step="0.1" value={perfil.peso_kg ?? ""} onChange={(e) => setPerfil({ ...perfil, peso_kg: e.target.value ? +e.target.value : null })} /></div>
                 <div><Label>Altura (cm)</Label><Input type="number" value={perfil.altura_cm ?? ""} onChange={(e) => setPerfil({ ...perfil, altura_cm: e.target.value ? +e.target.value : null })} /></div>
                 <div><Label>BF %</Label><Input type="number" step="0.1" value={perfil.bf_pct ?? ""} onChange={(e) => setPerfil({ ...perfil, bf_pct: e.target.value ? +e.target.value : null })} /></div>
-                <div><Label>Frequência semanal</Label><Input type="number" min={2} max={6} value={perfil.frequencia_semanal ?? ""} onChange={(e) => setPerfil({ ...perfil, frequencia_semanal: e.target.value ? +e.target.value : null })} /></div>
+                 <div><Label>Frequência semanal</Label><Input type="number" min={2} max={6} value={perfil.frequencia_semanal ?? ""} onChange={(e) => setPerfil({ ...perfil, frequencia_semanal: e.target.value ? +e.target.value : null })} /></div>
+                <div><Label>Pescoço (cm)</Label><Input type="number" value={perfil.pescoco_cm ?? ""} onChange={(e) => setPerfil({ ...perfil, pescoco_cm: e.target.value ? +e.target.value : null })} /></div>
+                <div><Label>Cintura (cm)</Label><Input type="number" value={perfil.cintura_cm ?? ""} onChange={(e) => setPerfil({ ...perfil, cintura_cm: e.target.value ? +e.target.value : null })} /></div>
+                <div><Label>Quadril (cm)</Label><Input type="number" value={perfil.quadril_cm ?? ""} onChange={(e) => setPerfil({ ...perfil, quadril_cm: e.target.value ? +e.target.value : null })} /></div>
                 <div><Label>Tempo de treino</Label>
                   <select value={perfil.tempo_treino || ""} onChange={(e) => setPerfil({ ...perfil, tempo_treino: e.target.value })}
                     className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm">
