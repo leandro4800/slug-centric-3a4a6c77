@@ -122,7 +122,7 @@ const AdminMontarDieta = () => {
         quadril_cm: perfil.quadril_cm,
         objetivo: perfil.objetivo,
         tempo_treino: perfil.tempo_treino
-      }, { onConflict: "aluno_id" });
+      } as any, { onConflict: "aluno_id" });
     
     if (error) {
       if (!silent) toast.error("Erro ao salvar perfil: " + error.message);
