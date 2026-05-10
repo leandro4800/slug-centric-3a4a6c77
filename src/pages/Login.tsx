@@ -112,12 +112,20 @@ const Login = () => {
       try {
         const timeoutId = window.setTimeout(() => {
           if (!isMounted) return;
+          console.log("[Login] Redirecionamento demorou demais, tentando fallback seguro.");
           setRedirectTimedOut(true);
-          goTo(urlSlug ? `/${urlSlug}` : "/marketplace");
-        }, REDIRECT_QUERY_TIMEOUT_MS + 1200);
+          // Fallback: se estiver em um tenant slug, vai para o app do aluno desse tenant
+          // O SubscriptionGuard cuidará se ele não tiver assinatura.
+          if (urlSlug) {
+            goTo(`/${urlSlug}/app`);
+          } else {
+            goTo("/marketplace");
+          }
+        }, REDIRECT_QUERY_TIMEOUT_MS + 2000);
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
-        const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        const redirectPath = locationState?.from?.pathname || urlSearchParams.get("redirect");
         const fallbackSlug = urlSlug || tenant?.slug || "demo";
 
         const [{ data: perfil }, { data: ownedTenant }] = await Promise.all([
@@ -195,7 +203,11 @@ const Login = () => {
             nextUrl.searchParams.delete("codigo");
             nextUrl.searchParams.delete("v");
             window.history.replaceState({}, "", nextUrl.toString());
-            if (urlSlug) goTo(`/${urlSlug}/app`);
+            if (urlSlug) {
+              goTo(`/${urlSlug}/app`);
+            } else {
+              goTo("/login");
+            }
             return;
           }
         } else if (pending === "1") {
@@ -214,8 +226,13 @@ const Login = () => {
         }
 
         if (!userSlug || userSlug === "demo") {
-          // Se não tem tenant vinculado, deixa ele no site/marketplace para escolher um
-          goTo("/site");
+          // Se não tem tenant vinculado e não está logado como coach/admin, 
+          // manda para o login geral caso não tenha slug na URL.
+          if (urlSlug) {
+             goTo(`/${urlSlug}/app`);
+          } else {
+             goTo("/login");
+          }
           return;
         }
 
