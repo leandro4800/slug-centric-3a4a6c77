@@ -69,6 +69,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
       }
 
       if (tenant?.owner_user_id === user.id) {
+        console.log("[SubscriptionGuard] Usuário é o dono do tenant, liberando acesso.");
         setIsCoach(true);
         setLoading(false);
         return;
