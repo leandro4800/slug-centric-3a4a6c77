@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CheckCircle2, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { buildAuthRedirectUrl } from "@/lib/app-url";
 
 export default function CheckoutSucesso() {
   const { user, isLoading } = useAuth();
@@ -52,7 +53,7 @@ export default function CheckoutSucesso() {
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/checkout/sucesso?slug=${slug ?? ""}`,
+            emailRedirectTo: buildAuthRedirectUrl("/index", { slug, confirmed: "1" }),
             data: { nome_completo: nome },
           },
         });
