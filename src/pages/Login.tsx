@@ -172,7 +172,7 @@ const Login = () => {
         const urlParams = new URLSearchParams(window.location.search);
         const pending = sessionStorage.getItem("pending_voucher") || urlParams.get("voucher") || urlParams.get("codigo") || urlParams.get("v");
         
-        if (pending) {
+        if (pending && pending !== "1") {
           console.log("[Login] Processando código de acesso:", pending);
           setVoucherLoading(true);
           const ok = await redeemVoucherCode(pending);
@@ -181,14 +181,11 @@ const Login = () => {
           
           if (ok) {
             console.log("[Login] Código resgatado com sucesso, redirecionando para App.");
-            // Limpa parâmetros da URL para evitar loops ou re-processamento
             const nextUrl = new URL(window.location.href);
             nextUrl.searchParams.delete("voucher");
             nextUrl.searchParams.delete("codigo");
             nextUrl.searchParams.delete("v");
             window.history.replaceState({}, "", nextUrl.toString());
-            
-            // Força redirecionamento para o App
             window.location.assign(`/${userSlug}/app`);
             return;
           } else {
@@ -198,11 +195,17 @@ const Login = () => {
             nextUrl.searchParams.delete("codigo");
             nextUrl.searchParams.delete("v");
             window.history.replaceState({}, "", nextUrl.toString());
-            
-            // Se falhou e não tem assinatura, o SubscriptionGuard vai levar para o site naturalmente
             if (urlSlug) goTo(`/${urlSlug}/app`);
             return;
           }
+        } else if (pending === "1") {
+          console.log("[Login] Trigger de voucher detectado no Login, redirecionando para o Site.");
+          sessionStorage.removeItem("pending_voucher");
+          const nextUrl = new URL(window.location.href);
+          nextUrl.searchParams.delete("voucher");
+          window.history.replaceState({}, "", nextUrl.toString());
+          goTo(`/${userSlug}/site?voucher=1`);
+          return;
         }
 
         if (redirectPath && !redirectPath.includes("/login") && !redirectPath.includes("voucher=1")) {
