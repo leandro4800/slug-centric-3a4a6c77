@@ -10,7 +10,7 @@ const REDIRECT_TIMEOUT_MS = 6500;
 const withTimeout = async <T,>(promise: PromiseLike<T>, fallback: unknown): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<T>((resolve) => {
-    timeoutId = setTimeout(() => resolve(fallback), REDIRECT_TIMEOUT_MS);
+    timeoutId = setTimeout(() => resolve(fallback as T), REDIRECT_TIMEOUT_MS);
   });
 
   try {
