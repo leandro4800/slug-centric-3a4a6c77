@@ -116,6 +116,7 @@ const AdminMontarTreino = () => {
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
     objetivo: "hipertrofia", frequencia_semanal: 4, tempo_treino: "Iniciante",
+    pescoco_cm: null, cintura_cm: null, quadril_cm: null,
     lesoes: [], limitacoes: [],
   });
   const [exercicios, setExercicios] = useState<ExercicioPrescrito[]>([]);
