@@ -163,7 +163,7 @@ const AlunoHome = () => {
   return (
     <>
       {/* Hero Content Section */}
-      <section className="relative h-[68vh] min-h-[520px] w-full overflow-hidden flex flex-col justify-end pb-0 px-5">
+      <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden flex flex-col justify-end pb-[10%] px-5">
         {/* Background Hero (contido na seção) */}
         <div className="hero-mask">
           {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
@@ -171,7 +171,7 @@ const AlunoHome = () => {
               <iframe
                 key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
                 src={ytAutoSrc || `https://www.youtube.com/embed/${tenantHeroVideoId}?autoplay=1&mute=1&loop=1&playlist=${tenantHeroVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
-                className="w-full h-full pointer-events-none"
+                className="w-full h-full pointer-events-none scale-110"
               />
             ) : (
               <video
@@ -188,7 +188,8 @@ const AlunoHome = () => {
           )}
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5 z-10">
           <Logo size={32} withText={false} />
@@ -230,17 +231,25 @@ const AlunoHome = () => {
           </div>
         </div>
         
-        <div className="relative z-10">
-          <p className="text-xs uppercase tracking-widest text-primary mb-2">{tenant?.nome || "Alpha Coach"}</p>
-          <h1 className="font-display text-4xl text-foreground mb-4 leading-none drop-shadow-lg">
-            {tenant?.tagline || "TREINE COMO UM CAMPEÃO"}
+        <div className="relative z-10 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">ORIGINAL</span>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{tenant?.nome || "ALPHA COACH"}</span>
+          </div>
+          <h1 className="font-display text-4xl leading-none drop-shadow-lg">
+            {(featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO").toUpperCase()}
           </h1>
+          <div className="flex items-center gap-3 text-xs mb-4">
+            <span className="text-[hsl(142_70%_55%)] font-semibold">98% compatível</span>
+            <span className="text-muted-foreground">{new Date().getFullYear()}</span>
+            <span className="border border-muted-foreground/50 px-1 text-[10px] text-muted-foreground">16+</span>
+          </div>
           <Button
             onClick={handlePlay}
             disabled={!featured && !tenant?.hero_url}
-            className="inline-flex items-center gap-2 font-bold px-6 py-3 rounded-xl tracking-widest shadow-[0_10px_30px_-5px_hsl(var(--primary)/0.5)] transition-all active:scale-95"
+            className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-md tracking-widest shadow-xl transition-all active:scale-95 bg-white text-black hover:bg-white/90"
           >
-            <Play className="h-4 w-4 fill-current" /> REPRODUZIR
+            <Play className="h-5 w-5 fill-current" /> ASSISTIR
           </Button>
         </div>
       </section>
