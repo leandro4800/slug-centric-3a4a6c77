@@ -101,7 +101,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
   }
 
   if (status !== "active" && status !== "trialing") {
-    return <Navigate to={`/${slug}`} replace />;
+    return <Navigate to={`/${slug}/site`} replace />;
   }
 
   return <>{children}</>;
