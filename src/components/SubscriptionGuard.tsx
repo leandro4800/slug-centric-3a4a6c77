@@ -30,16 +30,40 @@ export const SubscriptionGuard = ({ children }: Props) => {
           ? await supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle()
           : { data: null };
 
-      // Se o aluno está tentando entrar mas não tem assinatura, 
-      // verificamos se ele tem um voucher pendente para permitir que o Login/App lide com o resgate
-      // em vez de redirecionar imediatamente para o /site.
       const pendingVoucher = sessionStorage.getItem("pending_voucher");
       const urlParams = new URLSearchParams(window.location.search);
-      const hasVoucherParam = urlParams.has("voucher") || urlParams.has("codigo") || urlParams.has("v");
-
-      if ((pendingVoucher || hasVoucherParam) && slug && slug !== "demo") {
-        console.log("[SubscriptionGuard] Voucher detectado, permitindo acesso para processamento no Login.");
+      const voucherFromUrl = urlParams.get("voucher") || urlParams.get("codigo") || urlParams.get("v");
+      
+      // Se o aluno tem um código, tentamos resgatar agora mesmo para liberar o acesso
+      if ((pendingVoucher || (voucherFromUrl && voucherFromUrl !== "1")) && slug && slug !== "demo") {
+        const codeToRedeem = pendingVoucher || voucherFromUrl;
+        console.log("[SubscriptionGuard] Tentando resgatar voucher:", codeToRedeem);
+        
+        try {
+          const { data, error } = await supabase.rpc("redeem_voucher", { _code: codeToRedeem });
+          if (!error && (data as any)?.ok) {
+            console.log("[SubscriptionGuard] Voucher resgatado com sucesso!");
+            sessionStorage.removeItem("pending_voucher");
+            // Limpa a URL para evitar re-processamento
+            const nextUrl = new URL(window.location.href);
+            nextUrl.searchParams.delete("voucher");
+            nextUrl.searchParams.delete("codigo");
+            nextUrl.searchParams.delete("v");
+            window.history.replaceState({}, "", nextUrl.toString());
+            // Continua para verificar a assinatura recém-criada
+          } else {
+            console.warn("[SubscriptionGuard] Falha ao resgatar voucher:", error || (data as any)?.error);
+            // Se falhou, removemos do sessionStorage para evitar loops, mas mantemos na URL caso o usuário queira tentar manualmente
+            sessionStorage.removeItem("pending_voucher");
+          }
+        } catch (err) {
+          console.error("[SubscriptionGuard] Erro ao processar voucher:", err);
+        }
+      } else if (voucherFromUrl === "1") {
+        // Se for apenas o trigger ?voucher=1, redirecionamos para o site para abrir o modal
+        console.log("[SubscriptionGuard] Trigger de voucher detectado, redirecionando para o site.");
         setLoading(false);
+        setStatus("redirect_to_site_voucher");
         return;
       }
 
