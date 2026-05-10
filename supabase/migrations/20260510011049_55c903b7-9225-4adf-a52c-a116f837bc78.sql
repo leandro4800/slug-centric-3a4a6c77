@@ -1,0 +1,1 @@
+ALTER TABLE public.refeicoes ADD COLUMN IF NOT EXISTS descricao_ia TEXT;
