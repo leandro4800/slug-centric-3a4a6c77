@@ -226,8 +226,13 @@ const Login = () => {
         }
 
         if (!userSlug || userSlug === "demo") {
-          // Se não tem tenant vinculado, deixa ele no site/marketplace para escolher um
-          goTo("/site");
+          // Se não tem tenant vinculado e não está logado como coach/admin, 
+          // manda para o login geral caso não tenha slug na URL.
+          if (urlSlug) {
+             goTo(`/${urlSlug}/app`);
+          } else {
+             goTo("/login");
+          }
           return;
         }
 
