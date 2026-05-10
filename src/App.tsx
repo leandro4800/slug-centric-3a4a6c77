@@ -128,7 +128,6 @@ const App = () => (
             {/* Destino padrão de confirmações de e-mail (Site URL do Supabase).
                 Não exige auth nem assinatura — decide o destino sozinho. */}
             <Route path="/index" element={<IndexRedirect />} />
-            </Route>
 
             <Route
               path="/:slug/app"
