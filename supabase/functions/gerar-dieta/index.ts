@@ -104,20 +104,21 @@ serve(async (req) => {
       : nivel.includes("avan") ? "5 a 6"
       : "4 a 5";
 
-    // 1. TMB (Mifflin-St Jeor)
+    // 1. TMB (Mifflin-St Jeor) → GET (TMB × Fator Atividade) → Ajuste % por objetivo
     const tmb = sexo === "M"
       ? 10 * peso + 6.25 * altura - 5 * idade + 5
       : 10 * peso + 6.25 * altura - 5 * idade - 161;
-    const gcd = tmb * fa;
-    const ajusteBase = objetivo === "cutting" ? -400 : objetivo === "hipertrofia" ? 350 : 0;
-    // Atleta de alto nível em hipertrofia precisa de mais superávit
-    const ajuste = nivel.includes("alto") && objetivo === "hipertrofia" ? ajusteBase + 200 : ajusteBase;
-    const kcalAlvo = Math.round(gcd + ajuste);
 
-    // Macros baseados na proporção 45/35/20 (Carboidrato/Proteína/Gordura)
-    const carboG = Math.round((kcalAlvo * 0.45) / 4);
-    const proteinaG = Math.round((kcalAlvo * 0.35) / 4);
-    const gorduraG = Math.round((kcalAlvo * 0.20) / 9);
+    // Fator de atividade será definido após buscar anamnese (mais abaixo).
+    // Por enquanto guardamos default; será recomputado.
+    let fatorAtividade = fa;
+    let nivelAtividadeDiaria = "moderado";
+
+    // Placeholder — kcalAlvo será calculado após anamnese
+    let gcd = tmb * fatorAtividade;
+    let kcalAlvo = Math.round(gcd);
+    let carboG = 0, proteinaG = 0, gorduraG = 0;
+    let estrategiaCalorica = "";
 
     // 2. Última análise clínica (deficiências)
     const { data: ultimaAnalise } = await supabase
@@ -135,12 +136,38 @@ serve(async (req) => {
       .in("classificacao", ["Alerta", "Critico", "Subotimizado"])
       .limit(20);
 
-    // Buscar horário de treino da anamnese
+    // Buscar anamnese completa (horário treino + nível atividade + preferências alimentares)
     const { data: anamneseRow } = await supabase
       .from("anamnese_aluno")
-      .select("horario_treino")
+      .select("horario_treino, nivel_atividade_diaria, alimentos_basicos_casa, cafe_lanche_habitual, proteinas_consumidas, frutas_vegetais_preferidos, horario_almoco, horario_jantar, alimentos_ama, alimentos_evita, restricoes_alimentares, suplementos")
       .eq("aluno_id", targetUserId)
       .maybeSingle();
+
+    // Fator de atividade pelo nível diário (sobrepõe o padrão se houver)
+    const fatorMap: Record<string, number> = {
+      sedentario: 1.2, leve: 1.375, moderado: 1.55, intenso: 1.725, muito_intenso: 1.9,
+    };
+    nivelAtividadeDiaria = (anamneseRow as any)?.nivel_atividade_diaria || "moderado";
+    fatorAtividade = fatorMap[nivelAtividadeDiaria] ?? fa;
+    gcd = tmb * fatorAtividade;
+
+    // Ajuste calórico em PERCENTUAL do GET por objetivo
+    // Cutting: -20% (déficit moderado, ~500 kcal típico)
+    // Hipertrofia: +12% (superávit moderado, ~10-15% acima do GET)
+    // Alto nível em hipertrofia: +18% (superávit maior para máximo ganho)
+    let percAjuste = 0;
+    if (objetivo === "cutting") percAjuste = -0.20;
+    else if (objetivo === "hipertrofia") percAjuste = nivel.includes("alto") ? 0.18 : 0.12;
+    else percAjuste = 0;
+
+    kcalAlvo = Math.round(gcd * (1 + percAjuste));
+    estrategiaCalorica = `TMB ${Math.round(tmb)}kcal × FA ${fatorAtividade} (${nivelAtividadeDiaria}) = GET ${Math.round(gcd)}kcal | ${objetivo}: ${(percAjuste * 100).toFixed(0)}% → Alvo ${kcalAlvo}kcal`;
+
+    // Macros 45/35/20 (Carbo/Proteína/Gordura) — mas garante mínimo de proteína por kg
+    proteinaG = Math.max(Math.round((kcalAlvo * 0.35) / 4), Math.round(peso * protPorKg));
+    gorduraG = Math.round((kcalAlvo * 0.20) / 9);
+    const kcalRestante = kcalAlvo - (proteinaG * 4) - (gorduraG * 9);
+    carboG = Math.max(0, Math.round(kcalRestante / 4));
 
     const horarioTreinoMap: Record<string, { label: string; janela: string; pre: string; pos: string }> = {
       manha_cedo: { label: "Manhã cedo (5h-7h)", janela: "05:00-07:00", pre: "04:30", pos: "07:30" },
@@ -152,6 +179,20 @@ serve(async (req) => {
     };
     const horarioKey = (anamneseRow as any)?.horario_treino || "tarde";
     const horarioTreino = horarioTreinoMap[horarioKey] || horarioTreinoMap.tarde;
+    const horarioAlmoco = (anamneseRow as any)?.horario_almoco || "12:00";
+    const horarioJantar = (anamneseRow as any)?.horario_jantar || "20:00";
+
+    // Preferências alimentares do atleta
+    const prefAlimentos = {
+      basicos: (anamneseRow as any)?.alimentos_basicos_casa || "",
+      cafe_lanche: (anamneseRow as any)?.cafe_lanche_habitual || "",
+      proteinas: (anamneseRow as any)?.proteinas_consumidas || "",
+      frutas_veg: (anamneseRow as any)?.frutas_vegetais_preferidos || "",
+      ama: (anamneseRow as any)?.alimentos_ama || "",
+      evita: (anamneseRow as any)?.alimentos_evita || "",
+      restricoes: ((anamneseRow as any)?.restricoes_alimentares || []).join(", "),
+      suplementos: ((anamneseRow as any)?.suplementos || []).join(", "),
+    };
 
     // 3. Alimentos disponíveis
     const { data: alimentos } = await supabase
