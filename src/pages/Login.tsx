@@ -114,29 +114,29 @@ const Login = () => {
           if (!isMounted) return;
           console.log("[Login] Redirecionamento demorou demais, tentando fallback seguro.");
           setRedirectTimedOut(true);
-          // Fallback: se estiver em um tenant slug, vai para o app do aluno desse tenant
-          // O SubscriptionGuard cuidará se ele não tiver assinatura.
           if (urlSlug) {
             goTo(`/${urlSlug}/app`);
           } else {
-            goTo("/marketplace");
+            // Em vez de marketplace, tenta o index geral ou login
+            goTo("/index");
           }
         }, REDIRECT_QUERY_TIMEOUT_MS + 2000);
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const urlSearchParams = new URLSearchParams(window.location.search);
         const redirectPath = locationState?.from?.pathname || urlSearchParams.get("redirect");
-        const fallbackSlug = urlSlug || tenant?.slug || "demo";
+        const fallbackSlug = urlSlug || tenant?.slug;
 
+        // 1. Busca perfil e tenant owned em paralelo
         const [{ data: perfil }, { data: ownedTenant }] = await Promise.all([
           withRedirectTimeout(
-            supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
-            { data: null, error: null, status: 408, statusText: "timeout" },
+            supabase.from("perfis").select("tenant_id").eq("id", user.id).maybeSingle(),
+            { data: null },
             "Perfil"
           ),
           withRedirectTimeout(
-            supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle(),
-            { data: null, error: null, status: 408, statusText: "timeout" },
+            supabase.from("tenants").select("slug").eq("owner_user_id", user.id).maybeSingle(),
+            { data: null },
             "Tenant do coach"
           ),
         ]);
@@ -144,41 +144,14 @@ const Login = () => {
         window.clearTimeout(timeoutId);
         if (!isMounted) return;
 
-        const isAdmin = roles.some((r) => r.role === "admin");
-        const coachRole = roles.find((r) => r.role === "coach" && r.tenant_id);
-
+        // 2. Se for dono de um tenant (coach), vai para o controle
         if (ownedTenant?.slug) {
           goTo(`/${ownedTenant.slug}/app/controle`);
           return;
         }
 
-        if (coachRole?.tenant_id) {
-          const { data: coachTenant } = await withRedirectTimeout(
-            supabase.from("tenants").select("slug").eq("id", coachRole.tenant_id).maybeSingle(),
-            { data: null, error: null, status: 408, statusText: "timeout" },
-            "Slug do coach"
-          );
-          goTo(coachTenant?.slug ? `/${coachTenant.slug}/app/controle` : "/marketplace");
-          return;
-        }
-
-        if (isAdmin && !perfil?.tenant_id) {
-          goTo("/admin/coaches");
-          return;
-        }
-
-        let userSlug = fallbackSlug;
-        if (perfil?.tenant_id) {
-          const { data: tenantData } = await withRedirectTimeout(
-            supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle(),
-            { data: null, error: null, status: 408, statusText: "timeout" },
-            "Slug do aluno"
-          );
-          if (tenantData?.slug) userSlug = tenantData.slug;
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const pending = sessionStorage.getItem("pending_voucher") || urlParams.get("voucher") || urlParams.get("codigo") || urlParams.get("v");
+        // 3. Processamento de voucher ANTES de qualquer redirecionamento
+        const pending = sessionStorage.getItem("pending_voucher") || urlSearchParams.get("voucher") || urlSearchParams.get("codigo") || urlSearchParams.get("v");
         
         if (pending && pending !== "1") {
           console.log("[Login] Processando código de acesso:", pending);
@@ -188,58 +161,49 @@ const Login = () => {
           sessionStorage.removeItem("pending_voucher");
           
           if (ok) {
-            console.log("[Login] Código resgatado com sucesso, redirecionando para App.");
+            // Limpa a URL e força o redirecionamento
             const nextUrl = new URL(window.location.href);
             nextUrl.searchParams.delete("voucher");
             nextUrl.searchParams.delete("codigo");
             nextUrl.searchParams.delete("v");
             window.history.replaceState({}, "", nextUrl.toString());
-            window.location.assign(`/${userSlug}/app`);
-            return;
-          } else {
-            console.log("[Login] Falha ao resgatar código, removendo parâmetros para quebrar loop.");
-            const nextUrl = new URL(window.location.href);
-            nextUrl.searchParams.delete("voucher");
-            nextUrl.searchParams.delete("codigo");
-            nextUrl.searchParams.delete("v");
-            window.history.replaceState({}, "", nextUrl.toString());
-            if (urlSlug) {
-              goTo(`/${urlSlug}/app`);
-            } else {
-              goTo("/login");
+            
+            // Determina para qual slug ir
+            let targetSlug = fallbackSlug;
+            if (perfil?.tenant_id) {
+              const { data: t } = await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle();
+              if (t?.slug) targetSlug = t.slug;
             }
-            return;
+            
+            if (targetSlug) {
+              window.location.assign(`/${targetSlug}/app`);
+              return;
+            }
           }
-        } else if (pending === "1") {
-          console.log("[Login] Trigger de voucher detectado no Login, redirecionando para o Site.");
-          sessionStorage.removeItem("pending_voucher");
-          const nextUrl = new URL(window.location.href);
-          nextUrl.searchParams.delete("voucher");
-          window.history.replaceState({}, "", nextUrl.toString());
-          goTo(`/${userSlug}/site?voucher=1`);
-          return;
         }
 
+        // 4. Se tiver um redirectPath explícito (que não seja login ou voucher)
         if (redirectPath && !redirectPath.includes("/login") && !redirectPath.includes("voucher=1")) {
           goTo(redirectPath);
           return;
         }
 
-        if (!userSlug || userSlug === "demo") {
-          // Se não tem tenant vinculado e não está logado como coach/admin, 
-          // manda para o login geral caso não tenha slug na URL.
-          if (urlSlug) {
-             goTo(`/${urlSlug}/app`);
-          } else {
-             goTo("/login");
-          }
-          return;
+        // 5. Determina o destino baseado no perfil ou slug da URL
+        let finalSlug = fallbackSlug;
+        if (perfil?.tenant_id) {
+          const { data: t } = await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle();
+          if (t?.slug) finalSlug = t.slug;
         }
 
-        goTo(`/${userSlug}/app`);
+        if (finalSlug) {
+          goTo(`/${finalSlug}/app`);
+        } else {
+          // Se não tem slug nem perfil, vai para o index que resolve o papel
+          goTo("/index");
+        }
       } catch (err) {
         console.error("Error in login redirect effect:", err);
-        goTo(urlSlug ? `/${urlSlug}` : "/marketplace");
+        goTo(urlSlug ? `/${urlSlug}/app` : "/index");
       }
     })();
 
