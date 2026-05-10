@@ -215,6 +215,15 @@ FIBRAS E HIDRATAÇÃO (SAÚDE SISTÊMICA)
 - HIDRATAÇÃO: ${hidratacaoMl}ml/dia (50ml × ${peso}kg).
 
 ═══════════════════════════════════════════════
+NUTRIENT TIMING — HORÁRIO DE TREINO DO ATLETA
+═══════════════════════════════════════════════
+- O atleta TREINA NA JANELA: ${horarioTreino.label} (${horarioTreino.janela}).
+- PRÉ-TREINO (refeição ~30-60min antes, por volta de ${horarioTreino.pre}): carbo de médio/alto IG + proteína magra, baixa gordura (<10g) e baixa fibra (<5g). Ex.: banana + whey, pão + ovos, mingau de aveia + whey.
+- PÓS-TREINO IMEDIATO (até 30min após, por volta de ${horarioTreino.pos}): **OBRIGATÓRIO PRIORIZAR WHEY PROTEIN** como fonte proteica principal por absorção rápida. Combine com carbo de alto IG (banana, mel, dextrose, arroz branco, batata inglesa). Mantenha gordura mínima (<5g) e fibra <3g.
+- Se houver refeição sólida pós-treino (~60-90min depois), priorize proteína magra + carbo + vegetais.
+- Marque corretamente "tag_timing" como: "pre_treino", "pos_treino_imediato", "pos_treino_solido" ou "longe_treino".
+
+═══════════════════════════════════════════════
 NUTRIÇÃO FUNCIONAL (BASEADA EM LAUDOS CLÍNICOS)
 ═══════════════════════════════════════════════
 ${alertasNutricionais.length > 0 ? alertasNutricionais.map(a => `- ${a}`).join("\n") : "- Nenhum alerta clínico relevante. Foco em performance pura."}
