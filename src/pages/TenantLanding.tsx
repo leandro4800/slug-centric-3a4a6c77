@@ -58,13 +58,14 @@ export default function TenantLanding() {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
 
-  const handleRedeemVoucher = async () => {
-    const code = voucherCode.trim();
+  const handleRedeemVoucher = async (codeOverride?: string) => {
+    const code = (codeOverride || voucherCode).trim();
     if (!code) {
       toast({ title: "Digite o código", variant: "destructive" });
       return;
     }
     if (!user) {
+      sessionStorage.setItem("pending_voucher", code);
       navigate(`/${slug}/login`);
       return;
     }
@@ -85,6 +86,12 @@ export default function TenantLanding() {
       toast({ title: "Acesso liberado!", description: "Redirecionando para o app..." });
       setVoucherOpen(false);
       sessionStorage.removeItem("pending_voucher");
+      // Limpa params da URL se houver
+      if (searchParams.has("voucher") || searchParams.has("codigo")) {
+        searchParams.delete("voucher");
+        searchParams.delete("codigo");
+        setSearchParams(searchParams, { replace: true });
+      }
       setTimeout(() => window.location.assign(`/${slug}/app`), 800);
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
@@ -118,9 +125,16 @@ export default function TenantLanding() {
       const isVoucherRequested = searchParams.get("voucher") === "1";
       const pendingCode = sessionStorage.getItem("pending_voucher");
       
-      if (isVoucherRequested || pendingCode) {
-        console.log("[TenantLanding] Redirecionando para login para processar voucher:", pendingCode);
-        navigate(`/${slug}/login`, { replace: true });
+      if (isVoucherRequested) {
+        console.log("[TenantLanding] Voucher solicitado, abrindo modal.");
+        setVoucherOpen(true);
+        // Limpa a URL para evitar loops ao navegar
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete("voucher");
+        setSearchParams(nextParams, { replace: true });
+      } else if (pendingCode && pendingCode !== "1") {
+        console.log("[TenantLanding] Voucher pendente detectado, processando resgate automático.");
+        void handleRedeemVoucher(pendingCode);
       }
     }
   }, [loading, user, hasSubscription, searchParams, navigate, slug]);
@@ -412,7 +426,7 @@ export default function TenantLanding() {
             />
             {user ? (
               <Button
-                onClick={handleRedeemVoucher}
+                onClick={() => handleRedeemVoucher()}
                 disabled={voucherLoading}
                 className="w-full font-bold uppercase tracking-widest"
               >
