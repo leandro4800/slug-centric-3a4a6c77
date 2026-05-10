@@ -92,9 +92,17 @@ const AdminPanel = () => {
     if (isImage) {
       try {
         const source = isHeic
-          ? await heic2any({ blob: file, toType: "image/jpeg", quality: 0.82 })
+          ? await withTimeout(
+              heic2any({ blob: file, toType: "image/jpeg", quality: 0.82 }) as Promise<Blob | Blob[]>,
+              45000,
+              "A conversão demorou demais. Tente uma imagem JPG."
+            )
           : file;
-        uploadFile = await normalizeImage(Array.isArray(source) ? source[0] : source, kind === "logo" ? 900 : 1800, 0.84);
+        uploadFile = await withTimeout(
+          normalizeImage(Array.isArray(source) ? source[0] : source, kind === "logo" ? 900 : 1800, 0.84),
+          45000,
+          "O processamento da imagem demorou demais."
+        );
         ext = "jpg";
         contentType = "image/jpeg";
       } catch (err: unknown) {

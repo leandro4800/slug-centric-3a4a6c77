@@ -41,6 +41,7 @@ import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import heroDefault from "@/assets/hero-default.jpg";
+import heic2any from "heic2any";
 
 interface Aluno {
   id: string;
@@ -223,27 +224,102 @@ const AtletaDetalhe = () => {
     setSavingNivel(false);
   };
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms);
+    });
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  };
+
+  const compressImage = (blob: Blob, maxDim: number, quality: number): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(null);
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((b) => { URL.revokeObjectURL(url); resolve(b); }, 'image/jpeg', quality);
+        } catch { URL.revokeObjectURL(url); resolve(null); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+  };
+
   const handleUploadFoto = async (file: File) => {
     if (!aluno) return;
+    const toastId = toast.loading("Preparando foto...");
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `${aluno.id}/${Date.now()}.${ext}`;
+      const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+      
+      if (!isHeic && !file.type.startsWith("image/")) {
+        throw new Error("Por favor, selecione uma imagem.");
+      }
+
+      if (file.size > 15 * 1024 * 1024) {
+        throw new Error("A imagem deve ter no máximo 15MB.");
+      }
+
+      let source: Blob = file;
+      if (isHeic) {
+        toast.loading("Convertendo formato Apple (HEIC)...", { id: toastId });
+        const converted = await withTimeout(
+          heic2any({ blob: file, toType: "image/jpeg", quality: 0.82 }) as Promise<Blob | Blob[]>,
+          45000,
+          "A conversão demorou demais. Tente uma imagem JPG."
+        );
+        source = Array.isArray(converted) ? converted[0] : converted;
+      }
+
+      toast.loading("Otimizando imagem...", { id: toastId });
+      const normalized = await withTimeout(
+        compressImage(source, 1600, 0.82),
+        45000,
+        "A preparação demorou demais."
+      );
+
+      if (!normalized) throw new Error("Erro ao processar imagem.");
+
+      const path = `${aluno.id}/${Date.now()}.jpg`;
+      toast.loading("Enviando para o servidor...", { id: toastId });
+      
       const { error: upErr } = await supabase.storage
         .from("avatars")
-        .upload(path, file, { upsert: true, contentType: file.type });
+        .upload(path, normalized, { 
+          upsert: true, 
+          contentType: "image/jpeg" 
+        });
+      
       if (upErr) throw upErr;
+      
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-      const url = pub.publicUrl;
+      const url = `${pub.publicUrl}?v=${Date.now()}`;
+      
       const { error: updErr } = await supabase
         .from("perfis")
         .update({ avatar_url: url })
         .eq("id", aluno.id);
+        
       if (updErr) throw updErr;
+      
       setAluno({ ...aluno, avatar_url: url });
-      toast.success("Foto atualizada!");
+      toast.success("Foto atualizada!", { id: toastId });
     } catch (e: any) {
-      toast.error(e?.message || "Falha no upload");
+      console.error(e);
+      toast.error(e?.message || "Falha no upload", { id: toastId });
     } finally {
       setUploading(false);
     }
