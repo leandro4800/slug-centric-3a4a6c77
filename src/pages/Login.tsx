@@ -95,140 +95,107 @@ const Login = () => {
 
   // Redirect logged-in user
   useEffect(() => {
-    // Se ainda está carregando auth ou branding, não faz nada
     if (authLoading || !user) return;
-    
+
     let isMounted = true;
+    setRedirectTimedOut(false);
+
+    const goTo = (path: string) => {
+      if (!isMounted) return;
+      if (location.pathname === path || location.pathname.startsWith(`${path}/`)) return;
+      navigate(path, { replace: true });
+    };
 
     (async () => {
       try {
-        console.log("[Login] User detected, checking roles and redirections...");
+        const timeoutId = window.setTimeout(() => {
+          if (!isMounted) return;
+          setRedirectTimedOut(true);
+          goTo(urlSlug ? `/${urlSlug}` : "/marketplace");
+        }, REDIRECT_QUERY_TIMEOUT_MS + 1200);
+
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
-        
-        // Buscamos dados essenciais
-        const [{ data: perfil }, { data: roles }, { data: ownedTenant }] = await Promise.all([
-          supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
-          supabase.from("user_roles").select("role, tenant_id").eq("user_id", user.id),
-          supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle(),
+        const fallbackSlug = urlSlug || tenant?.slug || "demo";
+
+        const [{ data: perfil }, { data: ownedTenant }] = await Promise.all([
+          withRedirectTimeout(
+            supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
+            { data: null, error: null, status: 408, statusText: "timeout" },
+            "Perfil"
+          ),
+          withRedirectTimeout(
+            supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle(),
+            { data: null, error: null, status: 408, statusText: "timeout" },
+            "Tenant do coach"
+          ),
         ]);
 
+        window.clearTimeout(timeoutId);
         if (!isMounted) return;
 
-        const isAdmin = roles?.some((r) => r.role === "admin");
-        const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
+        const isAdmin = roles.some((r) => r.role === "admin");
+        const coachRole = roles.find((r) => r.role === "coach" && r.tenant_id);
 
-        // 1. Prioridade absoluta para o Dashboard do Coach/Admin se ele tiver um tenant próprio
-        if (isCoach && ownedTenant?.slug) {
-          const coachDashboardPath = `/${ownedTenant.slug}/app/controle`;
-          if (location.pathname !== coachDashboardPath && !location.pathname.startsWith(`/${ownedTenant.slug}/admin`)) {
-            console.log("[Login] Redirecting coach to dashboard:", coachDashboardPath);
-            navigate(coachDashboardPath, { replace: true });
-            return;
-          }
+        if (ownedTenant?.slug) {
+          goTo(`/${ownedTenant.slug}/app/controle`);
+          return;
         }
 
-        // 2. Determinar o slug do tenant do usuário comum (aluno)
-        let userSlug = urlSlug || "demo";
+        if (coachRole?.tenant_id) {
+          const { data: coachTenant } = await withRedirectTimeout(
+            supabase.from("tenants").select("slug").eq("id", coachRole.tenant_id).maybeSingle(),
+            { data: null, error: null, status: 408, statusText: "timeout" },
+            "Slug do coach"
+          );
+          goTo(coachTenant?.slug ? `/${coachTenant.slug}/app/controle` : "/marketplace");
+          return;
+        }
+
+        if (isAdmin && !perfil?.tenant_id) {
+          goTo("/admin/coaches");
+          return;
+        }
+
+        let userSlug = fallbackSlug;
         if (perfil?.tenant_id) {
-          const { data: tenantData } = await supabase
-            .from("tenants")
-            .select("slug")
-            .eq("id", perfil.tenant_id)
-            .maybeSingle();
+          const { data: tenantData } = await withRedirectTimeout(
+            supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle(),
+            { data: null, error: null, status: 408, statusText: "timeout" },
+            "Slug do aluno"
+          );
           if (tenantData?.slug) userSlug = tenantData.slug;
         }
 
-        // 3. VOUCHER REDEMPTION
         const pending = sessionStorage.getItem("pending_voucher");
         if (pending) {
           const ok = await redeemVoucherCode(pending);
-          if (ok && isMounted) {
-            sessionStorage.removeItem("pending_voucher");
-            const targetSlug = urlSlug || userSlug;
-            navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
-            return;
-          }
           sessionStorage.removeItem("pending_voucher");
-        }
-
-        // 4. Regras para Alunos (usuários comuns)
-        if (!isAdmin && !isCoach) {
-          const targetSlug = urlSlug || userSlug;
-          let targetTenantId: string | null = null;
-          if (targetSlug && targetSlug !== "demo") {
-            const { data: t } = await supabase.from("tenants").select("id").eq("slug", targetSlug).maybeSingle();
-            targetTenantId = t?.id || null;
-          }
-
-          if (targetTenantId) {
-            const { data: sub } = await supabase
-              .from("assinaturas")
-              .select("status")
-              .eq("aluno_id", user.id)
-              .eq("tenant_id", targetTenantId)
-              .in("status", ["active", "trialing"])
-              .maybeSingle();
-            
-            if (!sub && isMounted) {
-              console.log("[Login] Aluno sem assinatura, enviando para landing:", targetSlug);
-              navigate(`/${targetSlug}`, { replace: true });
-              return;
-            }
-            userSlug = targetSlug;
-          } else if (isMounted) {
-            navigate(`/marketplace`, { replace: true });
-            return;
-          }
-
-          // Onboarding obrigatório para alunos
-          const { count: anamneseCount } = await supabase
-            .from("anamnese_aluno")
-            .select("id", { count: 'exact', head: true })
-            .eq("aluno_id", user.id);
-
-          const { count: avaliacaoCount } = await supabase
-            .from("avaliacoes_fisicas")
-            .select("id", { count: 'exact', head: true })
-            .eq("aluno_id", user.id);
-
-          if (!perfil?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
-            navigate("/onboarding", { replace: true });
+          if (ok) {
+            goTo(`/${userSlug}/app`);
             return;
           }
         }
 
-        if (!isMounted) return;
-
-        // 5. Signup pendente de Coach
-        const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
-        if (isCoachSignup && !ownedTenant) {
-          navigate("/seja-coach", { replace: true });
-          return;
-        }
-
-        // 6. REDIRECIONAMENTO FINAL (FALLBACK)
         if (redirectPath && !redirectPath.includes("/login")) {
-          navigate(redirectPath, { replace: true });
+          goTo(redirectPath);
           return;
         }
 
-        if (isAdmin && !isCoach && !perfil?.tenant_id) {
-          navigate("/admin/coaches", { replace: true });
-        } else {
-          const finalPath = `/${userSlug}/app`;
-          if (location.pathname !== finalPath && !location.pathname.startsWith(`/${userSlug}/app`)) {
-            console.log("[Login] Final fallback redirect:", finalPath);
-            navigate(finalPath, { replace: true });
-          }
+        if (!userSlug || userSlug === "demo") {
+          goTo("/marketplace");
+          return;
         }
+
+        goTo(`/${userSlug}/app`);
       } catch (err) {
         console.error("Error in login redirect effect:", err);
+        goTo(urlSlug ? `/${urlSlug}` : "/marketplace");
       }
     })();
 
     return () => { isMounted = false; };
-  }, [user, authLoading, navigate, location.pathname, urlSlug]);
+  }, [user, authLoading, roles, navigate, location.pathname, location.state, urlSlug, tenant?.slug]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
