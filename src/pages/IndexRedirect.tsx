@@ -5,6 +5,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
+const REDIRECT_TIMEOUT_MS = 6500;
+
+const withTimeout = async <T,>(promise: PromiseLike<T>, fallback: T): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => resolve(fallback), REDIRECT_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 /**
  * Rota neutra usada como destino padrão de confirmações de e-mail do Supabase
  * (Site URL configurado no projeto). Decide para onde mandar o usuário com base
@@ -33,12 +48,19 @@ const IndexRedirect = () => {
     );
   })();
 
+  const requestedSlug = typeof window === "undefined"
+    ? null
+    : new URLSearchParams(window.location.search).get("slug");
+
   useEffect(() => {
     if (authLoading) return;
 
     if (!user) {
-      const suffix = cameFromEmailConfirmation ? "?confirmed=1" : "";
-      setTarget(`/login${suffix}`);
+      if (cameFromEmailConfirmation && requestedSlug) {
+        setTarget(`/${requestedSlug}?confirmed=1`);
+        return;
+      }
+      setTarget(cameFromEmailConfirmation ? "/marketplace?confirmed=1" : "/login");
       return;
     }
 
@@ -46,11 +68,14 @@ const IndexRedirect = () => {
     (async () => {
       try {
         // 1) Coach dono de tenant
-        const { data: owned } = await supabase
-          .from("tenants")
-          .select("slug")
-          .eq("owner_user_id", user.id)
-          .maybeSingle();
+        const { data: owned } = await withTimeout(
+          supabase
+            .from("tenants")
+            .select("slug")
+            .eq("owner_user_id", user.id)
+            .maybeSingle(),
+          { data: null, error: null }
+        );
         if (cancelled) return;
         if (owned?.slug) {
           setTarget(`/${owned.slug}/app/controle`);
@@ -58,36 +83,45 @@ const IndexRedirect = () => {
         }
 
         // 2) Aluno: pega tenant do perfil
-        const { data: perfil } = await supabase
-          .from("perfis")
-          .select("tenant_id")
-          .eq("id", user.id)
-          .maybeSingle();
+        const { data: perfil } = await withTimeout(
+          supabase
+            .from("perfis")
+            .select("tenant_id")
+            .eq("id", user.id)
+            .maybeSingle(),
+          { data: null, error: null }
+        );
         if (cancelled) return;
 
         if (!perfil?.tenant_id) {
           if (cameFromEmailConfirmation) {
             toast.success("E-mail confirmado! Escolha um coach para começar.");
           }
-          setTarget("/marketplace");
+          setTarget(requestedSlug ? `/${requestedSlug}` : "/marketplace");
           return;
         }
 
         // 3) Tem tenant — verifica assinatura ativa
-        const { data: sub } = await supabase
-          .from("assinaturas")
-          .select("status")
-          .eq("aluno_id", user.id)
-          .eq("tenant_id", perfil.tenant_id)
-          .in("status", ["active", "trialing"])
-          .maybeSingle();
+        const { data: sub } = await withTimeout(
+          supabase
+            .from("assinaturas")
+            .select("status")
+            .eq("aluno_id", user.id)
+            .eq("tenant_id", perfil.tenant_id)
+            .in("status", ["active", "trialing"])
+            .maybeSingle(),
+          { data: null, error: null }
+        );
         if (cancelled) return;
 
-        const { data: tenant } = await supabase
-          .from("tenants")
-          .select("slug")
-          .eq("id", perfil.tenant_id)
-          .maybeSingle();
+        const { data: tenant } = await withTimeout(
+          supabase
+            .from("tenants")
+            .select("slug")
+            .eq("id", perfil.tenant_id)
+            .maybeSingle(),
+          { data: null, error: null }
+        );
         if (cancelled) return;
 
         if (sub && tenant?.slug) {
@@ -99,16 +133,16 @@ const IndexRedirect = () => {
           }
           setTarget(`/${tenant.slug}`);
         } else {
-          setTarget("/marketplace");
+          setTarget(requestedSlug ? `/${requestedSlug}` : "/marketplace");
         }
       } catch (err) {
         console.error("[IndexRedirect] erro:", err);
-        if (!cancelled) setTarget("/marketplace");
+        if (!cancelled) setTarget(requestedSlug ? `/${requestedSlug}` : "/marketplace");
       }
     })();
 
     return () => { cancelled = true; };
-  }, [user, authLoading, cameFromEmailConfirmation]);
+  }, [user, authLoading, cameFromEmailConfirmation, requestedSlug]);
 
   if (target) return <Navigate to={target} replace />;
 
