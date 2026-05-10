@@ -406,6 +406,8 @@ export default function Anamnese() {
               </Select>
               <p className="text-xs text-muted-foreground">Usado para posicionar o pré e pós-treino na sua dieta.</p>
             </div>
+
+            <div className="space-y-4 p-4 rounded-xl border border-border bg-secondary/20">
               <div className="flex items-center gap-3">
                 <Checkbox
                   id="ergogenicos"
