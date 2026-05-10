@@ -58,13 +58,14 @@ export default function TenantLanding() {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
 
-  const handleRedeemVoucher = async () => {
-    const code = voucherCode.trim();
+  const handleRedeemVoucher = async (codeOverride?: string) => {
+    const code = (codeOverride || voucherCode).trim();
     if (!code) {
       toast({ title: "Digite o código", variant: "destructive" });
       return;
     }
     if (!user) {
+      sessionStorage.setItem("pending_voucher", code);
       navigate(`/${slug}/login`);
       return;
     }
@@ -85,6 +86,12 @@ export default function TenantLanding() {
       toast({ title: "Acesso liberado!", description: "Redirecionando para o app..." });
       setVoucherOpen(false);
       sessionStorage.removeItem("pending_voucher");
+      // Limpa params da URL se houver
+      if (searchParams.has("voucher") || searchParams.has("codigo")) {
+        searchParams.delete("voucher");
+        searchParams.delete("codigo");
+        setSearchParams(searchParams, { replace: true });
+      }
       setTimeout(() => window.location.assign(`/${slug}/app`), 800);
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
