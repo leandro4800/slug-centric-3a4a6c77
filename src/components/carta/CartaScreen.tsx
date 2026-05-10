@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft } from "lucide-react";
+import heic2any from "heic2any";
 import { AthleteCard, type CartaData, type AtributosCarta } from "./AthleteCard";
 import { HolographicCard } from "./HolographicCard";
 import { PainelEvolucao } from "./PainelEvolucao";
@@ -131,27 +132,92 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
     toast.success("Carta salva!");
   };
 
+  const compressImage = (blob: Blob, maxDim: number, quality: number): Promise<Blob | null> => {
+    return new Promise((resolve) => {
+      const url = URL.createObjectURL(blob);
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
+          const w = Math.round(img.width * ratio);
+          const h = Math.round(img.height * ratio);
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) return resolve(null);
+          ctx.drawImage(img, 0, 0, w, h);
+          canvas.toBlob((b) => { URL.revokeObjectURL(url); resolve(b); }, 'image/jpeg', quality);
+        } catch { URL.revokeObjectURL(url); resolve(null); }
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); resolve(null); };
+      img.src = url;
+    });
+  };
+
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms);
+    });
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  };
+
   const onUploadFoto = async (file: File) => {
     if (!file) return;
-    const path = `${alunoId}/foto-original-${Date.now()}.${file.name.split(".").pop()}`;
-    const { error } = await supabase.storage
-      .from("avatars")
-      .upload(path, file, { upsert: true, contentType: file.type });
-    if (error) { toast.error(error.message); return; }
-    const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
-    const url = pub.publicUrl;
-    setDraft((d) => (d ? { ...d, foto_original_url: url } : d));
-    if (!editing) {
-      setCarta((c) => (c ? { ...c, foto_original_url: url } : c));
-      // persistir só a foto se não estiver editando
-      if (tenantId) {
-        await supabase.from("cartas_atleta").upsert(
-          { aluno_id: alunoId, tenant_id: tenantId, foto_original_url: url },
-          { onConflict: "aluno_id" }
+    const toastId = toast.loading("Preparando foto...");
+    setGenerating(true); // Reusing generating state to show loader in button
+    
+    try {
+      const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+      let source: Blob = file;
+      
+      if (isHeic) {
+        toast.loading("Convertendo formato Apple (HEIC)...", { id: toastId });
+        const converted = await withTimeout(
+          heic2any({ blob: file, toType: "image/jpeg", quality: 0.8 }) as Promise<Blob | Blob[]>,
+          45000,
+          "A conversão demorou demais. Tente JPG."
         );
+        source = Array.isArray(converted) ? converted[0] : converted;
       }
+
+      toast.loading("Otimizando imagem...", { id: toastId });
+      const normalized = await compressImage(source, 1200, 0.8);
+      if (!normalized) throw new Error("Erro ao processar imagem.");
+
+      const path = `${alunoId}/foto-original-${Date.now()}.jpg`;
+      toast.loading("Enviando...", { id: toastId });
+      
+      const { error } = await supabase.storage
+        .from("avatars")
+        .upload(path, normalized, { upsert: true, contentType: "image/jpeg" });
+        
+      if (error) throw error;
+      
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const url = pub.publicUrl;
+      
+      setDraft((d) => (d ? { ...d, foto_original_url: url } : d));
+      if (!editing) {
+        setCarta((c) => (c ? { ...c, foto_original_url: url } : c));
+        if (tenantId) {
+          await supabase.from("cartas_atleta").upsert(
+            { aluno_id: alunoId, tenant_id: tenantId, foto_original_url: url },
+            { onConflict: "aluno_id" }
+          );
+        }
+      }
+      toast.success("Foto enviada!", { id: toastId });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Erro ao enviar foto", { id: toastId });
+    } finally {
+      setGenerating(false);
     }
-    toast.success("Foto enviada!");
   };
 
   const gerarAvatarIA = async () => {
