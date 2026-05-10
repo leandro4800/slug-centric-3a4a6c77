@@ -135,6 +135,24 @@ serve(async (req) => {
       .in("classificacao", ["Alerta", "Critico", "Subotimizado"])
       .limit(20);
 
+    // Buscar horário de treino da anamnese
+    const { data: anamneseRow } = await supabase
+      .from("anamnese_aluno")
+      .select("horario_treino")
+      .eq("aluno_id", targetUserId)
+      .maybeSingle();
+
+    const horarioTreinoMap: Record<string, { label: string; janela: string; pre: string; pos: string }> = {
+      manha_cedo: { label: "Manhã cedo (5h-7h)", janela: "05:00-07:00", pre: "04:30", pos: "07:30" },
+      manha:      { label: "Manhã (7h-11h)",     janela: "07:00-11:00", pre: "06:30", pos: "10:30" },
+      meio_dia:   { label: "Meio-dia (11h-14h)", janela: "11:00-14:00", pre: "10:30", pos: "13:30" },
+      tarde:      { label: "Tarde (14h-17h)",    janela: "14:00-17:00", pre: "13:30", pos: "16:30" },
+      fim_tarde:  { label: "Fim de tarde (17h-19h)", janela: "17:00-19:00", pre: "16:30", pos: "19:00" },
+      noite:      { label: "Noite (19h-22h)",    janela: "19:00-22:00", pre: "18:30", pos: "21:30" },
+    };
+    const horarioKey = (anamneseRow as any)?.horario_treino || "tarde";
+    const horarioTreino = horarioTreinoMap[horarioKey] || horarioTreinoMap.tarde;
+
     // 3. Alimentos disponíveis
     const { data: alimentos } = await supabase
       .from("alimentos_taco")
@@ -197,6 +215,15 @@ FIBRAS E HIDRATAÇÃO (SAÚDE SISTÊMICA)
 - HIDRATAÇÃO: ${hidratacaoMl}ml/dia (50ml × ${peso}kg).
 
 ═══════════════════════════════════════════════
+NUTRIENT TIMING — HORÁRIO DE TREINO DO ATLETA
+═══════════════════════════════════════════════
+- O atleta TREINA NA JANELA: ${horarioTreino.label} (${horarioTreino.janela}).
+- PRÉ-TREINO (refeição ~30-60min antes, por volta de ${horarioTreino.pre}): carbo de médio/alto IG + proteína magra, baixa gordura (<10g) e baixa fibra (<5g). Ex.: banana + whey, pão + ovos, mingau de aveia + whey.
+- PÓS-TREINO IMEDIATO (até 30min após, por volta de ${horarioTreino.pos}): **OBRIGATÓRIO PRIORIZAR WHEY PROTEIN** como fonte proteica principal por absorção rápida. Combine com carbo de alto IG (banana, mel, dextrose, arroz branco, batata inglesa). Mantenha gordura mínima (<5g) e fibra <3g.
+- Se houver refeição sólida pós-treino (~60-90min depois), priorize proteína magra + carbo + vegetais.
+- Marque corretamente "tag_timing" como: "pre_treino", "pos_treino_imediato", "pos_treino_solido" ou "longe_treino".
+
+═══════════════════════════════════════════════
 NUTRIÇÃO FUNCIONAL (BASEADA EM LAUDOS CLÍNICOS)
 ═══════════════════════════════════════════════
 ${alertasNutricionais.length > 0 ? alertasNutricionais.map(a => `- ${a}`).join("\n") : "- Nenhum alerta clínico relevante. Foco em performance pura."}
@@ -239,7 +266,7 @@ FORMATO OBRIGATÓRIO:
 OBJETIVO: ${objetivo}
 DADOS DO ATLETA: Sexo ${sexo} · ${idade} anos · ${peso}kg · ${altura}cm · Nível ${nivel}
 COMPOSIÇÃO CORPORAL: ${composicaoTxt}
-HORÁRIO DO TREINO (presumido): ${nivel.includes("alto") || nivel.includes("avan") ? "17:00-19:00" : "manhã ou tarde — você decide e marque tag_timing"}
+HORÁRIO DO TREINO (anamnese): ${horarioTreino.label} — janela ${horarioTreino.janela}. Pré ~${horarioTreino.pre}, pós imediato ~${horarioTreino.pos}. PRIORIZE WHEY no pós-treino imediato.
 DEFICIÊNCIAS CLÍNICAS: ${deficienciasTxt}
 ALERTAS NUTRICIONAIS DETECTADOS: ${alertasNutricionais.join(" | ") || "nenhum"}
 RESUMO CLÍNICO: ${ultimaAnalise?.resumo_clinico || "Nenhum exame disponível"}

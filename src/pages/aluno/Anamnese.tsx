@@ -40,6 +40,7 @@ export default function Anamnese() {
     agua_litros: "2",
     anos_treino: "0",
     disponibilidade_dias: [] as string[],
+    horario_treino: "tarde",
     nivel_experiencia: "Intermediário",
     faz_uso_ergogenicos: false,
     detalhes_ergogenicos: "",
@@ -81,6 +82,7 @@ export default function Anamnese() {
           agua_litros: String(data.agua_litros ?? "2"),
           anos_treino: String(data.anos_treino ?? "0"),
           disponibilidade_dias: (data.disponibilidade_dias as string[]) || [],
+          horario_treino: (data as any).horario_treino || "tarde",
           nivel_experiencia: data.nivel_experiencia || "Intermediário",
           faz_uso_ergogenicos: data.faz_uso_ergogenicos || false,
           detalhes_ergogenicos: data.detalhes_ergogenicos || "",
@@ -130,6 +132,7 @@ export default function Anamnese() {
         agua_litros: parseFloat(form.agua_litros) || 0,
         anos_treino: parseFloat(form.anos_treino) || 0,
         disponibilidade_dias: form.disponibilidade_dias,
+        horario_treino: form.horario_treino,
         nivel_experiencia: form.nivel_experiencia,
         faz_uso_ergogenicos: form.faz_uso_ergogenicos,
         detalhes_ergogenicos: form.detalhes_ergogenicos,
@@ -384,6 +387,24 @@ export default function Anamnese() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Horário em que costuma treinar</Label>
+              <Select value={form.horario_treino} onValueChange={v => setForm({ ...form, horario_treino: v })}>
+                <SelectTrigger className="bg-secondary/40 border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manha_cedo">Manhã cedo (5h-7h)</SelectItem>
+                  <SelectItem value="manha">Manhã (7h-11h)</SelectItem>
+                  <SelectItem value="meio_dia">Meio-dia (11h-14h)</SelectItem>
+                  <SelectItem value="tarde">Tarde (14h-17h)</SelectItem>
+                  <SelectItem value="fim_tarde">Fim de tarde (17h-19h)</SelectItem>
+                  <SelectItem value="noite">Noite (19h-22h)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Usado para posicionar o pré e pós-treino na sua dieta.</p>
             </div>
 
             <div className="space-y-4 p-4 rounded-xl border border-border bg-secondary/20">
