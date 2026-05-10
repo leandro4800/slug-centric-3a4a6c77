@@ -12,6 +12,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import { supabase } from "@/integrations/supabase/client";
 
 import Landing from "./pages/Landing";
+import IndexRedirect from "./pages/IndexRedirect";
 import Marketplace from "./pages/Marketplace";
 import TenantLanding from "./pages/TenantLanding";
 import SejaCoach from "./pages/SejaCoach";
