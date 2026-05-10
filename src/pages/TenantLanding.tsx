@@ -426,7 +426,7 @@ export default function TenantLanding() {
             />
             {user ? (
               <Button
-                onClick={handleRedeemVoucher}
+                onClick={() => handleRedeemVoucher()}
                 disabled={voucherLoading}
                 className="w-full font-bold uppercase tracking-widest"
               >
