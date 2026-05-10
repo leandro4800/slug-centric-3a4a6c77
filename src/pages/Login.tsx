@@ -124,7 +124,8 @@ const Login = () => {
         }, REDIRECT_QUERY_TIMEOUT_MS + 2000);
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
-        const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
+        const urlSearchParams = new URLSearchParams(window.location.search);
+        const redirectPath = locationState?.from?.pathname || urlSearchParams.get("redirect");
         const fallbackSlug = urlSlug || tenant?.slug || "demo";
 
         const [{ data: perfil }, { data: ownedTenant }] = await Promise.all([
