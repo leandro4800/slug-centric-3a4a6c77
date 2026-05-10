@@ -1,5 +1,14 @@
 project_id = "iflgryuemsohurtdaawm"
 
+[auth]
+site_url = "https://alpha-coach.app/index"
+additional_redirect_urls = [
+  "https://alpha-coach.app/index",
+  "https://alpha-coach.app/reset-password",
+  "https://www.alpha-coach.app/index",
+  "https://www.alpha-coach.app/reset-password"
+]
+
 [functions]
   [functions.analise-evolucao]
     verify_jwt = true
