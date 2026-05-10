@@ -35,10 +35,10 @@ export const SubscriptionGuard = ({ children }: Props) => {
       // em vez de redirecionar imediatamente para o /site.
       const pendingVoucher = sessionStorage.getItem("pending_voucher");
       const urlParams = new URLSearchParams(window.location.search);
-      const hasVoucherParam = urlParams.has("voucher") || urlParams.has("codigo");
+      const hasVoucherParam = urlParams.has("voucher") || urlParams.has("codigo") || urlParams.has("v");
 
       if ((pendingVoucher || hasVoucherParam) && slug && slug !== "demo") {
-        console.log("[SubscriptionGuard] Voucher detectado, liberando rota para processamento no Login/App.");
+        console.log("[SubscriptionGuard] Voucher detectado, permitindo acesso para processamento no Login.");
         setLoading(false);
         return;
       }
