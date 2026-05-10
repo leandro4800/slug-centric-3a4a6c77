@@ -102,8 +102,8 @@ const App = () => (
             <SplashScreen />
             <Routes>
             {/* Marketplace público */}
-            <Route path="/" element={<Landing />} />
-            <Route path="/site" element={<Landing />} />
+             <Route path="/" element={<Navigate to="/login" replace />} />
+             <Route path="/site" element={<Navigate to="/login" replace />} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
