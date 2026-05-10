@@ -205,6 +205,20 @@ const Landing = () => {
   // A raiz "/" e "/site" mostram a landing de marketing.
   // Não redirecionamos mais para o login automaticamente aqui.
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("confirmed") === "1") {
+      toast({
+        title: "E-mail confirmado!",
+        description: "Agora você já pode escolher seu coach e começar.",
+      });
+      // Limpa a URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete("confirmed");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [toast]);
+
+  useEffect(() => {
     if (authLoading || !user) return;
     
     // Se for coach (dono de tenant), podemos mandar pro admin por conveniência
