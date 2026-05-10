@@ -124,6 +124,10 @@ export const SubscriptionGuard = ({ children }: Props) => {
 
   if (isCoach) return <>{children}</>;
 
+  if (status === "redirect_to_site_voucher") {
+    return <Navigate to={`/${slug}/site?voucher=1`} replace />;
+  }
+
   if (status === "incomplete") {
     return <Navigate to="/onboarding" replace />;
   }
