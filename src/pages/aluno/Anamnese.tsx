@@ -82,6 +82,7 @@ export default function Anamnese() {
           agua_litros: String(data.agua_litros ?? "2"),
           anos_treino: String(data.anos_treino ?? "0"),
           disponibilidade_dias: (data.disponibilidade_dias as string[]) || [],
+          horario_treino: (data as any).horario_treino || "tarde",
           nivel_experiencia: data.nivel_experiencia || "Intermediário",
           faz_uso_ergogenicos: data.faz_uso_ergogenicos || false,
           detalhes_ergogenicos: data.detalhes_ergogenicos || "",
