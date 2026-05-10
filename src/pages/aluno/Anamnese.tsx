@@ -132,6 +132,7 @@ export default function Anamnese() {
         agua_litros: parseFloat(form.agua_litros) || 0,
         anos_treino: parseFloat(form.anos_treino) || 0,
         disponibilidade_dias: form.disponibilidade_dias,
+        horario_treino: form.horario_treino,
         nivel_experiencia: form.nivel_experiencia,
         faz_uso_ergogenicos: form.faz_uso_ergogenicos,
         detalhes_ergogenicos: form.detalhes_ergogenicos,
