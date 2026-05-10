@@ -115,13 +115,14 @@ const Login = () => {
           console.warn("[Login] Redirecionamento demorou demais, disparando fallback.");
           setRedirectTimedOut(true);
           
-          if (urlSlug) {
-            window.location.assign(`/${urlSlug}/app`);
+          const currentSlug = urlSlug || tenant?.slug;
+          if (currentSlug) {
+            console.log("[Login] Fallback: forçando redirecionamento para o app do slug atual:", currentSlug);
+            window.location.assign(`/${currentSlug}/app`);
           } else {
-            // Se travar no login geral, pelo menos libera a tela
             setLoading(false);
           }
-        }, 10000); // 10s de limite total para o redirect
+        }, 12000); // 12s de limite total para o redirect
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const urlSearchParams = new URLSearchParams(window.location.search);
@@ -133,6 +134,8 @@ const Login = () => {
           supabase.from("perfis").select("tenant_id").eq("id", user.id).maybeSingle(),
           supabase.from("tenants").select("slug").eq("owner_user_id", user.id).maybeSingle(),
         ]);
+
+        console.log("[Login] Dados carregados:", { perfilTenantId: perfil?.tenant_id, ownedTenantSlug: ownedTenant?.slug, urlSlug, brandingSlug: tenant?.slug });
 
         window.clearTimeout(timeoutId);
         if (!isMounted) return;
