@@ -389,7 +389,23 @@ export default function Anamnese() {
               </div>
             </div>
 
-            <div className="space-y-4 p-4 rounded-xl border border-border bg-secondary/20">
+            <div className="space-y-2">
+              <Label>Horário em que costuma treinar</Label>
+              <Select value={form.horario_treino} onValueChange={v => setForm({ ...form, horario_treino: v })}>
+                <SelectTrigger className="bg-secondary/40 border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="manha_cedo">Manhã cedo (5h-7h)</SelectItem>
+                  <SelectItem value="manha">Manhã (7h-11h)</SelectItem>
+                  <SelectItem value="meio_dia">Meio-dia (11h-14h)</SelectItem>
+                  <SelectItem value="tarde">Tarde (14h-17h)</SelectItem>
+                  <SelectItem value="fim_tarde">Fim de tarde (17h-19h)</SelectItem>
+                  <SelectItem value="noite">Noite (19h-22h)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Usado para posicionar o pré e pós-treino na sua dieta.</p>
+            </div>
               <div className="flex items-center gap-3">
                 <Checkbox
                   id="ergogenicos"
