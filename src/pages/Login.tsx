@@ -76,16 +76,18 @@ const Login = () => {
 
   // Redirect logged-in user
   useEffect(() => {
+    // Se ainda está carregando auth ou branding, não faz nada
     if (authLoading || !user) return;
     
-    // Flag para evitar múltiplas execuções simultâneas
     let isMounted = true;
 
     (async () => {
       try {
+        console.log("[Login] User detected, checking roles and redirections...");
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
         
+        // Buscamos dados essenciais
         const [{ data: perfil }, { data: roles }, { data: ownedTenant }] = await Promise.all([
           supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
           supabase.from("user_roles").select("role, tenant_id").eq("user_id", user.id),
@@ -97,11 +99,19 @@ const Login = () => {
         const isAdmin = roles?.some((r) => r.role === "admin");
         const isCoach = roles?.some((r) => r.role === "coach") || !!ownedTenant;
 
-        // Determinamos o slug do tenant do usuário
+        // 1. Prioridade absoluta para o Dashboard do Coach/Admin se ele tiver um tenant próprio
+        if (isCoach && ownedTenant?.slug) {
+          const coachDashboardPath = `/${ownedTenant.slug}/app/controle`;
+          if (location.pathname !== coachDashboardPath) {
+            console.log("[Login] Redirecting coach to dashboard:", coachDashboardPath);
+            navigate(coachDashboardPath, { replace: true });
+          }
+          return;
+        }
+
+        // 2. Determinar o slug do tenant do usuário comum (aluno)
         let userSlug = urlSlug || "demo";
-        if (ownedTenant?.slug) {
-          userSlug = ownedTenant.slug;
-        } else if (perfil?.tenant_id) {
+        if (perfil?.tenant_id) {
           const { data: tenantData } = await supabase
             .from("tenants")
             .select("slug")
@@ -110,7 +120,7 @@ const Login = () => {
           if (tenantData?.slug) userSlug = tenantData.slug;
         }
 
-        // VOUCHER REDEMPTION
+        // 3. VOUCHER REDEMPTION
         const pending = sessionStorage.getItem("pending_voucher");
         if (pending) {
           const ok = await redeemVoucherCode(pending);
@@ -123,7 +133,7 @@ const Login = () => {
           sessionStorage.removeItem("pending_voucher");
         }
 
-        // Aluno comum: precisa ter assinatura ativa OU comprou aula avulsa para acessar /app
+        // 4. Regras para Alunos (usuários comuns)
         if (!isAdmin && !isCoach) {
           const targetSlug = urlSlug || userSlug;
           let targetTenantId: string | null = null;
@@ -142,6 +152,7 @@ const Login = () => {
               .maybeSingle();
             
             if (!sub && isMounted) {
+              console.log("[Login] Aluno sem assinatura, enviando para landing:", targetSlug);
               navigate(`/${targetSlug}`, { replace: true });
               return;
             }
@@ -150,19 +161,8 @@ const Login = () => {
             navigate(`/marketplace`, { replace: true });
             return;
           }
-        }
 
-        if (!isMounted) return;
-
-        // Se a flag is_coach existir nos metadados e não tem tenant ainda
-        const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
-        if (isCoachSignup && !ownedTenant) {
-          navigate("/seja-coach", { replace: true });
-          return;
-        }
-
-        // Se for um usuário comum, verifica onboarding
-        if (!isAdmin && !isCoach) {
+          // Onboarding obrigatório para alunos
           const { count: anamneseCount } = await supabase
             .from("anamnese_aluno")
             .select("id", { count: 'exact', head: true })
@@ -179,7 +179,16 @@ const Login = () => {
           }
         }
 
-        // REDIRECIONAMENTO FINAL:
+        if (!isMounted) return;
+
+        // 5. Signup pendente de Coach
+        const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
+        if (isCoachSignup && !ownedTenant) {
+          navigate("/seja-coach", { replace: true });
+          return;
+        }
+
+        // 6. REDIRECIONAMENTO FINAL (FALLBACK)
         if (redirectPath && !redirectPath.includes("/login")) {
           navigate(redirectPath, { replace: true });
           return;
@@ -188,9 +197,9 @@ const Login = () => {
         if (isAdmin && !isCoach && !perfil?.tenant_id) {
           navigate("/admin/coaches", { replace: true });
         } else {
-          // Garante que não redirecionamos para o login se já estamos logados
           const finalPath = `/${userSlug}/app`;
           if (location.pathname !== finalPath) {
+            console.log("[Login] Final fallback redirect:", finalPath);
             navigate(finalPath, { replace: true });
           }
         }
