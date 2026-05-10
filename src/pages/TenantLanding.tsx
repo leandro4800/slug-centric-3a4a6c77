@@ -115,8 +115,12 @@ export default function TenantLanding() {
   useEffect(() => {
     if (!loading && user && !hasSubscription && (searchParams.get("voucher") === "1" || sessionStorage.getItem("pending_voucher"))) {
       setVoucherOpen(true);
-      searchParams.delete("voucher");
-      setSearchParams(searchParams, { replace: true });
+      if (searchParams.get("voucher") === "1") {
+        searchParams.delete("voucher");
+        setSearchParams(searchParams, { replace: true });
+      }
+      const pending = sessionStorage.getItem("pending_voucher");
+      if (pending) setVoucherCode(pending);
     }
   }, [loading, user, hasSubscription, searchParams, setSearchParams]);
 
