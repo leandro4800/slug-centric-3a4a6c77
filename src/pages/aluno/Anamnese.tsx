@@ -51,6 +51,13 @@ export default function Anamnese() {
     modalidades_anteriores: "",
     tempo_recuperacao: "",
     qualidade_sono: [5],
+    alimentos_basicos_casa: "",
+    cafe_lanche_habitual: "",
+    proteinas_consumidas: "",
+    frutas_vegetais_preferidos: "",
+    horario_almoco: "12:00",
+    horario_jantar: "20:00",
+    nivel_atividade_diaria: "moderado",
   });
 
   useEffect(() => {
@@ -93,6 +100,13 @@ export default function Anamnese() {
           modalidades_anteriores: (data.modalidades_anteriores as string[])?.join(", ") || "",
           tempo_recuperacao: data.tempo_recuperacao || "",
           qualidade_sono: [data.qualidade_sono ?? 5],
+          alimentos_basicos_casa: (data as any).alimentos_basicos_casa || "",
+          cafe_lanche_habitual: (data as any).cafe_lanche_habitual || "",
+          proteinas_consumidas: (data as any).proteinas_consumidas || "",
+          frutas_vegetais_preferidos: (data as any).frutas_vegetais_preferidos || "",
+          horario_almoco: (data as any).horario_almoco || "12:00",
+          horario_jantar: (data as any).horario_jantar || "20:00",
+          nivel_atividade_diaria: (data as any).nivel_atividade_diaria || "moderado",
         });
       }
     } catch (e: any) {
@@ -142,6 +156,13 @@ export default function Anamnese() {
         alimentos_evita: form.alimentos_evita,
         modalidades_anteriores: form.modalidades_anteriores.split(",").map(s => s.trim()).filter(Boolean),
         tempo_recuperacao: form.tempo_recuperacao,
+        alimentos_basicos_casa: form.alimentos_basicos_casa,
+        cafe_lanche_habitual: form.cafe_lanche_habitual,
+        proteinas_consumidas: form.proteinas_consumidas,
+        frutas_vegetais_preferidos: form.frutas_vegetais_preferidos,
+        horario_almoco: form.horario_almoco,
+        horario_jantar: form.horario_jantar,
+        nivel_atividade_diaria: form.nivel_atividade_diaria,
       };
 
       console.log("Salvando anamnese:", anamneseData);
