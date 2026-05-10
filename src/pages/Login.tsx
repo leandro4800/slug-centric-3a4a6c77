@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
+import { buildAuthRedirectUrl } from "@/lib/app-url";
 
 const REDIRECT_QUERY_TIMEOUT_MS = 7000;
 
@@ -223,7 +224,7 @@ const Login = () => {
       type: "signup",
       email: cleanEmail,
       options: {
-        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}/login?confirmed=1` : `${window.location.origin}/login?confirmed=1`,
+        emailRedirectTo: buildAuthRedirectUrl("/index", { slug: urlSlug, confirmed: "1" }),
       },
     });
     setLoading(false);
@@ -251,7 +252,7 @@ const Login = () => {
       email: cleanEmail,
       password,
       options: {
-        emailRedirectTo: urlSlug ? `${window.location.origin}/${urlSlug}/login?confirmed=1` : `${window.location.origin}/login?confirmed=1`,
+        emailRedirectTo: buildAuthRedirectUrl("/index", { slug: urlSlug, confirmed: "1" }),
         data: { 
           nome_completo: nome,
           tenant_id: tenant?.id || undefined,
