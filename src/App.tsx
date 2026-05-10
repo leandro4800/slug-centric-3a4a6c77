@@ -84,7 +84,8 @@ const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
 
   if (loading || authLoading || (tenant?.id && isOwner === null)) return null;
   if (tenant?.slug) {
-    return <Navigate to={`/${tenant.slug}/app`} replace />;
+    const target = isOwner ? `/${tenant.slug}/app/controle` : `/${tenant.slug}/app`;
+    return <Navigate to={target} replace />;
   }
   return children;
 };
