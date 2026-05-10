@@ -30,11 +30,14 @@ export const SubscriptionGuard = ({ children }: Props) => {
           ? await supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle()
           : { data: null };
 
-      // Se estamos em um tenant específico, e o usuário não tem assinatura,
-      // mas temos um voucher pendente, permitimos o acesso para que o Login.tsx processe
+      // Se o aluno está tentando entrar mas não tem assinatura, 
+      // verificamos se ele tem um voucher pendente para permitir que o Login/App lide com o resgate
+      // em vez de redirecionar imediatamente para o /site.
       const pendingVoucher = sessionStorage.getItem("pending_voucher");
-      if (pendingVoucher && slug && slug !== "demo") {
-        setIsCoach(false);
+      const urlParams = new URLSearchParams(window.location.search);
+      const hasVoucherParam = urlParams.has("voucher") || urlParams.has("codigo");
+
+      if ((pendingVoucher || hasVoucherParam) && slug && slug !== "demo") {
         setLoading(false);
         return;
       }

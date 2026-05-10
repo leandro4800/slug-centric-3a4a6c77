@@ -169,8 +169,9 @@ const Login = () => {
           if (tenantData?.slug) userSlug = tenantData.slug;
         }
 
-        const pending = sessionStorage.getItem("pending_voucher");
+        const pending = sessionStorage.getItem("pending_voucher") || new URLSearchParams(window.location.search).get("voucher") || new URLSearchParams(window.location.search).get("codigo");
         if (pending) {
+          console.log("[Login] Resgatando voucher pendente:", pending);
           const ok = await redeemVoucherCode(pending);
           sessionStorage.removeItem("pending_voucher");
           if (ok) {
