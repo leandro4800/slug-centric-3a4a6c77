@@ -94,6 +94,20 @@ export default function TenantLanding() {
 
 
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("confirmed") === "1") {
+      toast({
+        title: "E-mail confirmado!",
+        description: "Escolha seu plano para liberar seu acesso.",
+      });
+      // Limpa a URL
+      const url = new URL(window.location.href);
+      url.searchParams.delete("confirmed");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, [toast]);
+
+  useEffect(() => {
     void load();
   }, [slug]);
 
