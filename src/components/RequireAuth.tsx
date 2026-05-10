@@ -33,7 +33,8 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
   // Se requer um papel específico e não o possui
   if (requireRole && !hasRole(requireRole)) {
     console.warn(`[RequireAuth] User ${user.id} does not have required role: ${requireRole}`);
-    return <Navigate to="/index" replace />;
+    // Se não tem o papel, manda para a landing do coach ou marketplace para se inscrever
+    return <Navigate to={slug ? `/${slug}` : "/"} replace />;
   }
 
   // Se deve verificar o tenant e o slug não condiz com o tenant do usuário
@@ -47,7 +48,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
       console.warn(`[RequireAuth] User ${user.id} is not a member of tenant: ${tenant.id} (${slug})`);
       // Se ele for coach de OUTRO tenant, talvez devêssemos redirecionar para o tenant dele?
       // Por simplicidade, mandamos para o index que fará o redirecionamento correto.
-      return <Navigate to="/index" replace />;
+      return <Navigate to={slug ? `/${slug}` : "/"} replace />;
     }
   }
 
