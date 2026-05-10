@@ -15,12 +15,12 @@ import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
 
 const REDIRECT_QUERY_TIMEOUT_MS = 7000;
 
-const withRedirectTimeout = async <T,>(promise: PromiseLike<T>, fallback: T, label: string): Promise<T> => {
+const withRedirectTimeout = async <T,>(promise: PromiseLike<T>, fallback: unknown, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<T>((resolve) => {
     timeoutId = setTimeout(() => {
       console.warn(`[Login] ${label} demorou demais; usando fallback seguro.`);
-      resolve(fallback);
+      resolve(fallback as T);
     }, REDIRECT_QUERY_TIMEOUT_MS);
   });
 
