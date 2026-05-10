@@ -266,7 +266,7 @@ FORMATO OBRIGATÓRIO:
 OBJETIVO: ${objetivo}
 DADOS DO ATLETA: Sexo ${sexo} · ${idade} anos · ${peso}kg · ${altura}cm · Nível ${nivel}
 COMPOSIÇÃO CORPORAL: ${composicaoTxt}
-HORÁRIO DO TREINO (presumido): ${nivel.includes("alto") || nivel.includes("avan") ? "17:00-19:00" : "manhã ou tarde — você decide e marque tag_timing"}
+HORÁRIO DO TREINO (anamnese): ${horarioTreino.label} — janela ${horarioTreino.janela}. Pré ~${horarioTreino.pre}, pós imediato ~${horarioTreino.pos}. PRIORIZE WHEY no pós-treino imediato.
 DEFICIÊNCIAS CLÍNICAS: ${deficienciasTxt}
 ALERTAS NUTRICIONAIS DETECTADOS: ${alertasNutricionais.join(" | ") || "nenhum"}
 RESUMO CLÍNICO: ${ultimaAnalise?.resumo_clinico || "Nenhum exame disponível"}
