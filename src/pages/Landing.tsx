@@ -342,7 +342,7 @@ const Landing = () => {
       // If it's a full URL, try to extract the slug
       const slug = coachLink.split("/").pop();
       if (slug) {
-        navigate(`/${slug}`);
+        navigate(`/${slug}/site`);
       }
     }
   };

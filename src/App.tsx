@@ -121,8 +121,11 @@ const App = () => (
             <Route path="/admin/coaches" element={<RequireAuth requireRole="admin"><AdminCoaches /></RequireAuth>} />
             <Route path="/admin/faturamento" element={<RequireAuth requireRole="admin"><AdminFaturamento /></RequireAuth>} />
 
-            {/* Landing pública do tenant */}
-            <Route path="/:slug" element={<TenantLanding />} />
+            {/* Landing pública do tenant (Site de planos) */}
+            <Route path="/:slug/site" element={<TenantLanding />} />
+            
+            {/* Redireciona a raiz do coach para o login por padrão */}
+            <Route path="/:slug" element={<Navigate to="login" replace />} />
 
             {/* App do aluno */}
             {/* Destino padrão de confirmações de e-mail (Site URL do Supabase).

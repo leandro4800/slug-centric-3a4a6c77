@@ -285,7 +285,7 @@ export default function Marketplace() {
                 </button>
               )}
               <button
-                onClick={() => navigate(`/${selectedCoach.slug}`)}
+                onClick={() => navigate(`/${selectedCoach.slug}/site`)}
                 className="w-full p-4 border-2 border-border hover:border-primary rounded-none text-left transition group"
               >
                 <div className="flex items-center gap-3">
