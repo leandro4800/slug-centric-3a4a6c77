@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, Wallet, ShieldCheck, CalendarClock } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, Wallet, ShieldCheck, CalendarClock, Save } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import {
@@ -81,6 +81,18 @@ const AdminPanel = () => {
     setLoading(false);
   };
 
+  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timeout = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(message)), ms);
+    });
+    try {
+      return await Promise.race([promise, timeout]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  };
+
   const handleUpload = async (file: File, kind: "hero" | "logo" | "splash" | "login") => {
     if (!tenant) return;
     setUploading(kind);
@@ -89,12 +101,21 @@ const AdminPanel = () => {
     let uploadFile: Blob = file;
     let ext = (file.name.split(".").pop() || "jpg").toLowerCase();
     let contentType = file.type || "application/octet-stream";
+    
     if (isImage) {
       try {
         const source = isHeic
-          ? await heic2any({ blob: file, toType: "image/jpeg", quality: 0.82 })
+          ? await withTimeout(
+              heic2any({ blob: file, toType: "image/jpeg", quality: 0.82 }) as Promise<Blob | Blob[]>,
+              45000,
+              "A conversão demorou demais. Tente uma imagem JPG."
+            )
           : file;
-        uploadFile = await normalizeImage(Array.isArray(source) ? source[0] : source, kind === "logo" ? 900 : 1800, 0.84);
+        uploadFile = await withTimeout(
+          normalizeImage(Array.isArray(source) ? source[0] : source, kind === "logo" ? 900 : 1800, 0.84),
+          45000,
+          "O processamento da imagem demorou demais."
+        );
         ext = "jpg";
         contentType = "image/jpeg";
       } catch (err: unknown) {
@@ -103,6 +124,7 @@ const AdminPanel = () => {
         return;
       }
     }
+    
     const path = `${tenant.id}/${kind}-${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from("branding").upload(path, uploadFile, { upsert: false, contentType });
     if (error) { toast.error(error.message); setUploading(null); return; }
@@ -123,16 +145,26 @@ const AdminPanel = () => {
     const url = URL.createObjectURL(blob);
     const img = new Image();
     img.onload = () => {
-      const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(img.width * ratio));
-      canvas.height = Math.max(1, Math.round(img.height * ratio));
-      canvas.getContext("2d")?.drawImage(img, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob((out) => {
+      try {
+        const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(img.width * ratio));
+        canvas.height = Math.max(1, Math.round(img.height * ratio));
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          URL.revokeObjectURL(url);
+          return reject(new Error("Erro ao criar contexto de imagem."));
+        }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((out) => {
+          URL.revokeObjectURL(url);
+          if (out) resolve(out);
+          else reject(new Error("Erro ao gerar arquivo final."));
+        }, "image/jpeg", quality);
+      } catch (err) {
         URL.revokeObjectURL(url);
-        if (out) resolve(out);
-        else reject(new Error("Imagem inválida."));
-      }, "image/jpeg", quality);
+        reject(err);
+      }
     };
     img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("Imagem inválida ou não suportada.")); };
     img.src = url;
@@ -357,25 +389,35 @@ const AdminPanel = () => {
                       Aparece por alguns segundos quando o aluno entra no app. Você pode usar apenas a sua <strong>logo</strong> (já configurada ao lado) <strong>OU</strong> enviar um <strong>vídeo curto</strong> (5–8s, MP4, sem áudio). Se o vídeo for enviado, ele tem prioridade.
                     </p>
                     <div className="grid sm:grid-cols-2 gap-4">
-                      <div className="aspect-video rounded-xl overflow-hidden border border-border bg-black flex items-center justify-center">
-                        {tenant?.splash_video_url ? (
-                          <video src={tenant.splash_video_url} muted playsInline controls className="w-full h-full object-cover" />
-                        ) : tenant?.logo_url ? (
-                          <img src={tenant.logo_url} alt="" className="w-24 h-24 object-contain" />
-                        ) : (
-                          <p className="text-xs text-muted-foreground">Sem mídia · usará logo padrão</p>
-                        )}
+                      <div className="space-y-3">
+                        <div className="aspect-video rounded-xl overflow-hidden border border-border relative bg-black flex items-center justify-center p-8">
+                          {tenant?.logo_url ? <img src={tenant.logo_url} alt="" className="max-w-full max-h-full object-contain" /> : <Logo size={64} />}
+                        </div>
+                        <label className="block">
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
+                          <Button asChild variant="outline" className="w-full" disabled={uploading === "logo"}>
+                            <span>{uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ImagePlus className="h-4 w-4 mr-2" /> Alterar Logo</>}</span>
+                          </Button>
+                        </label>
                       </div>
-                      <div className="flex flex-col gap-3 justify-center">
+                      <div className="space-y-3">
+                        <div className="aspect-video rounded-xl overflow-hidden border border-border relative bg-black flex items-center justify-center">
+                          {tenant?.splash_video_url ? (
+                            <video src={tenant.splash_video_url} muted playsInline controls className="w-full h-full object-cover" />
+                          ) : (
+                            <p className="text-xs text-muted-foreground px-4 text-center">Sem vídeo · usará a logo ao lado</p>
+                          )}
+                        </div>
                         <label className="block">
                           <input type="file" accept="video/mp4,video/webm,video/quicktime" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "splash")} />
-                          <Button asChild disabled={uploading === "splash"} className="w-full">
+                          <Button asChild className="w-full" disabled={uploading === "splash"}>
                             <span>{uploading === "splash" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-2" /> Enviar vídeo de abertura</>}</span>
                           </Button>
                         </label>
                         {tenant?.splash_video_url && (
                           <Button
                             variant="outline"
+                            className="w-full"
                             onClick={async () => {
                               if (!tenant) return;
                               const { error } = await supabase.from("tenants").update({ splash_video_url: null }).eq("id", tenant.id);
@@ -383,87 +425,62 @@ const AdminPanel = () => {
                               else { toast.success("Vídeo removido"); await refresh(); }
                             }}
                           >
-                            Remover vídeo (usar só a logo)
+                            Remover vídeo (usar logo)
                           </Button>
                         )}
                         <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                          Dica: vídeo vertical 9:16 ou quadrado, ≤ 5MB, sem áudio.
+                          Dica: Vídeo curto (máx 8s), MP4 leve.
                         </p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Logo & textos */}
-                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md space-y-5">
-                    <h3 className="font-display text-2xl text-primary uppercase tracking-wider">LOGO & TEXTOS</h3>
-                    <div>
-                      <Label>Logo</Label>
-                      <div className="flex items-center gap-3 mt-2">
-                        {tenant?.logo_url ? (
-                          <img src={tenant.logo_url} alt="" className="w-14 h-14 rounded-lg object-cover border border-border" />
-                        ) : (
-                          <div className="w-14 h-14 rounded-lg bg-muted flex items-center justify-center"><ImagePlus className="h-5 w-5 text-muted-foreground" /></div>
-                        )}
-                        <label className="flex-1">
-                          <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "logo")} />
-                          <Button asChild variant="outline" className="w-full" disabled={uploading === "logo"}>
-                            <span>{uploading === "logo" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Enviar logo"}</span>
-                          </Button>
-                        </label>
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Nome do time</Label>
-                      <Input value={nome} onChange={(e) => setNome(e.target.value)} />
-                    </div>
-                    <div>
-                      <Label>Tagline</Label>
-                      <Input value={tagline} onChange={(e) => setTagline(e.target.value)} />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Cidade</Label>
-                        <Input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex: São Paulo" />
-                      </div>
-                      <div>
-                        <Label>Estado (UF)</Label>
-                        <Input value={estado} onChange={(e) => setEstado(e.target.value)} placeholder="Ex: SP" maxLength={2} />
-                      </div>
-                    </div>
-                    <div className="pt-4 border-t border-border">
-                      <h4 className="font-display text-sm mb-3 uppercase tracking-wider text-primary">Aulas Avulsas</h4>
-                      <div className="flex items-center gap-3 mb-4">
-                        <input 
-                          type="checkbox" 
-                          id="aula-avulsa" 
-                          checked={permiteAulaAvulsa} 
-                          onChange={(e) => setPermiteAulaAvulsa(e.target.checked)}
-                          className="w-4 h-4 accent-primary"
-                        />
-                        <Label htmlFor="aula-avulsa" className="cursor-pointer">Permitir venda de aula avulsa no marketplace</Label>
-                      </div>
-                      {permiteAulaAvulsa && (
-                        <div>
-                          <Label>Preço da Aula Avulsa (R$)</Label>
-                          <Input 
-                            type="number" 
-                            value={precoAulaAvulsa} 
-                            onChange={(e) => setPrecoAulaAvulsa(e.target.value)} 
-                            placeholder="Ex: 150.00"
-                          />
-                          <p className="text-[10px] text-muted-foreground mt-1 uppercase">A plataforma retém 10% de taxa sobre este valor.</p>
+                  {/* Outros dados */}
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
+                    <h3 className="font-display text-2xl mb-4 text-primary uppercase tracking-wider">DADOS DO TIME</h3>
+                    <div className="grid sm:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label>Nome do Time</Label>
+                          <Input value={nome} onChange={(e) => setNome(e.target.value)} className="bg-secondary/40" />
                         </div>
-                      )}
+                        <div className="space-y-2">
+                          <Label>Slogan / Tagline</Label>
+                          <Input value={tagline} onChange={(e) => setTagline(e.target.value)} placeholder="Ex: A elite do treinamento" className="bg-secondary/40" />
+                        </div>
+                      </div>
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label>Cidade</Label>
+                            <Input value={cidade} onChange={(e) => setCidade(e.target.value)} className="bg-secondary/40" />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Estado (UF)</Label>
+                            <Input value={estado} onChange={(e) => setEstado(e.target.value)} maxLength={2} className="bg-secondary/40 uppercase" />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Preço Aula Avulsa (R$)</Label>
+                          <Input type="number" value={precoAulaAvulsa} onChange={(e) => setPrecoAulaAvulsa(e.target.value)} placeholder="0.00" className="bg-secondary/40" />
+                        </div>
+                        <div className="flex items-center gap-2 pt-2">
+                          <input type="checkbox" id="aula" checked={permiteAulaAvulsa} onChange={(e) => setPermiteAulaAvulsa(e.target.checked)} className="w-4 h-4 rounded border-white/20 bg-black accent-primary" />
+                          <Label htmlFor="aula" className="cursor-pointer">Permitir agendamento de aula avulsa</Label>
+                        </div>
+                      </div>
                     </div>
-                    <Button onClick={handleSaveAppearance} className="w-full">Salvar configurações</Button>
+                    <Button onClick={handleSaveAppearance} className="w-full mt-8 bg-gradient-primary shadow-glow font-bold uppercase tracking-widest">
+                      <Save className="h-4 w-4 mr-2" /> Salvar Alterações
+                    </Button>
                   </div>
                 </div>
               </TabsContent>
-            </Tabs>
-          </TabsContent>
 
-          <TabsContent value="vlogs">
-            <VlogsAdmin />
+              <TabsContent value="vlogs">
+                <VlogsAdmin />
+              </TabsContent>
+            </Tabs>
           </TabsContent>
         </Tabs>
       </main>
