@@ -135,6 +135,24 @@ serve(async (req) => {
       .in("classificacao", ["Alerta", "Critico", "Subotimizado"])
       .limit(20);
 
+    // Buscar horário de treino da anamnese
+    const { data: anamneseRow } = await supabase
+      .from("anamnese_aluno")
+      .select("horario_treino")
+      .eq("aluno_id", targetUserId)
+      .maybeSingle();
+
+    const horarioTreinoMap: Record<string, { label: string; janela: string; pre: string; pos: string }> = {
+      manha_cedo: { label: "Manhã cedo (5h-7h)", janela: "05:00-07:00", pre: "04:30", pos: "07:30" },
+      manha:      { label: "Manhã (7h-11h)",     janela: "07:00-11:00", pre: "06:30", pos: "10:30" },
+      meio_dia:   { label: "Meio-dia (11h-14h)", janela: "11:00-14:00", pre: "10:30", pos: "13:30" },
+      tarde:      { label: "Tarde (14h-17h)",    janela: "14:00-17:00", pre: "13:30", pos: "16:30" },
+      fim_tarde:  { label: "Fim de tarde (17h-19h)", janela: "17:00-19:00", pre: "16:30", pos: "19:00" },
+      noite:      { label: "Noite (19h-22h)",    janela: "19:00-22:00", pre: "18:30", pos: "21:30" },
+    };
+    const horarioKey = (anamneseRow as any)?.horario_treino || "tarde";
+    const horarioTreino = horarioTreinoMap[horarioKey] || horarioTreinoMap.tarde;
+
     // 3. Alimentos disponíveis
     const { data: alimentos } = await supabase
       .from("alimentos_taco")
