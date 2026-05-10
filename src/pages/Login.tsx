@@ -13,12 +13,30 @@ import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
 
+const REDIRECT_QUERY_TIMEOUT_MS = 7000;
+
+const withRedirectTimeout = async <T,>(promise: PromiseLike<T>, fallback: T, label: string): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => {
+      console.warn(`[Login] ${label} demorou demais; usando fallback seguro.`);
+      resolve(fallback);
+    }, REDIRECT_QUERY_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, roles } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
@@ -26,6 +44,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
+  const [redirectTimedOut, setRedirectTimedOut] = useState(false);
 
   const redeemVoucherCode = async (code: string): Promise<boolean> => {
     const { data, error } = await supabase.rpc("redeem_voucher", { _code: code });
