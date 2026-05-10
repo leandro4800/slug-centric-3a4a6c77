@@ -441,7 +441,8 @@ const Login = () => {
         </p>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Login;
