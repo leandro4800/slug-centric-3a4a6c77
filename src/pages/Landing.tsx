@@ -656,6 +656,7 @@ const Landing = () => {
           ) : filteredCoaches.map((coach, i) => (
             <div 
               key={i} 
+              onClick={() => navigate(`/${coach.slug}/site`)}
               className="group relative aspect-[3/4] rounded-xl overflow-hidden bg-card border border-white/5 hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] cursor-pointer"
             >
               {/* Media Background */}
