@@ -40,6 +40,7 @@ export default function Anamnese() {
     agua_litros: "2",
     anos_treino: "0",
     disponibilidade_dias: [] as string[],
+    horario_treino: "tarde",
     nivel_experiencia: "Intermediário",
     faz_uso_ergogenicos: false,
     detalhes_ergogenicos: "",
