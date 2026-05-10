@@ -125,9 +125,16 @@ export default function TenantLanding() {
       const isVoucherRequested = searchParams.get("voucher") === "1";
       const pendingCode = sessionStorage.getItem("pending_voucher");
       
-      if (isVoucherRequested || pendingCode) {
-        console.log("[TenantLanding] Redirecionando para login para processar voucher:", pendingCode);
-        navigate(`/${slug}/login`, { replace: true });
+      if (isVoucherRequested) {
+        console.log("[TenantLanding] Voucher solicitado, abrindo modal.");
+        setVoucherOpen(true);
+        // Limpa a URL para evitar loops ao navegar
+        const nextParams = new URLSearchParams(searchParams);
+        nextParams.delete("voucher");
+        setSearchParams(nextParams, { replace: true });
+      } else if (pendingCode && pendingCode !== "1") {
+        console.log("[TenantLanding] Voucher pendente detectado, processando resgate automático.");
+        void handleRedeemVoucher(pendingCode);
       }
     }
   }, [loading, user, hasSubscription, searchParams, navigate, slug]);
