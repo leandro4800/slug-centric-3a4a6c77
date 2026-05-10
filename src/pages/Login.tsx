@@ -202,7 +202,11 @@ const Login = () => {
             nextUrl.searchParams.delete("codigo");
             nextUrl.searchParams.delete("v");
             window.history.replaceState({}, "", nextUrl.toString());
-            if (urlSlug) goTo(`/${urlSlug}/app`);
+            if (urlSlug) {
+              goTo(`/${urlSlug}/app`);
+            } else {
+              goTo("/login");
+            }
             return;
           }
         } else if (pending === "1") {
