@@ -112,9 +112,16 @@ const Login = () => {
       try {
         const timeoutId = window.setTimeout(() => {
           if (!isMounted) return;
+          console.log("[Login] Redirecionamento demorou demais, tentando fallback seguro.");
           setRedirectTimedOut(true);
-          goTo(urlSlug ? `/${urlSlug}` : "/marketplace");
-        }, REDIRECT_QUERY_TIMEOUT_MS + 1200);
+          // Fallback: se estiver em um tenant slug, vai para o app do aluno desse tenant
+          // O SubscriptionGuard cuidará se ele não tiver assinatura.
+          if (urlSlug) {
+            goTo(`/${urlSlug}/app`);
+          } else {
+            goTo("/marketplace");
+          }
+        }, REDIRECT_QUERY_TIMEOUT_MS + 2000);
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const redirectPath = locationState?.from?.pathname || new URLSearchParams(window.location.search).get("redirect");
