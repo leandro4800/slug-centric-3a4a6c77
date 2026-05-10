@@ -1,0 +1,1 @@
+ALTER TABLE public.anamnese_aluno ADD COLUMN IF NOT EXISTS horario_treino TEXT;

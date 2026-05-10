@@ -384,6 +384,7 @@ export type Database = {
           doencas: string[] | null
           faz_uso_ergogenicos: boolean | null
           historico_familiar: string | null
+          horario_treino: string | null
           horas_sono: number | null
           id: string
           lesoes_atuais: string | null
@@ -414,6 +415,7 @@ export type Database = {
           doencas?: string[] | null
           faz_uso_ergogenicos?: boolean | null
           historico_familiar?: string | null
+          horario_treino?: string | null
           horas_sono?: number | null
           id?: string
           lesoes_atuais?: string | null
@@ -444,6 +446,7 @@ export type Database = {
           doencas?: string[] | null
           faz_uso_ergogenicos?: boolean | null
           historico_familiar?: string | null
+          horario_treino?: string | null
           horas_sono?: number | null
           id?: string
           lesoes_atuais?: string | null
