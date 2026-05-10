@@ -11,7 +11,7 @@ import { Loader2, Eye, EyeOff, KeyRound } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
-import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
+
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 
 const REDIRECT_QUERY_TIMEOUT_MS = 7000;
@@ -330,12 +330,9 @@ const Login = () => {
             </div>
           ) : (
             <Tabs defaultValue="login">
-            <TabsList className={`grid ${tenant?.permite_aula_avulsa ? "grid-cols-3" : "grid-cols-2"} w-full mb-8 bg-transparent p-1 rounded-none border border-white/5`}>
+            <TabsList className="grid grid-cols-2 w-full mb-8 bg-transparent p-1 rounded-none border border-white/5">
               <TabsTrigger value="login" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Entrar</TabsTrigger>
               <TabsTrigger value="signup" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Criar conta</TabsTrigger>
-              {tenant?.permite_aula_avulsa && (
-                <TabsTrigger value="avulsa" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Aula Avulsa</TabsTrigger>
-              )}
             </TabsList>
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
@@ -437,48 +434,6 @@ const Login = () => {
                 </Button>
               </form>
             </TabsContent>
-            {tenant?.permite_aula_avulsa && (
-              <TabsContent value="avulsa">
-                <AulaAvulsaQuickForm 
-                  tenantId={tenant.id} 
-                  tenantNome={tenant.nome} 
-                  preco={Number(tenant.preco_aula_avulsa)} 
-                />
-              </TabsContent>
-            )}
-            </Tabs>
-          )}
-
-          {/* Voucher / código de acesso */}
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <Label htmlFor="voucher" className="flex items-center gap-2 text-xs uppercase tracking-widest text-muted-foreground mb-2">
-              <KeyRound className="h-4 w-4" /> Tem um código de acesso?
-            </Label>
-            <div className="flex gap-2">
-              <Input
-                id="voucher"
-                value={voucherCode}
-                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                placeholder="EX: ALPHA-XXXXXX"
-                className="bg-white/5 border-white/10 uppercase tracking-widest"
-                disabled={voucherLoading}
-              />
-              <Button
-                type="button"
-                onClick={handleRedeemClick}
-                disabled={voucherLoading}
-                variant="outline"
-                className="font-bold uppercase tracking-widest whitespace-nowrap"
-              >
-                {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar"}
-              </Button>
-            </div>
-            {!user && (
-              <p className="text-[11px] text-muted-foreground mt-2">
-                Sem conta? Crie uma na aba acima — o código será aplicado automaticamente após o login.
-              </p>
-            )}
-          </div>
         </div>
         <p className="text-center text-xs text-muted-foreground mt-6">
           {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
