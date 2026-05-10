@@ -95,9 +95,9 @@ const AdminMontarDieta = () => {
         peso_kg: pt?.peso_kg ?? av?.peso_kg ?? null,
         altura_cm: pt?.altura_cm ?? av?.altura_cm ?? null,
         bf_pct: pt?.bf_pct ?? av?.bf_pct_calculado ?? null,
-        pescoco_cm: av?.pescoco_cm ?? null,
-        cintura_cm: av?.cintura_cm ?? null,
-        quadril_cm: av?.quadril_cm ?? null,
+        pescoco_cm: pt?.pescoco_cm ?? av?.pescoco_cm ?? null,
+        cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
+        quadril_cm: pt?.quadril_cm ?? av?.quadril_cm ?? null,
         objetivo: pt?.objetivo || "hipertrofia",
         tempo_treino: normalizarNivel(pt?.tempo_treino || an?.nivel_experiencia),
       });
@@ -217,37 +217,7 @@ const AdminMontarDieta = () => {
               <option key={a.id} value={a.id}>{a.nome_completo || a.email}</option>
             ))}
           </select>
-            </div>
-            <div className="grid md:grid-cols-3 gap-4 mt-4">
-              <div>
-                <Label>Pescoço (cm)</Label>
-                <Input type="number" value={perfil.pescoco_cm || ""} onChange={(e) => setPerfil({...perfil, pescoco_cm: Number(e.target.value)})} />
-              </div>
-              <div>
-                <Label>Cintura (cm)</Label>
-                <Input type="number" value={perfil.cintura_cm || ""} onChange={(e) => setPerfil({...perfil, cintura_cm: Number(e.target.value)})} />
-              </div>
-              <div>
-                <Label>Quadril (cm)</Label>
-                <Input type="number" value={perfil.quadril_cm || ""} onChange={(e) => setPerfil({...perfil, quadril_cm: Number(e.target.value)})} />
-              </div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-4 mt-4">
-              <div>
-                <Label>BF (%)</Label>
-                <Input type="number" value={perfil.bf_pct || ""} onChange={(e) => setPerfil({...perfil, bf_pct: Number(e.target.value)})} />
-              </div>
-              <div>
-                <Label>Sexo</Label>
-                <select 
-                  value={perfil.sexo || ""} 
-                  onChange={(e) => setPerfil({...perfil, sexo: e.target.value})}
-                  className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
-                >
-                  <option value="masculino">Masculino</option>
-                  <option value="feminino">Feminino</option>
-                </select>
-              </div>
+        </div>
 
         {alunoId && (
           <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
@@ -288,14 +258,59 @@ const AdminMontarDieta = () => {
               </div>
             </div>
 
-            <Button 
-              className="w-full h-12 bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-widest"
-              onClick={() => gerarComIA()}
-              disabled={generating}
-            >
-              {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
-              Gerar Dieta de Elite com IA
-            </Button>
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <Label>Pescoço (cm)</Label>
+                <Input type="number" value={perfil.pescoco_cm || ""} onChange={(e) => setPerfil({...perfil, pescoco_cm: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Cintura (cm)</Label>
+                <Input type="number" value={perfil.cintura_cm || ""} onChange={(e) => setPerfil({...perfil, cintura_cm: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Quadril (cm)</Label>
+                <Input type="number" value={perfil.quadril_cm || ""} onChange={(e) => setPerfil({...perfil, quadril_cm: Number(e.target.value)})} />
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <Label>BF (%)</Label>
+                <Input type="number" value={perfil.bf_pct || ""} onChange={(e) => setPerfil({...perfil, bf_pct: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Sexo</Label>
+                <select 
+                  value={perfil.sexo || ""} 
+                  onChange={(e) => setPerfil({...perfil, sexo: e.target.value})}
+                  className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="">Selecione</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <Button 
+                variant="outline"
+                className="flex-1"
+                onClick={() => salvarPerfil()}
+                disabled={loading}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Salvar Perfil
+              </Button>
+              <Button 
+                className="flex-[2] bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-widest"
+                onClick={() => gerarComIA()}
+                disabled={generating}
+              >
+                {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
+                Gerar Dieta de Elite com IA
+              </Button>
+            </div>
           </div>
         )}
       </main>
