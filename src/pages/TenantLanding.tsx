@@ -113,7 +113,7 @@ export default function TenantLanding() {
 
   // Auto-abre o modal de código quando voltar do login com ?voucher=1
   useEffect(() => {
-    if (!loading && user && !hasSubscription && searchParams.get("voucher") === "1") {
+    if (!loading && user && !hasSubscription && (searchParams.get("voucher") === "1" || sessionStorage.getItem("pending_voucher"))) {
       setVoucherOpen(true);
       searchParams.delete("voucher");
       setSearchParams(searchParams, { replace: true });
