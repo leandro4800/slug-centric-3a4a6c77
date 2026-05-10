@@ -26,6 +26,9 @@ interface PerfilTreino {
   objetivo: string | null;
   frequencia_semanal: number | null;
   tempo_treino: string | null;
+  pescoco_cm: number | null;
+  cintura_cm: number | null;
+  quadril_cm: number | null;
   lesoes: string[];
   limitacoes: string[];
 }
