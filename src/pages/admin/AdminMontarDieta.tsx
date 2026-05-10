@@ -105,6 +105,32 @@ const AdminMontarDieta = () => {
     })();
   }, [alunoId]);
 
+  const salvarPerfil = async (silent = false) => {
+    if (!alunoId || !tenant) return;
+    const { error } = await supabase
+      .from("perfis_treino")
+      .upsert({ 
+        aluno_id: alunoId, 
+        tenant_id: tenant.id, 
+        sexo: perfil.sexo,
+        idade: perfil.idade,
+        peso_kg: perfil.peso_kg,
+        altura_cm: perfil.altura_cm,
+        bf_pct: perfil.bf_pct,
+        pescoco_cm: perfil.pescoco_cm,
+        cintura_cm: perfil.cintura_cm,
+        quadril_cm: perfil.quadril_cm,
+        objetivo: perfil.objetivo,
+        tempo_treino: perfil.tempo_treino
+      }, { onConflict: "aluno_id" });
+    
+    if (error) {
+      if (!silent) toast.error("Erro ao salvar perfil: " + error.message);
+    } else if (!silent) {
+      toast.success("Perfil atualizado!");
+    }
+  };
+
   const gerarComIA = useCallback(async (customPrompt?: string) => {
     if (!alunoId) {
       toast.error("Selecione um aluno.");
@@ -114,9 +140,14 @@ const AdminMontarDieta = () => {
       toast.error("Peso e altura são obrigatórios. Peça ao aluno para preencher a avaliação física.");
       return;
     }
+    
     setGenerating(true);
-    const toastId = toast.loading("Gerando dieta com IA...");
+    const toastId = toast.loading("Salvando perfil e gerando dieta...");
+    
     try {
+      // Salva o perfil antes de gerar para garantir que as alterações manuais persistam
+      await salvarPerfil(true);
+
       const promptFromUrl = searchParams.get("prompt");
       const activePrompt = customPrompt || promptFromUrl || "";
 
@@ -146,7 +177,7 @@ const AdminMontarDieta = () => {
     } finally {
       setGenerating(false);
     }
-  }, [alunoId, perfil]);
+  }, [alunoId, perfil, tenant]);
 
   const autoTriggeredRef = useRef(false);
   useEffect(() => {
