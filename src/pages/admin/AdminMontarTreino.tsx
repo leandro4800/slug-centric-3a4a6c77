@@ -234,7 +234,7 @@ const AdminMontarTreino = () => {
     if (!alunoId || !tenant) return;
     const { error } = await supabase
       .from("perfis_treino")
-      .upsert({ aluno_id: alunoId, tenant_id: tenant.id, ...perfil }, { onConflict: "aluno_id" });
+      .upsert({ aluno_id: alunoId, tenant_id: tenant.id, ...perfil } as any, { onConflict: "aluno_id" });
     if (error) {
       if (!silent) toast.error(error.message);
     } else {
