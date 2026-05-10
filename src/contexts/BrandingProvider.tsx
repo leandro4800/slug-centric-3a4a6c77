@@ -169,25 +169,30 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     const userId = auth.user?.id;
     if (!userId) return null;
 
-    const [{ data: ownedTenant }, { data: profile }, { data: subscription }] = await Promise.all([
-      supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("owner_user_id", userId).maybeSingle(),
-      supabase.from("perfis").select("tenant_id").eq("id", userId).maybeSingle(),
-      supabase
-        .from("assinaturas")
-        .select("tenant_id")
-        .eq("aluno_id", userId)
-        .in("status", ["active", "trialing"])
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
-    ]);
+    const fetchPromise = (async () => {
+      const [{ data: ownedTenant }, { data: profile }, { data: subscription }] = await Promise.all([
+        supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("owner_user_id", userId).maybeSingle(),
+        supabase.from("perfis").select("tenant_id").eq("id", userId).maybeSingle(),
+        supabase
+          .from("assinaturas")
+          .select("tenant_id")
+          .eq("aluno_id", userId)
+          .in("status", ["active", "trialing"])
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
 
-    if (ownedTenant) return ownedTenant as Tenant;
-    const tenantId = profile?.tenant_id || subscription?.tenant_id;
-    if (!tenantId) return null;
+      if (ownedTenant) return ownedTenant as Tenant;
+      const tenantId = profile?.tenant_id || subscription?.tenant_id;
+      if (!tenantId) return null;
 
-    const { data } = await supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("id", tenantId).maybeSingle();
-    return (data as Tenant | null) ?? null;
+      const { data } = await supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("id", tenantId).maybeSingle();
+      return (data as Tenant | null) ?? null;
+    })();
+
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+    return await Promise.race([fetchPromise, timeout as Promise<Tenant | null>]);
   };
 
   const load = async (targetSlug: string | null, force = false) => {
