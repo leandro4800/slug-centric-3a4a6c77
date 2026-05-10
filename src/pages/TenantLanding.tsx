@@ -84,7 +84,8 @@ export default function TenantLanding() {
       }
       toast({ title: "Acesso liberado!", description: "Redirecionando para o app..." });
       setVoucherOpen(false);
-      setTimeout(() => navigate(`/${slug}/app`, { replace: true }), 800);
+      sessionStorage.removeItem("pending_voucher");
+      setTimeout(() => window.location.assign(`/${slug}/app`), 800);
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
