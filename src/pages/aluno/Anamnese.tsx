@@ -51,6 +51,13 @@ export default function Anamnese() {
     modalidades_anteriores: "",
     tempo_recuperacao: "",
     qualidade_sono: [5],
+    alimentos_basicos_casa: "",
+    cafe_lanche_habitual: "",
+    proteinas_consumidas: "",
+    frutas_vegetais_preferidos: "",
+    horario_almoco: "12:00",
+    horario_jantar: "20:00",
+    nivel_atividade_diaria: "moderado",
   });
 
   useEffect(() => {
@@ -93,6 +100,13 @@ export default function Anamnese() {
           modalidades_anteriores: (data.modalidades_anteriores as string[])?.join(", ") || "",
           tempo_recuperacao: data.tempo_recuperacao || "",
           qualidade_sono: [data.qualidade_sono ?? 5],
+          alimentos_basicos_casa: (data as any).alimentos_basicos_casa || "",
+          cafe_lanche_habitual: (data as any).cafe_lanche_habitual || "",
+          proteinas_consumidas: (data as any).proteinas_consumidas || "",
+          frutas_vegetais_preferidos: (data as any).frutas_vegetais_preferidos || "",
+          horario_almoco: (data as any).horario_almoco || "12:00",
+          horario_jantar: (data as any).horario_jantar || "20:00",
+          nivel_atividade_diaria: (data as any).nivel_atividade_diaria || "moderado",
         });
       }
     } catch (e: any) {
@@ -142,6 +156,13 @@ export default function Anamnese() {
         alimentos_evita: form.alimentos_evita,
         modalidades_anteriores: form.modalidades_anteriores.split(",").map(s => s.trim()).filter(Boolean),
         tempo_recuperacao: form.tempo_recuperacao,
+        alimentos_basicos_casa: form.alimentos_basicos_casa,
+        cafe_lanche_habitual: form.cafe_lanche_habitual,
+        proteinas_consumidas: form.proteinas_consumidas,
+        frutas_vegetais_preferidos: form.frutas_vegetais_preferidos,
+        horario_almoco: form.horario_almoco,
+        horario_jantar: form.horario_jantar,
+        nivel_atividade_diaria: form.nivel_atividade_diaria,
       };
 
       console.log("Salvando anamnese:", anamneseData);
@@ -345,6 +366,78 @@ export default function Anamnese() {
                 onChange={e => setForm({ ...form, alimentos_evita: e.target.value })}
                 className="bg-secondary/40 border-border"
               />
+            </div>
+            <div className="space-y-2">
+              <Label>Alimentos básicos que costuma ter em casa</Label>
+              <Textarea
+                placeholder="Ex: arroz, feijão, ovos, frango, batata-doce, aveia..."
+                value={form.alimentos_basicos_casa}
+                onChange={e => setForm({ ...form, alimentos_basicos_casa: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>O que costuma comer no café da manhã e nos lanches</Label>
+              <Textarea
+                placeholder="Ex: pão integral com ovos, tapioca, fruta com whey..."
+                value={form.cafe_lanche_habitual}
+                onChange={e => setForm({ ...form, cafe_lanche_habitual: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Proteínas que mais consome</Label>
+              <Input
+                placeholder="Ex: frango, ovos, carne vermelha, peixe, whey..."
+                value={form.proteinas_consumidas}
+                onChange={e => setForm({ ...form, proteinas_consumidas: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Frutas e vegetais preferidos</Label>
+              <Input
+                placeholder="Ex: banana, mamão, brócolis, espinafre..."
+                value={form.frutas_vegetais_preferidos}
+                onChange={e => setForm({ ...form, frutas_vegetais_preferidos: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Horário do almoço</Label>
+                <Input
+                  type="time"
+                  value={form.horario_almoco}
+                  onChange={e => setForm({ ...form, horario_almoco: e.target.value })}
+                  className="bg-secondary/40 border-border"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Horário do jantar</Label>
+                <Input
+                  type="time"
+                  value={form.horario_jantar}
+                  onChange={e => setForm({ ...form, horario_jantar: e.target.value })}
+                  className="bg-secondary/40 border-border"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>Nível de Atividade Física Diária (fora do treino)</Label>
+              <Select value={form.nivel_atividade_diaria} onValueChange={v => setForm({ ...form, nivel_atividade_diaria: v })}>
+                <SelectTrigger className="bg-secondary/40 border-border">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sedentario">Sedentário (escritório, pouco movimento)</SelectItem>
+                  <SelectItem value="leve">Leve (caminhadas leves 1-3x/sem)</SelectItem>
+                  <SelectItem value="moderado">Moderado (treina 3-5x/sem)</SelectItem>
+                  <SelectItem value="intenso">Intenso (treina 6-7x/sem)</SelectItem>
+                  <SelectItem value="muito_intenso">Muito intenso (atleta, 2x/dia ou trabalho físico)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">Usado no cálculo do GET (TMB × Fator de Atividade).</p>
             </div>
           </div>
         </section>

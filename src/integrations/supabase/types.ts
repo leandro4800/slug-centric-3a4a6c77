@@ -374,24 +374,31 @@ export type Database = {
           agua_litros: number | null
           alcool: string | null
           alimentos_ama: string | null
+          alimentos_basicos_casa: string | null
           alimentos_evita: string | null
           aluno_id: string
           anos_treino: number | null
+          cafe_lanche_habitual: string | null
           cirurgias: string | null
           created_at: string
           detalhes_ergogenicos: string | null
           disponibilidade_dias: string[] | null
           doencas: string[] | null
           faz_uso_ergogenicos: boolean | null
+          frutas_vegetais_preferidos: string | null
           historico_familiar: string | null
+          horario_almoco: string | null
+          horario_jantar: string | null
           horario_treino: string | null
           horas_sono: number | null
           id: string
           lesoes_atuais: string | null
           medicamentos: string | null
           modalidades_anteriores: string[] | null
+          nivel_atividade_diaria: string | null
           nivel_estresse: number | null
           nivel_experiencia: string | null
+          proteinas_consumidas: string | null
           qualidade_sono: number | null
           refeicoes_dia: number | null
           restricoes_alimentares: string[] | null
@@ -405,24 +412,31 @@ export type Database = {
           agua_litros?: number | null
           alcool?: string | null
           alimentos_ama?: string | null
+          alimentos_basicos_casa?: string | null
           alimentos_evita?: string | null
           aluno_id: string
           anos_treino?: number | null
+          cafe_lanche_habitual?: string | null
           cirurgias?: string | null
           created_at?: string
           detalhes_ergogenicos?: string | null
           disponibilidade_dias?: string[] | null
           doencas?: string[] | null
           faz_uso_ergogenicos?: boolean | null
+          frutas_vegetais_preferidos?: string | null
           historico_familiar?: string | null
+          horario_almoco?: string | null
+          horario_jantar?: string | null
           horario_treino?: string | null
           horas_sono?: number | null
           id?: string
           lesoes_atuais?: string | null
           medicamentos?: string | null
           modalidades_anteriores?: string[] | null
+          nivel_atividade_diaria?: string | null
           nivel_estresse?: number | null
           nivel_experiencia?: string | null
+          proteinas_consumidas?: string | null
           qualidade_sono?: number | null
           refeicoes_dia?: number | null
           restricoes_alimentares?: string[] | null
@@ -436,24 +450,31 @@ export type Database = {
           agua_litros?: number | null
           alcool?: string | null
           alimentos_ama?: string | null
+          alimentos_basicos_casa?: string | null
           alimentos_evita?: string | null
           aluno_id?: string
           anos_treino?: number | null
+          cafe_lanche_habitual?: string | null
           cirurgias?: string | null
           created_at?: string
           detalhes_ergogenicos?: string | null
           disponibilidade_dias?: string[] | null
           doencas?: string[] | null
           faz_uso_ergogenicos?: boolean | null
+          frutas_vegetais_preferidos?: string | null
           historico_familiar?: string | null
+          horario_almoco?: string | null
+          horario_jantar?: string | null
           horario_treino?: string | null
           horas_sono?: number | null
           id?: string
           lesoes_atuais?: string | null
           medicamentos?: string | null
           modalidades_anteriores?: string[] | null
+          nivel_atividade_diaria?: string | null
           nivel_estresse?: number | null
           nivel_experiencia?: string | null
+          proteinas_consumidas?: string | null
           qualidade_sono?: number | null
           refeicoes_dia?: number | null
           restricoes_alimentares?: string[] | null
