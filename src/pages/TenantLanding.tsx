@@ -65,7 +65,7 @@ export default function TenantLanding() {
       return;
     }
     if (!user) {
-      navigate(`/${slug}/login?redirect=/${slug}?voucher=1`);
+      navigate(`/${slug}/login`);
       return;
     }
     setVoucherLoading(true);
@@ -84,7 +84,8 @@ export default function TenantLanding() {
       }
       toast({ title: "Acesso liberado!", description: "Redirecionando para o app..." });
       setVoucherOpen(false);
-      setTimeout(() => navigate(`/${slug}/app`, { replace: true }), 800);
+      sessionStorage.removeItem("pending_voucher");
+      setTimeout(() => window.location.assign(`/${slug}/app`), 800);
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
@@ -113,10 +114,14 @@ export default function TenantLanding() {
 
   // Auto-abre o modal de código quando voltar do login com ?voucher=1
   useEffect(() => {
-    if (!loading && user && !hasSubscription && searchParams.get("voucher") === "1") {
+    if (!loading && user && !hasSubscription && (searchParams.get("voucher") === "1" || sessionStorage.getItem("pending_voucher"))) {
       setVoucherOpen(true);
-      searchParams.delete("voucher");
-      setSearchParams(searchParams, { replace: true });
+      if (searchParams.get("voucher") === "1") {
+        searchParams.delete("voucher");
+        setSearchParams(searchParams, { replace: true });
+      }
+      const pending = sessionStorage.getItem("pending_voucher");
+      if (pending) setVoucherCode(pending);
     }
   }, [loading, user, hasSubscription, searchParams, setSearchParams]);
 
@@ -131,7 +136,7 @@ export default function TenantLanding() {
     // pula a tela de planos e vai direto para o login do coach.
     const temCodigo = searchParams.get("codigo") !== null || searchParams.get("voucher") !== null;
     if (temCodigo && !currentUser) {
-      navigate(`/${slug}/login?redirect=/${slug}?voucher=1`, { replace: true });
+      navigate(`/${slug}/login`, { replace: true });
       return;
     }
 
@@ -414,7 +419,7 @@ export default function TenantLanding() {
                 {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar acesso"}
               </Button>
             ) : (
-              <Link to={`/${slug}/login?redirect=/${slug}?voucher=1`} className="block">
+              <Link to={`/${slug}/login`} className="block">
                 <Button className="w-full font-bold uppercase tracking-widest">Entrar / Cadastrar</Button>
               </Link>
             )}

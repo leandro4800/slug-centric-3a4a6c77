@@ -179,7 +179,7 @@ const Login = () => {
           }
         }
 
-        if (redirectPath && !redirectPath.includes("/login")) {
+        if (redirectPath && !redirectPath.includes("/login") && !redirectPath.includes("voucher=1")) {
           goTo(redirectPath);
           return;
         }
