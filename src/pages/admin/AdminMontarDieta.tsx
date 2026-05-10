@@ -217,7 +217,37 @@ const AdminMontarDieta = () => {
               <option key={a.id} value={a.id}>{a.nome_completo || a.email}</option>
             ))}
           </select>
-        </div>
+            </div>
+            <div className="grid md:grid-cols-3 gap-4 mt-4">
+              <div>
+                <Label>Pescoço (cm)</Label>
+                <Input type="number" value={perfil.pescoco_cm || ""} onChange={(e) => setPerfil({...perfil, pescoco_cm: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Cintura (cm)</Label>
+                <Input type="number" value={perfil.cintura_cm || ""} onChange={(e) => setPerfil({...perfil, cintura_cm: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Quadril (cm)</Label>
+                <Input type="number" value={perfil.quadril_cm || ""} onChange={(e) => setPerfil({...perfil, quadril_cm: Number(e.target.value)})} />
+              </div>
+            </div>
+            <div className="grid md:grid-cols-2 gap-4 mt-4">
+              <div>
+                <Label>BF (%)</Label>
+                <Input type="number" value={perfil.bf_pct || ""} onChange={(e) => setPerfil({...perfil, bf_pct: Number(e.target.value)})} />
+              </div>
+              <div>
+                <Label>Sexo</Label>
+                <select 
+                  value={perfil.sexo || ""} 
+                  onChange={(e) => setPerfil({...perfil, sexo: e.target.value})}
+                  className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
+                >
+                  <option value="masculino">Masculino</option>
+                  <option value="feminino">Feminino</option>
+                </select>
+              </div>
 
         {alunoId && (
           <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
