@@ -116,8 +116,8 @@ const App = () => (
             <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
 
             {/* Admin AlphaCoach (super admin) */}
-            <Route path="/admin/coaches" element={<RequireAuth><AdminCoaches /></RequireAuth>} />
-            <Route path="/admin/faturamento" element={<RequireAuth><AdminFaturamento /></RequireAuth>} />
+            <Route path="/admin/coaches" element={<RequireAuth requireRole="admin"><AdminCoaches /></RequireAuth>} />
+            <Route path="/admin/faturamento" element={<RequireAuth requireRole="admin"><AdminFaturamento /></RequireAuth>} />
 
             {/* Landing pública do tenant */}
             <Route path="/:slug" element={<TenantLanding />} />
@@ -141,7 +141,7 @@ const App = () => (
             <Route
               path="/:slug/app"
               element={
-                <RequireAuth>
+                <RequireAuth checkTenant>
                   <SubscriptionGuard>
                     <AlunoLayout />
                   </SubscriptionGuard>
@@ -167,19 +167,19 @@ const App = () => (
             {/* Painel do coach */}
             <Route path="/:slug/admin" element={<SlugRedirect to="app" />} />
             <Route path="/:slug/admin/controle" element={<SlugRedirect to="app" />} />
-            <Route path="/:slug/admin/atletas" element={<RequireAuth><MeusAtletas /></RequireAuth>} />
-            <Route path="/:slug/admin/aparencia" element={<RequireAuth><AdminPanel /></RequireAuth>} />
-            <Route path="/:slug/admin/montar-treino" element={<RequireAuth><AdminMontarTreino /></RequireAuth>} />
-            <Route path="/:slug/admin/montar-dieta" element={<RequireAuth><AdminMontarDieta /></RequireAuth>} />
-            <Route path="/:slug/admin/atleta/:atletaId" element={<RequireAuth><AtletaDetalhe /></RequireAuth>} />
-            <Route path="/:slug/admin/atleta/:atletaId/carta" element={<RequireAuth><AtletaCarta /></RequireAuth>} />
-            <Route path="/:slug/admin/planos" element={<RequireAuth><AdminPlanos /></RequireAuth>} />
-            <Route path="/:slug/admin/faturamento" element={<RequireAuth><AdminFaturamento /></RequireAuth>} />
-            <Route path="/:slug/admin/base-conhecimento" element={<RequireAuth><AdminBaseConhecimento /></RequireAuth>} />
-            <Route path="/:slug/admin/vlogs" element={<RequireAuth><AdminVlogs /></RequireAuth>} />
-            <Route path="/:slug/admin/videos-tecnicos" element={<RequireAuth><AdminVideosTecnicos /></RequireAuth>} />
-            <Route path="/:slug/admin/agenda-avulsa" element={<RequireAuth><AdminAgendaAvulsa /></RequireAuth>} />
-            <Route path="/:slug/admin/agenda-presencial" element={<RequireAuth><AdminAgendaPresencial /></RequireAuth>} />
+            <Route path="/:slug/admin/atletas" element={<RequireAuth requireRole="coach" checkTenant><MeusAtletas /></RequireAuth>} />
+            <Route path="/:slug/admin/aparencia" element={<RequireAuth requireRole="coach" checkTenant><AdminPanel /></RequireAuth>} />
+            <Route path="/:slug/admin/montar-treino" element={<RequireAuth requireRole="coach" checkTenant><AdminMontarTreino /></RequireAuth>} />
+            <Route path="/:slug/admin/montar-dieta" element={<RequireAuth requireRole="coach" checkTenant><AdminMontarDieta /></RequireAuth>} />
+            <Route path="/:slug/admin/atleta/:atletaId" element={<RequireAuth requireRole="coach" checkTenant><AtletaDetalhe /></RequireAuth>} />
+            <Route path="/:slug/admin/atleta/:atletaId/carta" element={<RequireAuth requireRole="coach" checkTenant><AtletaCarta /></RequireAuth>} />
+            <Route path="/:slug/admin/planos" element={<RequireAuth requireRole="coach" checkTenant><AdminPlanos /></RequireAuth>} />
+            <Route path="/:slug/admin/faturamento" element={<RequireAuth requireRole="coach" checkTenant><AdminFaturamento /></RequireAuth>} />
+            <Route path="/:slug/admin/base-conhecimento" element={<RequireAuth requireRole="coach" checkTenant><AdminBaseConhecimento /></RequireAuth>} />
+            <Route path="/:slug/admin/vlogs" element={<RequireAuth requireRole="coach" checkTenant><AdminVlogs /></RequireAuth>} />
+            <Route path="/:slug/admin/videos-tecnicos" element={<RequireAuth requireRole="coach" checkTenant><AdminVideosTecnicos /></RequireAuth>} />
+            <Route path="/:slug/admin/agenda-avulsa" element={<RequireAuth requireRole="coach" checkTenant><AdminAgendaAvulsa /></RequireAuth>} />
+            <Route path="/:slug/admin/agenda-presencial" element={<RequireAuth requireRole="coach" checkTenant><AdminAgendaPresencial /></RequireAuth>} />
 
             {/* Agendamento pós-pagamento (público, via token) */}
             <Route path="/:slug/agendar-aula/:token" element={<AgendarAulaAvulsa />} />
