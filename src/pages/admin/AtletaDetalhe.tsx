@@ -119,7 +119,7 @@ const AtletaDetalhe = () => {
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const importInputRef = useRef<HTMLInputElement>(null);
-  const [importType, setImportType] = useState<"treino" | "dieta">("treino");
+  const [importType, setImportType] = useState<"treino" | "dieta" | "avaliacao">("treino");
   const [protocolResult, setProtocolResult] = useState<string | null>(null);
   const [isGeneratingProtocol, setIsGeneratingProtocol] = useState(false);
   const [showProtocolDialog, setShowProtocolDialog] = useState(false);
@@ -354,9 +354,11 @@ const AtletaDetalhe = () => {
       if (importType === "treino") {
         toast.success("Treino importado com sucesso!", { id: toastId });
         navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}`);
-      } else {
+      } else if (importType === "dieta") {
         toast.success("Dieta importada com sucesso!", { id: toastId });
-        // Refresh page to show data if needed, or navigate to diet page if it existed
+        void load();
+      } else {
+        toast.success("Avaliação física importada com sucesso!", { id: toastId });
         void load();
       }
     } catch (e: any) {
@@ -520,6 +522,22 @@ const AtletaDetalhe = () => {
                 <Upload className="h-3 w-3 mr-1" />
               )}
               Importar dieta
+            </Button>
+            <Button
+              size="sm"
+              disabled={importing}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8"
+              onClick={() => {
+                setImportType("avaliacao");
+                importInputRef.current?.click();
+              }}
+            >
+              {importing && importType === "avaliacao" ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Upload className="h-3 w-3 mr-1" />
+              )}
+              Importar Avaliação
             </Button>
           </div>
         </div>

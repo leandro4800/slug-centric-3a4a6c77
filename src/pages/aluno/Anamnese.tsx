@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { ArrowLeft, Loader2, Save, Sparkles, ClipboardCheck } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Sparkles, ClipboardCheck, Upload } from "lucide-react";
 import { PageHeader } from "@/components/aluno/PageHeader";
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -23,6 +23,8 @@ export default function Anamnese() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [existingRecord, setExistingRecord] = useState<any>(null);
 
   // Form State
@@ -182,6 +184,79 @@ export default function Anamnese() {
     }
   };
 
+  const handleImportFile = async (file: File) => {
+    if (!user) return;
+    setImporting(true);
+    const toastId = toast.loading("Dr. IA analisando seu arquivo...");
+    
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(file);
+      });
+      
+      const base64 = await base64Promise;
+      
+      const { data, error } = await supabase.functions.invoke("import-with-ai", {
+        body: { 
+          file: base64, 
+          fileType: file.type,
+          importType: "anamnese",
+          alunoId: user.id,
+          tenantId: tenant?.id
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data && data.extractedData) {
+        const ext = data.extractedData;
+        setForm(prev => ({
+          ...prev,
+          doencas: ext.doencas?.join(", ") || prev.doencas,
+          medicamentos: ext.medicamentos || prev.medicamentos,
+          lesoes_atuais: ext.lesoes_atuais || prev.lesoes_atuais,
+          horas_sono: ext.horas_sono ? [ext.horas_sono] : prev.horas_sono,
+          nivel_estresse: ext.nivel_estresse ? [ext.nivel_estresse] : prev.nivel_estresse,
+          tabagismo: ext.tabagismo !== undefined ? ext.tabagismo : prev.tabagismo,
+          alcool: ext.alcool || prev.alcool,
+          suplementos: ext.suplementos?.join(", ") || prev.suplementos,
+          restricoes_alimentares: ext.restricoes_alimentares?.join(", ") || prev.restricoes_alimentares,
+          refeicoes_dia: ext.refeicoes_dia ? String(ext.refeicoes_dia) : prev.refeicoes_dia,
+          agua_litros: ext.agua_litros ? String(ext.agua_litros) : prev.agua_litros,
+          anos_treino: ext.anos_treino ? String(ext.anos_treino) : prev.anos_treino,
+          horario_treino: ext.horario_treino || prev.horario_treino,
+          nivel_experiencia: ext.nivel_experiencia || prev.nivel_experiencia,
+          faz_uso_ergogenicos: ext.faz_uso_ergogenicos !== undefined ? ext.faz_uso_ergogenicos : prev.faz_uso_ergogenicos,
+          detalhes_ergogenicos: ext.detalhes_ergogenicos || prev.detalhes_ergogenicos,
+          historico_familiar: ext.historico_familiar || prev.historico_familiar,
+          cirurgias: ext.cirurgias || prev.cirurgias,
+          alimentos_ama: ext.alimentos_ama || prev.alimentos_ama,
+          alimentos_evita: ext.alimentos_evita || prev.alimentos_evita,
+          modalidades_anteriores: ext.modalidades_anteriores?.join(", ") || prev.modalidades_anteriores,
+          tempo_recuperacao: ext.tempo_recuperacao || prev.tempo_recuperacao,
+          qualidade_sono: ext.qualidade_sono ? [ext.qualidade_sono] : prev.qualidade_sono,
+          alimentos_basicos_casa: ext.alimentos_basicos_casa || prev.alimentos_basicos_casa,
+          cafe_lanche_habitual: ext.cafe_lanche_habitual || prev.cafe_lanche_habitual,
+          proteinas_consumidas: ext.proteinas_consumidas || prev.proteinas_consumidas,
+          frutas_vegetais_preferidos: ext.frutas_vegetais_preferidos || prev.frutas_vegetais_preferidos,
+          horario_almoco: ext.horario_almoco || prev.horario_almoco,
+          horario_jantar: ext.horario_jantar || prev.horario_jantar,
+          nivel_atividade_diaria: ext.nivel_atividade_diaria || prev.nivel_atividade_diaria,
+        }));
+        toast.success("Dados extraídos com sucesso pela IA!", { id: toastId });
+      } else {
+        throw new Error("Não foi possível extrair dados do arquivo.");
+      }
+    } catch (e: any) {
+      console.error(e);
+      toast.error(`Falha ao importar: ${e.message}`, { id: toastId });
+    } finally {
+      setImporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
@@ -198,7 +273,27 @@ export default function Anamnese() {
         subtitle="Complete seu perfil de saúde"
       />
 
-      <div className="px-5 mb-6">
+      <div className="px-5 mb-6 flex flex-col gap-3">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.pdf,.doc,.docx"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void handleImportFile(f);
+            e.target.value = "";
+          }}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={importing}
+          className="w-full h-12 rounded-xl border border-primary/30 bg-primary/5 text-primary font-bold uppercase tracking-wider flex items-center justify-center gap-2"
+        >
+          {importing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+          Importar com IA
+        </button>
+
         <button
           onClick={handleSave}
           disabled={saving}
