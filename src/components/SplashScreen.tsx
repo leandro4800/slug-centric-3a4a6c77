@@ -17,7 +17,8 @@ export const SplashScreen = () => {
     location.pathname.includes("/app") ||
     location.pathname.includes("/admin") ||
     location.pathname.includes("/onboarding") ||
-    location.pathname.includes("/controle");
+    location.pathname.includes("/controle") ||
+    location.pathname.includes("/login");
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
