@@ -26,7 +26,7 @@ import imgMacroHero from "@/assets/macro-hero.jpg";
 
 type Alimento = { id: string; nome: string; energia_kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number };
 type Item = { id: string; quantidade_g: number; substituicoes: string | null; alimento: Alimento | null };
-type Refeicao = { id: string; nome: string; horario: string | null; ordem: number | null; itens: Item[] };
+type Refeicao = { id: string; nome: string; horario: string | null; ordem: number | null; descricao_ia: string | null; itens: Item[] };
 type Dieta = {
   id: string;
   objetivo: string | null;
@@ -88,7 +88,7 @@ const Dieta = () => {
 
     const { data: refs } = await supabase
       .from("refeicoes")
-      .select("*")
+      .select("id, nome, horario, ordem, descricao_ia")
       .eq("dieta_id", d.id)
       .order("ordem", { ascending: true });
 
@@ -105,6 +105,7 @@ const Dieta = () => {
       nome: r.nome,
       horario: r.horario,
       ordem: r.ordem,
+      descricao_ia: r.descricao_ia,
       itens: (itens || []).filter((i: any) => i.refeicao_id === r.id).map((i: any) => ({
         id: i.id,
         quantidade_g: Number(i.quantidade_g),
@@ -284,41 +285,64 @@ const Dieta = () => {
 
             {/* Cards de refeição estilo Netflix */}
             <div className="space-y-3">
-              {dieta.refeicoes.map(r => (
-                <button
-                  key={r.id}
-                  onClick={() => setSelectedRef(r)}
-                  className="group relative w-full h-32 rounded-xl overflow-hidden bg-black ring-1 ring-white/5 hover:ring-primary/60 transition-all text-left"
-                >
-                  <img
-                    src={imgFor(r.nome)}
-                    alt={r.nome}
-                    className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
-                  />
-                  {/* Escurecimento global + gradiente suave da esquerda para legibilidade do texto */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/40 to-black/10" />
-                  <div className="absolute inset-0 bg-black/20" />
-                  <div className="absolute inset-0 p-4 flex flex-col justify-between">
-                    {/* Topo: badge com ícone amarelo de talheres */}
-                    <div className="flex items-center gap-2">
-                      <div className="h-6 w-6 rounded-full bg-black/60 backdrop-blur flex items-center justify-center ring-1 ring-white/10">
-                        <Utensils className="h-3 w-3" style={{ color: `hsl(${COLOR_CARB})` }} />
+              {dieta.refeicoes.map(r => {
+                const macros = calcMacros(r.itens);
+                return (
+                  <button
+                    key={r.id}
+                    onClick={() => setSelectedRef(r)}
+                    className="group relative w-full h-36 rounded-xl overflow-hidden bg-black ring-1 ring-white/5 hover:ring-primary/60 transition-all text-left"
+                  >
+                    <img
+                      src={imgFor(r.nome)}
+                      alt={r.descricao_ia || r.nome}
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }}
+                    />
+                    {/* Escurecimento global + gradiente suave da esquerda para legibilidade do texto */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/40 to-black/10" />
+                    <div className="absolute inset-0 bg-black/20" />
+                    <div className="absolute inset-0 p-4 flex flex-col justify-between">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2">
+                          <div className="h-6 w-6 rounded-full bg-black/60 backdrop-blur flex items-center justify-center ring-1 ring-white/10">
+                            <Utensils className="h-3 w-3" style={{ color: `hsl(${COLOR_CARB})` }} />
+                          </div>
+                          <span className="text-xs font-bold text-white tracking-wide">{r.horario || "—"}</span>
+                        </div>
+                        {/* Macros da refeição no card */}
+                        <div className="flex gap-2">
+                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                            <span className="text-primary">{macros.kcal}</span>
+                            <span className="opacity-50 font-normal">kcal</span>
+                          </div>
+                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                            <span style={{ color: `hsl(${COLOR_PROT})` }}>{macros.p}g</span>
+                            <span className="opacity-50 font-normal">P</span>
+                          </div>
+                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                            <span style={{ color: `hsl(${COLOR_CARB})` }}>{macros.c}g</span>
+                            <span className="opacity-50 font-normal">C</span>
+                          </div>
+                        </div>
                       </div>
-                      <span className="text-xs font-bold text-white tracking-wide">{r.horario || "—"}</span>
+                      <div>
+                        <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                          {r.nome.toUpperCase()}
+                        </h3>
+                        {r.descricao_ia && (
+                          <p className="text-[10px] text-white/60 line-clamp-1 mt-1 font-medium">{r.descricao_ia}</p>
+                        )}
+                      </div>
                     </div>
-                    {/* Base: título em itálico */}
-                    <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-                      {r.nome.toUpperCase()}
-                    </h3>
-                  </div>
-                  {/* Play cinza no canto inferior direito */}
-                  <div className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/15 backdrop-blur-md ring-1 ring-white/20 flex items-center justify-center group-hover:bg-primary group-hover:ring-primary transition-colors">
-                    <Play className="h-4 w-4 text-white fill-white ml-0.5" />
-                  </div>
-                </button>
-              ))}
+                    {/* Play cinza no canto inferior direito */}
+                    <div className="absolute bottom-3 right-3 h-9 w-9 rounded-full bg-white/15 backdrop-blur-md ring-1 ring-white/20 flex items-center justify-center group-hover:bg-primary group-hover:ring-primary transition-colors">
+                      <Play className="h-4 w-4 text-white fill-white ml-0.5" />
+                    </div>
+                  </button>
+                );
+              })}
             </div>
           </>
         )}
