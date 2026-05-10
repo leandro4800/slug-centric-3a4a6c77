@@ -80,7 +80,8 @@ const Login = () => {
     if (ok) {
       sessionStorage.removeItem("pending_voucher");
       const targetSlug = urlSlug || tenant?.slug;
-      navigate(targetSlug ? `/${targetSlug}/app` : "/marketplace", { replace: true });
+      // Hard reload para o AuthProvider reler os papéis (inclui o 'aluno' recém-criado)
+      window.location.assign(targetSlug ? `/${targetSlug}/app` : "/marketplace");
     }
   };
 
@@ -173,7 +174,7 @@ const Login = () => {
           const ok = await redeemVoucherCode(pending);
           sessionStorage.removeItem("pending_voucher");
           if (ok) {
-            goTo(`/${userSlug}/app`);
+            window.location.assign(`/${userSlug}/app`);
             return;
           }
         }
