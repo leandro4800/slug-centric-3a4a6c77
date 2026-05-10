@@ -33,7 +33,8 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
   // Se requer um papel específico e não o possui
   if (requireRole && !hasRole(requireRole)) {
     console.warn(`[RequireAuth] User ${user.id} does not have required role: ${requireRole}`);
-    return <Navigate to="/index" replace />;
+    // Se não tem o papel, manda para a landing do coach ou marketplace para se inscrever
+    return <Navigate to={slug ? `/${slug}` : "/"} replace />;
   }
 
   // Se deve verificar o tenant e o slug não condiz com o tenant do usuário
