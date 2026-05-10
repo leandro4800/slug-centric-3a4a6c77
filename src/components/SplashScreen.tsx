@@ -17,7 +17,8 @@ export const SplashScreen = () => {
     location.pathname.includes("/app") ||
     location.pathname.includes("/admin") ||
     location.pathname.includes("/onboarding") ||
-    location.pathname.includes("/controle");
+    location.pathname.includes("/controle") ||
+    location.pathname.includes("/login");
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -65,7 +66,7 @@ export const SplashScreen = () => {
     sessionStorage.setItem(sessionKeyFor(tenantKey), "1");
 
     const hasVideo = !!tenant?.splash_video_url;
-    const showMs = hasVideo ? 3200 : 1600;
+    const showMs = hasVideo ? 5000 : 1600;
 
     const fadeTimer = setTimeout(() => setIsVisible(false), showMs);
     const removeTimer = setTimeout(() => setShouldRender(false), showMs + 500);
