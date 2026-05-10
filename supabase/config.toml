@@ -1,7 +1,7 @@
 project_id = "iflgryuemsohurtdaawm"
 
 [auth]
-site_url = "https://alpha-coach.app/site"
+site_url = "https://alpha-coach.app/index"
 additional_redirect_urls = [
   "https://alpha-coach.app/site",
   "https://alpha-coach.app/*",

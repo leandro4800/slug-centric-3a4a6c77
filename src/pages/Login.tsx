@@ -225,7 +225,7 @@ const Login = () => {
       type: "signup",
       email: cleanEmail,
       options: {
-        emailRedirectTo: buildAuthRedirectUrl(urlSlug ? `/${urlSlug}` : "/site", { confirmed: "1" }),
+        emailRedirectTo: buildAuthRedirectUrl(urlSlug ? `/${urlSlug}/login` : "/login", { confirmed: "1" }),
       },
     });
     setLoading(false);
@@ -253,7 +253,7 @@ const Login = () => {
       email: cleanEmail,
       password,
       options: {
-            emailRedirectTo: buildAuthRedirectUrl(urlSlug ? `/${urlSlug}` : "/site", { confirmed: "1" }),
+            emailRedirectTo: buildAuthRedirectUrl(urlSlug ? `/${urlSlug}/login` : "/login", { confirmed: "1" }),
         data: { 
           nome_completo: nome,
           tenant_id: tenant?.id || undefined,

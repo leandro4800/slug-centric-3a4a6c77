@@ -53,7 +53,7 @@ export default function CheckoutSucesso() {
           email,
           password,
           options: {
-            emailRedirectTo: buildAuthRedirectUrl(slug ? `/${slug}` : "/site", { confirmed: "1" }),
+            emailRedirectTo: buildAuthRedirectUrl(slug ? `/${slug}/login` : "/login", { confirmed: "1" }),
             data: { nome_completo: nome },
           },
         });
