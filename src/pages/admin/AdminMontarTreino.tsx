@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -291,8 +291,16 @@ const AdminMontarTreino = () => {
     }
   }, [alunoId, tenant, perfil, divisoes]);
 
+  const autoTriggeredRef = useRef(false);
   useEffect(() => {
-    if (searchParams.get("auto") === "true" && alunoId && tenant && !generating && exercicios.length === 0) {
+    if (
+      searchParams.get("auto") === "true" &&
+      alunoId && tenant &&
+      !generating &&
+      exercicios.length === 0 &&
+      !autoTriggeredRef.current
+    ) {
+      autoTriggeredRef.current = true;
       void gerarComIA();
     }
   }, [searchParams, alunoId, tenant, generating, exercicios.length, gerarComIA]);

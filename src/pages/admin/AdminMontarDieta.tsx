@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -148,11 +148,20 @@ const AdminMontarDieta = () => {
     }
   }, [alunoId, perfil]);
 
+  const autoTriggeredRef = useRef(false);
   useEffect(() => {
-    if (searchParams.get("auto") === "true" && alunoId && !generating && !loading) {
+    if (
+      searchParams.get("auto") === "true" &&
+      alunoId &&
+      !generating &&
+      !loading &&
+      !autoTriggeredRef.current &&
+      perfil.peso_kg && perfil.altura_cm
+    ) {
+      autoTriggeredRef.current = true;
       void gerarComIA();
     }
-  }, [searchParams, alunoId, generating, loading, gerarComIA]);
+  }, [searchParams, alunoId, generating, loading, perfil.peso_kg, perfil.altura_cm, gerarComIA]);
 
   return (
     <div className="min-h-screen bg-black text-white">
