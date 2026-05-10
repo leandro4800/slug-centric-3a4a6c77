@@ -174,7 +174,7 @@ const Login = () => {
           const ok = await redeemVoucherCode(pending);
           sessionStorage.removeItem("pending_voucher");
           if (ok) {
-            goTo(`/${userSlug}/app`);
+            window.location.assign(`/${userSlug}/app`);
             return;
           }
         }
