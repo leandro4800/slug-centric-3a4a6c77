@@ -102,11 +102,11 @@ const Login = () => {
         // 1. Prioridade absoluta para o Dashboard do Coach/Admin se ele tiver um tenant próprio
         if (isCoach && ownedTenant?.slug) {
           const coachDashboardPath = `/${ownedTenant.slug}/app/controle`;
-          if (location.pathname !== coachDashboardPath) {
+          if (location.pathname !== coachDashboardPath && !location.pathname.startsWith(`/${ownedTenant.slug}/admin`)) {
             console.log("[Login] Redirecting coach to dashboard:", coachDashboardPath);
             navigate(coachDashboardPath, { replace: true });
+            return;
           }
-          return;
         }
 
         // 2. Determinar o slug do tenant do usuário comum (aluno)
@@ -198,7 +198,7 @@ const Login = () => {
           navigate("/admin/coaches", { replace: true });
         } else {
           const finalPath = `/${userSlug}/app`;
-          if (location.pathname !== finalPath) {
+          if (location.pathname !== finalPath && !location.pathname.startsWith(`/${userSlug}/app`)) {
             console.log("[Login] Final fallback redirect:", finalPath);
             navigate(finalPath, { replace: true });
           }
