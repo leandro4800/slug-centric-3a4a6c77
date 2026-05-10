@@ -379,6 +379,7 @@ Gere o plano em JSON aplicando Nutrient Timing, Proteína Rotativa, metas de Fib
         },
         observacoes_clinicas: [
           plano.observacoes_clinicas,
+          `\n🔥 Cálculo: ${estrategiaCalorica}`,
           plano.estrategia_timing ? `\n📍 Timing: ${plano.estrategia_timing}` : "",
           plano.recomendacao_hidratacao ? `\n💧 Hidratação: ${plano.recomendacao_hidratacao}` : "",
         ].filter(Boolean).join("") || null,
