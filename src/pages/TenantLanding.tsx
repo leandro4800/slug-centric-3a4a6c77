@@ -135,7 +135,7 @@ export default function TenantLanding() {
     // pula a tela de planos e vai direto para o login do coach.
     const temCodigo = searchParams.get("codigo") !== null || searchParams.get("voucher") !== null;
     if (temCodigo && !currentUser) {
-      navigate(`/${slug}/login?redirect=/${slug}?voucher=1`, { replace: true });
+      navigate(`/${slug}/login`, { replace: true });
       return;
     }
 
