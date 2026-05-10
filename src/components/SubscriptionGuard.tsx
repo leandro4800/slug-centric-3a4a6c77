@@ -38,6 +38,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
       const hasVoucherParam = urlParams.has("voucher") || urlParams.has("codigo");
 
       if ((pendingVoucher || hasVoucherParam) && slug && slug !== "demo") {
+        console.log("[SubscriptionGuard] Voucher detectado, liberando rota para processamento no Login/App.");
         setLoading(false);
         return;
       }

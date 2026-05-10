@@ -172,10 +172,17 @@ const Login = () => {
         const pending = sessionStorage.getItem("pending_voucher") || new URLSearchParams(window.location.search).get("voucher") || new URLSearchParams(window.location.search).get("codigo");
         if (pending) {
           console.log("[Login] Resgatando voucher pendente:", pending);
+          setVoucherLoading(true);
           const ok = await redeemVoucherCode(pending);
+          setVoucherLoading(false);
           sessionStorage.removeItem("pending_voucher");
           if (ok) {
+            console.log("[Login] Voucher resgatado com sucesso, redirecionando para app.");
             window.location.assign(`/${userSlug}/app`);
+            return;
+          } else {
+            console.log("[Login] Falha ao resgatar voucher, redirecionando para site.");
+            goTo(`/${userSlug}/site`);
             return;
           }
         }

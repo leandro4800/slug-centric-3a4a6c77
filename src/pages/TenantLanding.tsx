@@ -114,16 +114,16 @@ export default function TenantLanding() {
 
   // Auto-abre o modal de código quando voltar do login com ?voucher=1
   useEffect(() => {
-    if (!loading && user && !hasSubscription && (searchParams.get("voucher") === "1" || sessionStorage.getItem("pending_voucher"))) {
-      setVoucherOpen(true);
-      if (searchParams.get("voucher") === "1") {
-        searchParams.delete("voucher");
-        setSearchParams(searchParams, { replace: true });
+    if (!loading && user && !hasSubscription) {
+      const isVoucherRequested = searchParams.get("voucher") === "1";
+      const pendingCode = sessionStorage.getItem("pending_voucher");
+      
+      if (isVoucherRequested || pendingCode) {
+        console.log("[TenantLanding] Redirecionando para login para processar voucher:", pendingCode);
+        navigate(`/${slug}/login`, { replace: true });
       }
-      const pending = sessionStorage.getItem("pending_voucher");
-      if (pending) setVoucherCode(pending);
     }
-  }, [loading, user, hasSubscription, searchParams, setSearchParams]);
+  }, [loading, user, hasSubscription, searchParams, navigate, slug]);
 
   const load = async () => {
     if (!slug) return;
