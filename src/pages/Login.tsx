@@ -169,20 +169,38 @@ const Login = () => {
           if (tenantData?.slug) userSlug = tenantData.slug;
         }
 
-        const pending = sessionStorage.getItem("pending_voucher") || new URLSearchParams(window.location.search).get("voucher") || new URLSearchParams(window.location.search).get("codigo");
+        const urlParams = new URLSearchParams(window.location.search);
+        const pending = sessionStorage.getItem("pending_voucher") || urlParams.get("voucher") || urlParams.get("codigo") || urlParams.get("v");
+        
         if (pending) {
-          console.log("[Login] Resgatando voucher pendente:", pending);
+          console.log("[Login] Processando código de acesso:", pending);
           setVoucherLoading(true);
           const ok = await redeemVoucherCode(pending);
           setVoucherLoading(false);
           sessionStorage.removeItem("pending_voucher");
+          
           if (ok) {
-            console.log("[Login] Voucher resgatado com sucesso, redirecionando para app.");
+            console.log("[Login] Código resgatado com sucesso, redirecionando para App.");
+            // Limpa parâmetros da URL para evitar loops ou re-processamento
+            const nextUrl = new URL(window.location.href);
+            nextUrl.searchParams.delete("voucher");
+            nextUrl.searchParams.delete("codigo");
+            nextUrl.searchParams.delete("v");
+            window.history.replaceState({}, "", nextUrl.toString());
+            
+            // Força redirecionamento para o App
             window.location.assign(`/${userSlug}/app`);
             return;
           } else {
-            console.log("[Login] Falha ao resgatar voucher, redirecionando para site.");
-            goTo(`/${userSlug}/site`);
+            console.log("[Login] Falha ao resgatar código, removendo parâmetros para quebrar loop.");
+            const nextUrl = new URL(window.location.href);
+            nextUrl.searchParams.delete("voucher");
+            nextUrl.searchParams.delete("codigo");
+            nextUrl.searchParams.delete("v");
+            window.history.replaceState({}, "", nextUrl.toString());
+            
+            // Se falhou e não tem assinatura, o SubscriptionGuard vai levar para o site naturalmente
+            if (urlSlug) goTo(`/${urlSlug}/app`);
             return;
           }
         }
