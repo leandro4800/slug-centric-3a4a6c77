@@ -434,7 +434,8 @@ const Login = () => {
                 </Button>
               </form>
             </TabsContent>
-        </div>
+            </Tabs>
+          )}
         <p className="text-center text-xs text-muted-foreground mt-6">
           {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
         </p>
