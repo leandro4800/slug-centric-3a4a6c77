@@ -44,14 +44,16 @@ export const SubscriptionGuard = ({ children }: Props) => {
           if (!error && (data as any)?.ok) {
             console.log("[SubscriptionGuard] Voucher resgatado com sucesso!");
             sessionStorage.removeItem("pending_voucher");
+            
+            // Limpa params da URL sem recarregar
             const nextUrl = new URL(window.location.href);
             nextUrl.searchParams.delete("voucher");
             nextUrl.searchParams.delete("codigo");
             nextUrl.searchParams.delete("v");
             window.history.replaceState({}, "", nextUrl.toString());
             
-            // Pequeno delay para o Supabase processar a nova assinatura antes da próxima consulta
-            await new Promise(r => setTimeout(r, 500));
+            // Espera um pouco mais para o trigger do BD processar a assinatura
+            await new Promise(r => setTimeout(r, 1500));
           } else {
             console.warn("[SubscriptionGuard] Falha ao resgatar voucher:", error || (data as any)?.error);
             sessionStorage.removeItem("pending_voucher");
@@ -61,7 +63,6 @@ export const SubscriptionGuard = ({ children }: Props) => {
           sessionStorage.removeItem("pending_voucher");
         }
       } else if (voucherFromUrl === "1") {
-        // Se for apenas o trigger ?voucher=1, redirecionamos para o site para abrir o modal
         console.log("[SubscriptionGuard] Trigger de voucher detectado, redirecionando para o site.");
         setLoading(false);
         setStatus("redirect_to_site_voucher");

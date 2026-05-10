@@ -160,6 +160,7 @@ const Login = () => {
                if (t?.slug) targetSlug = t.slug;
             }
             if (targetSlug) {
+              console.log("[Login] Voucher ok, indo para app:", targetSlug);
               window.location.assign(`/${targetSlug}/app`);
               return;
             }
