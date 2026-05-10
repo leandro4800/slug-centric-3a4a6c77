@@ -36,7 +36,7 @@ serve(async (req) => {
     }
     const callerId = userData.user.id;
 
-    const { alunoId } = await req.json();
+    const { alunoId, currentProtocol } = await req.json();
     if (!alunoId) throw new Error("ID do aluno é obrigatório");
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
@@ -121,6 +121,7 @@ Medicamentos em uso: ${anamnese.medicamentos || 'Nenhum'}
 Doenças: ${anamnese.doencas ? anamnese.doencas.join(', ') : 'Nenhuma'}
 Resumo clínico: ${ultimaAnalise?.resumo_clinico || 'Sem análise prévia'}
 ${examesContext}
+${currentProtocol ? `\nPROTOCOLO ATUAL EM USO:\n${currentProtocol}` : ""}
 `;
 
     const systemPrompt = `# ROLE: MÉDICO DO ESPORTE & CONSULTOR DE PERFORMANCE DE ELITE
@@ -139,8 +140,9 @@ Você é a inteligência clínica da Alpha Coach, o "Dr. IA". Sua especialidade 
 - CRUISE: dose fisiológica/manutenção para estabilizar biomarcadores entre blasts.
 
 # REGRAS DE OURO
-1. SEGURANÇA PRIMEIRO — Se biomarcadores em zona crítica (Hto>52, HDL<20, TGP>70, Creat>1.5, ALT/AST>60), NÃO sugira ciclo. Prescreva "RESET/DETOX" (Cruise TRT ou Off-Drugs) com NAC, Silimarina, TUDCA, Ômega 3, Berberina.
-2. DURAÇÃO: 8 a 16 semanas (blast); cruise 8-12 semanas.
+1. SEGURANÇA PRIMEIRO — Se biomarcadores em zona crítica (Hto>52, HDL<20, TGP>70, Creat>1.5, ALT/AST>60), NÃO sugira ciclo. Prescreva "RESET/DETOX" (Cruise TRT ou Off-Drugs) com NAC, Silimarina, TUDCA, Ômega 3, Berberina. Se o aluno já estiver em uso, sugira a redução ou interrupção imediata conforme a gravidade.
+2. ANÁLISE DO PROTOCOLO ATUAL: Se o aluno já estiver utilizando algo (currentProtocol), analise se as doses são adequadas para o nível e objetivo. Se estiverem exageradas ou inadequadas para os exames, sugira o ajuste (troca de droga, redução de dose ou substituição por algo mais seguro). Se estiver bom, sugira manutenção ou progressão mínima se necessário.
+3. DURAÇÃO: 8 a 16 semanas (blast); cruise 8-12 semanas.
 3. ESTRUTURA: substância → dose (mg/sem) → frequência → via → duração.
 4. PROTETORES OBRIGATÓRIOS: suporte HPTA (HCG/SERM), perfil lipídico (ômega 3, berberina), hepático (TUDCA, Silimarina, NAC), cardiovascular (telmisartana se PA alta).
 

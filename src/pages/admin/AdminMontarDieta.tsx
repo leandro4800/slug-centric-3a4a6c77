@@ -181,6 +181,8 @@ const AdminMontarDieta = () => {
 
   const autoTriggeredRef = useRef(false);
   useEffect(() => {
+    // Só dispara automático se o coach explicitamente vir de AtletaDetalhe com o parâmetro auto=true
+    // E apenas UMA VEZ por carregamento de página
     if (
       searchParams.get("auto") === "true" &&
       alunoId &&
@@ -189,8 +191,15 @@ const AdminMontarDieta = () => {
       !autoTriggeredRef.current &&
       perfil.peso_kg && perfil.altura_cm
     ) {
-      autoTriggeredRef.current = true;
-      void gerarComIA();
+      // O coach ainda precisa confirmar se quer gerar agora
+      const confirmAction = window.confirm("Deseja gerar a dieta agora com a IA?");
+      if (confirmAction) {
+        autoTriggeredRef.current = true;
+        void gerarComIA();
+      } else {
+        // Se cancelar, marcamos como disparado para não perguntar de novo até recarregar
+        autoTriggeredRef.current = true;
+      }
     }
   }, [searchParams, alunoId, generating, loading, perfil.peso_kg, perfil.altura_cm, gerarComIA]);
 
