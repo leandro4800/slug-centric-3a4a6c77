@@ -253,7 +253,7 @@ Gere o plano em JSON aplicando Nutrient Timing, Proteína Rotativa, metas de Fib
       method: "POST",
       headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.0-flash-exp",
+        model: "google/gemini-2.5-flash",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
