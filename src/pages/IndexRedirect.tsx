@@ -9,6 +9,9 @@ const IndexRedirect = () => {
   const slug = params.get("slug");
   const confirmed = params.get("confirmed") === "1" || params.get("type") === "signup";
   const safeSlug = slug && /^[a-z0-9-]+$/i.test(slug) ? slug : null;
+  
+  // Se tiver slug, manda para a landing do coach. 
+  // Se não tiver, manda para o /site (landing institucional/marketplace)
   const target = safeSlug ? `/${safeSlug}${confirmed ? "?confirmed=1" : ""}` : `/site${confirmed ? "?confirmed=1" : ""}`;
 
   return <Navigate to={target} replace />;

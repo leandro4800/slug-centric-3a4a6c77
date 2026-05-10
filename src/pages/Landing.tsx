@@ -201,31 +201,23 @@ const Landing = () => {
   // - /site  -> mostra a landing institucional (marketing)
   // - /      -> redireciona pro /login (que joga pro app se tiver sessão)
   // Cobre também PWA instalado (display-mode: standalone).
-  useEffect(() => {
-    // Se o usuário clicar em alpha-coach.app (raiz), e não for o path de marketing (/site),
-    // devemos redirecionar para o login. O Login.tsx já tem a lógica para levar o usuário
-    // logado para o seu respectivo app/tenant sem precisar limpar cache.
-    const isMarketingPath = window.location.pathname.startsWith("/site");
-    
-    if (!isMarketingPath) {
-      navigate("/login", { replace: true });
-    }
-  }, [navigate]);
-
+  // Simplificamos o roteamento:
+  // A raiz "/" e "/site" mostram a landing de marketing.
+  // Não redirecionamos mais para o login automaticamente aqui.
   useEffect(() => {
     if (authLoading || !user) return;
+    
+    // Se for coach (dono de tenant), podemos mandar pro admin por conveniência
     (async () => {
-      // Se já é dono de tenant aprovado, vai direto pro painel
       const { data: owned } = await supabase
         .from("tenants")
-        .select("slug, status")
+        .select("slug")
         .eq("owner_user_id", user.id)
         .maybeSingle();
+        
       if (owned?.slug) {
         navigate(`/${owned.slug}/admin`, { replace: true });
-        return;
       }
-      navigate("/login", { replace: true });
     })();
   }, [user, authLoading, navigate]);
 

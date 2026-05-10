@@ -184,7 +184,8 @@ const Login = () => {
         }
 
         if (!userSlug || userSlug === "demo") {
-          goTo("/marketplace");
+          // Se não tem tenant vinculado, deixa ele no site/marketplace para escolher um
+          goTo("/site");
           return;
         }
 
