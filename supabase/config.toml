@@ -4,9 +4,11 @@ project_id = "iflgryuemsohurtdaawm"
 site_url = "https://alpha-coach.app/site"
 additional_redirect_urls = [
   "https://alpha-coach.app/site",
+  "https://alpha-coach.app/*",
   "https://alpha-coach.app/index",
   "https://alpha-coach.app/reset-password",
   "https://www.alpha-coach.app/site",
+  "https://www.alpha-coach.app/*",
   "https://www.alpha-coach.app/index",
   "https://www.alpha-coach.app/reset-password"
 ]
