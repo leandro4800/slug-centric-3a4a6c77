@@ -83,6 +83,17 @@ const textSmall = {
   margin: '0 0 25px',
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
+const button = {
+  backgroundColor: '#E50914',
+  color: '#ffffff',
+  fontSize: '14px',
+  borderRadius: '8px',
+  padding: '12px 20px',
+  textDecoration: 'none',
+  fontWeight: 'bold' as const,
+  display: 'inline-block',
+  margin: '0 0 25px',
+}
 const codeBox = {
   backgroundColor: '#f4f4f5',
   border: '1px solid #e4e4e7',
