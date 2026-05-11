@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Loader2, KeyRound } from "lucide-react";
-import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
+// AulaAvulsaQuickForm removed
 
 interface Tenant {
   id: string;
