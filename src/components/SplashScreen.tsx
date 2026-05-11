@@ -5,9 +5,9 @@ import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
-// Chave por tenant — assim cada coach tem seu próprio splash garantido
+// Chave por tenant e sessão — assim cada coach tem seu próprio splash garantido
 const sessionKeyFor = (slug: string | null | undefined) =>
-  `splash_shown_session::${slug ?? "_neutral"}`;
+  `splash_shown_v2::${slug ?? "_neutral"}`;
 
 export const SplashScreen = () => {
   const { tenant, loading } = useBranding();
@@ -66,10 +66,11 @@ export const SplashScreen = () => {
     sessionStorage.setItem(sessionKeyFor(tenantKey), "1");
 
     const hasVideo = !!tenant?.splash_video_url;
-    const showMs = hasVideo ? 4000 : 1200;
+    // Reduzi os tempos para evitar que o splash pareça um loop infinito
+    const showMs = hasVideo ? 3000 : 1000;
 
     const fadeTimer = setTimeout(() => setIsVisible(false), showMs);
-    const removeTimer = setTimeout(() => setShouldRender(false), showMs + 500);
+    const removeTimer = setTimeout(() => setShouldRender(false), showMs + 300);
 
     return () => {
       clearTimeout(fadeTimer);
