@@ -16,7 +16,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
   const location = useLocation();
   const { slug } = useParams();
 
-  const isLoading = authLoading || (checkTenant && brandingLoading);
+  const isLoading = authLoading || (checkTenant && brandingLoading && !user);
 
   if (isLoading) {
     return (

@@ -128,7 +128,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const isLoading = !sessionReady || (!!session?.user && rolesLoading);
+  const isLoading = !sessionReady || rolesLoading;
 
   return (
     <AuthContext.Provider value={{ user: session?.user ?? null, session, isLoading, roles, signOut, hasRole }}>
