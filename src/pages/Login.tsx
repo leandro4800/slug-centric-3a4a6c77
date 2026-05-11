@@ -14,7 +14,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 
-const REDIRECT_QUERY_TIMEOUT_MS = 7000;
+const REDIRECT_QUERY_TIMEOUT_MS = 12000;
 
 const withRedirectTimeout = async <T,>(promise: PromiseLike<T>, fallback: unknown, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -122,7 +122,7 @@ const Login = () => {
           } else {
             setLoading(false);
           }
-        }, 15000); // 15s de limite total para o redirect
+        }, 20000); // 20s de limite total para o redirect
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const urlSearchParams = new URLSearchParams(window.location.search);

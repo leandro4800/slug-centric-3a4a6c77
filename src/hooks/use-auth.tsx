@@ -29,7 +29,7 @@ const AuthContext = createContext<AuthContextValue>({
 
 export const useAuth = () => useContext(AuthContext);
 
-const ROLE_FETCH_TIMEOUT_MS = 8000;
+const ROLE_FETCH_TIMEOUT_MS = 12000;
 
 const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
