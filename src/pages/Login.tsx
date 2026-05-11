@@ -194,8 +194,22 @@ const Login = () => {
           return;
         }
 
-        // 5. Sem destino definido: NÃO travar na tela de loading.
-        // Faz signOut para liberar o formulário e mostra mensagem clara.
+        // 5. Sem destino definido: Tenta buscar novamente antes de desistir
+        if (!userSlug) {
+           const tFromCurrentUser = await withRedirectTimeout(
+             supabase.from("tenants").select("slug").eq("owner_user_id", user.id).maybeSingle(),
+             { data: null },
+             "Busca final de tenant"
+           );
+           if (tFromCurrentUser?.data?.slug) userSlug = tFromCurrentUser.data.slug;
+        }
+
+        if (userSlug && userSlug !== "demo") {
+          console.log("[Login] Redirecionando para app do tenant:", userSlug);
+          goTo(`/${userSlug}/app`);
+          return;
+        }
+
         console.warn("[Login] Usuário sem tenant vinculado. Fazendo signOut para liberar tela.");
         await supabase.auth.signOut();
         setLoading(false);
