@@ -31,17 +31,21 @@ const IndexRedirect = () => {
   }, []);
 
   useEffect(() => {
-    // Se ainda está carregando ou já está redirecionando, aguarda
-    if (authLoading || brandingLoading || redirecting) {
-        // Exceção: se o user não existe e temos branding (ou branding demorou), mandamos para login logo
-        if (!authLoading && !user && (!brandingLoading || forceRender)) {
-            // Segue para a lógica abaixo
-        } else {
-            return;
-        }
+    // Se ainda está carregando, aguarda (a menos que o forceRender tenha sido ativado)
+    if ((authLoading || brandingLoading) && !forceRender) {
+      return;
     }
 
+    if (redirecting) return;
+
     const decideDestination = async () => {
+      const timeoutId = setTimeout(() => {
+        if (!redirecting) {
+          console.warn("[IndexRedirect] Decision taking too long, fallback to login");
+          navigate("/login", { replace: true });
+        }
+      }, 6000);
+
       setRedirecting(true);
       try {
         if (!user) {
@@ -142,6 +146,8 @@ const IndexRedirect = () => {
       } catch (err) {
         console.error("[IndexRedirect] Erro crítico na decisão:", err);
         navigate("/login", { replace: true });
+      } finally {
+        clearTimeout(timeoutId);
       }
     };
 

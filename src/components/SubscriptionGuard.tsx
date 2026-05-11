@@ -16,6 +16,17 @@ export const SubscriptionGuard = ({ children }: Props) => {
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCoach, setIsCoach] = useState(false);
+  const [forceShow, setForceShow] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.warn("[SubscriptionGuard] Timeout atingido, forçando renderização.");
+        setForceShow(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   useEffect(() => {
     if (authLoading || brandingLoading || !user) return;
@@ -117,13 +128,16 @@ export const SubscriptionGuard = ({ children }: Props) => {
     void checkSubscriptionAndCompletion();
   }, [user, authLoading, brandingLoading, slug, brandedTenant?.id]);
 
-  if (authLoading || loading) {
+  if ((authLoading || loading) && !forceShow) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />
       </div>
     );
   }
+
+  // Se o timeout foi atingido e ainda estamos carregando, tentamos renderizar os filhos por segurança
+  if (forceShow && loading) return <>{children}</>;
 
   if (isCoach) return <>{children}</>;
 
