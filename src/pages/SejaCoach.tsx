@@ -86,25 +86,6 @@ export default function SejaCoach() {
       .eq("owner_user_id", user.id)
       .maybeSingle();
 
-    let stripeAccountId: string | null = null;
-    let stripeOnboardingCompleted = false;
-    let hasPlano = false;
-    if (data?.id) {
-      const { data: priv } = await supabase
-        .from("tenants_private" as any)
-        .select("stripe_account_id, stripe_onboarding_completed")
-        .eq("tenant_id", data.id)
-        .maybeSingle();
-      stripeAccountId = (priv as any)?.stripe_account_id ?? null;
-      stripeOnboardingCompleted = !!(priv as any)?.stripe_onboarding_completed;
-
-      const { count } = await supabase
-        .from("planos")
-        .select("id", { count: "exact", head: true })
-        .eq("tenant_id", data.id);
-      hasPlano = (count ?? 0) > 0;
-    }
-
     if (data) {
       setTenantId(data.id);
       setSlug(data.slug);
@@ -119,14 +100,9 @@ export default function SejaCoach() {
         navigate(`/${data.slug}/admin`);
         return;
       }
-      if (hasPlano || stripeOnboardingCompleted || stripeAccountId) setStep("pending");
-      else setStep("product");
+      setStep("pending");
     } else {
       setStep(perfil?.telefone ? "tenant" : "personal");
-    }
-
-    if (params.get("completed") === "1" && data?.id) {
-      void syncStripe(data.id);
     }
   };
 
