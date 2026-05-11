@@ -19,7 +19,13 @@ export const getPublicAppOrigin = () => {
   if (typeof window === "undefined") return PRODUCTION_APP_ORIGIN;
 
   const currentOrigin = window.location.origin;
-  if (isUnsafeAuthOrigin(currentOrigin)) return PRODUCTION_APP_ORIGIN;
+  
+  // Se estivermos em localhost, priorizamos o domínio de produção para os links de auth
+  // Isso evita que e-mails enviados em desenvolvimento apontem para localhost
+  if (isUnsafeAuthOrigin(currentOrigin)) {
+    console.log("[Auth] Origin insegura detectada, usando:", PRODUCTION_APP_ORIGIN);
+    return PRODUCTION_APP_ORIGIN;
+  }
 
   return currentOrigin;
 };
