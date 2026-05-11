@@ -1,14 +1,14 @@
 import { NavLink, useParams } from "react-router-dom";
-import { Home, Dumbbell, Utensils, TrendingUp, Stethoscope, CalendarCheck, User } from "lucide-react";
+import { Home, Dumbbell, Utensils, TrendingUp, Users, Stethoscope, User } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 
 const items = [
   { label: "Início", icon: Home, to: "" },
   { label: "Treino", icon: Dumbbell, to: "treino" },
   { label: "Dieta", icon: Utensils, to: "dieta" },
+  { label: "Comu…", icon: Users, to: "comunidade" },
   { label: "Evolução", icon: TrendingUp, to: "evolucao" },
   { label: "Clínica", icon: Stethoscope, to: "clinica" },
-  { label: "Presen…", icon: CalendarCheck, to: "presencial" },
   { label: "Perfil", icon: User, to: "perfil" },
 ];
 
