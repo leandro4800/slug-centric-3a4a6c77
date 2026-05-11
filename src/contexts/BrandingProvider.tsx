@@ -160,7 +160,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const slug = params.slug || slugFromPath;
 
   const [tenant, setTenant] = useState<Tenant | null>(() => (slug ? readCache(slug) : null));
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(!!slug);
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
