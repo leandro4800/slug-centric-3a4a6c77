@@ -31,15 +31,12 @@ const IndexRedirect = () => {
   }, []);
 
   useEffect(() => {
-    // Se ainda está carregando ou já está redirecionando, aguarda
-    if (authLoading || brandingLoading || redirecting) {
-        // Exceção: se o user não existe e temos branding (ou branding demorou), mandamos para login logo
-        if (!authLoading && !user && (!brandingLoading || forceRender)) {
-            // Segue para a lógica abaixo
-        } else {
-            return;
-        }
+    // Se ainda está carregando, aguarda (a menos que o forceRender tenha sido ativado)
+    if ((authLoading || brandingLoading) && !forceRender) {
+      return;
     }
+
+    if (redirecting) return;
 
     const decideDestination = async () => {
       setRedirecting(true);
