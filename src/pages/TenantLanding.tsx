@@ -50,10 +50,8 @@ export default function TenantLanding() {
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [planos, setPlanos] = useState<Plano[]>([]);
   const [loading, setLoading] = useState(true);
-  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [aulaAvulsaOpen, setAulaAvulsaOpen] = useState(false);
   const [voucherOpen, setVoucherOpen] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
@@ -106,7 +104,7 @@ export default function TenantLanding() {
     if (params.get("confirmed") === "1") {
       toast({
         title: "E-mail confirmado!",
-        description: "Escolha seu plano para liberar seu acesso.",
+        description: "Acesse o app para começar.",
       });
       // Limpa a URL
       const url = new URL(window.location.href);
@@ -126,14 +124,11 @@ export default function TenantLanding() {
       const pendingCode = sessionStorage.getItem("pending_voucher");
       
       if (isVoucherRequested) {
-        console.log("[TenantLanding] Voucher solicitado, abrindo modal.");
         setVoucherOpen(true);
-        // Limpa a URL para evitar loops ao navegar
         const nextParams = new URLSearchParams(searchParams);
         nextParams.delete("voucher");
         setSearchParams(nextParams, { replace: true });
       } else if (pendingCode && pendingCode !== "1") {
-        console.log("[TenantLanding] Voucher pendente detectado, processando resgate automático.");
         void handleRedeemVoucher(pendingCode);
       }
     }
@@ -146,8 +141,6 @@ export default function TenantLanding() {
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     setUser(currentUser);
 
-    // Se o aluno já tem código (chegou pelo link com ?codigo / ?voucher),
-    // pula a tela de planos e vai direto para o login do coach.
     const temCodigo = searchParams.get("codigo") !== null || searchParams.get("voucher") !== null;
     if (temCodigo && !currentUser) {
       navigate(`/${slug}/login`, { replace: true });
@@ -158,7 +151,6 @@ export default function TenantLanding() {
     setTenant(t as Tenant);
     
     if (t) {
-      // Check for subscription
       if (currentUser) {
         const { data: sub } = await supabase
           .from("assinaturas")
@@ -186,28 +178,8 @@ export default function TenantLanding() {
     setLoading(false);
   };
 
-  const handleCheckout = async (plano_id?: string, type: 'subscription' | 'aula_avulsa' = 'subscription') => {
-    const loadingKey = type === 'aula_avulsa' ? 'aula_avulsa' : plano_id!;
-    setCheckoutLoading(loadingKey);
-    try {
-      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
-        body: { 
-          plano_id, 
-          tenant_id: tenant?.id,
-          type 
-        },
-      });
-      if (error) throw error;
-      if (data?.url) window.location.href = data.url;
-    } catch (e: any) {
-      toast({ title: "Erro no checkout", description: e.message, variant: "destructive" });
-    } finally {
-      setCheckoutLoading(null);
-    }
-  };
-
   if (loading) {
-    return <div className="flex h-screen items-center justify-center bg-background">Carregando...</div>;
+    return <div className="flex h-screen items-center justify-center bg-background text-white font-display uppercase tracking-widest">Carregando...</div>;
   }
   if (!tenant || tenant.status !== "approved") {
     return (
@@ -228,7 +200,7 @@ export default function TenantLanding() {
           ) : (
             <div className="h-full w-full bg-gradient-to-br from-primary/30 to-background" />
           )}
-          <div className="absolute inset-0 bg-black/20" /> {/* Subtle overlay only for text legibility */}
+          <div className="absolute inset-0 bg-black/20" />
         </div>
 
         <div className="relative mx-auto max-w-5xl px-4 pt-6 md:px-8 flex justify-between items-center">
@@ -277,132 +249,27 @@ export default function TenantLanding() {
         </div>
       </section>
 
-      {/* Planos */}
-      <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
-        <div className="mb-12 text-center">
-          <h2 className="font-display text-4xl uppercase md:text-5xl">
-            {hasSubscription ? "Você já possui acesso" : "Escolha seu plano"}
-          </h2>
-          <p className="mt-3 text-muted-foreground">
-            {hasSubscription 
-              ? "Aproveite todos os benefícios do seu plano ativo." 
-              : "Experimente por 30 dias grátis. Cancele quando quiser."}
-          </p>
-          {hasSubscription && (
-            <Button 
-              size="lg" 
-              className="mt-6 font-bold uppercase tracking-widest"
-              onClick={() => navigate(`/${slug}/app`)}
-            >
-              Ir para o Dashboard
+      {/* Info */}
+      <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24 text-center">
+        <h2 className="font-display text-4xl uppercase md:text-5xl">Bem-vindo ao Time</h2>
+        <p className="mt-6 text-muted-foreground max-w-2xl mx-auto">
+          Para acessar a plataforma, você precisa de um código de acesso fornecido diretamente pelo seu coach.
+        </p>
+        <div className="mt-10 flex justify-center gap-4">
+          <Button 
+            size="lg" 
+            className="font-bold uppercase tracking-widest"
+            onClick={() => setVoucherOpen(true)}
+          >
+            <KeyRound className="mr-2 h-5 w-5" /> Digitar meu código
+          </Button>
+          <Link to={`/${slug}/login`}>
+            <Button size="lg" variant="outline" className="font-bold uppercase tracking-widest">
+              Fazer Login
             </Button>
-          )}
+          </Link>
         </div>
-
-        {!hasSubscription && (
-          <>
-            {planos.length === 0 ? (
-          <div className="rounded-none border border-border/50 bg-card/40 p-12 text-center text-muted-foreground">
-            Este coach ainda não publicou planos.
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {tenant.permite_aula_avulsa && (
-              <div className="relative overflow-hidden rounded-none border-2 border-primary/30 bg-card p-8 flex flex-col">
-                <Badge className="absolute right-4 top-4 bg-primary text-primary-foreground">Aula Presencial</Badge>
-                <h3 className="font-display text-2xl uppercase">Aula Avulsa</h3>
-                <p className="mt-2 text-sm text-muted-foreground">Treino presencial único para correção de técnica e performance.</p>
-                <div className="my-6">
-                  <span className="font-display text-5xl">R$ {tenant.preco_aula_avulsa}</span>
-                  <span className="ml-1 text-muted-foreground">/aula</span>
-                </div>
-                <ul className="mb-8 space-y-2 text-sm flex-1">
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Correção de técnica</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Intensidade máxima</li>
-                  <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Suporte pós-treino</li>
-                </ul>
-                <Button 
-                  onClick={() => setAulaAvulsaOpen(true)}
-                  className="w-full font-bold uppercase tracking-widest"
-                >
-                  Agendar Aula
-                </Button>
-              </div>
-            )}
-            {planos.map((p, i) => {
-              const destaque = i === 1 && planos.length >= 2;
-              return (
-                <div
-                  key={p.id}
-                  className={`relative overflow-hidden rounded-none border p-8 transition-all ${
-                    destaque
-                      ? "border-primary bg-gradient-to-b from-primary/10 to-card shadow-glow"
-                      : "border-border/50 bg-card hover:border-primary/40"
-                  }`}
-                >
-                  {destaque && (
-                    <Badge className="absolute right-4 top-4 bg-primary text-primary-foreground">
-                      Mais popular
-                    </Badge>
-                  )}
-                  <h3 className="font-display text-2xl uppercase">{p.nome}</h3>
-                  {p.descricao && <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>}
-                  <div className="my-6">
-                    <span className="font-display text-5xl">{formatBRL(p.preco_centavos)}</span>
-                    <span className="ml-1 text-muted-foreground">{intervaloLabel[p.intervalo]}</span>
-                  </div>
-                  <ul className="mb-8 space-y-2 text-sm">
-                    {["Treinos personalizados", "Dieta sob medida", "Acompanhamento contínuo", "App exclusivo"].map(
-                      (f) => (
-                        <li key={f} className="flex items-center gap-2">
-                          <Check className="h-4 w-4 text-primary" /> {f}
-                        </li>
-                      )
-                    )}
-                  </ul>
-                  {!p.stripe_price_id ? (
-                    <div className="text-xs text-center text-muted-foreground border border-border/50 p-3">
-                      Plano em configuração — em breve.
-                    </div>
-                  ) : !user ? (
-                    <Link to={`/${slug}/login`} className="block">
-                      <Button className="w-full font-bold uppercase tracking-widest" variant={destaque ? "default" : "outline"}>
-                        Criar conta e assinar
-                      </Button>
-                    </Link>
-                  ) : (
-                    <Button
-                      onClick={() => handleCheckout(p.id)}
-                      disabled={checkoutLoading === p.id}
-                      className="w-full font-bold uppercase tracking-widest"
-                      variant={destaque ? "default" : "outline"}
-                    >
-                      {checkoutLoading === p.id ? "Redirecionando..." : "Testar 30 dias grátis"}
-                    </Button>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </>
-    )}
       </section>
-
-      <Dialog open={aulaAvulsaOpen} onOpenChange={setAulaAvulsaOpen}>
-        <DialogContent className="bg-card border border-border">
-          <DialogHeader>
-            <DialogTitle className="font-display uppercase text-xl">Agendar Aula Avulsa</DialogTitle>
-          </DialogHeader>
-          {tenant?.permite_aula_avulsa && tenant.preco_aula_avulsa && (
-            <AulaAvulsaQuickForm
-              tenantId={tenant.id}
-              tenantNome={tenant.nome}
-              preco={Number(tenant.preco_aula_avulsa)}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
 
       <Dialog open={voucherOpen} onOpenChange={setVoucherOpen}>
         <DialogContent className="bg-card border border-border">
@@ -412,7 +279,7 @@ export default function TenantLanding() {
             </DialogTitle>
             <DialogDescription>
               {user
-                ? "Digite o código fornecido pelo coach para liberar acesso ilimitado sem cobrança."
+                ? "Digite o código fornecido pelo coach para liberar acesso ilimitado."
                 : "Faça login ou cadastre-se primeiro. Depois volte aqui para resgatar seu código."}
             </DialogDescription>
           </DialogHeader>
@@ -425,16 +292,16 @@ export default function TenantLanding() {
               disabled={!user || voucherLoading}
             />
             {user ? (
-              <Button
-                onClick={() => handleRedeemVoucher()}
-                disabled={voucherLoading}
+              <Button 
+                onClick={() => handleRedeemVoucher()} 
+                disabled={voucherLoading || !voucherCode} 
                 className="w-full font-bold uppercase tracking-widest"
               >
                 {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar acesso"}
               </Button>
             ) : (
-              <Link to={`/${slug}/login`} className="block">
-                <Button className="w-full font-bold uppercase tracking-widest">Entrar / Cadastrar</Button>
+              <Link to={`/${slug}/login?voucher=1`} className="block">
+                <Button className="w-full font-bold uppercase tracking-widest">Entrar para resgatar</Button>
               </Link>
             )}
           </div>
