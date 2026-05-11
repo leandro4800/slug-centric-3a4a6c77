@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
-import { ArrowLeft, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 
 type Step = "signup" | "verify-email" | "personal" | "tenant" | "pending";
 const STEPS: Step[] = ["signup", "personal", "tenant", "pending"];
@@ -17,12 +16,10 @@ const STEPS: Step[] = ["signup", "personal", "tenant", "pending"];
 export default function SejaCoach() {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
-  const [params] = useSearchParams();
   const { toast } = useToast();
 
   const [step, setStep] = useState<Step>("signup");
   const [busy, setBusy] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
 
   // signup
   const [email, setEmail] = useState("");
@@ -42,17 +39,6 @@ export default function SejaCoach() {
   const [bio, setBio] = useState("");
   const [especialidades, setEspecialidades] = useState("");
 
-  // product (até 4 planos: mensal/trimestral/semestral/anual)
-  type PlanoForm = { nome: string; descricao: string; preco: string; intervalo: "mensal" | "trimestral" | "semestral" | "anual" };
-  const [planos, setPlanos] = useState<PlanoForm[]>([
-    { nome: "", descricao: "", preco: "", intervalo: "mensal" },
-    { nome: "", descricao: "", preco: "", intervalo: "trimestral" },
-    { nome: "", descricao: "", preco: "", intervalo: "semestral" },
-    { nome: "", descricao: "", preco: "", intervalo: "anual" },
-  ]);
-  const updatePlano = (i: number, patch: Partial<PlanoForm>) =>
-    setPlanos((arr) => arr.map((p, idx) => (idx === i ? { ...p, ...patch } : p)));
-
   const [tenantId, setTenantId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -62,14 +48,6 @@ export default function SejaCoach() {
 
   const loadExisting = async () => {
     if (!user) return;
-
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin");
-    const userIsAdmin = !!roles && roles.length > 0;
-    setIsAdmin(userIsAdmin);
 
     const { data: perfil } = await supabase
       .from("perfis")
@@ -111,17 +89,10 @@ export default function SejaCoach() {
     setBusy(true);
     try {
       const cleanEmail = email.trim().toLowerCase();
-
-      // Verifica se o e-mail já tem perfil cadastrado para evitar duplicidade silenciosa
-      const { data: exists, error: checkErr } = await supabase
-        .rpc("email_is_registered", { _email: cleanEmail });
+      const { data: exists, error: checkErr } = await supabase.rpc("email_is_registered", { _email: cleanEmail });
       if (checkErr) throw checkErr;
       if (exists) {
-        toast({
-          title: "E-mail já cadastrado",
-          description: "Esse e-mail já está cadastrado. Faça login para continuar seu cadastro.",
-          variant: "destructive",
-        });
+        toast({ title: "E-mail já cadastrado", description: "Faça login para continuar.", variant: "destructive" });
         navigate(`/login?redirect=/seja-coach`);
         return;
       }
@@ -129,46 +100,16 @@ export default function SejaCoach() {
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
-        options: {
-          // Sem emailRedirectTo: força envio de OTP de 6 dígitos em vez de magic link
-          data: { nome_completo: nome, is_coach: true },
-        },
+        options: { data: { nome_completo: nome, is_coach: true } },
       });
-      if (error) {
-        // Supabase pode retornar erro genérico para email já existente
-        const msg = error.message?.toLowerCase() || "";
-        if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-          toast({
-            title: "E-mail já cadastrado",
-            description: "Esse e-mail já está cadastrado. Faça login para continuar.",
-            variant: "destructive",
-          });
-          navigate(`/login?redirect=/seja-coach`);
-          return;
-        }
-        throw error;
-      }
-      // Heurística adicional: signUp retorna user com identities=[] quando o email já existe
-      const identities = (data?.user as any)?.identities;
-      if (data?.user && Array.isArray(identities) && identities.length === 0) {
-        toast({
-          title: "E-mail já cadastrado",
-          description: "Esse e-mail já está cadastrado. Faça login para continuar.",
-          variant: "destructive",
-        });
-        navigate(`/login?redirect=/seja-coach`);
-        return;
-      }
-      // Se a confirmação de e-mail está habilitada, não há sessão ainda
+      if (error) throw error;
+      
       if (!data?.session) {
         setStep("verify-email");
-        toast({
-          title: "Confirme seu e-mail",
-          description: "Enviamos um link de confirmação para o seu e-mail. Clique nele para continuar.",
-        });
+        toast({ title: "Confirme seu e-mail", description: "Enviamos um link para o seu e-mail." });
         return;
       }
-      toast({ title: "Conta criada!", description: "Continue o cadastro do seu painel." });
+      toast({ title: "Conta criada!" });
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
@@ -183,11 +124,7 @@ export default function SejaCoach() {
     try {
       const { error } = await supabase
         .from("perfis")
-        .update({
-          nome_completo: nome,
-          telefone,
-          onboarding_completo: true,
-        })
+        .update({ nome_completo: nome, telefone, onboarding_completo: true })
         .eq("id", user.id);
       if (error) throw error;
       setStep("tenant");
@@ -203,59 +140,25 @@ export default function SejaCoach() {
     if (!user) return;
     setBusy(true);
     try {
-      const cleanSlug = slug
-        .toLowerCase()
-        .replace(/[^a-z0-9-]/g, "-")
-        .replace(/-+/g, "-")
-        .replace(/^-|-$/g, "");
+      const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
       if (!cleanSlug) throw new Error("Slug inválido");
-
-      const especArr = especialidades
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean);
+      const especArr = especialidades.split(",").map((s) => s.trim()).filter(Boolean);
 
       let currentTenantId = tenantId;
       if (currentTenantId) {
-        const { error } = await supabase
-          .from("tenants")
-          .update({
-            slug: cleanSlug,
-            nome: nomePainel,
-            tagline,
-            bio,
-            especialidades: especArr,
-            cidade,
-            estado: estado.toUpperCase(),
-          })
-          .eq("id", currentTenantId);
+        const { error } = await supabase.from("tenants").update({
+          slug: cleanSlug, nome: nomePainel, tagline, bio, especialidades: especArr, cidade, estado: estado.toUpperCase(),
+        }).eq("id", currentTenantId);
         if (error) throw error;
       } else {
-        const { data, error } = await supabase
-          .from("tenants")
-          .insert({
-            slug: cleanSlug,
-            nome: nomePainel,
-            tagline,
-            bio,
-            especialidades: especArr,
-            cidade,
-            estado: estado.toUpperCase(),
-            owner_user_id: user.id,
-            status: "pending",
-          })
-          .select()
-          .single();
+        const { data, error } = await supabase.from("tenants").insert({
+          slug: cleanSlug, nome: nomePainel, tagline, bio, especialidades: especArr, cidade, estado: estado.toUpperCase(),
+          owner_user_id: user.id, status: "pending",
+        }).select().single();
         if (error) throw error;
         currentTenantId = data.id;
-
-        await supabase.from("user_roles").insert({
-          user_id: user.id,
-          role: "coach" as any,
-          tenant_id: data.id,
-        });
+        await supabase.from("user_roles").insert({ user_id: user.id, role: "coach" as any, tenant_id: data.id });
       }
-
       setTenantId(currentTenantId);
       setStep("pending");
     } catch (e: any) {
@@ -265,66 +168,7 @@ export default function SejaCoach() {
     }
   };
 
-  const handleCreateProduct = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!tenantId) return;
-    setBusy(true);
-    try {
-      const rows = planos
-        .map((p, i) => ({ p, i }))
-        .filter(({ p }) => p.nome.trim() && p.preco.trim());
-
-      if (rows.length === 0) throw new Error("Preencha ao menos um plano");
-
-      const inserts = rows.map(({ p, i }) => {
-        const preco = Math.round(parseFloat(p.preco.replace(",", ".")) * 100);
-        if (!preco || preco < 100) throw new Error(`Valor inválido no plano ${i + 1}`);
-        return {
-          tenant_id: tenantId,
-          nome: p.nome,
-          descricao: p.descricao,
-          preco_centavos: preco,
-          intervalo: p.intervalo,
-          ativo: true,
-          ordem: i,
-        };
-      });
-
-      const { error } = await supabase.from("planos").insert(inserts);
-      if (error) throw error;
-      setStep("pending");
-    } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const handleStripeOnboard = async () => {
-    if (!tenantId) return;
-    setBusy(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", {
-        body: { tenant_id: tenantId },
-      });
-      if (error) throw error;
-      if (data?.url) window.location.href = data.url;
-    } catch (e: any) {
-      toast({ title: "Erro Stripe", description: e.message, variant: "destructive" });
-      setBusy(false);
-    }
-  };
-
-  const syncStripe = async (id: string) => {
-    const { data } = await supabase.functions.invoke("stripe-connect-status", {
-      body: { tenant_id: id },
-    });
-    if (data?.completed) setStep("pending");
-  };
-
-  if (isLoading)
-    return <div className="flex h-screen items-center justify-center bg-background">Carregando...</div>;
-
+  if (isLoading) return <div className="flex h-screen items-center justify-center bg-background text-white font-display uppercase tracking-widest">Carregando...</div>;
   const stepIndex = STEPS.indexOf(step);
 
   return (
@@ -339,26 +183,21 @@ export default function SejaCoach() {
       </header>
 
       <div className="mx-auto max-w-2xl px-4 py-12 md:px-8">
-        <h1 className="font-display text-4xl uppercase md:text-5xl">Seja um coach Elite</h1>
-        <p className="mt-2 text-muted-foreground">
-          Cadastre seu painel, crie sua consultoria e receba 90% de cada assinatura. Plataforma fica com 10%.
+        <h1 className="font-display text-4xl uppercase md:text-5xl tracking-tighter italic">Seja um coach <span className="text-primary">ALPHA</span></h1>
+        <p className="mt-2 text-muted-foreground uppercase tracking-widest text-[10px] font-bold">
+          Cadastre seu painel e comece a gerenciar seus atletas agora mesmo.
         </p>
 
-        {/* Steps indicator */}
         <div className="my-8 flex items-center gap-2 text-xs">
-          {STEPS.slice(0, 5).map((s, i) => {
+          {STEPS.slice(0, 4).map((s, i) => {
             const active = step === s;
             const done = stepIndex > i;
             return (
               <div key={s} className="flex flex-1 items-center gap-2">
-                <div
-                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${
-                    active || done ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"
-                  }`}
-                >
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border ${active || done ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>
                   {done ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
                 </div>
-                {i < 4 && <div className={`h-px flex-1 ${done ? "bg-primary" : "bg-border"}`} />}
+                {i < 3 && <div className={`h-px flex-1 ${done ? "bg-primary" : "bg-border"}`} />}
               </div>
             );
           })}
@@ -367,7 +206,7 @@ export default function SejaCoach() {
         <div className="rounded-2xl border border-border/50 bg-card p-8">
           {step === "signup" && !user && (
             <form onSubmit={handleSignup} className="space-y-4">
-              <h2 className="font-display text-2xl uppercase">1. Crie sua conta</h2>
+              <h2 className="font-display text-2xl uppercase italic">1. Crie sua conta</h2>
               <div>
                 <Label>Nome completo</Label>
                 <Input value={nome} onChange={(e) => setNome(e.target.value)} required />
@@ -380,289 +219,89 @@ export default function SejaCoach() {
                 <Label>Senha</Label>
                 <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={6} />
               </div>
-              <Button type="submit" disabled={busy} className="w-full bg-primary hover:bg-primary/90">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar conta"}
+              <Button type="submit" disabled={busy} className="w-full">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "CRIAR CONTA ALPHA"}
               </Button>
-              <p className="text-center text-xs text-muted-foreground">
-                Já tem conta? <Link to="/login" className="text-primary">Entrar</Link>
-              </p>
             </form>
           )}
 
           {step === "verify-email" && !user && (
-            <form
-              className="space-y-4 text-center"
-              onSubmit={async (e) => {
-                e.preventDefault();
-                setBusy(true);
-                try {
-                  const { error } = await supabase.auth.verifyOtp({
-                    email: email.trim().toLowerCase(),
-                    token: otpCode.trim(),
-                    type: "email",
-                  });
-                  if (error) throw error;
-                  toast({ title: "E-mail confirmado!" });
-                  // onAuthStateChange vai disparar e o useEffect avança a step
-                } catch (err: any) {
-                  toast({ title: "Código inválido", description: err.message, variant: "destructive" });
-                } finally {
-                  setBusy(false);
-                }
-              }}
-            >
-              <h2 className="font-display text-2xl uppercase">Confirme seu e-mail</h2>
-              <p className="text-sm text-muted-foreground">
-                Enviamos um código de 6 dígitos para <strong className="text-foreground">{email}</strong>.
-                Digite-o abaixo para ativar sua conta.
-              </p>
-              <Input
-                value={otpCode}
-                onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                placeholder="000000"
-                inputMode="numeric"
-                maxLength={6}
-                className="text-center text-2xl tracking-[0.5em] font-mono"
-                required
-              />
+            <form className="space-y-4 text-center" onSubmit={async (e) => {
+              e.preventDefault();
+              setBusy(true);
+              try {
+                const { error } = await supabase.auth.verifyOtp({ email: email.trim().toLowerCase(), token: otpCode.trim(), type: "email" });
+                if (error) throw error;
+                toast({ title: "E-mail confirmado!" });
+              } catch (err: any) {
+                toast({ title: "Código inválido", description: err.message, variant: "destructive" });
+              } finally { setBusy(false); }
+            }}>
+              <h2 className="font-display text-2xl uppercase italic">Confirme seu e-mail</h2>
+              <p className="text-sm text-muted-foreground">Enviamos um código para {email}.</p>
+              <Input value={otpCode} onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, "").slice(0, 6))} placeholder="000000" inputMode="numeric" maxLength={6} className="text-center text-2xl tracking-[0.5em] font-mono" required />
               <Button type="submit" disabled={busy || otpCode.length !== 6} className="w-full">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirmar código"}
-              </Button>
-              <p className="text-xs text-muted-foreground">
-                Não recebeu? Verifique a caixa de spam ou{" "}
-                <button
-                  type="button"
-                  className="text-primary underline"
-                  onClick={async () => {
-                    const { error } = await supabase.auth.resend({ type: "signup", email });
-                    if (error) toast({ title: "Erro", description: error.message, variant: "destructive" });
-                    else toast({ title: "Código reenviado" });
-                  }}
-                >
-                  reenviar
-                </button>
-                .
-              </p>
-              <Button type="button" variant="outline" onClick={() => setStep("signup")} className="w-full">
-                Usar outro e-mail
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "CONFIRMAR CÓDIGO"}
               </Button>
             </form>
           )}
 
           {step === "personal" && (
             <form onSubmit={handleSavePersonal} className="space-y-4">
-              <h2 className="font-display text-2xl uppercase">2. Seus dados pessoais</h2>
-              <p className="text-sm text-muted-foreground">
-                Esses dados ficam visíveis apenas para você e a equipe da plataforma.
-              </p>
+              <h2 className="font-display text-2xl uppercase italic">2. Seus dados pessoais</h2>
               <div>
                 <Label>Nome completo</Label>
                 <Input value={nome} onChange={(e) => setNome(e.target.value)} required />
               </div>
               <div>
                 <Label>Telefone (WhatsApp)</Label>
-                <Input
-                  value={telefone}
-                  onChange={(e) => setTelefone(e.target.value)}
-                  placeholder="(11) 99999-9999"
-                  required
-                />
+                <Input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" required />
               </div>
-              <Button type="submit" disabled={busy} className="w-full bg-primary hover:bg-primary/90">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
+              <Button type="submit" disabled={busy} className="w-full">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "CONTINUAR"}
               </Button>
             </form>
           )}
 
           {step === "tenant" && (
             <form onSubmit={handleCreateTenant} className="space-y-4">
-              <h2 className="font-display text-2xl uppercase">3. Configure seu painel</h2>
+              <h2 className="font-display text-2xl uppercase italic">3. Configure seu painel</h2>
               <div>
-                <Label>Como sua consultoria vai se chamar</Label>
-                <Input
-                  value={nomePainel}
-                  onChange={(e) => setNomePainel(e.target.value)}
-                  placeholder="Ex: TEAMLEANDRO"
-                  required
-                />
+                <Label>Nome da sua marca / Consultoria</Label>
+                <Input value={nomePainel} onChange={(e) => setNomePainel(e.target.value)} placeholder="Ex: TEAM ALPHA" required />
               </div>
               <div>
                 <Label>Slug (URL única)</Label>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-muted-foreground">alphacoach.app/</span>
-                  <Input
-                    value={slug}
-                    onChange={(e) => setSlug(e.target.value)}
-                    placeholder="teamleandro"
-                    required
-                    pattern="[a-z0-9-]+"
-                  />
+                  <span className="text-sm text-muted-foreground">alpha-coach.app/</span>
+                  <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="teamalpha" required pattern="[a-z0-9-]+" />
                 </div>
-              </div>
-              <div>
-                <Label>Tagline</Label>
-                <Input
-                  value={tagline}
-                  onChange={(e) => setTagline(e.target.value)}
-                  placeholder="Hipertrofia & Estética"
-                />
-              </div>
-              <div>
-                <Label>Especialidades (separadas por vírgula)</Label>
-                <Input
-                  value={especialidades}
-                  onChange={(e) => setEspecialidades(e.target.value)}
-                  placeholder="Hipertrofia, Emagrecimento, Performance"
-                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Cidade</Label>
-                  <Input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex: Serra" required />
+                  <Input value={cidade} onChange={(e) => setCidade(e.target.value)} placeholder="Ex: Vitória" required />
                 </div>
                 <div>
                   <Label>Estado (UF)</Label>
                   <Input value={estado} onChange={(e) => setEstado(e.target.value)} placeholder="Ex: ES" maxLength={2} required />
                 </div>
               </div>
-              <div>
-                <Label>Bio</Label>
-                <Textarea value={bio} onChange={(e) => setBio(e.target.value)} rows={4} />
-              </div>
-              <Button type="submit" disabled={busy} className="w-full bg-primary hover:bg-primary/90">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
+              <Button type="submit" disabled={busy} className="w-full">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "FINALIZAR CADASTRO"}
               </Button>
             </form>
-          )}
-
-          {step === "product" && (
-            <form onSubmit={handleCreateProduct} className="space-y-6">
-              <h2 className="font-display text-2xl uppercase">4. Seus planos</h2>
-              <p className="text-sm text-muted-foreground">
-                Crie até 4 planos de uma vez (mensal, trimestral, semestral e anual). Preencha apenas os que quiser oferecer — os vazios serão ignorados. Você pode editar ou adicionar mais depois.
-              </p>
-
-              {planos.map((p, i) => (
-                <div key={i} className="space-y-3 rounded-xl border border-white/10 bg-black/30 p-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-display text-sm uppercase text-primary">
-                      Plano {i + 1} — {p.intervalo}
-                    </h3>
-                    <span className="text-xs text-muted-foreground">opcional</span>
-                  </div>
-                  <div>
-                    <Label>Nome do plano</Label>
-                    <Input
-                      value={p.nome}
-                      onChange={(e) => updatePlano(i, { nome: e.target.value })}
-                      placeholder={
-                        p.intervalo === "mensal"
-                          ? "Ex: Mentoria Mensal"
-                          : p.intervalo === "trimestral"
-                          ? "Ex: Mentoria Trimestral"
-                          : p.intervalo === "semestral"
-                          ? "Ex: Mentoria Semestral"
-                          : "Ex: Mentoria Anual"
-                      }
-                    />
-                  </div>
-                  <div>
-                    <Label>Descrição</Label>
-                    <Textarea
-                      value={p.descricao}
-                      onChange={(e) => updatePlano(i, { descricao: e.target.value })}
-                      placeholder="O que está incluso no plano..."
-                      rows={2}
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label>Valor (R$)</Label>
-                      <Input
-                        type="text"
-                        inputMode="decimal"
-                        value={p.preco}
-                        onChange={(e) => updatePlano(i, { preco: e.target.value })}
-                        placeholder="297,00"
-                      />
-                    </div>
-                    <div>
-                      <Label>Período</Label>
-                      <Select
-                        value={p.intervalo}
-                        onValueChange={(v: any) => updatePlano(i, { intervalo: v })}
-                      >
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="mensal">Mensal</SelectItem>
-                          <SelectItem value="trimestral">Trimestral</SelectItem>
-                          <SelectItem value="semestral">Semestral</SelectItem>
-                          <SelectItem value="anual">Anual</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              <Button type="submit" disabled={busy} className="w-full bg-primary hover:bg-primary/90">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Continuar"}
-              </Button>
-            </form>
-          )}
-
-          {step === "stripe" && (
-            <div className="space-y-6 text-center">
-              <h2 className="font-display text-2xl uppercase">5. Conecte seu Stripe</h2>
-              <p className="text-muted-foreground">
-                Crie sua conta Stripe Express em ~3 minutos. É como você vai receber 90% de cada assinatura,
-                direto na sua conta bancária. A confirmação de identidade para saques acontece dentro do painel.
-              </p>
-              <Button
-                onClick={handleStripeOnboard}
-                disabled={busy}
-                size="lg"
-                className="bg-primary hover:bg-primary/90"
-              >
-                {busy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    Conectar Stripe <ExternalLink className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-              {isAdmin && (
-                <Button
-                  variant="ghost"
-                  onClick={async () => {
-                    if (!tenantId) return;
-                    setBusy(true);
-                    await supabase.from("tenants_private" as any).upsert({ tenant_id: tenantId, stripe_onboarding_completed: true });
-                    setStep("pending");
-                    setBusy(false);
-                    toast({ title: "Stripe ignorado (Admin)" });
-                  }}
-                  className="w-full text-xs text-muted-foreground"
-                >
-                  Pular Stripe (Apenas Admin)
-                </Button>
-              )}
-              <Button variant="outline" onClick={() => tenantId && syncStripe(tenantId)} className="w-full">
-                Já completei — verificar status
-              </Button>
-            </div>
           )}
 
           {step === "pending" && (
             <div className="space-y-4 text-center">
               <CheckCircle2 className="mx-auto h-16 w-16 text-primary" />
-              <h2 className="font-display text-2xl uppercase">Pronto! Aguardando aprovação</h2>
-              <p className="text-muted-foreground">
-                Seu painel <span className="font-mono text-primary">/{slug}</span> está em análise.
-                Você receberá um email assim que for aprovado e poderá receber alunos. O Stripe pode ser configurado depois.
+              <h2 className="font-display text-2xl uppercase italic">Quase lá!</h2>
+              <p className="text-sm text-muted-foreground">
+                Seu painel <span className="font-mono text-primary">/{slug}</span> está em análise pela equipe.
+                Você receberá um e-mail em instantes informando a aprovação.
               </p>
-              <Link to="/"><Button variant="outline">Voltar ao marketplace</Button></Link>
+              <Link to="/"><Button variant="outline" className="w-full uppercase font-bold tracking-widest">VOLTAR AO INÍCIO</Button></Link>
             </div>
           )}
         </div>
