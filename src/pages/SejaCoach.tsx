@@ -11,8 +11,8 @@ import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 
-type Step = "signup" | "verify-email" | "personal" | "tenant" | "product" | "stripe" | "pending";
-const STEPS: Step[] = ["signup", "personal", "tenant", "product", "stripe", "pending"];
+type Step = "signup" | "verify-email" | "personal" | "tenant" | "pending";
+const STEPS: Step[] = ["signup", "personal", "tenant", "pending"];
 
 export default function SejaCoach() {
   const { user, isLoading } = useAuth();
