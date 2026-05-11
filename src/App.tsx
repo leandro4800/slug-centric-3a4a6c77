@@ -116,6 +116,7 @@ const App = () => (
 
             {/* App do aluno */}
             <Route path="/index" element={<IndexRedirect />} />
+            <Route path="/:slug/index" element={<IndexRedirect />} />
 
             <Route
               path="/:slug/app"

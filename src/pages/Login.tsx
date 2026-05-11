@@ -101,10 +101,11 @@ const Login = () => {
 
     // Se o usuário já estiver logado e tentar acessar a página de login,
     // nós o mandamos para a rota de redirecionamento que decidirá o destino final.
-    // Usamos window.location.href para garantir uma limpeza de estado se necessário.
-    console.log("[Login] Usuário já autenticado, delegando ao IndexRedirect.");
-    window.location.href = "/index";
-  }, [user, authLoading]);
+    // Usamos replace: true para evitar loops no histórico.
+    const target = urlSlug ? `/${urlSlug}/index` : "/index";
+    console.log("[Login] Usuário já autenticado, delegando ao IndexRedirect:", target);
+    navigate(target, { replace: true });
+  }, [user, authLoading, navigate, urlSlug]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

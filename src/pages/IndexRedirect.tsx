@@ -20,6 +20,8 @@ const IndexRedirect = () => {
   const confirmed = params.get("confirmed") === "1" || params.get("type") === "signup";
   const safeSlug = slugParam && /^[a-z0-9-]+$/i.test(slugParam) ? slugParam : null;
 
+  console.log("[IndexRedirect] Rota atual:", window.location.pathname, "Slug detectado:", safeSlug);
+
   const [forceRender, setForceRender] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
@@ -31,17 +33,19 @@ const IndexRedirect = () => {
   useEffect(() => {
     if (authLoading || brandingLoading || redirecting) return;
 
-    if (!user) {
-      const loginPath = safeSlug ? `/${safeSlug}/login` : "/login";
-      const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
-      navigate(target, { replace: true });
-      return;
-    }
-
     const decideDestination = async () => {
       setRedirecting(true);
       try {
-        // Busca se ele é dono de algum tenant
+        if (!user) {
+          const loginPath = safeSlug ? `/${safeSlug}/login` : "/login";
+          const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
+          console.log("[IndexRedirect] Não autenticado, enviando para:", target);
+          navigate(target, { replace: true });
+          return;
+        }
+
+        // Se o usuário está logado, decidimos o destino
+        // 1. Busca se ele é dono de algum tenant
         const { data: ownedTenant } = await supabase
           .from("tenants")
           .select("slug")
@@ -49,18 +53,22 @@ const IndexRedirect = () => {
           .maybeSingle();
 
         if (ownedTenant?.slug) {
-          navigate(`/${ownedTenant.slug}/app/controle`, { replace: true });
+          const target = `/${ownedTenant.slug}/app/controle`;
+          console.log("[IndexRedirect] Owner identificado, enviando para:", target);
+          navigate(target, { replace: true });
           return;
         }
 
-        // Se ele está em um tenant específico via URL ou Branding
+        // 2. Se ele está em um tenant específico via URL ou Branding
         const targetSlug = safeSlug || tenant?.slug;
         if (targetSlug && targetSlug !== "demo") {
-          navigate(`/${targetSlug}/app`, { replace: true });
+          const target = `/${targetSlug}/app`;
+          console.log("[IndexRedirect] Tenant identificado via URL/Branding, enviando para:", target);
+          navigate(target, { replace: true });
           return;
         }
 
-        // Busca o tenant do perfil
+        // 3. Busca o tenant do perfil
         const { data: profile } = await supabase
           .from("perfis")
           .select("tenant_id")
@@ -75,15 +83,18 @@ const IndexRedirect = () => {
             .maybeSingle();
           
           if (profileTenant?.slug) {
-            navigate(`/${profileTenant.slug}/app`, { replace: true });
+            const target = `/${profileTenant.slug}/app`;
+            console.log("[IndexRedirect] Tenant identificado via Perfil, enviando para:", target);
+            navigate(target, { replace: true });
             return;
           }
         }
 
-        // Sem tenant: vai para onboarding
+        // 4. Sem tenant associado: vai para onboarding
+        console.log("[IndexRedirect] Sem tenant associado, enviando para onboarding");
         navigate("/onboarding", { replace: true });
       } catch (err) {
-        console.error("[IndexRedirect] Erro:", err);
+        console.error("[IndexRedirect] Erro crítico na decisão:", err);
         navigate("/login", { replace: true });
       }
     };
