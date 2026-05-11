@@ -20,6 +20,8 @@ const IndexRedirect = () => {
   const confirmed = params.get("confirmed") === "1" || params.get("type") === "signup";
   const safeSlug = slugParam && /^[a-z0-9-]+$/i.test(slugParam) ? slugParam : null;
 
+  console.log("[IndexRedirect] Rota atual:", window.location.pathname, "Slug detectado:", safeSlug);
+
   const [forceRender, setForceRender] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
