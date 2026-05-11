@@ -4,6 +4,7 @@ import * as React from 'npm:react@18.3.1'
 
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -35,15 +36,21 @@ export const SignupEmail = ({
       <Container style={container}>
         <Heading style={h1}>Confirme seu cadastro</Heading>
         <Text style={text}>
-          Olá! Use o código abaixo para confirmar seu e-mail em{' '}
+          Olá! Clique no botão abaixo para confirmar seu e-mail em{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
           :
         </Text>
+        <Button style={button} href={confirmationUrl}>
+          Confirmar E-mail
+        </Button>
+        <Text style={textSmall}>
+          Ou se preferir, use o código abaixo na tela de confirmação:
+        </Text>
         <div style={codeBox}>{token || '------'}</div>
         <Text style={textSmall}>
-          Digite este código de 6 dígitos na tela de confirmação. O código expira em 1 hora.
+          Este código expira em 1 hora.
         </Text>
         <Text style={footer}>
           Se você não criou uma conta, ignore este e-mail.
@@ -76,6 +83,17 @@ const textSmall = {
   margin: '0 0 25px',
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
+const button = {
+  backgroundColor: '#E50914',
+  color: '#ffffff',
+  fontSize: '14px',
+  borderRadius: '8px',
+  padding: '12px 20px',
+  textDecoration: 'none',
+  fontWeight: 'bold' as const,
+  display: 'inline-block',
+  margin: '0 0 25px',
+}
 const codeBox = {
   backgroundColor: '#f4f4f5',
   border: '1px solid #e4e4e7',
