@@ -81,7 +81,7 @@ const Login = () => {
       sessionStorage.removeItem("pending_voucher");
       const targetSlug = urlSlug || tenant?.slug;
       // Hard reload para o AuthProvider reler os papéis (inclui o 'aluno' recém-criado)
-      window.location.assign(targetSlug ? `/${targetSlug}/app` : "/marketplace");
+      window.location.href = targetSlug ? `/${targetSlug}/app` : "/marketplace";
     }
   };
 
@@ -148,7 +148,7 @@ const Login = () => {
 
         // 2. Prioridade: Coach (Dono de Tenant)
         if (ownedTenant?.slug) {
-          goTo(`/${ownedTenant.slug}/app/controle`);
+          window.location.href = `/${ownedTenant.slug}/app/controle`;
           return;
         }
 
