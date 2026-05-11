@@ -126,12 +126,25 @@ export default function Onboarding() {
     try {
       const peso = Number(pesoKg);
       const alt = Number(alturaCm);
-      const bf = calcBodyFatUSNavy({ sexo, altura_cm: alt, pescoco_cm: Number(pescocoCm), cintura_cm: Number(cinturaCm), quadril_cm: quadrilCm ? Number(quadrilCm) : undefined });
-      const imc = calcIMC(peso, alt);
-      const massaGorda = bf && peso ? +(peso * (bf / 100)).toFixed(2) : null;
-      const massaMagra = bf && peso ? +(peso - (massaGorda ?? 0)).toFixed(2) : null;
+      const bfVal = calcBodyFatUSNavy({ 
+        sexo, 
+        altura_cm: alt, 
+        pescoco_cm: Number(pescocoCm), 
+        cintura_cm: Number(cinturaCm), 
+        quadril_cm: quadrilCm ? Number(quadrilCm) : undefined 
+      });
+      const imcVal = calcIMC(peso, alt);
+      const massaGorda = bfVal && peso ? +(peso * (bfVal / 100)).toFixed(2) : null;
+      const massaMagra = bfVal && peso ? +(peso - (massaGorda ?? 0)).toFixed(2) : null;
 
-      await supabase.from("perfis").update({ nome_completo: nome, telefone, data_nascimento: dataNasc || null, sexo, onboarding_completo: true, tenant_id: tenantId }).eq("id", user.id);
+      await supabase.from("perfis").update({ 
+        nome_completo: nome, 
+        telefone, 
+        data_nascimento: dataNasc || null, 
+        sexo, 
+        onboarding_completo: true, 
+        tenant_id: tenantId 
+      }).eq("id", user.id);
 
       if (tenantId) {
         const { data: hasRole } = await supabase.from("user_roles").select("id").eq("user_id", user.id).eq("tenant_id", tenantId).eq("role", "aluno").maybeSingle();
@@ -147,7 +160,7 @@ export default function Onboarding() {
         nivel_experiencia: nivelExperiencia, faz_uso_ergogenicos: fazUsoErgogenicos, detalhes_ergogenicos: detalhesErgogenicos
       }, { onConflict: "aluno_id" });
 
-      await supabase.from("avaliacoes_fisicas").insert({ aluno_id: user.id, tenant_id: tenantId, peso_kg: peso, altura_cm: alt, pescoco_cm: Number(pescocoCm), cintura_cm: Number(cinturaCm), quadril_cm: quadrilCm ? Number(quadrilCm) : null, bf_pct_calculado: bf, imc, massa_magra_kg: massaMagra, massa_gorda_kg: massaGorda });
+      await supabase.from("avaliacoes_fisicas").insert({ aluno_id: user.id, tenant_id: tenantId, peso_kg: peso, altura_cm: alt, pescoco_cm: Number(pescocoCm), cintura_cm: Number(cinturaCm), quadril_cm: quadrilCm ? Number(quadrilCm) : null, bf_pct_calculado: bfVal, imc: imcVal, massa_magra_kg: massaMagra, massa_gorda_kg: massaGorda });
       
       toast({ title: "Tudo pronto!", description: "Bem-vindo ao seu painel." });
       navigate(tenantSlug ? `/${tenantSlug}/app` : "/", { replace: true });
@@ -161,14 +174,13 @@ export default function Onboarding() {
   const bf = pesoKg && alturaCm && pescocoCm && cinturaCm ? calcBodyFatUSNavy({ sexo, altura_cm: Number(alturaCm), pescoco_cm: Number(pescocoCm), cintura_cm: Number(cinturaCm), quadril_cm: quadrilCm ? Number(quadrilCm) : undefined }) : null;
   const imc = pesoKg && alturaCm ? calcIMC(Number(pesoKg), Number(alturaCm)) : null;
 
-  if (isLoading) return <div className="flex h-screen items-center justify-center bg-black">Carregando...</div>;
+  if (isLoading) return <div className="flex h-screen items-center justify-center bg-black text-white">Carregando...</div>;
 
   const bgImage = tenant?.hero_url || heroDefault;
   const isVideo = isDirectVideo(bgImage) || extractYouTubeId(bgImage);
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 overflow-hidden bg-black">
-      {/* Background and UI code... keep existing structure */}
       {isVideo ? (
         <div className="absolute inset-0 w-full h-full opacity-40 blur-[2px] scale-110">
           {extractYouTubeId(bgImage) ? (
