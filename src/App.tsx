@@ -16,7 +16,6 @@ import IndexRedirect from "./pages/IndexRedirect";
 import Marketplace from "./pages/Marketplace";
 import TenantLanding from "./pages/TenantLanding";
 import SejaCoach from "./pages/SejaCoach";
-import CheckoutSucesso from "./pages/CheckoutSucesso";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -43,14 +42,9 @@ import AtletaCarta from "./pages/admin/AtletaCarta";
 import Carta from "./pages/aluno/Carta";
 import Scheduling from "./pages/aluno/Scheduling";
 import AdminCoaches from "./pages/admin/AdminCoaches";
-import AdminPlanos from "./pages/admin/AdminPlanos";
-import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
-import Unsubscribe from "./pages/Unsubscribe";
-import AgendarAulaAvulsa from "./pages/AgendarAulaAvulsa";
-import AdminAgendaAvulsa from "./pages/admin/AdminAgendaAvulsa";
 import AdminAgendaPresencial from "./pages/admin/AdminAgendaPresencial";
 
 const queryClient = new QueryClient();
@@ -60,9 +54,6 @@ const SlugRedirect = ({ to }: { to: string }) => {
   return <Navigate to={`/${slug}/${to}`} replace />;
 };
 
-// Em /index, redireciona conforme o papel do usuário:
-// - Owner do tenant (coach) → /{slug}/app/controle (painel de coach)
-// - Aluno → /{slug}/app (painel de aluno)
 const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
   const { tenant, loading } = useBranding();
   const { user, isLoading: authLoading } = useAuth();
@@ -111,25 +102,19 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Pós-checkout */}
-            <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
-
             {/* Onboarding obrigatório */}
             <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
 
             {/* Admin AlphaCoach (super admin) */}
             <Route path="/admin/coaches" element={<RequireAuth requireRole="admin"><AdminCoaches /></RequireAuth>} />
-            <Route path="/admin/faturamento" element={<RequireAuth requireRole="admin"><AdminFaturamento /></RequireAuth>} />
 
-            {/* Landing pública do tenant (Site de planos) */}
+            {/* Landing pública do tenant */}
             <Route path="/:slug/site" element={<TenantLanding />} />
             
             {/* Redireciona a raiz do coach para o login por padrão */}
             <Route path="/:slug" element={<Navigate to="login" replace />} />
 
             {/* App do aluno */}
-            {/* Destino padrão de confirmações de e-mail (Site URL do Supabase).
-                Não exige auth nem assinatura — decide o destino sozinho. */}
             <Route path="/index" element={<IndexRedirect />} />
 
             <Route
@@ -167,18 +152,11 @@ const App = () => (
             <Route path="/:slug/admin/montar-dieta" element={<RequireAuth requireRole="coach" checkTenant><AdminMontarDieta /></RequireAuth>} />
             <Route path="/:slug/admin/atleta/:atletaId" element={<RequireAuth requireRole="coach" checkTenant><AtletaDetalhe /></RequireAuth>} />
             <Route path="/:slug/admin/atleta/:atletaId/carta" element={<RequireAuth requireRole="coach" checkTenant><AtletaCarta /></RequireAuth>} />
-            <Route path="/:slug/admin/planos" element={<RequireAuth requireRole="coach" checkTenant><AdminPlanos /></RequireAuth>} />
-            <Route path="/:slug/admin/faturamento" element={<RequireAuth requireRole="coach" checkTenant><AdminFaturamento /></RequireAuth>} />
             <Route path="/:slug/admin/base-conhecimento" element={<RequireAuth requireRole="coach" checkTenant><AdminBaseConhecimento /></RequireAuth>} />
             <Route path="/:slug/admin/vlogs" element={<RequireAuth requireRole="coach" checkTenant><AdminVlogs /></RequireAuth>} />
             <Route path="/:slug/admin/videos-tecnicos" element={<RequireAuth requireRole="coach" checkTenant><AdminVideosTecnicos /></RequireAuth>} />
-            <Route path="/:slug/admin/agenda-avulsa" element={<RequireAuth requireRole="coach" checkTenant><AdminAgendaAvulsa /></RequireAuth>} />
             <Route path="/:slug/admin/agenda-presencial" element={<RequireAuth requireRole="coach" checkTenant><AdminAgendaPresencial /></RequireAuth>} />
 
-            {/* Agendamento pós-pagamento (público, via token) */}
-            <Route path="/:slug/agendar-aula/:token" element={<AgendarAulaAvulsa />} />
-
-            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrandingProvider>

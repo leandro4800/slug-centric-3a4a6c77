@@ -111,7 +111,7 @@ const AtletaDetalhe = () => {
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [perfil, setPerfil] = useState<PerfilTreino | null>(null);
-  const [assinatura, setAssinatura] = useState<Assinatura | null>(null);
+  // assinatura state removed
   const [loading, setLoading] = useState(true);
   const [nivel, setNivel] = useState<string>("intermediario");
   const [savingNivel, setSavingNivel] = useState(false);
@@ -144,7 +144,6 @@ const AtletaDetalhe = () => {
     if (slug === "demo" && demoAthlete) {
       setAluno(demoAthlete as Aluno);
       setPerfil(null);
-      setAssinatura(null);
       setLoading(false);
       return;
     }
@@ -152,7 +151,6 @@ const AtletaDetalhe = () => {
     const [
       { data: a }, 
       { data: pt }, 
-      { data: ass }, 
       { data: ana },
       { data: aval }
     ] = await Promise.all([
@@ -164,19 +162,6 @@ const AtletaDetalhe = () => {
       supabase
         .from("perfis_treino")
         .select("*")
-        .eq("aluno_id", atletaId!)
-        .maybeSingle(),
-      supabase
-        .from("assinaturas")
-        .select(`
-          id,
-          status,
-          plano:planos (
-            nome,
-            preco_centavos,
-            intervalo
-          )
-        `)
         .eq("aluno_id", atletaId!)
         .maybeSingle(),
       supabase
@@ -194,7 +179,6 @@ const AtletaDetalhe = () => {
     ]);
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
-    setAssinatura((ass as any) || null);
     setAnamnese(ana);
     setUltimaAvaliacao(aval);
     setNivel(TEMPO_TO_NIVEL((pt as PerfilTreino | null)?.tempo_treino));
@@ -671,44 +655,23 @@ const AtletaDetalhe = () => {
         </div>
 
         <div className="rounded-2xl border border-border bg-secondary/40 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-primary" />
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Plano & Assinatura
-              </p>
-            </div>
-            {assinatura && (
-              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                assinatura.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
-              }`}>
-                {assinatura.status === 'active' ? 'Ativo' : assinatura.status}
-              </span>
-            )}
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-primary" />
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Status de Acesso
+            </p>
           </div>
-          
-          {assinatura ? (
-            <div>
-              <p className="font-display text-lg uppercase text-foreground leading-tight">
-                {assinatura.plano.nome}
-              </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
-                R$ {(assinatura.plano.preco_centavos / 100).toFixed(2)} · {assinatura.plano.intervalo}
-              </p>
-            </div>
-          ) : (
-            <div className="text-center py-2">
-              <p className="text-xs text-muted-foreground mb-3">Nenhum plano vinculado a este atleta.</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-[10px] font-bold uppercase tracking-wider h-8 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={() => navigate(`/${slug}/admin/planos`)}
-              >
-                Vincular Plano
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+              Acesso à Plataforma
+            </p>
+            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
+              Liberado
+            </span>
+          </div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            Este atleta possui acesso ilimitado aos recursos do seu painel.
+          </p>
         </div>
 
         <div className="rounded-2xl border border-border bg-secondary/40 p-5">

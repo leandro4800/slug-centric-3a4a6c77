@@ -328,11 +328,6 @@ export default function AdminCoaches() {
                 <DialogTitle className="font-display text-2xl uppercase flex items-center gap-2 flex-wrap">
                   {selected.nome}
                   <Badge variant="outline" className="text-xs">/{selected.slug}</Badge>
-                  {selected.stripe_onboarding_completed ? (
-                    <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">Stripe ✓</Badge>
-                  ) : (
-                    <Badge variant="outline" className="border-amber-500/40 text-amber-400">Stripe pendente</Badge>
-                  )}
                 </DialogTitle>
               </DialogHeader>
 
