@@ -17,7 +17,15 @@ const IndexRedirect = () => {
   const confirmed = params.get("confirmed") === "1" || params.get("type") === "signup";
   const safeSlug = slug && /^[a-z0-9-]+$/i.test(slug) ? slug : null;
 
-  if (authLoading || brandingLoading) {
+  // Não esperamos branding/auth infinitamente na rota de redirect
+  // Se após 3s ainda estiver carregando, forçamos o render para tentar o redirecionamento
+  const [forceRender, setForceRender] = useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setForceRender(true), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if ((authLoading || brandingLoading) && !forceRender) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />

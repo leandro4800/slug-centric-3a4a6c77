@@ -123,7 +123,7 @@ const Login = () => {
             console.warn("[Login] Timeout atingido e nenhum slug disponível para fallback.");
             setLoading(false);
           }
-        }, 15000); // Reduzido para 15s para ser mais responsivo se algo travar
+        }, 6000); // Reduzido para 6s para fallback imediato se houver lentidão na Alphateam
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const urlSearchParams = new URLSearchParams(window.location.search);
