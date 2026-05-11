@@ -112,7 +112,7 @@ const App = () => (
             <Route path="/:slug/site" element={<TenantLanding />} />
             
             {/* Redireciona a raiz do coach para o login por padrão */}
-            <Route path="/:slug" element={<IndexRedirect />} />
+            <Route path="/:slug" element={<Navigate to="login" replace />} />
 
             {/* App do aluno */}
             <Route path="/index" element={<IndexRedirect />} />
