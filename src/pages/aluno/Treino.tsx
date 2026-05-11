@@ -234,6 +234,16 @@ const Treino = () => {
   const dias = [...new Set(treinos.map((t) => t.dia_semana))];
   const treinosDoDia = treinos.filter((t) => t.dia_semana === diaAtual);
 
+  const { url: avatarTreinando } = useAvatarVariant("treinando");
+  const primeiroNome = (user?.user_metadata?.nome_completo || user?.email || "Atleta")
+    .toString()
+    .split(/\s|@/)[0];
+  const horaSaudacao = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Bom dia";
+    if (h < 18) return "Boa tarde";
+    return "Boa noite";
+  })();
   const handleCargaSaved = (nome: string, carga: number, reps: number) => {
     setCargas((prev) => ({
       ...prev,
