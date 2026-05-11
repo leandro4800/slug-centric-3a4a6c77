@@ -167,8 +167,28 @@ export default function Onboarding() {
           data_nascimento: dataNasc || null,
           sexo,
           onboarding_completo: true,
+          tenant_id: tenantId,
         })
         .eq("id", user.id);
+
+      // Garante que o usuário tem o papel de aluno no tenant
+      if (tenantId) {
+        const { data: hasRole } = await supabase
+          .from("user_roles")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("tenant_id", tenantId)
+          .eq("role", "aluno")
+          .maybeSingle();
+        
+        if (!hasRole) {
+          await supabase.from("user_roles").insert({
+            user_id: user.id,
+            tenant_id: tenantId,
+            role: "aluno"
+          });
+        }
+      }
 
       // 2. Salva anamnese
       await supabase.from("anamnese_aluno").upsert(
