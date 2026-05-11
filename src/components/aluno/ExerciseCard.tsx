@@ -266,80 +266,95 @@ export const ExerciseCard = ({
 
   const currentVideoUrl = (hasCoach && (showCoach || !showYT)) ? coachUrl : referenceVideoUrl;
 
+  const hasAnyVideo = hasCoach || hasReference;
+
   return (
     <div className="bg-card/50 border border-primary/30 rounded-xl overflow-hidden">
-      <div className="relative aspect-video bg-black">
-        <ExercisePlayer 
-          videoUrl={currentVideoUrl} 
-          exerciseName={data.exercicio}
-        />
-
-        <div className="absolute bottom-2 left-2 flex gap-2 z-10">
-          <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
-            <Share2 className="h-4 w-4 text-white" />
-          </button>
-          <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
-            <Clock className="h-4 w-4 text-white" />
-          </button>
-        </div>
-
-        {(hasCoach || hasReference) && (
-          <div className="absolute bottom-2 right-2 z-10 flex gap-1.5 bg-background/70 backdrop-blur rounded-full p-1">
-            {hasCoach && (
-              <button
-                onClick={() => { setShowCoach(true); setShowYT(false); }}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition ${
-                  showCoach || !showYT ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-                }`}
-              >
-                Coach
-              </button>
-            )}
-            {hasReference && (
-              <button
-                onClick={() => { setShowYT(true); setShowCoach(false); }}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition relative overflow-hidden ${
-                  showYT || (!hasCoach && !showYT) ? "bg-primary text-primary-foreground border border-white/20" : "text-muted-foreground border border-transparent"
-                }`}
-              >
-                {showYT && <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-40" />}
-                <Video className="h-3 w-3 relative z-10" /> <span className="relative z-10">Técnico</span>
-              </button>
+      {/* Header com nome + ícone de vídeo lateral + toggle de séries */}
+      <div className="flex items-stretch">
+        <button onClick={onToggle} className="flex-1 p-4 text-left min-w-0">
+          <div className="flex items-start justify-between gap-3">
+            <p className="font-display text-lg leading-tight truncate">{data.exercicio.toUpperCase()}</p>
+            {data.is_extra && (
+              <span className="text-[9px] uppercase px-2 py-0.5 rounded bg-accent/20 text-accent shrink-0">
+                Extra IA
+              </span>
             )}
           </div>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {data.series && data.repeticoes && (
+              <span className="px-3 py-1 rounded-full bg-secondary text-xs">
+                {data.series}x {data.repeticoes}
+              </span>
+            )}
+            {cargaAnterior && (
+              <span className="px-3 py-1 rounded-full bg-primary/15 text-primary text-xs">
+                Última: {cargaAnterior.carga_kg}kg × {cargaAnterior.repeticoes_feitas}
+              </span>
+            )}
+            <ChevronDown className={`h-4 w-4 text-muted-foreground ml-auto transition-transform ${isOpen ? "rotate-180" : ""}`} />
+          </div>
+        </button>
+
+        {hasAnyVideo && (
+          <button
+            onClick={(e) => { e.stopPropagation(); setShowVideo((v) => !v); }}
+            className={`shrink-0 w-16 flex flex-col items-center justify-center gap-1 border-l border-primary/20 transition-colors ${
+              showVideo ? "bg-primary text-primary-foreground" : "bg-secondary/40 text-foreground hover:bg-secondary"
+            }`}
+            aria-label="Abrir vídeo"
+          >
+            <Video className="h-5 w-5" />
+            <span className="text-[9px] uppercase tracking-wider font-bold">Vídeo</span>
+          </button>
         )}
       </div>
 
-      <button onClick={onToggle} className="w-full p-4 text-left">
+      {/* Player de vídeo (recolhido por padrão) */}
+      {showVideo && hasAnyVideo && (
+        <div className="relative aspect-video bg-black border-t border-primary/20">
+          <ExercisePlayer
+            videoUrl={currentVideoUrl}
+            exerciseName={data.exercicio}
+          />
 
-        <div className="flex items-start justify-between gap-3">
-          <p className="font-display text-lg leading-tight">{data.exercicio.toUpperCase()}</p>
-          {data.is_extra && (
-            <span className="text-[9px] uppercase px-2 py-0.5 rounded bg-accent/20 text-accent shrink-0">
-              Extra IA
-            </span>
-          )}
-        </div>
-        <div className="flex flex-wrap gap-2 mt-2">
-          {data.series && data.repeticoes && (
-            <span className="px-3 py-1 rounded-full bg-secondary text-xs">
-              {data.series}x {data.repeticoes}
-            </span>
-          )}
-          {cargaAnterior && (
-            <span className="px-3 py-1 rounded-full bg-primary/15 text-primary text-xs">
-              Última: {cargaAnterior.carga_kg}kg × {cargaAnterior.repeticoes_feitas}
-            </span>
-          )}
-        </div>
-
-        {!isOpen && (
-          <div className="mt-3 w-full py-3 rounded-xl bg-primary text-primary-foreground font-display text-base flex items-center justify-center gap-2 relative overflow-hidden border border-white/20 shadow-lg">
-            <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
-            <span className="relative z-10">▶ EXECUTAR</span>
+          <div className="absolute bottom-2 left-2 flex gap-2 z-10">
+            <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
+              <Share2 className="h-4 w-4 text-white" />
+            </button>
+            <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
+              <Clock className="h-4 w-4 text-white" />
+            </button>
           </div>
-        )}
-      </button>
+
+          {(hasCoach || hasReference) && (
+            <div className="absolute bottom-2 right-2 z-10 flex gap-1.5 bg-background/70 backdrop-blur rounded-full p-1">
+              {hasCoach && (
+                <button
+                  onClick={() => { setShowCoach(true); setShowYT(false); }}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition ${
+                    showCoach || !showYT ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  Coach
+                </button>
+              )}
+              {hasReference && (
+                <button
+                  onClick={() => { setShowYT(true); setShowCoach(false); }}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 transition relative overflow-hidden ${
+                    showYT || (!hasCoach && !showYT) ? "bg-primary text-primary-foreground border border-white/20" : "text-muted-foreground border border-transparent"
+                  }`}
+                >
+                  {showYT && <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-40" />}
+                  <Video className="h-3 w-3 relative z-10" /> <span className="relative z-10">Técnico</span>
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
 
       {isOpen && (
         <div className="px-4 pb-4 space-y-4">
