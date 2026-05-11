@@ -76,15 +76,23 @@ const AlunoHome = () => {
   const [playing, setPlaying] = useState<VlogPost | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     const checkRole = async () => {
       if (!user) return;
-      const { data } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-      setIsAdmin(Boolean(data));
+      try {
+        const { data, error } = await supabase.rpc("has_role", {
+          _user_id: user.id,
+          _role: "admin",
+        });
+        if (isMounted && !error) {
+          setIsAdmin(Boolean(data));
+        }
+      } catch (err) {
+        console.error("[AlunoHome] Error checking admin role:", err);
+      }
     };
     checkRole();
+    return () => { isMounted = false; };
   }, [user]);
 
   useEffect(() => {
