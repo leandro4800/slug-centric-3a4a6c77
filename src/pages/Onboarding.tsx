@@ -25,6 +25,7 @@ export default function Onboarding() {
   const { user, isLoading } = useAuth();
   const { tenant } = useBranding();
   const navigate = useNavigate();
+  const { slug } = useParams();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
