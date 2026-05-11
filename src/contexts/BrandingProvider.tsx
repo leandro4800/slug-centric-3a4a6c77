@@ -220,18 +220,23 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
       lastLoadedSlug.current = targetSlug;
 
-      // Busca dados atualizados do tenant via slug
-      const { data, error } = await supabase
+      // Busca dados atualizados do tenant via slug com timeout
+      const fetchPromise = supabase
         .from("tenants")
         .select(TENANT_PUBLIC_COLUMNS)
         .eq("slug", targetSlug)
         .maybeSingle();
 
+      const timeoutPromise = new Promise<{ data: any, error: any }>((resolve) => 
+        setTimeout(() => resolve({ data: readCache(targetSlug), error: null }), 3500)
+      );
+
+      const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+
       if (!isMountedRef.current) return;
       
       if (error) {
         console.warn("[Branding] erro ao buscar tenant:", error.message);
-        return;
       }
 
       const t = data as Tenant | null;
