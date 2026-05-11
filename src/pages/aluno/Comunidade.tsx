@@ -68,14 +68,13 @@ const Comunidade = () => {
       if (profilesError) throw profilesError;
       setStories(profilesData || []);
 
-      // Fetch posts with profile info
+      // Fetch posts with profile info (showing all users from the platform)
       const { data: postsData, error: postsError } = await supabase
         .from("comunidade_posts")
         .select(`
           *,
           perfil:perfis!usuario_id(nome_completo, avatar_url)
         `)
-        .eq("profissional_id", tenant?.id)
         .order("criado_em", { ascending: false });
 
       if (postsError) throw postsError;
