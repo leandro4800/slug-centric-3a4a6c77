@@ -20,18 +20,26 @@ const IndexRedirect = () => {
   const confirmed = params.get("confirmed") === "1" || params.get("type") === "signup";
   const safeSlug = slugParam && /^[a-z0-9-]+$/i.test(slugParam) ? slugParam : null;
 
-  console.log("[IndexRedirect] Rota atual:", window.location.pathname, "Slug detectado:", safeSlug);
+  console.log("[IndexRedirect] Rota atual:", window.location.pathname, "Slug detectado:", safeSlug, "AuthLoading:", authLoading, "BrandingLoading:", brandingLoading);
 
   const [forceRender, setForceRender] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setForceRender(true), 1500);
+    const timer = setTimeout(() => setForceRender(true), 3000);
     return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
-    if (authLoading || brandingLoading || redirecting) return;
+    // Se ainda está carregando ou já está redirecionando, aguarda
+    if (authLoading || brandingLoading || redirecting) {
+        // Exceção: se o user não existe e temos branding (ou branding demorou), mandamos para login logo
+        if (!authLoading && !user && (!brandingLoading || forceRender)) {
+            // Segue para a lógica abaixo
+        } else {
+            return;
+        }
+    }
 
     const decideDestination = async () => {
       setRedirecting(true);
@@ -44,7 +52,6 @@ const IndexRedirect = () => {
           return;
         }
 
-        // Se o usuário está logado, decidimos o destino
         // 1. Busca se ele é dono de algum tenant
         const { data: ownedTenant } = await supabase
           .from("tenants")
@@ -100,7 +107,7 @@ const IndexRedirect = () => {
     };
 
     decideDestination();
-  }, [user, authLoading, brandingLoading, safeSlug, tenant?.slug, confirmed, navigate, redirecting]);
+  }, [user, authLoading, brandingLoading, safeSlug, tenant?.slug, confirmed, navigate, redirecting, forceRender]);
 
   if ((authLoading || brandingLoading) && !forceRender) {
     return (
