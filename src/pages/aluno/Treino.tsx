@@ -7,6 +7,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
+import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 
 interface Treino extends ExerciseCardData {
   dia_semana: string;
