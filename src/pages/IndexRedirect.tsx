@@ -2,6 +2,7 @@ import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
 
 /**
  * Rota de redirecionamento principal (ex: confirmações de e-mail).
