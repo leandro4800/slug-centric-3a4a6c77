@@ -103,6 +103,15 @@ export const SplashScreen = () => {
           autoPlay
           muted
           playsInline
+          onLoadedData={() => {
+            // Se o vídeo carregar, podemos estender um pouco o tempo se necessário, 
+            // mas o useEffect já cuida do agendamento.
+          }}
+          onError={() => {
+            console.error("Erro ao carregar vídeo de splash");
+            setIsVisible(false);
+            setTimeout(() => setShouldRender(false), 300);
+          }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
