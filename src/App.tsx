@@ -17,6 +17,7 @@ import Marketplace from "./pages/Marketplace";
 import TenantLanding from "./pages/TenantLanding";
 import SejaCoach from "./pages/SejaCoach";
 import CheckoutSucesso from "./pages/CheckoutSucesso";
+import Unsubscribe from "./pages/Unsubscribe";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
