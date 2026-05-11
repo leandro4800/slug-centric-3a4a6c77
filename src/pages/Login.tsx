@@ -118,12 +118,12 @@ const Login = () => {
           const currentSlug = urlSlug || tenant?.slug;
           if (currentSlug) {
             console.log("[Login] Fallback: redirecionando para app do slug:", currentSlug);
-            window.location.assign(`/${currentSlug}/app`);
+            window.location.href = `/${currentSlug}/app`;
           } else {
             console.warn("[Login] Timeout atingido e nenhum slug disponível para fallback.");
             setLoading(false);
           }
-        }, 6000); // Reduzido para 6s para fallback imediato se houver lentidão na Alphateam
+        }, 3000); // Reduzido para 3s para fallback imediato se houver lentidão na Alphateam
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const urlSearchParams = new URLSearchParams(window.location.search);
@@ -170,7 +170,7 @@ const Login = () => {
             }
             if (targetSlug) {
               console.log("[Login] Voucher ok, indo para app:", targetSlug);
-              window.location.assign(`/${targetSlug}/app`);
+              window.location.href = `/${targetSlug}/app`;
               return;
             }
           }
@@ -190,7 +190,7 @@ const Login = () => {
 
         if (userSlug && userSlug !== "demo") {
           console.log("[Login] Redirecionando para app do tenant:", userSlug);
-          goTo(`/${userSlug}/app`);
+          window.location.href = `/${userSlug}/app`;
           return;
         }
 
@@ -206,7 +206,7 @@ const Login = () => {
 
         if (userSlug && userSlug !== "demo") {
           console.log("[Login] Redirecionando para app do tenant:", userSlug);
-          goTo(`/${userSlug}/app`);
+          window.location.href = `/${userSlug}/app`;
           return;
         }
 

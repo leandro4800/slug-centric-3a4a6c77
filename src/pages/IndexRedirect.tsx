@@ -42,7 +42,8 @@ const IndexRedirect = () => {
     if (targetSlug) {
       const isCoach = hasRole("coach", tenant?.id) || hasRole("admin") || tenant?.owner_user_id === user.id;
       const target = isCoach ? `/${targetSlug}/app/controle` : `/${targetSlug}/app`;
-      return <Navigate to={target} replace />;
+      window.location.href = target;
+      return null;
     }
     
     // Fallback se logado mas sem tenant definido: vai para o login resolver ou para o onboarding
