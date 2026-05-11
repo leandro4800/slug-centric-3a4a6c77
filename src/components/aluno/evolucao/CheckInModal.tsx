@@ -19,7 +19,10 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [show7Dobras, setShow7Dobras] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
   const { user } = useAuth();
+  // Pré-carrega o avatar de comemoração (gera 1x e cacheia no perfil — não gasta IA toda vez)
+  const { url: avatarCelebracao } = useAvatarVariant("celebracao");
 
   const [peso, setPeso] = useState("");
   const [bf, setBf] = useState("");
