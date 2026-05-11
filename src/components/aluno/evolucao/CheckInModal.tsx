@@ -252,6 +252,28 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
           </Button>
         </form>
       </DialogContent>
+
+      {/* Overlay de comemoração com avatar */}
+      {showCelebration && avatarCelebracao && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/85 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={() => setShowCelebration(false)}
+        >
+          <div className="relative flex flex-col items-center gap-4 px-6 animate-in zoom-in-50 duration-500">
+            <div className="absolute inset-0 -z-10 rounded-full blur-3xl bg-primary/40" />
+            <p className="text-[10px] uppercase tracking-[0.4em] text-primary font-bold">Check-in concluído</p>
+            <img
+              src={avatarCelebracao}
+              alt="Comemoração"
+              className="w-64 max-w-[70vw] h-auto rounded-2xl shadow-[0_0_60px_-10px_hsl(var(--primary))]"
+            />
+            <p className="font-display text-3xl text-center leading-tight drop-shadow-lg">
+              VOCÊ É <span className="text-primary">FERA!</span>
+            </p>
+            <p className="text-xs text-muted-foreground text-center">Toque para fechar</p>
+          </div>
+        </div>
+      )}
     </Dialog>
   );
 };
