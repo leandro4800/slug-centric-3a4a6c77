@@ -1,5 +1,6 @@
 // Edge function: gera avatar estilo EA FC a partir da foto do atleta
-// usando Lovable AI (Nano Banana). Retorna data URL base64.
+// usando Lovable AI (Nano Banana). Variantes: carta (default), treinando, celebracao.
+// Faz cache: se já existir o avatar dessa variante no perfil, retorna sem gastar IA.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -8,11 +9,24 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+type Variant = "carta" | "treinando" | "celebracao";
+
+const VARIANT_FIELD: Record<Variant, string> = {
+  carta: "avatar_url",
+  treinando: "avatar_treinando_url",
+  celebracao: "avatar_celebracao_url",
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { foto_url, sexo } = await req.json();
+    const body = await req.json();
+    const foto_url: string | undefined = body.foto_url;
+    const sexo: string | undefined = body.sexo;
+    const variant: Variant = (["carta", "treinando", "celebracao"].includes(body.variant) ? body.variant : "carta");
+    const force: boolean = Boolean(body.force);
+
     if (!foto_url) {
       return new Response(JSON.stringify({ error: "foto_url obrigatório" }), {
         status: 400,
@@ -38,22 +52,55 @@ Deno.serve(async (req) => {
       });
     }
 
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+
+    // Cache: se já existe avatar da variante e não foi pedido force, retorna direto
+    const field = VARIANT_FIELD[variant];
+    if (!force) {
+      const { data: perfilExist } = await admin
+        .from("perfis")
+        .select(field)
+        .eq("id", userId)
+        .maybeSingle();
+      const cached = (perfilExist as any)?.[field];
+      if (cached) {
+        return new Response(JSON.stringify({ avatar_url: cached, cached: true }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     const isFem = (sexo ?? "").toLowerCase().startsWith("f");
+
+    // Uniforme padrão (igual em todas as variantes): rash guard preta
+    // + short de treino preto (acima do joelho para homens) / legging preta para mulheres
     const uniforme = isFem
-      ? "vestindo legging preta justa e top fitness preto"
-      : "vestindo bermuda de treino preta e camisa preta justa";
+      ? "vestindo rash guard preta justa de manga curta e legging preta de academia"
+      : "vestindo rash guard preta justa de manga curta e short de treino preto que termina ACIMA DO JOELHO";
+
+    // Pose conforme variante
+    let pose = "";
+    let extraMood = "";
+    if (variant === "treinando") {
+      pose = "em pose dinâmica de treino: executando uma rosca com halteres ou flexão isométrica, expressão concentrada, músculos contraídos";
+      extraMood = " Atmosfera de academia premium ao fundo (desfocada), iluminação dramática lateral.";
+    } else if (variant === "celebracao") {
+      pose = "em pose vitoriosa de comemoração: braços erguidos para cima em V, punhos cerrados, sorriso confiante de conquista, olhando para o alto";
+      extraMood = " Confetes dourados/prateados caindo ao fundo, raios de luz cinematográficos, vibe de campeão pós-conquista.";
+    } else {
+      pose = "em pose atlética de musculação em pé, mostrando da cabeça aos pés";
+    }
 
     // Busca o nome do tenant para estampar na camisa/top
-    const admin0 = createClient(SUPABASE_URL, SERVICE_KEY);
     let teamName = "";
     try {
-      const { data: perfil } = await admin0
+      const { data: perfil } = await admin
         .from("perfis")
         .select("tenant_id")
         .eq("id", userId)
         .maybeSingle();
       if (perfil?.tenant_id) {
-        const { data: tenant } = await admin0
+        const { data: tenant } = await admin
           .from("tenants")
           .select("nome")
           .eq("id", perfil.tenant_id)
@@ -65,10 +112,10 @@ Deno.serve(async (req) => {
     }
 
     const estampa = teamName
-      ? ` A ${isFem ? "frente do top fitness" : "frente da camisa preta"} deve ter o texto "${teamName}" estampado em letras grandes, centralizadas, em branco com leve relevo, tipografia esportiva moderna sans-serif (estilo jersey de time), bem legível e nítido, sem distorções nem erros ortográficos.`
+      ? ` A frente da rash guard preta deve ter APENAS o texto "${teamName}" estampado em letras grandes, centralizadas, em branco com leve relevo, tipografia esportiva moderna sans-serif (estilo jersey de time), bem legível e nítido, sem distorções, sem outros símbolos, sem erros ortográficos.`
       : "";
 
-    const prompt = `Gere um avatar 3D realista de CORPO INTEIRO estilo EA FC / FIFA Ultimate Team da pessoa nesta foto, mantendo fielmente o rosto, traços e tom de pele. A pessoa deve estar ${uniforme}, em pose atlética de musculação em pé, mostrando da cabeça aos pés. Fundo neutro escuro com leve glow dourado/prata cinematográfico. Iluminação AAA PS5, enquadramento vertical 3:5, corpo inteiro centralizado, sem cortes nas pernas ou cabeça.${estampa}`;
+    const prompt = `Gere um avatar 3D realista de CORPO INTEIRO estilo EA FC / FIFA Ultimate Team da pessoa nesta foto, mantendo fielmente o rosto, traços e tom de pele. A pessoa deve estar ${uniforme}, ${pose}. Fundo neutro escuro com leve glow dourado/prata cinematográfico. Iluminação AAA PS5, enquadramento vertical 3:5, corpo inteiro centralizado, sem cortes nas pernas ou cabeça.${extraMood}${estampa}`;
 
     const aiResp = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -114,18 +161,24 @@ Deno.serve(async (req) => {
     const dataUrl = data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
     if (!dataUrl) throw new Error("Avatar não retornado pela IA");
 
-    // Faz upload para o bucket avatars
+    // Upload para o bucket avatars
     const base64 = dataUrl.split(",")[1];
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const path = `${userId}/carta-${Date.now()}.png`;
-    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    const path = `${userId}/${variant}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
       .upload(path, bytes, { contentType: "image/png", upsert: true });
     if (upErr) throw upErr;
     const { data: pub } = admin.storage.from("avatars").getPublicUrl(path);
+    const publicUrl = pub.publicUrl;
 
-    return new Response(JSON.stringify({ avatar_url: pub.publicUrl }), {
+    // Cacheia no perfil (campo correspondente à variante)
+    await admin
+      .from("perfis")
+      .update({ [field]: publicUrl })
+      .eq("id", userId);
+
+    return new Response(JSON.stringify({ avatar_url: publicUrl, cached: false, variant }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

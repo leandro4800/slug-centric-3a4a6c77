@@ -1628,7 +1628,9 @@ export type Database = {
       }
       perfis: {
         Row: {
+          avatar_celebracao_url: string | null
           avatar_pos_y: number | null
+          avatar_treinando_url: string | null
           avatar_url: string | null
           created_at: string
           data_nascimento: string | null
@@ -1643,7 +1645,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          avatar_celebracao_url?: string | null
           avatar_pos_y?: number | null
+          avatar_treinando_url?: string | null
           avatar_url?: string | null
           created_at?: string
           data_nascimento?: string | null
@@ -1658,7 +1662,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          avatar_celebracao_url?: string | null
           avatar_pos_y?: number | null
+          avatar_treinando_url?: string | null
           avatar_url?: string | null
           created_at?: string
           data_nascimento?: string | null
