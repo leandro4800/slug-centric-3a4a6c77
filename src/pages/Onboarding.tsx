@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -25,6 +25,7 @@ export default function Onboarding() {
   const { user, isLoading } = useAuth();
   const { tenant } = useBranding();
   const navigate = useNavigate();
+  const { slug } = useParams();
   const { toast } = useToast();
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
@@ -119,10 +120,17 @@ export default function Onboarding() {
       return;
     }
     setNome(perfil?.nome_completo ?? "");
-    setTenantId(perfil?.tenant_id ?? null);
-    if (perfil?.tenant_id) {
-      const { data: t } = await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle();
-      setTenantSlug(t?.slug ?? null);
+    
+    // Se temos um slug na URL, usamos o ID desse tenant
+    if (tenant?.id) {
+      setTenantId(tenant.id);
+      setTenantSlug(tenant.slug);
+    } else {
+      setTenantId(perfil?.tenant_id ?? null);
+      if (perfil?.tenant_id) {
+        const { data: t } = await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle();
+        setTenantSlug(t?.slug ?? null);
+      }
     }
   };
 
@@ -159,8 +167,28 @@ export default function Onboarding() {
           data_nascimento: dataNasc || null,
           sexo,
           onboarding_completo: true,
+          tenant_id: tenantId,
         })
         .eq("id", user.id);
+
+      // Garante que o usuário tem o papel de aluno no tenant
+      if (tenantId) {
+        const { data: hasRole } = await supabase
+          .from("user_roles")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("tenant_id", tenantId)
+          .eq("role", "aluno")
+          .maybeSingle();
+        
+        if (!hasRole) {
+          await supabase.from("user_roles").insert({
+            user_id: user.id,
+            tenant_id: tenantId,
+            role: "aluno"
+          });
+        }
+      }
 
       // 2. Salva anamnese
       await supabase.from("anamnese_aluno").upsert(

@@ -155,7 +155,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   
   // Extrai o slug do path se useParams falhar
   const pathParts = location.pathname.split("/").filter(Boolean);
-  const reservedKeywords = ["index", "marketplace", "seja-coach", "login", "forgot-password", "reset-password", "checkout", "onboarding", "admin", "unsubscribe"];
+  const reservedKeywords = ["index", "marketplace", "seja-coach", "login", "forgot-password", "reset-password", "checkout", "admin", "unsubscribe"];
   const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
   const slug = params.slug || slugFromPath;
 

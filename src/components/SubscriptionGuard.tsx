@@ -146,7 +146,8 @@ export const SubscriptionGuard = ({ children }: Props) => {
   }
 
   if (status === "incomplete") {
-    return <Navigate to="/onboarding" replace />;
+    const onboardingPath = slug ? `/${slug}/onboarding` : "/onboarding";
+    return <Navigate to={onboardingPath} replace />;
   }
 
   if (status !== "active" && status !== "trialing") {
