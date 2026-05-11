@@ -58,11 +58,10 @@ const Comunidade = () => {
     try {
       setLoading(true);
       
-      // Fetch stories (profiles from same tenant)
+      // Fetch stories (profiles from the platform)
       const { data: profilesData, error: profilesError } = await supabase
         .from("perfis")
         .select("id, nome_completo, avatar_url")
-        .eq("tenant_id", tenant?.id)
         .limit(15);
 
       if (profilesError) throw profilesError;
