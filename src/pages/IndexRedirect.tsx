@@ -1,4 +1,4 @@
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
@@ -10,12 +10,13 @@ import { supabase } from "@/integrations/supabase/client";
  * Decide para onde o usuário deve ir baseado no seu estado de autenticação e papéis.
  */
 const IndexRedirect = () => {
-  const { user, isLoading: authLoading, hasRole } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { tenant, loading: brandingLoading } = useBranding();
   const navigate = useNavigate();
+  const { slug: urlSlug } = useParams<{ slug: string }>();
   
   const params = new URLSearchParams(window.location.search);
-  const slugParam = params.get("slug");
+  const slugParam = urlSlug || params.get("slug");
   const confirmed = params.get("confirmed") === "1" || params.get("type") === "signup";
   const safeSlug = slugParam && /^[a-z0-9-]+$/i.test(slugParam) ? slugParam : null;
 
