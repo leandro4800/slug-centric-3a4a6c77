@@ -16,6 +16,17 @@ export const SubscriptionGuard = ({ children }: Props) => {
   const [status, setStatus] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isCoach, setIsCoach] = useState(false);
+  const [forceShow, setForceShow] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (loading) {
+        console.warn("[SubscriptionGuard] Timeout atingido, forçando renderização.");
+        setForceShow(true);
+      }
+    }, 5000);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   useEffect(() => {
     if (authLoading || brandingLoading || !user) return;
