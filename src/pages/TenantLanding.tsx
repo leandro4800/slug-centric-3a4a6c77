@@ -55,6 +55,22 @@ export default function TenantLanding() {
   const [voucherOpen, setVoucherOpen] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (plano_id: string) => {
+    setCheckoutLoading(plano_id);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+        body: { plano_id, type: "subscription" },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error("URL de checkout não retornada");
+      window.location.href = data.url;
+    } catch (e: any) {
+      toast({ title: "Erro ao iniciar checkout", description: e.message, variant: "destructive" });
+      setCheckoutLoading(null);
+    }
+  };
 
   const handleRedeemVoucher = async (codeOverride?: string) => {
     const code = (codeOverride || voucherCode).trim();
@@ -249,25 +265,67 @@ export default function TenantLanding() {
         </div>
       </section>
 
-      {/* Info */}
-      <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24 text-center">
-        <h2 className="font-display text-4xl uppercase md:text-5xl">Bem-vindo ao Time</h2>
-        <p className="mt-6 text-muted-foreground max-w-2xl mx-auto">
-          Para acessar a plataforma, você precisa de um código de acesso fornecido diretamente pelo seu coach.
-        </p>
-        <div className="mt-10 flex justify-center gap-4">
-          <Button 
-            size="lg" 
-            className="font-bold uppercase tracking-widest"
+      {/* Planos */}
+      <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
+        <div className="text-center">
+          <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
+          <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
+            Comece com <span className="text-primary font-bold">30 dias grátis</span>. Cancele quando quiser. Sem multa, sem letra miúda.
+          </p>
+        </div>
+
+        {planos.length === 0 ? (
+          <p className="mt-10 text-center text-muted-foreground">Nenhum plano disponível no momento.</p>
+        ) : (
+          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {planos.map((p, idx) => {
+              const destacado = idx === 1 || planos.length === 1;
+              return (
+                <div
+                  key={p.id}
+                  className={`relative rounded-2xl border p-8 flex flex-col ${
+                    destacado ? "border-primary bg-primary/5 shadow-glow" : "border-border bg-card"
+                  }`}
+                >
+                  {destacado && (
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
+                      Mais popular
+                    </Badge>
+                  )}
+                  <h3 className="font-display text-2xl uppercase">{p.nome}</h3>
+                  {p.descricao && <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>}
+                  <div className="mt-6">
+                    <span className="text-5xl font-display">{formatBRL(p.preco_centavos / 100)}</span>
+                    <span className="text-muted-foreground">{intervaloLabel[p.intervalo]}</span>
+                  </div>
+                  <ul className="mt-6 space-y-2 text-sm flex-1">
+                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> 30 dias grátis</li>
+                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Acesso completo ao app</li>
+                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Cancele quando quiser</li>
+                  </ul>
+                  <Button
+                    size="lg"
+                    className="mt-8 w-full font-bold uppercase tracking-widest"
+                    disabled={!!checkoutLoading}
+                    onClick={() => handleCheckout(p.id)}
+                  >
+                    {checkoutLoading === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Começar 30 dias grátis"}
+                  </Button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="mt-12 text-center border-t border-border pt-8">
+          <p className="text-sm text-muted-foreground">Tem um código de acesso do coach?</p>
+          <Button
+            variant="outline"
+            className="mt-3 font-bold uppercase tracking-widest"
             onClick={() => setVoucherOpen(true)}
           >
-            <KeyRound className="mr-2 h-5 w-5" /> Digitar meu código
+            <KeyRound className="mr-2 h-4 w-4" /> Resgatar código
           </Button>
-          <Link to={`/${slug}/login`}>
-            <Button size="lg" variant="outline" className="font-bold uppercase tracking-widest">
-              Fazer Login
-            </Button>
-          </Link>
         </div>
       </section>
 
