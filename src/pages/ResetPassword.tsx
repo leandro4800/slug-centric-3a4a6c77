@@ -20,25 +20,26 @@ const ResetPassword = () => {
       if (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN") setReady(true);
     });
 
+    // O cliente Supabase já detecta automaticamente ?code=... ou #access_token=...
+    // (detectSessionInUrl=true é o default). Apenas verificamos a sessão final.
     const init = async () => {
-      // Caso 1: link PKCE -> ?code=...
-      const url = new URL(window.location.href);
-      const code = url.searchParams.get("code");
-      if (code) {
-        const { error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          toast.error("Link inválido ou expirado. Solicite um novo.");
-        } else {
-          setReady(true);
-          // limpa a query string para não reusar o code
+      // Pequeno delay para o detectSessionInUrl terminar de processar
+      await new Promise((r) => setTimeout(r, 300));
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setReady(true);
+        // limpa qualquer code/hash da URL
+        const url = new URL(window.location.href);
+        if (url.search || url.hash) {
           window.history.replaceState({}, "", url.pathname);
         }
-        return;
+      } else {
+        // Sem sessão e sem token na URL: link expirado
+        const url = new URL(window.location.href);
+        if (!url.searchParams.get("code") && !url.hash.includes("access_token")) {
+          toast.error("Link inválido ou expirado. Solicite um novo.");
+        }
       }
-
-      // Caso 2: link com hash (#access_token=...) — supabase processa sozinho
-      const { data } = await supabase.auth.getSession();
-      if (data.session) setReady(true);
     };
 
     void init();
