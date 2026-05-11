@@ -141,8 +141,9 @@ const IndexRedirect = () => {
         }
 
         // 4. Sem tenant associado: vai para onboarding
-        console.log("[IndexRedirect] Sem tenant associado, enviando para onboarding");
-        navigate("/onboarding", { replace: true });
+        console.log("[IndexRedirect] Sem tenant associado, enviando para onboarding. Slug disponível:", targetSlug);
+        const onboardingPath = targetSlug ? `/${targetSlug}/onboarding` : "/onboarding";
+        navigate(onboardingPath, { replace: true });
       } catch (err) {
         console.error("[IndexRedirect] Erro crítico na decisão:", err);
         navigate("/login", { replace: true });
