@@ -48,7 +48,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
     if (!isMember) {
       console.warn(`[RequireAuth] User ${user.id} is not a member of tenant: ${tenant.id} (${slug}) — enviando para onboarding para evitar loop.`);
       // Importante: NÃO redirecionar para /:slug aqui, senão o IndexRedirect manda de volta para /:slug/app e cria loop.
-      return <Navigate to="/onboarding" replace />;
+      return <Navigate to={`/${slug}/onboarding`} replace />;
     }
   }
 
