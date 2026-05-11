@@ -264,6 +264,24 @@ const Treino = () => {
       <PageHeader icon={Dumbbell} title="MEU TREINO" subtitle={`${treinos.length} exercícios`} />
 
       <div className="px-5">
+        {/* Saudação personalizada com avatar treinando */}
+        {avatarTreinando && (
+          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-card to-card mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
+            <div className="flex items-center gap-3 p-3">
+              <img
+                src={avatarTreinando}
+                alt="Você treinando"
+                className="w-20 h-24 object-cover rounded-xl shadow-[0_0_24px_-6px_hsl(var(--primary)/0.6)]"
+              />
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">{horaSaudacao}</p>
+                <p className="font-display text-xl leading-tight truncate">{primeiroNome.toUpperCase()},</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Bora treinar pesado hoje. 💪</p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isMock && (
           <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-xs text-primary mb-4">
             <TenantSymbol size={16} /> Prévia — seu treino personalizado será montado pelo coach
