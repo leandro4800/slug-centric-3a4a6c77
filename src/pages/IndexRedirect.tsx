@@ -39,6 +39,13 @@ const IndexRedirect = () => {
     if (redirecting) return;
 
     const decideDestination = async () => {
+      const timeoutId = setTimeout(() => {
+        if (!redirecting) {
+          console.warn("[IndexRedirect] Decision taking too long, fallback to login");
+          navigate("/login", { replace: true });
+        }
+      }, 6000);
+
       setRedirecting(true);
       try {
         if (!user) {
@@ -139,6 +146,8 @@ const IndexRedirect = () => {
       } catch (err) {
         console.error("[IndexRedirect] Erro crítico na decisão:", err);
         navigate("/login", { replace: true });
+      } finally {
+        clearTimeout(timeoutId);
       }
     };
 
