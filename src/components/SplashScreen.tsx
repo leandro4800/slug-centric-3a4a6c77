@@ -66,10 +66,11 @@ export const SplashScreen = () => {
     sessionStorage.setItem(sessionKeyFor(tenantKey), "1");
 
     const hasVideo = !!tenant?.splash_video_url;
-    const showMs = hasVideo ? 4000 : 1200;
+    // Reduzi os tempos para evitar que o splash pareça um loop infinito
+    const showMs = hasVideo ? 3000 : 1000;
 
     const fadeTimer = setTimeout(() => setIsVisible(false), showMs);
-    const removeTimer = setTimeout(() => setShouldRender(false), showMs + 500);
+    const removeTimer = setTimeout(() => setShouldRender(false), showMs + 300);
 
     return () => {
       clearTimeout(fadeTimer);
