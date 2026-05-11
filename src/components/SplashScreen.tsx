@@ -67,7 +67,7 @@ export const SplashScreen = () => {
 
     const hasVideo = !!tenant?.splash_video_url;
     // Reduzi os tempos para evitar que o splash pareça um loop infinito
-    const showMs = hasVideo ? 3000 : 1000;
+    const showMs = hasVideo ? 2500 : 1500;
 
     const fadeTimer = setTimeout(() => setIsVisible(false), showMs);
     const removeTimer = setTimeout(() => setShouldRender(false), showMs + 300);
