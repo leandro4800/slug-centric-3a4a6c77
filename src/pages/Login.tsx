@@ -99,11 +99,9 @@ const Login = () => {
   useEffect(() => {
     if (authLoading || !user) return;
 
-    // Se o usuário já estiver logado e tentar acessar a página de login,
-    // nós o mandamos para a rota de redirecionamento que decidirá o destino final.
-    // Usamos replace: true para evitar loops no histórico.
+    // Redireciona usuários já autenticados para o IndexRedirect, que decidirá o destino.
     const target = urlSlug ? `/${urlSlug}/index` : "/index";
-    console.log("[Login] Usuário já autenticado, delegando ao IndexRedirect:", target);
+    console.log("[Login] Usuário já autenticado, redirecionando:", target);
     navigate(target, { replace: true });
   }, [user, authLoading, navigate, urlSlug]);
 
