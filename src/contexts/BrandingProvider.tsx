@@ -192,7 +192,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
       return (data as Tenant | null) ?? null;
     })();
 
-    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 5000));
+    const timeout = new Promise<null>((resolve) => setTimeout(() => resolve(null), 3000));
     return await Promise.race([fetchPromise, timeout as Promise<Tenant | null>]);
   };
 
