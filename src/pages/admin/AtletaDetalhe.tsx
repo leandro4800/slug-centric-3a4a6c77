@@ -655,44 +655,23 @@ const AtletaDetalhe = () => {
         </div>
 
         <div className="rounded-2xl border border-border bg-secondary/40 p-5 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-primary" />
-              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Plano & Assinatura
-              </p>
-            </div>
-            {assinatura && (
-              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                assinatura.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
-              }`}>
-                {assinatura.status === 'active' ? 'Ativo' : assinatura.status}
-              </span>
-            )}
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-primary" />
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              Status de Acesso
+            </p>
           </div>
-          
-          {assinatura ? (
-            <div>
-              <p className="font-display text-lg uppercase text-foreground leading-tight">
-                {assinatura.plano.nome}
-              </p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-1">
-                R$ {(assinatura.plano.preco_centavos / 100).toFixed(2)} · {assinatura.plano.intervalo}
-              </p>
-            </div>
-          ) : (
-            <div className="text-center py-2">
-              <p className="text-xs text-muted-foreground mb-3">Nenhum plano vinculado a este atleta.</p>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="text-[10px] font-bold uppercase tracking-wider h-8 border-primary/30 text-primary hover:bg-primary/5"
-                onClick={() => navigate(`/${slug}/admin/planos`)}
-              >
-                Vincular Plano
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+              Acesso à Plataforma
+            </p>
+            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400">
+              Liberado
+            </span>
+          </div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+            Este atleta possui acesso ilimitado aos recursos do seu painel.
+          </p>
         </div>
 
         <div className="rounded-2xl border border-border bg-secondary/40 p-5">
