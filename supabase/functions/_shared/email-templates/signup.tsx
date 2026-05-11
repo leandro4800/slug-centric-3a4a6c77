@@ -35,15 +35,21 @@ export const SignupEmail = ({
       <Container style={container}>
         <Heading style={h1}>Confirme seu cadastro</Heading>
         <Text style={text}>
-          Olá! Use o código abaixo para confirmar seu e-mail em{' '}
+          Olá! Clique no botão abaixo para confirmar seu e-mail em{' '}
           <Link href={siteUrl} style={link}>
             <strong>{siteName}</strong>
           </Link>
           :
         </Text>
+        <Button style={button} href={confirmationUrl}>
+          Confirmar E-mail
+        </Button>
+        <Text style={textSmall}>
+          Ou se preferir, use o código abaixo na tela de confirmação:
+        </Text>
         <div style={codeBox}>{token || '------'}</div>
         <Text style={textSmall}>
-          Digite este código de 6 dígitos na tela de confirmação. O código expira em 1 hora.
+          Este código expira em 1 hora.
         </Text>
         <Text style={footer}>
           Se você não criou uma conta, ignore este e-mail.
