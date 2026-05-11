@@ -61,7 +61,17 @@ export const SplashScreen = () => {
   // Agenda o fade-out
   useEffect(() => {
     if (!shouldRender) return;
-    if (loading) return;
+
+    // Se começou a carregar algo de novo (ex: refresh de branding), 
+    // não cancelamos o splash, apenas esperamos o loading terminar para agendar o fim.
+    // No entanto, se o loading demorar demais, queremos garantir que o splash saia.
+    if (loading) {
+      const safetyTimer = setTimeout(() => {
+        setIsVisible(false);
+        setTimeout(() => setShouldRender(false), 300);
+      }, 5000); // 5 segundos de segurança máxima
+      return () => clearTimeout(safetyTimer);
+    }
 
     sessionStorage.setItem(sessionKeyFor(tenantKey), "1");
 
@@ -76,7 +86,7 @@ export const SplashScreen = () => {
       clearTimeout(fadeTimer);
       clearTimeout(removeTimer);
     };
-  }, [shouldRender, loading, tenant?.splash_video_url]);
+  }, [shouldRender, loading, tenant?.splash_video_url, tenantKey]);
 
   if (!shouldRender) return null;
 
@@ -93,6 +103,15 @@ export const SplashScreen = () => {
           autoPlay
           muted
           playsInline
+          onLoadedData={() => {
+            // Se o vídeo carregar, podemos estender um pouco o tempo se necessário, 
+            // mas o useEffect já cuida do agendamento.
+          }}
+          onError={() => {
+            console.error("Erro ao carregar vídeo de splash");
+            setIsVisible(false);
+            setTimeout(() => setShouldRender(false), 300);
+          }}
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (

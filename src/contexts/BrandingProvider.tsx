@@ -159,8 +159,9 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
   const slug = params.slug || slugFromPath;
 
-  const [tenant, setTenant] = useState<Tenant | null>(() => (slug ? readCache(slug) : null));
-  const [loading, setLoading] = useState(!!slug);
+  const cachedTenant = slug ? readCache(slug) : null;
+  const [tenant, setTenant] = useState<Tenant | null>(cachedTenant);
+  const [loading, setLoading] = useState(!!slug && !cachedTenant);
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
