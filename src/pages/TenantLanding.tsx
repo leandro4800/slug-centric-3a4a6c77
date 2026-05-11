@@ -55,6 +55,22 @@ export default function TenantLanding() {
   const [voucherOpen, setVoucherOpen] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+
+  const handleCheckout = async (plano_id: string) => {
+    setCheckoutLoading(plano_id);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+        body: { plano_id, type: "subscription" },
+      });
+      if (error) throw error;
+      if (!data?.url) throw new Error("URL de checkout não retornada");
+      window.location.href = data.url;
+    } catch (e: any) {
+      toast({ title: "Erro ao iniciar checkout", description: e.message, variant: "destructive" });
+      setCheckoutLoading(null);
+    }
+  };
 
   const handleRedeemVoucher = async (codeOverride?: string) => {
     const code = (codeOverride || voucherCode).trim();
