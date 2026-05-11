@@ -20,8 +20,9 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="sr-only">Carregando...</span>
       </div>
     );
   }
