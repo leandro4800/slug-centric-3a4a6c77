@@ -100,6 +100,9 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
       toast.success("Check-in de evolução salvo com sucesso!");
       onSaved?.();
       setIsOpen(false);
+      // Mostra avatar comemorativo (cacheado) por alguns segundos
+      setShowCelebration(true);
+      setTimeout(() => setShowCelebration(false), 4500);
       // Reset form
       setPeso("");
       setBf("");
