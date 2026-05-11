@@ -120,10 +120,17 @@ export default function Onboarding() {
       return;
     }
     setNome(perfil?.nome_completo ?? "");
-    setTenantId(perfil?.tenant_id ?? null);
-    if (perfil?.tenant_id) {
-      const { data: t } = await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle();
-      setTenantSlug(t?.slug ?? null);
+    
+    // Se temos um slug na URL, usamos o ID desse tenant
+    if (tenant?.id) {
+      setTenantId(tenant.id);
+      setTenantSlug(tenant.slug);
+    } else {
+      setTenantId(perfil?.tenant_id ?? null);
+      if (perfil?.tenant_id) {
+        const { data: t } = await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle();
+        setTenantSlug(t?.slug ?? null);
+      }
     }
   };
 
