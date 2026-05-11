@@ -193,15 +193,12 @@ const Login = () => {
           return;
         }
 
-        // 5. Se chegamos aqui, o usuário não tem tenant vinculado nem slug na URL
-        // Evita loop com o /index: se já estiver em /login sem slug, para por aqui.
-        if (location.pathname === "/login") {
-          setLoading(false);
-          // Se o usuário não tem nada, redireciona para um lugar seguro ou marketplace se existisse
-          console.log("[Login] Usuário sem destino definido.");
-        } else {
-          goTo("/login");
-        }
+        // 5. Sem destino definido: NÃO travar na tela de loading.
+        // Faz signOut para liberar o formulário e mostra mensagem clara.
+        console.warn("[Login] Usuário sem tenant vinculado. Fazendo signOut para liberar tela.");
+        await supabase.auth.signOut();
+        setLoading(false);
+        toast.message("Conta sem coach vinculado. Use um código de acesso ou peça o link do seu coach.");
       } catch (err) {
         console.error("[Login] Erro no redirecionamento:", err);
         setLoading(false);
