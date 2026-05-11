@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Search, Sparkles, MapPin, Calendar, Zap, Crown } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AulaAvulsaQuickForm } from "@/components/AulaAvulsaQuickForm";
+// AulaAvulsaQuickForm removed
 
 
 interface CoachCard {
@@ -196,7 +196,7 @@ export default function Marketplace() {
             {filtered.map((c) => (
               <button
                 type="button"
-                onClick={() => { setSelectedCoach(c); setModalMode("choice"); }}
+                onClick={() => navigate(`/${c.slug}/site`)}
                 key={c.id}
                 className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-primary/60 hover:shadow-glow text-left"
               >
@@ -216,9 +216,6 @@ export default function Marketplace() {
                   <div className="absolute bottom-0 left-0 right-0 p-5">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-display text-2xl uppercase text-white leading-none">{c.nome}</h3>
-                      {c.permite_aula_avulsa && (
-                        <Badge className="bg-primary text-[10px] font-bold uppercase px-1.5 py-0 h-4">Aula Avulsa</Badge>
-                      )}
                     </div>
                     {c.tagline && <p className="mt-1 text-sm text-white/70 line-clamp-1">{c.tagline}</p>}
                     <div className="mt-2 flex items-center gap-2 text-xs text-white/60">
@@ -245,12 +242,10 @@ export default function Marketplace() {
                     <span className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Consultoria</span>
                     <span className="text-sm font-bold">Ver opções</span>
                   </div>
-                  {c.permite_aula_avulsa && c.preco_aula_avulsa && (
-                    <div className="flex flex-col items-end border-l border-border/50 pl-4">
-                      <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Aula Avulsa</span>
-                      <span className="text-sm font-bold text-primary">R$ {c.preco_aula_avulsa}</span>
-                    </div>
-                  )}
+                  <div className="flex flex-col items-end border-l border-border/50 pl-4">
+                    <span className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Status</span>
+                    <span className="text-sm font-bold text-primary">Ver Perfil</span>
+                  </div>
                   <ArrowRight className="h-4 w-4 text-primary transition-transform group-hover:translate-x-1" />
                 </div>
               </button>
@@ -259,56 +254,7 @@ export default function Marketplace() {
         )}
       </section>
 
-      {/* Modal de intenção */}
-      <Dialog open={!!selectedCoach} onOpenChange={(open) => { if (!open) { setSelectedCoach(null); setModalMode("choice"); } }}>
-        <DialogContent className="bg-card border border-border">
-          <DialogHeader>
-            <DialogTitle className="font-display uppercase text-xl">
-              {modalMode === "choice" ? `O que você quer com ${selectedCoach?.nome}?` : "Aula Avulsa"}
-            </DialogTitle>
-          </DialogHeader>
-          {modalMode === "choice" && selectedCoach && (
-            <div className="space-y-3 pt-2">
-              {selectedCoach.permite_aula_avulsa && selectedCoach.preco_aula_avulsa && (
-                <button
-                  onClick={() => setModalMode("aula")}
-                  className="w-full p-4 border-2 border-primary/30 hover:border-primary rounded-none text-left transition group"
-                >
-                  <div className="flex items-center gap-3">
-                    <Zap className="h-6 w-6 text-primary" />
-                    <div className="flex-1">
-                      <div className="font-display uppercase text-base">Quero uma aula avulsa</div>
-                      <div className="text-xs text-muted-foreground">Treino único, pagamento direto. R$ {selectedCoach.preco_aula_avulsa}</div>
-                    </div>
-                    <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition" />
-                  </div>
-                </button>
-              )}
-              <button
-                onClick={() => navigate(`/${selectedCoach.slug}/site`)}
-                className="w-full p-4 border-2 border-border hover:border-primary rounded-none text-left transition group"
-              >
-                <div className="flex items-center gap-3">
-                  <Crown className="h-6 w-6 text-primary" />
-                  <div className="flex-1">
-                    <div className="font-display uppercase text-base">Quero acompanhamento contínuo</div>
-                    <div className="text-xs text-muted-foreground">Ver planos mensais e começar.</div>
-                  </div>
-                  <ArrowRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition" />
-                </div>
-              </button>
-            </div>
-          )}
-          {modalMode === "aula" && selectedCoach && (
-            <AulaAvulsaQuickForm
-              tenantId={selectedCoach.id}
-              tenantNome={selectedCoach.nome}
-              preco={Number(selectedCoach.preco_aula_avulsa)}
-              onClose={() => setModalMode("choice")}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
+      {/* Modal de intenção removido, vai direto para o site do coach */}
     </div>
   );
 }
