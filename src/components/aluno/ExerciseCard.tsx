@@ -88,6 +88,7 @@ export const ExerciseCard = ({
   const [savingAll, setSavingAll] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [listeningIdx, setListeningIdx] = useState<number | null>(null);
   const [referenceVideoUrl, setReferenceVideoUrl] = useState<string | null>(data.video_url || null);
 
