@@ -23,7 +23,7 @@ const IndexRedirect = () => {
   const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setForceRender(true), 4000);
+    const timer = setTimeout(() => setForceRender(true), 1500);
     return () => clearTimeout(timer);
   }, []);
 

@@ -95,15 +95,16 @@ const Login = () => {
     }
   }, []);
 
-  // Redirect logged-in user
+  // Redireciona usuário já logado
   useEffect(() => {
     if (authLoading || !user) return;
 
-    // Se já está logado, deixa o IndexRedirect resolver o destino
-    // Isso evita loops de redirecionamento conflitantes
+    // Se o usuário já estiver logado e tentar acessar a página de login,
+    // nós o mandamos para a rota de redirecionamento que decidirá o destino final.
+    // Usamos window.location.href para garantir uma limpeza de estado se necessário.
     console.log("[Login] Usuário já autenticado, delegando ao IndexRedirect.");
-    navigate("/index", { replace: true });
-  }, [user, authLoading, navigate]);
+    window.location.href = "/index";
+  }, [user, authLoading]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
