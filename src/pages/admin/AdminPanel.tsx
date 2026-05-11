@@ -43,8 +43,6 @@ const AdminPanel = () => {
   const [tagline, setTagline] = useState("");
   const [cidade, setCidade] = useState("");
   const [estado, setEstado] = useState("");
-  const [permiteAulaAvulsa, setPermiteAulaAvulsa] = useState(false);
-  const [precoAulaAvulsa, setPrecoAulaAvulsa] = useState("");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {
@@ -66,8 +64,6 @@ const AdminPanel = () => {
     setTagline(tenant.tagline || "");
     setCidade(tenant.cidade || "");
     setEstado(tenant.estado || "");
-    setPermiteAulaAvulsa(tenant.permite_aula_avulsa || false);
-    setPrecoAulaAvulsa(tenant.preco_aula_avulsa?.toString() || "");
     void loadAlunos(tenant.id);
   }, [tenant]);
 
@@ -177,8 +173,6 @@ const AdminPanel = () => {
       tagline,
       cidade,
       estado,
-      permite_aula_avulsa: permiteAulaAvulsa,
-      preco_aula_avulsa: precoAulaAvulsa ? parseFloat(precoAulaAvulsa) : null,
     }).eq("id", tenant.id);
     if (error) toast.error(error.message);
     else { toast.success("Dados salvos!"); await refresh(); }
@@ -244,20 +238,6 @@ const AdminPanel = () => {
             <Link to={`/${slug}/admin/atletas`}>
               <Button variant="outline" className="border-primary/40">
                 <Users className="h-4 w-4 mr-2" /> Gerenciar Elenco
-              </Button>
-            </Link>
-            <Link to={`/${slug}/admin/faturamento`}>
-              <Button variant="outline" className="border-primary/40 h-auto py-2 px-4 flex flex-col items-start gap-0.5 bg-black/60 hover:bg-black/80">
-                <div className="flex items-center gap-2">
-                  <Wallet className="h-4 w-4 text-primary" />
-                  <span className="font-display text-base tracking-wide">FATURAMENTO</span>
-                </div>
-                <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Gestão financeira e saques</span>
-              </Button>
-            </Link>
-            <Link to={`/${slug}/admin/agenda-avulsa`}>
-              <Button variant="outline" className="border-primary/40">
-                <CalendarClock className="h-4 w-4 mr-2" /> Agenda Aulas Avulsas
               </Button>
             </Link>
             <Link to={`/${slug}/admin/agenda-presencial`}>
@@ -459,14 +439,6 @@ const AdminPanel = () => {
                             <Label>Estado (UF)</Label>
                             <Input value={estado} onChange={(e) => setEstado(e.target.value)} maxLength={2} className="bg-secondary/40 uppercase" />
                           </div>
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Preço Aula Avulsa (R$)</Label>
-                          <Input type="number" value={precoAulaAvulsa} onChange={(e) => setPrecoAulaAvulsa(e.target.value)} placeholder="0.00" className="bg-secondary/40" />
-                        </div>
-                        <div className="flex items-center gap-2 pt-2">
-                          <input type="checkbox" id="aula" checked={permiteAulaAvulsa} onChange={(e) => setPermiteAulaAvulsa(e.target.checked)} className="w-4 h-4 rounded border-white/20 bg-black accent-primary" />
-                          <Label htmlFor="aula" className="cursor-pointer">Permitir agendamento de aula avulsa</Label>
                         </div>
                       </div>
                     </div>
