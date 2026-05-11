@@ -1,7 +1,7 @@
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon } from "lucide-react";
+import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon, KeyRound } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -623,8 +623,8 @@ const Landing = () => {
               <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mb-6">
                 <CheckCircle2 className="text-primary" />
               </div>
-              <h3 className="text-xl font-bold mb-4 uppercase">PAGAMENTO AUTOMÁTICO</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">Receba pelo app via PIX ou Cartão com renovação recorrente. Gestão financeira completa e simples.</p>
+              <h3 className="text-xl font-bold mb-4 uppercase">SISTEMA DE VOUCHERS</h3>
+              <p className="text-gray-500 text-sm leading-relaxed">Libere acesso para seus alunos via códigos únicos. Controle total de quem entra no seu time sem fluxos de pagamento internos.</p>
             </div>
           </div>
         </div>
@@ -773,7 +773,7 @@ const Landing = () => {
                 <ul className="space-y-4">
                   {[
                     "App próprio com sua marca e seu domínio",
-                    "Pagamento automático via Stripe Connect",
+                    "Acesso controlado por códigos exclusivos",
                     "Treinos com vídeo HD em alta qualidade",
                     "Dr.IA pra responder dúvidas dos alunos 24h",
                     "Dashboard de evolução em tempo real",
@@ -802,7 +802,7 @@ const Landing = () => {
               VEJA QUANTO VOCÊ PODE <span className="text-primary text-glow-primary">FATURAR</span>
             </h2>
             <p className="text-gray-400 max-w-2xl mx-auto">
-              Deslize as barras e veja o quanto cai na sua conta — já com a taxa Alpha Coach descontada.
+              Simule o crescimento do seu time e organize sua base de alunos com facilidade.
             </p>
           </div>
 
@@ -848,22 +848,22 @@ const Landing = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               <div className="p-5 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Faturamento bruto / mês</p>
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Faturamento estimado / mês</p>
                 <p className="text-2xl font-black text-white">{formatBRL(grossRevenue)}</p>
               </div>
               <div className="p-5 bg-white/5 rounded-xl border border-white/5">
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Taxa Alpha Coach (10%)</p>
-                <p className="text-2xl font-black text-gray-400">-{formatBRL(fee)}</p>
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-2">Manutenção Alpha Coach</p>
+                <p className="text-2xl font-black text-gray-400">Incluso</p>
               </div>
               <div className="p-5 bg-primary/10 rounded-xl border border-primary/30">
-                <p className="text-[10px] uppercase tracking-widest text-primary mb-2">Líquido na sua conta / mês</p>
-                <p className="text-2xl font-black text-primary text-glow-primary">{formatBRL(netRevenue)}</p>
+                <p className="text-[10px] uppercase tracking-widest text-primary mb-2">Sua economia de tempo</p>
+                <p className="text-2xl font-black text-primary text-glow-primary">100%</p>
               </div>
             </div>
 
             <div className="text-center pt-4 border-t border-white/5">
-              <p className="text-sm text-gray-400">
-                Em 12 meses: <span className="text-white font-black text-lg ml-2">{formatBRL(yearlyNet)}</span>
+              <p className="text-sm text-gray-400 uppercase tracking-widest font-bold">
+                Escale seu time sem limites tecnológicos.
               </p>
             </div>
           </div>
@@ -1050,41 +1050,32 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Paz de espírito financeira */}
+      {/* Gestão de Alunos */}
       <section className="py-24 px-6 md:px-12 bg-background">
         <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
           <div>
             <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border border-primary/30 bg-primary/10 text-primary rounded-md">
-              <Wallet className="h-3 w-3" />
-              Pagamentos
+              <Users className="h-3 w-3" />
+              Comunidade
             </div>
             <h2 className="text-3xl md:text-5xl font-black uppercase mb-4 leading-tight">
-              PAZ DE ESPÍRITO <br />
-              <span className="text-primary">FINANCEIRA.</span>
+              GESTÃO DE <br />
+              <span className="text-primary">ALUNOS ELITE.</span>
             </h2>
-            <p className="text-lg text-white font-bold mb-4">Divisão automática de pagamentos.</p>
+            <p className="text-lg text-white font-bold mb-4">Controle total de quem acessa seu time.</p>
             <p className="text-gray-400 leading-relaxed">
-              Você vende por R$ 200 e R$ 180 caem direto na sua conta. 
-              Sem cobrar aluno por WhatsApp, sem conferir comprovante de PIX, sem atraso.
+              Gere códigos de acesso personalizados e envie para seus alunos. 
+              Você mantém o controle total das cobranças fora do app, enquanto nós garantimos que apenas alunos ativos acessem seu conteúdo.
             </p>
           </div>
 
           <div className="space-y-3">
             <div className="flex items-center justify-between p-6 bg-background border border-white/10 rounded-xl">
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Aluno paga no app</p>
-                <p className="text-3xl font-black text-white">R$ 200</p>
+                <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Você gera o código</p>
+                <p className="text-2xl font-black text-white">ALPHA-VIP-2026</p>
               </div>
-              <Smartphone className="h-10 w-10 text-gray-700" />
-            </div>
-
-            <div className="flex justify-center">
-              <ArrowRight className="h-6 w-6 text-primary rotate-90" />
-            </div>
-
-            <div className="flex items-center justify-between p-4 bg-background/50 border border-white/5 rounded-xl">
-              <p className="text-[10px] uppercase tracking-widest text-gray-500">Taxa Alpha Coach</p>
-              <p className="text-xl font-bold text-gray-500">- R$ 20</p>
+              <KeyRound className="h-10 w-10 text-primary" />
             </div>
 
             <div className="flex justify-center">
@@ -1093,10 +1084,10 @@ const Landing = () => {
 
             <div className="flex items-center justify-between p-6 bg-gradient-to-br from-primary/20 to-background border border-primary/40 rounded-xl">
               <div>
-                <p className="text-[10px] uppercase tracking-widest text-primary mb-1">Cai na sua conta</p>
-                <p className="text-3xl font-black text-primary text-glow-primary">R$ 180</p>
+                <p className="text-[10px] uppercase tracking-widest text-primary mb-1">Aluno libera o app</p>
+                <p className="text-3xl font-black text-primary text-glow-primary">Acesso Liberado</p>
               </div>
-              <Wallet className="h-10 w-10 text-primary" />
+              <CheckCircle2 className="h-10 w-10 text-primary" />
             </div>
           </div>
         </div>
