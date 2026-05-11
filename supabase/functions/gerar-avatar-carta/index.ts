@@ -43,7 +43,32 @@ Deno.serve(async (req) => {
       ? "vestindo legging preta justa e top fitness preto"
       : "vestindo bermuda de treino preta e camisa preta justa";
 
-    const prompt = `Gere um avatar 3D realista de CORPO INTEIRO estilo EA FC / FIFA Ultimate Team da pessoa nesta foto, mantendo fielmente o rosto, traços e tom de pele. A pessoa deve estar ${uniforme}, em pose atlética de musculação em pé, mostrando da cabeça aos pés. Fundo neutro escuro com leve glow dourado/prata cinematográfico. Iluminação AAA PS5, enquadramento vertical 3:5, corpo inteiro centralizado, sem cortes nas pernas ou cabeça.`;
+    // Busca o nome do tenant para estampar na camisa/top
+    const admin0 = createClient(SUPABASE_URL, SERVICE_KEY);
+    let teamName = "";
+    try {
+      const { data: perfil } = await admin0
+        .from("perfis")
+        .select("tenant_id")
+        .eq("id", userId)
+        .maybeSingle();
+      if (perfil?.tenant_id) {
+        const { data: tenant } = await admin0
+          .from("tenants")
+          .select("nome")
+          .eq("id", perfil.tenant_id)
+          .maybeSingle();
+        teamName = (tenant?.nome ?? "").toUpperCase().trim();
+      }
+    } catch (e) {
+      console.warn("não foi possível obter nome do tenant:", e);
+    }
+
+    const estampa = teamName
+      ? ` A ${isFem ? "frente do top fitness" : "frente da camisa preta"} deve ter o texto "${teamName}" estampado em letras grandes, centralizadas, em branco com leve relevo, tipografia esportiva moderna sans-serif (estilo jersey de time), bem legível e nítido, sem distorções nem erros ortográficos.`
+      : "";
+
+    const prompt = `Gere um avatar 3D realista de CORPO INTEIRO estilo EA FC / FIFA Ultimate Team da pessoa nesta foto, mantendo fielmente o rosto, traços e tom de pele. A pessoa deve estar ${uniforme}, em pose atlética de musculação em pé, mostrando da cabeça aos pés. Fundo neutro escuro com leve glow dourado/prata cinematográfico. Iluminação AAA PS5, enquadramento vertical 3:5, corpo inteiro centralizado, sem cortes nas pernas ou cabeça.${estampa}`;
 
     const aiResp = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
