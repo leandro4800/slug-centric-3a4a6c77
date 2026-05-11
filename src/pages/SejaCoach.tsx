@@ -257,7 +257,7 @@ export default function SejaCoach() {
       }
 
       setTenantId(currentTenantId);
-      setStep("product");
+      setStep("pending");
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
