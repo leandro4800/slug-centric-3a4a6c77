@@ -120,9 +120,10 @@ const Login = () => {
             console.log("[Login] Fallback: redirecionando para app do slug:", currentSlug);
             window.location.assign(`/${currentSlug}/app`);
           } else {
+            console.warn("[Login] Timeout atingido e nenhum slug disponível para fallback.");
             setLoading(false);
           }
-        }, 20000); // 20s de limite total para o redirect
+        }, 15000); // Reduzido para 15s para ser mais responsivo se algo travar
 
         const locationState = location.state as { from?: { pathname: string }, slug?: string } | null;
         const urlSearchParams = new URLSearchParams(window.location.search);
