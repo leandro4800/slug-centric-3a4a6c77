@@ -66,13 +66,52 @@ const IndexRedirect = () => {
           return;
         }
 
-        // 2. Se ele está em um tenant específico via URL ou Branding
+        // 2. Se há slug na URL ou no Branding, valida se é membro do tenant antes de entrar
         const targetSlug = safeSlug || tenant?.slug;
         if (targetSlug && targetSlug !== "demo") {
-          const target = `/${targetSlug}/app`;
-          console.log("[IndexRedirect] Tenant identificado via URL/Branding, enviando para:", target);
-          navigate(target, { replace: true });
-          return;
+          // Busca o tenant pelo slug
+          const { data: targetTenant } = await supabase
+            .from("tenants")
+            .select("id, slug, owner_user_id")
+            .eq("slug", targetSlug)
+            .maybeSingle();
+
+          if (targetTenant) {
+            // Se é owner do tenant, vai pro controle
+            if (targetTenant.owner_user_id === user.id) {
+              const target = `/${targetTenant.slug}/app/controle`;
+              console.log("[IndexRedirect] Owner do slug, enviando para:", target);
+              navigate(target, { replace: true });
+              return;
+            }
+
+            // Verifica se tem role no tenant ou assinatura ativa
+            const [{ data: roleRow }, { data: subRow }] = await Promise.all([
+              supabase
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", user.id)
+                .eq("tenant_id", targetTenant.id)
+                .maybeSingle(),
+              supabase
+                .from("assinaturas")
+                .select("status")
+                .eq("aluno_id", user.id)
+                .eq("tenant_id", targetTenant.id)
+                .in("status", ["active", "trialing"])
+                .maybeSingle(),
+            ]);
+
+            if (roleRow || subRow) {
+              const target = `/${targetTenant.slug}/app`;
+              console.log("[IndexRedirect] Membro do tenant, enviando para:", target);
+              navigate(target, { replace: true });
+              return;
+            }
+
+            // Não é membro do slug pedido — segue para checar o tenant do perfil abaixo
+            console.log("[IndexRedirect] Usuário logado não é membro do slug", targetSlug, "— procurando tenant próprio.");
+          }
         }
 
         // 3. Busca o tenant do perfil
