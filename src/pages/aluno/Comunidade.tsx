@@ -58,24 +58,22 @@ const Comunidade = () => {
     try {
       setLoading(true);
       
-      // Fetch stories (profiles from same tenant)
+      // Fetch stories (profiles from the platform)
       const { data: profilesData, error: profilesError } = await supabase
         .from("perfis")
         .select("id, nome_completo, avatar_url")
-        .eq("tenant_id", tenant?.id)
         .limit(15);
 
       if (profilesError) throw profilesError;
       setStories(profilesData || []);
 
-      // Fetch posts with profile info
+      // Fetch posts with profile info (showing all users from the platform)
       const { data: postsData, error: postsError } = await supabase
         .from("comunidade_posts")
         .select(`
           *,
           perfil:perfis!usuario_id(nome_completo, avatar_url)
         `)
-        .eq("profissional_id", tenant?.id)
         .order("criado_em", { ascending: false });
 
       if (postsError) throw postsError;
