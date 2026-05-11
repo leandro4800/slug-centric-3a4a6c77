@@ -7,6 +7,7 @@ import { Camera, Plus, Calculator, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
+import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 
 type PhotoType = 'frente' | 'costas' | 'lado';
 
