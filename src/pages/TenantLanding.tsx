@@ -295,7 +295,7 @@ export default function TenantLanding() {
                   <h3 className="font-display text-2xl uppercase">{p.nome}</h3>
                   {p.descricao && <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>}
                   <div className="mt-6">
-                    <span className="text-5xl font-display">{formatBRL(p.preco_centavos / 100)}</span>
+                    <span className="text-5xl font-display">{formatBRL(p.preco_centavos)}</span>
                     <span className="text-muted-foreground">{intervaloLabel[p.intervalo]}</span>
                   </div>
                   <ul className="mt-6 space-y-2 text-sm flex-1">
