@@ -265,22 +265,28 @@ NUTRIENT TIMING — HORÁRIO DE TREINO DO ATLETA
 - Marque corretamente "tag_timing" como: "pre_treino", "pos_treino_imediato", "pos_treino_solido" ou "longe_treino".
 
 ═══════════════════════════════════════════════
-SALADA À VONTADE (ALMOÇO E JANTAR) — REGRA INVIOLÁVEL
+SALADA À VONTADE + VEGETAIS PREFERIDOS (ALMOÇO E JANTAR) — REGRA INVIOLÁVEL
 ═══════════════════════════════════════════════
 - OBRIGATÓRIO: TODA refeição de ALMOÇO (~${horarioAlmoco}) E JANTAR (~${horarioJantar}) DEVE conter "salada de folhas verdes e vegetais crus À VONTADE / a gosto" — não conte essas calorias no fechamento dos macros (volume livre).
-- Use SEMPRE o campo "salada_livre": true nessas refeições e descreva exemplos no "descricao_ia" (ex.: alface, rúcula, agrião, espinafre, tomate, pepino, cenoura ralada, beterraba, repolho).
-- Se gerar almoço ou jantar SEM salada, a dieta está ERRADA e deve ser refeita.
+- Use SEMPRE o campo "salada_livre": true nessas refeições.
+- Inclua EXPLICITAMENTE no "descricao_ia" os vegetais/frutas preferidos do atleta vindos da anamnese: "${prefAlimentos.frutas_veg || "alface, rúcula, tomate, pepino, cenoura, beterraba"}". Liste-os por nome no texto.
+- Se gerar almoço ou jantar SEM salada à vontade ou SEM citar os vegetais preferidos do atleta, a dieta está ERRADA e deve ser refeita.
 
 ═══════════════════════════════════════════════
 REGRAS PACHOLOK DE COMBINAÇÕES (INVIOLÁVEIS)
 ═══════════════════════════════════════════════
-1. CUSCUZ: pode aparecer APENAS no CAFÉ DA MANHÃ. NUNCA em almoço, lanche ou jantar.
-   - Combinação obrigatória: cuscuz + FRANGO DESFIADO (cozido e desfiado). PROIBIDO frango grelhado/em pedaços com cuscuz.
-   - Alternativa válida: cuscuz + OVOS MEXIDOS (com a gema, nunca só claras).
+1. CUSCUZ (regra absoluta — proibido violar):
+   - Pode aparecer APENAS no CAFÉ DA MANHÃ (refeição 1, ordem 1). NUNCA em lanche, almoço ou jantar.
+   - Quando o atleta mencionar cuscuz na anamnese (campo "cafe_lanche_habitual" / "ama" / "alimentos_basicos_casa") OU quando a preferência indicar cuscuz, é OBRIGATÓRIO colocar cuscuz no café da manhã.
+   - PROTEÍNA do café com cuscuz é OBRIGATORIAMENTE: FRANGO DESFIADO (peito de frango cozido e desfiado) OU OVOS MEXIDOS INTEIROS (com gema). NUNCA ovo cozido, NUNCA frango grelhado/em pedaços, NUNCA frango em outra refeição quando o cuscuz pediu desfiado no café.
+   - Se a anamnese pediu "cuscuz no café com frango desfiado", a refeição 1 PRECISA conter cuscuz + frango desfiado JUNTOS — não jogar o frango/ovo em outro horário.
 2. PÃO DE FORMA + OVOS no café da manhã: usar OVOS MEXIDOS INTEIROS (com gema). PROIBIDO usar somente claras.
    - Inclua a gordura da gema no cálculo de macros (1 gema ≈ 5g gordura, 2.7g proteína).
-3. AVEIA: se o atleta declarar na anamnese que tem o HÁBITO de comer aveia (campo "alimentos_basicos_casa", "cafe_lanche_habitual" ou "ama" mencionando aveia), SUGERIR no café da manhã OU na última refeição do dia um MINGAU DE AVEIA (aveia + leite/bebida vegetal + whey/proteína) OU um SHAKE DE AVEIA (aveia + whey + banana + leite). Descreva claramente em "descricao_ia".
-4. Estas regras são prioritárias sobre preferências genéricas, mas devem respeitar restrições/alergias do atleta.
+3. AVEIA: se o atleta declarar na anamnese que tem o HÁBITO de comer aveia, SUGERIR no café da manhã OU na última refeição do dia um MINGAU DE AVEIA OU SHAKE DE AVEIA com whey. Descreva claramente em "descricao_ia".
+4. JANTAR — CARBOIDRATO:
+   - PROIBIDO usar BATATA DOCE no jantar (joga a batata doce para almoço/pré-treino).
+   - O carbo padrão do JANTAR é SEMPRE ARROZ (branco ou integral). Só substitua arroz no jantar se o atleta declarar explicitamente em "evita" ou em restrições que NÃO consome arroz.
+5. Estas regras são prioritárias sobre preferências genéricas, mas devem respeitar restrições/alergias do atleta.
 
 ═══════════════════════════════════════════════
 PREFERÊNCIAS ALIMENTARES DO ATLETA (ANAMNESE)
