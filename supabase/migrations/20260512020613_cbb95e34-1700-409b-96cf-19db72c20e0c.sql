@@ -1,0 +1,1 @@
+UPDATE public.planos SET preco_centavos = 120000 WHERE id = 'c452caf8-824c-42d8-abe1-448009552deb';
