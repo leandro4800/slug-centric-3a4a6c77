@@ -164,7 +164,7 @@ const AdminMontarTreino = () => {
 
       // Mesclar: perfis_treino (overrides do coach) > avaliacao/anamnese/perfis
       const sexoMesclado = pt?.sexo || pr?.sexo || av?.sexo || "";
-      const tempoMesclado = pt?.tempo_treino || an?.nivel_experiencia || "Iniciante";
+      const tempoMesclado = toNivelCanonico(pt?.tempo_treino || an?.nivel_experiencia) || "Iniciante";
 
       setPerfil({
         sexo: sexoMesclado,
