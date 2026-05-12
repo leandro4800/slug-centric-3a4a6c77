@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Save, Sparkles, ClipboardCheck, Upload } from "lucide-react";
 import { PageHeader } from "@/components/aluno/PageHeader";
+import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
