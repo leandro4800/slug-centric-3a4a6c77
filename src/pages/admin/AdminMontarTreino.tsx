@@ -283,7 +283,8 @@ const AdminMontarTreino = () => {
       });
       setExercicios(novos);
       setCardio(data.cardio || "");
-      toast.success(`Treino gerado · ${novos.length} exercícios`);
+      setPendingReview(true);
+      toast.success(`Treino gerado · ${novos.length} exercícios — revise antes de salvar`);
 
       if (searchParams.get("andDiet") === "true") {
         setTimeout(async () => {
