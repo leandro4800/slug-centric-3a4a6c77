@@ -124,6 +124,7 @@ const AdminMontarTreino = () => {
   const [cardio, setCardio] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pendingReview, setPendingReview] = useState(false);
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
