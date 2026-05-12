@@ -154,7 +154,7 @@ const AdminMontarDieta = () => {
           altura_cm: perfil.altura_cm,
           idade: perfil.idade,
           sexo: sexoEnvio,
-          nivel: perfil.tempo_treino,
+          nivel: toNivelEdgeKey(perfil.tempo_treino),
           bf_pct: perfil.bf_pct,
           pescoco_cm: perfil.pescoco_cm,
           cintura_cm: perfil.cintura_cm,
