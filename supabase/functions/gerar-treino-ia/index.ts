@@ -84,8 +84,20 @@ serve(async (req) => {
     let regrasDescansoContext = "";
     let bibliotecaAbsContext = "";
 
+    // Normaliza nível removendo acento (DB usa "intermediario", "avancado", "alto_nivel")
+    const stripAcc = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const nivelRaw = perfil?.tempo_treino || "Iniciante";
+    const nivelKey = (() => {
+      const t = stripAcc(String(nivelRaw));
+      if (t.includes("alto") || t === "atleta") return "alto_nivel";
+      if (t.startsWith("avan")) return "avancado";
+      if (t.startsWith("inter")) return "intermediario";
+      return "iniciante";
+    })();
+    const nivelLabel = ({ iniciante: "Iniciante", intermediario: "Intermediário", avancado: "Avançado", alto_nivel: "Atleta de Alto Nível" } as const)[nivelKey];
+
     try {
-      const nivelInput = (perfil?.tempo_treino || "Iniciante").toLowerCase();
+      const nivelInput = nivelKey;
       const variant = Math.floor(Math.random() * 3) + 1; // Sorteio de Variante (1, 2 ou 3)
 
       const [pachoResp, descansoResp, absResp] = await Promise.all([
@@ -206,7 +218,7 @@ serve(async (req) => {
       ? divisoes
       : null;
     const divisaoBlock = divisoesEscolhidas
-      ? `\n\n═══════════════════════════════════════════════\n0. DIVISÃO OBRIGATÓRIA (DEFINIDA PELO COACH) — INVIOLÁVEL\n═══════════════════════════════════════════════\nO Coach já escolheu EXATAMENTE como o aluno vai dividir a semana. Você DEVE retornar um dia para cada item abaixo, com o nome IDÊNTICO ao informado, na MESMA ORDEM, e os exercícios DEVEM corresponder aos grupos musculares descritos no nome de cada dia.\n\nDIVISÃO ESCOLHIDA (${divisoesEscolhidas.length} dias de treino):\n${divisoesEscolhidas.map((d: string, i: number) => `${i + 1}. "${d}"`).join("\n")}\n\nREGRAS DE INTERPRETAÇÃO:\n- "Peito + Tríceps" = treine SOMENTE peito e tríceps nesse dia (e ombro anterior se mencionado).\n- "Peito + Bíceps" = treine SOMENTE peito e bíceps (combinação alternativa, válida).\n- "Costas + Bíceps" / "Costas + Tríceps" — siga literalmente.\n- "Pernas Completas" = quadríceps + posterior + glúteo + panturrilha.\n- "Push" = peito/ombro/tríceps. "Pull" = costas/bíceps. "Legs" = pernas.\n- "Full Body" = todos os grandes grupos no mesmo dia.\n- NÃO adicione grupos musculares que não estejam no nome do dia.\n- Complete a semana (7 entradas) com OFFs estratégicos nos dias restantes.\n`
+      ? `\n\n═══════════════════════════════════════════════\n0. DIVISÃO OBRIGATÓRIA (DEFINIDA PELO COACH) — INVIOLÁVEL — PRIORIDADE MÁXIMA\n═══════════════════════════════════════════════\nO Coach já escolheu EXATAMENTE como o aluno vai dividir a semana. Você DEVE retornar um dia para cada item abaixo, com o nome IDÊNTICO ao informado, na MESMA ORDEM, e os exercícios DEVEM corresponder aos grupos musculares descritos no nome de cada dia.\n\n⛔ PROIBIDO ABSOLUTAMENTE: Gerar Full Body, juntar grupos não listados, ou trocar a divisão por outra que você ache melhor. Se a divisão diz "Peito + Tríceps", o dia tem APENAS peito e tríceps — NUNCA full body, NUNCA pernas/costas no mesmo dia.\n⛔ Esta regra SOBRESCREVE qualquer regra de "Estrutura por Nível" abaixo. Mesmo que o nível seja Iniciante, se o coach passou divisão dividida, RESPEITE a divisão dividida.\n\nDIVISÃO ESCOLHIDA (${divisoesEscolhidas.length} dias de treino, nível do aluno = ${nivelLabel}):\n${divisoesEscolhidas.map((d: string, i: number) => `${i + 1}. "${d}"`).join("\n")}\n\nREGRAS DE INTERPRETAÇÃO:\n- "Peito + Tríceps" = treine SOMENTE peito e tríceps nesse dia (e ombro anterior se mencionado).\n- "Peito + Bíceps" = treine SOMENTE peito e bíceps (combinação alternativa, válida).\n- "Costas + Bíceps" / "Costas + Tríceps" — siga literalmente.\n- "Pernas Completas" = quadríceps + posterior + glúteo + panturrilha.\n- "Push" = peito/ombro/tríceps. "Pull" = costas/bíceps. "Legs" = pernas.\n- "Full Body" = todos os grandes grupos no mesmo dia (USE APENAS se o nome do dia contiver "Full Body").\n- NÃO adicione grupos musculares que não estejam no nome do dia.\n- Complete a semana (7 entradas) com OFFs estratégicos nos dias restantes.\n`
       : "";
 
     const systemPrompt = `${knowledgeContext}${divisaoBlock}
@@ -310,12 +322,12 @@ ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição complet
     const userPrompt = `Monte o treino Pacho-style para:
 - Sexo: ${perfil?.sexo || "não informado"}
 - Idade: ${perfil?.idade || "?"}
-- Nível: ${perfil?.tempo_treino || "Iniciante"} (Seção correspondente na base)
+- Nível: ${nivelLabel} (Seção correspondente na base) ${nivelKey !== "iniciante" ? "— ⛔ PROIBIDO gerar Full Body. Use divisão dividida (split)." : ""}
 - Objetivo: ${perfil?.objetivo || "hipertrofia"}
 - Frequência semanal: ${perfil?.frequencia_semanal || 4}x
 - Ênfase desejada: ${perfil?.enfase || "Geral"}
 - Lesões/Limitações: ${lesoes} / ${limitacoes}
-${biomarkerTier ? `- Tier biomarcador: ${biomarkerTier.toUpperCase()} (aplique a Regra 7)\n` : ""}${divisoesEscolhidas ? `\n⚠️ DIVISÃO OBRIGATÓRIA (não invente outra): ${divisoesEscolhidas.map((d: string, i: number) => `Dia ${i + 1} = "${d}"`).join(" | ")}\n` : ""}
+${biomarkerTier ? `- Tier biomarcador: ${biomarkerTier.toUpperCase()} (aplique a Regra 7)\n` : ""}${divisoesEscolhidas ? `\n⚠️ DIVISÃO OBRIGATÓRIA (não invente outra, NÃO USE FULL BODY): ${divisoesEscolhidas.map((d: string, i: number) => `Dia ${i + 1} = "${d}"`).join(" | ")}\n` : ""}
 ${Array.isArray(estimulos_extras) && estimulos_extras.length > 0 ? `\n🎯 ESTÍMULOS EXTRAS (acessórios obrigatórios): ${estimulos_extras.join(", ")}.\nDistribua esses grupos como exercícios ACESSÓRIOS (1-2 exercícios por grupo) ao FINAL dos dias mais coerentes da divisão (ex: panturrilha em dia de pernas, ombro lateral em dia de ombro/peito, core em 3 dias separados). NÃO substituem os grupos principais do dia — são adições.\n` : ""}
 ${customPrompt ? `\n=== PEDIDO ESPECÍFICO DO COACH (PRIORIDADE MÁXIMA) ===\n"${customPrompt}"\n\nINTERPRETE este pedido e aplique a Diretriz #6 (Ênfase/Pontos Fracos): aumente o volume e a frequência semanal dos grupos mencionados.\n` : ""}
 Use exercícios desta biblioteca:
