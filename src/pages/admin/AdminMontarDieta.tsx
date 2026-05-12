@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Sparkles, Save, Apple, Trash2, Plus } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
+import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
 
 interface Aluno {
   id: string;
