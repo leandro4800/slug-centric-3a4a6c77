@@ -67,6 +67,7 @@ const Treino = () => {
       refMap[nome.trim().toLowerCase()]?.coach || null;
 
     const autoFillVolume = async (list: Treino[], refMap: Record<string, VideoRef>): Promise<Treino[]> => {
+      if (!tenant) return list;
       const dias = [...new Set(list.map((t) => t.dia_semana))];
       const extras: Treino[] = [];
       for (const dia of dias) {
