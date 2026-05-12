@@ -239,14 +239,14 @@ const AdminMontarDieta = () => {
               <div>
                 <Label>Nível</Label>
                 <select 
-                  value={perfil.tempo_treino || "intermediario"} 
+                  value={perfil.tempo_treino || "Intermediário"} 
                   onChange={(e) => setPerfil({...perfil, tempo_treino: e.target.value})}
                   className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
                 >
-                  <option value="iniciante">Iniciante</option>
-                  <option value="intermediario">Intermediário</option>
-                  <option value="avancado">Avançado</option>
-                  <option value="alto_nivel">Atleta de Alto Nível</option>
+                  <option value="Iniciante">Iniciante</option>
+                  <option value="Intermediário">Intermediário</option>
+                  <option value="Avançado">Avançado</option>
+                  <option value="Atleta de Alto Nível">Atleta de Alto Nível</option>
                 </select>
               </div>
               <div>
