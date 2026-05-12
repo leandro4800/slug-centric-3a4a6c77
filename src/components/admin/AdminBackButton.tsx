@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,10 +34,15 @@ export const AdminBackButton = ({
   exitMessage = "Você voltará para a tela anterior. Deseja continuar?",
 }: AdminBackButtonProps) => {
   const navigate = useNavigate();
+  const { slug } = useParams<{ slug: string }>();
 
   const handleBack = () => {
     if (to) {
       navigate(to);
+    } else if (slug) {
+      // Sempre volta para a tela inicial do app do coach,
+      // evitando ficar preso no Painel do Coach.
+      navigate(`/${slug}/app`);
     } else {
       navigate(-1);
     }
