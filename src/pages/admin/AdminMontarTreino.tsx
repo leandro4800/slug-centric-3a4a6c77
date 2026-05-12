@@ -377,7 +377,7 @@ const AdminMontarTreino = () => {
 
       <main className="max-w-6xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-24">
         {/* Selecionar aluno */}
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm">
           <Label>Aluno</Label>
           <select
             value={alunoId}
@@ -394,7 +394,7 @@ const AdminMontarTreino = () => {
         {alunoId && (
           <>
             {/* Perfil */}
-            <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl">PERFIL DO ALUNO</h2>
                 <span className="text-xs px-3 py-1 rounded-full bg-primary/15 text-primary uppercase">Nível: {nivel}</span>
@@ -460,7 +460,7 @@ const AdminMontarTreino = () => {
             </div>
 
             {/* === ESCOLHA DA DIVISÃO === */}
-            <div className="bg-black/40 border border-primary/30 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
+            <div className="bg-black/40 border border-primary/30 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl">DIVISÃO DO TREINO</h2>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30">
@@ -563,7 +563,7 @@ const AdminMontarTreino = () => {
               </div>
             </div>
 
-            <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm">
               <div className="text-xs text-muted-foreground mb-3">
                 Divisão final: <strong className="text-foreground">{divisoes.join(" · ")}</strong>
               </div>
