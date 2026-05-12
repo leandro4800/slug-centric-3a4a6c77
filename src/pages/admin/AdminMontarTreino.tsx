@@ -348,6 +348,7 @@ const AdminMontarTreino = () => {
       }
     }
     toast.success("Prescrição salva!");
+    setPendingReview(false);
     setSaving(false);
   };
 
