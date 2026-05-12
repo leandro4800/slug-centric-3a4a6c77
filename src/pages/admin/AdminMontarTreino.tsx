@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
@@ -111,9 +111,7 @@ const fullBodyBloqueado = (nivel: string, divisoes: string[]) =>
   nivel !== "Iniciante" && divisoes.some(contemFullBody);
 
 const AdminMontarTreino = () => {
-  const { slug } = useParams();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { tenant } = useBranding();
   const { user } = useAuth();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
