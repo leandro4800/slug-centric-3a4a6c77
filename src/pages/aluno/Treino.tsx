@@ -126,6 +126,7 @@ const Treino = () => {
     };
 
     const loadSpotify = async () => {
+      if (!tenant) return;
       const { data } = await supabase
         .from("configuracoes_tenant")
         .select("valor")
