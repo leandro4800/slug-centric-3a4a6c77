@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles, Save, ArrowLeft, Trash2, Plus } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
+import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 interface Aluno {
   id: string;
@@ -163,7 +164,7 @@ const AdminMontarTreino = () => {
 
       // Mesclar: perfis_treino (overrides do coach) > avaliacao/anamnese/perfis
       const sexoMesclado = pt?.sexo || pr?.sexo || av?.sexo || "";
-      const tempoMesclado = pt?.tempo_treino || an?.nivel_experiencia || "Iniciante";
+      const tempoMesclado = toNivelCanonico(pt?.tempo_treino || an?.nivel_experiencia) || "Iniciante";
 
       setPerfil({
         sexo: sexoMesclado,

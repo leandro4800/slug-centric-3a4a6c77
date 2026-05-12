@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ArrowLeft, Loader2, Save, Sparkles, ClipboardCheck, Upload } from "lucide-react";
 import { PageHeader } from "@/components/aluno/PageHeader";
+import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -92,7 +93,7 @@ export default function Anamnese() {
           anos_treino: String(data.anos_treino ?? "0"),
           disponibilidade_dias: (data.disponibilidade_dias as string[]) || [],
           horario_treino: (data as any).horario_treino || "tarde",
-          nivel_experiencia: data.nivel_experiencia || "Intermediário",
+          nivel_experiencia: toNivelCanonico(data.nivel_experiencia) || "Intermediário",
           faz_uso_ergogenicos: data.faz_uso_ergogenicos || false,
           detalhes_ergogenicos: data.detalhes_ergogenicos || "",
           historico_familiar: data.historico_familiar || "",
@@ -227,7 +228,7 @@ export default function Anamnese() {
           agua_litros: ext.agua_litros ? String(ext.agua_litros) : prev.agua_litros,
           anos_treino: ext.anos_treino ? String(ext.anos_treino) : prev.anos_treino,
           horario_treino: ext.horario_treino || prev.horario_treino,
-          nivel_experiencia: ext.nivel_experiencia || prev.nivel_experiencia,
+          nivel_experiencia: toNivelCanonico(ext.nivel_experiencia) || prev.nivel_experiencia,
           faz_uso_ergogenicos: ext.faz_uso_ergogenicos !== undefined ? ext.faz_uso_ergogenicos : prev.faz_uso_ergogenicos,
           detalhes_ergogenicos: ext.detalhes_ergogenicos || prev.detalhes_ergogenicos,
           historico_familiar: ext.historico_familiar || prev.historico_familiar,

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, Sparkles, Save, Apple, Trash2, Plus } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
+import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
 
 interface Aluno {
   id: string;
@@ -29,16 +30,7 @@ interface PerfilTreino {
   tempo_treino: string | null;
 }
 
-// Normaliza nível para os valores aceitos pelo select e edge function
-const normalizarNivel = (v: string | null | undefined): string => {
-  if (!v) return "intermediario";
-  const t = v.toLowerCase();
-  if (t.includes("alto")) return "alto_nivel";
-  if (t.includes("avan")) return "avancado";
-  if (t.includes("inter")) return "intermediario";
-  if (t.includes("inic")) return "iniciante";
-  return "intermediario";
-};
+// (helper movido para src/lib/nivel-experiencia.ts)
 
 const AdminMontarDieta = () => {
   const { slug } = useParams();
@@ -50,7 +42,7 @@ const AdminMontarDieta = () => {
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
     pescoco_cm: null, cintura_cm: null, quadril_cm: null,
-    objetivo: "hipertrofia", tempo_treino: "intermediario",
+    objetivo: "hipertrofia", tempo_treino: "Intermediário",
   });
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -99,7 +91,7 @@ const AdminMontarDieta = () => {
         cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
         quadril_cm: pt?.quadril_cm ?? av?.quadril_cm ?? null,
         objetivo: pt?.objetivo || "hipertrofia",
-        tempo_treino: normalizarNivel(pt?.tempo_treino || an?.nivel_experiencia),
+        tempo_treino: toNivelCanonico(pt?.tempo_treino || an?.nivel_experiencia) || "Intermediário",
       });
       setLoading(false);
     })();
@@ -162,7 +154,7 @@ const AdminMontarDieta = () => {
           altura_cm: perfil.altura_cm,
           idade: perfil.idade,
           sexo: sexoEnvio,
-          nivel: perfil.tempo_treino,
+          nivel: toNivelEdgeKey(perfil.tempo_treino),
           bf_pct: perfil.bf_pct,
           pescoco_cm: perfil.pescoco_cm,
           cintura_cm: perfil.cintura_cm,
@@ -247,14 +239,14 @@ const AdminMontarDieta = () => {
               <div>
                 <Label>Nível</Label>
                 <select 
-                  value={perfil.tempo_treino || "intermediario"} 
+                  value={perfil.tempo_treino || "Intermediário"} 
                   onChange={(e) => setPerfil({...perfil, tempo_treino: e.target.value})}
                   className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
                 >
-                  <option value="iniciante">Iniciante</option>
-                  <option value="intermediario">Intermediário</option>
-                  <option value="avancado">Avançado</option>
-                  <option value="alto_nivel">Atleta de Alto Nível</option>
+                  <option value="Iniciante">Iniciante</option>
+                  <option value="Intermediário">Intermediário</option>
+                  <option value="Avançado">Avançado</option>
+                  <option value="Atleta de Alto Nível">Atleta de Alto Nível</option>
                 </select>
               </div>
               <div>
