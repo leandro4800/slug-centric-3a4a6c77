@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
-import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Save, ArrowLeft, Trash2, Plus } from "lucide-react";
+import { Loader2, Sparkles, Save, Trash2, Plus } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
@@ -47,7 +46,7 @@ interface ExercicioPrescrito {
 
 const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" | "Avançado" | "Atleta de Alto Nível" => {
   if (!tempo) return "Iniciante";
-  const t = tempo.toLowerCase();
+  const t = tempo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
   if (t.includes("alto")) return "Atleta de Alto Nível";
   if (t.includes("avan") || t.includes("3 a") || t.includes("4 a") || t.includes("5+")) return "Avançado";
   if (t.includes("inter") || t.includes("1 a") || t.includes("2 a")) return "Intermediário";
@@ -106,12 +105,13 @@ const sugerirDivisoes = (frequencia: number, sexo: string | null, nivel: string)
   return candidatos[0]?.dias || ["Treino A", "Treino B", "Treino C", "Treino D"];
 };
 
+const contemFullBody = (texto: string) => /full\s*body|corpo\s*todo/i.test(texto);
+const fullBodyBloqueado = (nivel: string, divisoes: string[]) =>
+  nivel !== "Iniciante" && divisoes.some(contemFullBody);
+
 const AdminMontarTreino = () => {
-  const { slug } = useParams();
   const [searchParams] = useSearchParams();
-  const navigate = useNavigate();
   const { tenant } = useBranding();
-  const { user } = useAuth();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
   const [perfil, setPerfil] = useState<PerfilTreino>({
@@ -125,6 +125,7 @@ const AdminMontarTreino = () => {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingReview, setPendingReview] = useState(false);
+  const [perfilLoading, setPerfilLoading] = useState(Boolean(searchParams.get("aluno")));
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
@@ -141,8 +142,15 @@ const AdminMontarTreino = () => {
   }, [tenant]);
 
   useEffect(() => {
-    if (!alunoId || !tenant) return;
+    if (!alunoId || !tenant) {
+      setPerfilLoading(false);
+      return;
+    }
     void (async () => {
+      setPerfilLoading(true);
+      setExercicios([]);
+      setCardio("");
+      setPendingReview(false);
       // Buscar em paralelo todas as fontes do perfil real do aluno
       const [perfilTreinoRes, perfilRes, avaliacaoRes, anamneseRes] = await Promise.all([
         supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
@@ -204,6 +212,7 @@ const AdminMontarTreino = () => {
       } else {
         setExercicios([]);
       }
+      setPerfilLoading(false);
     })();
   }, [alunoId, tenant]);
 
@@ -244,9 +253,17 @@ const AdminMontarTreino = () => {
     }
   };
 
-  const gerarComIA = useCallback(async (customPrompt?: string) => {
+  const gerarComIA = async (customPrompt?: string) => {
     if (!alunoId || !tenant) {
       toast.error("Selecione um aluno.");
+      return;
+    }
+    if (perfilLoading) {
+      toast.error("Aguarde carregar os dados do aluno antes de gerar.");
+      return;
+    }
+    if (fullBodyBloqueado(nivel, divisoes)) {
+      toast.error("Full Body é permitido apenas para iniciantes. Escolha uma divisão split.");
       return;
     }
     setGenerating(true);
@@ -261,7 +278,7 @@ const AdminMontarTreino = () => {
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil, biblioteca: biblioteca || [], divisoes, prompt: activePrompt, estimulos_extras: estimulosExtras },
+        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: biblioteca || [], divisoes, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -287,40 +304,14 @@ const AdminMontarTreino = () => {
       toast.success(`Treino gerado · ${novos.length} exercícios — revise antes de salvar`);
 
       if (searchParams.get("andDiet") === "true") {
-        setTimeout(async () => {
-          await salvarPrescricao(novos);
-          const prompt = searchParams.get("prompt");
-          const promptQuery = prompt ? `&prompt=${encodeURIComponent(prompt)}` : "";
-          navigate(`/${slug}/admin/montar-dieta?aluno=${alunoId}&auto=true${promptQuery}`);
-        }, 1000);
+        toast.info("Revise e confirme o treino antes de montar a dieta.");
       }
     } catch (e: any) {
       toast.error(e.message || "Falha ao gerar.");
     } finally {
       setGenerating(false);
     }
-  }, [alunoId, tenant, perfil, divisoes]);
-
-  const autoTriggeredRef = useRef(false);
-  useEffect(() => {
-    // Só dispara automático se o coach explicitamente vir de AtletaDetalhe com o parâmetro auto=true
-    // E apenas UMA VEZ por carregamento de página
-    if (
-      searchParams.get("auto") === "true" &&
-      alunoId && tenant &&
-      !generating &&
-      exercicios.length === 0 &&
-      !autoTriggeredRef.current
-    ) {
-      const confirmAction = window.confirm("Deseja gerar o treino agora com a IA?");
-      if (confirmAction) {
-        autoTriggeredRef.current = true;
-        void gerarComIA();
-      } else {
-        autoTriggeredRef.current = true;
-      }
-    }
-  }, [searchParams, alunoId, tenant, generating, exercicios.length, gerarComIA]);
+  };
 
   const salvarPrescricao = async (manualExercicios?: ExercicioPrescrito[]) => {
     if (!alunoId || !tenant) return;
@@ -565,13 +556,13 @@ const AdminMontarTreino = () => {
 
             <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm">
               <div className="text-xs text-muted-foreground mb-3">
-                Divisão final: <strong className="text-foreground">{divisoes.join(" · ")}</strong>
+                {perfilLoading ? "Carregando dados reais do aluno..." : <>Divisão final: <strong className="text-foreground">{divisoes.join(" · ")}</strong></>}
               </div>
               <div className="flex gap-3">
                 <Button onClick={() => salvarPerfil()} variant="outline">Salvar perfil</Button>
-                <Button onClick={() => gerarComIA()} disabled={generating} variant="outline">
+                <Button onClick={() => gerarComIA()} disabled={generating || perfilLoading} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                  Gerar com IA
+                  {perfilLoading ? "Aguardando perfil" : "Gerar com IA"}
                 </Button>
               </div>
             </div>

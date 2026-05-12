@@ -905,16 +905,18 @@ const AtletaDetalhe = () => {
               onClick={() => {
                 const promptQuery = iaPrompt ? `&prompt=${encodeURIComponent(iaPrompt)}` : '';
                 if (promptType === 'treino') {
-                  navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}&auto=true${promptQuery}`);
+                  navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}${promptQuery}`);
                 } else if (promptType === 'dieta') {
                   navigate(`/${slug}/admin/montar-dieta?aluno=${aluno.id}&auto=true${promptQuery}`);
                 } else {
-                  navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}&auto=true&andDiet=true${promptQuery}`);
+                  navigate(`/${slug}/admin/montar-treino?aluno=${aluno.id}&andDiet=true${promptQuery}`);
                 }
                 setShowPromptDialog(false);
               }}
             >
-              {iaPrompt ? 'Gerar com Instruções' : 'Gerar Agora (Padrão)'}
+              {promptType === 'dieta'
+                ? (iaPrompt ? 'Gerar Dieta com Instruções' : 'Gerar Dieta Agora')
+                : (iaPrompt ? 'Continuar com Instruções' : 'Continuar para revisar')}
             </Button>
             <Button
               variant="ghost"
