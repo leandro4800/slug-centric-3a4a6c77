@@ -45,17 +45,8 @@ const Treino = () => {
   const [spotifyLink, setSpotifyLink] = useState<string | null>(null);
 
   useEffect(() => {
-    // Mostra mock imediato mesmo sem tenant carregado — evita spinner infinito
-    if (!tenant) {
-      const mockEnriched = MOCK_TREINOS.map((m) => ({ ...m }));
-      setTreinos(mockEnriched);
-      setDiaAtual(mockEnriched[0].dia_semana);
-      setIsMock(true);
-      setLoading(false);
-      return;
-    }
-
     const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
+      if (!tenant) return {};
       const { data } = await supabase
         .from("referencia_videos")
         .select("nome_exercicio, url_video, video_coach_url")
@@ -76,6 +67,7 @@ const Treino = () => {
       refMap[nome.trim().toLowerCase()]?.coach || null;
 
     const autoFillVolume = async (list: Treino[], refMap: Record<string, VideoRef>): Promise<Treino[]> => {
+      if (!tenant) return list;
       const dias = [...new Set(list.map((t) => t.dia_semana))];
       const extras: Treino[] = [];
       for (const dia of dias) {
@@ -134,6 +126,7 @@ const Treino = () => {
     };
 
     const loadSpotify = async () => {
+      if (!tenant) return;
       const { data } = await supabase
         .from("configuracoes_tenant")
         .select("valor")
