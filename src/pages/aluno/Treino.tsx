@@ -144,7 +144,7 @@ const Treino = () => {
     };
 
     // Timeout helper — evita ficar preso em retries do PostgREST quando o banco está em recovery
-    const withTimeout = <T,>(p: Promise<T>, ms = 4000): Promise<T> =>
+    const withTimeout = <T,>(p: Promise<T>, ms = 12000): Promise<T> =>
       Promise.race([
         p,
         new Promise<T>((_, rej) => setTimeout(() => rej(new Error("timeout")), ms)),
@@ -163,16 +163,19 @@ const Treino = () => {
       // 2) Em paralelo, busca tudo com timeout — se o banco está lento, ficamos no mock
       const spotifyP = withTimeout(loadSpotify()).catch(() => null);
       const refsP = withTimeout(loadVideoRefs()).catch(() => ({} as Record<string, VideoRef>));
+      // Busca treinos do aluno SEM filtrar por tenant — evita falso "sem treino"
+      // se o aluno trocou de tenant ou se o coach salvou com tenant diferente.
+      // RLS já garante visibilidade correta (aluno_id = auth.uid()).
       const treinosP = withTimeout(
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
             .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url, observacao_clinica")
             .eq("aluno_id", user.id)
-            .eq("tenant_id", tenant.id)
             .order("dia_semana")
             .order("ordem")
-        )
+        ),
+        15000
       ).catch(() => null);
       const cargasP = withTimeout(loadCargas()).catch(() => null);
 
