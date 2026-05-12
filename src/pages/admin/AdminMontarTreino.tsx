@@ -124,6 +124,7 @@ const AdminMontarTreino = () => {
   const [cardio, setCardio] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [pendingReview, setPendingReview] = useState(false);
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
@@ -282,7 +283,8 @@ const AdminMontarTreino = () => {
       });
       setExercicios(novos);
       setCardio(data.cardio || "");
-      toast.success(`Treino gerado · ${novos.length} exercícios`);
+      setPendingReview(true);
+      toast.success(`Treino gerado · ${novos.length} exercícios — revise antes de salvar`);
 
       if (searchParams.get("andDiet") === "true") {
         setTimeout(async () => {
@@ -346,6 +348,7 @@ const AdminMontarTreino = () => {
       }
     }
     toast.success("Prescrição salva!");
+    setPendingReview(false);
     setSaving(false);
   };
 
@@ -364,18 +367,17 @@ const AdminMontarTreino = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
-        <div className="flex items-center gap-3">
-          <AdminBackButton 
-          />
-          <h1 className="font-display text-2xl">MONTAR TREINO</h1>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">IA Coach</span>
+      <header className="border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <AdminBackButton />
+          <h1 className="font-display text-base sm:text-2xl truncate">MONTAR TREINO</h1>
+          <span className="shrink-0 text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-wider border border-primary/30">IA Coach</span>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
+      <main className="max-w-6xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-24">
         {/* Selecionar aluno */}
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm">
           <Label>Aluno</Label>
           <select
             value={alunoId}
@@ -392,7 +394,7 @@ const AdminMontarTreino = () => {
         {alunoId && (
           <>
             {/* Perfil */}
-            <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl">PERFIL DO ALUNO</h2>
                 <span className="text-xs px-3 py-1 rounded-full bg-primary/15 text-primary uppercase">Nível: {nivel}</span>
@@ -458,7 +460,7 @@ const AdminMontarTreino = () => {
             </div>
 
             {/* === ESCOLHA DA DIVISÃO === */}
-            <div className="bg-black/40 border border-primary/30 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
+            <div className="bg-black/40 border border-primary/30 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-display text-xl">DIVISÃO DO TREINO</h2>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30">
@@ -561,7 +563,7 @@ const AdminMontarTreino = () => {
               </div>
             </div>
 
-            <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm">
               <div className="text-xs text-muted-foreground mb-3">
                 Divisão final: <strong className="text-foreground">{divisoes.join(" · ")}</strong>
               </div>
@@ -582,13 +584,32 @@ const AdminMontarTreino = () => {
               </div>
             )}
 
+            {/* Banner de revisão pós IA */}
+            {pendingReview && exercicios.length > 0 && (
+              <div className="bg-primary/10 border border-primary/40 rounded-2xl p-4 sm:p-5 shadow-[0_0_25px_-8px_hsl(var(--primary)/0.6)] animate-in fade-in slide-in-from-top-2">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold mb-1">Revisão necessária</p>
+                <h3 className="font-display text-base sm:text-lg leading-tight">A IA gerou {exercicios.length} exercícios. Confira tudo antes de enviar ao aluno.</h3>
+                <p className="text-xs text-muted-foreground mt-2">Edite o que precisar abaixo. O treino só vai para o aluno quando você clicar em <strong className="text-foreground">Confirmar e enviar</strong>.</p>
+                <div className="flex flex-col sm:flex-row gap-2 mt-3">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving} className="flex-1">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                    Confirmar e enviar ao aluno
+                  </Button>
+                  <Button onClick={() => gerarComIA()} disabled={generating} variant="outline" className="flex-1">
+                    {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                    Refazer com IA
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Editor de prescrição */}
-            <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-5">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl">PRESCRIÇÃO</h2>
-                <Button onClick={() => salvarPrescricao()} disabled={saving}>
+            <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4 sm:space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <h2 className="font-display text-lg sm:text-xl">PRESCRIÇÃO</h2>
+                <Button onClick={() => salvarPrescricao()} disabled={saving} size="sm" className="w-full sm:w-auto">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                  Salvar prescrição
+                  {pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
                 </Button>
               </div>
 
@@ -597,35 +618,50 @@ const AdminMontarTreino = () => {
               )}
 
               {dias.map((dia) => (
-                <div key={dia} className="border border-border rounded-xl p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-display text-lg">{dia}</h3>
-                    <Button size="sm" variant="ghost" onClick={() => addEx(dia)}>
-                      <Plus className="h-4 w-4 mr-1" /> Adicionar
+                <div key={dia} className="border border-border rounded-xl p-3 sm:p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-display text-sm sm:text-lg leading-tight flex-1 min-w-0">{dia}</h3>
+                    <Button size="sm" variant="ghost" onClick={() => addEx(dia)} className="shrink-0 h-8 px-2 text-xs">
+                      <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
                     </Button>
                   </div>
                   {exercicios
                     .map((e, globalIdx) => ({ e, globalIdx }))
                     .filter(({ e }) => e.dia_semana === dia)
-                    .map(({ e, globalIdx }) => (
-                      <div key={globalIdx} className="grid grid-cols-12 gap-2 items-start border-b border-border/50 pb-4 last:border-0 last:pb-0">
-                        <div className="col-span-5 space-y-2">
-                          <Input placeholder="Exercício" value={e.exercicio} onChange={(ev) => updateEx(globalIdx, { exercicio: ev.target.value })} />
-                          <Input className="text-xs h-8" placeholder="Cadência (ex: 4-0-2-0)" value={e.cadencia} onChange={(ev) => updateEx(globalIdx, { cadencia: ev.target.value })} />
+                    .map(({ e, globalIdx }, localIdx) => (
+                      <div key={globalIdx} className="bg-secondary/30 border border-border/60 rounded-lg p-3 space-y-2.5 relative">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[10px] uppercase tracking-wider text-primary font-bold">Exercício {localIdx + 1}</span>
+                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeEx(globalIdx)}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
                         </div>
-                        <div className="col-span-1">
-                          <Input placeholder="Sx" value={e.series} onChange={(ev) => updateEx(globalIdx, { series: ev.target.value })} />
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nome do exercício</Label>
+                          <Input placeholder="Ex: Supino Reto" value={e.exercicio} onChange={(ev) => updateEx(globalIdx, { exercicio: ev.target.value })} className="mt-1" />
                         </div>
-                        <div className="col-span-2">
-                          <Input placeholder="Reps" value={e.repeticoes} onChange={(ev) => updateEx(globalIdx, { repeticoes: ev.target.value })} />
+                        <div className="grid grid-cols-3 gap-2">
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Séries</Label>
+                            <Input placeholder="4" value={e.series} onChange={(ev) => updateEx(globalIdx, { series: ev.target.value })} className="mt-1" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Reps</Label>
+                            <Input placeholder="8-12" value={e.repeticoes} onChange={(ev) => updateEx(globalIdx, { repeticoes: ev.target.value })} className="mt-1" />
+                          </div>
+                          <div>
+                            <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cadência</Label>
+                            <Input placeholder="3-1-X-0" value={e.cadencia} onChange={(ev) => updateEx(globalIdx, { cadencia: ev.target.value })} className="mt-1" />
+                          </div>
                         </div>
-                        <div className="col-span-3 space-y-2">
-                          <Textarea className="min-h-[40px] text-xs" placeholder="Detalhes de Execução (Coach style)" value={e.detalhes_execucao} onChange={(ev) => updateEx(globalIdx, { detalhes_execucao: ev.target.value })} />
-                          <Textarea className="min-h-[40px] text-xs" placeholder="Observação" value={e.observacao} onChange={(ev) => updateEx(globalIdx, { observacao: ev.target.value })} />
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Detalhes de execução</Label>
+                          <Textarea className="min-h-[60px] text-xs mt-1" placeholder="Ex: warm-up sets, RPE, técnica..." value={e.detalhes_execucao} onChange={(ev) => updateEx(globalIdx, { detalhes_execucao: ev.target.value })} />
                         </div>
-                        <Button size="icon" variant="ghost" className="col-span-1 self-center" onClick={() => removeEx(globalIdx)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Observação</Label>
+                          <Textarea className="min-h-[50px] text-xs mt-1" placeholder="Observações para o aluno..." value={e.observacao} onChange={(ev) => updateEx(globalIdx, { observacao: ev.target.value })} />
+                        </div>
                       </div>
                     ))}
                 </div>
