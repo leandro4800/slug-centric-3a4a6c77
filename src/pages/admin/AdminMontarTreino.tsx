@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles, Save, ArrowLeft, Trash2, Plus } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
+import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 interface Aluno {
   id: string;
