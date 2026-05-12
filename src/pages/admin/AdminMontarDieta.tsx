@@ -30,16 +30,7 @@ interface PerfilTreino {
   tempo_treino: string | null;
 }
 
-// Normaliza nível para os valores aceitos pelo select e edge function
-const normalizarNivel = (v: string | null | undefined): string => {
-  if (!v) return "intermediario";
-  const t = v.toLowerCase();
-  if (t.includes("alto")) return "alto_nivel";
-  if (t.includes("avan")) return "avancado";
-  if (t.includes("inter")) return "intermediario";
-  if (t.includes("inic")) return "iniciante";
-  return "intermediario";
-};
+// (helper movido para src/lib/nivel-experiencia.ts)
 
 const AdminMontarDieta = () => {
   const { slug } = useParams();
