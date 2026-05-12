@@ -91,7 +91,7 @@ const AdminMontarDieta = () => {
         cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
         quadril_cm: pt?.quadril_cm ?? av?.quadril_cm ?? null,
         objetivo: pt?.objetivo || "hipertrofia",
-        tempo_treino: normalizarNivel(pt?.tempo_treino || an?.nivel_experiencia),
+        tempo_treino: toNivelCanonico(pt?.tempo_treino || an?.nivel_experiencia) || "Intermediário",
       });
       setLoading(false);
     })();
