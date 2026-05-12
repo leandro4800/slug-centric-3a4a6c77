@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/select";
 import {
   ArrowLeft,
+  ChevronLeft,
   Loader2,
   Download,
   Upload,
@@ -459,26 +460,34 @@ const AtletaDetalhe = () => {
           {uploading ? "Enviando..." : "Editar foto"}
         </button>
 
-        <div className="absolute top-0 inset-x-0 px-4 pt-4 flex items-center justify-between z-10">
-          <AdminBackButton 
-            className="w-10 h-10 rounded-full bg-background/70 backdrop-blur"
-          />
-          <div className="flex gap-2">
-            <input
-              ref={importInputRef}
-              type="file"
-              accept="image/*,.pdf,.doc,.docx"
-              className="hidden"
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) void handleImportFile(f);
-                e.target.value = "";
-              }}
+        <div className="absolute top-0 inset-x-0 px-4 pt-4 z-10 flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <AdminBackButton
+              className="w-10 h-10 rounded-full bg-background/70 backdrop-blur shrink-0"
             />
+            <button
+              onClick={() => navigate(`/${slug}/admin/atletas`)}
+              className="flex items-center gap-1.5 px-3 h-9 rounded-full bg-background/70 backdrop-blur border border-white/10 text-foreground text-[10px] font-bold uppercase tracking-wider hover:bg-background"
+            >
+              <ChevronLeft className="h-3.5 w-3.5" /> Atletas
+            </button>
+          </div>
+          <input
+            ref={importInputRef}
+            type="file"
+            accept="image/*,.pdf,.doc,.docx"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) void handleImportFile(f);
+              e.target.value = "";
+            }}
+          />
+          <div className="flex flex-wrap gap-1.5 justify-end">
             <Button
               size="sm"
               disabled={importing}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8 px-2.5"
               onClick={() => {
                 setImportType("treino");
                 importInputRef.current?.click();
@@ -489,12 +498,12 @@ const AtletaDetalhe = () => {
               ) : (
                 <Upload className="h-3 w-3 mr-1" />
               )}
-              Importar treino
+              Treino
             </Button>
             <Button
               size="sm"
               disabled={importing}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8 px-2.5"
               onClick={() => {
                 setImportType("dieta");
                 importInputRef.current?.click();
@@ -505,12 +514,12 @@ const AtletaDetalhe = () => {
               ) : (
                 <Upload className="h-3 w-3 mr-1" />
               )}
-              Importar dieta
+              Dieta
             </Button>
             <Button
               size="sm"
               disabled={importing}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8 px-2.5"
               onClick={() => {
                 setImportType("avaliacao");
                 importInputRef.current?.click();
@@ -521,7 +530,7 @@ const AtletaDetalhe = () => {
               ) : (
                 <Upload className="h-3 w-3 mr-1" />
               )}
-              Importar Avaliação
+              Avaliação
             </Button>
           </div>
         </div>
