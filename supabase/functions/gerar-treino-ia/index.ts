@@ -86,6 +86,7 @@ serve(async (req) => {
 
     // Normaliza nível removendo acento (DB usa "intermediario", "avancado", "alto_nivel")
     const stripAcc = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const hasFullBody = (s: string) => /full\s*body|corpo\s*todo/i.test(s || "");
     const nivelRaw = perfil?.tempo_treino || "Iniciante";
     const nivelKey = (() => {
       const t = stripAcc(String(nivelRaw));
@@ -95,6 +96,13 @@ serve(async (req) => {
       return "iniciante";
     })();
     const nivelLabel = ({ iniciante: "Iniciante", intermediario: "Intermediário", avancado: "Avançado", alto_nivel: "Atleta de Alto Nível" } as const)[nivelKey];
+
+    if (nivelKey !== "iniciante" && Array.isArray(divisoes) && divisoes.some((d: string) => hasFullBody(d))) {
+      return new Response(JSON.stringify({ error: "Full Body é permitido apenas para iniciantes. Escolha uma divisão split para intermediário/avançado." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     try {
       const nivelInput = nivelKey;
@@ -402,6 +410,13 @@ ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("
     const data = await resp.json();
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
     const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : null;
+
+    if (nivelKey !== "iniciante" && Array.isArray(args?.dias) && args.dias.some((d: any) => hasFullBody(String(d?.dia || "")))) {
+      return new Response(JSON.stringify({ error: "A IA tentou gerar Full Body para um aluno intermediário/avançado. Ajuste a divisão e gere novamente." }), {
+        status: 422,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     
     return new Response(JSON.stringify(args), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
