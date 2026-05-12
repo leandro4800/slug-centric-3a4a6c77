@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Save, ArrowLeft, Trash2, Plus } from "lucide-react";
+import { Loader2, Sparkles, Save, Trash2, Plus } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
@@ -113,7 +112,6 @@ const fullBodyBloqueado = (nivel: string, divisoes: string[]) =>
 const AdminMontarTreino = () => {
   const [searchParams] = useSearchParams();
   const { tenant } = useBranding();
-  const { user } = useAuth();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
   const [perfil, setPerfil] = useState<PerfilTreino>({
