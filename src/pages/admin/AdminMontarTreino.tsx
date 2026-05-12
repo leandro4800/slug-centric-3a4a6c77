@@ -127,7 +127,7 @@ const AdminMontarTreino = () => {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingReview, setPendingReview] = useState(false);
-  const [perfilLoading, setPerfilLoading] = useState(false);
+  const [perfilLoading, setPerfilLoading] = useState(Boolean(searchParams.get("aluno")));
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
@@ -144,7 +144,10 @@ const AdminMontarTreino = () => {
   }, [tenant]);
 
   useEffect(() => {
-    if (!alunoId || !tenant) return;
+    if (!alunoId || !tenant) {
+      setPerfilLoading(false);
+      return;
+    }
     void (async () => {
       setPerfilLoading(true);
       setExercicios([]);
@@ -555,13 +558,13 @@ const AdminMontarTreino = () => {
 
             <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm">
               <div className="text-xs text-muted-foreground mb-3">
-                Divisão final: <strong className="text-foreground">{divisoes.join(" · ")}</strong>
+                {perfilLoading ? "Carregando dados reais do aluno..." : <>Divisão final: <strong className="text-foreground">{divisoes.join(" · ")}</strong></>}
               </div>
               <div className="flex gap-3">
                 <Button onClick={() => salvarPerfil()} variant="outline">Salvar perfil</Button>
-                <Button onClick={() => gerarComIA()} disabled={generating} variant="outline">
+                <Button onClick={() => gerarComIA()} disabled={generating || perfilLoading} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                  Gerar com IA
+                  {perfilLoading ? "Aguardando perfil" : "Gerar com IA"}
                 </Button>
               </div>
             </div>
