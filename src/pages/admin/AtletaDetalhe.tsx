@@ -914,7 +914,9 @@ const AtletaDetalhe = () => {
                 setShowPromptDialog(false);
               }}
             >
-              {iaPrompt ? 'Gerar com Instruções' : 'Gerar Agora (Padrão)'}
+              {promptType === 'dieta'
+                ? (iaPrompt ? 'Gerar Dieta com Instruções' : 'Gerar Dieta Agora')
+                : (iaPrompt ? 'Continuar com Instruções' : 'Continuar para revisar')}
             </Button>
             <Button
               variant="ghost"
