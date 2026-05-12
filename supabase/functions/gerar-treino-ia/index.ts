@@ -417,6 +417,21 @@ ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    if (divisoesEscolhidas && Array.isArray(args?.dias)) {
+      const normalizeDay = (s: string) => stripAcc(s).replace(/[^a-z0-9]+/g, " ").trim();
+      const generatedDays = args.dias.map((d: any) => normalizeDay(String(d?.dia || "")));
+      const missing = divisoesEscolhidas.filter((d: string) => {
+        const expected = normalizeDay(d);
+        return !generatedDays.some((g: string) => g === expected || g.includes(expected) || expected.includes(g));
+      });
+      if (missing.length > 0) {
+        return new Response(JSON.stringify({ error: `A IA não respeitou a divisão escolhida: ${missing.join(", ")}. Gere novamente mantendo a divisão selecionada.` }), {
+          status: 422,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
     
     return new Response(JSON.stringify(args), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
