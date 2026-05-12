@@ -84,8 +84,20 @@ serve(async (req) => {
     let regrasDescansoContext = "";
     let bibliotecaAbsContext = "";
 
+    // Normaliza nível removendo acento (DB usa "intermediario", "avancado", "alto_nivel")
+    const stripAcc = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    const nivelRaw = perfil?.tempo_treino || "Iniciante";
+    const nivelKey = (() => {
+      const t = stripAcc(String(nivelRaw));
+      if (t.includes("alto") || t === "atleta") return "alto_nivel";
+      if (t.startsWith("avan")) return "avancado";
+      if (t.startsWith("inter")) return "intermediario";
+      return "iniciante";
+    })();
+    const nivelLabel = ({ iniciante: "Iniciante", intermediario: "Intermediário", avancado: "Avançado", alto_nivel: "Atleta de Alto Nível" } as const)[nivelKey];
+
     try {
-      const nivelInput = (perfil?.tempo_treino || "Iniciante").toLowerCase();
+      const nivelInput = nivelKey;
       const variant = Math.floor(Math.random() * 3) + 1; // Sorteio de Variante (1, 2 ou 3)
 
       const [pachoResp, descansoResp, absResp] = await Promise.all([
