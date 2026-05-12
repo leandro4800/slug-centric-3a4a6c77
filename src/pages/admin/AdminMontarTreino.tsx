@@ -367,16 +367,15 @@ const AdminMontarTreino = () => {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
-        <div className="flex items-center gap-3">
-          <AdminBackButton 
-          />
-          <h1 className="font-display text-2xl">MONTAR TREINO</h1>
-          <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30 shadow-[0_0_10px_rgba(220,38,38,0.2)]">IA Coach</span>
+      <header className="border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <AdminBackButton />
+          <h1 className="font-display text-base sm:text-2xl truncate">MONTAR TREINO</h1>
+          <span className="shrink-0 text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-wider border border-primary/30">IA Coach</span>
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto p-6 space-y-6">
+      <main className="max-w-6xl mx-auto p-3 sm:p-6 space-y-4 sm:space-y-6 pb-24">
         {/* Selecionar aluno */}
         <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm">
           <Label>Aluno</Label>
