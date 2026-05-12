@@ -421,9 +421,13 @@ ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("
     if (divisoesEscolhidas && Array.isArray(args?.dias)) {
       const normalizeDay = (s: string) => stripAcc(s).replace(/[^a-z0-9]+/g, " ").trim();
       const generatedDays = args.dias.map((d: any) => normalizeDay(String(d?.dia || "")));
+      const splitTokens = (s: string) => normalizeDay(s)
+        .split(" ")
+        .filter((token) => token.length > 2 && !["treino", "completa", "completas", "seg", "ter", "qua", "qui", "sex", "sab", "dom"].includes(token));
       const missing = divisoesEscolhidas.filter((d: string) => {
-        const expected = normalizeDay(d);
-        return !generatedDays.some((g: string) => g === expected || g.includes(expected) || expected.includes(g));
+        const expectedTokens = splitTokens(d);
+        if (expectedTokens.length === 0) return false;
+        return !generatedDays.some((g: string) => expectedTokens.every((token) => g.includes(token)));
       });
       if (missing.length > 0) {
         return new Response(JSON.stringify({ error: `A IA não respeitou a divisão escolhida: ${missing.join(", ")}. Gere novamente mantendo a divisão selecionada.` }), {
