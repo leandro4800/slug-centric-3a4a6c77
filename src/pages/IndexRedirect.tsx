@@ -60,7 +60,7 @@ const IndexRedirect = () => {
           .maybeSingle();
 
         if (ownedTenant?.slug) {
-          const target = `/${ownedTenant.slug}/app/controle`;
+          const target = `/${ownedTenant.slug}/app`;
           console.log("[IndexRedirect] Owner identificado, enviando para:", target);
           navigate(target, { replace: true });
           return;
