@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -106,6 +106,10 @@ const sugerirDivisoes = (frequencia: number, sexo: string | null, nivel: string)
   return candidatos[0]?.dias || ["Treino A", "Treino B", "Treino C", "Treino D"];
 };
 
+const contemFullBody = (texto: string) => /full\s*body|corpo\s*todo/i.test(texto);
+const fullBodyBloqueado = (nivel: string, divisoes: string[]) =>
+  nivel !== "Iniciante" && divisoes.some(contemFullBody);
+
 const AdminMontarTreino = () => {
   const { slug } = useParams();
   const [searchParams] = useSearchParams();
@@ -125,6 +129,7 @@ const AdminMontarTreino = () => {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingReview, setPendingReview] = useState(false);
+  const [perfilLoading, setPerfilLoading] = useState(false);
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
@@ -143,6 +148,10 @@ const AdminMontarTreino = () => {
   useEffect(() => {
     if (!alunoId || !tenant) return;
     void (async () => {
+      setPerfilLoading(true);
+      setExercicios([]);
+      setCardio("");
+      setPendingReview(false);
       // Buscar em paralelo todas as fontes do perfil real do aluno
       const [perfilTreinoRes, perfilRes, avaliacaoRes, anamneseRes] = await Promise.all([
         supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
@@ -204,6 +213,7 @@ const AdminMontarTreino = () => {
       } else {
         setExercicios([]);
       }
+      setPerfilLoading(false);
     })();
   }, [alunoId, tenant]);
 
