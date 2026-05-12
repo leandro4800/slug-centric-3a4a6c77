@@ -42,7 +42,7 @@ const AdminMontarDieta = () => {
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
     pescoco_cm: null, cintura_cm: null, quadril_cm: null,
-    objetivo: "hipertrofia", tempo_treino: "intermediario",
+    objetivo: "hipertrofia", tempo_treino: "Intermediário",
   });
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(false);
