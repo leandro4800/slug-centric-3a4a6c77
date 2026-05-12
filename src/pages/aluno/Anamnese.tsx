@@ -228,7 +228,7 @@ export default function Anamnese() {
           agua_litros: ext.agua_litros ? String(ext.agua_litros) : prev.agua_litros,
           anos_treino: ext.anos_treino ? String(ext.anos_treino) : prev.anos_treino,
           horario_treino: ext.horario_treino || prev.horario_treino,
-          nivel_experiencia: ext.nivel_experiencia || prev.nivel_experiencia,
+          nivel_experiencia: toNivelCanonico(ext.nivel_experiencia) || prev.nivel_experiencia,
           faz_uso_ergogenicos: ext.faz_uso_ergogenicos !== undefined ? ext.faz_uso_ergogenicos : prev.faz_uso_ergogenicos,
           detalhes_ergogenicos: ext.detalhes_ergogenicos || prev.detalhes_ergogenicos,
           historico_familiar: ext.historico_familiar || prev.historico_familiar,
