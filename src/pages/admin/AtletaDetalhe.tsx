@@ -30,6 +30,8 @@ import {
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
+import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
+
 import { SevenDobrasIntro } from "@/components/admin/SevenDobrasIntro";
 import { 
   Dialog, 
