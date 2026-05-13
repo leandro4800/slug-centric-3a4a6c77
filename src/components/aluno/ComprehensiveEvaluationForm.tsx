@@ -25,9 +25,10 @@ interface Props {
   alunoId: string;
   tenantId?: string | null;
   sexo?: string | null;
-  onSaved?: () => void;
+  onSaved?: (data?: any) => void;
   initialData?: any;
   triggerImportOnInit?: boolean;
+  showDietButton?: boolean;
 }
 
 export const ComprehensiveEvaluationForm = ({
@@ -61,6 +62,7 @@ export const ComprehensiveEvaluationForm = ({
     },
     perimetros: {
       pescoco: "",
+      ombro: "",
       torax: "",
       cintura: "",
       abdomen: "",
@@ -127,6 +129,9 @@ export const ComprehensiveEvaluationForm = ({
           const pageText = textContent.items.map((item: any) => item.str).join(" ");
           fullText += pageText + "\n";
         }
+        if (!fullText.trim()) {
+          throw new Error("Não foi possível extrair texto deste PDF. Tente converter para imagem ou usar um PDF com texto.");
+        }
         content = fullText;
       } else {
         const reader = new FileReader();
@@ -167,6 +172,7 @@ export const ComprehensiveEvaluationForm = ({
           },
           perimetros: {
             pescoco: ext.perimetros?.pescoco ? String(ext.perimetros.pescoco) : form.perimetros.pescoco,
+            ombro: ext.perimetros?.ombro ? String(ext.perimetros.ombro) : form.perimetros.ombro,
             torax: ext.perimetros?.torax ? String(ext.perimetros.torax) : form.perimetros.torax,
             cintura: ext.perimetros?.cintura ? String(ext.perimetros.cintura) : form.perimetros.cintura,
             abdomen: ext.perimetros?.abdomen ? String(ext.perimetros.abdomen) : form.perimetros.abdomen,
@@ -197,7 +203,7 @@ export const ComprehensiveEvaluationForm = ({
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (goToDiet = false) => {
     setSaving(true);
     try {
       // Cálculo básico de BF 7 dobras (Jackson & Pollock)
@@ -235,6 +241,7 @@ export const ComprehensiveEvaluationForm = ({
         dobra_coxa: num(form.dobras.coxa),
         dobra_panturrilha: num(form.dobras.panturrilha),
         pescoco_cm: num(form.perimetros.pescoco),
+        perimetro_ombro: num(form.perimetros.ombro),
         cintura_cm: num(form.perimetros.cintura),
         quadril_cm: num(form.perimetros.quadril),
         perimetro_torax: num(form.perimetros.torax),
@@ -257,7 +264,7 @@ export const ComprehensiveEvaluationForm = ({
 
       if (error) throw error;
       toast.success("Avaliação salva com sucesso!");
-      onSaved?.();
+      onSaved?.(goToDiet);
       onOpenChange(false);
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
@@ -370,24 +377,55 @@ export const ComprehensiveEvaluationForm = ({
           </motion.div>
         </AnimatePresence>
 
-        <DialogFooter className="flex justify-between sm:justify-between items-center gap-2 pt-4 border-t border-border/50">
+        <DialogFooter className="flex flex-row justify-between items-center gap-2 pt-6 mt-6 border-t border-border/50">
           <div className="flex gap-2">
             {step > 1 && (
-              <Button variant="outline" size="sm" onClick={() => setStep(step - 1)}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setStep(step - 1)}
+                className="font-bold uppercase tracking-widest text-[10px]"
+              >
                 <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
               </Button>
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onOpenChange(false)}
+              className="font-bold uppercase tracking-widest text-[10px]"
+            >
+              Cancelar
+            </Button>
             {step === 1 ? (
-              <Button size="sm" onClick={() => setStep(2)}>
+              <Button 
+                size="sm" 
+                onClick={() => setStep(2)}
+                className="bg-primary hover:bg-primary/90 font-bold uppercase tracking-widest text-[10px] shadow-glow px-6"
+              >
                 Próximo <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
-              <Button size="sm" onClick={handleSave} disabled={saving}>
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : "Salvar Avaliação"}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => handleSave(false)} 
+                  disabled={saving}
+                  className="bg-secondary hover:bg-secondary/80 font-bold uppercase tracking-widest text-[10px] px-4"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : "Salvar"}
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={() => handleSave(true)} 
+                  disabled={saving}
+                  className="bg-primary hover:bg-primary/90 font-bold uppercase tracking-widest text-[10px] shadow-glow px-4"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : "Salvar e Montar Dieta"}
+                </Button>
+              </div>
             )}
           </div>
         </DialogFooter>

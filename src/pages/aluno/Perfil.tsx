@@ -704,7 +704,10 @@ const Perfil = () => {
         alunoId={user?.id || ""}
         tenantId={profile?.tenant_id}
         sexo={profile?.sexo}
-        onSaved={() => loadData(true)}
+        onSaved={(goToDiet) => {
+          loadData(true);
+          if (goToDiet) navigate(`/${slug}/app/dieta`);
+        }}
         triggerImportOnInit={triggerImport}
       />
 

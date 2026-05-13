@@ -520,22 +520,7 @@ const AtletaDetalhe = () => {
               )}
               Dieta
             </Button>
-            <Button
-              size="sm"
-              disabled={importing}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8 px-2.5"
-              onClick={() => {
-                setImportType("avaliacao");
-                importInputRef.current?.click();
-              }}
-            >
-              {importing && importType === "avaliacao" ? (
-                <Loader2 className="h-3 w-3 animate-spin mr-1" />
-              ) : (
-                <Upload className="h-3 w-3 mr-1" />
-              )}
-              Avaliação
-            </Button>
+            {/* Removido botão redundante de importação de avaliação */}
           </div>
         </div>
 
@@ -715,11 +700,11 @@ const AtletaDetalhe = () => {
         </div>
 
         <div className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-4">
             <Button
-              className={`h-16 flex-1 font-display text-xl uppercase tracking-wider ${
+              className={`h-20 flex-1 flex flex-col items-center justify-center font-display text-xl uppercase tracking-wider transition-all duration-300 ${
                 canGenerate 
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow hover:scale-[1.02]" 
                   : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
               }`}
               disabled={!canGenerate}
@@ -733,13 +718,16 @@ const AtletaDetalhe = () => {
                 }
               }}
             >
-              <Dumbbell className="h-6 w-6 mr-2" />
-              Montar Treino
+              <div className="flex items-center gap-2">
+                <Dumbbell className="h-6 w-6" />
+                Montar Treino
+              </div>
+              {!canGenerate && <span className="text-[10px] lowercase tracking-normal font-sans opacity-70 mt-1">Requer anamnese e avaliação</span>}
             </Button>
             <Button
-              className={`h-16 flex-1 font-display text-xl uppercase tracking-wider ${
+              className={`h-20 flex-1 flex flex-col items-center justify-center font-display text-xl uppercase tracking-wider transition-all duration-300 ${
                 canGenerate 
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow hover:scale-[1.02]" 
                   : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
               }`}
               disabled={!canGenerate}
@@ -753,8 +741,11 @@ const AtletaDetalhe = () => {
                 }
               }}
             >
-              <Apple className="h-6 w-6 mr-2" />
-              Montar Dieta
+              <div className="flex items-center gap-2">
+                <Apple className="h-6 w-6" />
+                Montar Dieta
+              </div>
+              {!canGenerate && <span className="text-[10px] lowercase tracking-normal font-sans opacity-70 mt-1">Requer anamnese e avaliação</span>}
             </Button>
           </div>
 
@@ -839,7 +830,10 @@ const AtletaDetalhe = () => {
         alunoId={atletaId || ""}
         tenantId={aluno.tenant_id}
         sexo={perfil?.sexo}
-        onSaved={() => load()}
+        onSaved={(goToDiet) => {
+          load();
+          if (goToDiet) navigate(`/${slug}/admin/montar-dieta?aluno=${atletaId}&auto=true`);
+        }}
       />
 
       {show7DobrasIntro && (
