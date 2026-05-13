@@ -946,6 +946,15 @@ const AtletaDetalhe = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {aluno && (
+        <PrescricaoViewer
+          open={showPrescricaoViewer}
+          onOpenChange={setShowPrescricaoViewer}
+          alunoId={aluno.id}
+          alunoNome={aluno.nome_completo}
+        />
+      )}
     </div>
   );
 };
