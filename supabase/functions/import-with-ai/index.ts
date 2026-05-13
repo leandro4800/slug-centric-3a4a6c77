@@ -79,7 +79,7 @@ serve(async (req) => {
     const messages = [
       {
         role: "system",
-        content: `Você é um especialista em fitness e nutrição. Sua tarefa é extrair dados estruturados de ${importType === "treino" ? "treinos" : "dietas"} a partir de documentos ou imagens. 
+        content: `Você é um especialista em fitness e nutrição. Sua tarefa é extrair dados estruturados de treinos, dietas ou avaliações físicas a partir de documentos ou imagens. 
         Retorne APENAS um JSON válido. Se não conseguir extrair, retorne um erro amigável em JSON.`,
       },
       {
@@ -87,10 +87,51 @@ serve(async (req) => {
         content: [
           {
             type: "text",
-            text: `Extraia o ${importType} deste arquivo. 
+            text: `Extraia os dados estruturados do arquivo para o tipo: ${importType}. 
+            
             ${importType === "treino" ? 
               `Estrutura esperada: { "dias": [ { "dia": "string", "exercicios": [ { "nome": "string", "series": "string", "repeticoes": "string", "cadencia": "string", "detalhes_execucao": "string", "observacao": "string" } ] } ], "cardio": "string" }` : 
-              `Estrutura esperada: { "objetivo": "string", "kcal_alvo": number, "macros_alvo": { "proteina_g": number, "carboidrato_g": number, "lipideos_g": number }, "refeicoes": [ { "nome": "string", "horario": "string", "itens": [ { "nome": "string", "quantidade_g": number } ] } ] }`
+              importType === "dieta" ?
+              `Estrutura esperada: { "objetivo": "string", "kcal_alvo": number, "macros_alvo": { "proteina_g": number, "carboidrato_g": number, "lipideos_g": number }, "refeicoes": [ { "nome": "string", "horario": "string", "itens": [ { "nome": "string", "quantidade_g": number } ] } ] }` :
+              importType === "7dobras" || importType === "avaliacao" ?
+              `Estrutura esperada (valores em mm para dobras e cm para perímetros/peso/altura): {
+                "peso": number,
+                "altura": number,
+                "idade": number,
+                "sexo": "M" | "F",
+                "dobras": {
+                  "peitoral": number,
+                  "axilar_media": number,
+                  "triceps": number,
+                  "subescapular": number,
+                  "abdominal": number,
+                  "suprailiaca": number,
+                  "coxa": number,
+                  "panturrilha": number
+                },
+                "perimetros": {
+                  "pescoco": number,
+                  "ombro": number,
+                  "torax": number,
+                  "cintura": number,
+                  "abdomen": number,
+                  "quadril": number,
+                  "braco_relaxado_dir": number,
+                  "braco_relaxado_esq": number,
+                  "braco_contraido_dir": number,
+                  "braco_contraido_esq": number,
+                  "antebraco_dir": number,
+                  "antebraco_esq": number,
+                  "coxa_proximal_dir": number,
+                  "coxa_proximal_esq": number,
+                  "coxa_media_dir": number,
+                  "coxa_media_esq": number,
+                  "coxa_distal_dir": number,
+                  "coxa_distal_esq": number,
+                  "panturrilha_dir": number,
+                  "panturrilha_esq": number
+                }
+              }` : ""
             }`,
           },
           isImage ? {
