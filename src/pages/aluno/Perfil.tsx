@@ -450,7 +450,7 @@ const Perfil = () => {
               <User className="h-4 w-4" /> Editar Perfil
             </Button>
             <Button 
-              onClick={() => setEvalOpen(true)}
+              onClick={() => setSelectionOpen(true)}
               variant="default"
               className="flex-1"
             >
