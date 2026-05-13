@@ -11,13 +11,14 @@ const corsHeaders = {
 };
 
 interface DietRequest {
-  objetivo?: string; // "hipertrofia" | "cutting" | "manutencao"
+  mode?: "generate" | "refine";
+  objetivo?: string;
   peso_kg?: number;
   altura_cm?: number;
   idade?: number;
   sexo?: string;
-  nivel_atividade?: number; // 1.2 - 1.9
-  nivel?: string; // "iniciante" | "intermediario" | "avancado" | "alto_nivel"
+  nivel_atividade?: number;
+  nivel?: string;
   bf_pct?: number;
   pescoco_cm?: number;
   cintura_cm?: number;
@@ -25,7 +26,10 @@ interface DietRequest {
   refeicoes_dia?: number;
   prompt?: string;
   aluno_id?: string;
-  tenant_id?: string;
+  dieta_id?: string;
+  kcal_alvo?: number;
+  macros_alvo?: any;
+  refeicoes?: Array<{ nome: string, descricao: string }>;
 }
 
 serve(async (req) => {
@@ -52,30 +56,68 @@ serve(async (req) => {
     }
 
     const body: DietRequest = await req.json().catch(() => ({}));
+    const mode = body.mode || "generate";
     let targetUserId = user.id;
+
     if (body.aluno_id && body.aluno_id !== user.id) {
       const { data: alunoRow } = await supabase
-        .from("alunos").select("tenant_id").eq("id", body.aluno_id).maybeSingle();
+        .from("perfis").select("id, tenant_id").eq("id", body.aluno_id).maybeSingle();
       if (!alunoRow) {
         return new Response(JSON.stringify({ error: "Aluno não encontrado" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const { data: isCoach } = await supabase.rpc("has_role", {
-        _user_id: user.id, _role: "coach", _tenant_id: alunoRow.tenant_id,
-      });
-      let allowed = !!isCoach;
-      if (!allowed) {
-        const { data: isAdmin } = await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" });
-        allowed = !!isAdmin;
-      }
-      if (!allowed) {
-        return new Response(JSON.stringify({ error: "Forbidden" }), {
-          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
       targetUserId = body.aluno_id;
     }
+
+    if (mode === "refine") {
+      const kcalAlvo = body.kcal_alvo || 2500;
+      const macros = body.macros_alvo || { proteina_g: 200, carboidrato_g: 250, lipideos_g: 60 };
+      const refeicoesTxt = (body.refeicoes || []).map(r => `Refeição: ${r.nome}\nDescrição atual: ${r.descricao}`).join("\n\n");
+
+      const systemPrompt = `Você é um nutricionista especialista.
+Sua tarefa é AJUSTAR AS QUANTIDADES de uma dieta já montada para que ela atinja EXATAMENTE os macros alvo fornecidos.
+O usuário pode ter trocado alimentos (ex: frango por ovo). Você deve manter os alimentos escolhidos, mas recalcular os pesos (gramas) para bater a meta.
+
+META ALVO:
+Kcal: ${kcalAlvo}
+Proteína: ${macros.proteina_g}g
+Carbo: ${macros.carboidrato_g}g
+Gordura: ${macros.lipideos_g}g
+
+REGRAS:
+1. Mantenha os alimentos citados na descrição.
+2. Altere apenas os números (quantidades).
+3. Retorne no mesmo formato JSON abaixo.`;
+
+      const userPrompt = `Abaixo estão as refeições atuais. Ajuste-as para bater os macros alvo.\n\n${refeicoesTxt}`;
+
+      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.0-pro-exp-02-05",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.1,
+        }),
+      });
+
+      if (!aiResp.ok) throw new Error(`IA falhou no refinamento: ${aiResp.status}`);
+      const aiData = await aiResp.json();
+      const content = aiData.choices[0].message.content;
+      const plano = JSON.parse(content);
+
+      // O retorno esperado do JSON é { "refeicoes": [ { "nome": "...", "descricao_ia": "..." } ] }
+      return new Response(JSON.stringify({ success: true, refeicoes: plano.refeicoes }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- MODO GENERATE (original) ---
     const objetivo = body.objetivo || "hipertrofia";
     const peso = Number(body.peso_kg) || 75;
     const altura = Number(body.altura_cm) || 175;
@@ -83,228 +125,76 @@ serve(async (req) => {
     const sexo = (body.sexo || "M").toUpperCase();
     const fa = Number(body.nivel_atividade) || 1.55;
     const nivel = (body.nivel || "intermediario").toLowerCase();
-    const bfPct = Number(body.bf_pct) || null;
-    const pescoco = Number(body.pescoco_cm) || null;
-    const cintura = Number(body.cintura_cm) || null;
-    const quadril = Number(body.quadril_cm) || null;
-
-    // Multiplicador de proteína por nível
-    const protPorKg = nivel.includes("alto") ? 2.6
-      : nivel.includes("avan") ? 2.3
-      : nivel.includes("inter") ? 2.0
-      : 1.6;
-
-    // Refeições: Prioriza o que vem no body (da anamnese), senão usa default por nível
-    const numRefeicoesAlvo = body.refeicoes_dia || (
-      nivel.includes("alto") ? 6
-      : nivel.includes("avan") ? 5
-      : 4
-    );
-
-    // 1. TMB (Mifflin-St Jeor) → GET (TMB × Fator Atividade) → Ajuste % por objetivo
+    
+    // TMB Mifflin-St Jeor
     const tmb = sexo === "M"
       ? 10 * peso + 6.25 * altura - 5 * idade + 5
       : 10 * peso + 6.25 * altura - 5 * idade - 161;
 
-    let fatorAtividade = fa;
-    let nivelAtividadeDiaria = "moderado";
-
-    let gcd = tmb * fatorAtividade;
-    let kcalAlvo = Math.round(gcd);
-    let carboG = 0, proteinaG = 0, gorduraG = 0;
-    let estrategiaCalorica = "";
-
-    const { data: anamneseRow } = await supabase
-      .from("anamnese_aluno")
-      .select("horario_treino, nivel_atividade_diaria, alimentos_basicos_casa, cafe_lanche_habitual, proteinas_consumidas, frutas_vegetais_preferidos, horario_almoco, horario_jantar, alimentos_ama, alimentos_evita, restricoes_alimentares, suplementos, refeicoes_dia")
-      .eq("aluno_id", targetUserId)
-      .maybeSingle();
-    
-    const finalNumRefeicoes = body.refeicoes_dia || (anamneseRow as any)?.refeicoes_dia || numRefeicoesAlvo;
-
-    const fatorMap: Record<string, number> = {
-      sedentario: 1.2, leve: 1.375, moderado: 1.55, intenso: 1.725, muito_intenso: 1.9,
-    };
-    nivelAtividadeDiaria = (anamneseRow as any)?.nivel_atividade_diaria || "moderado";
-    fatorAtividade = fatorMap[nivelAtividadeDiaria] ?? fa;
-    gcd = tmb * fatorAtividade;
-
+    let gcd = tmb * fa;
     let percAjuste = 0;
     if (objetivo === "cutting") percAjuste = -0.20;
-    else if (objetivo === "hipertrofia") percAjuste = nivel.includes("alto") ? 0.18 : 0.12;
-    else percAjuste = 0;
+    else if (objetivo === "hipertrofia") percAjuste = 0.15;
 
-    kcalAlvo = Math.round(gcd * (1 + percAjuste));
-    estrategiaCalorica = `TMB ${Math.round(tmb)}kcal × FA ${fatorAtividade} (${nivelAtividadeDiaria}) = GET ${Math.round(gcd)}kcal | ${objetivo}: ${(percAjuste * 100).toFixed(0)}% → Alvo ${kcalAlvo}kcal`;
-
-    proteinaG = Math.max(Math.round((kcalAlvo * 0.35) / 4), Math.round(peso * protPorKg));
-    gorduraG = Math.round((kcalAlvo * 0.20) / 9);
-    const kcalRestante = kcalAlvo - (proteinaG * 4) - (gorduraG * 9);
-    carboG = Math.max(0, Math.round(kcalRestante / 4));
+    const kcalAlvo = Math.round(gcd * (1 + percAjuste));
+    const protPorKg = nivel.includes("alto") ? 2.5 : 2.0;
+    const proteinaG = Math.round(peso * protPorKg);
+    const gorduraG = Math.round(peso * 0.8);
+    const carboG = Math.round((kcalAlvo - (proteinaG * 4) - (gorduraG * 9)) / 4);
 
     const { data: alimentos } = await supabase
       .from("alimentos_taco")
-      .select("id, nome, categoria, energia_kcal, proteina_g, carboidrato_g, lipideos_g")
-      .limit(200);
+      .select("nome, energia_kcal, proteina_g, carboidrato_g, lipideos_g")
+      .limit(100);
 
-    const alimentosLista = (alimentos || []).map(a =>
-      `${a.id}|${a.nome}|${a.categoria}|kcal:${a.energia_kcal}|P:${a.proteina_g}|C:${a.carboidrato_g}|G:${a.lipideos_g}`
-    ).join("\n");
+    const alimentosLista = (alimentos || []).map(a => `${a.nome} (kcal:${a.energia_kcal}, P:${a.proteina_g}, C:${a.carboidrato_g}, G:${a.lipideos_g})`).join("\n");
 
-    const hidratacaoMl = Math.round(peso * 50);
-    const fibrasMin = Math.max(25, Math.round(peso * 0.35));
-    const fibrasMax = Math.max(35, Math.round(peso * 0.45));
-
-    let levelQuery = "iniciante";
-    if (nivel.includes("atleta") || nivel.includes("alto") || nivel.includes("avan")) {
-      levelQuery = "avancado";
-    } else if (nivel.includes("inter")) {
-      levelQuery = "intermediario";
-    }
-
-    const { data: menuTemplates } = await supabase
-      .from("menu_templates")
-      .select("name, meal_structure")
-      .eq("level", levelQuery)
-      .eq("meal_count", finalNumRefeicoes);
-    
-    let finalMenuTemplates = menuTemplates;
-    if (!finalMenuTemplates || finalMenuTemplates.length === 0) {
-      const { data: altTemplates } = await supabase
-        .from("menu_templates")
-        .select("name, meal_structure")
-        .eq("level", levelQuery);
-      finalMenuTemplates = altTemplates;
-    }
-
-    const modelosTxt = (finalMenuTemplates || []).map((m: any, idx: number) => {
-      return `MODELO ${idx + 1}: ${m.name}\n` + m.meal_structure.map((r: any) => `  - ${r.nome}: ${r.itens.join(", ")}`).join("\n");
-    }).join("\n\n") || "Nenhum modelo encontrado.";
-
-    const systemPrompt = `Você é DR. IA NUTRI, Estrategista Nutricional de Performance seguindo a Metodologia Fabrício Pacholok.
-Sua missão é gerar um plano alimentar baseado RIGOROSAMENTE nos modelos base fornecidos.
-
-═══════════════════════════════════════════════
-REGRAS INVIOLÁVEIS:
-═══════════════════════════════════════════════
-1. ESCOLHA UM MODELO: Escolha EXCLUSIVAMENTE UM dos modelos de nível ${nivel.toUpperCase()} com ${finalNumRefeicoes} refeições fornecidos abaixo.
-2. NÃO INVENTE: É expressamente proibido adicionar, remover ou substituir alimentos do modelo escolhido.
-3. AJUSTE APENAS QUANTIDADES: Sua única função é definir as gramagens (quantidade_g) de cada item. Para ovos, se o modelo indicar "Ovos inteiros" e "Clara de ovo", você DEVE fornecer AMBOS com quantidades específicas (ex: 2 ovos inteiros e 60g de clara).
-4. ESTRUTURA FIXA: O número de refeições deve ser RIGOROSAMENTE ${finalNumRefeicoes} e os nomes devem ser EXATAMENTE os do modelo.
-5. TACO: Use os IDs da tabela TACO. Para ovos inteiros use id: 53514fca-bf4c-4bd7-bc72-57b1c3a2da94. Para claras use id: 921fa2e8-23f9-4933-a821-6544ed5c5ddf.
-
-═══════════════════════════════════════════════
-MODELOS DISPONÍVEIS PARA NÍVEL ${nivel.toUpperCase()} (${finalNumRefeicoes} REFEIÇÕES):
-═══════════════════════════════════════════════
-${modelosTxt}
-
-═══════════════════════════════════════════════
-REGRAS PACHOLOK ESPECÍFICAS (PARA AJUSTE DE QUANTIDADES):
-═══════════════════════════════════════════════
-1. Se o objetivo for Cutting, reduza carboidratos e aumente fibras/vegetais (salada_livre: true).
-2. Se o objetivo for Hipertrofia, aumente carboidratos, especialmente no Pré e Pós treino.
-3. Concentre ~60% dos carboidratos na janela de treino (refeições marcadas como pre_treino ou pos_treino).
-
-═══════════════════════════════════════════════
-ESTRUTURA DE RETORNO (JSON):
-═══════════════════════════════════════════════
-{
-  "modelo_escolhido": "Nome do modelo selecionado",
-  "observacoes_clinicas": "Resumo do ajuste feito",
-  "ajuste_clinico_badge": "Opcional: Alerta curto",
-  "recomendacao_hidratacao": "${hidratacaoMl}ml/dia",
-  "fibras_alvo_g": number,
-  "estrategia_timing": "Como os carbos foram distribuídos",
-  "refeicoes": [
-    {
-      "nome": "Nome da refeição (EXATO do modelo)",
-      "horario": "Horário sugerido",
-      "ordem": number,
-      "tag_timing": "pre_treino | pos_treino_imediato | pos_treino_solido | longe_treino",
-      "descricao_ia": "Breve descrição",
-      "salada_livre": boolean,
-      "itens": [
-        { "alimento_id": "uuid da TACO", "quantidade_g": number, "substituicoes": null }
-      ]
-    }
-  ]
-}`;
-
-    const userPrompt = `META DIÁRIA: ${kcalAlvo} kcal | Proteína: ${proteinaG}g | Carbo: ${carboG}g | Gordura: ${gorduraG}g
+    const systemPrompt = `Você é um nutricionista especialista. Gere uma dieta completa com ${body.refeicoes_dia || 4} refeições.
+META: ${kcalAlvo} kcal | P: ${proteinaG}g | C: ${carboG}g | G: ${gorduraG}g
 OBJETIVO: ${objetivo}
-DADOS DO ATLETA: Sexo ${sexo} · ${idade} anos · ${peso}kg · ${altura}cm · Nível ${nivel}
-QUANTIDADE DE REFEIÇÕES DESEJADA: ${finalNumRefeicoes}
-PROMPT ADICIONAL: ${body.prompt || "Nenhum"}
-
-ALIMENTOS TACO (IDs):
+ALIMENTOS REFERÊNCIA:
 ${alimentosLista}
 
-INSTRUÇÃO: Selecione um dos modelos ${nivel.toUpperCase()} que possua ${finalNumRefeicoes} refeições. Se o modelo indicar ovos no café, use ovos inteiros + claras separadamente com quantidades exatas. GERE O JSON seguindo a estrutura do modelo.`;
+REGRAS:
+1. Retorne um JSON com o campo "refeicoes" contendo "nome", "horario", "ordem" e "descricao_ia".
+2. A "descricao_ia" deve ser amigável e conter quantidades exatas em gramas.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { 
-        "Authorization": `Bearer ${LOVABLE_API_KEY}`, 
-        "Content-Type": "application/json" 
-      },
+      headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.0-pro-exp-02-05",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
+        messages: [{ role: "system", content: systemPrompt }],
         response_format: { type: "json_object" },
-        temperature: 0.1,
+        temperature: 0.2,
       }),
     });
 
-    if (!aiResp.ok) {
-      const t = await aiResp.text();
-      throw new Error(`IA falhou: ${aiResp.status}`);
-    }
-
+    if (!aiResp.ok) throw new Error("Falha na geração da IA");
     const aiData = await aiResp.json();
-    const content = aiData.choices[0].message.content;
-    const plano = JSON.parse(content);
+    const plano = JSON.parse(aiData.choices[0].message.content);
 
     const { data: dieta, error: dietaErr } = await supabase
       .from("dietas")
       .insert({
         user_id: targetUserId,
         objetivo,
-        tmb_estimada: Math.round(tmb),
         kcal_alvo: kcalAlvo,
-        macros_alvo: {
-          proteina_g: proteinaG,
-          carboidrato_g: carboG,
-          lipideos_g: gorduraG,
-          fibras_g: plano.fibras_alvo_g || Math.round((fibrasMin + fibrasMax) / 2),
-          hidratacao_ml: hidratacaoMl,
-          badge: plano.ajuste_clinico_badge || null,
-        },
-        observacoes_clinicas: [
-          plano.observacoes_clinicas,
-          `\n🔥 Cálculo: ${estrategiaCalorica}`,
-        ].filter(Boolean).join("") || null,
+        macros_alvo: { proteina_g: proteinaG, carboidrato_g: carboG, lipideos_g: gorduraG },
+        is_published: false,
       })
       .select()
       .single();
     if (dietaErr) throw dietaErr;
 
     for (const ref of plano.refeicoes || []) {
-      const { data: refIns, error: refErr } = await supabase
-        .from("refeicoes")
-        .insert({ dieta_id: dieta.id, nome: ref.nome, horario: ref.horario, ordem: ref.ordem, descricao_ia: ref.descricao_ia })
-        .select()
-        .single();
-      if (refErr) continue;
-      const itens = (ref.itens || []).map((i: any) => ({
-        refeicao_id: refIns.id,
-        alimento_id: i.alimento_id,
-        quantidade_g: Number(i.quantidade_g) || 100,
-        substituicoes: i.substituicoes || null,
-      }));
-      if (itens.length) await supabase.from("itens_refeicao").insert(itens);
+      await supabase.from("refeicoes").insert({
+        dieta_id: dieta.id,
+        nome: ref.nome,
+        horario: ref.horario,
+        ordem: ref.ordem,
+        descricao_ia: ref.descricao_ia
+      });
     }
 
     return new Response(JSON.stringify({ success: true, dieta_id: dieta.id }), {
