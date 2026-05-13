@@ -194,6 +194,7 @@ const AdminMontarDieta = () => {
       
       if (data?.dieta_id) {
         setDietaId(data.dieta_id);
+        setIsPublished(false); // Sempre gera como rascunho
         const { data: refs } = await supabase
           .from("refeicoes")
           .select("*")
@@ -235,7 +236,6 @@ const AdminMontarDieta = () => {
         user_id: alunoId,
         objetivo: perfil.objetivo,
         is_published: publish || isPublished,
-        // Mantemos os kcal e macros se já existirem, ou iniciamos zerado
       };
 
       if (!currentDietaId) {
@@ -349,7 +349,6 @@ const AdminMontarDieta = () => {
         .map((result: any) => result.transcript)
         .join("");
       
-      // Podemos injetar o texto no prompt da IA
       const currentPrompt = searchParams.get("prompt") || "";
       const newParams = new URLSearchParams(searchParams);
       newParams.set("prompt", (currentPrompt + " " + transcript).trim());
@@ -455,27 +454,58 @@ const AdminMontarDieta = () => {
                   <Save className="h-4 w-4 mr-2" />
                   Salvar Perfil
                 </Button>
-                <Button 
-                  className="flex-[2] h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest transition-all duration-300 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.2)]"
-                  onClick={() => gerarComIA()}
-                  disabled={generating}
-                >
-                  {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
-                  Gerar com IA
-                </Button>
+                <div className="flex flex-col flex-[2] gap-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest transition-all duration-300 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.2)]"
+                      onClick={() => gerarComIA()}
+                      disabled={generating}
+                    >
+                      {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
+                      Gerar com IA
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className={`w-12 h-12 rounded-xl border-white/10 ${isRecording ? 'bg-red-600/20 text-red-500 border-red-500/50' : ''}`}
+                      onClick={startVoice}
+                    >
+                      {isRecording ? <MicOff className="h-5 w-5 animate-pulse" /> : <Mic className="h-5 w-5" />}
+                    </Button>
+                  </div>
+                  {isRecording && (
+                    <p className="text-[10px] text-red-500 animate-pulse text-center font-bold uppercase tracking-tighter">
+                      Ouvindo... Fale sua preferência para a dieta
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
             <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl uppercase">Editor de Dieta</h2>
-                <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-display text-xl uppercase">Editor de Dieta</h2>
+                  {isPublished ? (
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-green-500/20 text-green-500 uppercase font-bold border border-green-500/30">Publicada</span>
+                  ) : (
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 uppercase font-bold border border-yellow-500/30">Rascunho</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={addRefeicao}>
-                    <Plus className="h-4 w-4 mr-2" /> Adicionar Refeição
+                    <Plus className="h-4 w-4 mr-1" /> Refeição
                   </Button>
-                  <Button size="sm" onClick={salvarPrescricaoDieta} disabled={saving || !alunoId} className="bg-primary hover:bg-primary/90">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    Salvar Dieta
+                  <Button variant="outline" size="sm" onClick={equilibrarMacros} disabled={adjusting || !dietaId} className="border-primary/50 text-primary hover:bg-primary/10">
+                    {adjusting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    Equilibrar Macros
+                  </Button>
+                  <Button size="sm" onClick={() => salvarPrescricaoDieta(false)} disabled={saving || !alunoId} className="bg-secondary hover:bg-secondary/80">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                    Salvar Rascunho
+                  </Button>
+                  <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId} className="bg-primary hover:bg-primary/90">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                    Enviar para Aluno
                   </Button>
                 </div>
               </div>
