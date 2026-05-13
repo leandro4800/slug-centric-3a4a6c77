@@ -133,13 +133,9 @@ const MeusAtletas = () => {
       supabase.from("user_roles").select("user_id").eq("tenant_id", tenantId).eq("role", "coach"),
     ]);
 
-    const excluidos = new Set<string>();
-    if (tenantRow?.owner_user_id) excluidos.add(tenantRow.owner_user_id);
-    (coachRoles || []).forEach((r: any) => r.user_id && excluidos.add(r.user_id));
-
+    // Não excluir mais o coach/owner para que ele possa gerenciar seu próprio perfil de atleta
     const atletasBanco = ((data as Aluno[]) || [])
-      .filter((a) => !DEMO_ATHLETE_EMAILS.has(a.email || ""))
-      .filter((a) => !excluidos.has(a.id));
+      .filter((a) => !DEMO_ATHLETE_EMAILS.has(a.email || ""));
     const atletas = slug === "demo" ? [...DEMO_ATHLETES, ...atletasBanco] : atletasBanco;
 
     if (error && slug !== "demo") console.error("[MeusAtletas] Error loading profiles:", error);
