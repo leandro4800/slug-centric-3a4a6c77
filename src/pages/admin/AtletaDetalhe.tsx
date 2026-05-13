@@ -852,50 +852,32 @@ const AtletaDetalhe = () => {
         <div className="space-y-3">
           <div className="grid grid-cols-2 gap-4">
             <Button
-              className={`h-20 flex-1 flex flex-col items-center justify-center font-display text-xl uppercase tracking-wider transition-all duration-300 ${
-                canGenerate 
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow hover:scale-[1.02]" 
-                  : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
-              }`}
-              disabled={!canGenerate}
+              className="h-20 flex-1 flex flex-col items-center justify-center font-display text-xl uppercase tracking-wider transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow hover:scale-[1.02]"
               onClick={() => {
-                if (canGenerate) {
-                  setPromptType("treino");
-                  setIaPrompt("");
-                  setShowPromptDialog(true);
-                } else {
-                  toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
-                }
+                setPromptType("treino");
+                setIaPrompt("");
+                setShowPromptDialog(true);
               }}
             >
               <div className="flex items-center gap-2">
                 <Dumbbell className="h-6 w-6" />
                 Montar Treino
               </div>
-              {!canGenerate && <span className="text-[10px] lowercase tracking-normal font-sans opacity-70 mt-1">Requer anamnese e avaliação</span>}
+              {!canGenerate && <span className="text-[10px] lowercase tracking-normal font-sans opacity-70 mt-1">Manual (IA requer anamnese e avaliação)</span>}
             </Button>
             <Button
-              className={`h-20 flex-1 flex flex-col items-center justify-center font-display text-xl uppercase tracking-wider transition-all duration-300 ${
-                canGenerate 
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow hover:scale-[1.02]" 
-                  : "bg-secondary text-muted-foreground opacity-50 cursor-not-allowed"
-              }`}
-              disabled={!canGenerate}
+              className="h-20 flex-1 flex flex-col items-center justify-center font-display text-xl uppercase tracking-wider transition-all duration-300 bg-primary text-primary-foreground hover:bg-primary/90 shadow-glow hover:scale-[1.02]"
               onClick={() => {
-                if (canGenerate) {
-                  setPromptType("dieta");
-                  setIaPrompt("");
-                  setShowPromptDialog(true);
-                } else {
-                  toast.error("Preencha anamnese, perfil e avaliação física primeiro.");
-                }
+                setPromptType("dieta");
+                setIaPrompt("");
+                setShowPromptDialog(true);
               }}
             >
               <div className="flex items-center gap-2">
                 <Apple className="h-6 w-6" />
                 Montar Dieta
               </div>
-              {!canGenerate && <span className="text-[10px] lowercase tracking-normal font-sans opacity-70 mt-1">Requer anamnese e avaliação</span>}
+              {!canGenerate && <span className="text-[10px] lowercase tracking-normal font-sans opacity-70 mt-1">Manual (IA requer anamnese e avaliação)</span>}
             </Button>
           </div>
 

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, ShieldCheck, CalendarClock, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, ShieldCheck, CalendarClock, Save, Dumbbell, Apple, Stethoscope } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import {
@@ -251,6 +251,36 @@ const AdminPanel = () => {
               </Button>
             </Link>
           </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+          <Link to={`/${slug}/admin/atleta/${user?.id}?action=generate-training`}>
+            <Button className="w-full bg-primary/10 border-primary/40 text-primary hover:bg-primary/20 h-auto py-4 flex flex-col gap-2">
+              <Dumbbell className="h-6 w-6" />
+              <div className="text-center">
+                <p className="text-sm font-bold uppercase tracking-wider">Montar Meu Treino</p>
+                <p className="text-[10px] opacity-60 normal-case">Monte seu próprio plano de treino</p>
+              </div>
+            </Button>
+          </Link>
+          <Link to={`/${slug}/admin/atleta/${user?.id}?action=generate-diet`}>
+            <Button className="w-full bg-primary/10 border-primary/40 text-primary hover:bg-primary/20 h-auto py-4 flex flex-col gap-2">
+              <Apple className="h-6 w-6" />
+              <div className="text-center">
+                <p className="text-sm font-bold uppercase tracking-wider">Montar Minha Dieta</p>
+                <p className="text-[10px] opacity-60 normal-case">Monte sua própria dieta personalizada</p>
+              </div>
+            </Button>
+          </Link>
+          <Link to={`/${slug}/admin/atleta/${user?.id}`}>
+            <Button className="w-full bg-primary/10 border-primary/40 text-primary hover:bg-primary/20 h-auto py-4 flex flex-col gap-2">
+              <Stethoscope className="h-6 w-6" />
+              <div className="text-center">
+                <p className="text-sm font-bold uppercase tracking-wider">Minha Avaliação</p>
+                <p className="text-[10px] opacity-60 normal-case">Gerencie sua avaliação e anamnese</p>
+              </div>
+            </Button>
+          </Link>
         </div>
 
         <Tabs value={tabValue} onValueChange={(v) => setSearchParams({ tab: v })}>
