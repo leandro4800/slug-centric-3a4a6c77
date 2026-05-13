@@ -25,9 +25,10 @@ interface Props {
   alunoId: string;
   tenantId?: string | null;
   sexo?: string | null;
-  onSaved?: () => void;
+  onSaved?: (data?: any) => void;
   initialData?: any;
   triggerImportOnInit?: boolean;
+  showDietButton?: boolean;
 }
 
 export const ComprehensiveEvaluationForm = ({
@@ -202,7 +203,7 @@ export const ComprehensiveEvaluationForm = ({
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (goToDiet = false) => {
     setSaving(true);
     try {
       // Cálculo básico de BF 7 dobras (Jackson & Pollock)
@@ -263,7 +264,7 @@ export const ComprehensiveEvaluationForm = ({
 
       if (error) throw error;
       toast.success("Avaliação salva com sucesso!");
-      onSaved?.();
+      onSaved?.(goToDiet);
       onOpenChange(false);
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
