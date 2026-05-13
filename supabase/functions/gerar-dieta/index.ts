@@ -285,8 +285,17 @@ REGRAS PACHOLOK DE COMBINAÇÕES (INVIOLÁVEIS)
 3. AVEIA: se o atleta declarar na anamnese que tem o HÁBITO de comer aveia, SUGERIR no café da manhã OU na última refeição do dia um MINGAU DE AVEIA OU SHAKE DE AVEIA com whey. Descreva claramente em "descricao_ia".
 4. JANTAR — CARBOIDRATO:
    - PROIBIDO usar BATATA DOCE no jantar (joga a batata doce para almoço/pré-treino).
-   - O carbo padrão do JANTAR é SEMPRE ARROZ (branco ou integral). Só substitua arroz no jantar se o atleta declarar explicitamente em "evita" ou em restrições que NÃO consome arroz.
+   - O carbo padrão do JANTAR é SEMPRE ARROZ BRANCO. Só use ARROZ INTEGRAL no jantar se o atleta declarar EXPLICITAMENTE no campo "ama" / "cafe_lanche_habitual" / "alimentos_basicos_casa" que PREFERE/AMA arroz integral. Caso contrário, NUNCA usar integral por padrão. Só substitua arroz por outro carbo se o atleta declarar em "evita"/restrições que NÃO consome arroz.
 5. Estas regras são prioritárias sobre preferências genéricas, mas devem respeitar restrições/alergias do atleta.
+
+═══════════════════════════════════════════════
+SUBSTITUIÇÕES — REGRA CRÍTICA (INVIOLÁVEL)
+═══════════════════════════════════════════════
+- O campo "alimento_id" + "quantidade_g" PRECISA refletir EXATAMENTE o alimento que o atleta vai consumir, com macros corretos para a meta da refeição. Esse é o item REAL prescrito.
+- Se a regra Pacholok exige "frango desfiado" no café com cuscuz, então "alimento_id" = ID do PEITO DE FRANGO COZIDO/DESFIADO (não ovo cozido) e "quantidade_g" calculada pelos macros do FRANGO. NUNCA cadastre ovo cozido com observação "frango desfiado" — isso está ERRADO.
+- O campo "substituicoes" deve ser DEIXADO EM null/vazio na MAIORIA dos casos. NÃO use "substituicoes" para listar uma proteína totalmente diferente (ex.: trocar ovo por frango ou frango por carne moída) porque o impacto em proteína/gordura quebra a meta da refeição.
+- Só preencha "substituicoes" quando for um swap NEUTRO de macros (ex.: arroz branco ↔ arroz parboilizado, banana ↔ maçã equivalente). Se a substituição mudar mais de ±3g de proteína ou ±3g de gordura por porção, NÃO inclua.
+- Em refeições onde a regra Pacholok determina o alimento (cuscuz+frango desfiado, jantar com arroz, pão+ovos mexidos), "substituicoes" DEVE ser null.
 
 ═══════════════════════════════════════════════
 PREFERÊNCIAS ALIMENTARES DO ATLETA (ANAMNESE)
@@ -334,7 +343,7 @@ FORMATO OBRIGATÓRIO:
       "descricao_ia": "Ovos mexidos com batata doce cozida e abacate fatiado (exemplo sólido)",
       "salada_livre": false,
       "itens": [
-        { "alimento_id": "uuid-da-tabela", "quantidade_g": 100, "substituicoes": "sugestão livre opcional" }
+        { "alimento_id": "uuid-da-tabela", "quantidade_g": 100, "substituicoes": null }
       ]
     }
   ]
