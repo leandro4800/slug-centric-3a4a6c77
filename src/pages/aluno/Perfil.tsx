@@ -57,7 +57,9 @@ const Perfil = () => {
   // Edit Modals
   const [pwOpen, setPwOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [evalOpen, setEvalOpen] = useState(false);
+  const [evalOpen, setEvalOpen] = useState(false); // Navy form
+  const [selectionOpen, setSelectionOpen] = useState(false);
+  const [comprehensiveOpen, setComprehensiveOpen] = useState(false);
 
   // Form states
   const [newPw, setNewPw] = useState("");
