@@ -636,6 +636,7 @@ export type Database = {
           perimetro_coxa_proximal_dir: number | null
           perimetro_coxa_proximal_esq: number | null
           perimetro_panturrilha_dir: number | null
+          perimetro_panturrilha_esq: number | null
           perimetro_torax: number | null
           pescoco_cm: number | null
           peso_kg: number
@@ -682,6 +683,7 @@ export type Database = {
           perimetro_coxa_proximal_dir?: number | null
           perimetro_coxa_proximal_esq?: number | null
           perimetro_panturrilha_dir?: number | null
+          perimetro_panturrilha_esq?: number | null
           perimetro_torax?: number | null
           pescoco_cm?: number | null
           peso_kg: number
@@ -728,6 +730,7 @@ export type Database = {
           perimetro_coxa_proximal_dir?: number | null
           perimetro_coxa_proximal_esq?: number | null
           perimetro_panturrilha_dir?: number | null
+          perimetro_panturrilha_esq?: number | null
           perimetro_torax?: number | null
           pescoco_cm?: number | null
           peso_kg?: number

@@ -74,6 +74,7 @@ export const ComprehensiveEvaluationForm = ({
       coxa_distal_dir: "",
       coxa_distal_esq: "",
       panturrilha_dir: "",
+      panturrilha_esq: "",
     }
   });
 
