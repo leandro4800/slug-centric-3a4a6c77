@@ -958,7 +958,6 @@ const AtletaDetalhe = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-        triggerImportOnInit={triggerImport}
 
       <ComprehensiveEvaluationForm
         open={open7Dobras}
