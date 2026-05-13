@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -162,7 +161,6 @@ const fullBodyBloqueado = (nivel: string, divisoes: string[]) =>
 const AdminMontarTreino = () => {
   const [searchParams] = useSearchParams();
   const { tenant } = useBranding();
-  const { roles } = useAuth();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
   const [perfil, setPerfil] = useState<PerfilTreino>({
@@ -188,10 +186,9 @@ const AdminMontarTreino = () => {
         .from("perfis")
         .select("id, nome_completo, email")
         .eq("tenant_id", tenant.id);
-      const coachIds = new Set(roles.filter((r) => r.role === "coach" && r.tenant_id === tenant.id).map((r) => r.tenant_id));
-      setAlunos(((data as Aluno[]) || []).filter((a) => a.id !== tenant.owner_user_id && !coachIds.has(a.id)));
+      setAlunos(((data as Aluno[]) || []).filter((a) => a.id !== tenant.owner_user_id));
     })();
-  }, [tenant, roles]);
+  }, [tenant]);
 
   useEffect(() => {
     if (!alunoId || !tenant) {
