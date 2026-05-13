@@ -138,89 +138,81 @@ export const TreinoConclusaoCard = ({ open, onClose, diaTreino, totalExercicios 
   );
 };
 
-const CardArt = ({
-  nome,
-  diaTreino,
-  totalExercicios,
-  dataHoje,
-  avatar,
-  tenantNome,
-  ref,
-}: {
+interface CardArtProps {
   nome: string;
   diaTreino: string;
   totalExercicios: number;
   dataHoje: string;
   avatar: string | null;
   tenantNome: string;
-  ref: React.RefObject<HTMLDivElement>;
-}) => (
-  <div
-    ref={ref}
-    className="w-[1080px] h-[1350px] bg-black relative overflow-hidden flex flex-col text-white font-sans"
-  >
-    {/* Background gradient */}
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-black to-black" />
-    <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.4),transparent_60%)]" />
+}
 
-    {/* Header */}
-    <div className="relative z-10 flex items-center gap-4 p-12">
-      <div className="w-16 h-16 bg-primary flex items-center justify-center font-display text-4xl text-white rounded">
-        {tenantNome.charAt(0)}
-      </div>
-      <div className="text-xl font-bold tracking-[0.3em] uppercase">{tenantNome}</div>
-    </div>
+const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
+  ({ nome, diaTreino, totalExercicios, dataHoje, avatar, tenantNome }, ref) => (
+    <div
+      ref={ref}
+      className="w-[1080px] h-[1350px] bg-black relative overflow-hidden flex flex-col text-white font-sans"
+    >
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-black to-black" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.4),transparent_60%)]" />
 
-    {/* Big trophy + headline */}
-    <div className="relative z-10 px-12 mt-4 text-center">
-      <div className="inline-flex items-center gap-3 px-6 py-2 bg-primary/20 border border-primary rounded-full">
-        <Trophy className="h-7 w-7 text-primary" />
-        <span className="text-2xl tracking-[0.4em] uppercase font-bold">Treino Concluído</span>
-      </div>
-      <h1 className="text-8xl font-display tracking-[0.05em] mt-8 leading-none">
-        MAIS UM <span className="text-primary italic">CHECK</span>
-      </h1>
-      <p className="text-3xl mt-4 text-muted-foreground tracking-widest uppercase">na conta</p>
-    </div>
-
-    {/* Avatar / Hero */}
-    <div className="relative z-10 flex-1 flex items-end justify-center mt-6 px-12">
-      {avatar ? (
-        <img
-          src={avatar}
-          alt="Atleta"
-          className="h-[560px] object-contain drop-shadow-[0_0_60px_hsl(var(--primary)/0.7)]"
-        />
-      ) : (
-        <div className="h-[560px] w-[400px] rounded-3xl bg-primary/10 border-2 border-primary/40 flex items-center justify-center">
-          <Trophy className="h-40 w-40 text-primary" />
+      <div className="relative z-10 flex items-center gap-4 p-12">
+        <div className="w-16 h-16 bg-primary flex items-center justify-center font-display text-4xl text-white rounded">
+          {tenantNome.charAt(0)}
         </div>
-      )}
-    </div>
+        <div className="text-xl font-bold tracking-[0.3em] uppercase">{tenantNome}</div>
+      </div>
 
-    {/* Bottom info bar */}
-    <div className="relative z-10 mx-12 mb-12 bg-black/70 backdrop-blur border-y-4 border-primary px-8 py-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-sm tracking-widest uppercase text-muted-foreground">Atleta</p>
-          <p className="text-5xl font-display tracking-[0.1em] mt-1">{nome}</p>
+      <div className="relative z-10 px-12 mt-4 text-center">
+        <div className="inline-flex items-center gap-3 px-6 py-2 bg-primary/20 border border-primary rounded-full">
+          <Trophy className="h-7 w-7 text-primary" />
+          <span className="text-2xl tracking-[0.4em] uppercase font-bold">Treino Concluído</span>
         </div>
-        <div className="text-right">
-          <p className="text-sm tracking-widest uppercase text-muted-foreground">{diaTreino}</p>
-          <p className="text-5xl font-display text-primary tracking-tighter">{totalExercicios}</p>
-          <p className="text-xs uppercase tracking-widest text-muted-foreground">exercícios</p>
+        <h1 className="text-8xl font-display tracking-[0.05em] mt-8 leading-none">
+          MAIS UM <span className="text-primary italic">CHECK</span>
+        </h1>
+        <p className="text-3xl mt-4 text-muted-foreground tracking-widest uppercase">na conta</p>
+      </div>
+
+      <div className="relative z-10 flex-1 flex items-end justify-center mt-6 px-12">
+        {avatar ? (
+          <img
+            src={avatar}
+            alt="Atleta"
+            crossOrigin="anonymous"
+            className="h-[560px] object-contain drop-shadow-[0_0_60px_hsl(var(--primary)/0.7)]"
+          />
+        ) : (
+          <div className="h-[560px] w-[400px] rounded-3xl bg-primary/10 border-2 border-primary/40 flex items-center justify-center">
+            <Trophy className="h-40 w-40 text-primary" />
+          </div>
+        )}
+      </div>
+
+      <div className="relative z-10 mx-12 mb-12 bg-black/70 backdrop-blur border-y-4 border-primary px-8 py-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm tracking-widest uppercase text-muted-foreground">Atleta</p>
+            <p className="text-5xl font-display tracking-[0.1em] mt-1">{nome}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-sm tracking-widest uppercase text-muted-foreground">{diaTreino}</p>
+            <p className="text-5xl font-display text-primary tracking-tighter">{totalExercicios}</p>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">exercícios</p>
+          </div>
+        </div>
+        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-sm uppercase tracking-widest">
+          <span className="text-muted-foreground">{dataHoje}</span>
+          <span className="font-bold text-white underline decoration-primary underline-offset-4">
+            #{tenantNome.replace(/\s+/g, "")}
+          </span>
         </div>
       </div>
-      <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-sm uppercase tracking-widest">
-        <span className="text-muted-foreground">{dataHoje}</span>
-        <span className="font-bold text-white underline decoration-primary underline-offset-4">
-          #{tenantNome.replace(/\s+/g, "")}
-        </span>
-      </div>
-    </div>
 
-    <div className="absolute bottom-0 left-0 w-full h-2 bg-primary shadow-[0_0_30px_hsl(var(--primary))]" />
-  </div>
+      <div className="absolute bottom-0 left-0 w-full h-2 bg-primary shadow-[0_0_30px_hsl(var(--primary))]" />
+    </div>
+  )
 );
+CardArt.displayName = "CardArt";
 
 export default TreinoConclusaoCard;
