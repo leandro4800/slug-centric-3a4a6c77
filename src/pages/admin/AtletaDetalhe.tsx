@@ -367,8 +367,62 @@ const AtletaDetalhe = () => {
         toast.success("Dieta importada com sucesso!", { id: toastId });
         void load();
       } else {
-        toast.success("Avaliação física importada com sucesso!", { id: toastId });
-        void load();
+        const ext = data.data; // Dados extraídos pela IA
+        if (ext) {
+          toast.loading("Salvando dados da avaliação...", { id: toastId });
+          
+          // Se tiver dados de dobras, salva como jackson_pollock_7
+          const hasDobras = ext.dobras && Object.values(ext.dobras).some(v => v && Number(v) > 0);
+          
+          const evalData = {
+            aluno_id: aluno.id,
+            tenant_id: aluno.tenant_id,
+            peso_kg: ext.peso || null,
+            altura_cm: ext.altura || null,
+            idade: ext.idade || null,
+            sexo: ext.sexo || (perfil?.sexo === "F" ? "F" : "M"),
+            metodo: hasDobras ? "jackson_pollock_7" : "marinha_americana",
+            // Dobras
+            dobra_peitoral: ext.dobras?.peitoral || null,
+            dobra_axilar_media: ext.dobras?.axilar_media || null,
+            dobra_triceps: ext.dobras?.triceps || null,
+            dobra_subescapular: ext.dobras?.subescapular || null,
+            dobra_abdominal: ext.dobras?.abdominal || null,
+            dobra_suprailiaca: ext.dobras?.suprailiaca || null,
+            dobra_coxa: ext.dobras?.coxa || null,
+            dobra_panturrilha: ext.dobras?.panturrilha || null,
+            // Perímetros
+            pescoco_cm: ext.perimetros?.pescoco || null,
+            cintura_cm: ext.perimetros?.cintura || null,
+            quadril_cm: ext.perimetros?.quadril || null,
+            perimetro_ombro: ext.perimetros?.ombro || null,
+            perimetro_torax: ext.perimetros?.torax || null,
+            perimetro_abdomen: ext.perimetros?.abdomen || null,
+            perimetro_braco_relaxado_dir: ext.perimetros?.braco_relaxado_dir || null,
+            perimetro_braco_relaxado_esq: ext.perimetros?.braco_relaxado_esq || null,
+            perimetro_braco_contraido_dir: ext.perimetros?.braco_contraido_dir || null,
+            perimetro_braco_contraido_esq: ext.perimetros?.braco_contraido_esq || null,
+            perimetro_antebraco_dir: ext.perimetros?.antebraco_dir || null,
+            perimetro_antebraco_esq: ext.perimetros?.antebraco_esq || null,
+            perimetro_coxa_proximal_dir: ext.perimetros?.coxa_proximal_dir || null,
+            perimetro_coxa_proximal_esq: ext.perimetros?.coxa_proximal_esq || null,
+            perimetro_coxa_media_dir: ext.perimetros?.coxa_media_dir || null,
+            perimetro_coxa_media_esq: ext.perimetros?.coxa_media_esq || null,
+            perimetro_coxa_distal_dir: ext.perimetros?.coxa_distal_dir || null,
+            perimetro_coxa_distal_esq: ext.perimetros?.coxa_distal_esq || null,
+            perimetro_panturrilha_dir: ext.perimetros?.panturrilha_dir || null,
+            perimetro_panturrilha_esq: ext.perimetros?.panturrilha_esq || null,
+            data: new Date().toISOString()
+          };
+
+          const { error: saveErr } = await supabase.from("avaliacoes_fisicas").insert(evalData);
+          if (saveErr) throw saveErr;
+
+          toast.success("Avaliação física importada e salva com sucesso!", { id: toastId });
+          void load();
+        } else {
+          toast.error("Não foi possível extrair dados da avaliação.", { id: toastId });
+        }
       }
     } catch (e: any) {
       console.error(e);
