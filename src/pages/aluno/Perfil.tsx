@@ -60,6 +60,7 @@ const Perfil = () => {
   const [evalOpen, setEvalOpen] = useState(false); // Navy form
   const [selectionOpen, setSelectionOpen] = useState(false);
   const [comprehensiveOpen, setComprehensiveOpen] = useState(false);
+  const [triggerImport, setTriggerImport] = useState(false);
 
   // Form states
   const [newPw, setNewPw] = useState("");
