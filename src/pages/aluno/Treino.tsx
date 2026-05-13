@@ -166,7 +166,7 @@ const Treino = () => {
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url, observacao_clinica")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url")
             .eq("aluno_id", user.id)
             .order("dia_semana")
             .order("ordem")
@@ -204,9 +204,6 @@ const Treino = () => {
           }
           setTreinos(filled);
           setDiaAtual(filled[0].dia_semana);
-          if (data[0].observacao_clinica) {
-            setObservacaoClinica(data[0].observacao_clinica);
-          }
           setIsMock(false);
           return;
         }
