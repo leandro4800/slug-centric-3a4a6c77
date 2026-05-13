@@ -377,7 +377,7 @@ const AdminMontarDieta = () => {
       const confirmAction = window.confirm("Deseja gerar a dieta agora com a IA?");
       if (confirmAction) {
         autoTriggeredRef.current = true;
-        void gerarComIA();
+        void gerarComIA(undefined, true);
       } else {
         autoTriggeredRef.current = true;
       }
