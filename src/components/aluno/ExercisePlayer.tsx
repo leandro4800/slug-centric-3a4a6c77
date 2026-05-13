@@ -25,7 +25,7 @@ const ExercisePlayer = ({ videoUrl, exerciseName, onPlayClick, showPlayButton = 
   if (ytId) {
     return (
       <iframe
-        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=1&loop=1&playlist=${ytId}`}
+        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&loop=1&playlist=${ytId}`}
         title={exerciseName}
         className="absolute inset-0 w-full h-full border-0"
         allow="autoplay; encrypted-media"
@@ -40,7 +40,7 @@ const ExercisePlayer = ({ videoUrl, exerciseName, onPlayClick, showPlayButton = 
         src={videoUrl}
         controls
         autoPlay
-        muted
+        muted={false}
         loop
         playsInline
         className="absolute inset-0 w-full h-full object-contain bg-black"
