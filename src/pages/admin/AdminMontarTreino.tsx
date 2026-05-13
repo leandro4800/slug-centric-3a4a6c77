@@ -234,7 +234,7 @@ const AdminMontarTreino = () => {
         cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
         quadril_cm: pt?.quadril_cm ?? av?.quadril_cm ?? null,
         objetivo: pt?.objetivo || "hipertrofia",
-        frequencia_semanal: pt?.frequencia_semanal || 4,
+        frequencia_semanal: pt?.frequencia_semanal || (Array.isArray(an?.disponibilidade_dias) && an.disponibilidade_dias.length >= 2 ? Math.min(6, an.disponibilidade_dias.length) : 4),
         tempo_treino: tempoMesclado,
         lesoes: pt?.lesoes && pt.lesoes.length > 0 ? pt.lesoes : (an?.lesoes_atuais ? [an.lesoes_atuais] : []),
         limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
