@@ -48,28 +48,47 @@ const Treino = () => {
   const [showConclusao, setShowConclusao] = useState(false);
 
   useEffect(() => {
-    const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
-      if (!tenant) return {};
+    const norm = (s: string) =>
+      (s || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 2 && !["com","sem","dos","das","para","pelo","pela","reto","livre","barra","halter","halteres","maquina","cabo","polia","banco","pulley"].includes(w));
+
+    const loadVideoRefs = async (): Promise<{ entries: { tokens: string[]; yt: string; coach: string | null }[] }> => {
       const { data } = await supabase
-        .from("referencia_videos")
-        .select("nome_exercicio, url_video, video_coach_url")
-        .eq("tenant_id", tenant.id);
-      const map: Record<string, VideoRef> = {};
-      data?.forEach((r: any) => {
-        map[r.nome_exercicio.trim().toLowerCase()] = {
-          yt: r.url_video || null,
-          coach: r.video_coach_url || null,
-        };
-      });
-      return map;
+        .from("referencia_exercicios")
+        .select("nome_exercicio, url_video");
+      const entries = (data || []).map((r: any) => ({
+        tokens: norm(r.nome_exercicio),
+        yt: r.url_video as string,
+        coach: null as string | null,
+      })).filter((e) => e.tokens.length > 0 && e.yt);
+      return { entries };
     };
 
-    const resolveVideo = (nome: string, refMap: Record<string, VideoRef>) =>
-      refMap[nome.trim().toLowerCase()]?.yt || null;
-    const resolveCoach = (nome: string, refMap: Record<string, VideoRef>) =>
-      refMap[nome.trim().toLowerCase()]?.coach || null;
+    const findBest = (nome: string, refMap: any): { yt: string | null; coach: string | null } => {
+      const tokens = norm(nome);
+      if (!tokens.length) return { yt: null, coach: null };
+      let best: any = null;
+      let bestScore = 0;
+      for (const e of refMap.entries || []) {
+        const overlap = e.tokens.filter((t: string) => tokens.includes(t)).length;
+        if (overlap > bestScore) {
+          bestScore = overlap;
+          best = e;
+        }
+      }
+      if (bestScore < 1) return { yt: null, coach: null };
+      return { yt: best.yt, coach: best.coach };
+    };
 
-    const autoFillVolume = async (list: Treino[], refMap: Record<string, VideoRef>): Promise<Treino[]> => {
+    const resolveVideo = (nome: string, refMap: any) => findBest(nome, refMap).yt;
+    const resolveCoach = (nome: string, refMap: any) => findBest(nome, refMap).coach;
+
+    const autoFillVolume = async (list: Treino[], refMap: any): Promise<Treino[]> => {
       if (!tenant) return list;
       const dias = [...new Set(list.map((t) => t.dia_semana))];
       const extras: Treino[] = [];
@@ -178,12 +197,22 @@ const Treino = () => {
       const [, refMapRes, treinosRes] = await Promise.all([spotifyP, refsP, treinosP]);
       void cargasP; // dispara em background, não bloqueia
 
-      const refMap: Record<string, VideoRef> = (refMapRes as any) || {};
+      const refMap: any = refMapRes || { entries: [] };
+
+      // Ordem semanal e filtro de dias OFF/descanso
+      const WEEK_ORDER = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"];
+      const weekIdx = (s: string) => {
+        const n = (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const i = WEEK_ORDER.findIndex((d) => n.includes(d));
+        return i === -1 ? 99 : i;
+      };
+      const isOff = (s: string) => /\boff\b|descanso|rest/i.test(s || "");
 
       if (treinosRes && !(treinosRes as any).error) {
         const data = (treinosRes as any).data as any[] | null;
         if (data && data.length > 0) {
-          const mapped: Treino[] = data.map((t: any) => ({
+          const filteredData = data.filter((t) => !isOff(t.dia_semana));
+          const mapped: Treino[] = filteredData.map((t: any) => ({
             id: t.id,
             dia_semana: t.dia_semana,
             exercicio: t.exercicio,
@@ -195,10 +224,11 @@ const Treino = () => {
             video_url: t.video_url || resolveVideo(t.exercicio, refMap),
             video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
           }));
-          // autoFillVolume também com timeout para não travar a tela
+          mapped.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
           let filled = mapped;
           try {
             filled = await withTimeout(autoFillVolume(mapped, refMap), 4000);
+            filled.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
           } catch (e) {
             console.warn("autoFillVolume pulado", e);
           }
@@ -210,7 +240,7 @@ const Treino = () => {
       }
 
       // Sem treino real disponível: enriquece o mock com vídeos se conseguimos buscar
-      if (Object.keys(refMap).length > 0) {
+      if (refMap.entries && refMap.entries.length > 0) {
         setTreinos((prev) =>
           prev.map((m) => ({
             ...m,
@@ -321,20 +351,27 @@ const Treino = () => {
         )}
 
         <div className="flex gap-2 mt-5 overflow-x-auto pb-1">
-          {dias.map((dia) => (
-            <button
-              key={dia}
-              onClick={() => {
-                setDiaAtual(dia);
-                setActiveIndex(null);
-              }}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition ${
-                diaAtual === dia ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-              }`}
-            >
-              {dia}
-            </button>
-          ))}
+          {dias.map((dia) => {
+            const n = dia.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const wd = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"].find((d) => n.includes(d));
+            const wdShort: Record<string, string> = { segunda: "SEG", terca: "TER", quarta: "QUA", quinta: "QUI", sexta: "SEX", sabado: "SAB", domingo: "DOM" };
+            const letra = dia.match(/\b([A-E])\b/)?.[1];
+            const label = `${wd ? wdShort[wd] : dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
+            return (
+              <button
+                key={dia}
+                onClick={() => {
+                  setDiaAtual(dia);
+                  setActiveIndex(null);
+                }}
+                className={`px-4 py-2 rounded-full font-display text-xs uppercase tracking-[0.2em] whitespace-nowrap transition ${
+                  diaAtual === dia ? "bg-primary text-primary-foreground shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" : "bg-secondary text-muted-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-6">
