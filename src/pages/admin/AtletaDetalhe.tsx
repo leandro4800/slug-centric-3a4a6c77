@@ -39,6 +39,8 @@ import {
   DialogFooter
 } from "@/components/ui/dialog";
 import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
+import { PrescricaoViewer } from "@/components/admin/PrescricaoViewer";
+import { Eye } from "lucide-react";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import heroDefault from "@/assets/hero-default.jpg";
