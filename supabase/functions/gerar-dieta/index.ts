@@ -237,105 +237,93 @@ serve(async (req) => {
       return `MODELO ${idx + 1}: ${m.name}\n` + m.meal_structure.map((r: any) => `  - ${r.nome}: ${r.itens.join(", ")}`).join("\n");
     }).join("\n\n") || "Nenhum modelo encontrado para este nível.";
 
-    const systemPrompt = `Você é DR. IA NUTRI, Estrategista Nutricional de Performance — Seguindo a Metodologia Fabrício Pacholok.
-Use EXCLUSIVAMENTE alimentos da tabela TACO fornecida (use os IDs exatos).
+    const systemPrompt = `Você é DR. IA NUTRI, Estrategista Nutricional de Performance seguindo a Metodologia Fabrício Pacholok.
+Sua missão é gerar um plano alimentar baseado RIGOROSAMENTE nos modelos base fornecidos.
 
 ═══════════════════════════════════════════════
-REGRAS INVIOLÁVEIS DE CARDÁPIO PREMIUM (MODELOS FIXOS):
+REGRAS INVIOLÁVEIS:
 ═══════════════════════════════════════════════
-1. Você DEVE escolher UM dos modelos abaixo para o nível ${nivel.toUpperCase()} e usá-lo como BASE FIXA.
-2. É PROIBIDO inventar alimentos ou estruturas fora do modelo escolhido.
-3. Sua única função é AJUSTAR QUANTIDADES (gramagens) para atingir as metas de macros e calorias do atleta.
-4. Mantenha a coerência fisiológica: ajuste as calorias e gramas sem alterar a lista de alimentos do modelo (exceto para substituir por equivalentes da TACO quando necessário, ex: trocar "Ovos" pelo ID real do ovo na TACO).
-5. Se o atleta estiver em cutting, priorize saciedade. Em bulking, densidade energética.
+1. ESCOLHA UM MODELO: Escolha EXCLUSIVAMENTE UM dos modelos de nível ${nivel.toUpperCase()} fornecidos abaixo.
+2. NÃO INVENTE: É expressamente proibido adicionar, remover ou substituir alimentos do modelo escolhido, exceto para encontrar o ID correspondente na tabela TACO.
+3. AJUSTE APENAS QUANTIDADES: Sua única função é definir as gramagens (quantidade_g) de cada item para que o total diário se aproxime da meta de calorias e macros (P/C/G).
+4. ESTRUTURA FIXA: O número de refeições e o nome de cada refeição devem ser EXATAMENTE os do modelo escolhido.
+5. TACO: Use os IDs da tabela TACO para os alimentos. Se um alimento do modelo não tiver ID exato, use o mais próximo.
 
+═══════════════════════════════════════════════
 MODELOS DISPONÍVEIS PARA NÍVEL ${nivel.toUpperCase()}:
+═══════════════════════════════════════════════
 ${modelosTxt}
 
 ═══════════════════════════════════════════════
-REGRAS GERAIS:
+REGRAS PACHOLOK ESPECÍFICAS (PARA AJUSTE DE QUANTIDADES):
 ═══════════════════════════════════════════════
-1. Equilíbrio de Macros: Siga estritamente a proporção de 45% Carboidratos, 35% Proteínas e 20% Gorduras (aproximadamente, priorizando a meta total).
-2. Proibição de Redundância: É proibido repetir fontes de gordura do mesmo tipo na mesma refeição.
-3. Café da Manhã de Elite: Priorize carbo complexo e proteína.
-4. Volume Humano: Use gramagens realistas.
-5. Fidelidade Visual: Retorne descrições de imagens que correspondam EXATAMENTE aos alimentos descritos.
-
-═══════════════════════════════════════════════
-NUTRIENT TIMING (JANELA DE PERFORMANCE) — OBRIGATÓRIO
-═══════════════════════════════════════════════
-- Identifique as refeições que cercam o treino no modelo escolhido (ex: Pré-Treino e Pós-Treino).
-- Concentre ~60% dos CARBOIDRATOS DIÁRIOS nessas refeições.
-- Marque corretamente "tag_timing" como: "pre_treino", "pos_treino_imediato", "pos_treino_solido" ou "longe_treino".
-
-═══════════════════════════════════════════════
-SALADA À VONTADE + VEGETAIS PREFERIDOS (ALMOÇO E JANTAR)
-═══════════════════════════════════════════════
-- OBRIGATÓRIO: TODA refeição de ALMOÇO (~${horarioAlmoco}) E JANTAR (~${horarioJantar}) DEVE conter "salada de folhas verdes e vegetais crus À VONTADE" (salada_livre: true).
-- Use os vegetais preferidos: "${prefAlimentos.frutas_veg || "alface, rúcula, tomate, pepino, cenoura"}".
-
-═══════════════════════════════════════════════
-REGRAS PACHOLOK ESPECÍFICAS
-═══════════════════════════════════════════════
-1. CUSCUZ: Se o modelo permitir ou a anamnese pedir, apenas no café da manhã com frango desfiado ou ovos mexidos.
-2. JANTAR: Carbo padrão é Arroz Branco. Proibido Batata Doce no jantar.
+1. Se o objetivo for Cutting, reduza carboidratos e aumente fibras/vegetais (salada_livre: true).
+2. Se o objetivo for Hipertrofia, aumente carboidratos, especialmente no Pré e Pós treino.
+3. Concentre ~60% dos carboidratos na janela de treino (refeições marcadas como pre_treino ou pos_treino).
 
 ═══════════════════════════════════════════════
 ESTRUTURA DE RETORNO (JSON):
 ═══════════════════════════════════════════════
 {
-  "observacoes_clinicas": "string",
-  "ajuste_clinico_badge": "string or null",
+  "modelo_escolhido": "Nome do modelo selecionado",
+  "observacoes_clinicas": "Resumo do ajuste feito",
+  "ajuste_clinico_badge": "Opcional: Alerta curto",
   "recomendacao_hidratacao": "${hidratacaoMl}ml/dia",
-  "fibras_alvo_g": ${Math.round((fibrasMin + fibrasMax) / 2)},
-  "estrategia_timing": "string",
+  "fibras_alvo_g": number,
+  "estrategia_timing": "Como os carbos foram distribuídos",
   "refeicoes": [
     {
-      "nome": "string",
-      "horario": "string",
+      "nome": "Nome da refeição (EXATO do modelo)",
+      "horario": "Horário sugerido",
       "ordem": number,
-      "tag_timing": "string",
-      "descricao_ia": "string",
+      "tag_timing": "pre_treino | pos_treino_imediato | pos_treino_solido | longe_treino",
+      "descricao_ia": "Breve descrição",
       "salada_livre": boolean,
       "itens": [
-        { "alimento_id": "uuid", "quantidade_g": number, "substituicoes": null }
+        { "alimento_id": "uuid da TACO", "quantidade_g": number, "substituicoes": null }
       ]
     }
   ]
 }`;
 
-    const userPrompt = `META: ${kcalAlvo} kcal | P:${proteinaG}g C:${carboG}g G:${gorduraG}g
+    const userPrompt = `META DIÁRIA: ${kcalAlvo} kcal | Proteína: ${proteinaG}g | Carbo: ${carboG}g | Gordura: ${gorduraG}g
 OBJETIVO: ${objetivo}
 DADOS DO ATLETA: Sexo ${sexo} · ${idade} anos · ${peso}kg · ${altura}cm · Nível ${nivel}
-HORÁRIO DO TREINO: ${horarioTreino.label} (${horarioTreino.janela}).
+HORÁRIO DO TREINO: ${horarioTreino.label}
 
-ALIMENTOS DISPONÍVEIS NA TACO (use estes IDs):
+ALIMENTOS TACO (IDs):
 ${alimentosLista}
 
-ESCOLHA UM MODELO DO NÍVEL ${nivel.toUpperCase()} E GERE A DIETA AJUSTANDO AS GRAMAGENS.`;
+INSTRUÇÃO: Selecione um dos modelos ${nivel.toUpperCase()} e gere o JSON seguindo a estrutura de refeições e alimentos desse modelo, ajustando apenas as quantidades.`;
 
+    console.log("Chamando IA com meta:", kcalAlvo, "Nível:", nivel);
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { 
+        "Authorization": `Bearer ${LOVABLE_API_KEY}`, 
+        "Content-Type": "application/json" 
+      },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: "gpt-4o",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         response_format: { type: "json_object" },
+        temperature: 0.1, // Baixa temperatura para maior fidelidade
       }),
     });
 
     if (!aiResp.ok) {
       const t = await aiResp.text();
-      throw new Error(`IA falhou: ${aiResp.status} ${t}`);
+      console.error("Erro na IA:", t);
+      throw new Error(`IA falhou: ${aiResp.status}`);
     }
 
     const aiData = await aiResp.json();
-    let content = aiData.choices[0].message.content;
-    content = content.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+    const content = aiData.choices[0].message.content;
+    console.log("Resposta da IA recebida");
     const plano = JSON.parse(content);
 
     // 4. Persistir
