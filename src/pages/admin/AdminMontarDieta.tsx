@@ -103,7 +103,7 @@ const AdminMontarDieta = () => {
 
       const { data: d } = await supabase
         .from("dietas")
-        .select("id")
+        .select("id, is_published")
         .eq("user_id", alunoId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -111,6 +111,7 @@ const AdminMontarDieta = () => {
       
       if (d) {
         setDietaId(d.id);
+        setIsPublished(!!d.is_published);
         const { data: refs } = await supabase
           .from("refeicoes")
           .select("*")
@@ -119,6 +120,7 @@ const AdminMontarDieta = () => {
         if (refs) setRefeicoes(refs as any[]);
       } else {
         setDietaId(null);
+        setIsPublished(false);
         setRefeicoes([]);
       }
     })();
