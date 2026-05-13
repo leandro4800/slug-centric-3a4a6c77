@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { DEMO_ATHLETES } from "@/lib/demoAthletes";
 import {
   Select,
@@ -30,6 +33,10 @@ import {
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
+import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
+import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
+
+
 import { SevenDobrasIntro } from "@/components/admin/SevenDobrasIntro";
 import { 
   Dialog, 
@@ -112,6 +119,7 @@ const RESTRICOES = [
 
 const AtletaDetalhe = () => {
   const { slug, atletaId } = useParams();
+  const { tenant } = useBranding();
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [perfil, setPerfil] = useState<PerfilTreino | null>(null);
@@ -129,6 +137,17 @@ const AtletaDetalhe = () => {
   const [showProtocolDialog, setShowProtocolDialog] = useState(false);
   const [open7Dobras, setOpen7Dobras] = useState(false);
   const [show7DobrasIntro, setShow7DobrasIntro] = useState(false);
+  const [selectionOpen, setSelectionOpen] = useState(false);
+  const [evalOpen, setEvalOpen] = useState(false);
+  const [formEval, setFormEval] = useState({
+    peso_kg: "",
+    altura_cm: "",
+    pescoco_cm: "",
+    cintura_cm: "",
+    quadril_cm: "",
+  });
+  const [savingEval, setSavingEval] = useState(false);
+
   const [anamnese, setAnamnese] = useState<any>(null);
   const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
   const [ultimaAvaliacao, setUltimaAvaliacao] = useState<any>(null);
@@ -392,7 +411,53 @@ const AtletaDetalhe = () => {
     }
   };
 
+  const handleUpdateEval = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!atletaId) return toast.error("Atleta não identificado.");
+    setSavingEval(true);
+    
+    const peso = Number(formEval.peso_kg);
+    const alt = Number(formEval.altura_cm);
+    const bf = calcBodyFatUSNavy({
+      sexo: (perfil?.sexo as "M" | "F") || "M",
+      altura_cm: alt,
+      pescoco_cm: Number(formEval.pescoco_cm),
+      cintura_cm: Number(formEval.cintura_cm),
+      quadril_cm: formEval.quadril_cm ? Number(formEval.quadril_cm) : undefined,
+    });
+    const imc = calcIMC(peso, alt);
+    const massaGorda = bf && peso ? +(peso * (bf / 100)).toFixed(2) : null;
+    const massaMagra = bf && peso ? +(peso - (massaGorda ?? 0)).toFixed(2) : null;
+
+    const evalData = {
+      aluno_id: atletaId,
+      tenant_id: aluno?.tenant_id || tenant?.id,
+      peso_kg: peso,
+      altura_cm: alt,
+      pescoco_cm: Number(formEval.pescoco_cm),
+      cintura_cm: Number(formEval.cintura_cm),
+      quadril_cm: formEval.quadril_cm ? Number(formEval.quadril_cm) : null,
+      bf_pct_calculado: bf,
+      imc,
+      massa_magra_kg: massaMagra,
+      massa_gorda_kg: massaGorda,
+      data: new Date().toISOString()
+    };
+
+    const { error } = await supabase.from("avaliacoes_fisicas").insert(evalData);
+    setSavingEval(false);
+    if (error) {
+      console.error("Erro ao salvar avaliação:", error);
+      return toast.error("Erro ao salvar: " + error.message);
+    }
+    
+    toast.success("Nova avaliação registrada!");
+    setEvalOpen(false);
+    load();
+  };
+
   const subtitulo = useMemo(() => {
+
     if (!perfil) return "Sem dados de anamnese";
     const peso = perfil.peso_kg ? `${perfil.peso_kg}kg` : null;
     const bf = perfil.bf_pct ? `${perfil.bf_pct}%` : null;
@@ -627,7 +692,7 @@ const AtletaDetalhe = () => {
           </button>
 
           <button
-            onClick={() => setShow7DobrasIntro(true)}
+            onClick={() => setSelectionOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
           >
             <Ruler className="h-4 w-4 text-primary" />
@@ -828,11 +893,27 @@ const AtletaDetalhe = () => {
         open={open7Dobras}
         onOpenChange={setOpen7Dobras}
         alunoId={atletaId || ""}
-        tenantId={aluno.tenant_id}
+        tenantId={aluno.tenant_id || tenant?.id}
         sexo={perfil?.sexo}
         onSaved={(goToDiet) => {
           load();
           if (goToDiet) navigate(`/${slug}/admin/montar-dieta?aluno=${atletaId}&auto=true`);
+        }}
+      />
+
+      <PhysicalEvaluationSelection
+        open={selectionOpen}
+        onOpenChange={setSelectionOpen}
+        onSelect={(type) => {
+          setSelectionOpen(false);
+          if (type === "navy") {
+            setEvalOpen(true);
+          } else if (type === "7dobras") {
+            setShow7DobrasIntro(true);
+          } else if (type === "import") {
+            // No AtletaDetalhe, o import é feito direto no 7 dobras
+            setShow7DobrasIntro(true);
+          }
         }}
       />
 
@@ -866,7 +947,52 @@ const AtletaDetalhe = () => {
               <AnamneseDetails data={anamnese} />
             ) : (
               <p className="text-center text-muted-foreground py-10">Dados não encontrados.</p>
+      )}
+
+      <Dialog open={evalOpen} onOpenChange={setEvalOpen}>
+        <DialogContent className="max-w-md bg-card border-border shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl uppercase tracking-tight">Nova Avaliação Física</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs uppercase tracking-wider">
+              Protocolo Marinha Americana (Medidas)
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateEval} className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="peso">Peso (kg)</Label>
+                <Input id="peso" type="number" step="0.1" value={formEval.peso_kg} onChange={(e) => setFormEval({...formEval, peso_kg: e.target.value})} required className="bg-background border-primary/20" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="altura">Altura (cm)</Label>
+                <Input id="altura" type="number" value={formEval.altura_cm} onChange={(e) => setFormEval({...formEval, altura_cm: e.target.value})} required className="bg-background border-primary/20" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="pescoco">Pescoço (cm)</Label>
+                <Input id="pescoco" type="number" step="0.1" value={formEval.pescoco_cm} onChange={(e) => setFormEval({...formEval, pescoco_cm: e.target.value})} required className="bg-background border-primary/20" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cintura">Cintura (cm)</Label>
+                <Input id="cintura" type="number" step="0.1" value={formEval.cintura_cm} onChange={(e) => setFormEval({...formEval, cintura_cm: e.target.value})} required className="bg-background border-primary/20" />
+              </div>
+            </div>
+            {perfil?.sexo === "F" && (
+              <div className="space-y-2">
+                <Label htmlFor="quadril">Quadril (cm)</Label>
+                <Input id="quadril" type="number" step="0.1" value={formEval.quadril_cm} onChange={(e) => setFormEval({...formEval, quadril_cm: e.target.value})} required={perfil?.sexo === "F"} className="bg-background border-primary/20" />
+              </div>
             )}
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="ghost" onClick={() => setEvalOpen(false)} className="uppercase tracking-widest text-[10px] font-bold">Cancelar</Button>
+              <Button type="submit" disabled={savingEval} className="bg-primary hover:bg-primary/90 uppercase tracking-widest text-[10px] font-bold px-8">
+                {savingEval ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
           </div>
 
           <DialogFooter className="border-t border-border/50 pt-4">
