@@ -23,6 +23,7 @@ interface Props {
   sexo?: string | null;
   onSaved?: () => void;
   initialData?: any;
+  triggerImportOnInit?: boolean;
 }
 
 export const ComprehensiveEvaluationForm = ({
@@ -32,7 +33,8 @@ export const ComprehensiveEvaluationForm = ({
   tenantId,
   sexo,
   onSaved,
-  initialData
+  initialData,
+  triggerImportOnInit
 }: Props) => {
   const [step, setStep] = useState(1);
   const [saving, setSaving] = useState(false);
