@@ -108,7 +108,6 @@ serve(async (req) => {
                 "perimetros": {
                   "pescoco": number,
                   "ombro": number,
-                  "ombro": number,
                   "torax": number,
                   "cintura": number,
                   "abdomen": number,
