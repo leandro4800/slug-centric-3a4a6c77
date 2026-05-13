@@ -679,6 +679,30 @@ const Perfil = () => {
           </form>
         </DialogContent>
       </Dialog>
+      
+      <PhysicalEvaluationSelection
+        open={selectionOpen}
+        onOpenChange={setSelectionOpen}
+        onSelect={(type) => {
+          setSelectionOpen(false);
+          if (type === "navy") setEvalOpen(true);
+          else if (type === "7dobras") setComprehensiveOpen(true);
+          else if (type === "import") {
+            setComprehensiveOpen(true);
+            // I'll handle the immediate import trigger in the next turn or via a prop if needed
+          }
+        }}
+      />
+
+      <ComprehensiveEvaluationForm
+        open={comprehensiveOpen}
+        onOpenChange={setComprehensiveOpen}
+        alunoId={user?.id || ""}
+        tenantId={profile?.tenant_id}
+        sexo={profile?.sexo}
+        onSaved={() => loadData(true)}
+      />
+
       {/* Adjust photo position dialog */}
       <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
         <DialogContent>
