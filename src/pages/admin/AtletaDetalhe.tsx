@@ -32,6 +32,8 @@ import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
+import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
+
 
 import { SevenDobrasIntro } from "@/components/admin/SevenDobrasIntro";
 import { 
