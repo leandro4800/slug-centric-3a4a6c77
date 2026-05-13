@@ -686,11 +686,14 @@ const Perfil = () => {
         onOpenChange={setSelectionOpen}
         onSelect={(type) => {
           setSelectionOpen(false);
-          if (type === "navy") setEvalOpen(true);
-          else if (type === "7dobras") setComprehensiveOpen(true);
-          else if (type === "import") {
+          if (type === "navy") {
+            setEvalOpen(true);
+          } else if (type === "7dobras") {
+            setTriggerImport(false);
             setComprehensiveOpen(true);
-            // I'll handle the immediate import trigger in the next turn or via a prop if needed
+          } else if (type === "import") {
+            setTriggerImport(true);
+            setComprehensiveOpen(true);
           }
         }}
       />
@@ -702,6 +705,7 @@ const Perfil = () => {
         tenantId={profile?.tenant_id}
         sexo={profile?.sexo}
         onSaved={() => loadData(true)}
+        triggerImportOnInit={triggerImport}
       />
 
       {/* Adjust photo position dialog */}
