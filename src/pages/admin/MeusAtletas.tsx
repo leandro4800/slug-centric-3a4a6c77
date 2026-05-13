@@ -204,14 +204,14 @@ const MeusAtletas = () => {
       {currentUser && (
         <div className="px-5 mb-4 grid grid-cols-2 gap-3">
           <Link 
-            to={`/${slug}/admin/atleta/${currentUser.id}`}
+            to={`/${slug}/admin/atleta/${currentUser.id}?action=generate-training`}
             className="flex flex-col items-center justify-center p-4 rounded-2xl bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
           >
             <Dumbbell className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Gerar Meu Treino</span>
           </Link>
           <Link 
-            to={`/${slug}/admin/atleta/${currentUser.id}`}
+            to={`/${slug}/admin/atleta/${currentUser.id}?action=generate-diet`}
             className="flex flex-col items-center justify-center p-4 rounded-2xl bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
           >
             <Apple className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
