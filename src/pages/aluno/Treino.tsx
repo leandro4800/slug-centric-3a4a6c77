@@ -88,7 +88,7 @@ const Treino = () => {
     const resolveVideo = (nome: string, refMap: any) => findBest(nome, refMap).yt;
     const resolveCoach = (nome: string, refMap: any) => findBest(nome, refMap).coach;
 
-    const autoFillVolume = async (list: Treino[], refMap: Record<string, VideoRef>): Promise<Treino[]> => {
+    const autoFillVolume = async (list: Treino[], refMap: any): Promise<Treino[]> => {
       if (!tenant) return list;
       const dias = [...new Set(list.map((t) => t.dia_semana))];
       const extras: Treino[] = [];
