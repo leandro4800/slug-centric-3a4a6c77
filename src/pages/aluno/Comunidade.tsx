@@ -75,12 +75,14 @@ const Comunidade = () => {
       const { data: profilesData } = await supabase
         .from("perfis")
         .select("id, nome_completo, avatar_url")
-        .limit(20);
+        .eq("tenant_id", tenant.id)
+        .limit(50);
       setStories((profilesData as any) || []);
 
       const { data: postsData, error: postsError } = await supabase
         .from("comunidade_posts")
         .select(`*, perfil:perfis!usuario_id(id, nome_completo, avatar_url)`)
+        .eq("profissional_id", tenant.id)
         .order("criado_em", { ascending: false });
       if (postsError) throw postsError;
 
