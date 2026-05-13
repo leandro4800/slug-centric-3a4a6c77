@@ -962,6 +962,7 @@ const AtletaDetalhe = () => {
       <ComprehensiveEvaluationForm
         open={open7Dobras}
         onOpenChange={setOpen7Dobras}
+        triggerImportOnInit={triggerImport}
         alunoId={atletaId || ""}
         tenantId={aluno.tenant_id || tenant?.id}
         sexo={perfil?.sexo}
