@@ -233,6 +233,7 @@ export const ComprehensiveEvaluationForm = ({
         perimetro_coxa_distal_dir: num(form.perimetros.coxa_distal_dir),
         perimetro_coxa_distal_esq: num(form.perimetros.coxa_distal_esq),
         perimetro_panturrilha_dir: num(form.perimetros.panturrilha_dir),
+        perimetro_panturrilha_esq: num(form.perimetros.panturrilha_esq),
       });
 
       if (error) throw error;
