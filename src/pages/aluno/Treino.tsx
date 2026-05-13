@@ -351,20 +351,27 @@ const Treino = () => {
         )}
 
         <div className="flex gap-2 mt-5 overflow-x-auto pb-1">
-          {dias.map((dia) => (
-            <button
-              key={dia}
-              onClick={() => {
-                setDiaAtual(dia);
-                setActiveIndex(null);
-              }}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider whitespace-nowrap transition ${
-                diaAtual === dia ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
-              }`}
-            >
-              {dia}
-            </button>
-          ))}
+          {dias.map((dia) => {
+            const n = dia.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+            const wd = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"].find((d) => n.includes(d));
+            const wdShort: Record<string, string> = { segunda: "SEG", terca: "TER", quarta: "QUA", quinta: "QUI", sexta: "SEX", sabado: "SAB", domingo: "DOM" };
+            const letra = dia.match(/\b([A-E])\b/)?.[1];
+            const label = `${wd ? wdShort[wd] : dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
+            return (
+              <button
+                key={dia}
+                onClick={() => {
+                  setDiaAtual(dia);
+                  setActiveIndex(null);
+                }}
+                className={`px-4 py-2 rounded-full font-display text-xs uppercase tracking-[0.2em] whitespace-nowrap transition ${
+                  diaAtual === dia ? "bg-primary text-primary-foreground shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" : "bg-secondary text-muted-foreground"
+                }`}
+              >
+                {label}
+              </button>
+            );
+          })}
         </div>
 
         <div className="mt-6">
