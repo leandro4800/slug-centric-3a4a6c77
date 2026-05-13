@@ -76,7 +76,7 @@ const Comunidade = () => {
         .from("perfis")
         .select("id, nome_completo, avatar_url")
         .eq("tenant_id", tenant.id)
-        .limit(50);
+        .limit(100);
       setStories((profilesData as any) || []);
 
       const { data: postsData, error: postsError } = await supabase
