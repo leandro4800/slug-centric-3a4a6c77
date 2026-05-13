@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Ruler, Upload, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, Ruler, Upload, Sparkles, ChevronRight, ChevronLeft, FileText } from "lucide-react";
+import * as pdfjs from "pdfjs-dist";
+
+// Configurar o worker do PDF.js
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -47,7 +51,7 @@ export const ComprehensiveEvaluationForm = ({
     idade: "",
     dobras: {
       peitoral: "",
-      axiliar_media: "",
+      axilar_media: "",
       triceps: "",
       subescapular: "",
       abdominal: "",
@@ -107,20 +111,35 @@ export const ComprehensiveEvaluationForm = ({
     if (!file) return;
 
     setImporting(true);
-    const toastId = toast.loading("Dr. IA analisando seu relatório...");
+    const toastId = toast.loading("Analisando relatório...");
 
     try {
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.readAsDataURL(file);
-      });
+      let content = "";
+      let isPDF = file.type === "application/pdf";
 
-      const base64 = await base64Promise;
+      if (isPDF) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item: any) => item.str).join(" ");
+          fullText += pageText + "\n";
+        }
+        content = fullText;
+      } else {
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(file);
+        });
+        content = await base64Promise;
+      }
 
       const { data, error } = await supabase.functions.invoke("import-with-ai", {
         body: {
-          file: base64,
+          file: content,
           fileType: file.type,
           importType: "avaliacao",
           alunoId,
@@ -138,7 +157,7 @@ export const ComprehensiveEvaluationForm = ({
           idade: ext.idade ? String(ext.idade) : form.idade,
           dobras: {
             peitoral: ext.dobras?.peitoral ? String(ext.dobras.peitoral) : form.dobras.peitoral,
-            axiliar_media: ext.dobras?.axiliar_media ? String(ext.dobras.axiliar_media) : form.dobras.axiliar_media,
+            axilar_media: ext.dobras?.axilar_media ? String(ext.dobras.axilar_media) : form.dobras.axilar_media,
             triceps: ext.dobras?.triceps ? String(ext.dobras.triceps) : form.dobras.triceps,
             subescapular: ext.dobras?.subescapular ? String(ext.dobras.subescapular) : form.dobras.subescapular,
             abdominal: ext.dobras?.abdominal ? String(ext.dobras.abdominal) : form.dobras.abdominal,
@@ -208,7 +227,7 @@ export const ComprehensiveEvaluationForm = ({
         massa_gorda_kg: bf && pesoN ? Number((pesoN * (bf / 100)).toFixed(2)) : null,
         massa_magra_kg: bf && pesoN ? Number((pesoN - (pesoN * (bf / 100))).toFixed(2)) : null,
         dobra_peitoral: num(form.dobras.peitoral),
-        dobra_axilar_media: num(form.dobras.axiliar_media),
+        dobra_axilar_media: num(form.dobras.axilar_media),
         dobra_triceps: num(form.dobras.triceps),
         dobra_subescapular: num(form.dobras.subescapular),
         dobra_abdominal: num(form.dobras.abdominal),
@@ -271,7 +290,7 @@ export const ComprehensiveEvaluationForm = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Object.entries(form.dobras).map(([key, value]) => (
             <div key={key} className="space-y-1">
-              <Label className="text-[10px] uppercase tracking-wider">{key.replace("_", " ")}</Label>
+              <Label className="text-[10px] uppercase tracking-wider">{key.replace(/_/g, " ")}</Label>
               <Input 
                 type="number" 
                 step="0.1" 

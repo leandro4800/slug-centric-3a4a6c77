@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Ruler, Anchor, Upload, FileDown } from "lucide-react";
+import { Ruler, Anchor, Upload, FileDown, Sparkles } from "lucide-react";
 
 interface Props {
   open: boolean;
@@ -30,37 +30,28 @@ export const PhysicalEvaluationSelection = ({ open, onOpenChange, onSelect }: Pr
         <div className="grid gap-4 py-4">
           <Button
             variant="outline"
-            className="h-20 flex flex-col items-center justify-center gap-2 border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all group"
+            className="h-24 flex flex-col items-center justify-center gap-2 border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all group"
             onClick={() => onSelect("navy")}
           >
-            <Anchor className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+            <Anchor className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wider">Marinha Americana</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Pescoço, Cintura e Quadril</p>
+              <p className="text-sm font-bold uppercase tracking-wider">Marinha Americana</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Protocolo Pescoço, Cintura e Quadril</p>
             </div>
           </Button>
 
           <Button
             variant="outline"
-            className="h-20 flex flex-col items-center justify-center gap-2 border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all group"
+            className="h-24 flex flex-col items-center justify-center gap-2 border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all group"
             onClick={() => onSelect("7dobras")}
           >
-            <Ruler className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wider">7 Dobras + Perímetros</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Protocolo Jackson & Pollock</p>
+            <div className="relative">
+              <Ruler className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
+              <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
             </div>
-          </Button>
-
-          <Button
-            variant="outline"
-            className="h-20 flex flex-col items-center justify-center gap-2 border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all group"
-            onClick={() => onSelect("import")}
-          >
-            <Upload className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
             <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wider">Importar Relatório (PDF)</p>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Preenchimento automático via IA</p>
+              <p className="text-sm font-bold uppercase tracking-wider">7 Dobras + Avaliação Física</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Protocolo Completo (Permite importar PDF)</p>
             </div>
           </Button>
         </div>

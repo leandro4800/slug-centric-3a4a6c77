@@ -71,6 +71,7 @@ serve(async (req) => {
     }
 
     const isImage = fileType.startsWith("image/");
+    const isPDF = fileType === "application/pdf";
     const messages = [
       {
         role: "system",
@@ -134,7 +135,9 @@ serve(async (req) => {
             image_url: { url: `data:${fileType};base64,${file}` },
           } : {
             type: "text",
-            text: `Conteúdo do arquivo (Base64): ${file.substring(0, 10000)}...`,
+            text: isPDF 
+              ? `Conteúdo do texto extraído do PDF:\n\n${file}`
+              : `Conteúdo do arquivo (Base64):\n\n${file.substring(0, 10000)}...`,
           },
         ],
       },
