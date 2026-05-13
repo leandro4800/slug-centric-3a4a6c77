@@ -47,6 +47,9 @@ const AdminMontarDieta = () => {
   });
   const [generating, setGenerating] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [refeicoes, setRefeicoes] = useState<Array<{ id?: string, nome: string, horario: string, descricao_ia: string }>>([]);
+  const [dietaId, setDietaId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!tenant) return;
@@ -96,6 +99,28 @@ const AdminMontarDieta = () => {
       });
       setRefeicoesDia(an?.refeicoes_dia || 4);
       setLoading(false);
+      
+      // Busca dieta atual
+      const { data: d } = await supabase
+        .from("dietas")
+        .select("id")
+        .eq("user_id", alunoId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (d) {
+        setDietaId(d.id);
+        const { data: refs } = await supabase
+          .from("refeicoes")
+          .select("*")
+          .eq("dieta_id", d.id)
+          .order("ordem");
+        if (refs) setRefeicoes(refs as any[]);
+      } else {
+        setDietaId(null);
+        setRefeicoes([]);
+      }
     })();
   }, [alunoId]);
 
