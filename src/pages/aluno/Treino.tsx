@@ -43,6 +43,7 @@ const Treino = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [cargas, setCargas] = useState<CargaMap>({});
   const [spotifyLink, setSpotifyLink] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
