@@ -44,6 +44,55 @@ interface ExercicioPrescrito {
   observacao: string;
 }
 
+type DiaGeradoIA = {
+  dia?: string;
+  exercicios?: Array<{
+    nome?: string;
+    series?: string;
+    repeticoes?: string;
+    cadencia?: string;
+    detalhes_execucao?: string;
+    observacao?: string;
+  }>;
+};
+
+const normalizarTexto = (texto: string) =>
+  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+const tokensMusculares = (texto: string) =>
+  normalizarTexto(texto)
+    .split(" ")
+    .filter((token) => token.length > 2 && !["treino", "dia", "seg", "ter", "qua", "qui", "sex", "sab", "dom", "completa", "completas"].includes(token));
+
+const mapearDiasParaEstrutura = (diasIA: DiaGeradoIA[], divisoes: string[]): ExercicioPrescrito[] => {
+  const diasComExercicios = diasIA.filter((d) => Array.isArray(d.exercicios) && d.exercicios.length > 0 && !/\boff\b|descanso/i.test(d.dia || ""));
+  const usados = new Set<number>();
+
+  return divisoes.flatMap((diaEstrutura) => {
+    const esperados = tokensMusculares(diaEstrutura);
+    let idxDia = diasComExercicios.findIndex((d, idx) => {
+      if (usados.has(idx)) return false;
+      const gerado = normalizarTexto(d.dia || "");
+      return esperados.length > 0 && esperados.some((token) => gerado.includes(token));
+    });
+
+    if (idxDia < 0) idxDia = diasComExercicios.findIndex((_, idx) => !usados.has(idx));
+    if (idxDia < 0) return [];
+
+    usados.add(idxDia);
+    return (diasComExercicios[idxDia].exercicios || []).map((e, idx) => ({
+      dia_semana: diaEstrutura,
+      ordem: idx,
+      exercicio: e.nome || "",
+      series: e.series || "",
+      repeticoes: e.repeticoes || "",
+      cadencia: e.cadencia || "",
+      detalhes_execucao: e.detalhes_execucao || "",
+      observacao: e.observacao || "",
+    }));
+  });
+};
+
 const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" | "Avançado" | "Atleta de Alto Nível" => {
   if (!tempo) return "Iniciante";
   const t = tempo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
@@ -137,7 +186,7 @@ const AdminMontarTreino = () => {
         .from("perfis")
         .select("id, nome_completo, email")
         .eq("tenant_id", tenant.id);
-      setAlunos((data as Aluno[]) || []);
+      setAlunos(((data as Aluno[]) || []).filter((a) => a.id !== tenant.owner_user_id));
     })();
   }, [tenant]);
 
@@ -198,19 +247,9 @@ const AdminMontarTreino = () => {
         .eq("tenant_id", tenant.id)
         .order("dia_semana")
         .order("ordem");
-      if (tp) {
-        setExercicios(tp.map((e) => ({
-          dia_semana: e.dia_semana,
-          ordem: e.ordem || 0,
-          exercicio: e.exercicio,
-          series: e.series || "",
-          repeticoes: e.repeticoes || "",
-          observacao: e.observacao || "",
-          cadencia: e.cadencia || "",
-          detalhes_execucao: e.detalhes_execucao || "",
-        })));
-      } else {
-        setExercicios([]);
+      setExercicios([]);
+      if (tp && tp.length > 0) {
+        toast.info(`Já existe um treino salvo para este aluno (${tp.length} exercícios). Gere e revise para substituir.`);
       }
       setPerfilLoading(false);
     })();
@@ -253,7 +292,20 @@ const AdminMontarTreino = () => {
     }
   };
 
-  const gerarComIA = async (customPrompt?: string) => {
+  const prepararGeracaoDaDivisao = (preset?: DivisaoPreset) => {
+    setPendingReview(false);
+    setCardio("");
+    setExercicios([]);
+    if (preset) {
+      setDivisaoSelecionadaId(preset.id);
+      setDivisaoCustom(preset.dias);
+      void gerarComIA(preset.dias);
+      return;
+    }
+    void gerarComIA(divisoes);
+  };
+
+  const gerarComIA = async (divisoesParaGerar = divisoes, customPrompt?: string) => {
     if (!alunoId || !tenant) {
       toast.error("Selecione um aluno.");
       return;
@@ -262,8 +314,12 @@ const AdminMontarTreino = () => {
       toast.error("Aguarde carregar os dados do aluno antes de gerar.");
       return;
     }
-    if (fullBodyBloqueado(nivel, divisoes)) {
+    if (fullBodyBloqueado(nivel, divisoesParaGerar)) {
       toast.error("Full Body é permitido apenas para iniciantes. Escolha uma divisão split.");
+      return;
+    }
+    if (!divisoesParaGerar.length) {
+      toast.error("Escolha uma divisão antes de gerar o treino.");
       return;
     }
     setGenerating(true);
@@ -278,26 +334,13 @@ const AdminMontarTreino = () => {
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: biblioteca || [], divisoes, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
+        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: biblioteca || [], divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
-      const novos: ExercicioPrescrito[] = [];
-      (data.dias || []).forEach((d: any) => {
-        (d.exercicios || []).forEach((e: any, idx: number) => {
-          novos.push({
-            dia_semana: d.dia,
-            ordem: idx,
-            exercicio: e.nome,
-            series: e.series,
-            repeticoes: e.repeticoes,
-            cadencia: e.cadencia,
-            detalhes_execucao: e.detalhes_execucao,
-            observacao: e.observacao,
-          });
-        });
-      });
+      const novos = mapearDiasParaEstrutura((data.dias || []) as DiaGeradoIA[], divisoesParaGerar);
+      if (novos.length === 0) throw new Error("A IA não retornou exercícios para a divisão escolhida. Tente gerar novamente.");
       setExercicios(novos);
       setCardio(data.cardio || "");
       setPendingReview(true);
@@ -316,31 +359,51 @@ const AdminMontarTreino = () => {
   const salvarPrescricao = async (manualExercicios?: ExercicioPrescrito[]) => {
     if (!alunoId || !tenant) return;
     const exerciciosToSave = manualExercicios || exercicios;
+    if (exerciciosToSave.length === 0) {
+      toast.error("Gere ou adicione exercícios antes de salvar.");
+      return;
+    }
     setSaving(true);
-    await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenant.id);
-    if (exerciciosToSave.length > 0) {
+    try {
+      const { data: alunoTenant, error: alunoError } = await supabase
+        .from("perfis")
+        .select("tenant_id")
+        .eq("id", alunoId)
+        .eq("tenant_id", tenant.id)
+        .maybeSingle();
+      if (alunoError) throw alunoError;
+      if (!alunoTenant) throw new Error("Este aluno não pertence a este tenant.");
+
+      const { error: deleteError } = await supabase
+        .from("treinos_prescritos")
+        .delete()
+        .eq("aluno_id", alunoId)
+        .eq("tenant_id", tenant.id);
+      if (deleteError) throw deleteError;
+
       const rows = exerciciosToSave.map((e) => ({
         tenant_id: tenant.id,
         aluno_id: alunoId,
         dia_semana: e.dia_semana,
         ordem: e.ordem,
+        ordem_execucao: e.ordem,
         exercicio: e.exercicio,
         series: e.series,
         repeticoes: e.repeticoes,
         cadencia: e.cadencia,
         detalhes_execucao: e.detalhes_execucao,
         observacao: e.observacao,
+        status: "ativo",
       }));
       const { error } = await supabase.from("treinos_prescritos").insert(rows);
-      if (error) {
-        toast.error(error.message);
-        setSaving(false);
-        return;
-      }
+      if (error) throw error;
+      toast.success(`Prescrição salva para o aluno · ${rows.length} exercícios`);
+      setPendingReview(false);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao salvar prescrição.");
+    } finally {
+      setSaving(false);
     }
-    toast.success("Prescrição salva!");
-    setPendingReview(false);
-    setSaving(false);
   };
 
   const updateEx = (idx: number, patch: Partial<ExercicioPrescrito>) => {
@@ -467,10 +530,8 @@ const AdminMontarTreino = () => {
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => {
-                      setDivisaoSelecionadaId(p.id);
-                      setDivisaoCustom(p.dias);
-                    }}
+                    onClick={() => prepararGeracaoDaDivisao(p)}
+                    disabled={generating || perfilLoading}
                     className={`text-left p-3 rounded-xl border transition-all ${
                       divisaoSelecionadaId === p.id
                         ? "bg-primary/15 border-primary shadow-[0_0_15px_rgba(220,38,38,0.25)]"
@@ -480,6 +541,9 @@ const AdminMontarTreino = () => {
                     <div className="text-sm font-bold mb-1">{p.label}</div>
                     <div className="text-[11px] text-muted-foreground leading-relaxed">
                       {p.dias.map((d, i) => <div key={i}>• {d}</div>)}
+                    </div>
+                    <div className="text-[10px] text-primary uppercase font-bold tracking-widest mt-2">
+                      {generating && divisaoSelecionadaId === p.id ? "Gerando..." : "Tocar para gerar e revisar"}
                     </div>
                   </button>
                 ))}
@@ -560,9 +624,9 @@ const AdminMontarTreino = () => {
               </div>
               <div className="flex gap-3">
                 <Button onClick={() => salvarPerfil()} variant="outline">Salvar perfil</Button>
-                <Button onClick={() => gerarComIA()} disabled={generating || perfilLoading} variant="outline">
+                <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating || perfilLoading} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                  {perfilLoading ? "Aguardando perfil" : "Gerar com IA"}
+                  {perfilLoading ? "Aguardando perfil" : "Gerar e revisar"}
                 </Button>
               </div>
             </div>
@@ -586,7 +650,7 @@ const AdminMontarTreino = () => {
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                     Confirmar e enviar ao aluno
                   </Button>
-                  <Button onClick={() => gerarComIA()} disabled={generating} variant="outline" className="flex-1">
+                  <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating} variant="outline" className="flex-1">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                     Refazer com IA
                   </Button>
