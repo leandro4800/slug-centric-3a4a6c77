@@ -417,7 +417,7 @@ const AtletaDetalhe = () => {
     const peso = Number(formEval.peso_kg);
     const alt = Number(formEval.altura_cm);
     const bf = calcBodyFatUSNavy({
-      sexo: perfil?.sexo || "M",
+      sexo: (perfil?.sexo as "M" | "F") || "M",
       altura_cm: alt,
       pescoco_cm: Number(formEval.pescoco_cm),
       cintura_cm: Number(formEval.cintura_cm),
