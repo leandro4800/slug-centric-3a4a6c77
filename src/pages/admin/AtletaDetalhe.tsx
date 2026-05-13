@@ -166,18 +166,6 @@ const AtletaDetalhe = () => {
     void load();
   }, [atletaId]);
 
-  useEffect(() => {
-    if (action === "generate-training" && canGenerate && !loading) {
-      setPromptType("treino");
-      setIaPrompt("");
-      setShowPromptDialog(true);
-    } else if (action === "generate-diet" && canGenerate && !loading) {
-      setPromptType("dieta");
-      setIaPrompt("");
-      setShowPromptDialog(true);
-    }
-  }, [action, canGenerate, loading]);
-
   const load = async () => {
     setLoading(true);
     const demoAthlete = DEMO_ATHLETES.find((athlete) => athlete.id === atletaId);
