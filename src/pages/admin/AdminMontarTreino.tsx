@@ -359,31 +359,51 @@ const AdminMontarTreino = () => {
   const salvarPrescricao = async (manualExercicios?: ExercicioPrescrito[]) => {
     if (!alunoId || !tenant) return;
     const exerciciosToSave = manualExercicios || exercicios;
+    if (exerciciosToSave.length === 0) {
+      toast.error("Gere ou adicione exercícios antes de salvar.");
+      return;
+    }
     setSaving(true);
-    await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenant.id);
-    if (exerciciosToSave.length > 0) {
+    try {
+      const { data: alunoTenant, error: alunoError } = await supabase
+        .from("perfis")
+        .select("tenant_id")
+        .eq("id", alunoId)
+        .eq("tenant_id", tenant.id)
+        .maybeSingle();
+      if (alunoError) throw alunoError;
+      if (!alunoTenant) throw new Error("Este aluno não pertence a este tenant.");
+
+      const { error: deleteError } = await supabase
+        .from("treinos_prescritos")
+        .delete()
+        .eq("aluno_id", alunoId)
+        .eq("tenant_id", tenant.id);
+      if (deleteError) throw deleteError;
+
       const rows = exerciciosToSave.map((e) => ({
         tenant_id: tenant.id,
         aluno_id: alunoId,
         dia_semana: e.dia_semana,
         ordem: e.ordem,
+        ordem_execucao: e.ordem,
         exercicio: e.exercicio,
         series: e.series,
         repeticoes: e.repeticoes,
         cadencia: e.cadencia,
         detalhes_execucao: e.detalhes_execucao,
         observacao: e.observacao,
+        status: "ativo",
       }));
       const { error } = await supabase.from("treinos_prescritos").insert(rows);
-      if (error) {
-        toast.error(error.message);
-        setSaving(false);
-        return;
-      }
+      if (error) throw error;
+      toast.success(`Prescrição salva para o aluno · ${rows.length} exercícios`);
+      setPendingReview(false);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao salvar prescrição.");
+    } finally {
+      setSaving(false);
     }
-    toast.success("Prescrição salva!");
-    setPendingReview(false);
-    setSaving(false);
   };
 
   const updateEx = (idx: number, patch: Partial<ExercicioPrescrito>) => {
