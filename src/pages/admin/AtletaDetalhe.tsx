@@ -527,6 +527,18 @@ const AtletaDetalhe = () => {
     return !!anamnese && !!perfil && !!ultimaAvaliacao;
   }, [anamnese, perfil, ultimaAvaliacao]);
 
+  useEffect(() => {
+    if (action === "generate-training" && canGenerate && !loading) {
+      setPromptType("treino");
+      setIaPrompt("");
+      setShowPromptDialog(true);
+    } else if (action === "generate-diet" && canGenerate && !loading) {
+      setPromptType("dieta");
+      setIaPrompt("");
+      setShowPromptDialog(true);
+    }
+  }, [action, canGenerate, loading]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
