@@ -271,7 +271,7 @@ export const ExerciseCard = ({
   return (
     <div className="bg-card/50 border border-primary/30 rounded-xl overflow-hidden">
       {/* Header com nome + ícone de vídeo lateral + toggle de séries */}
-      <div className="flex items-stretch">
+      <div className="flex items-stretch min-h-[90px]">
         <button onClick={onToggle} className="flex-1 p-4 text-left min-w-0">
           <div className="flex items-start justify-between gap-3">
             <p className="font-display text-lg leading-tight truncate">{data.exercicio.toUpperCase()}</p>
@@ -299,13 +299,13 @@ export const ExerciseCard = ({
         {hasAnyVideo && (
           <button
             onClick={(e) => { e.stopPropagation(); setShowVideo((v) => !v); }}
-            className={`shrink-0 w-16 flex flex-col items-center justify-center gap-1 border-l border-primary/20 transition-colors ${
+            className={`shrink-0 w-24 flex flex-col items-center justify-center gap-1 border-l border-primary/20 transition-colors ${
               showVideo ? "bg-primary text-primary-foreground" : "bg-secondary/40 text-foreground hover:bg-secondary"
             }`}
             aria-label="Abrir vídeo"
           >
-            <Video className="h-5 w-5" />
-            <span className="text-[9px] uppercase tracking-wider font-bold">Vídeo</span>
+            <Video className="h-6 w-6" />
+            <span className="text-[10px] uppercase tracking-wider font-bold">Ver vídeo</span>
           </button>
         )}
       </div>
