@@ -420,12 +420,16 @@ export default function Anamnese() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Refeições/Dia</Label>
-                <Input
-                  type="number"
-                  value={form.refeicoes_dia}
-                  onChange={e => setForm({ ...form, refeicoes_dia: e.target.value })}
-                  className="bg-secondary/40 border-border"
-                />
+                <Select value={form.refeicoes_dia} onValueChange={v => setForm({ ...form, refeicoes_dia: v })}>
+                  <SelectTrigger className="bg-secondary/40 border-border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {[3, 4, 5, 6, 7].map(n => (
+                      <SelectItem key={n} value={String(n)}>{n} refeições</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Água (Litros/Dia)</Label>
