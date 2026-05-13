@@ -1614,6 +1614,7 @@ export type Database = {
           created_at: string | null
           id: string
           level: string
+          meal_count: number | null
           meal_structure: Json
           name: string
         }
@@ -1621,6 +1622,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           level: string
+          meal_count?: number | null
           meal_structure: Json
           name: string
         }
@@ -1628,6 +1630,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           level?: string
+          meal_count?: number | null
           meal_structure?: Json
           name?: string
         }

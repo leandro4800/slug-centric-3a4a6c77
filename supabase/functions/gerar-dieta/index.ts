@@ -22,6 +22,7 @@ interface DietRequest {
   pescoco_cm?: number;
   cintura_cm?: number;
   quadril_cm?: number;
+  refeicoes_dia?: number;
   prompt?: string;
   aluno_id?: string;
   tenant_id?: string;
@@ -103,10 +104,12 @@ serve(async (req) => {
       : nivel.includes("inter") ? 2.0
       : 1.6;
 
-    // Refeições por nível
-    const numRefeicoes = nivel.includes("alto") ? "6 a 7"
-      : nivel.includes("avan") ? "5 a 6"
-      : "4 a 5";
+    // Refeições: Prioriza o que vem no body (da anamnese), senão usa default por nível
+    const numRefeicoesAlvo = body.refeicoes_dia || (
+      nivel.includes("alto") ? 6
+      : nivel.includes("avan") ? 5
+      : 4
+    );
 
     // 1. TMB (Mifflin-St Jeor) → GET (TMB × Fator Atividade) → Ajuste % por objetivo
     const tmb = sexo === "M"
@@ -143,9 +146,12 @@ serve(async (req) => {
     // Buscar anamnese completa (horário treino + nível atividade + preferências alimentares)
     const { data: anamneseRow } = await supabase
       .from("anamnese_aluno")
-      .select("horario_treino, nivel_atividade_diaria, alimentos_basicos_casa, cafe_lanche_habitual, proteinas_consumidas, frutas_vegetais_preferidos, horario_almoco, horario_jantar, alimentos_ama, alimentos_evita, restricoes_alimentares, suplementos")
+      .select("horario_treino, nivel_atividade_diaria, alimentos_basicos_casa, cafe_lanche_habitual, proteinas_consumidas, frutas_vegetais_preferidos, horario_almoco, horario_jantar, alimentos_ama, alimentos_evita, restricoes_alimentares, suplementos, refeicoes_dia")
       .eq("aluno_id", targetUserId)
       .maybeSingle();
+    
+    // Se não veio no body, tenta pegar da anamnese do banco
+    const finalNumRefeicoes = body.refeicoes_dia || (anamneseRow as any)?.refeicoes_dia || numRefeicoesAlvo;
 
     // Fator de atividade pelo nível diário (sobrepõe o padrão se houver)
     const fatorMap: Record<string, number> = {
@@ -235,14 +241,26 @@ serve(async (req) => {
       levelQuery = "intermediario";
     }
 
+    // 3. Buscar modelos base na tabela menu_templates filtrando por nível e quantidade de refeições
     const { data: menuTemplates } = await supabase
       .from("menu_templates")
       .select("name, meal_structure")
-      .eq("level", levelQuery);
+      .eq("level", levelQuery)
+      .eq("meal_count", finalNumRefeicoes);
+    
+    // Se não achar nada com a quantidade exata, tenta apenas pelo nível
+    let finalMenuTemplates = menuTemplates;
+    if (!finalMenuTemplates || finalMenuTemplates.length === 0) {
+      const { data: altTemplates } = await supabase
+        .from("menu_templates")
+        .select("name, meal_structure")
+        .eq("level", levelQuery);
+      finalMenuTemplates = altTemplates;
+    }
 
-    const modelosTxt = (menuTemplates || []).map((m: any, idx: number) => {
+    const modelosTxt = (finalMenuTemplates || []).map((m: any, idx: number) => {
       return `MODELO ${idx + 1}: ${m.name}\n` + m.meal_structure.map((r: any) => `  - ${r.nome}: ${r.itens.join(", ")}`).join("\n");
-    }).join("\n\n") || "Nenhum modelo encontrado para este nível.";
+    }).join("\n\n") || "Nenhum modelo encontrado.";
 
     const systemPrompt = `Você é DR. IA NUTRI, Estrategista Nutricional de Performance seguindo a Metodologia Fabrício Pacholok.
 Sua missão é gerar um plano alimentar baseado RIGOROSAMENTE nos modelos base fornecidos.
