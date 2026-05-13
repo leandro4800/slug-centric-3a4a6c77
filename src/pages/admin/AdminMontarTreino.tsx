@@ -247,19 +247,9 @@ const AdminMontarTreino = () => {
         .eq("tenant_id", tenant.id)
         .order("dia_semana")
         .order("ordem");
-      if (tp) {
-        setExercicios(tp.map((e) => ({
-          dia_semana: e.dia_semana,
-          ordem: e.ordem || 0,
-          exercicio: e.exercicio,
-          series: e.series || "",
-          repeticoes: e.repeticoes || "",
-          observacao: e.observacao || "",
-          cadencia: e.cadencia || "",
-          detalhes_execucao: e.detalhes_execucao || "",
-        })));
-      } else {
-        setExercicios([]);
+      setExercicios([]);
+      if (tp && tp.length > 0) {
+        toast.info(`Já existe um treino salvo para este aluno (${tp.length} exercícios). Gere e revise para substituir.`);
       }
       setPerfilLoading(false);
     })();
