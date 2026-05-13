@@ -376,22 +376,43 @@ export const ComprehensiveEvaluationForm = ({
           </motion.div>
         </AnimatePresence>
 
-        <DialogFooter className="flex justify-between sm:justify-between items-center gap-2 pt-4 border-t border-border/50">
+        <DialogFooter className="flex flex-row justify-between items-center gap-2 pt-6 mt-6 border-t border-border/50">
           <div className="flex gap-2">
             {step > 1 && (
-              <Button variant="outline" size="sm" onClick={() => setStep(step - 1)}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => setStep(step - 1)}
+                className="font-bold uppercase tracking-widest text-[10px]"
+              >
                 <ChevronLeft className="h-4 w-4 mr-1" /> Anterior
               </Button>
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>Cancelar</Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => onOpenChange(false)}
+              className="font-bold uppercase tracking-widest text-[10px]"
+            >
+              Cancelar
+            </Button>
             {step === 1 ? (
-              <Button size="sm" onClick={() => setStep(2)}>
+              <Button 
+                size="sm" 
+                onClick={() => setStep(2)}
+                className="bg-primary hover:bg-primary/90 font-bold uppercase tracking-widest text-[10px] shadow-glow px-6"
+              >
                 Próximo <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
-              <Button size="sm" onClick={handleSave} disabled={saving}>
+              <Button 
+                size="sm" 
+                onClick={handleSave} 
+                disabled={saving}
+                className="bg-primary hover:bg-primary/90 font-bold uppercase tracking-widest text-[10px] shadow-glow px-6"
+              >
                 {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : "Salvar Avaliação"}
               </Button>
             )}
