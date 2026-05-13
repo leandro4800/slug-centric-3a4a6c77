@@ -51,7 +51,7 @@ export const ComprehensiveEvaluationForm = ({
     idade: "",
     dobras: {
       peitoral: "",
-      axiliar_media: "",
+      axilar_media: "",
       triceps: "",
       subescapular: "",
       abdominal: "",
@@ -157,7 +157,7 @@ export const ComprehensiveEvaluationForm = ({
           idade: ext.idade ? String(ext.idade) : form.idade,
           dobras: {
             peitoral: ext.dobras?.peitoral ? String(ext.dobras.peitoral) : form.dobras.peitoral,
-            axiliar_media: ext.dobras?.axiliar_media ? String(ext.dobras.axiliar_media) : form.dobras.axiliar_media,
+            axilar_media: ext.dobras?.axilar_media ? String(ext.dobras.axilar_media) : form.dobras.axilar_media,
             triceps: ext.dobras?.triceps ? String(ext.dobras.triceps) : form.dobras.triceps,
             subescapular: ext.dobras?.subescapular ? String(ext.dobras.subescapular) : form.dobras.subescapular,
             abdominal: ext.dobras?.abdominal ? String(ext.dobras.abdominal) : form.dobras.abdominal,
@@ -227,7 +227,7 @@ export const ComprehensiveEvaluationForm = ({
         massa_gorda_kg: bf && pesoN ? Number((pesoN * (bf / 100)).toFixed(2)) : null,
         massa_magra_kg: bf && pesoN ? Number((pesoN - (pesoN * (bf / 100))).toFixed(2)) : null,
         dobra_peitoral: num(form.dobras.peitoral),
-        dobra_axilar_media: num(form.dobras.axiliar_media),
+        dobra_axilar_media: num(form.dobras.axilar_media),
         dobra_triceps: num(form.dobras.triceps),
         dobra_subescapular: num(form.dobras.subescapular),
         dobra_abdominal: num(form.dobras.abdominal),
@@ -290,7 +290,7 @@ export const ComprehensiveEvaluationForm = ({
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {Object.entries(form.dobras).map(([key, value]) => (
             <div key={key} className="space-y-1">
-              <Label className="text-[10px] uppercase tracking-wider">{key.replace("_", " ")}</Label>
+              <Label className="text-[10px] uppercase tracking-wider">{key.replace(/_/g, " ")}</Label>
               <Input 
                 type="number" 
                 step="0.1" 
