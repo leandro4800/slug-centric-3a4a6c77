@@ -176,7 +176,13 @@ REGRAS:
       }),
     });
 
-    if (!aiResp.ok) throw new Error("Falha na geração da IA");
+    if (!aiResp.ok) {
+      const txt = await aiResp.text();
+      console.error("[gerar-dieta generate] AI error", aiResp.status, txt);
+      if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições da IA atingido. Tente em alguns segundos." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      throw new Error(`Falha na geração da IA (${aiResp.status}): ${txt.slice(0, 200)}`);
+    }
     const aiData = await aiResp.json();
     const plano = JSON.parse(aiData.choices[0].message.content);
 
