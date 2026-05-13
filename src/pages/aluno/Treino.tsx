@@ -45,6 +45,7 @@ const Treino = () => {
   const [cargas, setCargas] = useState<CargaMap>({});
   const [spotifyLink, setSpotifyLink] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [showConclusao, setShowConclusao] = useState(false);
 
   useEffect(() => {
     const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
