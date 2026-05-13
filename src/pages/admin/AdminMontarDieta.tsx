@@ -152,7 +152,7 @@ const AdminMontarDieta = () => {
     }
   };
 
-  const gerarComIA = useCallback(async (customPrompt?: string) => {
+  const gerarComIA = useCallback(async (customPrompt?: string, skipConfirm = false) => {
     if (!alunoId) {
       toast.error("Selecione um aluno.");
       return;
@@ -161,7 +161,12 @@ const AdminMontarDieta = () => {
       toast.error("Peso e altura são obrigatórios.");
       return;
     }
-    
+
+    if (!skipConfirm) {
+      const resumo = `Confirmar geração da dieta?\n\nObjetivo: ${perfil.objetivo || "-"}\nPeso: ${perfil.peso_kg}kg • Altura: ${perfil.altura_cm}cm\nIdade: ${perfil.idade || "-"} • Sexo: ${perfil.sexo || "-"}\nRefeições/dia: ${refeicoesDia}\n\nA dieta será criada como RASCUNHO. Você poderá revisar e ajustar antes de enviar ao aluno.`;
+      if (!window.confirm(resumo)) return;
+    }
+
     setGenerating(true);
     const toastId = toast.loading("Gerando dieta...");
     
@@ -372,7 +377,7 @@ const AdminMontarDieta = () => {
       const confirmAction = window.confirm("Deseja gerar a dieta agora com a IA?");
       if (confirmAction) {
         autoTriggeredRef.current = true;
-        void gerarComIA();
+        void gerarComIA(undefined, true);
       } else {
         autoTriggeredRef.current = true;
       }

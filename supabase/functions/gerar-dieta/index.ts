@@ -96,7 +96,7 @@ REGRAS:
         method: "POST",
         headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.0-pro-exp-02-05",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
@@ -106,7 +106,13 @@ REGRAS:
         }),
       });
 
-      if (!aiResp.ok) throw new Error(`IA falhou no refinamento: ${aiResp.status}`);
+      if (!aiResp.ok) {
+        const txt = await aiResp.text();
+        console.error("[gerar-dieta refine] AI error", aiResp.status, txt);
+        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições da IA atingido. Tente em alguns segundos." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        throw new Error(`IA falhou no refinamento (${aiResp.status}): ${txt.slice(0, 200)}`);
+      }
       const aiData = await aiResp.json();
       const content = aiData.choices[0].message.content;
       const plano = JSON.parse(content);
@@ -163,14 +169,20 @@ REGRAS:
       method: "POST",
       headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.0-pro-exp-02-05",
+        model: "google/gemini-2.5-flash",
         messages: [{ role: "system", content: systemPrompt }],
         response_format: { type: "json_object" },
         temperature: 0.2,
       }),
     });
 
-    if (!aiResp.ok) throw new Error("Falha na geração da IA");
+    if (!aiResp.ok) {
+      const txt = await aiResp.text();
+      console.error("[gerar-dieta generate] AI error", aiResp.status, txt);
+      if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições da IA atingido. Tente em alguns segundos." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      throw new Error(`Falha na geração da IA (${aiResp.status}): ${txt.slice(0, 200)}`);
+    }
     const aiData = await aiResp.json();
     const plano = JSON.parse(aiData.choices[0].message.content);
 
