@@ -96,7 +96,7 @@ REGRAS:
         method: "POST",
         headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-2.0-pro-exp-02-05",
+          model: "google/gemini-2.5-flash",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
@@ -163,7 +163,7 @@ REGRAS:
       method: "POST",
       headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.0-pro-exp-02-05",
+        model: "google/gemini-2.5-flash",
         messages: [{ role: "system", content: systemPrompt }],
         response_format: { type: "json_object" },
         temperature: 0.2,
