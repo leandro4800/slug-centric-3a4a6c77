@@ -840,6 +840,22 @@ const AtletaDetalhe = () => {
         }}
       />
 
+      <PhysicalEvaluationSelection
+        open={selectionOpen}
+        onOpenChange={setSelectionOpen}
+        onSelect={(type) => {
+          setSelectionOpen(false);
+          if (type === "navy") {
+            setEvalOpen(true);
+          } else if (type === "7dobras") {
+            setShow7DobrasIntro(true);
+          } else if (type === "import") {
+            // No AtletaDetalhe, o import é feito direto no 7 dobras
+            setShow7DobrasIntro(true);
+          }
+        }}
+      />
+
       {show7DobrasIntro && (
         <SevenDobrasIntro
           name={aluno.nome_completo || ""}
