@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
+import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import { SevenDobrasIntro } from "@/components/admin/SevenDobrasIntro";
 import { 
   Dialog, 
