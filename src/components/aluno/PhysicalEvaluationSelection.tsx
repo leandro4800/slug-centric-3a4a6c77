@@ -6,7 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Ruler, Anchor, Upload, FileDown } from "lucide-react";
+import { Ruler, Anchor, Upload, FileDown, Sparkles } from "lucide-react";
 
 interface Props {
   open: boolean;
