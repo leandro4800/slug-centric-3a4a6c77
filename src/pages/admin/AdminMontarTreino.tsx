@@ -530,10 +530,8 @@ const AdminMontarTreino = () => {
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => {
-                      setDivisaoSelecionadaId(p.id);
-                      setDivisaoCustom(p.dias);
-                    }}
+                    onClick={() => prepararGeracaoDaDivisao(p)}
+                    disabled={generating || perfilLoading}
                     className={`text-left p-3 rounded-xl border transition-all ${
                       divisaoSelecionadaId === p.id
                         ? "bg-primary/15 border-primary shadow-[0_0_15px_rgba(220,38,38,0.25)]"
@@ -543,6 +541,9 @@ const AdminMontarTreino = () => {
                     <div className="text-sm font-bold mb-1">{p.label}</div>
                     <div className="text-[11px] text-muted-foreground leading-relaxed">
                       {p.dias.map((d, i) => <div key={i}>• {d}</div>)}
+                    </div>
+                    <div className="text-[10px] text-primary uppercase font-bold tracking-widest mt-2">
+                      {generating && divisaoSelecionadaId === p.id ? "Gerando..." : "Tocar para gerar e revisar"}
                     </div>
                   </button>
                 ))}
@@ -623,9 +624,9 @@ const AdminMontarTreino = () => {
               </div>
               <div className="flex gap-3">
                 <Button onClick={() => salvarPerfil()} variant="outline">Salvar perfil</Button>
-                <Button onClick={() => gerarComIA()} disabled={generating || perfilLoading} variant="outline">
+                <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating || perfilLoading} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                  {perfilLoading ? "Aguardando perfil" : "Gerar com IA"}
+                  {perfilLoading ? "Aguardando perfil" : "Gerar e revisar"}
                 </Button>
               </div>
             </div>
@@ -649,7 +650,7 @@ const AdminMontarTreino = () => {
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
                     Confirmar e enviar ao aluno
                   </Button>
-                  <Button onClick={() => gerarComIA()} disabled={generating} variant="outline" className="flex-1">
+                  <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating} variant="outline" className="flex-1">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                     Refazer com IA
                   </Button>
