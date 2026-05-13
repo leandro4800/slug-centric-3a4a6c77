@@ -111,20 +111,35 @@ export const ComprehensiveEvaluationForm = ({
     if (!file) return;
 
     setImporting(true);
-    const toastId = toast.loading("Dr. IA analisando seu relatório...");
+    const toastId = toast.loading("Analisando relatório...");
 
     try {
-      const reader = new FileReader();
-      const base64Promise = new Promise<string>((resolve) => {
-        reader.onload = () => resolve((reader.result as string).split(',')[1]);
-        reader.readAsDataURL(file);
-      });
+      let content = "";
+      let isPDF = file.type === "application/pdf";
 
-      const base64 = await base64Promise;
+      if (isPDF) {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item: any) => item.str).join(" ");
+          fullText += pageText + "\n";
+        }
+        content = fullText;
+      } else {
+        const reader = new FileReader();
+        const base64Promise = new Promise<string>((resolve) => {
+          reader.onload = () => resolve((reader.result as string).split(',')[1]);
+          reader.readAsDataURL(file);
+        });
+        content = await base64Promise;
+      }
 
       const { data, error } = await supabase.functions.invoke("import-with-ai", {
         body: {
-          file: base64,
+          file: content,
           fileType: file.type,
           importType: "avaliacao",
           alunoId,
