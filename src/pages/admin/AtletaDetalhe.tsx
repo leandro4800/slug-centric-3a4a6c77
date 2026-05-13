@@ -135,6 +135,7 @@ const AtletaDetalhe = () => {
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [promptType, setPromptType] = useState<"treino" | "dieta" | "ambos">("treino");
   const [iaPrompt, setIaPrompt] = useState("");
+  const [showPrescricaoViewer, setShowPrescricaoViewer] = useState(false);
 
   useEffect(() => {
     if (!atletaId) return;
