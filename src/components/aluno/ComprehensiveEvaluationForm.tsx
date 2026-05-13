@@ -196,7 +196,8 @@ export const ComprehensiveEvaluationForm = ({
         toast.success("Dados extraídos com sucesso!", { id: toastId });
       }
     } catch (err: any) {
-      toast.error("Erro ao processar PDF: " + err.message, { id: toastId });
+      console.error("Erro PDF:", err);
+      toast.error("Erro ao processar arquivo: " + (err.message || "Verifique se o PDF contém texto ou envie uma imagem."), { id: toastId });
     } finally {
       setImporting(false);
       e.target.value = "";
