@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
+import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
+import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import heic2any from "heic2any";
 
 type ProfileData = {
