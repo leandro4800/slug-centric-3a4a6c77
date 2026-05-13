@@ -10,7 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Ruler, Upload, Sparkles, ChevronRight, ChevronLeft } from "lucide-react";
+import { Loader2, Ruler, Upload, Sparkles, ChevronRight, ChevronLeft, FileText } from "lucide-react";
+import * as pdfjs from "pdfjs-dist";
+
+// Configurar o worker do PDF.js
+pdfjs.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.mjs`;
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
