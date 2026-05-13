@@ -223,20 +223,26 @@ const AdminMontarDieta = () => {
     setRefeicoes(prev => prev.map((r, i) => i === idx ? { ...r, ...patch } : r));
   };
 
-  const salvarPrescricaoDieta = async () => {
+  const salvarPrescricaoDieta = async (publish = false) => {
     if (!alunoId || !tenant) return;
     setSaving(true);
-    const toastId = toast.loading("Salvando dieta...");
+    const toastId = toast.loading(publish ? "Publicando dieta..." : "Salvando rascunho...");
 
     try {
       let currentDietaId = dietaId;
+
+      const dietData = {
+        user_id: alunoId,
+        objetivo: perfil.objetivo,
+        is_published: publish || isPublished,
+        // Mantemos os kcal e macros se já existirem, ou iniciamos zerado
+      };
 
       if (!currentDietaId) {
         const { data: d, error: dErr } = await supabase
           .from("dietas")
           .insert({
-            user_id: alunoId,
-            objetivo: perfil.objetivo,
+            ...dietData,
             kcal_alvo: 0,
             macros_alvo: {},
           })
@@ -245,7 +251,15 @@ const AdminMontarDieta = () => {
         if (dErr) throw dErr;
         currentDietaId = d.id;
         setDietaId(d.id);
+      } else {
+        const { error: updErr } = await supabase
+          .from("dietas")
+          .update(dietData)
+          .eq("id", currentDietaId);
+        if (updErr) throw updErr;
       }
+
+      setIsPublished(publish || isPublished);
 
       await supabase.from("refeicoes").delete().eq("dieta_id", currentDietaId);
 
@@ -262,12 +276,88 @@ const AdminMontarDieta = () => {
         if (insErr) throw insErr;
       }
 
-      toast.success("Dieta salva com sucesso!", { id: toastId });
+      toast.success(publish ? "Dieta publicada para o aluno!" : "Rascunho salvo com sucesso!", { id: toastId });
     } catch (e: any) {
       toast.error("Erro ao salvar: " + e.message, { id: toastId });
     } finally {
       setSaving(false);
     }
+  };
+
+  const equilibrarMacros = async () => {
+    if (!alunoId || refeicoes.length === 0) return;
+    setAdjusting(true);
+    const toastId = toast.loading("Ajustando quantidades para bater os macros...");
+
+    try {
+      // Buscamos a dieta para saber os alvos
+      const { data: diet } = await supabase.from("dietas").select("*").eq("id", dietaId).maybeSingle();
+      if (!diet) throw new Error("Dieta não encontrada para ajuste.");
+
+      const { data, error } = await supabase.functions.invoke("gerar-dieta", {
+        body: { 
+          mode: "refine",
+          aluno_id: alunoId,
+          dieta_id: dietaId,
+          kcal_alvo: diet.kcal_alvo,
+          macros_alvo: diet.macros_alvo,
+          refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia }))
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.refeicoes) {
+        setRefeicoes(prev => prev.map((r, i) => ({
+          ...r,
+          descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia
+        })));
+        toast.success("Macros equilibrados com sucesso!", { id: toastId });
+      }
+    } catch (e: any) {
+      toast.error("Erro ao ajustar: " + e.message, { id: toastId });
+    } finally {
+      setAdjusting(false);
+    }
+  };
+
+  const startVoice = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      return;
+    }
+
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "pt-BR";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = () => setIsRecording(false);
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((result: any) => result[0])
+        .map((result: any) => result.transcript)
+        .join("");
+      
+      // Podemos injetar o texto no prompt da IA
+      const currentPrompt = searchParams.get("prompt") || "";
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("prompt", (currentPrompt + " " + transcript).trim());
+      navigate(`?${newParams.toString()}`, { replace: true });
+    };
+
+    recognition.start();
+    recognitionRef.current = recognition;
   };
 
   const autoTriggeredRef = useRef(false);
