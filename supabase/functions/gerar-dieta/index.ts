@@ -228,10 +228,17 @@ serve(async (req) => {
     const fibrasMax = Math.max(35, Math.round(peso * 0.45));
 
     // 3. Buscar modelos base na tabela menu_templates
+    let levelQuery = "iniciante";
+    if (nivel.includes("atleta") || nivel.includes("alto") || nivel.includes("avan")) {
+      levelQuery = "avancado";
+    } else if (nivel.includes("inter")) {
+      levelQuery = "intermediario";
+    }
+
     const { data: menuTemplates } = await supabase
       .from("menu_templates")
       .select("name, meal_structure")
-      .eq("level", nivel.includes("alto") ? "avancado" : (nivel.includes("avan") ? "avancado" : (nivel.includes("inter") ? "intermediario" : "iniciante")));
+      .eq("level", levelQuery);
 
     const modelosTxt = (menuTemplates || []).map((m: any, idx: number) => {
       return `MODELO ${idx + 1}: ${m.name}\n` + m.meal_structure.map((r: any) => `  - ${r.nome}: ${r.itens.join(", ")}`).join("\n");
