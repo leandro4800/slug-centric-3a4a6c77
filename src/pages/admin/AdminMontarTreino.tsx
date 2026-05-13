@@ -44,6 +44,55 @@ interface ExercicioPrescrito {
   observacao: string;
 }
 
+type DiaGeradoIA = {
+  dia?: string;
+  exercicios?: Array<{
+    nome?: string;
+    series?: string;
+    repeticoes?: string;
+    cadencia?: string;
+    detalhes_execucao?: string;
+    observacao?: string;
+  }>;
+};
+
+const normalizarTexto = (texto: string) =>
+  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
+const tokensMusculares = (texto: string) =>
+  normalizarTexto(texto)
+    .split(" ")
+    .filter((token) => token.length > 2 && !["treino", "dia", "seg", "ter", "qua", "qui", "sex", "sab", "dom", "completa", "completas"].includes(token));
+
+const mapearDiasParaEstrutura = (diasIA: DiaGeradoIA[], divisoes: string[]): ExercicioPrescrito[] => {
+  const diasComExercicios = diasIA.filter((d) => Array.isArray(d.exercicios) && d.exercicios.length > 0 && !/\boff\b|descanso/i.test(d.dia || ""));
+  const usados = new Set<number>();
+
+  return divisoes.flatMap((diaEstrutura) => {
+    const esperados = tokensMusculares(diaEstrutura);
+    let idxDia = diasComExercicios.findIndex((d, idx) => {
+      if (usados.has(idx)) return false;
+      const gerado = normalizarTexto(d.dia || "");
+      return esperados.length > 0 && esperados.some((token) => gerado.includes(token));
+    });
+
+    if (idxDia < 0) idxDia = diasComExercicios.findIndex((_, idx) => !usados.has(idx));
+    if (idxDia < 0) return [];
+
+    usados.add(idxDia);
+    return (diasComExercicios[idxDia].exercicios || []).map((e, idx) => ({
+      dia_semana: diaEstrutura,
+      ordem: idx,
+      exercicio: e.nome || "",
+      series: e.series || "",
+      repeticoes: e.repeticoes || "",
+      cadencia: e.cadencia || "",
+      detalhes_execucao: e.detalhes_execucao || "",
+      observacao: e.observacao || "",
+    }));
+  });
+};
+
 const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" | "Avançado" | "Atleta de Alto Nível" => {
   if (!tempo) return "Iniciante";
   const t = tempo.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
