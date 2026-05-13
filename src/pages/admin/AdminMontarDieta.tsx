@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Save, Apple, Trash2, Plus } from "lucide-react";
+import { Loader2, Sparkles, Save, Apple, Trash2, Plus, Mic, MicOff, Send } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
@@ -48,6 +48,10 @@ const AdminMontarDieta = () => {
   const [saving, setSaving] = useState(false);
   const [refeicoes, setRefeicoes] = useState<Array<{ id?: string, nome: string, horario: string, descricao_ia: string }>>([]);
   const [dietaId, setDietaId] = useState<string | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (!tenant) return;
@@ -99,7 +103,7 @@ const AdminMontarDieta = () => {
 
       const { data: d } = await supabase
         .from("dietas")
-        .select("id")
+        .select("id, is_published")
         .eq("user_id", alunoId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -107,6 +111,7 @@ const AdminMontarDieta = () => {
       
       if (d) {
         setDietaId(d.id);
+        setIsPublished(!!d.is_published);
         const { data: refs } = await supabase
           .from("refeicoes")
           .select("*")
@@ -115,6 +120,7 @@ const AdminMontarDieta = () => {
         if (refs) setRefeicoes(refs as any[]);
       } else {
         setDietaId(null);
+        setIsPublished(false);
         setRefeicoes([]);
       }
     })();
@@ -188,6 +194,7 @@ const AdminMontarDieta = () => {
       
       if (data?.dieta_id) {
         setDietaId(data.dieta_id);
+        setIsPublished(false); // Sempre gera como rascunho
         const { data: refs } = await supabase
           .from("refeicoes")
           .select("*")
@@ -217,20 +224,25 @@ const AdminMontarDieta = () => {
     setRefeicoes(prev => prev.map((r, i) => i === idx ? { ...r, ...patch } : r));
   };
 
-  const salvarPrescricaoDieta = async () => {
+  const salvarPrescricaoDieta = async (publish = false) => {
     if (!alunoId || !tenant) return;
     setSaving(true);
-    const toastId = toast.loading("Salvando dieta...");
+    const toastId = toast.loading(publish ? "Publicando dieta..." : "Salvando rascunho...");
 
     try {
       let currentDietaId = dietaId;
+
+      const dietData = {
+        user_id: alunoId,
+        objetivo: perfil.objetivo,
+        is_published: publish || isPublished,
+      };
 
       if (!currentDietaId) {
         const { data: d, error: dErr } = await supabase
           .from("dietas")
           .insert({
-            user_id: alunoId,
-            objetivo: perfil.objetivo,
+            ...dietData,
             kcal_alvo: 0,
             macros_alvo: {},
           })
@@ -239,7 +251,15 @@ const AdminMontarDieta = () => {
         if (dErr) throw dErr;
         currentDietaId = d.id;
         setDietaId(d.id);
+      } else {
+        const { error: updErr } = await supabase
+          .from("dietas")
+          .update(dietData)
+          .eq("id", currentDietaId);
+        if (updErr) throw updErr;
       }
+
+      setIsPublished(publish || isPublished);
 
       await supabase.from("refeicoes").delete().eq("dieta_id", currentDietaId);
 
@@ -256,12 +276,87 @@ const AdminMontarDieta = () => {
         if (insErr) throw insErr;
       }
 
-      toast.success("Dieta salva com sucesso!", { id: toastId });
+      toast.success(publish ? "Dieta publicada para o aluno!" : "Rascunho salvo com sucesso!", { id: toastId });
     } catch (e: any) {
       toast.error("Erro ao salvar: " + e.message, { id: toastId });
     } finally {
       setSaving(false);
     }
+  };
+
+  const equilibrarMacros = async () => {
+    if (!alunoId || refeicoes.length === 0) return;
+    setAdjusting(true);
+    const toastId = toast.loading("Ajustando quantidades para bater os macros...");
+
+    try {
+      // Buscamos a dieta para saber os alvos
+      const { data: diet } = await supabase.from("dietas").select("*").eq("id", dietaId).maybeSingle();
+      if (!diet) throw new Error("Dieta não encontrada para ajuste.");
+
+      const { data, error } = await supabase.functions.invoke("gerar-dieta", {
+        body: { 
+          mode: "refine",
+          aluno_id: alunoId,
+          dieta_id: dietaId,
+          kcal_alvo: diet.kcal_alvo,
+          macros_alvo: diet.macros_alvo,
+          refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia }))
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.refeicoes) {
+        setRefeicoes(prev => prev.map((r, i) => ({
+          ...r,
+          descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia
+        })));
+        toast.success("Macros equilibrados com sucesso!", { id: toastId });
+      }
+    } catch (e: any) {
+      toast.error("Erro ao ajustar: " + e.message, { id: toastId });
+    } finally {
+      setAdjusting(false);
+    }
+  };
+
+  const startVoice = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      return;
+    }
+
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      setIsRecording(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "pt-BR";
+    recognition.continuous = true;
+    recognition.interimResults = true;
+
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = () => setIsRecording(false);
+
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((result: any) => result[0])
+        .map((result: any) => result.transcript)
+        .join("");
+      
+      const currentPrompt = searchParams.get("prompt") || "";
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set("prompt", (currentPrompt + " " + transcript).trim());
+      navigate(`?${newParams.toString()}`, { replace: true });
+    };
+
+    recognition.start();
+    recognitionRef.current = recognition;
   };
 
   const autoTriggeredRef = useRef(false);
@@ -359,27 +454,58 @@ const AdminMontarDieta = () => {
                   <Save className="h-4 w-4 mr-2" />
                   Salvar Perfil
                 </Button>
-                <Button 
-                  className="flex-[2] h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest transition-all duration-300 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.2)]"
-                  onClick={() => gerarComIA()}
-                  disabled={generating}
-                >
-                  {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
-                  Gerar com IA
-                </Button>
+                <div className="flex flex-col flex-[2] gap-2">
+                  <div className="flex gap-2">
+                    <Button 
+                      className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest transition-all duration-300 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.2)]"
+                      onClick={() => gerarComIA()}
+                      disabled={generating}
+                    >
+                      {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
+                      Gerar com IA
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className={`w-12 h-12 rounded-xl border-white/10 ${isRecording ? 'bg-red-600/20 text-red-500 border-red-500/50' : ''}`}
+                      onClick={startVoice}
+                    >
+                      {isRecording ? <MicOff className="h-5 w-5 animate-pulse" /> : <Mic className="h-5 w-5" />}
+                    </Button>
+                  </div>
+                  {isRecording && (
+                    <p className="text-[10px] text-red-500 animate-pulse text-center font-bold uppercase tracking-tighter">
+                      Ouvindo... Fale sua preferência para a dieta
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
             <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl uppercase">Editor de Dieta</h2>
-                <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-display text-xl uppercase">Editor de Dieta</h2>
+                  {isPublished ? (
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-green-500/20 text-green-500 uppercase font-bold border border-green-500/30">Publicada</span>
+                  ) : (
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-yellow-500/20 text-yellow-500 uppercase font-bold border border-yellow-500/30">Rascunho</span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
                   <Button variant="outline" size="sm" onClick={addRefeicao}>
-                    <Plus className="h-4 w-4 mr-2" /> Adicionar Refeição
+                    <Plus className="h-4 w-4 mr-1" /> Refeição
                   </Button>
-                  <Button size="sm" onClick={salvarPrescricaoDieta} disabled={saving || !alunoId} className="bg-primary hover:bg-primary/90">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    Salvar Dieta
+                  <Button variant="outline" size="sm" onClick={equilibrarMacros} disabled={adjusting || !dietaId} className="border-primary/50 text-primary hover:bg-primary/10">
+                    {adjusting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
+                    Equilibrar Macros
+                  </Button>
+                  <Button size="sm" onClick={() => salvarPrescricaoDieta(false)} disabled={saving || !alunoId} className="bg-secondary hover:bg-secondary/80">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                    Salvar Rascunho
+                  </Button>
+                  <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId} className="bg-primary hover:bg-primary/90">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                    Enviar para Aluno
                   </Button>
                 </div>
               </div>

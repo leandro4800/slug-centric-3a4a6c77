@@ -1245,6 +1245,7 @@ export type Database = {
           analise_id: string | null
           created_at: string | null
           id: string
+          is_published: boolean | null
           kcal_alvo: number | null
           macros_alvo: Json | null
           objetivo: string | null
@@ -1256,6 +1257,7 @@ export type Database = {
           analise_id?: string | null
           created_at?: string | null
           id?: string
+          is_published?: boolean | null
           kcal_alvo?: number | null
           macros_alvo?: Json | null
           objetivo?: string | null
@@ -1267,6 +1269,7 @@ export type Database = {
           analise_id?: string | null
           created_at?: string | null
           id?: string
+          is_published?: boolean | null
           kcal_alvo?: number | null
           macros_alvo?: Json | null
           objetivo?: string | null
