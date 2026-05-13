@@ -268,14 +268,14 @@ Sua missão é gerar um plano alimentar baseado RIGOROSAMENTE nos modelos base f
 ═══════════════════════════════════════════════
 REGRAS INVIOLÁVEIS:
 ═══════════════════════════════════════════════
-1. ESCOLHA UM MODELO: Escolha EXCLUSIVAMENTE UM dos modelos de nível ${nivel.toUpperCase()} fornecidos abaixo.
-2. NÃO INVENTE: É expressamente proibido adicionar, remover ou substituir alimentos do modelo escolhido, exceto para encontrar o ID correspondente na tabela TACO.
-3. AJUSTE APENAS QUANTIDADES: Sua única função é definir as gramagens (quantidade_g) de cada item para que o total diário se aproxime da meta de calorias e macros (P/C/G).
-4. ESTRUTURA FIXA: O número de refeições e o nome de cada refeição devem ser EXATAMENTE os do modelo escolhido.
-5. TACO: Use os IDs da tabela TACO para os alimentos. Se um alimento do modelo não tiver ID exato, use o mais próximo.
+1. ESCOLHA UM MODELO: Escolha EXCLUSIVAMENTE UM dos modelos de nível ${nivel.toUpperCase()} com ${finalNumRefeicoes} refeições fornecidos abaixo.
+2. NÃO INVENTE: É expressamente proibido adicionar, remover ou substituir alimentos do modelo escolhido.
+3. AJUSTE APENAS QUANTIDADES: Sua única função é definir as gramagens (quantidade_g) de cada item. Para ovos, se o modelo indicar "Ovos inteiros" e "Clara de ovo", você DEVE fornecer AMBOS com quantidades específicas (ex: 2 ovos inteiros e 60g de clara).
+4. ESTRUTURA FIXA: O número de refeições deve ser RIGOROSAMENTE ${finalNumRefeicoes} e os nomes devem ser EXATAMENTE os do modelo.
+5. TACO: Use os IDs da tabela TACO. Para ovos inteiros use id: 53514fca-bf4c-4bd7-bc72-57b1c3a2da94. Para claras use id: 921fa2e8-23f9-4933-a821-6544ed5c5ddf.
 
 ═══════════════════════════════════════════════
-MODELOS DISPONÍVEIS PARA NÍVEL ${nivel.toUpperCase()}:
+MODELOS DISPONÍVEIS PARA NÍVEL ${nivel.toUpperCase()} (${finalNumRefeicoes} REFEIÇÕES):
 ═══════════════════════════════════════════════
 ${modelosTxt}
 
