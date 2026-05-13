@@ -114,6 +114,7 @@ const RESTRICOES = [
 
 const AtletaDetalhe = () => {
   const { slug, atletaId } = useParams();
+  const { tenant } = useBranding();
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [perfil, setPerfil] = useState<PerfilTreino | null>(null);
