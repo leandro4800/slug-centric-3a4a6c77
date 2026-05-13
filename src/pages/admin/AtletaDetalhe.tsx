@@ -832,7 +832,7 @@ const AtletaDetalhe = () => {
         open={open7Dobras}
         onOpenChange={setOpen7Dobras}
         alunoId={atletaId || ""}
-        tenantId={aluno.tenant_id}
+        tenantId={aluno.tenant_id || tenant?.id}
         sexo={perfil?.sexo}
         onSaved={(goToDiet) => {
           load();
