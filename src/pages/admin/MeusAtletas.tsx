@@ -377,9 +377,9 @@ const MeusAtletas = () => {
                 </Button>
               </Link>
             </div>
-            <Link to={`/${slug}/app`}>
+            <Link to={`/${slug}/admin/atleta/${currentUser?.id}`}>
               <Button variant="outline" className="w-full gap-2 border-primary/40">
-                <User className="h-4 w-4" /> Meu cadastro (perfil, anamnese e avaliação)
+                <User className="h-4 w-4" /> Gerenciar Meu Perfil (Treino, Dieta e Avaliação)
               </Button>
             </Link>
             <Button
