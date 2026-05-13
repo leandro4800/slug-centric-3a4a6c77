@@ -340,11 +340,15 @@ serve(async (req) => {
     const fibrasMin = Math.max(25, Math.round(peso * 0.35));
     const fibrasMax = Math.max(35, Math.round(peso * 0.45));
 
-    // Selecionar modelos base conforme nível
-    const modelosNivel = MENUS_BASE[nivel] || MENUS_BASE["intermediario"];
-    const modelosTxt = modelosNivel.map((m: any, idx: number) => {
-      return `MODELO ${idx + 1}: ${m.nome}\n` + m.refeicoes.map((r: any) => `  - ${r.nome}: ${r.itens.join(", ")}`).join("\n");
-    }).join("\n\n");
+    // 3. Buscar modelos base na tabela menu_templates
+    const { data: menuTemplates } = await supabase
+      .from("menu_templates")
+      .select("name, meal_structure")
+      .eq("level", nivel.includes("alto") ? "avancado" : (nivel.includes("avan") ? "avancado" : (nivel.includes("inter") ? "intermediario" : "iniciante")));
+
+    const modelosTxt = (menuTemplates || []).map((m: any, idx: number) => {
+      return `MODELO ${idx + 1}: ${m.name}\n` + m.meal_structure.map((r: any) => `  - ${r.nome}: ${r.itens.join(", ")}`).join("\n");
+    }).join("\n\n") || "Nenhum modelo encontrado para este nível.";
 
     const systemPrompt = `Você é DR. IA NUTRI, Estrategista Nutricional de Performance — Seguindo a Metodologia Fabrício Pacholok.
 Use EXCLUSIVAMENTE alimentos da tabela TACO fornecida (use os IDs exatos).
