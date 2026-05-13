@@ -158,10 +158,25 @@ const AtletaDetalhe = () => {
   const [iaPrompt, setIaPrompt] = useState("");
   const [showPrescricaoViewer, setShowPrescricaoViewer] = useState(false);
 
+  const [searchParams] = useSearchParams();
+  const action = searchParams.get("action");
+
   useEffect(() => {
     if (!atletaId) return;
     void load();
   }, [atletaId]);
+
+  useEffect(() => {
+    if (action === "generate-training" && canGenerate && !loading) {
+      setPromptType("treino");
+      setIaPrompt("");
+      setShowPromptDialog(true);
+    } else if (action === "generate-diet" && canGenerate && !loading) {
+      setPromptType("dieta");
+      setIaPrompt("");
+      setShowPromptDialog(true);
+    }
+  }, [action, canGenerate, loading]);
 
   const load = async () => {
     setLoading(true);
