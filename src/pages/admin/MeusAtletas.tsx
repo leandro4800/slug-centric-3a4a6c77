@@ -55,6 +55,7 @@ const MeusAtletas = () => {
   const [resposta, setResposta] = useState("");
   const [isAsking, setIsAsking] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
