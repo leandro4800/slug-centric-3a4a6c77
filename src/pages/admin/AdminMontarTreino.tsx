@@ -292,7 +292,20 @@ const AdminMontarTreino = () => {
     }
   };
 
-  const gerarComIA = async (customPrompt?: string) => {
+  const prepararGeracaoDaDivisao = (preset?: DivisaoPreset) => {
+    setPendingReview(false);
+    setCardio("");
+    setExercicios([]);
+    if (preset) {
+      setDivisaoSelecionadaId(preset.id);
+      setDivisaoCustom(preset.dias);
+      void gerarComIA(preset.dias);
+      return;
+    }
+    void gerarComIA(divisoes);
+  };
+
+  const gerarComIA = async (divisoesParaGerar = divisoes, customPrompt?: string) => {
     if (!alunoId || !tenant) {
       toast.error("Selecione um aluno.");
       return;
@@ -301,8 +314,12 @@ const AdminMontarTreino = () => {
       toast.error("Aguarde carregar os dados do aluno antes de gerar.");
       return;
     }
-    if (fullBodyBloqueado(nivel, divisoes)) {
+    if (fullBodyBloqueado(nivel, divisoesParaGerar)) {
       toast.error("Full Body é permitido apenas para iniciantes. Escolha uma divisão split.");
+      return;
+    }
+    if (!divisoesParaGerar.length) {
+      toast.error("Escolha uma divisão antes de gerar o treino.");
       return;
     }
     setGenerating(true);
@@ -317,26 +334,13 @@ const AdminMontarTreino = () => {
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: biblioteca || [], divisoes, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
+        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: biblioteca || [], divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
 
-      const novos: ExercicioPrescrito[] = [];
-      (data.dias || []).forEach((d: any) => {
-        (d.exercicios || []).forEach((e: any, idx: number) => {
-          novos.push({
-            dia_semana: d.dia,
-            ordem: idx,
-            exercicio: e.nome,
-            series: e.series,
-            repeticoes: e.repeticoes,
-            cadencia: e.cadencia,
-            detalhes_execucao: e.detalhes_execucao,
-            observacao: e.observacao,
-          });
-        });
-      });
+      const novos = mapearDiasParaEstrutura((data.dias || []) as DiaGeradoIA[], divisoesParaGerar);
+      if (novos.length === 0) throw new Error("A IA não retornou exercícios para a divisão escolhida. Tente gerar novamente.");
       setExercicios(novos);
       setCardio(data.cardio || "");
       setPendingReview(true);
