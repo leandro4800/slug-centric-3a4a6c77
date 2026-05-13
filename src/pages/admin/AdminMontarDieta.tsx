@@ -293,10 +293,10 @@ const AdminMontarDieta = () => {
               </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t border-white/5">
               <Button 
                 variant="outline"
-                className="flex-1"
+                className="flex-1 h-12 border-white/10 hover:bg-white/5 hover:text-white transition-all duration-300 rounded-xl"
                 onClick={() => salvarPerfil()}
                 disabled={loading}
               >
@@ -304,7 +304,7 @@ const AdminMontarDieta = () => {
                 Salvar Perfil
               </Button>
               <Button 
-                className="flex-[2] bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-widest"
+                className="flex-[2] h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest transition-all duration-300 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.2)] hover:shadow-[0_0_30px_rgba(220,38,38,0.4)] border-none"
                 onClick={() => gerarComIA()}
                 disabled={generating}
               >
