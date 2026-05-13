@@ -48,6 +48,10 @@ const AdminMontarDieta = () => {
   const [saving, setSaving] = useState(false);
   const [refeicoes, setRefeicoes] = useState<Array<{ id?: string, nome: string, horario: string, descricao_ia: string }>>([]);
   const [dietaId, setDietaId] = useState<string | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [adjusting, setAdjusting] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
     if (!tenant) return;
