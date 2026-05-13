@@ -39,6 +39,7 @@ const AdminMontarDieta = () => {
   const { tenant } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
+  const [refeicoesDia, setRefeicoesDia] = useState<number>(4);
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
     pescoco_cm: null, cintura_cm: null, quadril_cm: null,
@@ -93,6 +94,7 @@ const AdminMontarDieta = () => {
         objetivo: pt?.objetivo || "hipertrofia",
         tempo_treino: toNivelCanonico(pt?.tempo_treino || an?.nivel_experiencia) || "Intermediário",
       });
+      setRefeicoesDia(an?.refeicoes_dia || 4);
       setLoading(false);
     })();
   }, [alunoId]);
@@ -159,7 +161,8 @@ const AdminMontarDieta = () => {
           pescoco_cm: perfil.pescoco_cm,
           cintura_cm: perfil.cintura_cm,
           quadril_cm: perfil.quadril_cm,
-          prompt: activePrompt
+          prompt: activePrompt,
+          refeicoes_dia: refeicoesDia
         },
       });
       if (error) throw error;
@@ -289,6 +292,18 @@ const AdminMontarDieta = () => {
                   <option value="">Selecione</option>
                   <option value="masculino">Masculino</option>
                   <option value="feminino">Feminino</option>
+                </select>
+              </div>
+              <div>
+                <Label>Refeições por dia</Label>
+                <select 
+                  value={refeicoesDia} 
+                  onChange={(e) => setRefeicoesDia(Number(e.target.value))}
+                  className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
+                >
+                  {[3, 4, 5, 6, 7].map(n => (
+                    <option key={n} value={n}>{n} refeições</option>
+                  ))}
                 </select>
               </div>
             </div>
