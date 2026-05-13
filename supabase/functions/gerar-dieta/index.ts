@@ -106,7 +106,13 @@ REGRAS:
         }),
       });
 
-      if (!aiResp.ok) throw new Error(`IA falhou no refinamento: ${aiResp.status}`);
+      if (!aiResp.ok) {
+        const txt = await aiResp.text();
+        console.error("[gerar-dieta refine] AI error", aiResp.status, txt);
+        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições da IA atingido. Tente em alguns segundos." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        throw new Error(`IA falhou no refinamento (${aiResp.status}): ${txt.slice(0, 200)}`);
+      }
       const aiData = await aiResp.json();
       const content = aiData.choices[0].message.content;
       const plano = JSON.parse(content);
