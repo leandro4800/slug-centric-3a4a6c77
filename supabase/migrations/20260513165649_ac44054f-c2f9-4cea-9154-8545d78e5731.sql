@@ -1,0 +1,1 @@
+CREATE INDEX IF NOT EXISTS idx_perfis_tenant_id ON public.perfis(tenant_id);
