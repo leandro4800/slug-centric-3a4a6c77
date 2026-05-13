@@ -2597,6 +2597,7 @@ export type Database = {
       }
       current_user_tenant: { Args: never; Returns: string }
       email_is_registered: { Args: { _email: string }; Returns: boolean }
+      get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_active_subscription_for_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
