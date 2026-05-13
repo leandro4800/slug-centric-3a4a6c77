@@ -61,6 +61,7 @@ const MeusAtletas = () => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUser(user);
       const { data } = await supabase
         .from("user_roles")
         .select("role")
