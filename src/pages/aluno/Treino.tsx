@@ -48,26 +48,45 @@ const Treino = () => {
   const [showConclusao, setShowConclusao] = useState(false);
 
   useEffect(() => {
-    const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
-      if (!tenant) return {};
+    const norm = (s: string) =>
+      (s || "")
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/[^a-z0-9\s]/g, " ")
+        .split(/\s+/)
+        .filter((w) => w.length > 2 && !["com","sem","dos","das","para","pelo","pela","reto","livre","barra","halter","halteres","maquina","cabo","polia","banco","pulley"].includes(w));
+
+    const loadVideoRefs = async (): Promise<{ entries: { tokens: string[]; yt: string; coach: string | null }[] }> => {
       const { data } = await supabase
-        .from("referencia_videos")
-        .select("nome_exercicio, url_video, video_coach_url")
-        .eq("tenant_id", tenant.id);
-      const map: Record<string, VideoRef> = {};
-      data?.forEach((r: any) => {
-        map[r.nome_exercicio.trim().toLowerCase()] = {
-          yt: r.url_video || null,
-          coach: r.video_coach_url || null,
-        };
-      });
-      return map;
+        .from("referencia_exercicios")
+        .select("nome_exercicio, url_video");
+      const entries = (data || []).map((r: any) => ({
+        tokens: norm(r.nome_exercicio),
+        yt: r.url_video as string,
+        coach: null as string | null,
+      })).filter((e) => e.tokens.length > 0 && e.yt);
+      return { entries };
     };
 
-    const resolveVideo = (nome: string, refMap: Record<string, VideoRef>) =>
-      refMap[nome.trim().toLowerCase()]?.yt || null;
-    const resolveCoach = (nome: string, refMap: Record<string, VideoRef>) =>
-      refMap[nome.trim().toLowerCase()]?.coach || null;
+    const findBest = (nome: string, refMap: any): { yt: string | null; coach: string | null } => {
+      const tokens = norm(nome);
+      if (!tokens.length) return { yt: null, coach: null };
+      let best: any = null;
+      let bestScore = 0;
+      for (const e of refMap.entries || []) {
+        const overlap = e.tokens.filter((t: string) => tokens.includes(t)).length;
+        if (overlap > bestScore) {
+          bestScore = overlap;
+          best = e;
+        }
+      }
+      if (bestScore < 1) return { yt: null, coach: null };
+      return { yt: best.yt, coach: best.coach };
+    };
+
+    const resolveVideo = (nome: string, refMap: any) => findBest(nome, refMap).yt;
+    const resolveCoach = (nome: string, refMap: any) => findBest(nome, refMap).coach;
 
     const autoFillVolume = async (list: Treino[], refMap: Record<string, VideoRef>): Promise<Treino[]> => {
       if (!tenant) return list;
