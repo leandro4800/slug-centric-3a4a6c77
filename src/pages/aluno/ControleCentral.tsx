@@ -108,7 +108,24 @@ const ControleCentral = () => {
       </h1>
       <div className="h-px bg-primary/20 mt-3" />
 
-      <div className="space-y-4 mt-8">
+      <div className="grid grid-cols-2 gap-4 mt-8 mb-6">
+        <Link
+          to={`/${slug}/admin/atleta/${user?.id}?action=generate-training`}
+          className="flex flex-col items-center justify-center p-6 rounded-none bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
+        >
+          <Dumbbell className="h-7 w-7 text-primary mb-2 group-hover:scale-110 transition-transform" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-primary text-center">Montar Meu Treino</span>
+        </Link>
+        <Link
+          to={`/${slug}/admin/atleta/${user?.id}?action=generate-diet`}
+          className="flex flex-col items-center justify-center p-6 rounded-none bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
+        >
+          <Apple className="h-7 w-7 text-primary mb-2 group-hover:scale-110 transition-transform" />
+          <span className="text-[11px] font-bold uppercase tracking-widest text-primary text-center">Montar Minha Dieta</span>
+        </Link>
+      </div>
+
+      <div className="space-y-4">
         <Link
           to={isSuperAdmin ? "/admin/coaches" : `/${slug}/admin/atletas`}
           className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
