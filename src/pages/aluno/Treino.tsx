@@ -197,12 +197,22 @@ const Treino = () => {
       const [, refMapRes, treinosRes] = await Promise.all([spotifyP, refsP, treinosP]);
       void cargasP; // dispara em background, não bloqueia
 
-      const refMap: Record<string, VideoRef> = (refMapRes as any) || {};
+      const refMap: any = refMapRes || { entries: [] };
+
+      // Ordem semanal e filtro de dias OFF/descanso
+      const WEEK_ORDER = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"];
+      const weekIdx = (s: string) => {
+        const n = (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const i = WEEK_ORDER.findIndex((d) => n.includes(d));
+        return i === -1 ? 99 : i;
+      };
+      const isOff = (s: string) => /\boff\b|descanso|rest/i.test(s || "");
 
       if (treinosRes && !(treinosRes as any).error) {
         const data = (treinosRes as any).data as any[] | null;
         if (data && data.length > 0) {
-          const mapped: Treino[] = data.map((t: any) => ({
+          const filteredData = data.filter((t) => !isOff(t.dia_semana));
+          const mapped: Treino[] = filteredData.map((t: any) => ({
             id: t.id,
             dia_semana: t.dia_semana,
             exercicio: t.exercicio,
@@ -214,10 +224,11 @@ const Treino = () => {
             video_url: t.video_url || resolveVideo(t.exercicio, refMap),
             video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
           }));
-          // autoFillVolume também com timeout para não travar a tela
+          mapped.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
           let filled = mapped;
           try {
             filled = await withTimeout(autoFillVolume(mapped, refMap), 4000);
+            filled.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
           } catch (e) {
             console.warn("autoFillVolume pulado", e);
           }
@@ -229,7 +240,7 @@ const Treino = () => {
       }
 
       // Sem treino real disponível: enriquece o mock com vídeos se conseguimos buscar
-      if (Object.keys(refMap).length > 0) {
+      if (refMap.entries && refMap.entries.length > 0) {
         setTreinos((prev) =>
           prev.map((m) => ({
             ...m,
