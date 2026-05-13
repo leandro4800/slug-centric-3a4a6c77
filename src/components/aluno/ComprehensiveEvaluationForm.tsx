@@ -89,6 +89,12 @@ export const ComprehensiveEvaluationForm = ({
     }
   }, [initialData]);
 
+  useEffect(() => {
+    if (open && triggerImportOnInit && fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  }, [open, triggerImportOnInit]);
+
   const num = (v: any) => {
     if (typeof v === "number") return v;
     const n = parseFloat(String(v || "").replace(",", "."));
