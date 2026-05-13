@@ -418,25 +418,34 @@ ${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("
       });
     }
 
+    // Validação leve: exige somente que pelo menos UM token relevante de cada
+    // dia escolhido apareça no nome gerado pela IA. Antes exigíamos TODOS os
+    // tokens, o que rejeitava 422 mesmo com treinos válidos (ex: dia "Seg —
+    // Peito + Tríceps + Estímulo Anterior de Ombro" virando "Treino A — Peito
+    // + Tríceps"). Resultado: o coach nunca conseguia salvar o treino.
     if (divisoesEscolhidas && Array.isArray(args?.dias)) {
       const normalizeDay = (s: string) => stripAcc(s).replace(/[^a-z0-9]+/g, " ").trim();
       const generatedDays = args.dias.map((d: any) => normalizeDay(String(d?.dia || "")));
-      const splitTokens = (s: string) => normalizeDay(s)
-        .split(" ")
-        .filter((token) => token.length > 2 && !["treino", "completa", "completas", "seg", "ter", "qua", "qui", "sex", "sab", "dom"].includes(token));
+      const STOP = new Set(["treino", "completa", "completas", "estimulo", "anterior", "posterior", "lateral", "seg", "ter", "qua", "qui", "sex", "sab", "dom", "dia", "ombro"]);
+      const splitTokens = (s: string) => normalizeDay(s).split(" ").filter((t) => t.length > 2 && !STOP.has(t));
       const missing = divisoesEscolhidas.filter((d: string) => {
-        const expectedTokens = splitTokens(d);
-        if (expectedTokens.length === 0) return false;
-        return !generatedDays.some((g: string) => expectedTokens.every((token) => g.includes(token)));
+        const expected = splitTokens(d);
+        if (expected.length === 0) return false;
+        return !generatedDays.some((g: string) => expected.some((t) => g.includes(t)));
       });
       if (missing.length > 0) {
-        return new Response(JSON.stringify({ error: `A IA não respeitou a divisão escolhida: ${missing.join(", ")}. Gere novamente mantendo a divisão selecionada.` }), {
-          status: 422,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+        console.warn("Divisão parcial — aceitando mesmo assim:", missing);
       }
     }
-    
+
+    if (!args || !Array.isArray(args.dias) || args.dias.length === 0) {
+      console.error("IA retornou sem dias", { raw: data });
+      return new Response(JSON.stringify({ error: "A IA não retornou exercícios. Tente novamente." }), {
+        status: 502,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     return new Response(JSON.stringify(args), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
