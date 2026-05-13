@@ -586,7 +586,22 @@ const AtletaDetalhe = () => {
               )}
               Dieta
             </Button>
-            {/* Removido botão redundante de importação de avaliação */}
+            <Button
+              size="sm"
+              disabled={importing}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold uppercase tracking-wider text-[10px] h-8 px-2.5"
+              onClick={() => {
+                setImportType("avaliacao");
+                importInputRef.current?.click();
+              }}
+            >
+              {importing && importType === "avaliacao" ? (
+                <Loader2 className="h-3 w-3 animate-spin mr-1" />
+              ) : (
+                <Upload className="h-3 w-3 mr-1" />
+              )}
+              Avaliação
+            </Button>
           </div>
         </div>
 
