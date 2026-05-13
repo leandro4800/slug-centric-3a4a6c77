@@ -128,6 +128,9 @@ export const ComprehensiveEvaluationForm = ({
           const pageText = textContent.items.map((item: any) => item.str).join(" ");
           fullText += pageText + "\n";
         }
+        if (!fullText.trim()) {
+          throw new Error("Não foi possível extrair texto deste PDF. Tente converter para imagem ou usar um PDF com texto.");
+        }
         content = fullText;
       } else {
         const reader = new FileReader();
