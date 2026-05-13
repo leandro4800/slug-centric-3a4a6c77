@@ -1555,6 +1555,30 @@ export type Database = {
         }
         Relationships: []
       }
+      menu_templates: {
+        Row: {
+          created_at: string | null
+          id: string
+          level: string
+          meal_structure: Json
+          name: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          level: string
+          meal_structure: Json
+          name: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          level?: string
+          meal_structure?: Json
+          name?: string
+        }
+        Relationships: []
+      }
       metodologia_pacho_config: {
         Row: {
           intensidade_esforc_percebido: number | null
