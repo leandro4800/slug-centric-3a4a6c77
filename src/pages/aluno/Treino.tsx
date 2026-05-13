@@ -43,6 +43,7 @@ const Treino = () => {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const [cargas, setCargas] = useState<CargaMap>({});
   const [spotifyLink, setSpotifyLink] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
@@ -225,7 +226,32 @@ const Treino = () => {
       console.error("Erro fatal no load do treino", e);
       setLoading(false);
     });
-  }, [tenant, user]);
+  }, [tenant, user, reloadKey]);
+
+  // Realtime: quando o coach salvar/atualizar treinos, recarrega automaticamente
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`treinos-aluno-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "treinos_prescritos", filter: `aluno_id=eq.${user.id}` },
+        () => setReloadKey((k) => k + 1)
+      )
+      .subscribe();
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id]);
+
+  // Recarrega quando a aba volta a ficar visível (ex.: aluno volta do treino do coach)
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState === "visible") setReloadKey((k) => k + 1);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, []);
 
   const dias = [...new Set(treinos.map((t) => t.dia_semana))];
   const treinosDoDia = treinos.filter((t) => t.dia_semana === diaAtual);
