@@ -5,7 +5,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Home, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign, User, Copy, Share2 } from "lucide-react";
+import { Home, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign, User, Copy, Share2, Dumbbell, Apple } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -55,11 +55,13 @@ const MeusAtletas = () => {
   const [resposta, setResposta] = useState("");
   const [isAsking, setIsAsking] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [currentUser, setCurrentUser] = useState<any>(null);
 
   useEffect(() => {
     (async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      setCurrentUser(user);
       const { data } = await supabase
         .from("user_roles")
         .select("role")
@@ -133,13 +135,9 @@ const MeusAtletas = () => {
       supabase.from("user_roles").select("user_id").eq("tenant_id", tenantId).eq("role", "coach"),
     ]);
 
-    const excluidos = new Set<string>();
-    if (tenantRow?.owner_user_id) excluidos.add(tenantRow.owner_user_id);
-    (coachRoles || []).forEach((r: any) => r.user_id && excluidos.add(r.user_id));
-
+    // Não excluir mais o coach/owner para que ele possa gerenciar seu próprio perfil de atleta
     const atletasBanco = ((data as Aluno[]) || [])
-      .filter((a) => !DEMO_ATHLETE_EMAILS.has(a.email || ""))
-      .filter((a) => !excluidos.has(a.id));
+      .filter((a) => !DEMO_ATHLETE_EMAILS.has(a.email || ""));
     const atletas = slug === "demo" ? [...DEMO_ATHLETES, ...atletasBanco] : atletasBanco;
 
     if (error && slug !== "demo") console.error("[MeusAtletas] Error loading profiles:", error);
@@ -201,6 +199,26 @@ const MeusAtletas = () => {
           />
         </div>
       </div>
+
+      {/* Ações do Coach */}
+      {currentUser && (
+        <div className="px-5 mb-4 grid grid-cols-2 gap-3">
+          <Link 
+            to={`/${slug}/admin/atleta/${currentUser.id}?action=generate-training`}
+            className="flex flex-col items-center justify-center p-4 rounded-2xl bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
+          >
+            <Dumbbell className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Gerar Meu Treino</span>
+          </Link>
+          <Link 
+            to={`/${slug}/admin/atleta/${currentUser.id}?action=generate-diet`}
+            className="flex flex-col items-center justify-center p-4 rounded-2xl bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
+          >
+            <Apple className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Gerar Minha Dieta</span>
+          </Link>
+        </div>
+      )}
 
       {/* Alertas Críticos */}
       {alertas.length > 0 && (
@@ -381,9 +399,9 @@ const MeusAtletas = () => {
                 </Button>
               </Link>
             </div>
-            <Link to={`/${slug}/app`}>
+            <Link to={`/${slug}/admin/atleta/${currentUser?.id}`}>
               <Button variant="outline" className="w-full gap-2 border-primary/40">
-                <User className="h-4 w-4" /> Meu cadastro (perfil, anamnese e avaliação)
+                <User className="h-4 w-4" /> Gerenciar Meu Perfil (Treino, Dieta e Avaliação)
               </Button>
             </Link>
             <Button
