@@ -126,46 +126,84 @@ export default function Onboarding() {
     try {
       const peso = Number(pesoKg);
       const alt = Number(alturaCm);
-      const bfVal = calcBodyFatUSNavy({ 
-        sexo, 
-        altura_cm: alt, 
-        pescoco_cm: Number(pescocoCm), 
-        cintura_cm: Number(cinturaCm), 
-        quadril_cm: quadrilCm ? Number(quadrilCm) : undefined 
+      const bfVal = calcBodyFatUSNavy({
+        sexo,
+        altura_cm: alt,
+        pescoco_cm: Number(pescocoCm),
+        cintura_cm: Number(cinturaCm),
+        quadril_cm: quadrilCm ? Number(quadrilCm) : undefined,
       });
       const imcVal = calcIMC(peso, alt);
       const massaGorda = bfVal && peso ? +(peso * (bfVal / 100)).toFixed(2) : null;
       const massaMagra = bfVal && peso ? +(peso - (massaGorda ?? 0)).toFixed(2) : null;
 
-      await supabase.from("perfis").update({ 
-        nome_completo: nome, 
-        telefone, 
-        data_nascimento: dataNasc || null, 
-        sexo, 
-        onboarding_completo: true, 
-        tenant_id: tenantId 
+      // Clamp para respeitar CHECK (1..10) da anamnese
+      const horasSono = Math.min(Math.max(Number(sono[0]) || 7, 3), 12);
+      const qualidadeSono = Math.min(Math.max(Number(sono[0]) || 7, 1), 10);
+      const nivelEstresse = Math.min(Math.max(Number(estresse[0]) || 5, 1), 10);
+
+      const { error: errPerfil } = await supabase.from("perfis").update({
+        nome_completo: nome,
+        telefone,
+        data_nascimento: dataNasc || null,
+        sexo,
+        onboarding_completo: true,
+        tenant_id: tenantId,
       }).eq("id", user.id);
+      if (errPerfil) throw new Error(`Perfil: ${errPerfil.message}`);
 
       if (tenantId) {
         const { data: hasRole } = await supabase.from("user_roles").select("id").eq("user_id", user.id).eq("tenant_id", tenantId).eq("role", "aluno").maybeSingle();
-        if (!hasRole) await supabase.from("user_roles").insert({ user_id: user.id, tenant_id: tenantId, role: "aluno" });
+        if (!hasRole) {
+          const { error: errRole } = await supabase.from("user_roles").insert({ user_id: user.id, tenant_id: tenantId, role: "aluno" });
+          if (errRole) console.warn("[Onboarding] role aluno não criada:", errRole.message);
+        }
       }
 
-      await supabase.from("anamnese_aluno").upsert({
-        aluno_id: user.id, tenant_id: tenantId, doencas: doencas.split(",").map(s => s.trim()).filter(Boolean),
-        medicamentos, lesoes_atuais: lesoes, qualidade_sono: sono[0], horas_sono: sono[0], nivel_estresse: estresse[0],
-        tabagismo, alcool, suplementos: suplementos.split(",").map(s => s.trim()).filter(Boolean),
-        restricoes_alimentares: restricoes.split(",").map(s => s.trim()).filter(Boolean), refeicoes_dia: Number(refeicoes),
-        agua_litros: Number(aguaLitros), anos_treino: Number(anosTreino), disponibilidade_dias: diasDisponiveis,
-        nivel_experiencia: nivelExperiencia, faz_uso_ergogenicos: fazUsoErgogenicos, detalhes_ergogenicos: detalhesErgogenicos
+      const { error: errAnam } = await supabase.from("anamnese_aluno").upsert({
+        aluno_id: user.id,
+        tenant_id: tenantId,
+        doencas: doencas.split(",").map(s => s.trim()).filter(Boolean),
+        medicamentos,
+        lesoes_atuais: lesoes,
+        qualidade_sono: qualidadeSono,
+        horas_sono: horasSono,
+        nivel_estresse: nivelEstresse,
+        tabagismo,
+        alcool,
+        suplementos: suplementos.split(",").map(s => s.trim()).filter(Boolean),
+        restricoes_alimentares: restricoes.split(",").map(s => s.trim()).filter(Boolean),
+        refeicoes_dia: Number(refeicoes) || null,
+        agua_litros: Number(aguaLitros) || null,
+        anos_treino: Number(anosTreino) || null,
+        disponibilidade_dias: diasDisponiveis,
+        nivel_experiencia: nivelExperiencia,
+        faz_uso_ergogenicos: fazUsoErgogenicos,
+        detalhes_ergogenicos: detalhesErgogenicos,
       }, { onConflict: "aluno_id" });
+      if (errAnam) throw new Error(`Anamnese: ${errAnam.message}`);
 
-      await supabase.from("avaliacoes_fisicas").insert({ aluno_id: user.id, tenant_id: tenantId, peso_kg: peso, altura_cm: alt, pescoco_cm: Number(pescocoCm), cintura_cm: Number(cinturaCm), quadril_cm: quadrilCm ? Number(quadrilCm) : null, bf_pct_calculado: bfVal, imc: imcVal, massa_magra_kg: massaMagra, massa_gorda_kg: massaGorda });
-      
+      const { error: errAval } = await supabase.from("avaliacoes_fisicas").insert({
+        aluno_id: user.id,
+        tenant_id: tenantId,
+        peso_kg: peso,
+        altura_cm: alt,
+        pescoco_cm: Number(pescocoCm) || null,
+        cintura_cm: Number(cinturaCm) || null,
+        quadril_cm: quadrilCm ? Number(quadrilCm) : null,
+        bf_pct_calculado: bfVal,
+        imc: imcVal,
+        massa_magra_kg: massaMagra,
+        massa_gorda_kg: massaGorda,
+        sexo,
+      });
+      if (errAval) throw new Error(`Avaliação física: ${errAval.message}`);
+
       toast({ title: "Tudo pronto!", description: "Bem-vindo ao seu painel." });
       navigate(tenantSlug ? `/${tenantSlug}/app` : "/", { replace: true });
     } catch (e: any) {
-      toast({ title: "Erro", description: e.message, variant: "destructive" });
+      console.error("[Onboarding] Erro ao finalizar:", e);
+      toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" });
     } finally {
       setBusy(false);
     }
