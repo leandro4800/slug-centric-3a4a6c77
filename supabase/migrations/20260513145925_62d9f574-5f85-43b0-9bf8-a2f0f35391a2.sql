@@ -1,0 +1,17 @@
+ALTER TABLE public.avaliacoes_fisicas
+ADD COLUMN IF NOT EXISTS dobra_panturrilha numeric,
+ADD COLUMN IF NOT EXISTS perimetro_braco_relaxado_dir numeric,
+ADD COLUMN IF NOT EXISTS perimetro_braco_relaxado_esq numeric,
+ADD COLUMN IF NOT EXISTS perimetro_coxa_distal_dir numeric,
+ADD COLUMN IF NOT EXISTS perimetro_coxa_distal_esq numeric,
+ADD COLUMN IF NOT EXISTS perimetro_panturrilha_dir numeric,
+ADD COLUMN IF NOT EXISTS perimetro_antebraco_dir numeric,
+ADD COLUMN IF NOT EXISTS perimetro_antebraco_esq numeric,
+ADD COLUMN IF NOT EXISTS perimetro_torax numeric,
+ADD COLUMN IF NOT EXISTS perimetro_braco_contraido_dir numeric,
+ADD COLUMN IF NOT EXISTS perimetro_braco_contraido_esq numeric,
+ADD COLUMN IF NOT EXISTS perimetro_coxa_media_dir numeric,
+ADD COLUMN IF NOT EXISTS perimetro_coxa_media_esq numeric,
+ADD COLUMN IF NOT EXISTS perimetro_abdomen numeric,
+ADD COLUMN IF NOT EXISTS perimetro_coxa_proximal_dir numeric,
+ADD COLUMN IF NOT EXISTS perimetro_coxa_proximal_esq numeric;

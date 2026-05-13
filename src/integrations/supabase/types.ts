@@ -607,6 +607,7 @@ export type Database = {
           dobra_abdominal: number | null
           dobra_axilar_media: number | null
           dobra_coxa: number | null
+          dobra_panturrilha: number | null
           dobra_peitoral: number | null
           dobra_subescapular: number | null
           dobra_suprailiaca: number | null
@@ -621,6 +622,21 @@ export type Database = {
           massa_magra_kg: number | null
           metodo: string | null
           observacoes: string | null
+          perimetro_abdomen: number | null
+          perimetro_antebraco_dir: number | null
+          perimetro_antebraco_esq: number | null
+          perimetro_braco_contraido_dir: number | null
+          perimetro_braco_contraido_esq: number | null
+          perimetro_braco_relaxado_dir: number | null
+          perimetro_braco_relaxado_esq: number | null
+          perimetro_coxa_distal_dir: number | null
+          perimetro_coxa_distal_esq: number | null
+          perimetro_coxa_media_dir: number | null
+          perimetro_coxa_media_esq: number | null
+          perimetro_coxa_proximal_dir: number | null
+          perimetro_coxa_proximal_esq: number | null
+          perimetro_panturrilha_dir: number | null
+          perimetro_torax: number | null
           pescoco_cm: number | null
           peso_kg: number
           quadril_cm: number | null
@@ -637,6 +653,7 @@ export type Database = {
           dobra_abdominal?: number | null
           dobra_axilar_media?: number | null
           dobra_coxa?: number | null
+          dobra_panturrilha?: number | null
           dobra_peitoral?: number | null
           dobra_subescapular?: number | null
           dobra_suprailiaca?: number | null
@@ -651,6 +668,21 @@ export type Database = {
           massa_magra_kg?: number | null
           metodo?: string | null
           observacoes?: string | null
+          perimetro_abdomen?: number | null
+          perimetro_antebraco_dir?: number | null
+          perimetro_antebraco_esq?: number | null
+          perimetro_braco_contraido_dir?: number | null
+          perimetro_braco_contraido_esq?: number | null
+          perimetro_braco_relaxado_dir?: number | null
+          perimetro_braco_relaxado_esq?: number | null
+          perimetro_coxa_distal_dir?: number | null
+          perimetro_coxa_distal_esq?: number | null
+          perimetro_coxa_media_dir?: number | null
+          perimetro_coxa_media_esq?: number | null
+          perimetro_coxa_proximal_dir?: number | null
+          perimetro_coxa_proximal_esq?: number | null
+          perimetro_panturrilha_dir?: number | null
+          perimetro_torax?: number | null
           pescoco_cm?: number | null
           peso_kg: number
           quadril_cm?: number | null
@@ -667,6 +699,7 @@ export type Database = {
           dobra_abdominal?: number | null
           dobra_axilar_media?: number | null
           dobra_coxa?: number | null
+          dobra_panturrilha?: number | null
           dobra_peitoral?: number | null
           dobra_subescapular?: number | null
           dobra_suprailiaca?: number | null
@@ -681,6 +714,21 @@ export type Database = {
           massa_magra_kg?: number | null
           metodo?: string | null
           observacoes?: string | null
+          perimetro_abdomen?: number | null
+          perimetro_antebraco_dir?: number | null
+          perimetro_antebraco_esq?: number | null
+          perimetro_braco_contraido_dir?: number | null
+          perimetro_braco_contraido_esq?: number | null
+          perimetro_braco_relaxado_dir?: number | null
+          perimetro_braco_relaxado_esq?: number | null
+          perimetro_coxa_distal_dir?: number | null
+          perimetro_coxa_distal_esq?: number | null
+          perimetro_coxa_media_dir?: number | null
+          perimetro_coxa_media_esq?: number | null
+          perimetro_coxa_proximal_dir?: number | null
+          perimetro_coxa_proximal_esq?: number | null
+          perimetro_panturrilha_dir?: number | null
+          perimetro_torax?: number | null
           pescoco_cm?: number | null
           peso_kg?: number
           quadril_cm?: number | null
