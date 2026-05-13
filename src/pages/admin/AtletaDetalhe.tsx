@@ -147,6 +147,7 @@ const AtletaDetalhe = () => {
     quadril_cm: "",
   });
   const [savingEval, setSavingEval] = useState(false);
+  const [triggerImport, setTriggerImport] = useState(false);
 
   const [anamnese, setAnamnese] = useState<any>(null);
   const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
@@ -888,6 +889,7 @@ const AtletaDetalhe = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+        triggerImportOnInit={triggerImport}
 
       <ComprehensiveEvaluationForm
         open={open7Dobras}
