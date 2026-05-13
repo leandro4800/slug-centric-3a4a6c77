@@ -140,6 +140,7 @@ const DIVISOES_PRESETS: DivisaoPreset[] = [
   { id: "ppl-ul-5x", label: "PPL+UL 5x — Push/Pull/Legs/Upper/Lower", freq: 5, publico: "unisex", nivel: ["Avançado"], dias: ["Push", "Pull", "Legs", "Upper (Ênfase fraco)", "Lower (Ênfase fraco)"] },
   { id: "fem-5x-quad", label: "Mulher 5x — Ênfase Quadríceps", freq: 5, publico: "feminino", nivel: ["Avançado"], dias: ["A — Quadríceps", "B — Glúteo/Posterior", "C — Peito/Ombro", "D — Quadríceps + Panturrilha", "E — Costas/Braços"] },
   { id: "abcde-classic-pacho", label: "ABCDE 5x — Clássica Pacholok (Peito+Tri / Costas+Bi / Pernas Quad / Ombro / Pernas Posterior)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Seg — Peito + Tríceps + Estímulo Anterior de Ombro", "Ter — Costas + Bíceps + Estímulo Posterior de Ombro", "Qua — Perna Completa (ênfase Quadríceps)", "Sex — Ombro Completo (Anterior/Lateral/Posterior + Trapézio)", "Sáb — Perna Completa (ênfase Posterior + Glúteo)"] },
+  { id: "abcde-dorsal-sab", label: "ABCDE 5x — Sábado Dorsal+Peito (ênfase Dorsal)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Seg — Peito + Tríceps + Estímulo Anterior de Ombro", "Ter — Costas + Bíceps + Estímulo Posterior de Ombro", "Qua — Perna Completa (ênfase Quadríceps + Panturrilha)", "Sex — Ombro Completo (Anterior/Lateral/Posterior + Trapézio)", "Sáb — Costas + Peito (ênfase Dorsal — Largura e Espessura)"] },
 
   // ===== 6x semana =====
   { id: "abcdef-av", label: "ABCDEF 6x — Super Avançado (1 músculo/dia)", freq: 6, publico: "unisex", nivel: ["Avançado", "Atleta de Alto Nível"], dias: ["A — Peito", "B — Costas", "C — Pernas (Quad)", "D — Ombro", "E — Braços (Bi+Tri)", "F — Posterior + Trapézio"] },
@@ -205,7 +206,7 @@ const AdminMontarTreino = () => {
         supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
         supabase.from("perfis").select("sexo, data_nascimento").eq("id", alunoId).maybeSingle(),
         supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("anamnese_aluno").select("nivel_experiencia, anos_treino, lesoes_atuais, doencas").eq("aluno_id", alunoId).maybeSingle(),
+        supabase.from("anamnese_aluno").select("nivel_experiencia, anos_treino, lesoes_atuais, doencas, disponibilidade_dias").eq("aluno_id", alunoId).maybeSingle(),
       ]);
 
       const pt = perfilTreinoRes.data as any;
@@ -234,7 +235,7 @@ const AdminMontarTreino = () => {
         cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
         quadril_cm: pt?.quadril_cm ?? av?.quadril_cm ?? null,
         objetivo: pt?.objetivo || "hipertrofia",
-        frequencia_semanal: pt?.frequencia_semanal || 4,
+        frequencia_semanal: pt?.frequencia_semanal || (Array.isArray(an?.disponibilidade_dias) && an.disponibilidade_dias.length >= 2 ? Math.min(6, an.disponibilidade_dias.length) : 4),
         tempo_treino: tempoMesclado,
         lesoes: pt?.lesoes && pt.lesoes.length > 0 ? pt.lesoes : (an?.lesoes_atuais ? [an.lesoes_atuais] : []),
         limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
