@@ -74,6 +74,7 @@ export const ComprehensiveEvaluationForm = ({
       coxa_distal_dir: "",
       coxa_distal_esq: "",
       panturrilha_dir: "",
+      panturrilha_esq: "",
     }
   });
 
@@ -164,6 +165,7 @@ export const ComprehensiveEvaluationForm = ({
             coxa_distal_dir: ext.perimetros?.coxa_distal_dir ? String(ext.perimetros.coxa_distal_dir) : form.perimetros.coxa_distal_dir,
             coxa_distal_esq: ext.perimetros?.coxa_distal_esq ? String(ext.perimetros.coxa_distal_esq) : form.perimetros.coxa_distal_esq,
             panturrilha_dir: ext.perimetros?.panturrilha_dir ? String(ext.perimetros.panturrilha_dir) : form.perimetros.panturrilha_dir,
+            panturrilha_esq: ext.perimetros?.panturrilha_esq ? String(ext.perimetros.panturrilha_esq) : form.perimetros.panturrilha_esq,
           }
         });
         toast.success("Dados extraídos com sucesso!", { id: toastId });
@@ -231,6 +233,7 @@ export const ComprehensiveEvaluationForm = ({
         perimetro_coxa_distal_dir: num(form.perimetros.coxa_distal_dir),
         perimetro_coxa_distal_esq: num(form.perimetros.coxa_distal_esq),
         perimetro_panturrilha_dir: num(form.perimetros.panturrilha_dir),
+        perimetro_panturrilha_esq: num(form.perimetros.panturrilha_esq),
       });
 
       if (error) throw error;
