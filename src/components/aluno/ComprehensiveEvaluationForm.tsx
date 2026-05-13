@@ -61,6 +61,7 @@ export const ComprehensiveEvaluationForm = ({
     },
     perimetros: {
       pescoco: "",
+      ombro: "",
       torax: "",
       cintura: "",
       abdomen: "",
@@ -167,6 +168,7 @@ export const ComprehensiveEvaluationForm = ({
           },
           perimetros: {
             pescoco: ext.perimetros?.pescoco ? String(ext.perimetros.pescoco) : form.perimetros.pescoco,
+            ombro: ext.perimetros?.ombro ? String(ext.perimetros.ombro) : form.perimetros.ombro,
             torax: ext.perimetros?.torax ? String(ext.perimetros.torax) : form.perimetros.torax,
             cintura: ext.perimetros?.cintura ? String(ext.perimetros.cintura) : form.perimetros.cintura,
             abdomen: ext.perimetros?.abdomen ? String(ext.perimetros.abdomen) : form.perimetros.abdomen,
@@ -235,6 +237,7 @@ export const ComprehensiveEvaluationForm = ({
         dobra_coxa: num(form.dobras.coxa),
         dobra_panturrilha: num(form.dobras.panturrilha),
         pescoco_cm: num(form.perimetros.pescoco),
+        perimetro_ombro: num(form.perimetros.ombro),
         cintura_cm: num(form.perimetros.cintura),
         quadril_cm: num(form.perimetros.quadril),
         perimetro_torax: num(form.perimetros.torax),
