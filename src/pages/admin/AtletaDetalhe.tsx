@@ -409,7 +409,53 @@ const AtletaDetalhe = () => {
     }
   };
 
+  const handleUpdateEval = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!atletaId) return toast.error("Atleta não identificado.");
+    setSavingEval(true);
+    
+    const peso = Number(formEval.peso_kg);
+    const alt = Number(formEval.altura_cm);
+    const bf = calcBodyFatUSNavy({
+      sexo: perfil?.sexo || "M",
+      altura_cm: alt,
+      pescoco_cm: Number(formEval.pescoco_cm),
+      cintura_cm: Number(formEval.cintura_cm),
+      quadril_cm: formEval.quadril_cm ? Number(formEval.quadril_cm) : undefined,
+    });
+    const imc = calcIMC(peso, alt);
+    const massaGorda = bf && peso ? +(peso * (bf / 100)).toFixed(2) : null;
+    const massaMagra = bf && peso ? +(peso - (massaGorda ?? 0)).toFixed(2) : null;
+
+    const evalData = {
+      aluno_id: atletaId,
+      tenant_id: aluno?.tenant_id || tenant?.id,
+      peso_kg: peso,
+      altura_cm: alt,
+      pescoco_cm: Number(formEval.pescoco_cm),
+      cintura_cm: Number(formEval.cintura_cm),
+      quadril_cm: formEval.quadril_cm ? Number(formEval.quadril_cm) : null,
+      bf_pct_calculado: bf,
+      imc,
+      massa_magra_kg: massaMagra,
+      massa_gorda_kg: massaGorda,
+      data: new Date().toISOString()
+    };
+
+    const { error } = await supabase.from("avaliacoes_fisicas").insert(evalData);
+    setSavingEval(false);
+    if (error) {
+      console.error("Erro ao salvar avaliação:", error);
+      return toast.error("Erro ao salvar: " + error.message);
+    }
+    
+    toast.success("Nova avaliação registrada!");
+    setEvalOpen(false);
+    load();
+  };
+
   const subtitulo = useMemo(() => {
+
     if (!perfil) return "Sem dados de anamnese";
     const peso = perfil.peso_kg ? `${perfil.peso_kg}kg` : null;
     const bf = perfil.bf_pct ? `${perfil.bf_pct}%` : null;
