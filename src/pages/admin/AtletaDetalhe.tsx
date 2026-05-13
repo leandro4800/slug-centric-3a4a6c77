@@ -830,7 +830,10 @@ const AtletaDetalhe = () => {
         alunoId={atletaId || ""}
         tenantId={aluno.tenant_id}
         sexo={perfil?.sexo}
-        onSaved={() => load()}
+        onSaved={(goToDiet) => {
+          load();
+          if (goToDiet) navigate(`/${slug}/admin/montar-dieta?aluno=${atletaId}&auto=true`);
+        }}
       />
 
       {show7DobrasIntro && (
