@@ -312,7 +312,7 @@ const Treino = () => {
 
   return (
     <>
-      <PageHeader icon={Dumbbell} title="MEU TREINO" subtitle={`${treinos.length} exercícios`} />
+      <PageHeader icon={Dumbbell} title="MEUS TREINOS" subtitle={`${treinos.length} exercícios`} />
 
       <div className="px-5">
         {/* Saudação personalizada com avatar treinando */}
@@ -378,7 +378,7 @@ const Treino = () => {
           <h2 className="font-display text-base flex items-center gap-2">
             <span className="text-primary">▶</span> TREINO DE HOJE — {treinosDoDia.length} EXERCÍCIOS
           </h2>
-          <p className="text-xs text-muted-foreground mt-1">Toque em um exercício para abrir o modo execução</p>
+          <p className="text-xs text-muted-foreground mt-1">Toque no exercício para registrar as séries ou no botão "Ver Vídeo" para explicações.</p>
         </div>
 
         <div className="space-y-3 mt-4">
