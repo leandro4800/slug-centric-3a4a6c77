@@ -343,7 +343,7 @@ FORMATO OBRIGATÓRIO:
       "descricao_ia": "Ovos mexidos com batata doce cozida e abacate fatiado (exemplo sólido)",
       "salada_livre": false,
       "itens": [
-        { "alimento_id": "uuid-da-tabela", "quantidade_g": 100, "substituicoes": "sugestão livre opcional" }
+        { "alimento_id": "uuid-da-tabela", "quantidade_g": 100, "substituicoes": null }
       ]
     }
   ]
