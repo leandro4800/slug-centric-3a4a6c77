@@ -408,14 +408,24 @@ export const ComprehensiveEvaluationForm = ({
                 Próximo <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             ) : (
-              <Button 
-                size="sm" 
-                onClick={handleSave} 
-                disabled={saving}
-                className="bg-primary hover:bg-primary/90 font-bold uppercase tracking-widest text-[10px] shadow-glow px-6"
-              >
-                {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : "Salvar Avaliação"}
-              </Button>
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => handleSave(false)} 
+                  disabled={saving}
+                  className="bg-secondary hover:bg-secondary/80 font-bold uppercase tracking-widest text-[10px] px-4"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : "Salvar"}
+                </Button>
+                <Button 
+                  size="sm" 
+                  onClick={() => handleSave(true)} 
+                  disabled={saving}
+                  className="bg-primary hover:bg-primary/90 font-bold uppercase tracking-widest text-[10px] shadow-glow px-4"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : "Salvar e Montar Dieta"}
+                </Button>
+              </div>
             )}
           </div>
         </DialogFooter>
