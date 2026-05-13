@@ -135,6 +135,15 @@ const AtletaDetalhe = () => {
   const [show7DobrasIntro, setShow7DobrasIntro] = useState(false);
   const [selectionOpen, setSelectionOpen] = useState(false);
   const [evalOpen, setEvalOpen] = useState(false);
+  const [formEval, setFormEval] = useState({
+    peso_kg: "",
+    altura_cm: "",
+    pescoco_cm: "",
+    cintura_cm: "",
+    quadril_cm: "",
+  });
+  const [savingEval, setSavingEval] = useState(false);
+
   const [anamnese, setAnamnese] = useState<any>(null);
   const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
   const [ultimaAvaliacao, setUltimaAvaliacao] = useState<any>(null);
