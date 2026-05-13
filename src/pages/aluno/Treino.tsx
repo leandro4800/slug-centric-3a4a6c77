@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Dumbbell, Music, Loader2 } from "lucide-react";
+import { Dumbbell, Music, Loader2, Trophy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/aluno/PageHeader";
 import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
+import { TreinoConclusaoCard } from "@/components/aluno/TreinoConclusaoCard";
 
 interface Treino extends ExerciseCardData {
   dia_semana: string;
@@ -44,6 +45,7 @@ const Treino = () => {
   const [cargas, setCargas] = useState<CargaMap>({});
   const [spotifyLink, setSpotifyLink] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
+  const [showConclusao, setShowConclusao] = useState(false);
 
   useEffect(() => {
     const loadVideoRefs = async (): Promise<Record<string, VideoRef>> => {
@@ -359,6 +361,23 @@ const Treino = () => {
             />
           ))}
         </div>
+
+        {treinosDoDia.length > 0 && (
+          <button
+            onClick={() => setShowConclusao(true)}
+            className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition"
+          >
+            <Trophy className="h-5 w-5" />
+            CONCLUIR TREINO E COMPARTILHAR
+          </button>
+        )}
+
+        <TreinoConclusaoCard
+          open={showConclusao}
+          onClose={() => setShowConclusao(false)}
+          diaTreino={diaAtual}
+          totalExercicios={treinosDoDia.length}
+        />
 
         {observacaoClinica && (
           <div className="mt-8 mb-10 bg-card border border-primary/30 rounded-2xl p-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
