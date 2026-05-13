@@ -14,6 +14,8 @@ import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
+import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
+import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import heic2any from "heic2any";
 
 type ProfileData = {
@@ -55,7 +57,10 @@ const Perfil = () => {
   // Edit Modals
   const [pwOpen, setPwOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [evalOpen, setEvalOpen] = useState(false);
+  const [evalOpen, setEvalOpen] = useState(false); // Navy form
+  const [selectionOpen, setSelectionOpen] = useState(false);
+  const [comprehensiveOpen, setComprehensiveOpen] = useState(false);
+  const [triggerImport, setTriggerImport] = useState(false);
 
   // Form states
   const [newPw, setNewPw] = useState("");
@@ -446,7 +451,7 @@ const Perfil = () => {
               <User className="h-4 w-4" /> Editar Perfil
             </Button>
             <Button 
-              onClick={() => setEvalOpen(true)}
+              onClick={() => setSelectionOpen(true)}
               variant="default"
               className="flex-1"
             >
@@ -675,6 +680,34 @@ const Perfil = () => {
           </form>
         </DialogContent>
       </Dialog>
+      
+      <PhysicalEvaluationSelection
+        open={selectionOpen}
+        onOpenChange={setSelectionOpen}
+        onSelect={(type) => {
+          setSelectionOpen(false);
+          if (type === "navy") {
+            setEvalOpen(true);
+          } else if (type === "7dobras") {
+            setTriggerImport(false);
+            setComprehensiveOpen(true);
+          } else if (type === "import") {
+            setTriggerImport(true);
+            setComprehensiveOpen(true);
+          }
+        }}
+      />
+
+      <ComprehensiveEvaluationForm
+        open={comprehensiveOpen}
+        onOpenChange={setComprehensiveOpen}
+        alunoId={user?.id || ""}
+        tenantId={profile?.tenant_id}
+        sexo={profile?.sexo}
+        onSaved={() => loadData(true)}
+        triggerImportOnInit={triggerImport}
+      />
+
       {/* Adjust photo position dialog */}
       <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
         <DialogContent>

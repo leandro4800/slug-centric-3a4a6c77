@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
+import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import { SevenDobrasIntro } from "@/components/admin/SevenDobrasIntro";
 import { 
   Dialog, 
@@ -832,15 +833,13 @@ const AtletaDetalhe = () => {
         </DialogContent>
       </Dialog>
 
-      <JacksonPollockCalculator
+      <ComprehensiveEvaluationForm
         open={open7Dobras}
         onOpenChange={setOpen7Dobras}
-        alunoId={aluno.id}
+        alunoId={atletaId || ""}
         tenantId={aluno.tenant_id}
-        pesoInicial={perfil?.peso_kg ?? null}
-        idadeInicial={perfil?.idade ?? null}
-        sexoInicial={perfil?.sexo ?? null}
-        alturaInicial={perfil?.altura_cm ?? null}
+        sexo={perfil?.sexo}
+        onSaved={() => load()}
       />
 
       {show7DobrasIntro && (
