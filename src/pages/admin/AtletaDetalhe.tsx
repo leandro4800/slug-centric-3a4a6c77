@@ -945,7 +945,52 @@ const AtletaDetalhe = () => {
               <AnamneseDetails data={anamnese} />
             ) : (
               <p className="text-center text-muted-foreground py-10">Dados não encontrados.</p>
+      )}
+
+      <Dialog open={evalOpen} onOpenChange={setEvalOpen}>
+        <DialogContent className="max-w-md bg-card border-border shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl uppercase tracking-tight">Nova Avaliação Física</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs uppercase tracking-wider">
+              Protocolo Marinha Americana (Medidas)
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleUpdateEval} className="space-y-4 pt-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="peso">Peso (kg)</Label>
+                <Input id="peso" type="number" step="0.1" value={formEval.peso_kg} onChange={(e) => setFormEval({...formEval, peso_kg: e.target.value})} required className="bg-background border-primary/20" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="altura">Altura (cm)</Label>
+                <Input id="altura" type="number" value={formEval.altura_cm} onChange={(e) => setFormEval({...formEval, altura_cm: e.target.value})} required className="bg-background border-primary/20" />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="pescoco">Pescoço (cm)</Label>
+                <Input id="pescoco" type="number" step="0.1" value={formEval.pescoco_cm} onChange={(e) => setFormEval({...formEval, pescoco_cm: e.target.value})} required className="bg-background border-primary/20" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="cintura">Cintura (cm)</Label>
+                <Input id="cintura" type="number" step="0.1" value={formEval.cintura_cm} onChange={(e) => setFormEval({...formEval, cintura_cm: e.target.value})} required className="bg-background border-primary/20" />
+              </div>
+            </div>
+            {perfil?.sexo === "F" && (
+              <div className="space-y-2">
+                <Label htmlFor="quadril">Quadril (cm)</Label>
+                <Input id="quadril" type="number" step="0.1" value={formEval.quadril_cm} onChange={(e) => setFormEval({...formEval, quadril_cm: e.target.value})} required={perfil?.sexo === "F"} className="bg-background border-primary/20" />
+              </div>
             )}
+            <DialogFooter className="pt-4">
+              <Button type="button" variant="ghost" onClick={() => setEvalOpen(false)} className="uppercase tracking-widest text-[10px] font-bold">Cancelar</Button>
+              <Button type="submit" disabled={savingEval} className="bg-primary hover:bg-primary/90 uppercase tracking-widest text-[10px] font-bold px-8">
+                {savingEval ? <Loader2 className="h-4 w-4 animate-spin" /> : "Registrar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
           </div>
 
           <DialogFooter className="border-t border-border/50 pt-4">
