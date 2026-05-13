@@ -362,6 +362,23 @@ const Treino = () => {
           ))}
         </div>
 
+        {treinosDoDia.length > 0 && (
+          <button
+            onClick={() => setShowConclusao(true)}
+            className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition"
+          >
+            <Trophy className="h-5 w-5" />
+            CONCLUIR TREINO E COMPARTILHAR
+          </button>
+        )}
+
+        <TreinoConclusaoCard
+          open={showConclusao}
+          onClose={() => setShowConclusao(false)}
+          diaTreino={diaAtual}
+          totalExercicios={treinosDoDia.length}
+        />
+
         {observacaoClinica && (
           <div className="mt-8 mb-10 bg-card border border-primary/30 rounded-2xl p-5 animate-in fade-in slide-in-from-bottom-4 duration-700">
             <div className="flex items-center gap-2 mb-3 text-primary">
