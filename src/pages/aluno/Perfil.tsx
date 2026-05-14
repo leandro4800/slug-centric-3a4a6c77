@@ -789,6 +789,12 @@ const Perfil = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AthleteEvaluationsViewer
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        alunoId={user?.id || ""}
+      />
     </>
   );
 };
