@@ -159,7 +159,13 @@ const AtletaDetalhe = () => {
   const [showPrescricaoViewer, setShowPrescricaoViewer] = useState(false);
 
   const [searchParams] = useSearchParams();
-  const action = searchParams.get("action");
+  const openEval = searchParams.get("openEval");
+
+  useEffect(() => {
+    if (openEval === "true") {
+      setSelectionOpen(true);
+    }
+  }, [openEval]);
 
   useEffect(() => {
     if (!atletaId) return;
