@@ -474,7 +474,7 @@ const MeusAtletas = () => {
                   <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-background/70 backdrop-blur flex items-center justify-center border border-border/60">
                     <span className="block w-1.5 h-1.5 rounded-full bg-primary" />
                   </div>
-                </Link>
+                </div>
               );
             })}
           </div>
