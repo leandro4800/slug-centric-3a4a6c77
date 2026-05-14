@@ -1,4 +1,4 @@
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
@@ -26,6 +26,11 @@ const isRecentReverseNavigation = (from: string, to: string) => {
   }
 };
 
+const resolveLoginPath = (slug: string | null) => {
+  const safeSlug = slug && /^[a-z0-9-]+$/i.test(slug) && slug !== "index" && slug !== "demo" ? slug : null;
+  return safeSlug ? `/${safeSlug}/login` : "/login";
+};
+
 /**
  * Rota de redirecionamento principal simplificada e blindada contra loops.
  */
@@ -33,17 +38,17 @@ const IndexRedirect = () => {
   const { user, sessionReady } = useAuth();
   const { tenant, loading: brandingLoading } = useBranding();
   const { slug: urlSlug } = useParams<{ slug: string }>();
+  const location = useLocation();
   
   const params = new URLSearchParams(window.location.search);
   const slugParam = urlSlug || params.get("slug");
   const confirmed = params.get("confirmed") === "1" || params.get("type") === "signup";
-  const safeSlug = slugParam && /^[a-z0-9-]+$/i.test(slugParam) ? slugParam : null;
+  const safeSlug = slugParam && /^[a-z0-9-]+$/i.test(slugParam) && slugParam !== "index" && slugParam !== "demo" ? slugParam : null;
 
   const [decisionDone, setDecisionDone] = useState(false);
   const [destination, setDestination] = useState<string | null>(null);
 
   useEffect(() => {
-    // Usuário sem sessão deve ir para login imediatamente; não espera branding.
     if (!sessionReady) return;
 
     if (!user) {
@@ -191,6 +196,15 @@ const IndexRedirect = () => {
 
     decideDestination();
   }, [decisionDone, user, safeSlug, tenant?.slug, confirmed]);
+
+  if (sessionReady && !user) {
+    const loginPath = resolveLoginPath(safeSlug);
+    const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
+    const currentPath = normalizePath(location.pathname);
+
+    if (currentPath === normalizePath(loginPath)) return null;
+    return <Navigate to={target} replace />;
+  }
 
   if (destination) return <Navigate to={destination} replace />;
 
