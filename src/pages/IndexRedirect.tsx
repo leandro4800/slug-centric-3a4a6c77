@@ -54,7 +54,7 @@ const IndexRedirect = () => {
           return;
         }
 
-        const withDecisionTimeout = async <T,>(promise: PromiseLike<T>, fallback: T) => {
+        const withDecisionTimeout = async (promise: PromiseLike<any>, fallback: any) => {
           let timeoutId: ReturnType<typeof setTimeout> | undefined;
           const timeout = new Promise<T>((resolve) => {
             timeoutId = setTimeout(() => resolve(fallback), 3500);
