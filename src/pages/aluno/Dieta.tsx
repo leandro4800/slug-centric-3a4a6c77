@@ -27,7 +27,7 @@ import imgMacroHero from "@/assets/macro-hero.jpg";
 type Alimento = { id: string; nome: string; energia_kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number };
 type Item = { id: string; quantidade_g: number; substituicoes: string | null; alimento: Alimento | null };
 type Refeicao = { id: string; nome: string; horario: string | null; ordem: number | null; descricao_ia: string | null; itens: Item[] };
-type MacrosAlvo = { proteina_g?: number | string | null; carboidrato_g?: number | string | null; lipideos_g?: number | string | null } | null;
+type MacrosAlvo = { proteina_g?: number | string | null; carboidrato_g?: number | string | null; lipideos_g?: number | string | null; badge?: string | null } | null;
 type ItemRow = Omit<Item, "quantidade_g"> & { quantidade_g: number | string | null; refeicao_id: string | null };
 type Dieta = {
   id: string;
@@ -242,7 +242,8 @@ const Dieta = () => {
                   { l: "CARBO",    v: totalDia.c, alvo: dieta.macros_alvo?.carboidrato_g, hsl: COLOR_CARB, img: imgMacroCarbs },
                   { l: "GORDURA",  v: totalDia.g, alvo: dieta.macros_alvo?.lipideos_g, hsl: COLOR_FAT, img: imgMacroFats },
                 ].map(m => {
-                  const pct = m.alvo ? Math.min(100, Math.round((m.v / m.alvo) * 100)) : 0;
+                  const alvo = Number(m.alvo) || 0;
+                  const pct = alvo ? Math.min(100, Math.round((m.v / alvo) * 100)) : 0;
                   return (
                     <div
                       key={m.l}
