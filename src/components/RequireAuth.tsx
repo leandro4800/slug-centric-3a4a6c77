@@ -13,6 +13,48 @@ interface Props {
 
 const GUARD_TIMEOUT_MS = 4500;
 
+const NAVIGATION_MEMORY_KEY = "startup_navigation_memory_v1";
+
+const normalizePath = (path: string) => path.replace(/\/+$/, "") || "/";
+
+const isRecentReverseNavigation = (from: string, to: string) => {
+  try {
+    const raw = sessionStorage.getItem(NAVIGATION_MEMORY_KEY);
+    if (!raw) return false;
+    const previous = JSON.parse(raw) as { from?: string; to?: string; at?: number };
+    return previous.from === to && previous.to === from && Date.now() - (previous.at ?? 0) < 12000;
+  } catch {
+    return false;
+  }
+};
+
+const rememberNavigation = (from: string, to: string) => {
+  try {
+    sessionStorage.setItem(NAVIGATION_MEMORY_KEY, JSON.stringify({ from, to, at: Date.now() }));
+  } catch {}
+};
+
+const SafeNavigate = ({ to, state }: { to: string; state?: unknown }) => {
+  const currentPath = normalizePath(window.location.pathname);
+  const targetPath = normalizePath(to.split("?")[0]);
+
+  if (isRecentReverseNavigation(currentPath, targetPath)) {
+    console.error("[RequireAuth] Navegação reversa bloqueada para evitar loop:", currentPath, "->", targetPath);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center">
+        <div className="max-w-sm space-y-3">
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary">Acesso protegido</p>
+          <p className="text-sm text-muted-foreground">Detectamos um redirecionamento repetido. Use o login novamente para continuar.</p>
+          <a className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground" href={to}>Ir para login</a>
+        </div>
+      </div>
+    );
+  }
+
+  rememberNavigation(currentPath, targetPath);
+  return <Navigate to={to} state={state} replace />;
+};
+
 const withGuardTimeout = async <T,>(promise: PromiseLike<T>, fallback: T, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<T>((resolve) => {
@@ -81,7 +123,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
 
   if (!user) {
     console.log("[RequireAuth] Sem usuário, redirecionando para login. Slug:", slug);
-    return <Navigate to={slug ? `/${slug}/login` : "/login"} state={{ from: location, slug }} replace />;
+    return <SafeNavigate to={slug ? `/${slug}/login` : "/login"} state={{ from: location, slug }} />;
   }
 
   // Se requer um papel específico e não o possui
@@ -99,7 +141,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
       const onboardingPath = `/${slug}/onboarding`;
       if (location.pathname !== onboardingPath) {
         console.warn(`[RequireAuth] User ${user.id} is not a member of tenant: ${tenant.id} (${slug}) — enviando para onboarding.`);
-        return <Navigate to={onboardingPath} replace />;
+        return <SafeNavigate to={onboardingPath} />;
       }
       console.warn(`[RequireAuth] User ${user.id} is not a member, but already on onboarding page.`);
     }
