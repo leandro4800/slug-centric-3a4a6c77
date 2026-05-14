@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ const registerLoginRedirectAttempt = () => {
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
   const { user, sessionReady, signOut } = useAuth();
@@ -98,8 +97,7 @@ const Login = () => {
   useEffect(() => {
     if (!sessionReady || !user) return;
 
-    const target = safeRedirectSlug ? `/${safeRedirectSlug}/app` : null;
-    if (!target) return;
+    const target = safeRedirectSlug ? `/${safeRedirectSlug}/app` : "/";
 
     if (redirectTimedOut) return;
 
