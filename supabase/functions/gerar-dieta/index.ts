@@ -163,10 +163,19 @@ REGRAS DE OURO (OBRIGATÓRIO):
     const systemPrompt = `Você é um nutricionista especialista. Gere uma dieta completa com ${body.refeicoes_dia || 4} refeições.
 META: ${kcalAlvo} kcal | P: ${proteinaG}g | C: ${carboG}g | G: ${gorduraG}g
 OBJETIVO: ${objetivo}
-ALIMENTOS REFERÊNCIA:
+
+REGRAS DE OURO (OBRIGATÓRIO):
+1. FIBRA: Máximo de 35g de fibra por dia. Distribua a fibra entre as refeições.
+2. AVEIA: Limite máximo de 100g de aveia por refeição. No café da manhã, se precisar de muito carboidrato, use CREME DE ARROZ para complementar ou substituir o excesso de aveia.
+3. DIGESTÃO: Para dietas de alto volume (bulking), priorize alimentos de fácil digestão (arroz branco, etc), mas não deixe de colocar fibras (dentro do limite de 35g/dia).
+4. GORDURAS:
+   - NUNCA use castanhas (custo elevado).
+   - Se objetivo for CUTTING: Priorize ovos, iogurte, pasta de amendoim (controlada), abacate (foco em saciedade).
+   - Se objetivo for BULKING: Priorize ovos, pasta de amendoim, queijo, banana + aveia (foco em densidade e performance).
+5. ALIMENTOS REFERÊNCIA:
 ${alimentosLista}
 
-REGRAS:
+REGRAS DE SAÍDA:
 1. Retorne um JSON com o campo "refeicoes" contendo "nome", "horario", "ordem" e "descricao_ia".
 2. A "descricao_ia" deve ser amigável e conter quantidades exatas em gramas.`;
 
