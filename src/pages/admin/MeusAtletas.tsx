@@ -131,7 +131,7 @@ const MeusAtletas = () => {
     const [{ data, error }, { data: tenantRow }, { data: coachRoles }] = await Promise.all([
       supabase
         .from("perfis")
-        .select("id, nome_completo, email, avatar_url")
+        .select("id, nome_completo, email, avatar_url, sexo, avatar_treinando_url, avatar_celebracao_url")
         .eq("tenant_id", tenantId)
         .order("nome_completo", { ascending: true }),
       supabase.from("tenants").select("owner_user_id").eq("id", tenantId).maybeSingle(),
