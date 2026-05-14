@@ -26,6 +26,7 @@ import {
   Upload,
   Plus,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
