@@ -15,6 +15,9 @@ interface Aluno {
   nome_completo: string | null;
   email: string | null;
   avatar_url: string | null;
+  sexo: string | null;
+  avatar_treinando_url?: string | null;
+  avatar_celebracao_url?: string | null;
 }
 
 // Paleta inspirada na referência (cada inicial em uma cor neon)
