@@ -32,6 +32,7 @@ const AuthContext = createContext<AuthContextValue>({
 export const useAuth = () => useContext(AuthContext);
 
 const ROLE_FETCH_TIMEOUT_MS = 6000;
+const SESSION_RESTORE_TIMEOUT_MS = 4500;
 
 const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -70,20 +71,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const applySession = (sess: Session | null) => {
+      if (!mounted) return;
       setSession(sess);
       setSessionReady(true);
     };
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
-      applySession(sess);
-      if (event === "SIGNED_OUT") {
-        sessionStorage.removeItem("splash_shown_session");
-      }
-    });
+    void withTimeout(
+      supabase.auth.getSession(),
+      { data: { session: null }, error: null } as Awaited<ReturnType<typeof supabase.auth.getSession>>,
+      "Restauração da sessão"
+    )
+      .then(({ data }) => {
+        applySession(data.session);
 
-    supabase.auth.getSession()
-      .then(({ data }) => applySession(data.session))
+        const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
+          applySession(sess);
+          if (event === "SIGNED_OUT") {
+            try {
+              Object.keys(sessionStorage)
+                .filter((k) => k.startsWith("splash_shown"))
+                .forEach((k) => sessionStorage.removeItem(k));
+            } catch {}
+          }
+        });
+
+        return sub.subscription;
+      })
       .catch((error) => {
         console.error("Error restoring auth session:", error);
         setSession(null);
@@ -92,7 +108,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSessionReady(true);
       });
 
-    return () => sub.subscription.unsubscribe();
+    return () => { mounted = false; };
   }, []);
 
   useEffect(() => {
