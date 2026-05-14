@@ -37,7 +37,7 @@ const Login = () => {
   const location = useLocation();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
-  const { user, isLoading: authLoading, roles } = useAuth();
+  const { user, sessionReady } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
@@ -97,13 +97,15 @@ const Login = () => {
 
   // Redireciona usuário já logado
   useEffect(() => {
-    if (authLoading || !user) return;
+    if (!sessionReady || !user) return;
 
     // Redireciona usuários já autenticados para o IndexRedirect, que decidirá o destino.
-    const target = urlSlug ? `/${urlSlug}/index` : "/index";
+    const lastSlug = localStorage.getItem("last_tenant_slug");
+    const targetSlug = urlSlug || tenant?.slug || lastSlug;
+    const target = targetSlug ? `/${targetSlug}/app` : "/index";
     console.log("[Login] Usuário já autenticado, redirecionando:", target);
     navigate(target, { replace: true });
-  }, [user, authLoading, navigate, urlSlug]);
+  }, [user, sessionReady, navigate, urlSlug, tenant?.slug]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

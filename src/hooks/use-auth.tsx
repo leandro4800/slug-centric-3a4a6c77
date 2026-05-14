@@ -12,6 +12,7 @@ interface UserRole {
 interface AuthContextValue {
   user: User | null;
   session: Session | null;
+  sessionReady: boolean;
   isLoading: boolean;
   roles: UserRole[];
   signOut: () => Promise<void>;
@@ -21,6 +22,7 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue>({
   user: null,
   session: null,
+  sessionReady: false,
   isLoading: true,
   roles: [],
   signOut: async () => {},
@@ -67,29 +69,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return data as UserRole[];
   };
 
-  const loadRolesForSession = (sess: Session | null) => {
-    const requestId = ++roleRequestId.current;
-
-    if (!sess?.user) {
-      setRoles([]);
-      setRolesLoading(false);
-      return;
-    }
-
-    setRolesLoading(true);
-    void withTimeout(fetchRoles(sess.user.id), [], "Busca de permissões")
-      .then((userRoles) => {
-        if (requestId === roleRequestId.current) setRoles(userRoles);
-      })
-      .finally(() => {
-        if (requestId === roleRequestId.current) setRolesLoading(false);
-      });
-  };
-
   useEffect(() => {
     const applySession = (sess: Session | null) => {
       setSession(sess);
-      loadRolesForSession(sess);
       setSessionReady(true);
     };
 
@@ -113,6 +95,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    if (!sessionReady) return;
+
+    const requestId = ++roleRequestId.current;
+
+    if (!session?.user) {
+      setRoles([]);
+      setRolesLoading(false);
+      return;
+    }
+
+    setRolesLoading(true);
+    void withTimeout(fetchRoles(session.user.id), [], "Busca de permissões")
+      .then((userRoles) => {
+        if (requestId === roleRequestId.current) setRoles(userRoles);
+      })
+      .finally(() => {
+        if (requestId === roleRequestId.current) setRolesLoading(false);
+      });
+  }, [sessionReady, session?.user?.id]);
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -131,7 +134,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const isLoading = !sessionReady || rolesLoading;
 
   return (
-    <AuthContext.Provider value={{ user: session?.user ?? null, session, isLoading, roles, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user: session?.user ?? null, session, sessionReady, isLoading, roles, signOut, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

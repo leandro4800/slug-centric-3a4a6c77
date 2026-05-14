@@ -208,7 +208,10 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
         const t = await loadTenantForCurrentUser();
         if (isMountedRef.current) {
           setTenant(t);
-          if (t) writeCache(t.slug, t);
+          if (t) {
+            writeCache(t.slug, t);
+            localStorage.setItem("last_tenant_slug", t.slug);
+          }
           applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force);
           setLoading(false); // Garante que o loading termina aqui
         }
@@ -245,6 +248,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
       const t = data as Tenant | null;
       setTenant(t);
       if (targetSlug) writeCache(targetSlug, t);
+      if (t?.slug) localStorage.setItem("last_tenant_slug", t.slug);
       const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
       applyTheme(overrides, t?.hero_url, force);
       if (t) lastLoadedTenantId.current = t.id;
