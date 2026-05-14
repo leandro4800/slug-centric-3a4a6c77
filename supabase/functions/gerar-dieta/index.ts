@@ -77,7 +77,6 @@ serve(async (req) => {
 
       const systemPrompt = `Você é um nutricionista especialista.
 Sua tarefa é AJUSTAR AS QUANTIDADES de uma dieta já montada para que ela atinja EXATAMENTE os macros alvo fornecidos.
-O usuário pode ter trocado alimentos (ex: frango por ovo). Você deve manter os alimentos escolhidos, mas recalcular os pesos (gramas) para bater a meta.
 
 META ALVO:
 Kcal: ${kcalAlvo}
@@ -85,10 +84,16 @@ Proteína: ${macros.proteina_g}g
 Carbo: ${macros.carboidrato_g}g
 Gordura: ${macros.lipideos_g}g
 
-REGRAS:
-1. Mantenha os alimentos citados na descrição.
-2. Altere apenas os números (quantidades).
-3. Retorne no mesmo formato JSON abaixo.`;
+REGRAS DE OURO (OBRIGATÓRIO):
+1. FIBRA: Máximo de 35g de fibra por dia. Distribua a fibra entre as refeições.
+2. AVEIA: Limite máximo de 100g de aveia por refeição. Se a quantidade original for maior, substitua o excesso por CREME DE ARROZ (especialmente no café da manhã).
+3. DIGESTÃO: Para volumes altos de comida, priorize alimentos de fácil digestão (arroz branco, purê de batata, etc), mas mantenha a fibra dentro do limite.
+4. GORDURAS:
+   - ELIMINE CASTANHAS (custo alto).
+   - Se objetivo for CUTTING: Priorize ovos, iogurte, pasta de amendoim (controlada), abacate.
+   - Se objetivo for BULKING: Priorize ovos, pasta de amendoim, queijo, banana + aveia.
+5. Mantenha os outros alimentos citados, alterando apenas os números (quantidades) para bater os macros.
+6. Retorne no mesmo formato JSON abaixo.`;
 
       const userPrompt = `Abaixo estão as refeições atuais. Ajuste-as para bater os macros alvo.\n\n${refeicoesTxt}`;
 
