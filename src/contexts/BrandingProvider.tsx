@@ -209,6 +209,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
           setTenant(t);
           if (t) writeCache(t.slug, t);
           applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force);
+          setLoading(false); // Garante que o loading termina aqui
         }
         lastLoadedSlug.current = null;
         lastLoadedTenantId.current = t?.id ?? null;
