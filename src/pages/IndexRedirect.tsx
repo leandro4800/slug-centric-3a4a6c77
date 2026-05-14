@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
  * Rota de redirecionamento principal simplificada e blindada contra loops.
  */
 const IndexRedirect = () => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, sessionReady } = useAuth();
   const { tenant, loading: brandingLoading } = useBranding();
   const navigate = useNavigate();
   const { slug: urlSlug } = useParams<{ slug: string }>();
@@ -22,10 +22,10 @@ const IndexRedirect = () => {
   const [decisionDone, setDecisionDone] = useState(false);
 
   useEffect(() => {
-    // Se ainda está carregando o básico e não deu timeout, esperamos
-    if (authLoading || brandingLoading) {
+    // Espera a sessão ser restaurada; se o branding demorar, decide com dados parciais.
+    if (!sessionReady || brandingLoading) {
       const safetyTimer = setTimeout(() => {
-        if (!decisionDone) {
+        if (sessionReady && !decisionDone) {
           console.warn("[IndexRedirect] Timeout de segurança atingido, decidindo com dados parciais.");
           setDecisionDone(true);
         }
@@ -34,7 +34,7 @@ const IndexRedirect = () => {
     }
     
     setDecisionDone(true);
-  }, [authLoading, brandingLoading, decisionDone]);
+  }, [sessionReady, brandingLoading, decisionDone]);
 
   useEffect(() => {
     if (!decisionDone) return;
