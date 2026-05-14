@@ -78,14 +78,25 @@ Deno.serve(async (req) => {
     }
 
     // Cache: se já existe avatar da variante e não foi pedido force, retorna direto
-    const field = VARIANT_FIELD[variant];
+    let cached = null;
     if (!force) {
-      const { data: perfilExist } = await admin
-        .from("perfis")
-        .select(field)
-        .eq("id", finalUserId)
-        .maybeSingle();
-      const cached = (perfilExist as any)?.[field];
+      if (variant === "carta") {
+        const { data: cartaExist } = await admin
+          .from("cartas_atleta")
+          .select("avatar_carta_url")
+          .eq("aluno_id", finalUserId)
+          .maybeSingle();
+        cached = cartaExist?.avatar_carta_url;
+      } else {
+        const field = VARIANT_FIELD[variant];
+        const { data: perfilExist } = await admin
+          .from("perfis")
+          .select(field)
+          .eq("id", finalUserId)
+          .maybeSingle();
+        cached = (perfilExist as any)?.[field];
+      }
+      
       if (cached) {
         return new Response(JSON.stringify({ avatar_url: cached, cached: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
