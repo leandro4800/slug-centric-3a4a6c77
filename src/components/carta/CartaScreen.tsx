@@ -43,6 +43,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
   const [perfilNome, setPerfilNome] = useState<string>("");
   const [perfilSexo, setPerfilSexo] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
