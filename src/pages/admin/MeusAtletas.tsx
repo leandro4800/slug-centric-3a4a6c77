@@ -225,6 +225,25 @@ const MeusAtletas = () => {
           <button className="text-xs uppercase tracking-widest px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold">
             Atletas
           </button>
+          <button 
+            onClick={async () => {
+              const semAvatar = alunos.filter(a => !a.avatar_url && !DEMO_ATHLETE_EMAILS.has(a.email || ""));
+              if (semAvatar.length === 0) {
+                toast.info("Todos os atletas já possuem avatar.");
+                return;
+              }
+              if (!confirm(`Deseja tentar gerar avatares para ${semAvatar.length} atletas que estão sem? Isso consumirá créditos de IA.`)) return;
+              
+              toast.info(`Iniciando geração em lote para ${semAvatar.length} atletas...`);
+              for (const a of semAvatar) {
+                await handleGerarAvatar(a);
+              }
+            }}
+            className="col-span-2 flex items-center justify-center gap-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-all group"
+          >
+            <Sparkles className="h-5 w-5 text-amber-500 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Gerar Avatares Faltantes</span>
+          </button>
         </div>
       )}
 
