@@ -318,12 +318,22 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Carta */}
         <motion.div
-          className="lg:col-span-5 flex justify-center"
+          className="lg:col-span-5 flex flex-col items-center gap-6"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         >
-          <HolographicCard hue="0 85% 50%">
-            <AthleteCard carta={view} />
+          <HolographicCard hue="180 100% 50%">
+            <div ref={cardContainerRef}>
+              <AthleteCard carta={view} />
+            </div>
           </HolographicCard>
+
+          <Button 
+            variant="outline"
+            onClick={handleDownloadCard} 
+            className="font-gaming w-full max-w-sm border-[hsl(180_100%_50%/0.4)] hover:bg-[hsl(180_100%_50%/0.1)] text-white"
+          >
+            <Download className="w-4 h-4 mr-2" /> Baixar Carta para Postar
+          </Button>
         </motion.div>
 
         {/* Painel de info / edição */}
