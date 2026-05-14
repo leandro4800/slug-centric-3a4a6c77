@@ -76,7 +76,8 @@ const IndexRedirect = () => {
           const currentPath = normalizePath(window.location.pathname);
           const targetPath = normalizePath(target.split("?")[0]);
           if (currentPath === targetPath) return;
-          if (isRecentReverseNavigation(currentPath, targetPath)) {
+          const isLoginTarget = targetPath === "/login" || targetPath.endsWith("/login");
+          if (!isLoginTarget && isRecentReverseNavigation(currentPath, targetPath)) {
             console.error("[IndexRedirect] Loop de navegação bloqueado:", currentPath, "->", targetPath);
             setDestination(null);
             return;
