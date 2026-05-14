@@ -52,7 +52,7 @@ const Login = () => {
     const targetSlug = candidateSlug && /^[a-z0-9-]+$/i.test(candidateSlug) && candidateSlug !== "index" && candidateSlug !== "demo"
       ? candidateSlug
       : null;
-    navigate(targetSlug ? `/${targetSlug}/app` : "/index", { replace: true });
+    navigate(targetSlug ? `/${targetSlug}/app` : "/onboarding", { replace: true });
   };
 
   const handleResendConfirmation = async () => {
