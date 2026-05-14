@@ -161,7 +161,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
   const cachedTenant = slug ? readCache(slug) : null;
   const [tenant, setTenant] = useState<Tenant | null>(cachedTenant);
-  const [loading, setLoading] = useState(!!slug && !cachedTenant);
+  const [loading, setLoading] = useState(true); // Sempre começa em loading para evitar flashes ou inconsistências no início
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
