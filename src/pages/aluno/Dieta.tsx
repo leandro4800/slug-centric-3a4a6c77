@@ -55,6 +55,13 @@ const calcMacros = (itens: Item[]) => {
   return { kcal: Math.round(kcal), p: Math.round(p), c: Math.round(c), g: Math.round(g) };
 };
 
+const macrosFromTarget = (dieta: Dieta | null) => ({
+  kcal: Math.round(Number(dieta?.kcal_alvo) || 0),
+  p: Math.round(Number(dieta?.macros_alvo?.proteina_g) || 0),
+  c: Math.round(Number(dieta?.macros_alvo?.carboidrato_g) || 0),
+  g: Math.round(Number(dieta?.macros_alvo?.lipideos_g) || 0),
+});
+
 // Imagem cinematográfica por refeição (assets locais)
 const imgFor = (nome: string) => {
   const n = (nome || "").toLowerCase();
@@ -121,10 +128,15 @@ const Dieta = () => {
 
   useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [user]);
 
-  const totalDia = dieta ? dieta.refeicoes.reduce((acc, r) => {
-    const m = calcMacros(r.itens);
-    return { kcal: acc.kcal + m.kcal, p: acc.p + m.p, c: acc.c + m.c, g: acc.g + m.g };
-  }, { kcal: 0, p: 0, c: 0, g: 0 }) : { kcal: 0, p: 0, c: 0, g: 0 };
+  const hasStructuredItems = !!dieta?.refeicoes.some(r => r.itens.length > 0);
+  const totalDia = dieta
+    ? hasStructuredItems
+      ? dieta.refeicoes.reduce((acc, r) => {
+          const m = calcMacros(r.itens);
+          return { kcal: acc.kcal + m.kcal, p: acc.p + m.p, c: acc.c + m.c, g: acc.g + m.g };
+        }, { kcal: 0, p: 0, c: 0, g: 0 })
+      : macrosFromTarget(dieta)
+    : { kcal: 0, p: 0, c: 0, g: 0 };
 
   const pieData = [
     { name: "Proteína", value: totalDia.p * 4, color: `hsl(${COLOR_PROT})` },
@@ -133,7 +145,7 @@ const Dieta = () => {
   ];
 
   const badge = dieta?.macros_alvo?.badge;
-  const selectedMacros = useMemo(() => selectedRef ? calcMacros(selectedRef.itens) : null, [selectedRef]);
+  const selectedMacros = useMemo(() => selectedRef && selectedRef.itens.length > 0 ? calcMacros(selectedRef.itens) : null, [selectedRef]);
 
   return (
     <>
