@@ -300,6 +300,7 @@ const Dieta = () => {
             <div className="space-y-3">
               {dieta.refeicoes.map(r => {
                 const macros = calcMacros(r.itens);
+                const hasItems = r.itens.length > 0;
                 return (
                   <button
                     key={r.id}
@@ -325,28 +326,28 @@ const Dieta = () => {
                           <span className="text-xs font-bold text-white tracking-wide">{r.horario || "—"}</span>
                         </div>
                         {/* Macros da refeição no card */}
-                        <div className="flex gap-2">
-                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
-                            <span className="text-primary">{macros.kcal}</span>
-                            <span className="opacity-50 font-normal">kcal</span>
-                          </div>
-                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
-                            <span style={{ color: `hsl(${COLOR_PROT})` }}>{macros.p}g</span>
-                            <span className="opacity-50 font-normal">P</span>
-                          </div>
-                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
-                            <span style={{ color: `hsl(${COLOR_CARB})` }}>{macros.c}g</span>
-                            <span className="opacity-50 font-normal">C</span>
-                          </div>
-                        </div>
+                          {hasItems && (
+                            <div className="flex gap-2">
+                              <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                                <span className="text-primary">{macros.kcal}</span>
+                                <span className="opacity-50 font-normal">kcal</span>
+                              </div>
+                              <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                                <span style={{ color: `hsl(${COLOR_PROT})` }}>{macros.p}g</span>
+                                <span className="opacity-50 font-normal">P</span>
+                              </div>
+                              <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                                <span style={{ color: `hsl(${COLOR_CARB})` }}>{macros.c}g</span>
+                                <span className="opacity-50 font-normal">C</span>
+                              </div>
+                            </div>
+                          )}
                       </div>
                       <div>
                         <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                           {r.nome.toUpperCase()}
                         </h3>
-                        {r.descricao_ia && (
-                          <p className="text-[10px] text-white/60 line-clamp-1 mt-1 font-medium">{r.descricao_ia}</p>
-                        )}
+                          <p className="text-[10px] text-white/70 line-clamp-2 mt-1 font-medium">{r.descricao_ia || "Toque para ver a prescrição."}</p>
                       </div>
                     </div>
                     {/* Play cinza no canto inferior direito */}
