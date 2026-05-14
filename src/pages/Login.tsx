@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,23 +13,10 @@ import { useBranding } from "@/contexts/BrandingProvider";
 
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 
-const LOGIN_REDIRECT_GUARD_KEY = "login_redirect_guard_v1";
-const LOGIN_LAST_AUTO_REDIRECT_KEY = "login_last_auto_redirect_v1";
-
-const registerLoginRedirectAttempt = () => {
-  const now = Date.now();
-  const recentWindowMs = 15000;
-  const attempts = JSON.parse(sessionStorage.getItem(LOGIN_REDIRECT_GUARD_KEY) || "[]") as number[];
-  const recent = [...attempts.filter((time) => now - time < recentWindowMs), now];
-  sessionStorage.setItem(LOGIN_REDIRECT_GUARD_KEY, JSON.stringify(recent));
-  return recent.length;
-};
-
 const Login = () => {
   const navigate = useNavigate();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
-  const { user, sessionReady, signOut } = useAuth();
   const safeRedirectSlug = useMemo(() => {
     const candidate = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
     if (!candidate || !/^[a-z0-9-]+$/i.test(candidate) || candidate === "index" || candidate === "demo") return null;
@@ -43,7 +29,6 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
-  const [redirectTimedOut, setRedirectTimedOut] = useState(false);
 
   const redeemVoucherCode = async (code: string): Promise<boolean> => {
     const { data, error } = await supabase.rpc("redeem_voucher", { _code: code });
