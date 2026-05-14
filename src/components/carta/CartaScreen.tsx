@@ -321,7 +321,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
           className="lg:col-span-5 flex flex-col items-center gap-6"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         >
-          <HolographicCard hue="180 100% 50%">
+          <HolographicCard hue="355 100% 50%">
             <div ref={cardContainerRef}>
               <AthleteCard carta={view} />
             </div>
