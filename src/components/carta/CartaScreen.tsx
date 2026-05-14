@@ -5,8 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft } from "lucide-react";
+import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft, Download } from "lucide-react";
 import heic2any from "heic2any";
+import html2canvas from "html2canvas";
 import { AthleteCard, type CartaData, type AtributosCarta } from "./AthleteCard";
 import { HolographicCard } from "./HolographicCard";
 import { PainelEvolucao } from "./PainelEvolucao";
@@ -42,6 +43,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
   const [perfilNome, setPerfilNome] = useState<string>("");
   const [perfilSexo, setPerfilSexo] = useState<string>("");
   const fileRef = useRef<HTMLInputElement>(null);
+  const cardContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -249,6 +251,47 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
     toast.success("Avatar gerado!");
   };
 
+  const downloadImage = async (url: string, filename: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Error downloading image:", error);
+      toast.error("Erro ao baixar imagem. Tente abrir em uma nova aba e salvar.");
+    }
+  };
+
+  const handleDownloadCard = async () => {
+    if (!cardContainerRef.current) return;
+    const tid = toast.loading("Gerando imagem da carta...");
+    try {
+      // Capturamos a carta. useCORS é essencial para imagens do Supabase
+      const canvas = await html2canvas(cardContainerRef.current, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 2, // Melhor qualidade
+        logging: false,
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `carta-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`;
+      link.click();
+      toast.success("Carta baixada!", { id: tid });
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao gerar imagem da carta", { id: tid });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-fut-deep flex items-center justify-center">
@@ -275,12 +318,22 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
       <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Carta */}
         <motion.div
-          className="lg:col-span-5 flex justify-center"
+          className="lg:col-span-5 flex flex-col items-center gap-6"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }}
         >
-          <HolographicCard hue="0 85% 50%">
-            <AthleteCard carta={view} />
+          <HolographicCard hue="355 100% 50%">
+            <div ref={cardContainerRef}>
+              <AthleteCard carta={view} />
+            </div>
           </HolographicCard>
+
+          <Button 
+            variant="outline"
+            onClick={handleDownloadCard} 
+            className="font-gaming w-full max-w-sm border-[hsl(180_100%_50%/0.4)] hover:bg-[hsl(180_100%_50%/0.1)] text-white"
+          >
+            <Download className="w-4 h-4 mr-2" /> Baixar Carta para Postar
+          </Button>
         </motion.div>
 
         {/* Painel de info / edição */}
@@ -367,6 +420,19 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
                         alt="Avatar IA corpo inteiro"
                         className="w-full h-full object-contain drop-shadow-[0_8px_30px_hsla(42_70%_62%_/_0.5)]"
                       />
+                      <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                        <Button 
+                          size="sm" 
+                          variant="secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (view.avatar_carta_url) downloadImage(view.avatar_carta_url, `avatar-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`);
+                          }}
+                          className="font-gaming text-[10px]"
+                        >
+                          <Download className="w-3 h-3 mr-2" /> Baixar Avatar
+                        </Button>
+                      </div>
                       <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
                     </>
                   ) : (
