@@ -155,20 +155,7 @@ const Login = () => {
         </Link>
         <div className="relative bg-black/10 border border-white/20 rounded-none p-8 shadow-card overflow-hidden min-h-[400px]">
           <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
-          {user ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4">
-              <Loader2 className="h-10 w-10 animate-spin text-primary" />
-              <p className="text-sm font-bold uppercase tracking-widest text-primary animate-pulse">Acessando seu Painel...</p>
-              {redirectTimedOut && (
-                <div className="mt-4 flex w-full flex-col gap-3 text-center">
-                  <p className="text-xs text-muted-foreground">Proteção anti-loop ativada. Escolha uma ação para continuar.</p>
-                  <Button type="button" onClick={retryPanelAccess} className="w-full">Tentar acessar painel</Button>
-                  <Button type="button" variant="outline" onClick={resetSession} className="w-full">Sair e entrar novamente</Button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <Tabs defaultValue="login">
+          <Tabs defaultValue="login">
             <TabsList className="grid grid-cols-2 w-full mb-8 bg-transparent p-1 rounded-none border border-white/5">
               <TabsTrigger value="login" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Entrar</TabsTrigger>
               <TabsTrigger value="signup" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Criar conta</TabsTrigger>
@@ -274,7 +261,6 @@ const Login = () => {
               </form>
             </TabsContent>
             </Tabs>
-          )}
         <p className="text-center text-xs text-muted-foreground mt-6">
           {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
         </p>
