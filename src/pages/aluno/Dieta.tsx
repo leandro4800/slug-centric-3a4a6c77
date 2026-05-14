@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Utensils, Sparkles, Loader2, RefreshCcw, AlertCircle, Activity, Play, Clock, X } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { PageHeader } from "@/components/aluno/PageHeader";
@@ -27,12 +27,14 @@ import imgMacroHero from "@/assets/macro-hero.jpg";
 type Alimento = { id: string; nome: string; energia_kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number };
 type Item = { id: string; quantidade_g: number; substituicoes: string | null; alimento: Alimento | null };
 type Refeicao = { id: string; nome: string; horario: string | null; ordem: number | null; descricao_ia: string | null; itens: Item[] };
+type MacrosAlvo = { proteina_g?: number | string | null; carboidrato_g?: number | string | null; lipideos_g?: number | string | null; badge?: string | null } | null;
+type ItemRow = Omit<Item, "quantidade_g"> & { quantidade_g: number | string | null; refeicao_id: string | null };
 type Dieta = {
   id: string;
   objetivo: string | null;
   kcal_alvo: number | null;
   tmb_estimada: number | null;
-  macros_alvo: any;
+  macros_alvo: MacrosAlvo;
   observacoes_clinicas: string | null;
   refeicoes: Refeicao[];
 };
@@ -55,6 +57,13 @@ const calcMacros = (itens: Item[]) => {
   return { kcal: Math.round(kcal), p: Math.round(p), c: Math.round(c), g: Math.round(g) };
 };
 
+const macrosFromTarget = (dieta: Dieta | null) => ({
+  kcal: Math.round(Number(dieta?.kcal_alvo) || 0),
+  p: Math.round(Number(dieta?.macros_alvo?.proteina_g) || 0),
+  c: Math.round(Number(dieta?.macros_alvo?.carboidrato_g) || 0),
+  g: Math.round(Number(dieta?.macros_alvo?.lipideos_g) || 0),
+});
+
 // Imagem cinematográfica por refeição (assets locais)
 const imgFor = (nome: string) => {
   const n = (nome || "").toLowerCase();
@@ -74,7 +83,7 @@ const Dieta = () => {
   const [dieta, setDieta] = useState<Dieta | null>(null);
   const [selectedRef, setSelectedRef] = useState<Refeicao | null>(null);
 
-  const carregar = async () => {
+  const carregar = useCallback(async () => {
     if (!user) return;
     setLoading(true);
     const { data: dietas } = await supabase
@@ -99,7 +108,9 @@ const Dieta = () => {
           .from("itens_refeicao")
           .select("id, quantidade_g, substituicoes, refeicao_id, alimento:alimentos_taco(id, nome, energia_kcal, proteina_g, carboidrato_g, lipideos_g)")
           .in("refeicao_id", refIds)
-      : { data: [] as any[] };
+      : { data: [] as ItemRow[] };
+
+    const itemRows = (itens || []) as ItemRow[];
 
     const refeicoes: Refeicao[] = (refs || []).map(r => ({
       id: r.id,
@@ -107,7 +118,7 @@ const Dieta = () => {
       horario: r.horario,
       ordem: r.ordem,
       descricao_ia: r.descricao_ia,
-      itens: (itens || []).filter((i: any) => i.refeicao_id === r.id).map((i: any) => ({
+      itens: itemRows.filter((i) => i.refeicao_id === r.id).map((i) => ({
         id: i.id,
         quantidade_g: Number(i.quantidade_g),
         substituicoes: i.substituicoes,
@@ -117,14 +128,19 @@ const Dieta = () => {
 
     setDieta({ ...d, refeicoes } as Dieta);
     setLoading(false);
-  };
+  }, [user]);
 
-  useEffect(() => { carregar(); /* eslint-disable-next-line */ }, [user]);
+  useEffect(() => { void carregar(); }, [carregar]);
 
-  const totalDia = dieta ? dieta.refeicoes.reduce((acc, r) => {
-    const m = calcMacros(r.itens);
-    return { kcal: acc.kcal + m.kcal, p: acc.p + m.p, c: acc.c + m.c, g: acc.g + m.g };
-  }, { kcal: 0, p: 0, c: 0, g: 0 }) : { kcal: 0, p: 0, c: 0, g: 0 };
+  const hasStructuredItems = !!dieta?.refeicoes.some(r => r.itens.length > 0);
+  const totalDia = dieta
+    ? hasStructuredItems
+      ? dieta.refeicoes.reduce((acc, r) => {
+          const m = calcMacros(r.itens);
+          return { kcal: acc.kcal + m.kcal, p: acc.p + m.p, c: acc.c + m.c, g: acc.g + m.g };
+        }, { kcal: 0, p: 0, c: 0, g: 0 })
+      : macrosFromTarget(dieta)
+    : { kcal: 0, p: 0, c: 0, g: 0 };
 
   const pieData = [
     { name: "Proteína", value: totalDia.p * 4, color: `hsl(${COLOR_PROT})` },
@@ -133,7 +149,7 @@ const Dieta = () => {
   ];
 
   const badge = dieta?.macros_alvo?.badge;
-  const selectedMacros = useMemo(() => selectedRef ? calcMacros(selectedRef.itens) : null, [selectedRef]);
+  const selectedMacros = useMemo(() => selectedRef && selectedRef.itens.length > 0 ? calcMacros(selectedRef.itens) : null, [selectedRef]);
 
   return (
     <>
@@ -226,7 +242,8 @@ const Dieta = () => {
                   { l: "CARBO",    v: totalDia.c, alvo: dieta.macros_alvo?.carboidrato_g, hsl: COLOR_CARB, img: imgMacroCarbs },
                   { l: "GORDURA",  v: totalDia.g, alvo: dieta.macros_alvo?.lipideos_g, hsl: COLOR_FAT, img: imgMacroFats },
                 ].map(m => {
-                  const pct = m.alvo ? Math.min(100, Math.round((m.v / m.alvo) * 100)) : 0;
+                  const alvo = Number(m.alvo) || 0;
+                  const pct = alvo ? Math.min(100, Math.round((m.v / alvo) * 100)) : 0;
                   return (
                     <div
                       key={m.l}
@@ -288,6 +305,7 @@ const Dieta = () => {
             <div className="space-y-3">
               {dieta.refeicoes.map(r => {
                 const macros = calcMacros(r.itens);
+                const hasItems = r.itens.length > 0;
                 return (
                   <button
                     key={r.id}
@@ -313,28 +331,28 @@ const Dieta = () => {
                           <span className="text-xs font-bold text-white tracking-wide">{r.horario || "—"}</span>
                         </div>
                         {/* Macros da refeição no card */}
-                        <div className="flex gap-2">
-                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
-                            <span className="text-primary">{macros.kcal}</span>
-                            <span className="opacity-50 font-normal">kcal</span>
-                          </div>
-                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
-                            <span style={{ color: `hsl(${COLOR_PROT})` }}>{macros.p}g</span>
-                            <span className="opacity-50 font-normal">P</span>
-                          </div>
-                          <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
-                            <span style={{ color: `hsl(${COLOR_CARB})` }}>{macros.c}g</span>
-                            <span className="opacity-50 font-normal">C</span>
-                          </div>
-                        </div>
+                          {hasItems && (
+                            <div className="flex gap-2">
+                              <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                                <span className="text-primary">{macros.kcal}</span>
+                                <span className="opacity-50 font-normal">kcal</span>
+                              </div>
+                              <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                                <span style={{ color: `hsl(${COLOR_PROT})` }}>{macros.p}g</span>
+                                <span className="opacity-50 font-normal">P</span>
+                              </div>
+                              <div className="px-2 py-1 rounded bg-black/60 backdrop-blur border border-white/10 text-[9px] text-white font-bold flex flex-col items-center">
+                                <span style={{ color: `hsl(${COLOR_CARB})` }}>{macros.c}g</span>
+                                <span className="opacity-50 font-normal">C</span>
+                              </div>
+                            </div>
+                          )}
                       </div>
                       <div>
                         <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
                           {r.nome.toUpperCase()}
                         </h3>
-                        {r.descricao_ia && (
-                          <p className="text-[10px] text-white/60 line-clamp-1 mt-1 font-medium">{r.descricao_ia}</p>
-                        )}
+                          <p className="text-[10px] text-white/70 line-clamp-2 mt-1 font-medium">{r.descricao_ia || "Toque para ver a prescrição."}</p>
                       </div>
                     </div>
                     {/* Play cinza no canto inferior direito */}
@@ -406,26 +424,32 @@ const Dieta = () => {
 
                 <div>
                   <h3 className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">ALIMENTOS</h3>
-                  <div className="divide-y divide-border/50 border border-border rounded-lg overflow-hidden">
-                    {selectedRef.itens.map(it => (
-                      <div key={it.id} className="px-3 py-2.5 flex items-center justify-between gap-3 bg-background/40">
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{it.alimento?.nome || "—"}</p>
-                          <p className="text-[11px] text-muted-foreground">{it.quantidade_g}g {it.substituicoes ? `· ${it.substituicoes}` : ""}</p>
+                  {selectedRef.itens.length > 0 ? (
+                    <div className="divide-y divide-border/50 border border-border rounded-lg overflow-hidden">
+                      {selectedRef.itens.map(it => (
+                        <div key={it.id} className="px-3 py-2.5 flex items-center justify-between gap-3 bg-background/40">
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium truncate">{it.alimento?.nome || "—"}</p>
+                            <p className="text-[11px] text-muted-foreground">{it.quantidade_g}g {it.substituicoes ? `· ${it.substituicoes}` : ""}</p>
+                          </div>
+                          {it.substituicoes && (
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-[10px] h-7 px-2 text-primary hover:text-primary hover:bg-primary/10"
+                              onClick={() => toast.info(it.substituicoes!, { duration: 6000 })}
+                            >
+                              <RefreshCcw className="h-3 w-3 mr-1" /> Substituir
+                            </Button>
+                          )}
                         </div>
-                        {it.substituicoes && (
-                          <Button
-                            size="sm"
-                            variant="ghost"
-                            className="text-[10px] h-7 px-2 text-primary hover:text-primary hover:bg-primary/10"
-                            onClick={() => toast.info(it.substituicoes!, { duration: 6000 })}
-                          >
-                            <RefreshCcw className="h-3 w-3 mr-1" /> Substituir
-                          </Button>
-                        )}
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="rounded-lg border border-border bg-background/40 p-4 text-sm leading-relaxed whitespace-pre-line">
+                      {selectedRef.descricao_ia || "Prescrição não informada para esta refeição."}
+                    </div>
+                  )}
                 </div>
               </div>
             </>
