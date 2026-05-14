@@ -15,6 +15,16 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 
 const REDIRECT_QUERY_TIMEOUT_MS = 12000;
+const LOGIN_REDIRECT_GUARD_KEY = "login_redirect_guard_v1";
+
+const registerLoginRedirectAttempt = () => {
+  const now = Date.now();
+  const recentWindowMs = 15000;
+  const attempts = JSON.parse(sessionStorage.getItem(LOGIN_REDIRECT_GUARD_KEY) || "[]") as number[];
+  const recent = [...attempts.filter((time) => now - time < recentWindowMs), now];
+  sessionStorage.setItem(LOGIN_REDIRECT_GUARD_KEY, JSON.stringify(recent));
+  return recent.length;
+};
 
 const withRedirectTimeout = async <T,>(promise: PromiseLike<T>, fallback: unknown, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -37,7 +47,7 @@ const Login = () => {
   const location = useLocation();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
-  const { user, sessionReady } = useAuth();
+  const { user, sessionReady, signOut } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
@@ -103,9 +113,33 @@ const Login = () => {
     const lastSlug = localStorage.getItem("last_tenant_slug");
     const targetSlug = urlSlug || tenant?.slug || lastSlug;
     const target = targetSlug ? `/${targetSlug}/app` : "/index";
+
+    if (redirectTimedOut) return;
+
+    const attemptCount = registerLoginRedirectAttempt();
+    if (attemptCount >= 3) {
+      console.error("[Login] Loop de redirecionamento detectado. Travando auto-redirect para proteger o app.");
+      setRedirectTimedOut(true);
+      return;
+    }
+
     console.log("[Login] Usuário já autenticado, redirecionando:", target);
     navigate(target, { replace: true });
-  }, [user, sessionReady, navigate, urlSlug, tenant?.slug]);
+  }, [user, sessionReady, navigate, urlSlug, tenant?.slug, redirectTimedOut]);
+
+  const retryPanelAccess = () => {
+    sessionStorage.removeItem(LOGIN_REDIRECT_GUARD_KEY);
+    setRedirectTimedOut(false);
+    const lastSlug = localStorage.getItem("last_tenant_slug");
+    const targetSlug = urlSlug || tenant?.slug || lastSlug;
+    navigate(targetSlug ? `/${targetSlug}/app` : "/index", { replace: true });
+  };
+
+  const resetSession = async () => {
+    sessionStorage.removeItem(LOGIN_REDIRECT_GUARD_KEY);
+    await signOut();
+    setRedirectTimedOut(false);
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -235,7 +269,11 @@ const Login = () => {
               <Loader2 className="h-10 w-10 animate-spin text-primary" />
               <p className="text-sm font-bold uppercase tracking-widest text-primary animate-pulse">Acessando seu Painel...</p>
               {redirectTimedOut && (
-                <p className="text-[10px] text-muted-foreground mt-4">Redirecionando manualmente em instantes...</p>
+                <div className="mt-4 flex w-full flex-col gap-3 text-center">
+                  <p className="text-xs text-muted-foreground">Proteção anti-loop ativada. Escolha uma ação para continuar.</p>
+                  <Button type="button" onClick={retryPanelAccess} className="w-full">Tentar acessar painel</Button>
+                  <Button type="button" variant="outline" onClick={resetSession} className="w-full">Sair e entrar novamente</Button>
+                </div>
               )}
             </div>
           ) : (
