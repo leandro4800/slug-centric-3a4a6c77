@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate, useLocation, useParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,8 +14,8 @@ import { useBranding } from "@/contexts/BrandingProvider";
 
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 
-const REDIRECT_QUERY_TIMEOUT_MS = 12000;
 const LOGIN_REDIRECT_GUARD_KEY = "login_redirect_guard_v1";
+const LOGIN_LAST_AUTO_REDIRECT_KEY = "login_last_auto_redirect_v1";
 
 const registerLoginRedirectAttempt = () => {
   const now = Date.now();
@@ -26,28 +26,16 @@ const registerLoginRedirectAttempt = () => {
   return recent.length;
 };
 
-const withRedirectTimeout = async <T,>(promise: PromiseLike<T>, fallback: unknown, label: string): Promise<T> => {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<T>((resolve) => {
-    timeoutId = setTimeout(() => {
-      console.warn(`[Login] ${label} demorou demais; usando fallback seguro.`);
-      resolve(fallback as T);
-    }, REDIRECT_QUERY_TIMEOUT_MS);
-  });
-
-  try {
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
-  }
-};
-
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
   const { user, sessionReady, signOut } = useAuth();
+  const safeRedirectSlug = useMemo(() => {
+    const candidate = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
+    if (!candidate || !/^[a-z0-9-]+$/i.test(candidate) || candidate === "index" || candidate === "demo") return null;
+    return candidate;
+  }, [urlSlug, tenant?.slug]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
@@ -109,10 +97,7 @@ const Login = () => {
   useEffect(() => {
     if (!sessionReady || !user) return;
 
-    // Redireciona usuários já autenticados para o IndexRedirect, que decidirá o destino.
-    const lastSlug = localStorage.getItem("last_tenant_slug");
-    const targetSlug = urlSlug || tenant?.slug || lastSlug;
-    const target = targetSlug ? `/${targetSlug}/app` : "/index";
+    const target = safeRedirectSlug ? `/${safeRedirectSlug}/app` : "/";
 
     if (redirectTimedOut) return;
 
@@ -123,20 +108,29 @@ const Login = () => {
       return;
     }
 
+    const previousTarget = sessionStorage.getItem(LOGIN_LAST_AUTO_REDIRECT_KEY);
+    if (previousTarget === target && attemptCount > 1) {
+      console.warn("[Login] Auto-redirecionamento repetido bloqueado:", target);
+      setRedirectTimedOut(true);
+      return;
+    }
+
+    sessionStorage.setItem(LOGIN_LAST_AUTO_REDIRECT_KEY, target);
+
     console.log("[Login] Usuário já autenticado, redirecionando:", target);
     navigate(target, { replace: true });
-  }, [user, sessionReady, navigate, urlSlug, tenant?.slug, redirectTimedOut]);
+  }, [user, sessionReady, navigate, safeRedirectSlug, redirectTimedOut]);
 
   const retryPanelAccess = () => {
     sessionStorage.removeItem(LOGIN_REDIRECT_GUARD_KEY);
+    sessionStorage.removeItem(LOGIN_LAST_AUTO_REDIRECT_KEY);
     setRedirectTimedOut(false);
-    const lastSlug = localStorage.getItem("last_tenant_slug");
-    const targetSlug = urlSlug || tenant?.slug || lastSlug;
-    navigate(targetSlug ? `/${targetSlug}/app` : "/index", { replace: true });
+    navigate(safeRedirectSlug ? `/${safeRedirectSlug}/app` : "/", { replace: true });
   };
 
   const resetSession = async () => {
     sessionStorage.removeItem(LOGIN_REDIRECT_GUARD_KEY);
+    sessionStorage.removeItem(LOGIN_LAST_AUTO_REDIRECT_KEY);
     await signOut();
     setRedirectTimedOut(false);
   };

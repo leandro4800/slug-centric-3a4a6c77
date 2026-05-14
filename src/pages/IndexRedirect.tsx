@@ -1,9 +1,30 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+
+const NAVIGATION_MEMORY_KEY = "startup_navigation_memory_v1";
+
+const normalizePath = (path: string) => path.replace(/\/+$/, "") || "/";
+
+const rememberStartupNavigation = (from: string, to: string) => {
+  try {
+    sessionStorage.setItem(NAVIGATION_MEMORY_KEY, JSON.stringify({ from, to, at: Date.now() }));
+  } catch {}
+};
+
+const isRecentReverseNavigation = (from: string, to: string) => {
+  try {
+    const raw = sessionStorage.getItem(NAVIGATION_MEMORY_KEY);
+    if (!raw) return false;
+    const previous = JSON.parse(raw) as { from?: string; to?: string; at?: number };
+    return previous.from === to && previous.to === from && Date.now() - (previous.at ?? 0) < 12000;
+  } catch {
+    return false;
+  }
+};
 
 /**
  * Rota de redirecionamento principal simplificada e blindada contra loops.
@@ -11,7 +32,6 @@ import { supabase } from "@/integrations/supabase/client";
 const IndexRedirect = () => {
   const { user, sessionReady } = useAuth();
   const { tenant, loading: brandingLoading } = useBranding();
-  const navigate = useNavigate();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   
   const params = new URLSearchParams(window.location.search);
@@ -20,6 +40,7 @@ const IndexRedirect = () => {
   const safeSlug = slugParam && /^[a-z0-9-]+$/i.test(slugParam) ? slugParam : null;
 
   const [decisionDone, setDecisionDone] = useState(false);
+  const [destination, setDestination] = useState<string | null>(null);
 
   useEffect(() => {
     // Espera a sessão ser restaurada; se o branding demorar, decide com dados parciais.
@@ -43,13 +64,26 @@ const IndexRedirect = () => {
       try {
         console.log("[IndexRedirect] Iniciando decisão de destino. User:", user?.id, "Slug:", safeSlug);
 
+        const go = (target: string) => {
+          const currentPath = normalizePath(window.location.pathname);
+          const targetPath = normalizePath(target.split("?")[0]);
+          if (currentPath === targetPath) return;
+          if (isRecentReverseNavigation(currentPath, targetPath)) {
+            console.error("[IndexRedirect] Loop de navegação bloqueado:", currentPath, "->", targetPath);
+            setDestination(null);
+            return;
+          }
+          rememberStartupNavigation(currentPath, targetPath);
+          setDestination(target);
+        };
+
         if (!user) {
           const loginPath = safeSlug ? `/${safeSlug}/login` : "/login";
           const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
           
           if (window.location.pathname !== loginPath) {
             console.log("[IndexRedirect] Não autenticado, redirecionando para:", target);
-            navigate(target, { replace: true });
+            go(target);
           }
           return;
         }
@@ -58,7 +92,7 @@ const IndexRedirect = () => {
         if (cachedSlug && cachedSlug !== "index" && cachedSlug !== "demo") {
           const target = `/${cachedSlug}/app`;
           console.log("[IndexRedirect] Usando último tenant conhecido:", target);
-          if (window.location.pathname !== target) navigate(target, { replace: true });
+          go(target);
           return;
         }
 
@@ -85,7 +119,7 @@ const IndexRedirect = () => {
         if (ownedTenant?.slug) {
           const target = `/${ownedTenant.slug}/app`;
           console.log("[IndexRedirect] Redirecionando dono para seu app:", target);
-          if (window.location.pathname !== target) navigate(target, { replace: true });
+          go(target);
           return;
         }
 
@@ -101,7 +135,7 @@ const IndexRedirect = () => {
           if (targetTenant) {
             const target = `/${targetTenant.slug}/app`;
             console.log("[IndexRedirect] Slug encontrado, tentando entrar no app:", target);
-            if (window.location.pathname !== target) navigate(target, { replace: true });
+            go(target);
             return;
           }
         }
@@ -123,7 +157,7 @@ const IndexRedirect = () => {
           if (profileTenant?.slug) {
             const target = `/${profileTenant.slug}/app`;
             console.log("[IndexRedirect] Tenant do perfil encontrado:", target);
-            if (window.location.pathname !== target) navigate(target, { replace: true });
+            go(target);
             return;
           }
         }
@@ -132,22 +166,24 @@ const IndexRedirect = () => {
         if (safeSlug) {
           const target = `/${safeSlug}/onboarding`;
           console.log("[IndexRedirect] Nada encontrado, tentando onboarding no slug:", target);
-          if (window.location.pathname !== target) navigate(target, { replace: true });
+          go(target);
           return;
         }
 
         // Fallback absoluto
         console.log("[IndexRedirect] Sem destino claro, enviando para onboarding geral");
-        navigate("/onboarding", { replace: true });
+        go("/onboarding");
 
       } catch (err) {
         console.error("[IndexRedirect] Erro crítico:", err);
-        navigate("/login", { replace: true });
+        setDestination("/login");
       }
     };
 
     decideDestination();
-  }, [decisionDone, user, safeSlug, tenant?.slug, confirmed, navigate]);
+  }, [decisionDone, user, safeSlug, tenant?.slug, confirmed]);
+
+  if (destination) return <Navigate to={destination} replace />;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
