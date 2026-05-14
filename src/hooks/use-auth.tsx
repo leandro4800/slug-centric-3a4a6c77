@@ -34,13 +34,13 @@ export const useAuth = () => useContext(AuthContext);
 const ROLE_FETCH_TIMEOUT_MS = 6000;
 const SESSION_RESTORE_TIMEOUT_MS = 4500;
 
-const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string): Promise<T> => {
+const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string, timeoutMs = ROLE_FETCH_TIMEOUT_MS): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<T>((resolve) => {
     timeoutId = setTimeout(() => {
       console.warn(`[Auth] ${label} demorou demais; seguindo sem travar a tela.`);
       resolve(fallback);
-    }, ROLE_FETCH_TIMEOUT_MS);
+    }, timeoutMs);
   });
 
   try {
@@ -72,6 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
+    let authSubscription: { unsubscribe: () => void } | null = null;
 
     const applySession = (sess: Session | null) => {
       if (!mounted) return;
@@ -82,9 +83,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     void withTimeout(
       supabase.auth.getSession(),
       { data: { session: null }, error: null } as Awaited<ReturnType<typeof supabase.auth.getSession>>,
-      "Restauração da sessão"
+      "Restauração da sessão",
+      SESSION_RESTORE_TIMEOUT_MS
     )
       .then(({ data }) => {
+        if (!mounted) return null;
         applySession(data.session);
 
         const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
@@ -98,7 +101,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           }
         });
 
-        return sub.subscription;
+        authSubscription = sub.subscription;
+        return authSubscription;
       })
       .catch((error) => {
         console.error("Error restoring auth session:", error);
@@ -108,7 +112,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSessionReady(true);
       });
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+      authSubscription?.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
