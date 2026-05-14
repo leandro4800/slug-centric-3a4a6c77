@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 
 const Login = () => {
+  const navigate = useNavigate();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
   const [email, setEmail] = useState("");
@@ -44,7 +45,14 @@ const Login = () => {
       } else {
         toast.error(error.message);
       }
+      return;
     }
+
+    const candidateSlug = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
+    const targetSlug = candidateSlug && /^[a-z0-9-]+$/i.test(candidateSlug) && candidateSlug !== "index" && candidateSlug !== "demo"
+      ? candidateSlug
+      : null;
+    navigate(targetSlug ? `/${targetSlug}/app` : "/index", { replace: true });
   };
 
   const handleResendConfirmation = async () => {
