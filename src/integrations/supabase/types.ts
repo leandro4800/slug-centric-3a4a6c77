@@ -2598,6 +2598,18 @@ export type Database = {
         Args: { _athlete_id: string; _caller: string }
         Returns: boolean
       }
+      complete_student_onboarding: {
+        Args: {
+          _anamnese: Json
+          _avaliacao: Json
+          _data_nascimento: string
+          _nome_completo: string
+          _sexo: string
+          _telefone: string
+          _tenant_id: string
+        }
+        Returns: Json
+      }
       current_user_tenant: { Args: never; Returns: string }
       email_is_registered: { Args: { _email: string }; Returns: boolean }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
