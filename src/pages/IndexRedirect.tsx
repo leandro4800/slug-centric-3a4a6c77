@@ -54,6 +54,14 @@ const IndexRedirect = () => {
           return;
         }
 
+        const cachedSlug = safeSlug || localStorage.getItem("last_tenant_slug");
+        if (cachedSlug && cachedSlug !== "index" && cachedSlug !== "demo") {
+          const target = `/${cachedSlug}/app`;
+          console.log("[IndexRedirect] Usando último tenant conhecido:", target);
+          if (window.location.pathname !== target) navigate(target, { replace: true });
+          return;
+        }
+
         const withDecisionTimeout = async (promise: PromiseLike<any>, fallback: any) => {
           let timeoutId: ReturnType<typeof setTimeout> | undefined;
           const timeout = new Promise<any>((resolve) => {
