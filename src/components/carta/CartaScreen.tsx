@@ -292,6 +292,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
     }
   };
 
+  if (loading) {
     return (
       <div className="min-h-screen bg-fut-deep flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin fut-cyan" />
