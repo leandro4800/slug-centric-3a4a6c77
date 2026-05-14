@@ -378,6 +378,23 @@ const MeusAtletas = () => {
                   to={`/${slug}/admin/atleta/${a.id}`}
                   className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/40 border border-border hover:border-primary/60 transition-colors"
                 >
+                  {/* Botão Gerar Avatar (Admin) */}
+                  <div className="absolute top-2 left-2 z-20">
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="w-8 h-8 rounded-full bg-black/60 border-white/20 hover:bg-primary/80 transition-all"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleGerarAvatar(a);
+                      }}
+                      title="Gerar Avatar IA"
+                    >
+                      <Sparkles className="w-4 h-4 text-primary group-hover:text-black" />
+                    </Button>
+                  </div>
+
                   {/* Badge AGENDADO */}
                   <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
                     <span className="text-[9px] font-bold uppercase tracking-wider text-primary">
