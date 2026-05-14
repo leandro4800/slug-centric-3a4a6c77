@@ -9,6 +9,24 @@ interface Props {
   children: ReactNode;
 }
 
+const SUBSCRIPTION_TIMEOUT_MS = 5500;
+
+const withSubscriptionTimeout = async <T,>(promise: PromiseLike<T>, fallback: T, label: string): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => {
+      console.warn(`[SubscriptionGuard] ${label} demorou demais; usando fallback seguro.`);
+      resolve(fallback);
+    }, SUBSCRIPTION_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 export const SubscriptionGuard = ({ children }: Props) => {
   const { user, isLoading: authLoading } = useAuth();
   const { slug } = useParams();
@@ -36,9 +54,9 @@ export const SubscriptionGuard = ({ children }: Props) => {
       
       // 1. Resolve tenant with ownership explicitly.
       const { data: tenant } = brandedTenant?.id
-        ? await supabase.from("tenants").select("id, owner_user_id").eq("id", brandedTenant.id).maybeSingle()
+        ? await withSubscriptionTimeout(supabase.from("tenants").select("id, owner_user_id").eq("id", brandedTenant.id).maybeSingle(), { data: brandedTenant, error: null } as any, "Busca do tenant")
         : slug && slug !== "demo"
-          ? await supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle()
+          ? await withSubscriptionTimeout(supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle(), { data: null, error: null } as any, "Busca do tenant por slug")
           : { data: null };
 
       const pendingVoucher = sessionStorage.getItem("pending_voucher");
@@ -88,34 +106,40 @@ export const SubscriptionGuard = ({ children }: Props) => {
       }
 
       // 2. Check if user has an active/trialing subscription
-      const { data: sub } = await supabase
+      if (!tenant?.id) {
+        console.warn("[SubscriptionGuard] Tenant indisponível; liberando tela para evitar loop.");
+        setLoading(false);
+        return;
+      }
+
+      const { data: sub } = await withSubscriptionTimeout(supabase
         .from("assinaturas")
         .select("status")
         .eq("aluno_id", user.id)
         .eq("tenant_id", tenant?.id)
         .in("status", ["active", "trialing"])
-        .maybeSingle();
+        .maybeSingle(), { data: null, error: null } as any, "Verificação de assinatura");
 
       const subscriptionStatus = sub?.status || "inactive";
       setStatus(subscriptionStatus);
 
       // 3. Check for profile/onboarding completion
       if (subscriptionStatus === "active" || subscriptionStatus === "trialing") {
-        const { data: profile } = await supabase
+        const { data: profile } = await withSubscriptionTimeout(supabase
           .from("perfis")
           .select("onboarding_completo")
           .eq("id", user.id)
-          .maybeSingle();
+          .maybeSingle(), { data: null, error: null } as any, "Verificação de perfil");
 
-        const { count: anamneseCount } = await supabase
+        const { count: anamneseCount } = await withSubscriptionTimeout(supabase
           .from("anamnese_aluno")
           .select("id", { count: 'exact', head: true })
-          .eq("aluno_id", user.id);
+          .eq("aluno_id", user.id), { count: 0, error: null } as any, "Verificação de anamnese");
 
-        const { count: avaliacaoCount } = await supabase
+        const { count: avaliacaoCount } = await withSubscriptionTimeout(supabase
           .from("avaliacoes_fisicas")
           .select("id", { count: 'exact', head: true })
-          .eq("aluno_id", user.id);
+          .eq("aluno_id", user.id), { count: 0, error: null } as any, "Verificação de avaliação");
 
         if (!profile?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
           setStatus("incomplete");
