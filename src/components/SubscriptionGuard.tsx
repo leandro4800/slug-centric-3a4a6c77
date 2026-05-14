@@ -51,6 +51,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
 
     const checkSubscriptionAndCompletion = async () => {
       setLoading(true);
+      try {
       
       // 1. Resolve tenant with ownership explicitly.
       const { data: tenant } = brandedTenant?.id
@@ -147,6 +148,10 @@ export const SubscriptionGuard = ({ children }: Props) => {
       }
 
       setLoading(false);
+      } catch (error) {
+        console.error("[SubscriptionGuard] Erro inesperado; liberando render para evitar loop:", error);
+        setLoading(false);
+      }
     };
 
     void checkSubscriptionAndCompletion();
