@@ -83,7 +83,7 @@ Deno.serve(async (req) => {
       const { data: perfilExist } = await admin
         .from("perfis")
         .select(field)
-        .eq("id", userId)
+        .eq("id", finalUserId)
         .maybeSingle();
       const cached = (perfilExist as any)?.[field];
       if (cached) {
@@ -120,7 +120,7 @@ Deno.serve(async (req) => {
       const { data: perfil } = await admin
         .from("perfis")
         .select("tenant_id")
-        .eq("id", userId)
+        .eq("id", finalUserId)
         .maybeSingle();
       if (perfil?.tenant_id) {
         const { data: tenant } = await admin
@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
     // Upload para o bucket avatars
     const base64 = dataUrl.split(",")[1];
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const path = `${userId}/${variant}-${Date.now()}.png`;
+    const path = `${finalUserId}/${variant}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
       .upload(path, bytes, { contentType: "image/png", upsert: true });
@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
     await admin
       .from("perfis")
       .update({ [field]: publicUrl })
-      .eq("id", userId);
+      .eq("id", finalUserId);
 
     return new Response(JSON.stringify({ avatar_url: publicUrl, cached: false, variant }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
