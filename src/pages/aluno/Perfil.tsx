@@ -62,6 +62,7 @@ const Perfil = () => {
   const [selectionOpen, setSelectionOpen] = useState(false);
   const [comprehensiveOpen, setComprehensiveOpen] = useState(false);
   const [triggerImport, setTriggerImport] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Form states
   const [newPw, setNewPw] = useState("");
