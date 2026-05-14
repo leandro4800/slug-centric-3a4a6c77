@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
-    let authSubscription: { unsubscribe: () => void } | null = null;
+    let restoreSettled = false;
 
     const applySession = (sess: Session | null) => {
       if (!mounted) return;
@@ -80,32 +80,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSessionReady(true);
     };
 
-    void withTimeout(
-      supabase.auth.getSession(),
-      { data: { session: null }, error: null } as Awaited<ReturnType<typeof supabase.auth.getSession>>,
-      "Restauração da sessão",
-      SESSION_RESTORE_TIMEOUT_MS
-    )
-      .then(({ data }) => {
-        if (!mounted) return null;
+    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
+      applySession(sess);
+      if (event === "SIGNED_OUT") {
+        try {
+          Object.keys(sessionStorage)
+            .filter((k) => k.startsWith("splash_shown"))
+            .forEach((k) => sessionStorage.removeItem(k));
+        } catch {}
+      }
+    });
+
+    const restoreTimeout = setTimeout(() => {
+      if (!mounted || restoreSettled) return;
+      console.warn("[Auth] Restauração da sessão demorou demais; liberando a tela e aguardando retorno tardio.");
+      setSessionReady(true);
+    }, SESSION_RESTORE_TIMEOUT_MS);
+
+    void supabase.auth.getSession()
+      .then(({ data, error }) => {
+        restoreSettled = true;
+        clearTimeout(restoreTimeout);
+        if (error) console.error("Error restoring auth session:", error);
         applySession(data.session);
-
-        const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
-          applySession(sess);
-          if (event === "SIGNED_OUT") {
-            try {
-              Object.keys(sessionStorage)
-                .filter((k) => k.startsWith("splash_shown"))
-                .forEach((k) => sessionStorage.removeItem(k));
-            } catch {}
-          }
-        });
-
-        authSubscription = sub.subscription;
-        return authSubscription;
       })
       .catch((error) => {
+        restoreSettled = true;
+        clearTimeout(restoreTimeout);
         console.error("Error restoring auth session:", error);
+        if (!mounted) return;
         setSession(null);
         setRoles([]);
         setRolesLoading(false);
@@ -114,7 +117,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     return () => {
       mounted = false;
-      authSubscription?.unsubscribe();
+      clearTimeout(restoreTimeout);
+      sub.subscription.unsubscribe();
     };
   }, []);
 
@@ -143,7 +147,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     await supabase.auth.signOut();
   };
 
-  const hasRole = (role: AppRole, tenantId?: string | null) => {
+  const hasRole = useCallback((role: AppRole, tenantId?: string | null) => {
     return roles.some(r => {
       if (r.role === "admin" && r.tenant_id === null) return true;
       if (r.role === role) {
@@ -152,7 +156,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
       return false;
     });
-  };
+  }, [roles]);
 
   const isLoading = !sessionReady || rolesLoading;
 
