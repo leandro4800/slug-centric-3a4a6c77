@@ -112,31 +112,12 @@ export const ComprehensiveEvaluationForm = ({
     const toastId = toast.loading("Analisando relatório...");
 
     try {
-      let content = "";
-      let isPDF = file.type === "application/pdf";
-
-      if (isPDF) {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await pdfjs.getDocument({ data: arrayBuffer }).promise;
-        let fullText = "";
-        for (let i = 1; i <= pdf.numPages; i++) {
-          const page = await pdf.getPage(i);
-          const textContent = await page.getTextContent();
-          const pageText = textContent.items.map((item: any) => item.str).join(" ");
-          fullText += pageText + "\n";
-        }
-        if (!fullText.trim()) {
-          throw new Error("Não foi possível extrair texto deste PDF. Tente converter para imagem ou usar um PDF com texto.");
-        }
-        content = fullText;
-      } else {
-        const reader = new FileReader();
-        const base64Promise = new Promise<string>((resolve) => {
-          reader.onload = () => resolve((reader.result as string).split(',')[1]);
-          reader.readAsDataURL(file);
-        });
-        content = await base64Promise;
-      }
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve) => {
+        reader.onload = () => resolve((reader.result as string).split(',')[1]);
+        reader.readAsDataURL(file);
+      });
+      const content = await base64Promise;
 
       const { data, error } = await supabase.functions.invoke("import-with-ai", {
         body: {
