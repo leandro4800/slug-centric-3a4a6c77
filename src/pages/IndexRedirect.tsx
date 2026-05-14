@@ -43,10 +43,18 @@ const IndexRedirect = () => {
   const [destination, setDestination] = useState<string | null>(null);
 
   useEffect(() => {
-    // Espera a sessão ser restaurada; se o branding demorar, decide com dados parciais.
-    if (!sessionReady || brandingLoading) {
+    // Usuário sem sessão deve ir para login imediatamente; não espera branding.
+    if (!sessionReady) return;
+
+    if (!user) {
+      setDecisionDone(true);
+      return;
+    }
+
+    // Usuário autenticado espera branding; se demorar, decide com dados parciais.
+    if (brandingLoading) {
       const safetyTimer = setTimeout(() => {
-        if (sessionReady && !decisionDone) {
+        if (!decisionDone) {
           console.warn("[IndexRedirect] Timeout de segurança atingido, decidindo com dados parciais.");
           setDecisionDone(true);
         }
@@ -55,7 +63,7 @@ const IndexRedirect = () => {
     }
     
     setDecisionDone(true);
-  }, [sessionReady, brandingLoading, decisionDone]);
+  }, [sessionReady, user, brandingLoading, decisionDone]);
 
   useEffect(() => {
     if (!decisionDone) return;
@@ -68,7 +76,8 @@ const IndexRedirect = () => {
           const currentPath = normalizePath(window.location.pathname);
           const targetPath = normalizePath(target.split("?")[0]);
           if (currentPath === targetPath) return;
-          if (isRecentReverseNavigation(currentPath, targetPath)) {
+          const isLoginTarget = targetPath === "/login" || targetPath.endsWith("/login");
+          if (!isLoginTarget && isRecentReverseNavigation(currentPath, targetPath)) {
             console.error("[IndexRedirect] Loop de navegação bloqueado:", currentPath, "->", targetPath);
             setDestination(null);
             return;

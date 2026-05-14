@@ -38,7 +38,9 @@ const SafeNavigate = ({ to, state }: { to: string; state?: unknown }) => {
   const currentPath = normalizePath(window.location.pathname);
   const targetPath = normalizePath(to.split("?")[0]);
 
-  if (isRecentReverseNavigation(currentPath, targetPath)) {
+  const isLoginTarget = targetPath === "/login" || targetPath.endsWith("/login");
+
+  if (!isLoginTarget && isRecentReverseNavigation(currentPath, targetPath)) {
     console.error("[RequireAuth] Navegação reversa bloqueada para evitar loop:", currentPath, "->", targetPath);
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center">
