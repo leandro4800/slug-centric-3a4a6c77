@@ -32,14 +32,15 @@ const AuthContext = createContext<AuthContextValue>({
 export const useAuth = () => useContext(AuthContext);
 
 const ROLE_FETCH_TIMEOUT_MS = 6000;
+const SESSION_RESTORE_TIMEOUT_MS = 4500;
 
-const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string): Promise<T> => {
+const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string, timeoutMs = ROLE_FETCH_TIMEOUT_MS): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
   const timeout = new Promise<T>((resolve) => {
     timeoutId = setTimeout(() => {
       console.warn(`[Auth] ${label} demorou demais; seguindo sem travar a tela.`);
       resolve(fallback);
-    }, ROLE_FETCH_TIMEOUT_MS);
+    }, timeoutMs);
   });
 
   try {
@@ -70,20 +71,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+    let authSubscription: { unsubscribe: () => void } | null = null;
+
     const applySession = (sess: Session | null) => {
+      if (!mounted) return;
       setSession(sess);
       setSessionReady(true);
     };
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
-      applySession(sess);
-      if (event === "SIGNED_OUT") {
-        sessionStorage.removeItem("splash_shown_session");
-      }
-    });
+    void withTimeout(
+      supabase.auth.getSession(),
+      { data: { session: null }, error: null } as Awaited<ReturnType<typeof supabase.auth.getSession>>,
+      "Restauração da sessão",
+      SESSION_RESTORE_TIMEOUT_MS
+    )
+      .then(({ data }) => {
+        if (!mounted) return null;
+        applySession(data.session);
 
-    supabase.auth.getSession()
-      .then(({ data }) => applySession(data.session))
+        const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
+          applySession(sess);
+          if (event === "SIGNED_OUT") {
+            try {
+              Object.keys(sessionStorage)
+                .filter((k) => k.startsWith("splash_shown"))
+                .forEach((k) => sessionStorage.removeItem(k));
+            } catch {}
+          }
+        });
+
+        authSubscription = sub.subscription;
+        return authSubscription;
+      })
       .catch((error) => {
         console.error("Error restoring auth session:", error);
         setSession(null);
@@ -92,7 +112,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setSessionReady(true);
       });
 
-    return () => sub.subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      authSubscription?.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
