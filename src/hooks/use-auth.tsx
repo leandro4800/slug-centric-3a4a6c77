@@ -74,37 +74,75 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     let mounted = true;
     let restoreSettled = false;
 
+    const clearSplashMarks = () => {
+      try {
+        Object.keys(sessionStorage)
+          .filter((k) => k.startsWith("splash_shown"))
+          .forEach((k) => sessionStorage.removeItem(k));
+      } catch {}
+    };
+
     const applySession = (sess: Session | null) => {
       if (!mounted) return;
       setSession(sess);
       setSessionReady(true);
     };
 
-    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
-      applySession(sess);
-      if (event === "SIGNED_OUT") {
+    const validateStoredSession = async (sess: Session | null) => {
+      if (!sess) return null;
+
+      const response = await withTimeout(
+        supabase.auth.getUser(),
+        { data: { user: null }, error: null } as Awaited<ReturnType<typeof supabase.auth.getUser>>,
+        "Validação da sessão salva",
+        SESSION_RESTORE_TIMEOUT_MS
+      );
+
+      if (response.error || !response.data.user) {
+        console.warn("[Auth] Sessão local inválida ou expirada; limpando e mantendo login.");
         try {
-          Object.keys(sessionStorage)
-            .filter((k) => k.startsWith("splash_shown"))
-            .forEach((k) => sessionStorage.removeItem(k));
+          await supabase.auth.signOut({ scope: "local" });
         } catch {}
+        return null;
       }
+
+      return { ...sess, user: response.data.user };
+    };
+
+    const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
+      if (event === "INITIAL_SESSION") return;
+
+      if (event === "SIGNED_OUT") {
+        clearSplashMarks();
+        applySession(null);
+        return;
+      }
+
+      if (sess) applySession(sess);
     });
 
     const restoreTimeout = setTimeout(() => {
       if (!mounted || restoreSettled) return;
-      console.warn("[Auth] Restauração da sessão demorou demais; liberando a tela e aguardando retorno tardio.");
+      restoreSettled = true;
+      console.warn("[Auth] Restauração da sessão demorou demais; abrindo login para evitar loop.");
+      setSession(null);
+      setRoles([]);
+      setRolesLoading(false);
       setSessionReady(true);
     }, SESSION_RESTORE_TIMEOUT_MS);
 
     void supabase.auth.getSession()
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
+        if (restoreSettled) return;
+        if (error) console.error("Error restoring auth session:", error);
+        const validatedSession = await validateStoredSession(data.session);
+        if (restoreSettled) return;
         restoreSettled = true;
         clearTimeout(restoreTimeout);
-        if (error) console.error("Error restoring auth session:", error);
-        applySession(data.session);
+        applySession(validatedSession);
       })
       .catch((error) => {
+        if (restoreSettled) return;
         restoreSettled = true;
         clearTimeout(restoreTimeout);
         console.error("Error restoring auth session:", error);
