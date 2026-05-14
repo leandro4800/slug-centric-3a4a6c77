@@ -158,21 +158,14 @@ const Treino = () => {
       ]);
 
     const load = async () => {
-      // 1) Render imediato com MOCK para o usuário ver a tela na hora
-      const mockEnriched = MOCK_TREINOS.map((m) => ({ ...m }));
-      setTreinos(mockEnriched);
-      setDiaAtual(mockEnriched[0].dia_semana);
-      setIsMock(true);
-      setLoading(false);
+      if (!user) {
+        setTreinos([]);
+        setLoading(false);
+        return;
+      }
 
-      if (!user) return;
-
-      // 2) Em paralelo, busca tudo com timeout — se o banco está lento, ficamos no mock
       const spotifyP = withTimeout(loadSpotify()).catch(() => null);
       const refsP = withTimeout(loadVideoRefs()).catch(() => ({} as Record<string, VideoRef>));
-      // Busca treinos do aluno SEM filtrar por tenant — evita falso "sem treino"
-      // se o aluno trocou de tenant ou se o coach salvou com tenant diferente.
-      // RLS já garante visibilidade correta (aluno_id = auth.uid()).
       const treinosP = withTimeout(
         Promise.resolve(
           supabase
@@ -187,11 +180,10 @@ const Treino = () => {
       const cargasP = withTimeout(loadCargas()).catch(() => null);
 
       const [, refMapRes, treinosRes] = await Promise.all([spotifyP, refsP, treinosP]);
-      void cargasP; // dispara em background, não bloqueia
+      void cargasP;
 
       const refMap: any = refMapRes || { entries: [] };
 
-      // Ordem semanal e filtro de dias OFF/descanso
       const WEEK_ORDER = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"];
       const weekIdx = (s: string) => {
         const n = (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -227,20 +219,14 @@ const Treino = () => {
           setTreinos(filled);
           setDiaAtual(filled[0].dia_semana);
           setIsMock(false);
+          setLoading(false);
           return;
         }
       }
 
-      // Sem treino real disponível: enriquece o mock com vídeos se conseguimos buscar
-      if (refMap.entries && refMap.entries.length > 0) {
-        setTreinos((prev) =>
-          prev.map((m) => ({
-            ...m,
-            video_url: m.video_url || resolveVideo(m.exercicio, refMap),
-            video_coach_url: m.video_coach_url || resolveCoach(m.exercicio, refMap),
-          }))
-        );
-      }
+      setTreinos([]);
+      setIsMock(false);
+      setLoading(false);
     };
 
     void load().catch((e) => {
