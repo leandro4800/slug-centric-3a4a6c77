@@ -23,14 +23,6 @@ type VideoRef = { yt: string | null; coach: string | null };
 const VOLUME_GROUPS = ["peito", "costas", "quadríceps", "quadriceps", "glúteo", "gluteo", "ombro", "bíceps", "biceps", "tríceps", "triceps"];
 const MIN_EXERCISES_PER_DAY = 4;
 
-const MOCK_TREINOS: Treino[] = [
-  { id: "mock-a1", dia_semana: "Treino A", exercicio: "Supino Reto com Barra", series: "4", repeticoes: "12", observacao: "Controle a descida em 3 segundos." },
-  { id: "mock-a2", dia_semana: "Treino A", exercicio: "Crucifixo Inclinado", series: "3", repeticoes: "12", observacao: "Cotovelos levemente flexionados." },
-  { id: "mock-a3", dia_semana: "Treino A", exercicio: "Crossover", series: "3", repeticoes: "15", observacao: "Pico de contração." },
-  { id: "mock-a4", dia_semana: "Treino A", exercicio: "Tríceps Pulley", series: "4", repeticoes: "12", observacao: "Cotovelos fixos." },
-  { id: "mock-b1", dia_semana: "Treino B", exercicio: "Puxada Aberta", series: "4", repeticoes: "12", observacao: "Foco na dorsal." },
-  { id: "mock-c1", dia_semana: "Treino C", exercicio: "Agachamento Livre", series: "4", repeticoes: "10", observacao: "Mantenha a postura neutra." },
-];
 
 const Treino = () => {
   const { user } = useAuth();
@@ -166,21 +158,14 @@ const Treino = () => {
       ]);
 
     const load = async () => {
-      // 1) Render imediato com MOCK para o usuário ver a tela na hora
-      const mockEnriched = MOCK_TREINOS.map((m) => ({ ...m }));
-      setTreinos(mockEnriched);
-      setDiaAtual(mockEnriched[0].dia_semana);
-      setIsMock(true);
-      setLoading(false);
+      if (!user) {
+        setTreinos([]);
+        setLoading(false);
+        return;
+      }
 
-      if (!user) return;
-
-      // 2) Em paralelo, busca tudo com timeout — se o banco está lento, ficamos no mock
       const spotifyP = withTimeout(loadSpotify()).catch(() => null);
       const refsP = withTimeout(loadVideoRefs()).catch(() => ({} as Record<string, VideoRef>));
-      // Busca treinos do aluno SEM filtrar por tenant — evita falso "sem treino"
-      // se o aluno trocou de tenant ou se o coach salvou com tenant diferente.
-      // RLS já garante visibilidade correta (aluno_id = auth.uid()).
       const treinosP = withTimeout(
         Promise.resolve(
           supabase
@@ -195,11 +180,10 @@ const Treino = () => {
       const cargasP = withTimeout(loadCargas()).catch(() => null);
 
       const [, refMapRes, treinosRes] = await Promise.all([spotifyP, refsP, treinosP]);
-      void cargasP; // dispara em background, não bloqueia
+      void cargasP;
 
       const refMap: any = refMapRes || { entries: [] };
 
-      // Ordem semanal e filtro de dias OFF/descanso
       const WEEK_ORDER = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"];
       const weekIdx = (s: string) => {
         const n = (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -235,20 +219,14 @@ const Treino = () => {
           setTreinos(filled);
           setDiaAtual(filled[0].dia_semana);
           setIsMock(false);
+          setLoading(false);
           return;
         }
       }
 
-      // Sem treino real disponível: enriquece o mock com vídeos se conseguimos buscar
-      if (refMap.entries && refMap.entries.length > 0) {
-        setTreinos((prev) =>
-          prev.map((m) => ({
-            ...m,
-            video_url: m.video_url || resolveVideo(m.exercicio, refMap),
-            video_coach_url: m.video_coach_url || resolveCoach(m.exercicio, refMap),
-          }))
-        );
-      }
+      setTreinos([]);
+      setIsMock(false);
+      setLoading(false);
     };
 
     void load().catch((e) => {
@@ -333,9 +311,13 @@ const Treino = () => {
           </div>
         )}
 
-        {isMock && (
-          <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-xs text-primary mb-4">
-            <TenantSymbol size={16} /> Prévia — seu treino personalizado será montado pelo coach
+        {treinos.length === 0 && (
+          <div className="bg-card border border-primary/20 rounded-2xl px-5 py-8 flex flex-col items-center justify-center gap-3 text-center mb-4">
+            <TenantSymbol size={32} />
+            <p className="font-display text-base">Aguardando seu treino</p>
+            <p className="text-xs text-muted-foreground max-w-xs">
+              Seu coach ainda não montou seu plano. Assim que ele liberar, seus exercícios aparecem aqui.
+            </p>
           </div>
         )}
 
