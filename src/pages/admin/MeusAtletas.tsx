@@ -15,6 +15,9 @@ interface Aluno {
   nome_completo: string | null;
   email: string | null;
   avatar_url: string | null;
+  sexo: string | null;
+  avatar_treinando_url?: string | null;
+  avatar_celebracao_url?: string | null;
 }
 
 // Paleta inspirada na referência (cada inicial em uma cor neon)
@@ -128,7 +131,7 @@ const MeusAtletas = () => {
     const [{ data, error }, { data: tenantRow }, { data: coachRoles }] = await Promise.all([
       supabase
         .from("perfis")
-        .select("id, nome_completo, email, avatar_url")
+        .select("id, nome_completo, email, avatar_url, sexo, avatar_treinando_url, avatar_celebracao_url")
         .eq("tenant_id", tenantId)
         .order("nome_completo", { ascending: true }),
       supabase.from("tenants").select("owner_user_id").eq("id", tenantId).maybeSingle(),
@@ -154,6 +157,44 @@ const MeusAtletas = () => {
         (a.email || "").toLowerCase().includes(t),
     );
   }, [alunos, q]);
+
+  const handleGerarAvatar = async (aluno: Aluno) => {
+    // Busca a foto original na carta_atleta para ser mais fiel
+    const { data: carta } = await supabase
+      .from("cartas_atleta")
+      .select("foto_original_url")
+      .eq("aluno_id", aluno.id)
+      .maybeSingle();
+
+    const foto = carta?.foto_original_url || aluno.avatar_url;
+    if (!foto) {
+      toast.error(`O aluno ${aluno.nome_completo || ""} não possui foto original para gerar o avatar.`);
+      return;
+    }
+
+    const tid = toast.loading(`Gerando avatar para ${aluno.nome_completo || ""}...`);
+    try {
+      const { data, error } = await supabase.functions.invoke("gerar-avatar-carta", {
+        body: { 
+          foto_url: foto, 
+          sexo: aluno.sexo, 
+          user_id: aluno.id, 
+          force: true,
+          variant: "carta" 
+        },
+      });
+
+      if (error || !data?.avatar_url) {
+        throw new Error(data?.error || error?.message || "Falha na geração");
+      }
+
+      toast.success("Avatar gerado com sucesso!", { id: tid });
+      if (tenant) load(tenant.id); // Recarrega a lista
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Erro: ${err.message}`, { id: tid });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -183,6 +224,25 @@ const MeusAtletas = () => {
           </Link>
           <button className="text-xs uppercase tracking-widest px-4 py-2 rounded-full bg-primary text-primary-foreground font-bold">
             Atletas
+          </button>
+          <button 
+            onClick={async () => {
+              const semAvatar = alunos.filter(a => !a.avatar_url && !DEMO_ATHLETE_EMAILS.has(a.email || ""));
+              if (semAvatar.length === 0) {
+                toast.info("Todos os atletas já possuem avatar.");
+                return;
+              }
+              if (!confirm(`Deseja tentar gerar avatares para ${semAvatar.length} atletas que estão sem? Isso consumirá créditos de IA.`)) return;
+              
+              toast.info(`Iniciando geração em lote para ${semAvatar.length} atletas...`);
+              for (const a of semAvatar) {
+                await handleGerarAvatar(a);
+              }
+            }}
+            className="col-span-2 flex items-center justify-center gap-2 p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 transition-all group"
+          >
+            <Sparkles className="h-5 w-5 text-amber-500 group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-amber-500">Gerar Avatares Faltantes</span>
           </button>
         </div>
       )}
@@ -337,6 +397,23 @@ const MeusAtletas = () => {
                   to={`/${slug}/admin/atleta/${a.id}`}
                   className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/40 border border-border hover:border-primary/60 transition-colors"
                 >
+                  {/* Botão Gerar Avatar (Admin) */}
+                  <div className="absolute top-2 left-2 z-20">
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="w-8 h-8 rounded-full bg-black/60 border-white/20 hover:bg-primary/80 transition-all"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleGerarAvatar(a);
+                      }}
+                      title="Gerar Avatar IA"
+                    >
+                      <Sparkles className="w-4 h-4 text-primary group-hover:text-black" />
+                    </Button>
+                  </div>
+
                   {/* Badge AGENDADO */}
                   <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
                     <span className="text-[9px] font-bold uppercase tracking-wider text-primary">

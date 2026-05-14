@@ -26,6 +26,7 @@ Deno.serve(async (req) => {
     const sexo: string | undefined = body.sexo;
     const variant: Variant = (["carta", "treinando", "celebracao"].includes(body.variant) ? body.variant : "carta");
     const force: boolean = Boolean(body.force);
+    const target_user_id: string | undefined = body.user_id;
 
     if (!foto_url) {
       return new Response(JSON.stringify({ error: "foto_url obrigatório" }), {
@@ -44,8 +45,9 @@ Deno.serve(async (req) => {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: userData } = await userClient.auth.getUser();
-    const userId = userData?.user?.id;
-    if (!userId) {
+    const authUserId = userData?.user?.id;
+
+    if (!authUserId) {
       return new Response(JSON.stringify({ error: "não autenticado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -53,16 +55,48 @@ Deno.serve(async (req) => {
     }
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    let finalUserId = authUserId;
+
+    // Se o user_id foi passado, verifica se quem chama tem permissão (admin/coach)
+    if (target_user_id && target_user_id !== authUserId) {
+      const { data: userRoles } = await admin
+        .from("user_roles")
+        .select("role, tenant_id")
+        .eq("user_id", authUserId);
+      
+      const isAdminOrCoach = userRoles?.some(r => 
+        r.role === "admin" || r.role === "coach"
+      );
+
+      if (!isAdminOrCoach) {
+        return new Response(JSON.stringify({ error: "Permissão negada para gerar avatar de outro usuário." }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      finalUserId = target_user_id;
+    }
 
     // Cache: se já existe avatar da variante e não foi pedido force, retorna direto
-    const field = VARIANT_FIELD[variant];
+    let cached = null;
     if (!force) {
-      const { data: perfilExist } = await admin
-        .from("perfis")
-        .select(field)
-        .eq("id", userId)
-        .maybeSingle();
-      const cached = (perfilExist as any)?.[field];
+      if (variant === "carta") {
+        const { data: cartaExist } = await admin
+          .from("cartas_atleta")
+          .select("avatar_carta_url")
+          .eq("aluno_id", finalUserId)
+          .maybeSingle();
+        cached = cartaExist?.avatar_carta_url;
+      } else {
+        const field = VARIANT_FIELD[variant];
+        const { data: perfilExist } = await admin
+          .from("perfis")
+          .select(field)
+          .eq("id", finalUserId)
+          .maybeSingle();
+        cached = (perfilExist as any)?.[field];
+      }
+      
       if (cached) {
         return new Response(JSON.stringify({ avatar_url: cached, cached: true }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -97,7 +131,7 @@ Deno.serve(async (req) => {
       const { data: perfil } = await admin
         .from("perfis")
         .select("tenant_id")
-        .eq("id", userId)
+        .eq("id", finalUserId)
         .maybeSingle();
       if (perfil?.tenant_id) {
         const { data: tenant } = await admin
@@ -164,7 +198,7 @@ Deno.serve(async (req) => {
     // Upload para o bucket avatars
     const base64 = dataUrl.split(",")[1];
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const path = `${userId}/${variant}-${Date.now()}.png`;
+    const path = `${finalUserId}/${variant}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
       .upload(path, bytes, { contentType: "image/png", upsert: true });
@@ -172,11 +206,25 @@ Deno.serve(async (req) => {
     const { data: pub } = admin.storage.from("avatars").getPublicUrl(path);
     const publicUrl = pub.publicUrl;
 
-    // Cacheia no perfil (campo correspondente à variante)
-    await admin
-      .from("perfis")
-      .update({ [field]: publicUrl })
-      .eq("id", userId);
+    // Cacheia no perfil (campo correspondente à variante) ou na carta
+    if (variant === "carta") {
+      await admin
+        .from("cartas_atleta")
+        .update({ avatar_carta_url: publicUrl })
+        .eq("aluno_id", finalUserId);
+      
+      // Também atualiza o avatar_url do perfil para mostrar o novo avatar por padrão no app
+      await admin
+        .from("perfis")
+        .update({ avatar_url: publicUrl })
+        .eq("id", finalUserId);
+    } else {
+      const field = VARIANT_FIELD[variant];
+      await admin
+        .from("perfis")
+        .update({ [field]: publicUrl })
+        .eq("id", finalUserId);
+    }
 
     return new Response(JSON.stringify({ avatar_url: publicUrl, cached: false, variant }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

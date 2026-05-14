@@ -228,7 +228,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
     }
     setGenerating(true);
     const { data, error } = await supabase.functions.invoke("gerar-avatar-carta", {
-      body: { foto_url: fotoUrl, sexo: perfilSexo },
+      body: { foto_url: fotoUrl, sexo: perfilSexo, user_id: alunoId, force: true },
     });
     setGenerating(false);
     if (error || !data?.avatar_url) {

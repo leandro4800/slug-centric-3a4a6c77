@@ -61,7 +61,7 @@ export function useAvatarVariant(variant: Variant, opts: { enabled?: boolean } =
         }
 
         const { data, error } = await supabase.functions.invoke("gerar-avatar-carta", {
-          body: { foto_url: foto, sexo: perfil?.sexo, variant },
+          body: { foto_url: foto, sexo: perfil?.sexo, variant, user_id: user.id },
         });
         if (cancel) return;
         if (!error && (data as any)?.avatar_url) {
