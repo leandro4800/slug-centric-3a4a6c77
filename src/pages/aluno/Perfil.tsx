@@ -17,6 +17,7 @@ import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
 import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import heic2any from "heic2any";
+import { AthleteEvaluationsViewer } from "@/components/aluno/AthleteEvaluationsViewer";
 
 type ProfileData = {
   id?: string;
@@ -61,6 +62,7 @@ const Perfil = () => {
   const [selectionOpen, setSelectionOpen] = useState(false);
   const [comprehensiveOpen, setComprehensiveOpen] = useState(false);
   const [triggerImport, setTriggerImport] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
 
   // Form states
   const [newPw, setNewPw] = useState("");
@@ -508,7 +510,17 @@ const Perfil = () => {
       </section>
 
       <section className="px-5 mt-6">
-        <h2 className="font-display text-xl mb-3">ÚLTIMAS MÉTRICAS</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="font-display text-xl uppercase">Últimas Métricas</h2>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setHistoryOpen(true)}
+            className="text-[10px] font-bold uppercase tracking-widest text-primary h-7 px-2"
+          >
+            Ver Histórico
+          </Button>
+        </div>
         <div className="grid grid-cols-2 gap-3">
           <NetflixCard label="PESO" value={lastEval?.peso_kg ? `${lastEval.peso_kg} kg` : "---"} />
           <NetflixCard label="GORDURA" value={lastEval?.bf_pct_calculado ? `${lastEval.bf_pct_calculado}%` : "---"} />
@@ -777,6 +789,12 @@ const Perfil = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AthleteEvaluationsViewer
+        open={historyOpen}
+        onOpenChange={setHistoryOpen}
+        alunoId={user?.id || ""}
+      />
     </>
   );
 };
