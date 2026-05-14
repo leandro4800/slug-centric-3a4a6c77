@@ -311,9 +311,13 @@ const Treino = () => {
           </div>
         )}
 
-        {isMock && (
-          <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-xs text-primary mb-4">
-            <TenantSymbol size={16} /> Prévia — seu treino personalizado será montado pelo coach
+        {treinos.length === 0 && (
+          <div className="bg-card border border-primary/20 rounded-2xl px-5 py-8 flex flex-col items-center justify-center gap-3 text-center mb-4">
+            <TenantSymbol size={32} />
+            <p className="font-display text-base">Aguardando seu treino</p>
+            <p className="text-xs text-muted-foreground max-w-xs">
+              Seu coach ainda não montou seu plano. Assim que ele liberar, seus exercícios aparecem aqui.
+            </p>
           </div>
         )}
 
