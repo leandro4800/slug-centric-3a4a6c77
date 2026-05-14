@@ -70,15 +70,6 @@ const IndexRedirect = () => {
     setDecisionDone(true);
   }, [sessionReady, user, brandingLoading, decisionDone]);
 
-  if (sessionReady && !user) {
-    const loginPath = resolveLoginPath(safeSlug);
-    const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
-    const currentPath = normalizePath(location.pathname);
-
-    if (currentPath === normalizePath(loginPath)) return null;
-    return <Navigate to={target} replace />;
-  }
-
   useEffect(() => {
     if (!decisionDone) return;
 
@@ -205,6 +196,15 @@ const IndexRedirect = () => {
 
     decideDestination();
   }, [decisionDone, user, safeSlug, tenant?.slug, confirmed]);
+
+  if (sessionReady && !user) {
+    const loginPath = resolveLoginPath(safeSlug);
+    const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
+    const currentPath = normalizePath(location.pathname);
+
+    if (currentPath === normalizePath(loginPath)) return null;
+    return <Navigate to={target} replace />;
+  }
 
   if (destination) return <Navigate to={destination} replace />;
 
