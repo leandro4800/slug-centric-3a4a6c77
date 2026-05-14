@@ -9,6 +9,7 @@ import { BrandingProvider, useBranding } from "@/contexts/BrandingProvider";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { SplashScreen } from "@/components/SplashScreen";
+import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 
 import Landing from "./pages/Landing";
@@ -84,7 +85,8 @@ const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
+    <GlobalErrorBoundary>
+      <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -163,8 +165,9 @@ const App = () => (
           </Routes>
         </BrandingProvider>
       </AuthProvider>
-    </BrowserRouter>
-    </TooltipProvider>
+      </BrowserRouter>
+      </TooltipProvider>
+    </GlobalErrorBoundary>
   </QueryClientProvider>
 );
 

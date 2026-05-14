@@ -13,18 +13,16 @@ export const SplashScreen = () => {
   const { tenant, loading } = useBranding();
   const location = useLocation();
 
-  const isAppRoute =
-    location.pathname.includes("/app") ||
-    location.pathname.includes("/admin") ||
-    location.pathname.includes("/onboarding") ||
-    location.pathname.includes("/controle") ||
-    location.pathname.includes("/login");
+  const isPublicRoute = 
+    location.pathname === "/" || 
+    location.pathname.includes("/site") ||
+    location.pathname.includes("/marketplace");
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
   const startedForTenantRef = useRef<string | null>(null);
 
-  const tenantKey = tenant?.slug ?? null;
+  const tenantKey = tenant?.slug ?? "_neutral";
 
   // Limpa marcas ao deslogar — assim no próximo login o splash volta a aparecer
   useEffect(() => {
@@ -32,7 +30,7 @@ export const SplashScreen = () => {
       if (event === "SIGNED_OUT") {
         try {
           Object.keys(sessionStorage)
-            .filter((k) => k.startsWith("splash_shown_session"))
+            .filter((k) => k.startsWith("splash_shown_v2"))
             .forEach((k) => sessionStorage.removeItem(k));
         } catch {}
         startedForTenantRef.current = null;
@@ -44,9 +42,9 @@ export const SplashScreen = () => {
   }, []);
 
   useEffect(() => {
-    if (!isAppRoute) return;
-    if (loading) return;
-    if (!tenantKey) return;
+    // No ambiente mobile/PWA, queremos o splash quase sempre na inicialização,
+    // exceto se já mostramos nesta sessão ou se é uma rota pública explícita.
+    if (isPublicRoute && !loading) return;
     if (typeof window === "undefined") return;
 
     const key = sessionKeyFor(tenantKey);
@@ -56,33 +54,40 @@ export const SplashScreen = () => {
     startedForTenantRef.current = tenantKey;
     setShouldRender(true);
     setIsVisible(true);
-  }, [isAppRoute, loading, tenantKey]);
+  }, [isPublicRoute, loading, tenantKey]);
 
-  // Agenda o fade-out
+  // Agenda o fade-out com segurança máxima
   useEffect(() => {
     if (!shouldRender) return;
 
-    // Se começou a carregar algo de novo (ex: refresh de branding), 
-    // não cancelamos o splash, apenas esperamos o loading terminar para agendar o fim.
-    // No entanto, se o loading demorar demais, queremos garantir que o splash saia.
+    // Timer de segurança absoluta: se em 7 segundos o splash não sumir sozinho, 
+    // nós forçamos a saída para não travar o usuário.
+    const absoluteSafetyTimer = setTimeout(() => {
+      console.warn("[SplashScreen] Forçando saída por timeout de segurança");
+      setIsVisible(false);
+      setTimeout(() => setShouldRender(false), 500);
+    }, 7000);
+
+    // Se ainda está carregando o branding, esperamos.
     if (loading) {
-      const safetyTimer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(() => setShouldRender(false), 300);
-      }, 5000); // 5 segundos de segurança máxima
-      return () => clearTimeout(safetyTimer);
+      return () => clearTimeout(absoluteSafetyTimer);
     }
 
-    sessionStorage.setItem(sessionKeyFor(tenantKey), "1");
-
+    // Branding carregou, agora podemos agendar o fim baseado no conteúdo.
     const hasVideo = !!tenant?.splash_video_url;
-    // Reduzi os tempos para evitar que o splash pareça um loop infinito
-    const showMs = hasVideo ? 2500 : 1500;
+    const showMs = hasVideo ? 2800 : 1800;
 
-    const fadeTimer = setTimeout(() => setIsVisible(false), showMs);
-    const removeTimer = setTimeout(() => setShouldRender(false), showMs + 300);
+    const fadeTimer = setTimeout(() => {
+      setIsVisible(false);
+      sessionStorage.setItem(sessionKeyFor(tenantKey), "1");
+    }, showMs);
+
+    const removeTimer = setTimeout(() => {
+      setShouldRender(false);
+    }, showMs + 500);
 
     return () => {
+      clearTimeout(absoluteSafetyTimer);
       clearTimeout(fadeTimer);
       clearTimeout(removeTimer);
     };
@@ -93,7 +98,7 @@ export const SplashScreen = () => {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background transition-opacity duration-500 ease-in-out",
+        "fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background transition-opacity duration-700 ease-in-out",
         !isVisible && "opacity-0 pointer-events-none"
       )}
     >
@@ -104,8 +109,7 @@ export const SplashScreen = () => {
           muted
           playsInline
           onLoadedData={() => {
-            // Se o vídeo carregar, podemos estender um pouco o tempo se necessário, 
-            // mas o useEffect já cuida do agendamento.
+            // Vídeo carregou, o timer acima cuidará de fechar
           }}
           onError={() => {
             console.error("Erro ao carregar vídeo de splash");
@@ -115,28 +119,31 @@ export const SplashScreen = () => {
           className="absolute inset-0 w-full h-full object-cover"
         />
       ) : (
-        <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-700">
+        <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-1000">
           {tenant?.logo_url ? (
-            <div className="flex flex-col items-center gap-4">
+            <div className="flex flex-col items-center gap-6">
               <img
                 src={tenant.logo_url}
                 alt={tenant.nome}
-                className="w-32 h-32 object-contain animate-pulse"
+                className="w-40 h-40 object-contain animate-pulse shadow-2xl rounded-xl"
               />
-              <h1 className="text-2xl font-display tracking-widest uppercase text-foreground">
+              <h1 className="text-3xl font-display tracking-[0.2em] uppercase text-foreground text-center px-4">
                 {tenant.nome}
               </h1>
             </div>
           ) : (
-            <div className="scale-150">
+            <div className="scale-[2] mb-12">
               <Logo withText={true} />
             </div>
           )}
 
-          <div className="mt-8">
-            <div className="w-48 h-1 bg-white/10 rounded-full overflow-hidden">
-              <div className="h-full bg-primary animate-progress-loading" />
+          <div className="mt-12 flex flex-col items-center gap-4">
+            <div className="w-56 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+              <div className="h-full bg-primary animate-progress-loading shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
             </div>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground animate-pulse">
+              Carregando Ecossistema
+            </span>
           </div>
         </div>
       )}

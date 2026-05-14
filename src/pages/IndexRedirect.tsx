@@ -33,12 +33,13 @@ const IndexRedirect = () => {
     if (redirecting) return;
 
     const decideDestination = async () => {
+      // Reduzi o timeout para 4 segundos no total para ser mais ágil no mobile
       const timeoutId = setTimeout(() => {
         if (!redirecting) {
           console.warn("[IndexRedirect] Decision taking too long, fallback to login");
           navigate("/login", { replace: true });
         }
-      }, 6000);
+      }, 4500);
 
       setRedirecting(true);
       try {

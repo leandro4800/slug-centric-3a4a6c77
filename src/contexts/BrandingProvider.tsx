@@ -161,7 +161,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
   const cachedTenant = slug ? readCache(slug) : null;
   const [tenant, setTenant] = useState<Tenant | null>(cachedTenant);
-  const [loading, setLoading] = useState(!!slug && !cachedTenant);
+  const [loading, setLoading] = useState(true); // Sempre começa em loading para evitar flashes ou inconsistências no início
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
@@ -209,6 +209,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
           setTenant(t);
           if (t) writeCache(t.slug, t);
           applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force);
+          setLoading(false); // Garante que o loading termina aqui
         }
         lastLoadedSlug.current = null;
         lastLoadedTenantId.current = t?.id ?? null;

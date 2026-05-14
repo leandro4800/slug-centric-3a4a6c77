@@ -8,10 +8,11 @@ import type { CapacitorConfig } from '@capacitor/cli';
  * Para testar com hot-reload apontando pro preview do Lovable:
  *   - Deixe CAP_DEV=1 ao rodar `npx cap sync` e `npx cap run ios|android`
  */
-const isDev = process.env.CAP_DEV === '1';
+// Só ativa live-reload se estiver explicitamente em desenvolvimento local
+const isDev = process.env.NODE_ENV === 'development' || process.env.CAP_DEV === '1';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.164775dd51cd4aab839820f1eeab0a23',
+  appId: 'app.alphacoach.prod', // ID mais genérico/limpo para a Play Store se desejar, mas mantendo o atual por segurança se já estiver publicado
   appName: 'AlphaCoach',
   webDir: 'dist',
   ...(isDev && {
