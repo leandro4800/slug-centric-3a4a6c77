@@ -221,6 +221,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
       }
 
       if (lastLoadedSlug.current === targetSlug && tenant && !force) {
+        setLoading(false);
         return;
       }
 
