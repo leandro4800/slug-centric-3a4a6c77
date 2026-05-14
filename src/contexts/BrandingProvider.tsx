@@ -161,7 +161,8 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
   const cachedTenant = slug ? readCache(slug) : null;
   const [tenant, setTenant] = useState<Tenant | null>(cachedTenant);
-  const [loading, setLoading] = useState(true); // Sempre começa em loading para evitar flashes ou inconsistências no início
+  const [loading, setLoading] = useState(true);
+  const [lastCheckTime, setLastCheckTime] = useState(Date.now()); // Para forçar re-check se necessário
   const isMountedRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
@@ -266,15 +267,22 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   // Effect 1: carrega tenant ao mudar slug + ouve mudanças de auth (apenas uma vez)
   useEffect(() => {
     isMountedRef.current = true;
+    
+    // Timer de segurança para o loading de branding
+    const safetyTimer = setTimeout(() => {
+      if (isMountedRef.current && loading) {
+        console.warn("[Branding] Safety timeout hit, releasing loading state.");
+        setLoading(false);
+      }
+    }, 4500);
+
     void load(slug);
 
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event) => {
-      // Apenas SIGNED_OUT força reload — SIGNED_IN inicial já é tratado pelo getSession
       if (event === "SIGNED_OUT") {
-        // Limpa as marcas de splash de TODOS os tenants para que a logo volte a aparecer no próximo login
         try {
           Object.keys(sessionStorage)
-            .filter((k) => k.startsWith("splash_shown_session"))
+            .filter((k) => k.startsWith("splash_shown_v2"))
             .forEach((k) => sessionStorage.removeItem(k));
         } catch {}
         void load(slug, true);
@@ -284,6 +292,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     return () => {
       isMountedRef.current = false;
       authSub.unsubscribe();
+      clearTimeout(safetyTimer);
     };
   }, [slug]);
 

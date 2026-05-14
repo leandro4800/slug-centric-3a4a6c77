@@ -1,4 +1,4 @@
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
@@ -6,8 +6,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 /**
- * Rota de redirecionamento principal.
- * Decide para onde o usuário deve ir baseado no seu estado de autenticação e papéis.
+ * Rota de redirecionamento principal simplificada e blindada contra loops.
  */
 const IndexRedirect = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -20,40 +19,42 @@ const IndexRedirect = () => {
   const confirmed = params.get("confirmed") === "1" || params.get("type") === "signup";
   const safeSlug = slugParam && /^[a-z0-9-]+$/i.test(slugParam) ? slugParam : null;
 
-  const [forceRender, setForceRender] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  const [decisionDone, setDecisionDone] = useState(false);
 
   useEffect(() => {
-    const timer = setTimeout(() => setForceRender(true), 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    // Se ainda está carregando o básico e não deu timeout, esperamos
+    if (authLoading || brandingLoading) {
+      const safetyTimer = setTimeout(() => {
+        if (!decisionDone) {
+          console.warn("[IndexRedirect] Timeout de segurança atingido, decidindo com dados parciais.");
+          setDecisionDone(true);
+        }
+      }, 5000);
+      return () => clearTimeout(safetyTimer);
+    }
+    
+    setDecisionDone(true);
+  }, [authLoading, brandingLoading, decisionDone]);
 
   useEffect(() => {
-    if ((authLoading || brandingLoading) && !forceRender) return;
-    if (redirecting) return;
+    if (!decisionDone) return;
 
     const decideDestination = async () => {
-      // Reduzi o timeout para 4 segundos no total para ser mais ágil no mobile
-      const timeoutId = setTimeout(() => {
-        if (!redirecting) {
-          console.warn("[IndexRedirect] Decision taking too long, fallback to login");
-          navigate("/login", { replace: true });
-        }
-      }, 4500);
-
-      setRedirecting(true);
       try {
+        console.log("[IndexRedirect] Iniciando decisão de destino. User:", user?.id, "Slug:", safeSlug);
+
         if (!user) {
           const loginPath = safeSlug ? `/${safeSlug}/login` : "/login";
           const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
-          console.log("[IndexRedirect] Não autenticado, enviando para:", target);
+          
           if (window.location.pathname !== loginPath) {
+            console.log("[IndexRedirect] Não autenticado, redirecionando para:", target);
             navigate(target, { replace: true });
           }
           return;
         }
 
-        // 1. Busca se ele é dono de algum tenant
+        // 1. Prioridade: Se o usuário é dono de um tenant
         const { data: ownedTenant } = await supabase
           .from("tenants")
           .select("slug")
@@ -62,74 +63,79 @@ const IndexRedirect = () => {
 
         if (ownedTenant?.slug) {
           const target = `/${ownedTenant.slug}/app`;
-          console.log("[IndexRedirect] Owner identificado, enviando para:", target);
-          navigate(target, { replace: true });
+          console.log("[IndexRedirect] Redirecionando dono para seu app:", target);
+          if (window.location.pathname !== target) navigate(target, { replace: true });
           return;
         }
 
-        // 2. Se há slug na URL ou no Branding, valida se é membro do tenant
+        // 2. Se há um slug na URL, verifica se o usuário tem acesso a ele
         const targetSlug = safeSlug || tenant?.slug;
-        if (targetSlug && targetSlug !== "demo") {
+        if (targetSlug && targetSlug !== "demo" && targetSlug !== "index") {
           const { data: targetTenant } = await supabase
             .from("tenants")
-            .select("id, slug, owner_user_id")
+            .select("id, slug")
             .eq("slug", targetSlug)
             .maybeSingle();
 
           if (targetTenant) {
-            if (targetTenant.owner_user_id === user.id) {
-              const target = `/${targetTenant.slug}/app`;
-              console.log("[IndexRedirect] Owner do slug, enviando para:", target);
-              navigate(target, { replace: true });
-              return;
-            }
-
-            const [{ data: roleRow }, { data: subRow }] = await Promise.all([
-              supabase.from("user_roles").select("role").eq("user_id", user.id).eq("tenant_id", targetTenant.id).maybeSingle(),
-              supabase.from("assinaturas").select("status").eq("aluno_id", user.id).eq("tenant_id", targetTenant.id).in("status", ["active", "trialing"]).maybeSingle(),
-            ]);
-
-            if (roleRow || subRow) {
-              const target = `/${targetTenant.slug}/app`;
-              console.log("[IndexRedirect] Membro do tenant, enviando para:", target);
-              navigate(target, { replace: true });
-              return;
-            }
-          }
-        }
-
-        // 3. Busca o tenant do perfil
-        const { data: profile } = await supabase.from("perfis").select("tenant_id").eq("id", user.id).maybeSingle();
-        if (profile?.tenant_id) {
-          const { data: profileTenant } = await supabase.from("tenants").select("slug").eq("id", profile.tenant_id).maybeSingle();
-          if (profileTenant?.slug) {
-            const target = `/${profileTenant.slug}/app`;
-            console.log("[IndexRedirect] Tenant identificado via Perfil, enviando para:", target);
-            navigate(target, { replace: true });
+            const target = `/${targetTenant.slug}/app`;
+            console.log("[IndexRedirect] Slug encontrado, tentando entrar no app:", target);
+            if (window.location.pathname !== target) navigate(target, { replace: true });
             return;
           }
         }
 
-        // 4. Sem tenant associado: vai para onboarding
-        const onboardingPath = targetSlug ? `/${targetSlug}/onboarding` : "/onboarding";
-        console.log("[IndexRedirect] Sem tenant associado, enviando para onboarding:", onboardingPath);
-        if (window.location.pathname !== onboardingPath) {
-          navigate(onboardingPath, { replace: true });
+        // 3. Fallback final: Tenta o perfil
+        const { data: profile } = await supabase
+          .from("perfis")
+          .select("tenant_id")
+          .eq("id", user.id)
+          .maybeSingle();
+
+        if (profile?.tenant_id) {
+          const { data: profileTenant } = await supabase
+            .from("tenants")
+            .select("slug")
+            .eq("id", profile.tenant_id)
+            .maybeSingle();
+
+          if (profileTenant?.slug) {
+            const target = `/${profileTenant.slug}/app`;
+            console.log("[IndexRedirect] Tenant do perfil encontrado:", target);
+            if (window.location.pathname !== target) navigate(target, { replace: true });
+            return;
+          }
         }
+
+        // Se nada funcionar e houver slug, tenta onboarding nesse slug
+        if (safeSlug) {
+          const target = `/${safeSlug}/onboarding`;
+          console.log("[IndexRedirect] Nada encontrado, tentando onboarding no slug:", target);
+          if (window.location.pathname !== target) navigate(target, { replace: true });
+          return;
+        }
+
+        // Fallback absoluto
+        console.log("[IndexRedirect] Sem destino claro, enviando para onboarding geral");
+        navigate("/onboarding", { replace: true });
+
       } catch (err) {
-        console.error("[IndexRedirect] Erro crítico na decisão:", err);
+        console.error("[IndexRedirect] Erro crítico:", err);
         navigate("/login", { replace: true });
-      } finally {
-        clearTimeout(timeoutId);
       }
     };
 
     decideDestination();
-  }, [user, authLoading, brandingLoading, safeSlug, tenant?.slug, confirmed, navigate, redirecting, forceRender]);
+  }, [decisionDone, user, safeSlug, tenant?.slug, confirmed, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="flex flex-col items-center gap-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+        <span className="text-xs text-muted-foreground uppercase tracking-widest animate-pulse">
+          Organizando Ecossistema
+        </span>
+      </div>
     </div>
   );
 };
