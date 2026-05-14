@@ -11,6 +11,24 @@ interface Props {
   checkTenant?: boolean;
 }
 
+const GUARD_TIMEOUT_MS = 4500;
+
+const withGuardTimeout = async <T,>(promise: PromiseLike<T>, fallback: T, label: string): Promise<T> => {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<T>((resolve) => {
+    timeoutId = setTimeout(() => {
+      console.warn(`[RequireAuth] ${label} demorou demais; liberando fallback para não travar.`);
+      resolve(fallback);
+    }, GUARD_TIMEOUT_MS);
+  });
+
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
+  }
+};
+
 export const RequireAuth = ({ children, requireRole, checkTenant = false }: Props) => {
   const { user, isLoading: authLoading, hasRole } = useAuth();
   const { tenant, loading: brandingLoading } = useBranding();
@@ -36,12 +54,17 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
     let cancelled = false;
     setTenantMembership(null);
     (async () => {
-      const [{ data: profile }, { data: subscription }] = await Promise.all([
-        supabase.from("perfis").select("tenant_id").eq("id", user.id).eq("tenant_id", tenant.id).maybeSingle(),
-        supabase.from("assinaturas").select("id").eq("aluno_id", user.id).eq("tenant_id", tenant.id).in("status", ["active", "trialing"]).maybeSingle(),
-      ]);
+      try {
+        const [{ data: profile }, { data: subscription }] = await withGuardTimeout(Promise.all([
+          supabase.from("perfis").select("tenant_id").eq("id", user.id).eq("tenant_id", tenant.id).maybeSingle(),
+          supabase.from("assinaturas").select("id").eq("aluno_id", user.id).eq("tenant_id", tenant.id).in("status", ["active", "trialing"]).maybeSingle(),
+        ]), [{ data: null }, { data: null }] as any, "Verificação de vínculo");
 
-      if (!cancelled) setTenantMembership(!!profile || !!subscription);
+        if (!cancelled) setTenantMembership(!!profile || !!subscription);
+      } catch (error) {
+        console.error("[RequireAuth] Erro verificando vínculo:", error);
+        if (!cancelled) setTenantMembership(false);
+      }
     })();
 
     return () => { cancelled = true; };
