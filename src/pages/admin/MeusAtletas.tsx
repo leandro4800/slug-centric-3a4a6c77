@@ -392,13 +392,13 @@ const MeusAtletas = () => {
               const initials = getInitials(a);
               const hasPhoto = !!a.avatar_url;
               return (
-                <Link
-                  key={a.id}
-                  to={`/${slug}/admin/atleta/${a.id}`}
-                  className="group relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/40 border border-border hover:border-primary/60 transition-colors"
-                >
+                <div key={a.id} className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/40 border border-border hover:border-primary/60 transition-colors group">
+                  <Link
+                    to={`/${slug}/admin/atleta/${a.id}`}
+                    className="absolute inset-0 z-0"
+                  />
                   {/* Botão Gerar Avatar (Admin) */}
-                  <div className="absolute top-2 left-2 z-20">
+                  <div className="absolute top-2 left-2 z-20 flex gap-1">
                     <Button
                       size="icon"
                       variant="secondary"
@@ -412,6 +412,19 @@ const MeusAtletas = () => {
                     >
                       <Sparkles className="w-4 h-4 text-primary group-hover:text-black" />
                     </Button>
+                    <Link
+                      to={`/${slug}/admin/atleta/${a.id}?openEval=true`}
+                      className="z-20"
+                    >
+                      <Button
+                        size="icon"
+                        variant="secondary"
+                        className="w-8 h-8 rounded-full bg-black/60 border-white/20 hover:bg-primary/80 transition-all"
+                        title="Ver Avaliação Física"
+                      >
+                        <Ruler className="w-4 h-4 text-primary group-hover:text-black" />
+                      </Button>
+                    </Link>
                   </div>
 
                   {/* Badge AGENDADO */}
