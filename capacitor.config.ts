@@ -12,7 +12,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const isDev = process.env.NODE_ENV === 'development' || process.env.CAP_DEV === '1';
 
 const config: CapacitorConfig = {
-  appId: 'app.alphacoach.prod', // ID mais genérico/limpo para a Play Store se desejar, mas mantendo o atual por segurança se já estiver publicado
+  appId: 'app.lovable.164775dd51cd4aab839820f1eeab0a23',
   appName: 'AlphaCoach',
   webDir: 'dist',
   ...(isDev && {
