@@ -54,12 +54,25 @@ const IndexRedirect = () => {
           return;
         }
 
+        const withDecisionTimeout = async <T,>(promise: PromiseLike<T>, fallback: T) => {
+          let timeoutId: ReturnType<typeof setTimeout> | undefined;
+          const timeout = new Promise<T>((resolve) => {
+            timeoutId = setTimeout(() => resolve(fallback), 3500);
+          });
+
+          try {
+            return await Promise.race([promise, timeout]);
+          } finally {
+            if (timeoutId) clearTimeout(timeoutId);
+          }
+        };
+
         // 1. Prioridade: Se o usuário é dono de um tenant
-        const { data: ownedTenant } = await supabase
+        const { data: ownedTenant } = await withDecisionTimeout(supabase
           .from("tenants")
           .select("slug")
           .eq("owner_user_id", user.id)
-          .maybeSingle();
+          .maybeSingle(), { data: null, error: null });
 
         if (ownedTenant?.slug) {
           const target = `/${ownedTenant.slug}/app`;
@@ -71,11 +84,11 @@ const IndexRedirect = () => {
         // 2. Se há um slug na URL, verifica se o usuário tem acesso a ele
         const targetSlug = safeSlug || tenant?.slug;
         if (targetSlug && targetSlug !== "demo" && targetSlug !== "index") {
-          const { data: targetTenant } = await supabase
+          const { data: targetTenant } = await withDecisionTimeout(supabase
             .from("tenants")
             .select("id, slug")
             .eq("slug", targetSlug)
-            .maybeSingle();
+            .maybeSingle(), { data: null, error: null });
 
           if (targetTenant) {
             const target = `/${targetTenant.slug}/app`;
@@ -86,18 +99,18 @@ const IndexRedirect = () => {
         }
 
         // 3. Fallback final: Tenta o perfil
-        const { data: profile } = await supabase
+        const { data: profile } = await withDecisionTimeout(supabase
           .from("perfis")
           .select("tenant_id")
           .eq("id", user.id)
-          .maybeSingle();
+          .maybeSingle(), { data: null, error: null });
 
         if (profile?.tenant_id) {
-          const { data: profileTenant } = await supabase
+          const { data: profileTenant } = await withDecisionTimeout(supabase
             .from("tenants")
             .select("slug")
             .eq("id", profile.tenant_id)
-            .maybeSingle();
+            .maybeSingle(), { data: null, error: null });
 
           if (profileTenant?.slug) {
             const target = `/${profileTenant.slug}/app`;
