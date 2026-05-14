@@ -487,7 +487,6 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
                 </div>
               ) : (
                 <>
-                <>
                   {editing && (
                     <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
                       <div className="flex items-center justify-between">
