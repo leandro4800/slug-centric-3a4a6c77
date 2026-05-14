@@ -158,6 +158,44 @@ const MeusAtletas = () => {
     );
   }, [alunos, q]);
 
+  const handleGerarAvatar = async (aluno: Aluno) => {
+    // Busca a foto original na carta_atleta para ser mais fiel
+    const { data: carta } = await supabase
+      .from("cartas_atleta")
+      .select("foto_original_url")
+      .eq("aluno_id", aluno.id)
+      .maybeSingle();
+
+    const foto = carta?.foto_original_url || aluno.avatar_url;
+    if (!foto) {
+      toast.error(`O aluno ${aluno.nome_completo || ""} não possui foto original para gerar o avatar.`);
+      return;
+    }
+
+    const tid = toast.loading(`Gerando avatar para ${aluno.nome_completo || ""}...`);
+    try {
+      const { data, error } = await supabase.functions.invoke("gerar-avatar-carta", {
+        body: { 
+          foto_url: foto, 
+          sexo: aluno.sexo, 
+          user_id: aluno.id, 
+          force: true,
+          variant: "carta" 
+        },
+      });
+
+      if (error || !data?.avatar_url) {
+        throw new Error(data?.error || error?.message || "Falha na geração");
+      }
+
+      toast.success("Avatar gerado com sucesso!", { id: tid });
+      if (tenant) load(tenant.id); // Recarrega a lista
+    } catch (err: any) {
+      console.error(err);
+      toast.error(`Erro: ${err.message}`, { id: tid });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       {/* Header */}
