@@ -23,14 +23,6 @@ type VideoRef = { yt: string | null; coach: string | null };
 const VOLUME_GROUPS = ["peito", "costas", "quadríceps", "quadriceps", "glúteo", "gluteo", "ombro", "bíceps", "biceps", "tríceps", "triceps"];
 const MIN_EXERCISES_PER_DAY = 4;
 
-const MOCK_TREINOS: Treino[] = [
-  { id: "mock-a1", dia_semana: "Treino A", exercicio: "Supino Reto com Barra", series: "4", repeticoes: "12", observacao: "Controle a descida em 3 segundos." },
-  { id: "mock-a2", dia_semana: "Treino A", exercicio: "Crucifixo Inclinado", series: "3", repeticoes: "12", observacao: "Cotovelos levemente flexionados." },
-  { id: "mock-a3", dia_semana: "Treino A", exercicio: "Crossover", series: "3", repeticoes: "15", observacao: "Pico de contração." },
-  { id: "mock-a4", dia_semana: "Treino A", exercicio: "Tríceps Pulley", series: "4", repeticoes: "12", observacao: "Cotovelos fixos." },
-  { id: "mock-b1", dia_semana: "Treino B", exercicio: "Puxada Aberta", series: "4", repeticoes: "12", observacao: "Foco na dorsal." },
-  { id: "mock-c1", dia_semana: "Treino C", exercicio: "Agachamento Livre", series: "4", repeticoes: "10", observacao: "Mantenha a postura neutra." },
-];
 
 const Treino = () => {
   const { user } = useAuth();
