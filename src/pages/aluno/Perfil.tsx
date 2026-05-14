@@ -17,6 +17,7 @@ import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
 import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import heic2any from "heic2any";
+import { AthleteEvaluationsViewer } from "@/components/aluno/AthleteEvaluationsViewer";
 
 type ProfileData = {
   id?: string;
