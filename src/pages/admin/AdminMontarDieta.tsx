@@ -51,6 +51,7 @@ const AdminMontarDieta = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
+  const [iaCommand, setIaCommand] = useState(searchParams.get("prompt") || "");
   const recognitionRef = useRef<any>(null);
 
   useEffect(() => {
@@ -172,8 +173,7 @@ const AdminMontarDieta = () => {
     
     try {
       await salvarPerfil(true);
-      const promptFromUrl = searchParams.get("prompt");
-      const activePrompt = customPrompt || promptFromUrl || "";
+      const activePrompt = customPrompt || iaCommand || "";
       const sexoNorm = (perfil.sexo || "").toLowerCase();
       const sexoEnvio = sexoNorm.startsWith("f") ? "F" : "M";
 
@@ -306,6 +306,7 @@ const AdminMontarDieta = () => {
           dieta_id: dietaId,
           kcal_alvo: diet.kcal_alvo,
           macros_alvo: diet.macros_alvo,
+          prompt: iaCommand,
           refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia }))
         },
       });
@@ -354,10 +355,7 @@ const AdminMontarDieta = () => {
         .map((result: any) => result.transcript)
         .join("");
       
-      const currentPrompt = searchParams.get("prompt") || "";
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set("prompt", (currentPrompt + " " + transcript).trim());
-      navigate(`?${newParams.toString()}`, { replace: true });
+      setIaCommand(prev => (prev + " " + transcript).trim());
     };
 
     recognition.start();
@@ -459,7 +457,32 @@ const AdminMontarDieta = () => {
                   <Save className="h-4 w-4 mr-2" />
                   Salvar Perfil
                 </Button>
-                <div className="flex flex-col flex-[2] gap-2">
+                <div className="flex flex-col flex-[2] gap-3">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+                      Comando para a IA (Opcional)
+                      <span className="text-[9px] text-primary/60">Afeta toda a dieta</span>
+                    </Label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Textarea 
+                          value={iaCommand}
+                          onChange={(e) => setIaCommand(e.target.value)}
+                          placeholder="Ex: Limit aveia em 100g, remover castanhas, priorizar arroz..."
+                          className="min-h-[80px] bg-black/40 border-white/10 text-sm"
+                        />
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`absolute bottom-2 right-2 h-8 w-8 rounded-full ${isRecording ? 'bg-red-600/20 text-red-500 animate-pulse' : 'text-muted-foreground hover:text-white'}`}
+                          onClick={startVoice}
+                        >
+                          {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
                   <div className="flex gap-2">
                     <Button 
                       className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest transition-all duration-300 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.2)]"
@@ -467,21 +490,9 @@ const AdminMontarDieta = () => {
                       disabled={generating}
                     >
                       {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
-                      Gerar com IA
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className={`w-12 h-12 rounded-xl border-white/10 ${isRecording ? 'bg-red-600/20 text-red-500 border-red-500/50' : ''}`}
-                      onClick={startVoice}
-                    >
-                      {isRecording ? <MicOff className="h-5 w-5 animate-pulse" /> : <Mic className="h-5 w-5" />}
+                      {refeicoes.length > 0 ? "Refazer com IA" : "Gerar com IA"}
                     </Button>
                   </div>
-                  {isRecording && (
-                    <p className="text-[10px] text-red-500 animate-pulse text-center font-bold uppercase tracking-tighter">
-                      Ouvindo... Fale sua preferência para a dieta
-                    </p>
-                  )}
                 </div>
               </div>
             </div>

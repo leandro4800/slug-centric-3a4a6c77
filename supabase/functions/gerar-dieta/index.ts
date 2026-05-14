@@ -95,7 +95,7 @@ REGRAS DE OURO (OBRIGATÓRIO):
 5. Mantenha os outros alimentos citados, alterando apenas os números (quantidades) para bater os macros.
 6. Retorne no mesmo formato JSON abaixo.`;
 
-      const userPrompt = `Abaixo estão as refeições atuais. Ajuste-as para bater os macros alvo.\n\n${refeicoesTxt}`;
+      const userPrompt = `Abaixo estão as refeições atuais. Ajuste-as para bater os macros alvo.${body.prompt ? `\n\nINSTRUÇÕES ADICIONAIS: ${body.prompt}` : ""}\n\n${refeicoesTxt}`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -177,7 +177,8 @@ ${alimentosLista}
 
 REGRAS DE SAÍDA:
 1. Retorne um JSON com o campo "refeicoes" contendo "nome", "horario", "ordem" e "descricao_ia".
-2. A "descricao_ia" deve ser amigável e conter quantidades exatas em gramas.`;
+2. A "descricao_ia" deve ser amigável e conter quantidades exatas em gramas.
+3. Considere estas INSTRUÇÕES ADICIONAIS do coach: ${body.prompt || "Nenhuma"}`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

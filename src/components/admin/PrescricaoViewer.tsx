@@ -26,6 +26,7 @@ import {
   Upload,
   Plus,
   Trash2,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -76,6 +77,9 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const [recIdx, setRecIdx] = useState<number | null>(null);
+  const [isRecordingGeneral, setIsRecordingGeneral] = useState(false);
+  const [iaCommand, setIaCommand] = useState("");
+  const [adjusting, setAdjusting] = useState(false);
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -178,6 +182,67 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
     };
     rec.start();
     recognitionRef.current = rec;
+  };
+
+  const startVoiceGeneral = () => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      return;
+    }
+    if (isRecordingGeneral) {
+      recognitionRef.current?.stop();
+      setIsRecordingGeneral(false);
+      return;
+    }
+    const rec = new SR();
+    rec.lang = "pt-BR";
+    rec.continuous = true;
+    rec.interimResults = false;
+    rec.onstart = () => setIsRecordingGeneral(true);
+    rec.onend = () => setIsRecordingGeneral(false);
+    rec.onerror = () => setIsRecordingGeneral(false);
+    rec.onresult = (event: any) => {
+      const transcript = Array.from(event.results)
+        .map((r: any) => r[0].transcript)
+        .join(" ");
+      setIaCommand(prev => (prev + " " + transcript).trim());
+    };
+    rec.start();
+    recognitionRef.current = rec;
+  };
+
+  const ajustarComIA = async () => {
+    if (!alunoId || refeicoes.length === 0) return;
+    setAdjusting(true);
+    const tId = toast.loading("Ajustando dieta com IA...");
+    try {
+      const { data, error } = await supabase.functions.invoke("gerar-dieta", {
+        body: { 
+          mode: "refine",
+          aluno_id: alunoId,
+          dieta_id: dieta?.id,
+          kcal_alvo: dieta?.kcal_alvo,
+          macros_alvo: dieta?.macros_alvo,
+          prompt: iaCommand,
+          refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia }))
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.refeicoes) {
+        setRefeicoes(prev => prev.map((r, i) => ({
+          ...r,
+          descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia
+        })));
+        toast.success("Dieta ajustada com sucesso!", { id: tId });
+      }
+    } catch (e: any) {
+      toast.error("Erro ao ajustar: " + e.message, { id: tId });
+    } finally {
+      setAdjusting(false);
+    }
   };
 
   const salvarDieta = async () => {
@@ -423,6 +488,44 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
                 </div>
               ) : (
                 <>
+                  {editing && (
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-[10px] uppercase tracking-widest text-primary font-bold flex items-center gap-1">
+                          <Sparkles className="h-3 w-3" /> Comando Geral para IA
+                        </Label>
+                        <span className="text-[9px] text-muted-foreground uppercase">Muda a dieta por inteiro</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <div className="relative flex-1">
+                          <Textarea 
+                            value={iaCommand}
+                            onChange={(e) => setIaCommand(e.target.value)}
+                            placeholder="Ex: Dieta com muito volume, colocar no máximo 100g de aveia por refeição..."
+                            className="min-h-[70px] bg-background/50 text-xs pr-10"
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={startVoiceGeneral}
+                            className={`absolute bottom-2 right-2 h-7 w-7 rounded-full ${isRecordingGeneral ? 'text-red-500 animate-pulse' : 'text-muted-foreground'}`}
+                          >
+                            {isRecordingGeneral ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                          </Button>
+                        </div>
+                        <Button
+                          type="button"
+                          onClick={ajustarComIA}
+                          disabled={adjusting || !iaCommand}
+                          className="h-auto bg-primary text-primary-foreground text-[10px] uppercase font-bold px-4"
+                        >
+                          {adjusting ? <Loader2 className="h-3 w-3 animate-spin" /> : "Ajustar"}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="rounded-xl border border-border bg-secondary/30 p-4 grid grid-cols-2 gap-3 text-xs">
                     <div>
                       <p className="text-muted-foreground uppercase tracking-wider">Objetivo</p>
