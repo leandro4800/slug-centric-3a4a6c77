@@ -420,6 +420,19 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
                         alt="Avatar IA corpo inteiro"
                         className="w-full h-full object-contain drop-shadow-[0_8px_30px_hsla(42_70%_62%_/_0.5)]"
                       />
+                      <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
+                        <Button 
+                          size="sm" 
+                          variant="secondary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (view.avatar_carta_url) downloadImage(view.avatar_carta_url, `avatar-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`);
+                          }}
+                          className="font-gaming text-[10px]"
+                        >
+                          <Download className="w-3 h-3 mr-2" /> Baixar Avatar
+                        </Button>
+                      </div>
                       <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
                     </>
                   ) : (
