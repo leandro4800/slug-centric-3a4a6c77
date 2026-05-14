@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Logo } from "@/components/Logo";
-import { Loader2, Eye, EyeOff, KeyRound } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -14,59 +14,13 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 
 const Login = () => {
-  const navigate = useNavigate();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
-  const safeRedirectSlug = useMemo(() => {
-    const candidate = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
-    if (!candidate || !/^[a-z0-9-]+$/i.test(candidate) || candidate === "index" || candidate === "demo") return null;
-    return candidate;
-  }, [urlSlug, tenant?.slug]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [voucherCode, setVoucherCode] = useState("");
-  const [voucherLoading, setVoucherLoading] = useState(false);
-
-  const redeemVoucherCode = async (code: string): Promise<boolean> => {
-    const { data, error } = await supabase.rpc("redeem_voucher", { _code: code });
-    if (error) {
-      toast.error(error.message);
-      return false;
-    }
-    const result = data as { ok: boolean; error?: string };
-    if (!result?.ok) {
-      const msg = result?.error === "invalid_code" ? "Código inválido"
-        : result?.error === "already_used" ? "Código já utilizado"
-        : result?.error === "expired" ? "Código expirado"
-        : "Não foi possível resgatar o código";
-      toast.error(msg);
-      return false;
-    }
-    toast.success("Acesso liberado!");
-    return true;
-  };
-
-  const handleRedeemClick = async () => {
-    const code = voucherCode.trim();
-    if (!code) { toast.error("Digite o código"); return; }
-    if (!user) {
-      sessionStorage.setItem("pending_voucher", code);
-      toast.message("Faça login ou crie sua conta — vamos liberar seu acesso automaticamente.");
-      return;
-    }
-    setVoucherLoading(true);
-    const ok = await redeemVoucherCode(code);
-    setVoucherLoading(false);
-    if (ok) {
-      sessionStorage.removeItem("pending_voucher");
-      const targetSlug = urlSlug || tenant?.slug;
-      // Hard reload para o AuthProvider reler os papéis (inclui o 'aluno' recém-criado)
-      window.location.href = targetSlug ? `/${targetSlug}/app` : "/marketplace";
-    }
-  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -77,48 +31,6 @@ const Login = () => {
       window.history.replaceState({}, "", url.toString());
     }
   }, []);
-
-  // Redireciona usuário já logado
-  useEffect(() => {
-    if (!sessionReady || !user) return;
-
-    const target = safeRedirectSlug ? `/${safeRedirectSlug}/app` : "/";
-
-    if (redirectTimedOut) return;
-
-    const attemptCount = registerLoginRedirectAttempt();
-    if (attemptCount >= 3) {
-      console.error("[Login] Loop de redirecionamento detectado. Travando auto-redirect para proteger o app.");
-      setRedirectTimedOut(true);
-      return;
-    }
-
-    const previousTarget = sessionStorage.getItem(LOGIN_LAST_AUTO_REDIRECT_KEY);
-    if (previousTarget === target && attemptCount > 1) {
-      console.warn("[Login] Auto-redirecionamento repetido bloqueado:", target);
-      setRedirectTimedOut(true);
-      return;
-    }
-
-    sessionStorage.setItem(LOGIN_LAST_AUTO_REDIRECT_KEY, target);
-
-    console.log("[Login] Usuário já autenticado, redirecionando:", target);
-    navigate(target, { replace: true });
-  }, [user, sessionReady, navigate, safeRedirectSlug, redirectTimedOut]);
-
-  const retryPanelAccess = () => {
-    sessionStorage.removeItem(LOGIN_REDIRECT_GUARD_KEY);
-    sessionStorage.removeItem(LOGIN_LAST_AUTO_REDIRECT_KEY);
-    setRedirectTimedOut(false);
-    navigate(safeRedirectSlug ? `/${safeRedirectSlug}/app` : "/", { replace: true });
-  };
-
-  const resetSession = async () => {
-    sessionStorage.removeItem(LOGIN_REDIRECT_GUARD_KEY);
-    sessionStorage.removeItem(LOGIN_LAST_AUTO_REDIRECT_KEY);
-    await signOut();
-    setRedirectTimedOut(false);
-  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
