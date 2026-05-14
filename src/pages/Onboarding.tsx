@@ -142,62 +142,46 @@ export default function Onboarding() {
       const qualidadeSono = Math.min(Math.max(Number(sono[0]) || 7, 1), 10);
       const nivelEstresse = Math.min(Math.max(Number(estresse[0]) || 5, 1), 10);
 
-      const { error: errPerfil } = await supabase.from("perfis").update({
-        nome_completo: nome,
-        telefone,
-        data_nascimento: dataNasc || null,
-        sexo,
-        onboarding_completo: true,
-        tenant_id: tenantId,
-      }).eq("id", user.id);
-      if (errPerfil) throw new Error(`Perfil: ${errPerfil.message}`);
-
-      if (tenantId) {
-        const { data: hasRole } = await supabase.from("user_roles").select("id").eq("user_id", user.id).eq("tenant_id", tenantId).eq("role", "aluno").maybeSingle();
-        if (!hasRole) {
-          const { error: errRole } = await supabase.from("user_roles").insert({ user_id: user.id, tenant_id: tenantId, role: "aluno" });
-          if (errRole) console.warn("[Onboarding] role aluno não criada:", errRole.message);
-        }
-      }
-
-      const { error: errAnam } = await supabase.from("anamnese_aluno").upsert({
-        aluno_id: user.id,
-        tenant_id: tenantId,
-        doencas: doencas.split(",").map(s => s.trim()).filter(Boolean),
-        medicamentos,
-        lesoes_atuais: lesoes,
-        qualidade_sono: qualidadeSono,
-        horas_sono: horasSono,
-        nivel_estresse: nivelEstresse,
-        tabagismo,
-        alcool,
-        suplementos: suplementos.split(",").map(s => s.trim()).filter(Boolean),
-        restricoes_alimentares: restricoes.split(",").map(s => s.trim()).filter(Boolean),
-        refeicoes_dia: Number(refeicoes) || null,
-        agua_litros: Number(aguaLitros) || null,
-        anos_treino: Number(anosTreino) || null,
-        disponibilidade_dias: diasDisponiveis,
-        nivel_experiencia: nivelExperiencia,
-        faz_uso_ergogenicos: fazUsoErgogenicos,
-        detalhes_ergogenicos: detalhesErgogenicos,
-      }, { onConflict: "aluno_id" });
-      if (errAnam) throw new Error(`Anamnese: ${errAnam.message}`);
-
-      const { error: errAval } = await supabase.from("avaliacoes_fisicas").insert({
-        aluno_id: user.id,
-        tenant_id: tenantId,
-        peso_kg: peso,
-        altura_cm: alt,
-        pescoco_cm: Number(pescocoCm) || null,
-        cintura_cm: Number(cinturaCm) || null,
-        quadril_cm: quadrilCm ? Number(quadrilCm) : null,
-        bf_pct_calculado: bfVal,
-        imc: imcVal,
-        massa_magra_kg: massaMagra,
-        massa_gorda_kg: massaGorda,
-        sexo,
+      const { data: rpcData, error: rpcError } = await supabase.rpc("complete_student_onboarding", {
+        _tenant_id: tenantId,
+        _nome_completo: nome,
+        _telefone: telefone,
+        _data_nascimento: dataNasc || null,
+        _sexo: sexo,
+        _anamnese: {
+          doencas: doencas.split(",").map(s => s.trim()).filter(Boolean),
+          medicamentos,
+          lesoes_atuais: lesoes,
+          qualidade_sono: qualidadeSono,
+          horas_sono: horasSono,
+          nivel_estresse: nivelEstresse,
+          tabagismo,
+          alcool,
+          suplementos: suplementos.split(",").map(s => s.trim()).filter(Boolean),
+          restricoes_alimentares: restricoes.split(",").map(s => s.trim()).filter(Boolean),
+          refeicoes_dia: Number(refeicoes) || null,
+          agua_litros: Number(aguaLitros) || null,
+          anos_treino: Number(anosTreino) || null,
+          disponibilidade_dias: diasDisponiveis,
+          nivel_experiencia: nivelExperiencia,
+          faz_uso_ergogenicos: fazUsoErgogenicos,
+          detalhes_ergogenicos: detalhesErgogenicos,
+        },
+        _avaliacao: {
+          peso_kg: peso,
+          altura_cm: alt,
+          pescoco_cm: Number(pescocoCm) || null,
+          cintura_cm: Number(cinturaCm) || null,
+          quadril_cm: quadrilCm ? Number(quadrilCm) : null,
+          bf_pct_calculado: bfVal,
+          imc: imcVal,
+          massa_magra_kg: massaMagra,
+          massa_gorda_kg: massaGorda,
+        },
       });
-      if (errAval) throw new Error(`Avaliação física: ${errAval.message}`);
+      if (rpcError) throw new Error(rpcError.message);
+      const result = rpcData as { ok: boolean; error?: string } | null;
+      if (!result?.ok) throw new Error(result?.error || "Falha ao concluir cadastro");
 
       toast({ title: "Tudo pronto!", description: "Bem-vindo ao seu painel." });
       navigate(tenantSlug ? `/${tenantSlug}/app` : "/", { replace: true });
