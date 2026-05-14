@@ -5,7 +5,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Home, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign, User, Copy, Share2, Dumbbell, Apple } from "lucide-react";
+import { Home, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign, User, Copy, Share2, Dumbbell, Apple, Ruler } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
