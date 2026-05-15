@@ -786,16 +786,31 @@ const AtletaDetalhe = () => {
           </button>
 
           <button
+            onClick={() => setEvaluationsViewerOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/15 transition-colors text-left"
+          >
+            <Ruler className="h-4 w-4 text-primary" />
+            <span className="flex-1">
+              <span className="block text-xs font-bold uppercase tracking-wider text-primary">
+                Ver avaliações físicas
+              </span>
+              <span className="block text-[10px] text-muted-foreground tracking-wider uppercase mt-0.5">
+                Histórico completo + 7 dobras
+              </span>
+            </span>
+          </button>
+
+          <button
             onClick={() => setSelectionOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
           >
             <Ruler className="h-4 w-4 text-primary" />
             <span className="flex-1">
               <span className="block text-xs font-bold uppercase tracking-wider">
-                Protocolo 7 dobras
+                Nova avaliação / Protocolo 7 dobras
               </span>
               <span className="block text-[10px] text-muted-foreground tracking-wider">
-                Jackson & Pollock
+                Marinha, Jackson & Pollock ou importar PDF
               </span>
             </span>
           </button>
