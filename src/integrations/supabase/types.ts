@@ -1777,6 +1777,7 @@ export type Database = {
           altura_cm: number | null
           aluno_id: string
           bf_pct: number | null
+          cintura_cm: number | null
           created_at: string
           frequencia_semanal: number | null
           id: string
@@ -1784,7 +1785,9 @@ export type Database = {
           lesoes: string[] | null
           limitacoes: string[] | null
           objetivo: string | null
+          pescoco_cm: number | null
           peso_kg: number | null
+          quadril_cm: number | null
           sexo: string | null
           tempo_treino: string | null
           tenant_id: string
@@ -1794,6 +1797,7 @@ export type Database = {
           altura_cm?: number | null
           aluno_id: string
           bf_pct?: number | null
+          cintura_cm?: number | null
           created_at?: string
           frequencia_semanal?: number | null
           id?: string
@@ -1801,7 +1805,9 @@ export type Database = {
           lesoes?: string[] | null
           limitacoes?: string[] | null
           objetivo?: string | null
+          pescoco_cm?: number | null
           peso_kg?: number | null
+          quadril_cm?: number | null
           sexo?: string | null
           tempo_treino?: string | null
           tenant_id: string
@@ -1811,6 +1817,7 @@ export type Database = {
           altura_cm?: number | null
           aluno_id?: string
           bf_pct?: number | null
+          cintura_cm?: number | null
           created_at?: string
           frequencia_semanal?: number | null
           id?: string
@@ -1818,7 +1825,9 @@ export type Database = {
           lesoes?: string[] | null
           limitacoes?: string[] | null
           objetivo?: string | null
+          pescoco_cm?: number | null
           peso_kg?: number | null
+          quadril_cm?: number | null
           sexo?: string | null
           tempo_treino?: string | null
           tenant_id?: string
