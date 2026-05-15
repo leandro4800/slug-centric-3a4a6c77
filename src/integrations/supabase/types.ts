@@ -1486,7 +1486,9 @@ export type Database = {
           exercicio_nome: string
           id: string
           repeticoes_feitas: number
+          serie_index: number | null
           tenant_id: string
+          tipo_serie: string | null
           user_id: string
         }
         Insert: {
@@ -1496,7 +1498,9 @@ export type Database = {
           exercicio_nome: string
           id?: string
           repeticoes_feitas?: number
+          serie_index?: number | null
           tenant_id: string
+          tipo_serie?: string | null
           user_id: string
         }
         Update: {
@@ -1506,7 +1510,9 @@ export type Database = {
           exercicio_nome?: string
           id?: string
           repeticoes_feitas?: number
+          serie_index?: number | null
           tenant_id?: string
+          tipo_serie?: string | null
           user_id?: string
         }
         Relationships: [

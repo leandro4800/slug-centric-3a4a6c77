@@ -34,6 +34,7 @@ interface ExerciseCardProps {
   userId: string | null;
   tenantId: string | null;
   onCargaSaved?: (nome: string, carga: number, reps: number) => void;
+  nivelExperiencia?: string | null;
 }
 
 
@@ -43,29 +44,38 @@ const fmtTime = (s: number) => {
   return `${m}:${r}`;
 };
 
-const parseSeries = (s: string | null) => {
-  if (!s) return 4;
-  const matches = s.match(/\d+/g);
-  if (matches && matches.length > 1) {
-    return matches.reduce((acc, curr) => acc + parseInt(curr), 0);
-  }
-  const n = parseInt(String(s).match(/\d+/)?.[0] || "4");
-  return Math.min(Math.max(n, 1), 12);
+const isAvancado = (n?: string | null) => {
+  if (!n) return false;
+  const s = n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return s.includes("avanc");
 };
 
-const getSeriesType = (seriesStr: string | null, index: number) => {
-  if (!seriesStr) return "Trabalho";
-  const str = seriesStr.toLowerCase();
-  
+// Estrutura fixa para avançado: 1 aquecimento + 1 reconhecimento + 1 ajuste + 3 trabalho
+const ADVANCED_STRUCTURE = ["Aquecimento", "Reconhecimento", "Ajuste", "Trabalho", "Trabalho", "Trabalho"] as const;
+
+const buildSlotTypes = (seriesStr: string | null, nivel?: string | null): string[] => {
+  if (isAvancado(nivel)) return [...ADVANCED_STRUCTURE];
+
+  // Iniciante / intermediário: usa o que veio do coach, capado em 5
+  const str = (seriesStr || "").toLowerCase();
   const aquecimentoMatch = str.match(/(\d+)\s*x?\s*aquecimento/);
   const ajusteMatch = str.match(/(\d+)\s*x?\s*ajuste/);
-  
   const numAquecimento = aquecimentoMatch ? parseInt(aquecimentoMatch[1]) : 0;
   const numAjuste = ajusteMatch ? parseInt(ajusteMatch[1]) : 0;
 
-  if (index < numAquecimento) return "Aquecimento";
-  if (index < numAquecimento + numAjuste) return "Ajuste";
-  return "Trabalho";
+  const matches = seriesStr ? seriesStr.match(/\d+/g) : null;
+  let total = matches && matches.length > 1
+    ? matches.reduce((acc, c) => acc + parseInt(c), 0)
+    : parseInt(matches?.[0] || "4");
+  total = Math.min(Math.max(total, 1), 5); // cap 5
+
+  const types: string[] = [];
+  for (let i = 0; i < total; i++) {
+    if (i < numAquecimento) types.push("Aquecimento");
+    else if (i < numAquecimento + numAjuste) types.push("Ajuste");
+    else types.push("Trabalho");
+  }
+  return types;
 };
 
 export const ExerciseCard = ({
@@ -76,8 +86,11 @@ export const ExerciseCard = ({
   userId,
   tenantId,
   onCargaSaved,
+  nivelExperiencia,
 }: ExerciseCardProps) => {
-  const totalSlots = parseSeries(data.series);
+  const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
+  const totalSlots = slotTypes.length;
+  const getSlotType = (i: number) => slotTypes[i] || "Trabalho";
   const storageKey = `treino-state:${userId || "anon"}:${data.id}`;
   const [slots, setSlots] = useState(() => {
     try {
@@ -286,7 +299,12 @@ export const ExerciseCard = ({
       return;
     }
     const valid = slots
-      .map((s) => ({ k: parseFloat(s.carga.replace(",", ".")), r: parseInt(s.reps) }))
+      .map((s, i) => ({
+        k: parseFloat(s.carga.replace(",", ".")),
+        r: parseInt(s.reps),
+        tipo: getSlotType(i),
+        idx: i + 1,
+      }))
       .filter((s) => !isNaN(s.k) && !isNaN(s.r));
     if (valid.length === 0) {
       toast.error("Preencha pelo menos uma série.");
@@ -299,6 +317,8 @@ export const ExerciseCard = ({
       exercicio_nome: data.exercicio,
       carga_kg: s.k,
       repeticoes_feitas: s.r,
+      tipo_serie: s.tipo,
+      serie_index: s.idx,
     }));
     const { error } = await supabase.from("historico_cargas").insert(rows);
     setSavingAll(false);
@@ -460,9 +480,9 @@ export const ExerciseCard = ({
           <div className="space-y-2">
             {slots.map((slot, i) => (
               <div key={i} className={`border rounded-lg p-3 space-y-2 transition-all ${
-                getSeriesType(data.series, i) === "Trabalho" 
+                getSlotType(i) === "Trabalho" 
                   ? "border-primary/50 bg-primary/5 shadow-[0_0_15px_-5px_hsl(var(--primary)/0.3)]" 
-                  : getSeriesType(data.series, i) === "Ajuste"
+                  : getSlotType(i) === "Ajuste"
                   ? "border-amber-500/50 bg-amber-500/5"
                   : "border-border bg-background/40"
               }`}>
@@ -472,8 +492,8 @@ export const ExerciseCard = ({
                     className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
                   >
                     <CheckCircle2 className={`h-4 w-4 ${slot.done ? "text-emerald-500" : "text-muted-foreground"}`} />
-                    <span className={getSeriesType(data.series, i) !== "Aquecimento" ? "font-black" : ""}>
-                      S{i + 1} - {getSeriesType(data.series, i)}
+                    <span className={getSlotType(i) !== "Aquecimento" ? "font-black" : ""}>
+                      S{i + 1} - {getSlotType(i)}
                     </span>
                   </button>
                   <button
