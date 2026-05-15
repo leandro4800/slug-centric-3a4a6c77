@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
-import { Plus, ArrowLeft, Camera, Send, X, Heart, MessageCircle, Share2, MoreHorizontal } from "lucide-react";
+import { Plus, ArrowLeft, Camera, Send, X, Heart, MessageCircle, Share2, MoreHorizontal, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -186,6 +197,38 @@ const Comunidade = () => {
     }
   };
 
+  const isOwner = !!user && !!tenant?.owner_user_id && user.id === tenant.owner_user_id;
+  const canDeletePost = (p: Post) => !!user && (p.usuario_id === user.id || isOwner);
+  const canDeleteComment = (c: Comentario) => !!user && (c.usuario_id === user.id || isOwner);
+
+  const deletePost = async (post: Post) => {
+    const prev = posts;
+    setPosts((ps) => ps.filter((p) => p.id !== post.id));
+    const { error } = await supabase.from("comunidade_posts").delete().eq("id", post.id);
+    if (error) {
+      setPosts(prev);
+      toast({ title: "Erro ao excluir post", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Post excluído" });
+    }
+  };
+
+  const deleteComment = async (post: Post, comentario: Comentario) => {
+    const prev = posts;
+    setPosts((ps) =>
+      ps.map((p) =>
+        p.id === post.id
+          ? { ...p, comentarios: p.comentarios.filter((c) => c.id !== comentario.id), comentarios_count: Math.max(0, p.comentarios_count - 1) }
+          : p
+      )
+    );
+    const { error } = await supabase.from("comunidade_comentarios").delete().eq("id", comentario.id);
+    if (error) {
+      setPosts(prev);
+      toast({ title: "Erro ao excluir comentário", description: error.message, variant: "destructive" });
+    }
+  };
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -307,9 +350,31 @@ const Comunidade = () => {
                       </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-zinc-400">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </Button>
+                  {canDeletePost(post) ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-destructive">
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir publicação?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. O post e seus comentários serão removidos.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deletePost(post)}>Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : (
+                    <Button variant="ghost" size="icon" className="text-zinc-400">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  )}
                 </div>
 
                 {post.imagem_url && (
@@ -367,7 +432,7 @@ const Comunidade = () => {
                   {showComments && (
                     <div className="mt-3 flex flex-col gap-3">
                       {post.comentarios.map((c) => (
-                        <div key={c.id} className="flex gap-2 items-start">
+                        <div key={c.id} className="flex gap-2 items-start group">
                           <Avatar className="w-7 h-7">
                             <AvatarImage src={c.perfil?.avatar_url || ""} />
                             <AvatarFallback className="bg-zinc-800 text-[10px]">
@@ -378,6 +443,15 @@ const Comunidade = () => {
                             <span className="font-semibold mr-2">{c.perfil?.nome_completo || "Usuário"}</span>
                             <span className="text-zinc-300">{c.comentario}</span>
                           </div>
+                          {canDeleteComment(c) && (
+                            <button
+                              onClick={() => deleteComment(post, c)}
+                              className="opacity-60 hover:opacity-100 hover:text-destructive transition-opacity"
+                              aria-label="Excluir comentário"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       ))}
 
