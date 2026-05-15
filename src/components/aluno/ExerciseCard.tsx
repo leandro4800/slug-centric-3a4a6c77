@@ -78,13 +78,23 @@ export const ExerciseCard = ({
   onCargaSaved,
 }: ExerciseCardProps) => {
   const totalSlots = parseSeries(data.series);
-  const [slots, setSlots] = useState(() =>
-    Array.from({ length: totalSlots }, () => ({
+  const storageKey = `treino-state:${userId || "anon"}:${data.id}`;
+  const [slots, setSlots] = useState(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.slots) && parsed.slots.length === totalSlots) {
+          return parsed.slots;
+        }
+      }
+    } catch {}
+    return Array.from({ length: totalSlots }, () => ({
       carga: cargaAnterior?.carga_kg ? String(cargaAnterior.carga_kg) : "",
       reps: cargaAnterior?.repeticoes_feitas ? String(cargaAnterior.repeticoes_feitas) : "",
       done: false,
-    }))
-  );
+    }));
+  });
   const [savingAll, setSavingAll] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
