@@ -350,9 +350,31 @@ const Comunidade = () => {
                       </p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="text-zinc-400">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </Button>
+                  {canDeletePost(post) ? (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-destructive">
+                          <Trash2 className="h-5 w-5" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Excluir publicação?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. O post e seus comentários serão removidos.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => deletePost(post)}>Excluir</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  ) : (
+                    <Button variant="ghost" size="icon" className="text-zinc-400">
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  )}
                 </div>
 
                 {post.imagem_url && (
