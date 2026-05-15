@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes, Navigate, useParams } from "react-router-dom";
+import { BrowserRouter, Route, Routes, Navigate, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -83,6 +83,12 @@ const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
+const NativeStartupRedirect = () => {
+  const location = useLocation();
+  const search = location.search || window.location.search;
+  return <Navigate to={`/login${search}`} replace />;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <GlobalErrorBoundary>
@@ -118,9 +124,9 @@ const App = () => (
             <Route path="/:slug" element={<IndexRedirect />} />
 
             {/* App do aluno */}
-            <Route path="/index.html" element={<IndexRedirect />} />
-            <Route path="/index" element={<IndexRedirect />} />
-            <Route path="/:slug/index" element={<IndexRedirect />} />
+            <Route path="/index.html" element={<NativeStartupRedirect />} />
+            <Route path="/index" element={<NativeStartupRedirect />} />
+            <Route path="/:slug/index" element={<NativeStartupRedirect />} />
 
             <Route
               path="/:slug/app"
