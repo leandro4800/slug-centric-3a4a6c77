@@ -416,6 +416,8 @@ const Treino = () => {
               tenantId={tenant?.id || null}
               onCargaSaved={handleCargaSaved}
               nivelExperiencia={nivelExperiencia}
+              completed={completedIds.has(t.id)}
+              onCompleted={() => markCompleted(t.id)}
             />
           ))}
         </div>
