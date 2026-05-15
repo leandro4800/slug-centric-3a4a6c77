@@ -473,9 +473,9 @@ export const ExerciseCard = ({
           <div className="space-y-2">
             {slots.map((slot, i) => (
               <div key={i} className={`border rounded-lg p-3 space-y-2 transition-all ${
-                getSeriesType(data.series, i) === "Trabalho" 
+                getSlotType(i) === "Trabalho" 
                   ? "border-primary/50 bg-primary/5 shadow-[0_0_15px_-5px_hsl(var(--primary)/0.3)]" 
-                  : getSeriesType(data.series, i) === "Ajuste"
+                  : getSlotType(i) === "Ajuste"
                   ? "border-amber-500/50 bg-amber-500/5"
                   : "border-border bg-background/40"
               }`}>
@@ -485,8 +485,8 @@ export const ExerciseCard = ({
                     className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
                   >
                     <CheckCircle2 className={`h-4 w-4 ${slot.done ? "text-emerald-500" : "text-muted-foreground"}`} />
-                    <span className={getSeriesType(data.series, i) !== "Aquecimento" ? "font-black" : ""}>
-                      S{i + 1} - {getSeriesType(data.series, i)}
+                    <span className={getSlotType(i) !== "Aquecimento" ? "font-black" : ""}>
+                      S{i + 1} - {getSlotType(i)}
                     </span>
                   </button>
                   <button
