@@ -333,6 +333,7 @@ export const ExerciseCard = ({
     const last = valid[valid.length - 1];
     toast.success(`${valid.length} série(s) registrada(s)!`);
     onCargaSaved?.(data.exercicio, last.k, last.r);
+    onCompleted?.();
     setRunning(false);
     setSeconds(0);
     try { localStorage.removeItem(storageKey); } catch {}
