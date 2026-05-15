@@ -166,7 +166,7 @@ const AtletaDetalhe = () => {
 
   useEffect(() => {
     if (openEval === "true") {
-      setSelectionOpen(true);
+      setEvaluationsViewerOpen(true);
     }
   }, [openEval]);
 
