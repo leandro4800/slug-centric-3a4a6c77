@@ -13,10 +13,18 @@ export const SplashScreen = () => {
   const { tenant, loading } = useBranding();
   const location = useLocation();
 
-  const isPublicRoute = 
-    location.pathname === "/" || 
-    location.pathname.includes("/site") ||
-    location.pathname.includes("/marketplace");
+  const pathname = location.pathname.replace(/\/+$/, "") || "/";
+  const pathParts = pathname.split("/").filter(Boolean);
+  const isPublicRoute =
+    pathname === "/" ||
+    pathname === "/index" ||
+    pathname === "/login" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
+    pathname === "/marketplace" ||
+    pathParts[1] === "index" ||
+    pathParts[1] === "login" ||
+    pathParts[1] === "site";
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -42,9 +50,12 @@ export const SplashScreen = () => {
   }, []);
 
   useEffect(() => {
-    // No ambiente mobile/PWA, queremos o splash quase sempre na inicialização,
-    // exceto se já mostramos nesta sessão ou se é uma rota pública explícita.
-    if (isPublicRoute && !loading) return;
+    // Nunca cobre login/entrada pública com o splash React: o app precisa parar no login.
+    if (isPublicRoute) {
+      setShouldRender(false);
+      setIsVisible(false);
+      return;
+    }
     if (typeof window === "undefined") return;
 
     const key = sessionKeyFor(tenantKey);
