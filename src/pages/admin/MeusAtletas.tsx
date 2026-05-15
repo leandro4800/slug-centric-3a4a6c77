@@ -393,12 +393,57 @@ const MeusAtletas = () => {
               const hasPhoto = !!a.avatar_url;
               return (
                 <div key={a.id} className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-secondary/40 border border-border hover:border-primary/60 transition-colors group">
+                  {/* Conteúdo central: foto ou iniciais (sem capturar clique) */}
+                  {hasPhoto ? (
+                    <img
+                      src={a.avatar_url!}
+                      alt={a.nome_completo || ""}
+                      className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <span
+                        className="font-display text-6xl md:text-7xl tracking-tight"
+                        style={{ color, textShadow: `0 0 18px ${color}55` }}
+                      >
+                        {initials}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Overlay inferior */}
+                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/85 via-black/40 to-transparent pointer-events-none">
+                    <p className="font-semibold text-sm text-foreground truncate">
+                      {a.nome_completo || "Sem nome"}
+                    </p>
+                    {a.email && (
+                      <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
+                        <Mail className="h-2.5 w-2.5" /> {a.email}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-background/70 backdrop-blur flex items-center justify-center border border-border/60 pointer-events-none">
+                    <span className="block w-1.5 h-1.5 rounded-full bg-primary" />
+                  </div>
+
+                  {/* Badge AGENDADO */}
+                  <div className="absolute top-2 right-2 z-10 flex items-center gap-1 pointer-events-none">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-primary">Agendado</span>
+                    <span className="w-5 h-5 rounded-full bg-primary/90 flex items-center justify-center">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />
+                    </span>
+                  </div>
+
+                  {/* Link cobre o card todo */}
                   <Link
                     to={`/${slug}/admin/atleta/${a.id}`}
-                    className="absolute inset-0 z-0"
+                    aria-label={`Abrir perfil de ${a.nome_completo || "atleta"}`}
+                    className="absolute inset-0 z-20"
                   />
-                  {/* Botão Gerar Avatar (Admin) */}
-                  <div className="absolute top-2 left-2 z-20 flex gap-1">
+
+                  {/* Botões de ação acima do Link */}
+                  <div className="absolute top-2 left-2 z-30 flex gap-1">
                     <Button
                       size="icon"
                       variant="secondary"
@@ -414,65 +459,17 @@ const MeusAtletas = () => {
                     </Button>
                     <Link
                       to={`/${slug}/admin/atleta/${a.id}?openEval=true`}
-                      className="z-20"
+                      onClick={(e) => e.stopPropagation()}
+                      title="Ver Avaliação Física"
                     >
                       <Button
                         size="icon"
                         variant="secondary"
                         className="w-8 h-8 rounded-full bg-black/60 border-white/20 hover:bg-primary/80 transition-all"
-                        title="Ver Avaliação Física"
                       >
                         <Ruler className="w-4 h-4 text-primary group-hover:text-black" />
                       </Button>
                     </Link>
-                  </div>
-
-                  {/* Badge AGENDADO */}
-                  <div className="absolute top-2 right-2 z-10 flex items-center gap-1">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-primary">
-                      Agendado
-                    </span>
-                    <span className="w-5 h-5 rounded-full bg-primary/90 flex items-center justify-center">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground" />
-                    </span>
-                  </div>
-
-                  {/* Conteúdo central: foto ou iniciais */}
-                  {hasPhoto ? (
-                    <img
-                      src={a.avatar_url!}
-                      alt={a.nome_completo || ""}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span
-                        className="font-display text-6xl md:text-7xl tracking-tight"
-                        style={{
-                          color,
-                          textShadow: `0 0 18px ${color}55`,
-                        }}
-                      >
-                        {initials}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Overlay inferior com nome */}
-                  <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/85 via-black/40 to-transparent">
-                    <p className="font-semibold text-sm text-foreground truncate">
-                      {a.nome_completo || "Sem nome"}
-                    </p>
-                    {a.email && (
-                      <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
-                        <Mail className="h-2.5 w-2.5" /> {a.email}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Indicador inferior direito */}
-                  <div className="absolute bottom-2 right-2 w-6 h-6 rounded-full bg-background/70 backdrop-blur flex items-center justify-center border border-border/60">
-                    <span className="block w-1.5 h-1.5 rounded-full bg-primary" />
                   </div>
                 </div>
               );
