@@ -344,13 +344,22 @@ export const ExerciseCard = ({
   const hasAnyVideo = hasCoach || hasReference;
 
   return (
-    <div className="bg-card/50 border border-primary/30 rounded-xl overflow-hidden">
+    <div className={`bg-card/50 border rounded-xl overflow-hidden transition-all ${
+      completed ? "border-emerald-500/60 bg-emerald-500/5 opacity-90" : "border-primary/30"
+    }`}>
       {/* Header com nome + ícone de vídeo lateral + toggle de séries */}
       <div className="flex items-stretch min-h-[90px]">
         <button onClick={onToggle} className="flex-1 p-4 text-left min-w-0">
           <div className="flex items-start justify-between gap-3">
-            <p className="font-display text-lg leading-tight truncate">{data.exercicio.toUpperCase()}</p>
-            {data.is_extra && (
+            <p className={`text-base font-semibold leading-tight truncate ${completed ? "line-through text-muted-foreground" : ""}`}>
+              {data.exercicio}
+            </p>
+            {completed && (
+              <span className="flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-500 shrink-0">
+                <CheckCircle2 className="h-3 w-3" /> Concluído
+              </span>
+            )}
+            {data.is_extra && !completed && (
               <span className="text-[9px] uppercase px-2 py-0.5 rounded bg-accent/20 text-accent shrink-0">
                 Extra IA
               </span>
