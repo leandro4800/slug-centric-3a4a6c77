@@ -163,10 +163,19 @@ serve(async (req) => {
       userContent.push({ type: "text", text: `Conteúdo do arquivo:\n\n${txt.slice(0, 60000)}` });
     }
 
+    const extraInstr = (importType === "7dobras" || importType === "avaliacao")
+      ? `\n\nINSTRUÇÕES IMPORTANTES PARA AVALIAÇÃO FÍSICA / 7 DOBRAS:
+- Procure variações em PT-BR com ou sem acento: "Peitoral", "Tríceps/Triceps", "Subescapular", "Axilar Média/Axilar Medial/Axilar média", "Suprailíaca/Supra-ilíaca/Suprailiaca", "Abdominal/Abdômen (dobra)", "Coxa", "Panturrilha".
+- Valores de DOBRAS são em milímetros (mm), normalmente entre 3 e 60.
+- SEMPRE preencha TODAS as 7 dobras do protocolo Jackson & Pollock se aparecerem no relatório: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa (panturrilha é opcional/8ª).
+- Coloque os valores numéricos dentro de "dobras" (snake_case), conforme o schema. NÃO invente valores; se não encontrar, omita.
+- Perímetros são em centímetros (cm). Peso em kg, altura em cm.`
+      : "";
+
     const messages = [
       {
         role: "system",
-        content: `Você é um especialista em fitness e nutrição. Extraia dados estruturados a partir do documento. Retorne APENAS um JSON válido conforme a estrutura solicitada. Se um campo não estiver presente, omita-o.`,
+        content: `Você é um especialista em fitness e nutrição. Extraia dados estruturados a partir do documento. Retorne APENAS um JSON válido conforme a estrutura solicitada. Se um campo não estiver presente, omita-o.${extraInstr}`,
       },
       { role: "user", content: userContent },
     ];
