@@ -228,6 +228,8 @@ const Comunidade = () => {
       toast({ title: "Erro ao excluir comentário", description: error.message, variant: "destructive" });
     }
   };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 50 * 1024 * 1024) {
