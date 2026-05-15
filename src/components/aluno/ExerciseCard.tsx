@@ -35,6 +35,8 @@ interface ExerciseCardProps {
   tenantId: string | null;
   onCargaSaved?: (nome: string, carga: number, reps: number) => void;
   nivelExperiencia?: string | null;
+  completed?: boolean;
+  onCompleted?: () => void;
 }
 
 
