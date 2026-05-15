@@ -220,8 +220,29 @@ export const ExerciseCard = ({
     recognition.start();
   };
 
-  const [running, setRunning] = useState(false);
-  const [seconds, setSeconds] = useState(0);
+  // Restaura cronômetro do localStorage (mantém contagem mesmo com tela fechada)
+  const [running, setRunning] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) return !!JSON.parse(raw).running;
+    } catch {}
+    return false;
+  });
+  const [seconds, setSeconds] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const p = JSON.parse(raw);
+        const base = Number(p.seconds) || 0;
+        if (p.running && p.startedAt) {
+          const elapsed = Math.floor((Date.now() - p.startedAt) / 1000);
+          return base + Math.max(0, elapsed);
+        }
+        return base;
+      }
+    } catch {}
+    return 0;
+  });
   const intRef = useRef<number | null>(null);
   useEffect(() => {
     if (running) {
@@ -233,6 +254,21 @@ export const ExerciseCard = ({
       if (intRef.current) window.clearInterval(intRef.current);
     };
   }, [running]);
+
+  // Persiste estado (slots + cronômetro) sempre que mudar
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          slots,
+          seconds,
+          running,
+          startedAt: running ? Date.now() : null,
+        })
+      );
+    } catch {}
+  }, [slots, seconds, running, storageKey]);
 
   const coachUrl = data.video_coach_url || null;
   const hasCoach = !!coachUrl;
