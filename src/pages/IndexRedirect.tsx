@@ -1,4 +1,4 @@
-import { Navigate, useLocation, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
@@ -34,7 +34,6 @@ const IndexRedirect = () => {
   const { user, sessionReady } = useAuth();
   const { tenant, loading: brandingLoading } = useBranding();
   const { slug: urlSlug } = useParams<{ slug: string }>();
-  const location = useLocation();
   
   const params = new URLSearchParams(window.location.search);
   const slugParam = urlSlug || params.get("slug");
