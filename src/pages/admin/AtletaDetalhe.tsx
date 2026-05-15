@@ -34,6 +34,7 @@ import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculator";
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
+import { AthleteEvaluationsViewer } from "@/components/aluno/AthleteEvaluationsViewer";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 
 
@@ -138,6 +139,7 @@ const AtletaDetalhe = () => {
   const [open7Dobras, setOpen7Dobras] = useState(false);
   const [show7DobrasIntro, setShow7DobrasIntro] = useState(false);
   const [selectionOpen, setSelectionOpen] = useState(false);
+  const [evaluationsViewerOpen, setEvaluationsViewerOpen] = useState(false);
   const [evalOpen, setEvalOpen] = useState(false);
   const [formEval, setFormEval] = useState({
     peso_kg: "",
@@ -164,7 +166,7 @@ const AtletaDetalhe = () => {
 
   useEffect(() => {
     if (openEval === "true") {
-      setSelectionOpen(true);
+      setEvaluationsViewerOpen(true);
     }
   }, [openEval]);
 
@@ -784,16 +786,31 @@ const AtletaDetalhe = () => {
           </button>
 
           <button
+            onClick={() => setEvaluationsViewerOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/15 transition-colors text-left"
+          >
+            <Ruler className="h-4 w-4 text-primary" />
+            <span className="flex-1">
+              <span className="block text-xs font-bold uppercase tracking-wider text-primary">
+                Ver avaliações físicas
+              </span>
+              <span className="block text-[10px] text-muted-foreground tracking-wider uppercase mt-0.5">
+                Histórico completo + 7 dobras
+              </span>
+            </span>
+          </button>
+
+          <button
             onClick={() => setSelectionOpen(true)}
             className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
           >
             <Ruler className="h-4 w-4 text-primary" />
             <span className="flex-1">
               <span className="block text-xs font-bold uppercase tracking-wider">
-                Protocolo 7 dobras
+                Nova avaliação / Protocolo 7 dobras
               </span>
               <span className="block text-[10px] text-muted-foreground tracking-wider">
-                Jackson & Pollock
+                Marinha, Jackson & Pollock ou importar PDF
               </span>
             </span>
           </button>
@@ -974,6 +991,12 @@ const AtletaDetalhe = () => {
           load();
           if (goToDiet) navigate(`/${slug}/admin/montar-dieta?aluno=${atletaId}&auto=true`);
         }}
+      />
+
+      <AthleteEvaluationsViewer
+        open={evaluationsViewerOpen}
+        onOpenChange={setEvaluationsViewerOpen}
+        alunoId={atletaId!}
       />
 
       <PhysicalEvaluationSelection
