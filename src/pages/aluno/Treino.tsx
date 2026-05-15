@@ -229,7 +229,10 @@ const Treino = () => {
             console.warn("autoFillVolume pulado", e);
           }
           setTreinos(filled);
-          setDiaAtual(filled[0].dia_semana);
+          setDiaAtual((cur) => {
+            if (cur && filled.some((t) => t.dia_semana === cur)) return cur;
+            return filled[0].dia_semana;
+          });
           setIsMock(false);
           setLoading(false);
           return;
