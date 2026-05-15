@@ -353,6 +353,9 @@ export const ExerciseCard = ({
           <div className="flex items-start justify-between gap-3">
             <p className={`text-base font-semibold leading-tight truncate ${completed ? "line-through text-muted-foreground" : ""}`}>
               {data.exercicio}
+              {data.series && data.repeticoes && (
+                <span className="ml-2 text-primary font-bold">{data.series}x{data.repeticoes}</span>
+              )}
             </p>
             {completed && (
               <span className="flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-500 shrink-0">
@@ -366,11 +369,6 @@ export const ExerciseCard = ({
             )}
           </div>
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            {data.series && data.repeticoes && (
-              <span className="px-3 py-1 rounded-full bg-secondary text-xs">
-                {data.series}x {data.repeticoes}
-              </span>
-            )}
             {cargaAnterior && (
               <span className="px-3 py-1 rounded-full bg-primary/15 text-primary text-xs">
                 Última: {cargaAnterior.carga_kg}kg × {cargaAnterior.repeticoes_feitas}
