@@ -41,6 +41,18 @@ const Treino = () => {
   const [spotifyLink, setSpotifyLink] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [showConclusao, setShowConclusao] = useState(false);
+  const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
+
+  // Carrega nível de experiência (avançado / intermediário / iniciante) do aluno
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("anamnese_aluno")
+      .select("nivel_experiencia")
+      .eq("aluno_id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
+  }, [user?.id]);
 
   // Persiste seleção de dia / exercício aberto
   useEffect(() => {
