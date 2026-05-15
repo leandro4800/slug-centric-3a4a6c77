@@ -993,6 +993,12 @@ const AtletaDetalhe = () => {
         }}
       />
 
+      <AthleteEvaluationsViewer
+        open={evaluationsViewerOpen}
+        onOpenChange={setEvaluationsViewerOpen}
+        alunoId={atletaId!}
+      />
+
       <PhysicalEvaluationSelection
         open={selectionOpen}
         onOpenChange={setSelectionOpen}
