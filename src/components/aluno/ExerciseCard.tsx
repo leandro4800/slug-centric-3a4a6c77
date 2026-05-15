@@ -86,8 +86,11 @@ export const ExerciseCard = ({
   userId,
   tenantId,
   onCargaSaved,
+  nivelExperiencia,
 }: ExerciseCardProps) => {
-  const totalSlots = parseSeries(data.series);
+  const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
+  const totalSlots = slotTypes.length;
+  const getSlotType = (i: number) => slotTypes[i] || "Trabalho";
   const storageKey = `treino-state:${userId || "anon"}:${data.id}`;
   const [slots, setSlots] = useState(() => {
     try {
