@@ -310,6 +310,8 @@ export const ExerciseCard = ({
     toast.success(`${valid.length} série(s) registrada(s)!`);
     onCargaSaved?.(data.exercicio, last.k, last.r);
     setRunning(false);
+    setSeconds(0);
+    try { localStorage.removeItem(storageKey); } catch {}
   };
 
   const currentVideoUrl = (hasCoach && (showCoach || !showYT)) ? coachUrl : referenceVideoUrl;
