@@ -42,6 +42,20 @@ const Treino = () => {
   const [reloadKey, setReloadKey] = useState(0);
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
+  const completedKey = `treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`;
+  const [completedIds, setCompletedIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem(`treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`);
+      return new Set<string>(raw ? JSON.parse(raw) : []);
+    } catch { return new Set<string>(); }
+  });
+  const markCompleted = (id: string) => {
+    setCompletedIds((prev) => {
+      const next = new Set(prev); next.add(id);
+      try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  };
 
   // Carrega nível de experiência (avançado / intermediário / iniciante) do aluno
   useEffect(() => {
