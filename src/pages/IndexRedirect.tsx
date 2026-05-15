@@ -4,6 +4,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import Login from "./Login";
 
 const NAVIGATION_MEMORY_KEY = "startup_navigation_memory_v1";
 
@@ -24,11 +25,6 @@ const isRecentReverseNavigation = (from: string, to: string) => {
   } catch {
     return false;
   }
-};
-
-const resolveLoginPath = (slug: string | null) => {
-  const safeSlug = slug && /^[a-z0-9-]+$/i.test(slug) && slug !== "index" && slug !== "demo" ? slug : null;
-  return safeSlug ? `/${safeSlug}/login` : "/login";
 };
 
 /**
@@ -92,13 +88,7 @@ const IndexRedirect = () => {
         };
 
         if (!user) {
-          const loginPath = safeSlug ? `/${safeSlug}/login` : "/login";
-          const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
-          
-          if (window.location.pathname !== loginPath) {
-            console.log("[IndexRedirect] Não autenticado, redirecionando para:", target);
-            go(target);
-          }
+          setDestination(null);
           return;
         }
 
@@ -197,14 +187,7 @@ const IndexRedirect = () => {
     decideDestination();
   }, [decisionDone, user, safeSlug, tenant?.slug, confirmed]);
 
-  if (sessionReady && !user) {
-    const loginPath = resolveLoginPath(safeSlug);
-    const target = `${loginPath}${confirmed ? "?confirmed=1" : ""}`;
-    const currentPath = normalizePath(location.pathname);
-
-    if (currentPath === normalizePath(loginPath)) return null;
-    return <Navigate to={target} replace />;
-  }
+  if (sessionReady && !user) return <Login />;
 
   if (destination) return <Navigate to={destination} replace />;
 
