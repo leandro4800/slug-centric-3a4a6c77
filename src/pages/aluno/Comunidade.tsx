@@ -197,7 +197,37 @@ const Comunidade = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const isOwner = !!user && !!tenant?.owner_user_id && user.id === tenant.owner_user_id;
+  const canDeletePost = (p: Post) => !!user && (p.usuario_id === user.id || isOwner);
+  const canDeleteComment = (c: Comentario) => !!user && (c.usuario_id === user.id || isOwner);
+
+  const deletePost = async (post: Post) => {
+    const prev = posts;
+    setPosts((ps) => ps.filter((p) => p.id !== post.id));
+    const { error } = await supabase.from("comunidade_posts").delete().eq("id", post.id);
+    if (error) {
+      setPosts(prev);
+      toast({ title: "Erro ao excluir post", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Post excluído" });
+    }
+  };
+
+  const deleteComment = async (post: Post, comentario: Comentario) => {
+    const prev = posts;
+    setPosts((ps) =>
+      ps.map((p) =>
+        p.id === post.id
+          ? { ...p, comentarios: p.comentarios.filter((c) => c.id !== comentario.id), comentarios_count: Math.max(0, p.comentarios_count - 1) }
+          : p
+      )
+    );
+    const { error } = await supabase.from("comunidade_comentarios").delete().eq("id", comentario.id);
+    if (error) {
+      setPosts(prev);
+      toast({ title: "Erro ao excluir comentário", description: error.message, variant: "destructive" });
+    }
+  };
     const file = e.target.files?.[0];
     if (file) {
       if (file.size > 50 * 1024 * 1024) {
