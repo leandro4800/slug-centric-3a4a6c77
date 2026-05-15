@@ -34,6 +34,7 @@ interface ExerciseCardProps {
   userId: string | null;
   tenantId: string | null;
   onCargaSaved?: (nome: string, carga: number, reps: number) => void;
+  nivelExperiencia?: string | null;
 }
 
 
@@ -43,29 +44,38 @@ const fmtTime = (s: number) => {
   return `${m}:${r}`;
 };
 
-const parseSeries = (s: string | null) => {
-  if (!s) return 4;
-  const matches = s.match(/\d+/g);
-  if (matches && matches.length > 1) {
-    return matches.reduce((acc, curr) => acc + parseInt(curr), 0);
-  }
-  const n = parseInt(String(s).match(/\d+/)?.[0] || "4");
-  return Math.min(Math.max(n, 1), 12);
+const isAvancado = (n?: string | null) => {
+  if (!n) return false;
+  const s = n.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return s.includes("avanc");
 };
 
-const getSeriesType = (seriesStr: string | null, index: number) => {
-  if (!seriesStr) return "Trabalho";
-  const str = seriesStr.toLowerCase();
-  
+// Estrutura fixa para avançado: 1 aquecimento + 1 reconhecimento + 1 ajuste + 3 trabalho
+const ADVANCED_STRUCTURE = ["Aquecimento", "Reconhecimento", "Ajuste", "Trabalho", "Trabalho", "Trabalho"] as const;
+
+const buildSlotTypes = (seriesStr: string | null, nivel?: string | null): string[] => {
+  if (isAvancado(nivel)) return [...ADVANCED_STRUCTURE];
+
+  // Iniciante / intermediário: usa o que veio do coach, capado em 5
+  const str = (seriesStr || "").toLowerCase();
   const aquecimentoMatch = str.match(/(\d+)\s*x?\s*aquecimento/);
   const ajusteMatch = str.match(/(\d+)\s*x?\s*ajuste/);
-  
   const numAquecimento = aquecimentoMatch ? parseInt(aquecimentoMatch[1]) : 0;
   const numAjuste = ajusteMatch ? parseInt(ajusteMatch[1]) : 0;
 
-  if (index < numAquecimento) return "Aquecimento";
-  if (index < numAquecimento + numAjuste) return "Ajuste";
-  return "Trabalho";
+  const matches = seriesStr ? seriesStr.match(/\d+/g) : null;
+  let total = matches && matches.length > 1
+    ? matches.reduce((acc, c) => acc + parseInt(c), 0)
+    : parseInt(matches?.[0] || "4");
+  total = Math.min(Math.max(total, 1), 5); // cap 5
+
+  const types: string[] = [];
+  for (let i = 0; i < total; i++) {
+    if (i < numAquecimento) types.push("Aquecimento");
+    else if (i < numAquecimento + numAjuste) types.push("Ajuste");
+    else types.push("Trabalho");
+  }
+  return types;
 };
 
 export const ExerciseCard = ({
