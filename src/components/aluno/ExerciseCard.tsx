@@ -299,7 +299,12 @@ export const ExerciseCard = ({
       return;
     }
     const valid = slots
-      .map((s) => ({ k: parseFloat(s.carga.replace(",", ".")), r: parseInt(s.reps) }))
+      .map((s, i) => ({
+        k: parseFloat(s.carga.replace(",", ".")),
+        r: parseInt(s.reps),
+        tipo: getSlotType(i),
+        idx: i + 1,
+      }))
       .filter((s) => !isNaN(s.k) && !isNaN(s.r));
     if (valid.length === 0) {
       toast.error("Preencha pelo menos uma série.");
@@ -312,6 +317,8 @@ export const ExerciseCard = ({
       exercicio_nome: data.exercicio,
       carga_kg: s.k,
       repeticoes_feitas: s.r,
+      tipo_serie: s.tipo,
+      serie_index: s.idx,
     }));
     const { error } = await supabase.from("historico_cargas").insert(rows);
     setSavingAll(false);
