@@ -31,13 +31,25 @@ const Treino = () => {
   const [loading, setLoading] = useState(true);
   const [treinos, setTreinos] = useState<Treino[]>([]);
   const [observacaoClinica, setObservacaoClinica] = useState<string | null>(null);
-  const [diaAtual, setDiaAtual] = useState("");
+  const [diaAtual, setDiaAtual] = useState<string>(() => sessionStorage.getItem("treino:diaAtual") || "");
   const [isMock, setIsMock] = useState(false);
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(() => {
+    const v = sessionStorage.getItem("treino:activeIndex");
+    return v !== null && v !== "" ? Number(v) : null;
+  });
   const [cargas, setCargas] = useState<CargaMap>({});
   const [spotifyLink, setSpotifyLink] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
   const [showConclusao, setShowConclusao] = useState(false);
+
+  // Persiste seleção de dia / exercício aberto
+  useEffect(() => {
+    if (diaAtual) sessionStorage.setItem("treino:diaAtual", diaAtual);
+  }, [diaAtual]);
+  useEffect(() => {
+    if (activeIndex === null) sessionStorage.removeItem("treino:activeIndex");
+    else sessionStorage.setItem("treino:activeIndex", String(activeIndex));
+  }, [activeIndex]);
 
   useEffect(() => {
     const norm = (s: string) =>
@@ -217,7 +229,10 @@ const Treino = () => {
             console.warn("autoFillVolume pulado", e);
           }
           setTreinos(filled);
-          setDiaAtual(filled[0].dia_semana);
+          setDiaAtual((cur) => {
+            if (cur && filled.some((t) => t.dia_semana === cur)) return cur;
+            return filled[0].dia_semana;
+          });
           setIsMock(false);
           setLoading(false);
           return;

@@ -78,13 +78,23 @@ export const ExerciseCard = ({
   onCargaSaved,
 }: ExerciseCardProps) => {
   const totalSlots = parseSeries(data.series);
-  const [slots, setSlots] = useState(() =>
-    Array.from({ length: totalSlots }, () => ({
+  const storageKey = `treino-state:${userId || "anon"}:${data.id}`;
+  const [slots, setSlots] = useState(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed.slots) && parsed.slots.length === totalSlots) {
+          return parsed.slots;
+        }
+      }
+    } catch {}
+    return Array.from({ length: totalSlots }, () => ({
       carga: cargaAnterior?.carga_kg ? String(cargaAnterior.carga_kg) : "",
       reps: cargaAnterior?.repeticoes_feitas ? String(cargaAnterior.repeticoes_feitas) : "",
       done: false,
-    }))
-  );
+    }));
+  });
   const [savingAll, setSavingAll] = useState(false);
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
@@ -140,42 +150,44 @@ export const ExerciseCard = ({
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript.toLowerCase();
-      
-      const numbers = transcript.match(/\d+/g)?.map(Number) || [];
-      let reps = "";
+
+      // Parser robusto PT-BR: aceita "16 de carga e 12 repetições", "12 reps 16kg", "50 quilos por 10", etc.
+      // Procura pelo NÚMERO mais próximo (antes ou depois) de cada palavra-chave.
+      const cargaRegexes = [
+        /(\d+(?:[.,]\d+)?)\s*(?:kg|quilos?|kilos?)/i,
+        /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?carga/i,
+        /carga\s*(?:de\s+)?(\d+(?:[.,]\d+)?)/i,
+        /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?peso/i,
+      ];
+      const repsRegexes = [
+        /(\d+)\s*(?:repeti[cç][õo]es?|reps?|movimentos?|vezes?)/i,
+        /(?:repeti[cç][õo]es?|reps?|movimentos?|vezes?)\s*(?:de\s+)?(\d+)/i,
+      ];
+
       let carga = "";
+      let reps = "";
 
-      const hasKg = /kg|quilo|carga/.test(transcript);
-      const hasReps = /rep|movimento/.test(transcript);
-
-      if (hasKg || hasReps) {
-        const words = transcript.split(/\s+/);
-        words.forEach((word, idx) => {
-          if (!isNaN(Number(word))) {
-            const nextWord = words[idx + 1] || "";
-            if (/kg|quilo|carga/.test(nextWord)) carga = word;
-            else if (/rep|movimento/.test(nextWord)) reps = word;
-          }
-        });
+      for (const r of cargaRegexes) {
+        const m = transcript.match(r);
+        if (m) { carga = m[1].replace(",", "."); break; }
+      }
+      for (const r of repsRegexes) {
+        const m = transcript.match(r);
+        if (m) { reps = m[1]; break; }
       }
 
-      if (!reps && !carga && numbers.length >= 1) {
+      // Fallback: nenhum keyword reconhecido — usa heurística por magnitude
+      if (!reps && !carga) {
+        const numbers = transcript.match(/\d+(?:[.,]\d+)?/g)?.map((n) => n.replace(",", ".")) || [];
         if (numbers.length === 1) {
-          if (numbers[0] <= 30) reps = String(numbers[0]);
-          else carga = String(numbers[0]);
-        } else {
-          const n1 = numbers[0];
-          const n2 = numbers[1];
-          if (n1 > 30 && n2 <= 30) {
-            carga = String(n1);
-            reps = String(n2);
-          } else if (n2 > 30 && n1 <= 30) {
-            carga = String(n2);
-            reps = String(n1);
-          } else {
-            reps = String(n1);
-            carga = String(n2);
-          }
+          const n = parseFloat(numbers[0]);
+          if (n <= 30) reps = numbers[0]; else carga = numbers[0];
+        } else if (numbers.length >= 2) {
+          const n1 = parseFloat(numbers[0]);
+          const n2 = parseFloat(numbers[1]);
+          // Reps geralmente <= 30; carga geralmente > reps
+          if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
+          else { reps = numbers[0]; carga = numbers[1]; }
         }
       }
 
@@ -190,9 +202,9 @@ export const ExerciseCard = ({
           }
           return s;
         }));
-        toast.success(`Capturado: ${reps ? reps + " reps" : ""} ${carga ? carga + "kg" : ""}`, { id: "voice-toast" });
+        toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
       } else {
-        toast.error("Não entendi os valores. Tente: '10 repetições e 50 quilos'", { id: "voice-toast" });
+        toast.error("Não entendi. Tente: '16 de carga e 12 repetições'", { id: "voice-toast" });
       }
     };
 
@@ -208,8 +220,29 @@ export const ExerciseCard = ({
     recognition.start();
   };
 
-  const [running, setRunning] = useState(false);
-  const [seconds, setSeconds] = useState(0);
+  // Restaura cronômetro do localStorage (mantém contagem mesmo com tela fechada)
+  const [running, setRunning] = useState<boolean>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) return !!JSON.parse(raw).running;
+    } catch {}
+    return false;
+  });
+  const [seconds, setSeconds] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (raw) {
+        const p = JSON.parse(raw);
+        const base = Number(p.seconds) || 0;
+        if (p.running && p.startedAt) {
+          const elapsed = Math.floor((Date.now() - p.startedAt) / 1000);
+          return base + Math.max(0, elapsed);
+        }
+        return base;
+      }
+    } catch {}
+    return 0;
+  });
   const intRef = useRef<number | null>(null);
   useEffect(() => {
     if (running) {
@@ -221,6 +254,21 @@ export const ExerciseCard = ({
       if (intRef.current) window.clearInterval(intRef.current);
     };
   }, [running]);
+
+  // Persiste estado (slots + cronômetro) sempre que mudar
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          slots,
+          seconds,
+          running,
+          startedAt: running ? Date.now() : null,
+        })
+      );
+    } catch {}
+  }, [slots, seconds, running, storageKey]);
 
   const coachUrl = data.video_coach_url || null;
   const hasCoach = !!coachUrl;
@@ -262,6 +310,8 @@ export const ExerciseCard = ({
     toast.success(`${valid.length} série(s) registrada(s)!`);
     onCargaSaved?.(data.exercicio, last.k, last.r);
     setRunning(false);
+    setSeconds(0);
+    try { localStorage.removeItem(storageKey); } catch {}
   };
 
   const currentVideoUrl = (hasCoach && (showCoach || !showYT)) ? coachUrl : referenceVideoUrl;
