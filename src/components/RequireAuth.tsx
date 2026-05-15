@@ -4,6 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import Login from "@/pages/Login";
 
 interface Props {
   children: ReactNode;
@@ -125,7 +126,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
 
   if (!user) {
     console.log("[RequireAuth] Sem usuário, redirecionando para login. Slug:", slug);
-    return <SafeNavigate to={slug ? `/${slug}/login` : "/login"} state={{ from: location, slug }} />;
+    return <Login />;
   }
 
   // Se requer um papel específico e não o possui

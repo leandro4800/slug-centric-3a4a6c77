@@ -164,8 +164,13 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [lastCheckTime, setLastCheckTime] = useState(Date.now()); // Para forçar re-check se necessário
   const isMountedRef = useRef(true);
+  const loadingRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
+
+  useEffect(() => {
+    loadingRef.current = loading;
+  }, [loading]);
 
   const loadTenantForCurrentUser = async (): Promise<Tenant | null> => {
     const { data: auth } = await supabase.auth.getUser();
@@ -275,7 +280,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     
     // Timer de segurança para o loading de branding
     const safetyTimer = setTimeout(() => {
-      if (isMountedRef.current && loading) {
+      if (isMountedRef.current && loadingRef.current) {
         console.warn("[Branding] Safety timeout hit, releasing loading state.");
         setLoading(false);
       }
