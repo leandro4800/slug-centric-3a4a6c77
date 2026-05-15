@@ -401,6 +401,7 @@ const Treino = () => {
               userId={user?.id || null}
               tenantId={tenant?.id || null}
               onCargaSaved={handleCargaSaved}
+              nivelExperiencia={nivelExperiencia}
             />
           ))}
         </div>
