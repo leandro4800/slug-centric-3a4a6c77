@@ -143,6 +143,28 @@ export const AthleteEvaluationsViewer = ({ open, onOpenChange, alunoId }: Props)
                         )}
                       </div>
                     )}
+
+                    {(ev.peitoral || ev.axilar_media || ev.triceps || ev.subescapular || ev.abdominal || ev.suprailiaca || ev.coxa) && (
+                      <div className="mt-4 pt-4 border-t border-border/50">
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-widest mb-2">7 Dobras (mm)</p>
+                        <div className="grid grid-cols-4 gap-2">
+                          {[
+                            ["Peitoral", ev.peitoral],
+                            ["Ax. Média", ev.axilar_media],
+                            ["Tríceps", ev.triceps],
+                            ["Subesc.", ev.subescapular],
+                            ["Abdominal", ev.abdominal],
+                            ["Suprailíaca", ev.suprailiaca],
+                            ["Coxa", ev.coxa],
+                          ].filter(([, v]) => v != null && v !== "").map(([label, v]) => (
+                            <div key={label as string} className="bg-background/40 rounded-lg p-2 border border-border/50">
+                              <span className="block text-[9px] text-muted-foreground uppercase">{label}</span>
+                              <span className="text-xs font-semibold">{v}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
