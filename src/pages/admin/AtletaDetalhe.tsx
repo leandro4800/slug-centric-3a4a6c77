@@ -139,6 +139,7 @@ const AtletaDetalhe = () => {
   const [open7Dobras, setOpen7Dobras] = useState(false);
   const [show7DobrasIntro, setShow7DobrasIntro] = useState(false);
   const [selectionOpen, setSelectionOpen] = useState(false);
+  const [evaluationsViewerOpen, setEvaluationsViewerOpen] = useState(false);
   const [evalOpen, setEvalOpen] = useState(false);
   const [formEval, setFormEval] = useState({
     peso_kg: "",
