@@ -89,6 +89,8 @@ export const ExerciseCard = ({
   tenantId,
   onCargaSaved,
   nivelExperiencia,
+  completed = false,
+  onCompleted,
 }: ExerciseCardProps) => {
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
