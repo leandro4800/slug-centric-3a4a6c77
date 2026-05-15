@@ -432,7 +432,7 @@ const Comunidade = () => {
                   {showComments && (
                     <div className="mt-3 flex flex-col gap-3">
                       {post.comentarios.map((c) => (
-                        <div key={c.id} className="flex gap-2 items-start">
+                        <div key={c.id} className="flex gap-2 items-start group">
                           <Avatar className="w-7 h-7">
                             <AvatarImage src={c.perfil?.avatar_url || ""} />
                             <AvatarFallback className="bg-zinc-800 text-[10px]">
@@ -443,6 +443,15 @@ const Comunidade = () => {
                             <span className="font-semibold mr-2">{c.perfil?.nome_completo || "Usuário"}</span>
                             <span className="text-zinc-300">{c.comentario}</span>
                           </div>
+                          {canDeleteComment(c) && (
+                            <button
+                              onClick={() => deleteComment(post, c)}
+                              className="opacity-60 hover:opacity-100 hover:text-destructive transition-opacity"
+                              aria-label="Excluir comentário"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </button>
+                          )}
                         </div>
                       ))}
 
