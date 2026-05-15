@@ -19,20 +19,21 @@ const BottomNav = () => {
   const tenantSlug = tenant?.slug || slug;
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-background/95 backdrop-blur-xl border-t border-border">
-      <div className="max-w-2xl mx-auto grid grid-cols-8 px-1 pt-2 pb-3">
+      <div className="max-w-2xl mx-auto flex items-stretch overflow-x-auto scrollbar-hide px-1 pt-2 pb-3">
         {items.map(({ label, icon: Icon, to }) => (
           <NavLink
             key={label}
             to={`/${tenantSlug}/app${to ? `/${to}` : ""}`}
             end={!to}
+            className="flex-1 min-w-[44px]"
           >
             {({ isActive }) => (
               <div className={`flex flex-col items-center justify-center gap-1 py-1 text-[9px] uppercase tracking-wider transition-all duration-300 ${
-                isActive 
-                  ? "text-primary filter drop-shadow-[0_0_8px_hsla(var(--primary-glow)/0.8)] scale-110" 
+                isActive
+                  ? "text-primary filter drop-shadow-[0_0_8px_hsla(var(--primary-glow)/0.8)] scale-110"
                   : "text-muted-foreground hover:text-foreground opacity-70"
               }`}>
-                <Icon className={`h-[18px] w-[18px] ${isActive ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
+                <Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
                 <span className={`truncate w-full text-center ${isActive ? "font-bold" : "font-normal"}`}>{label}</span>
               </div>
             )}
