@@ -160,16 +160,22 @@ export default function JacksonPollockCalculator({
 
       if (error) throw error;
       
-      if (data && data.extractedData) {
-        const ext = data.extractedData;
+      const ext = data?.extractedData || data?.data;
+      if (ext) {
+        // A IA retorna dobras aninhadas em ext.dobras (snake_case). Aceitamos também valores no nível raiz como fallback.
+        const d = ext.dobras || {};
+        const pick = (a: any, b: any, c: any) => {
+          const v = a ?? b ?? c;
+          return v !== undefined && v !== null && v !== "" ? String(v) : "";
+        };
         setDobras({
-          peitoral: ext.peitoral ? String(ext.peitoral) : dobras.peitoral,
-          axilarMedia: ext.axilarMedia ? String(ext.axilarMedia) : dobras.axilarMedia,
-          triceps: ext.triceps ? String(ext.triceps) : dobras.triceps,
-          subescapular: ext.subescapular ? String(ext.subescapular) : dobras.subescapular,
-          abdominal: ext.abdominal ? String(ext.abdominal) : dobras.abdominal,
-          suprailiaca: ext.suprailiaca ? String(ext.suprailiaca) : dobras.suprailiaca,
-          coxa: ext.coxa ? String(ext.coxa) : dobras.coxa,
+          peitoral: pick(d.peitoral, ext.peitoral, dobras.peitoral) || dobras.peitoral,
+          axilarMedia: pick(d.axilar_media, ext.axilar_media ?? ext.axilarMedia, dobras.axilarMedia) || dobras.axilarMedia,
+          triceps: pick(d.triceps, ext.triceps, dobras.triceps) || dobras.triceps,
+          subescapular: pick(d.subescapular, ext.subescapular, dobras.subescapular) || dobras.subescapular,
+          abdominal: pick(d.abdominal, ext.abdominal, dobras.abdominal) || dobras.abdominal,
+          suprailiaca: pick(d.suprailiaca, ext.suprailiaca, dobras.suprailiaca) || dobras.suprailiaca,
+          coxa: pick(d.coxa, ext.coxa, dobras.coxa) || dobras.coxa,
         });
         if (ext.peso) setPeso(String(ext.peso));
         if (ext.idade) setIdade(String(ext.idade));
