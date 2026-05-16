@@ -147,6 +147,7 @@ export const ExerciseCard = ({
     fetchReferenceVideo();
   }, [data.exercicio, data.video_url]);
 
+  // index = -1 significa "preencher TODAS as séries de uma vez"
   const startListening = (index: number) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     
@@ -162,14 +163,17 @@ export const ExerciseCard = ({
 
     recognition.onstart = () => {
       setListeningIdx(index);
-      toast.info("Ouvindo...", { id: "voice-toast" });
+      toast.info(index === -1 ? "Ouvindo (todas as séries)..." : "Ouvindo...", { id: "voice-toast" });
     };
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript.toLowerCase();
 
-      // Parser robusto PT-BR: aceita "16 de carga e 12 repetições", "12 reps 16kg", "50 quilos por 10", etc.
-      // Procura pelo NÚMERO mais próximo (antes ou depois) de cada palavra-chave.
+      // Detecta intenção de preencher TODAS as séries
+      const bulkKeyword = /\b(todas?|tudo|todas as series|todas as séries|todos os slots|todas iguais)\b/i.test(transcript);
+      // "fiz 4 séries" / "4 series" — captura quantidade explícita
+      const qtdMatch = transcript.match(/(\d+)\s*(?:s[eé]ries?|sets?)/i);
+
       const cargaRegexes = [
         /(\d+(?:[.,]\d+)?)\s*(?:kg|quilos?|kilos?)/i,
         /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?carga/i,
@@ -193,35 +197,45 @@ export const ExerciseCard = ({
         if (m) { reps = m[1]; break; }
       }
 
-      // Fallback: nenhum keyword reconhecido — usa heurística por magnitude
+      // Fallback heurístico
       if (!reps && !carga) {
-        const numbers = transcript.match(/\d+(?:[.,]\d+)?/g)?.map((n) => n.replace(",", ".")) || [];
+        const numbers = (transcript.match(/\d+(?:[.,]\d+)?/g) || [])
+          .map((n) => n.replace(",", "."))
+          // remove o número de "X séries" para não confundir com carga/reps
+          .filter((n) => !(qtdMatch && n === qtdMatch[1]));
         if (numbers.length === 1) {
           const n = parseFloat(numbers[0]);
           if (n <= 30) reps = numbers[0]; else carga = numbers[0];
         } else if (numbers.length >= 2) {
           const n1 = parseFloat(numbers[0]);
           const n2 = parseFloat(numbers[1]);
-          // Reps geralmente <= 30; carga geralmente > reps
           if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
           else { reps = numbers[0]; carga = numbers[1]; }
         }
       }
 
+      const isBulk = index === -1 || bulkKeyword || !!qtdMatch;
+
       if (reps || carga) {
-        setSlots(prev => prev.map((s, idx) => {
-          if (idx === index) {
-            return {
-              ...s,
-              reps: reps || s.reps,
-              carga: carga || s.carga
-            };
-          }
-          return s;
-        }));
-        toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        if (isBulk) {
+          // Quantidade alvo: se disse "X séries", preenche as X primeiras; caso contrário, todas
+          const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), totalSlots) : totalSlots;
+          setSlots((prev) => prev.map((s, idx) => idx < qtd ? {
+            ...s,
+            reps: reps || s.reps,
+            carga: carga || s.carga,
+          } : s));
+          toast.success(`${qtd} séries preenchidas: ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        } else {
+          setSlots((prev) => prev.map((s, idx) => idx === index ? {
+            ...s,
+            reps: reps || s.reps,
+            carga: carga || s.carga,
+          } : s));
+          toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        }
       } else {
-        toast.error("Não entendi. Tente: '16 de carga e 12 repetições'", { id: "voice-toast" });
+        toast.error("Não entendi. Tente: 'fiz 4 séries com 20kg e 12 repetições'", { id: "voice-toast" });
       }
     };
 
