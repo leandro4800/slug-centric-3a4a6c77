@@ -563,7 +563,8 @@ export const ExerciseCard = ({
                     </span>
                   </button>
                   <button
-                    onClick={() => startListening(i)}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); startListening(i); }}
                     className={`p-2 rounded-full transition-all ${
                       listeningIdx === i 
                         ? "bg-primary text-primary-foreground animate-pulse" 
