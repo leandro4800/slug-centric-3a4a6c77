@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { buildAuthRedirectUrl } from "@/lib/app-url";
 
 type Step = "signup" | "verify-email" | "personal" | "tenant" | "pending";
 const STEPS: Step[] = ["signup", "personal", "tenant", "pending"];
@@ -100,7 +101,10 @@ export default function SejaCoach() {
       const { data, error } = await supabase.auth.signUp({
         email: cleanEmail,
         password,
-        options: { data: { nome_completo: nome, is_coach: true } },
+        options: {
+          data: { nome_completo: nome, is_coach: true },
+          emailRedirectTo: buildAuthRedirectUrl("/seja-coach", { confirmed: "1" }),
+        },
       });
       if (error) throw error;
       
