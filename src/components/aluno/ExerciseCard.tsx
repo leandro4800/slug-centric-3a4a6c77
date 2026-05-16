@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import ExercisePlayer from "./ExercisePlayer";
+import { Capacitor } from "@capacitor/core";
+import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 
 export interface ExerciseCardData {
   id: string;
@@ -149,21 +151,115 @@ export const ExerciseCard = ({
 
   // index = -1 significa "preencher TODAS as séries de uma vez"
   const recognitionRef = useRef<any>(null);
-  const startListening = (index: number) => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
-      toast.error("Seu navegador/app não suporta reconhecimento de voz. Use Chrome no Android ou Safari no iOS.");
-      return;
+  const processTranscript = (rawTranscript: string, index: number) => {
+    const transcript = (rawTranscript || "").toLowerCase();
+
+    const bulkKeyword = /\b(todas?|tudo|todas as series|todas as séries|todos os slots|todas iguais)\b/i.test(transcript);
+    const qtdMatch = transcript.match(/(\d+)\s*(?:s[eé]ries?|sets?)/i);
+
+    const cargaRegexes = [
+      /(\d+(?:[.,]\d+)?)\s*(?:kg|quilos?|kilos?)/i,
+      /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?carga/i,
+      /carga\s*(?:de\s+)?(\d+(?:[.,]\d+)?)/i,
+      /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?peso/i,
+    ];
+    const repsRegexes = [
+      /(\d+)\s*(?:repeti[cç][õo]es?|reps?|movimentos?|vezes?)/i,
+      /(?:repeti[cç][õo]es?|reps?|movimentos?|vezes?)\s*(?:de\s+)?(\d+)/i,
+    ];
+
+    let carga = "";
+    let reps = "";
+    for (const r of cargaRegexes) { const m = transcript.match(r); if (m) { carga = m[1].replace(",", "."); break; } }
+    for (const r of repsRegexes) { const m = transcript.match(r); if (m) { reps = m[1]; break; } }
+
+    if (!reps && !carga) {
+      const numbers = (transcript.match(/\d+(?:[.,]\d+)?/g) || [])
+        .map((n) => n.replace(",", ""))
+        .filter((n) => !(qtdMatch && n === qtdMatch[1]));
+      if (numbers.length === 1) {
+        const n = parseFloat(numbers[0]);
+        if (n <= 30) reps = numbers[0]; else carga = numbers[0];
+      } else if (numbers.length >= 2) {
+        const n1 = parseFloat(numbers[0]);
+        const n2 = parseFloat(numbers[1]);
+        if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
+        else { reps = numbers[0]; carga = numbers[1]; }
+      }
     }
 
-    // Cancela qualquer reconhecimento anterior em andamento
+    const isBulk = index === -1 || bulkKeyword || !!qtdMatch;
+
+    if (reps || carga) {
+      if (isBulk) {
+        const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), totalSlots) : totalSlots;
+        setSlots((prev) => prev.map((s, idx) => idx < qtd ? {
+          ...s, reps: reps || s.reps, carga: carga || s.carga,
+        } : s));
+        toast.success(`${qtd} séries preenchidas: ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+      } else {
+        setSlots((prev) => prev.map((s, idx) => idx === index ? {
+          ...s, reps: reps || s.reps, carga: carga || s.carga,
+        } : s));
+        toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+      }
+    } else {
+      toast.error("Não entendi. Tente: 'fiz 4 séries com 20kg e 12 repetições'", { id: "voice-toast" });
+    }
+  };
+
+  const startListeningNative = async (index: number) => {
+    try {
+      const avail = await NativeSpeech.available();
+      if (!avail.available) {
+        toast.error("Reconhecimento de voz não disponível neste aparelho.", { id: "voice-toast" });
+        return;
+      }
+      const perm = await NativeSpeech.checkPermissions();
+      if (perm.speechRecognition !== "granted") {
+        const req = await NativeSpeech.requestPermissions();
+        if (req.speechRecognition !== "granted") {
+          toast.error("Permissão de microfone negada. Habilite nas configurações do app.", { id: "voice-toast" });
+          return;
+        }
+      }
+      setListeningIdx(index);
+      toast.info(index === -1 ? "Ouvindo (todas as séries)..." : "Ouvindo...", { id: "voice-toast" });
+
+      const result: any = await NativeSpeech.start({
+        language: "pt-BR",
+        maxResults: 1,
+        prompt: "Diga carga e repetições",
+        partialResults: false,
+        popup: false,
+      });
+      const matches: string[] = result?.matches || [];
+      const transcript = matches[0] || "";
+      if (!transcript) {
+        toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
+      } else {
+        processTranscript(transcript, index);
+      }
+    } catch (err: any) {
+      const msg = err?.message || String(err);
+      toast.error(`Erro ao ouvir: ${msg}`, { id: "voice-toast" });
+    } finally {
+      setListeningIdx(null);
+    }
+  };
+
+  const startListeningWeb = (index: number) => {
+    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SR) {
+      toast.error("Seu navegador não suporta reconhecimento de voz. Use Chrome no Android ou Safari no iOS.", { id: "voice-toast" });
+      return;
+    }
     if (recognitionRef.current) {
       try { recognitionRef.current.abort(); } catch {}
       recognitionRef.current = null;
     }
-
-    const recognition = new SpeechRecognition();
+    const recognition = new SR();
     recognitionRef.current = recognition;
     recognition.lang = "pt-BR";
     recognition.interimResults = false;
@@ -173,80 +269,10 @@ export const ExerciseCard = ({
       setListeningIdx(index);
       toast.info(index === -1 ? "Ouvindo (todas as séries)..." : "Ouvindo...", { id: "voice-toast" });
     };
-
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript.toLowerCase();
-
-      // Detecta intenção de preencher TODAS as séries
-      const bulkKeyword = /\b(todas?|tudo|todas as series|todas as séries|todos os slots|todas iguais)\b/i.test(transcript);
-      // "fiz 4 séries" / "4 series" — captura quantidade explícita
-      const qtdMatch = transcript.match(/(\d+)\s*(?:s[eé]ries?|sets?)/i);
-
-      const cargaRegexes = [
-        /(\d+(?:[.,]\d+)?)\s*(?:kg|quilos?|kilos?)/i,
-        /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?carga/i,
-        /carga\s*(?:de\s+)?(\d+(?:[.,]\d+)?)/i,
-        /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?peso/i,
-      ];
-      const repsRegexes = [
-        /(\d+)\s*(?:repeti[cç][õo]es?|reps?|movimentos?|vezes?)/i,
-        /(?:repeti[cç][õo]es?|reps?|movimentos?|vezes?)\s*(?:de\s+)?(\d+)/i,
-      ];
-
-      let carga = "";
-      let reps = "";
-
-      for (const r of cargaRegexes) {
-        const m = transcript.match(r);
-        if (m) { carga = m[1].replace(",", "."); break; }
-      }
-      for (const r of repsRegexes) {
-        const m = transcript.match(r);
-        if (m) { reps = m[1]; break; }
-      }
-
-      // Fallback heurístico
-      if (!reps && !carga) {
-        const numbers = (transcript.match(/\d+(?:[.,]\d+)?/g) || [])
-          .map((n) => n.replace(",", "."))
-          // remove o número de "X séries" para não confundir com carga/reps
-          .filter((n) => !(qtdMatch && n === qtdMatch[1]));
-        if (numbers.length === 1) {
-          const n = parseFloat(numbers[0]);
-          if (n <= 30) reps = numbers[0]; else carga = numbers[0];
-        } else if (numbers.length >= 2) {
-          const n1 = parseFloat(numbers[0]);
-          const n2 = parseFloat(numbers[1]);
-          if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
-          else { reps = numbers[0]; carga = numbers[1]; }
-        }
-      }
-
-      const isBulk = index === -1 || bulkKeyword || !!qtdMatch;
-
-      if (reps || carga) {
-        if (isBulk) {
-          // Quantidade alvo: se disse "X séries", preenche as X primeiras; caso contrário, todas
-          const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), totalSlots) : totalSlots;
-          setSlots((prev) => prev.map((s, idx) => idx < qtd ? {
-            ...s,
-            reps: reps || s.reps,
-            carga: carga || s.carga,
-          } : s));
-          toast.success(`${qtd} séries preenchidas: ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
-        } else {
-          setSlots((prev) => prev.map((s, idx) => idx === index ? {
-            ...s,
-            reps: reps || s.reps,
-            carga: carga || s.carga,
-          } : s));
-          toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
-        }
-      } else {
-        toast.error("Não entendi. Tente: 'fiz 4 séries com 20kg e 12 repetições'", { id: "voice-toast" });
-      }
+      const transcript = event.results[0][0].transcript;
+      processTranscript(transcript, index);
     };
-
     recognition.onerror = (e: any) => {
       const err = e?.error || "";
       if (err === "not-allowed" || err === "service-not-allowed") {
@@ -261,18 +287,24 @@ export const ExerciseCard = ({
       setListeningIdx(null);
       recognitionRef.current = null;
     };
-
     recognition.onend = () => {
       setListeningIdx(null);
       recognitionRef.current = null;
     };
-
     try {
       recognition.start();
     } catch (err: any) {
       toast.error(`Não consegui iniciar o microfone: ${err?.message || err}`, { id: "voice-toast" });
       setListeningIdx(null);
       recognitionRef.current = null;
+    }
+  };
+
+  const startListening = (index: number) => {
+    if (Capacitor.isNativePlatform()) {
+      void startListeningNative(index);
+    } else {
+      startListeningWeb(index);
     }
   };
 
