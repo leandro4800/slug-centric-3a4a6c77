@@ -247,16 +247,33 @@ export const ExerciseCard = ({
       }
     };
 
-    recognition.onerror = () => {
-      toast.error("Erro ao ouvir. Tente novamente.", { id: "voice-toast" });
+    recognition.onerror = (e: any) => {
+      const err = e?.error || "";
+      if (err === "not-allowed" || err === "service-not-allowed") {
+        toast.error("Permissão de microfone negada. Habilite nas configurações do navegador/app.", { id: "voice-toast" });
+      } else if (err === "no-speech") {
+        toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
+      } else if (err === "audio-capture") {
+        toast.error("Microfone indisponível.", { id: "voice-toast" });
+      } else {
+        toast.error(`Erro ao ouvir (${err || "desconhecido"}). Tente novamente.`, { id: "voice-toast" });
+      }
       setListeningIdx(null);
+      recognitionRef.current = null;
     };
 
     recognition.onend = () => {
       setListeningIdx(null);
+      recognitionRef.current = null;
     };
 
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (err: any) {
+      toast.error(`Não consegui iniciar o microfone: ${err?.message || err}`, { id: "voice-toast" });
+      setListeningIdx(null);
+      recognitionRef.current = null;
+    }
   };
 
   // Restaura cronômetro do localStorage (mantém contagem mesmo com tela fechada)
