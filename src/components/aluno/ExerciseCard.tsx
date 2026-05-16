@@ -148,15 +148,23 @@ export const ExerciseCard = ({
   }, [data.exercicio, data.video_url]);
 
   // index = -1 significa "preencher TODAS as séries de uma vez"
+  const recognitionRef = useRef<any>(null);
   const startListening = (index: number) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
+
     if (!SpeechRecognition) {
-      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      toast.error("Seu navegador/app não suporta reconhecimento de voz. Use Chrome no Android ou Safari no iOS.");
       return;
     }
 
+    // Cancela qualquer reconhecimento anterior em andamento
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+      recognitionRef.current = null;
+    }
+
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.lang = "pt-BR";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
