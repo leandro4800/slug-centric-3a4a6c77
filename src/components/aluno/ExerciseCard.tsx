@@ -498,9 +498,22 @@ export const ExerciseCard = ({
           </div>
 
           {/* Séries de trabalho */}
-          <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center justify-between pt-1 gap-2">
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries de trabalho</p>
-            <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => startListening(-1)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
+                  listeningIdx === -1
+                    ? "bg-primary text-primary-foreground animate-pulse"
+                    : "bg-primary/15 text-primary hover:bg-primary/25"
+                }`}
+                title='Ex: "fiz 4 séries com 20kg e 12 repetições"'
+              >
+                <Mic className="h-3 w-3" /> Preencher todas
+              </button>
+              <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
+            </div>
           </div>
 
           <div className="space-y-2">
