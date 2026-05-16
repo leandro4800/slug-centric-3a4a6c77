@@ -12,7 +12,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 const isDev = process.env.NODE_ENV === 'development' || process.env.CAP_DEV === '1';
 
 const config: CapacitorConfig = {
-  appId: 'app.lovable.164775dd51cd4aab839820f1eeab0a23',
+  appId: 'app.lovable.alphacoach',
   appName: 'AlphaCoach',
   webDir: 'dist',
   ...(isDev && {
