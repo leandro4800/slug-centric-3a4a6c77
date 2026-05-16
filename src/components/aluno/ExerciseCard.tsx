@@ -522,23 +522,25 @@ export const ExerciseCard = ({
             </div>
           </div>
 
+          {/* Botão destacado: preencher TODAS as séries por voz */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); startListening(-1); }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider border transition-all ${
+              listeningIdx === -1
+                ? "bg-primary text-primary-foreground border-primary animate-pulse shadow-[0_0_30px_-5px_hsl(var(--primary)/0.8)]"
+                : "bg-primary/10 text-primary border-primary/40 hover:bg-primary/20"
+            }`}
+            title='Ex: "fiz 4 séries com 20kg e 12 repetições"'
+          >
+            <Mic className="h-4 w-4" />
+            {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
+          </button>
+
           {/* Séries de trabalho */}
           <div className="flex items-center justify-between pt-1 gap-2">
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries de trabalho</p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => startListening(-1)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
-                  listeningIdx === -1
-                    ? "bg-primary text-primary-foreground animate-pulse"
-                    : "bg-primary/15 text-primary hover:bg-primary/25"
-                }`}
-                title='Ex: "fiz 4 séries com 20kg e 12 repetições"'
-              >
-                <Mic className="h-3 w-3" /> Preencher todas
-              </button>
-              <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
-            </div>
+            <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
           </div>
 
           <div className="space-y-2">
