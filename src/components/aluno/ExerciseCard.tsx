@@ -148,15 +148,23 @@ export const ExerciseCard = ({
   }, [data.exercicio, data.video_url]);
 
   // index = -1 significa "preencher TODAS as séries de uma vez"
+  const recognitionRef = useRef<any>(null);
   const startListening = (index: number) => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    
+
     if (!SpeechRecognition) {
-      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      toast.error("Seu navegador/app não suporta reconhecimento de voz. Use Chrome no Android ou Safari no iOS.");
       return;
     }
 
+    // Cancela qualquer reconhecimento anterior em andamento
+    if (recognitionRef.current) {
+      try { recognitionRef.current.abort(); } catch {}
+      recognitionRef.current = null;
+    }
+
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.lang = "pt-BR";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
@@ -239,16 +247,33 @@ export const ExerciseCard = ({
       }
     };
 
-    recognition.onerror = () => {
-      toast.error("Erro ao ouvir. Tente novamente.", { id: "voice-toast" });
+    recognition.onerror = (e: any) => {
+      const err = e?.error || "";
+      if (err === "not-allowed" || err === "service-not-allowed") {
+        toast.error("Permissão de microfone negada. Habilite nas configurações do navegador/app.", { id: "voice-toast" });
+      } else if (err === "no-speech") {
+        toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
+      } else if (err === "audio-capture") {
+        toast.error("Microfone indisponível.", { id: "voice-toast" });
+      } else {
+        toast.error(`Erro ao ouvir (${err || "desconhecido"}). Tente novamente.`, { id: "voice-toast" });
+      }
       setListeningIdx(null);
+      recognitionRef.current = null;
     };
 
     recognition.onend = () => {
       setListeningIdx(null);
+      recognitionRef.current = null;
     };
 
-    recognition.start();
+    try {
+      recognition.start();
+    } catch (err: any) {
+      toast.error(`Não consegui iniciar o microfone: ${err?.message || err}`, { id: "voice-toast" });
+      setListeningIdx(null);
+      recognitionRef.current = null;
+    }
   };
 
   // Restaura cronômetro do localStorage (mantém contagem mesmo com tela fechada)
@@ -497,23 +522,25 @@ export const ExerciseCard = ({
             </div>
           </div>
 
+          {/* Botão destacado: preencher TODAS as séries por voz */}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); startListening(-1); }}
+            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider border transition-all ${
+              listeningIdx === -1
+                ? "bg-primary text-primary-foreground border-primary animate-pulse shadow-[0_0_30px_-5px_hsl(var(--primary)/0.8)]"
+                : "bg-primary/10 text-primary border-primary/40 hover:bg-primary/20"
+            }`}
+            title='Ex: "fiz 4 séries com 20kg e 12 repetições"'
+          >
+            <Mic className="h-4 w-4" />
+            {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
+          </button>
+
           {/* Séries de trabalho */}
           <div className="flex items-center justify-between pt-1 gap-2">
             <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries de trabalho</p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => startListening(-1)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider transition-all ${
-                  listeningIdx === -1
-                    ? "bg-primary text-primary-foreground animate-pulse"
-                    : "bg-primary/15 text-primary hover:bg-primary/25"
-                }`}
-                title='Ex: "fiz 4 séries com 20kg e 12 repetições"'
-              >
-                <Mic className="h-3 w-3" /> Preencher todas
-              </button>
-              <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
-            </div>
+            <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
           </div>
 
           <div className="space-y-2">
@@ -536,7 +563,8 @@ export const ExerciseCard = ({
                     </span>
                   </button>
                   <button
-                    onClick={() => startListening(i)}
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); startListening(i); }}
                     className={`p-2 rounded-full transition-all ${
                       listeningIdx === i 
                         ? "bg-primary text-primary-foreground animate-pulse" 
