@@ -101,7 +101,14 @@ REGRAS:
 3. AVEIA: quantidade variável conforme volume da refeição. NUNCA fixar 100g por padrão. Limite absoluto 100g/refeição. Se o carbo já está ok com menos, use menos.
 4. NÃO adicione creme de arroz se a refeição não tinha — só ajuste o que existe. NÃO empilhe creme de arroz + aveia se só um dos dois resolve.
 5. Sem castanhas.
-6. Retorne JSON: { "refeicoes": [ { "nome": "...", "descricao_ia": "..." } ] } na MESMA ORDEM recebida.`;
+6. FORMATO OBRIGATÓRIO do campo "descricao_ia" (DUAS PARTES separadas por uma linha em branco):
+   PARTE 1 — RESUMO (lista enxuta, uma linha por alimento, começando com "• "):
+   • 150g de arroz branco cozido
+   • 120g de peito de frango grelhado
+   • 80g de feijão carioca
+
+   PARTE 2 — DETALHE (parágrafo amigável atual, com modo de preparo/contexto).
+7. Retorne JSON: { "refeicoes": [ { "nome": "...", "descricao_ia": "..." } ] } na MESMA ORDEM recebida.`;
 
       const userPrompt = `Refeições atuais:${body.prompt ? `\n\nINSTRUÇÕES ADICIONAIS DO COACH: ${body.prompt}` : ""}\n\n${refeicoesTxt}`;
 
