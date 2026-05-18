@@ -258,7 +258,18 @@ ${alimentosLista}
 INSTRUÇÕES ADICIONAIS DO COACH (sobrepõem regras gerais, exceto a anamnese): ${body.prompt || "Nenhuma"}
 
 REGRAS DE SAÍDA:
-Retorne JSON com o campo "refeicoes", cada item com: "nome", "horario" (HH:MM:SS), "ordem" (inteiro), "descricao_ia" (texto amigável com quantidades EXATAS em gramas/ml). Não escreva justificativas longas dentro de descricao_ia — só a montagem da refeição.`;
+Retorne JSON com o campo "refeicoes", cada item com: "nome", "horario" (HH:MM:SS), "ordem" (inteiro), "descricao_ia".
+
+FORMATO OBRIGATÓRIO de "descricao_ia" — SEMPRE em DUAS PARTES separadas por UMA linha em branco:
+
+PARTE 1 — RESUMO (lista enxuta dos alimentos, uma linha por item, iniciada por "• ", apenas quantidade + alimento, sem modo de preparo):
+• 150g de arroz branco
+• 120g de peito de frango
+• 80g de feijão carioca
+
+PARTE 2 — DETALHE (parágrafo amigável explicando a montagem, modo de preparo e dicas — como você já faria).
+
+Não escreva justificativas longas; o resumo deve ser direto para o aluno objetivo, e o detalhe atende ao aluno que quer contexto.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
