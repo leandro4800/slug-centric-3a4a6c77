@@ -153,32 +153,97 @@ REGRAS DE OURO (OBRIGATÓRIO):
     const gorduraG = Math.round(peso * 0.8);
     const carboG = Math.round((kcalAlvo - (proteinaG * 4) - (gorduraG * 9)) / 4);
 
+    const refDia = body.refeicoes_dia || 4;
+
+    // 1. Anamnese do aluno (PRIORIDADE MÁXIMA na escolha de alimentos)
+    const { data: anamnese } = await supabase
+      .from("anamnese_aluno")
+      .select("alimentos_ama, alimentos_evita, restricoes_alimentares, suplementos, refeicoes_dia")
+      .eq("aluno_id", targetUserId)
+      .maybeSingle();
+
+    const alimentosAma = anamnese?.alimentos_ama?.trim() || "";
+    const alimentosEvita = anamnese?.alimentos_evita?.trim() || "";
+    const restricoes = (anamnese?.restricoes_alimentares || []).join(", ");
+    const suplementos = (anamnese?.suplementos || []).join(", ");
+
+    // 2. Templates de cardápio de referência para o nível e quantidade de refeições
+    const nivelTemplate = nivel.includes("alto") || nivel.includes("avan")
+      ? "avancado"
+      : nivel.includes("inter") ? "intermediario" : "iniciante";
+
+    const { data: menuTemplates } = await supabase
+      .from("menu_templates")
+      .select("name, meal_count, meal_structure")
+      .eq("level", nivelTemplate)
+      .eq("meal_count", refDia)
+      .limit(3);
+
+    const templatesTxt = (menuTemplates || []).length > 0
+      ? (menuTemplates || []).map((t: any) => {
+          const refs = (t.meal_structure || []).map((r: any) =>
+            `  - ${r.nome}: ${(r.itens || []).join(", ")}`
+          ).join("\n");
+          return `MODELO: ${t.name}\n${refs}`;
+        }).join("\n\n")
+      : "(sem modelo específico — use variedade de alimentos brasileiros)";
+
+    // 3. Lista TACO de apoio
     const { data: alimentos } = await supabase
       .from("alimentos_taco")
       .select("nome, energia_kcal, proteina_g, carboidrato_g, lipideos_g")
       .limit(100);
-
     const alimentosLista = (alimentos || []).map(a => `${a.nome} (kcal:${a.energia_kcal}, P:${a.proteina_g}, C:${a.carboidrato_g}, G:${a.lipideos_g})`).join("\n");
 
-    const systemPrompt = `Você é um nutricionista especialista. Gere uma dieta completa com ${body.refeicoes_dia || 4} refeições.
-META: ${kcalAlvo} kcal | P: ${proteinaG}g | C: ${carboG}g | G: ${gorduraG}g
-OBJETIVO: ${objetivo}
+    const systemPrompt = `Você é um nutricionista esportivo experiente. Monte uma dieta com ${refDia} refeições.
 
-REGRAS DE OURO (OBRIGATÓRIO):
-1. FIBRA: Máximo de 35g de fibra por dia. Distribua a fibra entre as refeições.
-2. AVEIA: Limite máximo de 100g de aveia por refeição. No café da manhã, se precisar de muito carboidrato, use CREME DE ARROZ para complementar ou substituir o excesso de aveia.
-3. DIGESTÃO: Para dietas de alto volume (bulking), priorize alimentos de fácil digestão (arroz branco, etc), mas não deixe de colocar fibras (dentro do limite de 35g/dia).
-4. GORDURAS:
+PERFIL DO ALUNO:
+- Sexo: ${sexo === "M" ? "Masculino" : "Feminino"}
+- Peso: ${peso}kg • Altura: ${altura}cm • Idade: ${idade}
+- Nível: ${nivelTemplate}
+- Objetivo: ${objetivo}
+
+META DE MACROS (calculada a partir do perfil acima):
+${kcalAlvo} kcal | Proteína: ${proteinaG}g | Carboidrato: ${carboG}g | Gordura: ${gorduraG}g
+
+==== PRIORIDADE 1 — ANAMNESE DO ALUNO (REGRA SUPREMA) ====
+A escolha dos alimentos DEVE respeitar a anamnese antes de qualquer outra regra.
+${alimentosAma ? `ALIMENTOS QUE O ALUNO AMA (use prioritariamente, especialmente nas refeições onde fizerem sentido): ${alimentosAma}` : "Aluno não declarou alimentos preferidos."}
+${alimentosEvita ? `ALIMENTOS QUE O ALUNO EVITA / NÃO GOSTA (NUNCA inclua): ${alimentosEvita}` : ""}
+${restricoes ? `RESTRIÇÕES ALIMENTARES: ${restricoes}` : ""}
+${suplementos ? `SUPLEMENTOS QUE USA: ${suplementos} (use whey/creatina nas refeições adequadas se citado)` : ""}
+
+Se o aluno declarou um alimento favorito para uma refeição específica (ex.: "no café da manhã gosto de tapioca com ovo"), MONTE essa refeição com esses alimentos. Só substitua se houver restrição de saúde ou inviabilidade nutricional gritante — e justifique no texto.
+
+==== PRIORIDADE 2 — VARIEDADE / MODELOS DE REFERÊNCIA ====
+Use estes modelos do nível "${nivelTemplate}" como inspiração de VARIEDADE de cardápio (NÃO copie literalmente — combine com a anamnese):
+${templatesTxt}
+
+Cafés da manhã NÃO precisam ter aveia. Varie entre opções como: tapioca + ovo, pão integral + ovo, iogurte + fruta + granola, panqueca de aveia/banana, omelete + fruta, etc. Use o que combina com o que o aluno ama.
+
+==== PRIORIDADE 3 — REGRAS NUTRICIONAIS ====
+1. FIBRA: máximo 35g/dia distribuídos entre refeições.
+2. AVEIA: a quantidade NÃO é fixa. Calcule conforme sexo, peso, objetivo e meta de carbo da refeição.
+   - Mulher cutting: 20–40g por porção.
+   - Mulher hipertrofia: 30–60g.
+   - Homem cutting: 30–50g.
+   - Homem hipertrofia leve/moderado: 40–80g.
+   - Homem bulking pesado (>90kg): pode chegar a 100g.
+   - LIMITE ABSOLUTO: 100g por refeição. NUNCA fixar 100g por padrão.
+3. CREME DE ARROZ: use APENAS quando o carboidrato necessário no café da manhã ultrapassar o que a aveia pode entregar (acima de 80g de carbo só de cereal) E o aluno fizer bulking/alto volume. NÃO combine creme de arroz + aveia automaticamente. Se aveia bastar, use só aveia. Se o aluno preferir tapioca/pão/banana, use a preferência dele.
+4. DIGESTÃO: em bulking de alto volume, priorize fontes de fácil digestão (arroz branco, batata, banana), respeitando a fibra.
+5. GORDURAS:
    - NUNCA use castanhas (custo elevado).
-   - Se objetivo for CUTTING: Priorize ovos, iogurte, pasta de amendoim (controlada), abacate (foco em saciedade).
-   - Se objetivo for BULKING: Priorize ovos, pasta de amendoim, queijo, banana + aveia (foco em densidade e performance).
-5. ALIMENTOS REFERÊNCIA:
+   - Cutting: priorize ovos, iogurte, pasta de amendoim controlada, abacate.
+   - Bulking/hipertrofia: ovos, pasta de amendoim, queijo, banana + aveia.
+
+ALIMENTOS DE REFERÊNCIA (TACO, apoio nutricional):
 ${alimentosLista}
 
+INSTRUÇÕES ADICIONAIS DO COACH (sobrepõem regras gerais, exceto a anamnese): ${body.prompt || "Nenhuma"}
+
 REGRAS DE SAÍDA:
-1. Retorne um JSON com o campo "refeicoes" contendo "nome", "horario", "ordem" e "descricao_ia".
-2. A "descricao_ia" deve ser amigável e conter quantidades exatas em gramas.
-3. Considere estas INSTRUÇÕES ADICIONAIS do coach: ${body.prompt || "Nenhuma"}`;
+Retorne JSON com o campo "refeicoes", cada item com: "nome", "horario" (HH:MM:SS), "ordem" (inteiro), "descricao_ia" (texto amigável com quantidades EXATAS em gramas/ml). Não escreva justificativas longas dentro de descricao_ia — só a montagem da refeição.`;
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
