@@ -75,27 +75,35 @@ serve(async (req) => {
       const macros = body.macros_alvo || { proteina_g: 200, carboidrato_g: 250, lipideos_g: 60 };
       const refeicoesTxt = (body.refeicoes || []).map(r => `Refeição: ${r.nome}\nDescrição atual: ${r.descricao}`).join("\n\n");
 
-      const systemPrompt = `Você é um nutricionista especialista.
-Sua tarefa é AJUSTAR AS QUANTIDADES de uma dieta já montada para que ela atinja EXATAMENTE os macros alvo fornecidos.
+      // Anamnese também no refine
+      const { data: anamneseRef } = await supabase
+        .from("anamnese_aluno")
+        .select("alimentos_ama, alimentos_evita, restricoes_alimentares")
+        .eq("aluno_id", targetUserId)
+        .maybeSingle();
+      const amaR = anamneseRef?.alimentos_ama?.trim() || "";
+      const evitaR = anamneseRef?.alimentos_evita?.trim() || "";
+      const restR = (anamneseRef?.restricoes_alimentares || []).join(", ");
+
+      const systemPrompt = `Você é um nutricionista esportivo. Ajuste APENAS AS QUANTIDADES (gramas) das refeições para bater EXATAMENTE os macros alvo, mantendo os alimentos que o aluno já gosta.
 
 META ALVO:
-Kcal: ${kcalAlvo}
-Proteína: ${macros.proteina_g}g
-Carbo: ${macros.carboidrato_g}g
-Gordura: ${macros.lipideos_g}g
+Kcal: ${kcalAlvo} | Proteína: ${macros.proteina_g}g | Carbo: ${macros.carboidrato_g}g | Gordura: ${macros.lipideos_g}g
 
-REGRAS DE OURO (OBRIGATÓRIO):
-1. FIBRA: Máximo de 35g de fibra por dia. Distribua a fibra entre as refeições.
-2. AVEIA: Limite máximo de 100g de aveia por refeição. Se a quantidade original for maior, substitua o excesso por CREME DE ARROZ (especialmente no café da manhã).
-3. DIGESTÃO: Para volumes altos de comida, priorize alimentos de fácil digestão (arroz branco, purê de batata, etc), mas mantenha a fibra dentro do limite.
-4. GORDURAS:
-   - ELIMINE CASTANHAS (custo alto).
-   - Se objetivo for CUTTING: Priorize ovos, iogurte, pasta de amendoim (controlada), abacate.
-   - Se objetivo for BULKING: Priorize ovos, pasta de amendoim, queijo, banana + aveia.
-5. Mantenha os outros alimentos citados, alterando apenas os números (quantidades) para bater os macros.
-6. Retorne no mesmo formato JSON abaixo.`;
+ANAMNESE (RESPEITAR):
+${amaR ? `Ama: ${amaR}` : ""}
+${evitaR ? `Evita (NÃO usar): ${evitaR}` : ""}
+${restR ? `Restrições: ${restR}` : ""}
 
-      const userPrompt = `Abaixo estão as refeições atuais. Ajuste-as para bater os macros alvo.${body.prompt ? `\n\nINSTRUÇÕES ADICIONAIS: ${body.prompt}` : ""}\n\n${refeicoesTxt}`;
+REGRAS:
+1. Mantenha os alimentos já presentes nas refeições — só altere quantidades. Só substitua alimento se ele violar a anamnese (ex.: aluno evita).
+2. FIBRA: máximo 35g/dia.
+3. AVEIA: quantidade variável conforme volume da refeição. NUNCA fixar 100g por padrão. Limite absoluto 100g/refeição. Se o carbo já está ok com menos, use menos.
+4. NÃO adicione creme de arroz se a refeição não tinha — só ajuste o que existe. NÃO empilhe creme de arroz + aveia se só um dos dois resolve.
+5. Sem castanhas.
+6. Retorne JSON: { "refeicoes": [ { "nome": "...", "descricao_ia": "..." } ] } na MESMA ORDEM recebida.`;
+
+      const userPrompt = `Refeições atuais:${body.prompt ? `\n\nINSTRUÇÕES ADICIONAIS DO COACH: ${body.prompt}` : ""}\n\n${refeicoesTxt}`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
