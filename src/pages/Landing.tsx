@@ -85,7 +85,7 @@ const useCases = [
     title: "CENTROS DE LUTAS",
     subtitle: "CT & Artes Marciais",
     description: "Do tatame para o digital. Gerencie turmas, treinos e graduações com um aplicativo exclusivo para o seu CT.",
-    image: "https://images.unsplash.com/photo-1552072805-2a9039d00e57?q=80&w=1374&auto=format&fit=crop",
+    image: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1779211949278_n2q6qo_Screenshot_30.png",
     color: "#BAA174",
     icon: Sword
   },
