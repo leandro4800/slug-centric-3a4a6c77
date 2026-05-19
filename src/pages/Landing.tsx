@@ -207,10 +207,30 @@ const Landing = () => {
         .from("tenants")
         .select("nome, tagline, bio, hero_url, foto_url, especialidades, cidade, estado, slug")
         .eq("status", "approved")
-        .limit(8);
+        .limit(10);
+      
       if (data && data.length > 0) {
-        const mapped = data.map(d => ({ name: d.nome, specialty: (d.especialidades && d.especialidades.length > 0) ? d.especialidades[0] : (d.tagline || ""), bio: d.bio || "", video: d.hero_url || d.foto_url || "", tag: "VERIFICADO", cidade: d.cidade || "", estado: d.estado || "", slug: d.slug }));
-        setCoaches(mapped);
+        const mapped = data.map(d => ({ 
+          name: d.nome, 
+          specialty: (d.especialidades && d.especialidades.length > 0) ? d.especialidades[0] : (d.tagline || ""), 
+          bio: d.bio || "", 
+          video: d.hero_url || d.foto_url || "", 
+          tag: "VERIFICADO", 
+          cidade: d.cidade || "", 
+          estado: d.estado || "", 
+          slug: d.slug 
+        }));
+        
+        // Merge with static ones we want to keep
+        const finalCoaches = [...defaultCoaches];
+        mapped.forEach(m => {
+          if (!finalCoaches.find(c => c.slug === m.slug)) {
+            finalCoaches.push(m);
+          }
+        });
+        setCoaches(finalCoaches);
+      } else {
+        setCoaches(defaultCoaches);
       }
     };
     void loadCoaches();
