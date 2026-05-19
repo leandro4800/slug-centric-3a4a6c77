@@ -221,7 +221,7 @@ const Landing = () => {
           slug: d.slug 
         }));
         
-        // Merge with static ones we want to keep
+        // Use default static coaches first, then add approved tenants if they are not already there
         const finalCoaches = [...defaultCoaches];
         mapped.forEach(m => {
           if (!finalCoaches.find(c => c.slug === m.slug)) {
