@@ -70,62 +70,139 @@ const videoLibrary = [
 ];
 
 interface DemoAppScreenProps {
-  mode?: "home" | "treino" | "stats";
+  mode?: "home" | "treino" | "dieta";
   brandName?: string;
   brandColor?: string; // hex
 }
 
 const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor = "#E00000" }: DemoAppScreenProps) => (
   <div
-    className="h-full w-full overflow-hidden bg-background text-foreground"
-    style={{ ["--brand" as any]: brandColor }}
+    className="h-full w-full overflow-hidden bg-black text-white font-sans flex flex-col"
+    style={{ ["--primary" as any]: brandColor }}
   >
-    <div className="relative h-56 overflow-hidden bg-card">
-      <video src="/videos/alpha-treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-90" />
-      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-      <div className="absolute left-5 right-5 bottom-5">
-        <p className="text-[10px] font-black uppercase tracking-[0.22em]" style={{ color: brandColor }}>{brandName}</p>
-        <h3 className="mt-1 text-3xl font-black uppercase leading-none">Plano Elite</h3>
+    {/* Status Bar */}
+    <div className="h-10 w-full flex items-center justify-between px-6 pt-4">
+      <span className="text-[10px] font-bold">9:41</span>
+      <div className="flex gap-1">
+        <div className="w-3 h-3 rounded-full border border-white/30" />
+        <div className="w-4 h-3 rounded-[2px] border border-white/30" />
       </div>
     </div>
 
-    <div className="space-y-4 p-5">
-      <div className="grid grid-cols-3 gap-2">
-        {["Treino", "Dieta", "Check-in"].map((item) => (
-          <div key={item} className="rounded-none border border-white/10 bg-card/50 p-3 text-center">
-            <p className="text-[9px] font-black uppercase tracking-wide text-white">{item}</p>
+    {mode === "home" && (
+      <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
+        <div className="relative h-64 shrink-0 overflow-hidden">
+          <video src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-60" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+          <div className="absolute left-6 right-6 bottom-6">
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: brandColor }}>{brandName}</p>
+            <h3 className="text-3xl font-black uppercase leading-none mb-2">BEM-VINDO, CHAMP</h3>
+            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Hoje é dia de braço e foco total.</p>
           </div>
-        ))}
-      </div>
-
-      <div
-        className="rounded-xl border p-4"
-        style={{ borderColor: `${brandColor}55`, backgroundColor: `${brandColor}1A` }}
-      >
-        <div className="mb-3 flex items-center justify-between">
-          <p className="text-xs font-black uppercase">{mode === "stats" ? "Evolução" : "Treino de hoje"}</p>
-          <span className="rounded px-2 py-1 text-[9px] font-black" style={{ backgroundColor: brandColor }}>AO VIVO</span>
         </div>
-        <div className="space-y-2">
-          {["Supino inclinado", "Remada curvada", "Agachamento livre"].map((item, i) => (
-            <div key={item} className="flex items-center justify-between rounded-lg bg-background p-3">
-              <span className="text-xs font-bold text-gray-200">{item}</span>
-              <span className="text-[10px] font-black" style={{ color: brandColor }}>{i + 3}x12</span>
+
+        <div className="p-6 space-y-6">
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-zinc-900 border border-white/5 p-4 rounded-2xl">
+              <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Próximo Treino</p>
+              <p className="text-sm font-bold text-white uppercase">Superiores B</p>
+            </div>
+            <div className="bg-zinc-900 border border-white/5 p-4 rounded-2xl">
+              <p className="text-[10px] text-gray-500 uppercase font-black mb-1">Próxima Refeição</p>
+              <p className="text-sm font-bold text-white uppercase">Pós-treino</p>
+            </div>
+          </div>
+
+          <div className="bg-zinc-900 border border-white/5 rounded-2xl overflow-hidden">
+            <div className="p-4 border-b border-white/5 flex justify-between items-center">
+              <p className="text-[10px] font-black uppercase tracking-widest">Sua Evolução</p>
+              <TrendingUp className="h-3 w-3 text-primary" />
+            </div>
+            <div className="p-6 flex flex-col items-center justify-center">
+              <div className="w-full h-24 flex items-end gap-2 mb-4">
+                {[40, 60, 45, 80, 55, 90, 70].map((h, i) => (
+                  <div key={i} className="flex-1 rounded-t-sm transition-all duration-500" style={{ height: `${h}%`, backgroundColor: i === 6 ? brandColor : `${brandColor}44` }} />
+                ))}
+              </div>
+              <p className="text-2xl font-black" style={{ color: brandColor }}>+4.2KG <span className="text-[10px] text-white/50 uppercase">Massa Magra</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+
+    {mode === "treino" && (
+      <div className="flex-1 flex flex-col p-6 overflow-y-auto scrollbar-hide">
+        <h3 className="text-2xl font-black uppercase mb-6">Treino de Hoje</h3>
+        <div className="space-y-3">
+          {[
+            { name: "Supino Inclinado", sets: "4x12", img: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400" },
+            { name: "Crucifixo Reto", sets: "3x15", img: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=400" },
+            { name: "Desenvolvimento", sets: "4x10", img: "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?w=400" },
+            { name: "Elevação Lateral", sets: "3x20", img: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=400" }
+          ].map((ex, i) => (
+            <div key={i} className="bg-zinc-900 border border-white/5 p-3 rounded-2xl flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl overflow-hidden shrink-0 bg-black">
+                <img src={ex.img} alt={ex.name} className="w-full h-full object-cover opacity-60" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs font-bold uppercase">{ex.name}</p>
+                <p className="text-[10px] text-gray-500 font-black tracking-widest">{ex.sets}</p>
+              </div>
+              <Button size="icon" variant="ghost" className="rounded-full hover:bg-white/5">
+                <Play className="h-3 w-3" style={{ color: brandColor }} />
+              </Button>
             </div>
           ))}
         </div>
       </div>
+    )}
 
-      <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-none border border-white/10 bg-card/50 p-4">
-          <p className="text-2xl font-black" style={{ color: brandColor }}>87%</p>
-          <p className="text-[10px] uppercase text-gray-400">Adesão semanal</p>
+    {mode === "dieta" && (
+      <div className="flex-1 flex flex-col p-6 overflow-y-auto scrollbar-hide">
+        <div className="flex justify-between items-end mb-6">
+          <h3 className="text-2xl font-black uppercase">Sua Dieta</h3>
+          <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest pb-1">2.400 KCAL</p>
         </div>
-        <div className="rounded-xl border border-white/10 bg-card p-4">
-          <p className="text-2xl font-black" style={{ color: brandColor }}>+4kg</p>
-          <p className="text-[10px] uppercase text-gray-400">Carga média</p>
+        
+        <div className="space-y-4">
+          {[
+            { time: "08:00", name: "Café da Manhã", cals: "450" },
+            { time: "12:00", name: "Almoço", cals: "750" },
+            { time: "16:00", name: "Lanche", cals: "300" },
+            { time: "20:00", name: "Jantar", cals: "600" }
+          ].map((meal, i) => (
+            <div key={i} className="relative pl-6 before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[2px] before:bg-zinc-800">
+              {i === 1 && <div className="absolute left-0 top-0 w-[2px] h-full" style={{ backgroundColor: brandColor }} />}
+              <p className="text-[9px] font-black text-gray-500 uppercase mb-1">{meal.time}</p>
+              <div className="bg-zinc-900 border border-white/5 p-4 rounded-2xl flex justify-between items-center shadow-lg">
+                <div>
+                  <p className="text-xs font-bold uppercase">{meal.name}</p>
+                  <p className="text-[9px] text-gray-500 font-black uppercase mt-0.5">{meal.cals} KCAL</p>
+                </div>
+                <div className="w-8 h-8 rounded-full flex items-center justify-center bg-black border border-white/5">
+                  <CheckCircle2 className={`h-4 w-4 ${i === 0 ? "text-green-500" : "text-gray-700"}`} />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
+    )}
+
+    {/* Tab Bar */}
+    <div className="h-20 w-full bg-zinc-900/50 backdrop-blur-md border-t border-white/5 flex items-center justify-around px-4 pb-4">
+      {[
+        { id: "home", label: "Home", icon: Smartphone },
+        { id: "treino", label: "Treino", icon: Play },
+        { id: "dieta", label: "Dieta", icon: Wallet },
+        { id: "chat", label: "Chat", icon: Mail }
+      ].map((tab) => (
+        <div key={tab.id} className="flex flex-col items-center gap-1 opacity-40 hover:opacity-100 transition-opacity">
+          <tab.icon className="h-5 w-5" />
+          <span className="text-[8px] font-black uppercase tracking-tighter">{tab.label}</span>
+        </div>
+      ))}
     </div>
   </div>
 );
@@ -139,19 +216,24 @@ const renderScreenMedia = (url: string) => {
   return <img src={url} alt="App Screen" className="h-full w-full object-cover" />;
 };
 
+
 const BRAND_COLORS = [
-  { name: "Bordeaux", hex: "#5E2129" },
-  { name: "Heritage Blue", hex: "#202C39" },
-  { name: "Old Gold", hex: "#BAA174" },
-  { name: "Forest Green", hex: "#22302A" },
-  { name: "Aubergine", hex: "#3A2B38" },
-  { name: "Graphite", hex: "#1F1F1F" },
+  { name: "Alpha Red", hex: "#E00000" },
+  { name: "Legacy Blue", hex: "#202C39" },
+  { name: "Champ Gold", hex: "#BAA174" },
+  { name: "Forest Pro", hex: "#22302A" },
+  { name: "Deep Purple", hex: "#3A2B38" },
+  { name: "Stealth", hex: "#1F1F1F" },
+  { name: "Neon Lime", hex: "#D4FF00" },
+  { name: "Electric Cyan", hex: "#00F0FF" },
 ];
+
 
 const Landing = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<"choice" | "aluno" | "coach" | null>(null);
   const [showSimulador, setShowSimulador] = useState(false);
+  const [simuladorMode, setSimuladorMode] = useState<"home" | "treino" | "dieta">("home");
   const [email, setEmail] = useState("");
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -163,6 +245,7 @@ const Landing = () => {
   const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
   const [screen4, setScreen4] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4");
+
   const [coaches, setCoaches] = useState<CoachData[]>(defaultCoaches);
   
   // Aluno state
@@ -1189,7 +1272,8 @@ const Landing = () => {
                   </form>
                 </div>
               ) : (
-                <DemoAppScreen mode="home" brandName={brandName} brandColor={brandColor} />
+                <DemoAppScreen mode={simuladorMode} brandName={brandName} brandColor={brandColor} />
+
               )}
             </div>
 
@@ -1233,8 +1317,27 @@ const Landing = () => {
               ) : (
                 <div className="space-y-6">
                   <p className="text-sm md:text-base text-gray-400 leading-relaxed">
-                    Mude o nome do seu time e a cor principal — veja o app reagir em tempo real ao lado.
+                    Personalize seu app e alterne entre as telas para ver a experiência completa.
                   </p>
+
+                  <div className="flex gap-2 p-1 bg-white/5 rounded-xl border border-white/10">
+                    {[
+                      { id: "home", label: "Home" },
+                      { id: "treino", label: "Treino" },
+                      { id: "dieta", label: "Dieta" }
+                    ].map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => setSimuladorMode(m.id as any)}
+                        className={`flex-1 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${
+                          simuladorMode === m.id ? "bg-white text-black" : "text-gray-500 hover:text-white"
+                        }`}
+                      >
+                        {m.label}
+                      </button>
+                    ))}
+                  </div>
+
 
                   <div className="space-y-2 text-left">
                     <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">
