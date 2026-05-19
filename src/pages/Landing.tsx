@@ -970,47 +970,9 @@ const Landing = () => {
             </p>
           </div>
 
-          <div className="grid lg:grid-cols-5 gap-10 items-start">
-            {/* Simulator Controls */}
-            <div className="lg:col-span-1 space-y-4 bg-background/50 p-6 rounded-2xl border border-white/10 lg:sticky lg:top-24">
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-white border-b border-white/10 pb-3 mb-4">Configuração</h3>
-              
-              <div className="space-y-4">
-                {[
-                  { id: 1, val: screen1, set: setScreen1 },
-                  { id: 2, val: screen2, set: setScreen2 },
-                  { id: 3, val: screen3, set: setScreen3 },
-                  { id: 4, val: screen4, set: setScreen4 },
-                ].map((s) => (
-                  <div key={s.id}>
-                    <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-gray-500 mb-1.5">Tela 0{s.id}</label>
-                    <Input 
-                      value={s.val}
-                      onChange={(e) => s.set(e.target.value)}
-                      placeholder="URL da mídia..."
-                      className="bg-secondary border-white/10 text-white focus:border-primary text-[10px] h-9"
-                    />
-                  </div>
-                ))}
-
-                <div className="pt-2">
-                  <Button 
-                    onClick={() => {
-                      toast({
-                        title: "App Atualizado",
-                        description: "As 4 telas foram configuradas com sucesso.",
-                      });
-                    }}
-                    className="w-full bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-wider h-10 text-[10px]"
-                  >
-                    ATUALIZAR APP
-                  </Button>
-                </div>
-              </div>
-            </div>
-
+          <div className="flex justify-center">
             {/* Device Previews - 4 Phones */}
-            <div className="lg:col-span-4 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 justify-items-center">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 justify-items-center w-full">
               {[
                 { url: screen1, label: "Treino" },
                 { url: screen2, label: "Nutrição" },
