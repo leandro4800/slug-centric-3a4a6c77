@@ -283,6 +283,17 @@ const Landing = () => {
   const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
   const [screen4, setScreen4] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4");
 
+  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 });
+  
+  useEffect(() => {
+    if (emblaApi) {
+      const intervalId = setInterval(() => {
+        emblaApi.scrollNext();
+      }, 5000);
+      return () => clearInterval(intervalId);
+    }
+  }, [emblaApi]);
+
   const [coaches, setCoaches] = useState<CoachData[]>(defaultCoaches);
   
   // Aluno state
