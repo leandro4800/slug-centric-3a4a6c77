@@ -251,7 +251,8 @@ const Landing = () => {
       <header className="fixed top-0 left-0 right-0 z-50 px-6 md:px-12 py-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm border-b border-white/10">
         <Logo />
         <nav className="hidden md:flex items-center gap-8 text-sm font-bold uppercase tracking-widest text-gray-300">
-          <a href="#coaches" className="hover:text-primary transition-colors">Coaches</a>
+          <a href="#solucoes" className="hover:text-primary transition-colors">Soluções</a>
+          <a href="#coaches" className="hover:text-primary transition-colors">Elite Team</a>
           <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
         </nav>
         <div className="flex items-center gap-3">
@@ -264,80 +265,285 @@ const Landing = () => {
             onClick={() => setShowSimulador(true)}
             className="px-6 font-black uppercase tracking-widest hidden sm:flex"
           >
-            {user ? "Dashboard" : "Testar Agora"}
+            {user ? "Dashboard" : "Criar meu App"}
           </Button>
         </div>
       </header>
 
-      <section className="relative min-h-[90vh] md:min-h-screen flex items-center pt-20 overflow-hidden">
-        {!mode ? (
-          <div className="absolute inset-0 z-0">
-            <div className="embla overflow-hidden h-full" ref={emblaRef}>
-              <div className="embla__container flex h-full">
-                {useCases.map((useCase, index) => (
-                  <div key={index} className="embla__slide relative flex-[0_0_100%] h-full">
-                    <img src={useCase.image} alt={useCase.title} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/40 to-transparent" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
-                    <div className="absolute inset-0 flex items-center px-6 md:px-24">
-                      <div className="max-w-2xl">
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} key={`title-${index}`} transition={{ duration: 0.5 }}>
-                          <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.2em] border rounded-md" style={{ borderColor: `${useCase.color}50`, backgroundColor: `${useCase.color}10`, color: useCase.color }}>
-                            <useCase.icon className="w-4 h-4" />
-                            {useCase.subtitle}
-                          </div>
-                          <h2 className="text-5xl md:text-8xl font-black leading-[0.8] mb-6 tracking-tighter uppercase text-white">
-                            {useCase.title.split(' ').map((word, i) => (
-                              <span key={i} className={i === 0 ? "block" : "block text-primary"}>{word} </span>
-                            ))}
-                          </h2>
-                          <p className="text-xl text-gray-300 font-medium max-w-lg mb-8 leading-relaxed">{useCase.description}</p>
-                        </motion.div>
-                      </div>
+      {/* Hero Section com Carrossel de Públicos */}
+      <section id="solucoes" className="relative h-[100vh] flex items-center overflow-hidden">
+        <div className="absolute inset-0 z-0">
+          <div className="embla overflow-hidden h-full" ref={emblaRef}>
+            <div className="embla__container flex h-full">
+              {useCases.map((useCase, index) => (
+                <div key={index} className="embla__slide relative flex-[0_0_100%] h-full">
+                  <img src={useCase.image} alt={useCase.title} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/40 to-transparent" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-80" />
+                  <div className="absolute inset-0 flex items-center px-6 md:px-24">
+                    <div className="max-w-3xl">
+                      <motion.div initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} key={`title-${index}`} transition={{ duration: 0.8, ease: "easeOut" }}>
+                        <div className="inline-flex items-center gap-2 px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.3em] border rounded-full" style={{ borderColor: `${useCase.color}50`, backgroundColor: `${useCase.color}10`, color: useCase.color }}>
+                          <useCase.icon className="w-4 h-4" />
+                          {useCase.subtitle}
+                        </div>
+                        <h2 className="text-6xl md:text-9xl font-black leading-[0.85] mb-8 tracking-tighter uppercase text-white">
+                          {useCase.title.split(' ').map((word, i) => (
+                            <span key={i} className={i === 0 ? "block" : "block text-primary"}>{word} </span>
+                          ))}
+                        </h2>
+                        <p className="text-xl md:text-2xl text-gray-300 font-medium max-w-xl mb-10 leading-relaxed drop-shadow-lg">{useCase.description}</p>
+                        
+                        <div className="flex flex-wrap gap-4">
+                          <Button onClick={() => setShowSimulador(true)} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
+                            Começar Agora
+                          </Button>
+                          <Button variant="outline" onClick={() => {
+                            document.getElementById('coaches')?.scrollIntoView({ behavior: 'smooth' });
+                          }} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest border-white/20 bg-white/5 backdrop-blur-md">
+                            Ver Elite Team
+                          </Button>
+                        </div>
+                      </motion.div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="absolute bottom-12 left-6 md:left-24 flex gap-3 z-20">
+            {useCases.map((_, i) => (
+              <div key={i} className={`h-1.5 transition-all duration-500 rounded-full ${i === (emblaApi?.selectedScrollSnap() || 0) ? "w-12 bg-primary" : "w-4 bg-white/20"}`} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Seção Ganho para o Coach/Profissional */}
+      <section className="py-24 bg-zinc-950 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] -mr-64 -mt-64" />
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="inline-block px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.3em] border border-primary/30 bg-primary/10 text-primary rounded-full">
+                Business & Scale
+              </div>
+              <h2 className="text-5xl md:text-7xl font-black leading-none mb-8 tracking-tighter uppercase">
+                SUA CARREIRA NO <span className="text-primary">PRÓXIMO NÍVEL</span>
+              </h2>
+              <div className="space-y-6">
+                {[
+                  { icon: Wallet, title: "Escala Financeira", desc: "Atenda 10x mais alunos sem perder a qualidade, automatizando processos e pagamentos." },
+                  { icon: Palette, title: "Branding Cinematográfico", desc: "O seu app não é apenas uma ferramenta, é uma extensão de luxo da sua marca pessoal." },
+                  { icon: TrendingUp, title: "Retenção de Alunos", desc: "A experiência imersiva e o acompanhamento de IA aumentam a fidelidade dos seus clientes." }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-6 group">
+                    <div className="shrink-0 w-14 h-14 bg-white/5 border border-white/10 flex items-center justify-center rounded-xl group-hover:border-primary/50 transition-colors">
+                      <item.icon className="w-7 h-7 text-primary" />
+                    </div>
+                    <div>
+                      <h4 className="text-xl font-bold uppercase mb-1">{item.title}</h4>
+                      <p className="text-gray-400 leading-relaxed">{item.desc}</p>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
-            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-2 z-20">
-              {useCases.map((_, i) => (
-                <div key={i} className={`h-1.5 transition-all duration-300 rounded-full ${i === (emblaApi?.selectedScrollSnap() || 0) ? "w-8 bg-primary" : "w-2 bg-white/20"}`} />
-              ))}
-            </div>
-          </div>
-        ) : (
-          <div className="absolute inset-0 z-0">
-            <img src="https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop" alt="Background" className="w-full h-full object-cover opacity-30 grayscale" />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-background to-background" />
-          </div>
-        )}
 
-        <div className="relative z-10 max-w-7xl mx-auto px-6 md:px-12 w-full">
-            <div className="max-w-4xl mx-auto mt-[40vh] md:mt-[30vh]">
-              {!mode && (
-                <div className="grid md:grid-cols-2 gap-8">
-                  <button onClick={() => setMode("aluno")} className="group relative p-8 bg-black/60 backdrop-blur-md border border-white/10 rounded-none hover:border-primary transition-all text-left overflow-hidden shadow-2xl">
-                    <Users className="mb-4 text-primary h-12 w-12" />
-                    <h3 className="text-3xl font-black uppercase mb-2 tracking-tighter">Sou Aluno</h3>
-                    <p className="text-gray-400 mb-6 font-medium text-sm">Quero treinar, evoluir e encontrar os melhores coaches.</p>
-                    <div className="flex items-center text-primary font-bold uppercase tracking-widest text-xs group-hover:translate-x-2 transition-transform">
-                      Acessar agora <ArrowRight className="ml-2 h-4 w-4" />
-                    </div>
-                  </button>
-                  <button onClick={() => setMode("coach")} className="group relative p-8 bg-black/60 backdrop-blur-md border border-white/10 rounded-none hover:border-primary transition-all text-left overflow-hidden shadow-2xl">
-                    <Smartphone className="mb-4 text-primary h-12 w-12" />
-                    <h3 className="text-3xl font-black uppercase mb-2 tracking-tighter">Sou Coach</h3>
-                    <p className="text-gray-400 mb-6 font-medium text-sm">Quero digitalizar minha consultoria e escalar meus resultados.</p>
-                    <div className="flex items-center text-primary font-bold uppercase tracking-widest text-xs group-hover:translate-x-2 transition-transform">
-                      Criar meu App <ArrowRight className="ml-2 h-4 w-4" />
-                    </div>
-                  </button>
+            <div className="bg-gradient-to-br from-zinc-900 to-black p-8 border border-white/10 rounded-2xl shadow-2xl">
+              <div className="mb-10 text-center">
+                <h3 className="text-2xl font-black uppercase mb-2">Simulador de Lucros</h3>
+                <p className="text-gray-400 text-sm font-medium">Veja o quanto você pode faturar com o seu App.</p>
+              </div>
+              
+              <div className="space-y-8">
+                <div>
+                  <div className="flex justify-between mb-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Número de Alunos</span>
+                    <span className="text-lg font-black text-primary">{students}</span>
+                  </div>
+                  <input type="range" min="10" max="500" step="10" value={students} onChange={(e) => setStudents(Number(e.target.value))} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" />
                 </div>
-              )}
+
+                <div>
+                  <div className="flex justify-between mb-4">
+                    <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Ticket Médio Mensal</span>
+                    <span className="text-lg font-black text-primary">{formatBRL(price)}</span>
+                  </div>
+                  <input type="range" min="50" max="1000" step="10" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" />
+                </div>
+
+                <div className="pt-8 border-t border-white/10">
+                  <div className="bg-black/40 p-6 rounded-xl border border-primary/20 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-1">Faturamento Bruto / Mês</p>
+                      <h4 className="text-4xl font-black text-white">{formatBRL(students * price)}</h4>
+                    </div>
+                    <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                      <TrendingUp className="text-primary w-6 h-6" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
+          </div>
         </div>
       </section>
-      <div className="h-20 bg-background" />
+
+      {/* Elite Team Section - Vídeos e Coaches Reais */}
+      <section id="coaches" className="py-24 bg-background">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="text-center mb-16">
+            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-4">ELITE <span className="text-primary">TEAM</span></h2>
+            <p className="text-gray-400 font-medium uppercase tracking-[0.3em] text-sm">Os maiores profissionais já estão no Alpha Coach</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {coaches.map((coach, i) => (
+              <motion.div 
+                key={i}
+                whileHover={{ y: -10 }}
+                className="group relative bg-zinc-900 border border-white/5 overflow-hidden rounded-xl"
+              >
+                <div className="aspect-[9/16] relative overflow-hidden">
+                  {renderScreenMedia(coach.video)}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+                  
+                  <div className="absolute top-4 left-4">
+                    <div className="px-2 py-1 bg-primary text-[8px] font-black tracking-widest rounded-sm">
+                      {coach.tag}
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-6 left-6 right-6">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] mb-1">{coach.specialty}</p>
+                    <h3 className="text-2xl font-black uppercase leading-tight mb-2">{coach.name}</h3>
+                    <div className="flex items-center gap-1 text-gray-400 text-[10px] font-bold uppercase">
+                      <MapPin className="w-3 h-3" />
+                      {coach.cidade}, {coach.estado}
+                    </div>
+                    <Link to={`/${coach.slug}/site`} className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:text-primary transition-colors opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                      Ver Perfil <ArrowRight className="w-3 h-3" />
+                    </Link>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Simulador App Experience */}
+      <section className="py-24 bg-zinc-950 border-t border-white/5">
+        <div className="max-w-7xl mx-auto px-6 md:px-12">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="order-2 lg:order-1 relative">
+              <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full scale-75" />
+              <div className="relative mx-auto w-[300px] h-[600px] bg-zinc-900 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
+                <DemoAppScreen 
+                  brandName={brandName}
+                  brandColor={brandColor}
+                  mode={simuladorMode}
+                />
+              </div>
+            </div>
+
+            <div className="order-1 lg:order-2">
+              <div className="inline-block px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.3em] border border-primary/30 bg-primary/10 text-primary rounded-full">
+                App Experience
+              </div>
+              <h2 className="text-5xl md:text-7xl font-black leading-none mb-8 tracking-tighter uppercase">
+                EXPERIMENTE <span className="text-primary">SEU APP</span>
+              </h2>
+              <p className="text-xl text-gray-400 mb-10 leading-relaxed font-medium">
+                Personalize as cores, o nome e veja instantaneamente como o seu app de elite ficará para os seus alunos.
+              </p>
+
+              <div className="space-y-8 bg-zinc-900/50 p-8 rounded-2xl border border-white/5 backdrop-blur-md">
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 block">Nome da sua Marca</label>
+                  <Input 
+                    value={brandName}
+                    onChange={(e) => setBrandName(e.target.value)}
+                    className="bg-black/50 border-white/10 h-14 text-lg font-bold uppercase"
+                    placeholder="Ex: Team BadBoy"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-gray-500 mb-4 block">Identidade Visual</label>
+                  <div className="grid grid-cols-4 sm:grid-cols-8 gap-3">
+                    {BRAND_COLORS.map((color) => (
+                      <button
+                        key={color.hex}
+                        onClick={() => setBrandColor(color.hex)}
+                        className={`h-10 rounded-lg transition-all transform hover:scale-110 ${brandColor === color.hex ? 'ring-2 ring-white ring-offset-2 ring-offset-black scale-110' : 'opacity-60 hover:opacity-100'}`}
+                        style={{ backgroundColor: color.hex }}
+                        title={color.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="pt-6">
+                  <Button onClick={() => setShowSimulador(true)} className="w-full h-16 text-lg font-black uppercase tracking-widest">
+                    Criar meu App Agora
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer Minimalista */}
+      <footer className="py-12 border-t border-white/5 bg-black">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-8">
+          <Logo />
+          <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+            <a href="#" className="hover:text-primary transition-colors">Termos</a>
+            <a href="#" className="hover:text-primary transition-colors">Privacidade</a>
+            <a href="#" className="hover:text-primary transition-colors">Suporte</a>
+          </div>
+          <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">
+            © 2026 ALPHA COACH. TODOS OS DIREITOS RESERVADOS.
+          </p>
+        </div>
+      </footer>
+
+      {/* Modal Simulador (Simula o App em tela cheia se necessário) */}
+      <AnimatePresence>
+        {showSimulador && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4"
+          >
+            <button 
+              onClick={() => setShowSimulador(false)}
+              className="absolute top-8 right-8 text-white/50 hover:text-white transition-colors"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <div className="w-full max-w-sm aspect-[9/19.5] relative rounded-[3rem] border-[12px] border-zinc-800 shadow-2xl overflow-hidden bg-black">
+              <DemoAppScreen 
+                brandName={brandName}
+                brandColor={brandColor}
+                mode={simuladorMode}
+              />
+            </div>
+            <div className="absolute bottom-12 left-1/2 -translate-x-1/2 flex gap-4">
+              <Button 
+                onClick={() => setMode("coach")}
+                className="h-16 px-12 font-black uppercase tracking-widest text-lg"
+              >
+                Gostei, quero o meu!
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
