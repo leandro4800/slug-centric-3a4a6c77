@@ -163,6 +163,10 @@ const renderScreenMedia = (url: string) => {
   return <img src={url} alt="App Screen" className="h-full w-full object-cover" />;
 };
 
+const filterEmptyCoaches = (coaches: CoachData[]) => {
+  return coaches.filter(coach => coach.name && (coach.video || coach.bio));
+};
+
 const Landing = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<"choice" | "aluno" | "coach" | null>(null);
@@ -221,7 +225,7 @@ const Landing = () => {
           slug: d.slug 
         }));
         
-        // Merge with static ones we want to keep
+        // Use default static coaches first, then add approved tenants if they are not already there
         const finalCoaches = [...defaultCoaches];
         mapped.forEach(m => {
           if (!finalCoaches.find(c => c.slug === m.slug)) {
@@ -446,7 +450,7 @@ const Landing = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {coaches.map((coach, i) => (
+            {filterEmptyCoaches(coaches).map((coach, i) => (
               <motion.div 
                 key={i}
                 whileHover={{ y: -10 }}
