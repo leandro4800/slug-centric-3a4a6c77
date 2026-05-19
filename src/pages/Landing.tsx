@@ -296,7 +296,7 @@ const Landing = () => {
                         
                         <div className="flex flex-wrap gap-4">
                           <Button onClick={() => setShowSimulador(true)} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
-                            Começar Agora
+                            30 Dias Grátis
                           </Button>
                           <Button variant="outline" onClick={() => {
                             document.getElementById('coaches')?.scrollIntoView({ behavior: 'smooth' });
