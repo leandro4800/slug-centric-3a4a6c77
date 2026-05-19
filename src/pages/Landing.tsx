@@ -1174,8 +1174,9 @@ const Landing = () => {
             <div className="relative">
               {/* Back Phone */}
               <div className="absolute -left-12 top-10 w-[240px] h-[480px] bg-background rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[-10deg] hidden md:block">
-                <DemoAppScreen mode="stats" brandName={brandName} brandColor={brandColor} />
+                <DemoAppScreen mode="home" brandName={brandName} brandColor={brandColor} />
               </div>
+
               
               {/* Main Phone */}
               <div className="relative w-[300px] h-[600px] bg-background rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden z-10">
@@ -1193,8 +1194,9 @@ const Landing = () => {
 
               {/* Front Phone */}
               <div className="absolute -right-12 bottom-10 w-[240px] h-[480px] bg-background rounded-[2.5rem] border-[6px] border-zinc-800 shadow-2xl overflow-hidden opacity-100 rotate-[10deg] hidden md:block z-20">
-                <DemoAppScreen mode="treino" brandName={brandName} brandColor={brandColor} />
+                <DemoAppScreen mode="dieta" brandName={brandName} brandColor={brandColor} />
               </div>
+
             </div>
             {/* Decorative Elements */}
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-primary/20 rounded-full blur-[100px]" />
