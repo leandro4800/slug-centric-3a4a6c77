@@ -296,7 +296,7 @@ const Landing = () => {
                         
                         <div className="flex flex-wrap gap-4">
                           <Button onClick={() => setShowSimulador(true)} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
-                            Começar Agora
+                            30 Dias Grátis
                           </Button>
                           <Button variant="outline" onClick={() => {
                             document.getElementById('coaches')?.scrollIntoView({ behavior: 'smooth' });
@@ -373,7 +373,7 @@ const Landing = () => {
                   <input type="range" min="50" max="1000" step="10" value={price} onChange={(e) => setPrice(Number(e.target.value))} className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-primary" />
                 </div>
 
-                <div className="pt-8 border-t border-white/10">
+                <div className="pt-8 border-t border-white/10 space-y-4">
                   <div className="bg-black/40 p-6 rounded-xl border border-primary/20 flex items-center justify-between">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gray-500 mb-1">Faturamento Bruto / Mês</p>
@@ -382,6 +382,23 @@ const Landing = () => {
                     <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
                       <TrendingUp className="text-primary w-6 h-6" />
                     </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 p-4 bg-zinc-800/50 rounded-lg border border-white/5">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[10px] font-bold uppercase text-gray-400">Taxa Alpha Coach (10%)</span>
+                      <span className="text-sm font-bold text-primary">-{formatBRL(students * price * 0.1)}</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-white/10 pt-2">
+                      <span className="text-xs font-black uppercase text-white">Seu Lucro Líquido</span>
+                      <span className="text-lg font-black text-green-500">{formatBRL(students * price * 0.9)}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold text-primary uppercase tracking-[0.2em] animate-pulse">
+                      Comece agora: 30 dias grátis para testar
+                    </p>
                   </div>
                 </div>
               </div>
