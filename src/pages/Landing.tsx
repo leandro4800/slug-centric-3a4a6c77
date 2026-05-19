@@ -450,7 +450,7 @@ const Landing = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {coaches.map((coach, i) => (
+            {filterEmptyCoaches(coaches).map((coach, i) => (
               <motion.div 
                 key={i}
                 whileHover={{ y: -10 }}
