@@ -163,6 +163,10 @@ const renderScreenMedia = (url: string) => {
   return <img src={url} alt="App Screen" className="h-full w-full object-cover" />;
 };
 
+const filterEmptyCoaches = (coaches: CoachData[]) => {
+  return coaches.filter(coach => coach.name && (coach.video || coach.bio));
+};
+
 const Landing = () => {
   const { user, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<"choice" | "aluno" | "coach" | null>(null);
