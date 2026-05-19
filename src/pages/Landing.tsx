@@ -219,6 +219,41 @@ const renderScreenMedia = (url: string) => {
 };
 
 
+const useCases = [
+  {
+    title: "COACHES DE ELITE",
+    subtitle: "Sua Consultoria Digital",
+    description: "Sua marca, seus treinos, seus resultados no modo cinema. A plataforma número 1 para coaches que buscam escala.",
+    image: "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?q=80&w=1470&auto=format&fit=crop",
+    color: "#E00000",
+    icon: Dumbbell
+  },
+  {
+    title: "NUTRICIONISTAS",
+    subtitle: "Nutrição Inteligente",
+    description: "Prescreva dietas personalizadas com auxílio de IA e acompanhe a evolução dos seus pacientes em tempo real.",
+    image: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1453&auto=format&fit=crop",
+    color: "#00F0FF",
+    icon: Apple
+  },
+  {
+    title: "CENTROS DE LUTAS",
+    subtitle: "CT & Artes Marciais",
+    description: "Do tatame para o digital. Gerencie turmas, treinos e graduações com um aplicativo exclusivo para o seu CT.",
+    image: "https://images.unsplash.com/photo-1552072805-2a9039d00e57?q=80&w=1374&auto=format&fit=crop",
+    color: "#BAA174",
+    icon: Sword
+  },
+  {
+    title: "BOX DE CROSSFIT",
+    subtitle: "Comunidade & WODs",
+    description: "WODs dinâmicos, rankings de PR e uma comunidade engajada. Tudo o que o seu Box precisa para decolar.",
+    image: "https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1470&auto=format&fit=crop",
+    color: "#D4FF00",
+    icon: Zap
+  }
+];
+
 const BRAND_COLORS = [
   { name: "Alpha Red", hex: "#E00000" },
   { name: "Legacy Blue", hex: "#202C39" },
