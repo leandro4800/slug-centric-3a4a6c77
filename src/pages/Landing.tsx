@@ -989,17 +989,7 @@ const Landing = () => {
                       {renderScreenMedia(screen.url)}
                     </div>
                     
-                    {/* UI Overlay */}
-                    <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-                    <div className="absolute bottom-6 left-0 right-0 px-5 z-30">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <div className="w-1 h-1 rounded-full bg-primary" />
-                        <p className="text-[9px] font-black uppercase tracking-widest text-white">{screen.label}</p>
-                      </div>
-                      <div className="h-0.5 w-full bg-white/10 rounded-full overflow-hidden">
-                        <div className="h-full bg-primary w-1/3" />
-                      </div>
-                    </div>
+                    {/* UI Overlay Removido */}
                   </div>
                   
                   <div className="mt-4 text-center">
