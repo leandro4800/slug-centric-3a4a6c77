@@ -32,10 +32,14 @@ const ControleCentral = () => {
   useEffect(() => {
     const check = async () => {
       if (!user) return setIsSuperAdmin(false);
-      const { data } = await supabase.rpc("has_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
+      // Verifica se é super admin global (admin sem tenant_id)
+      const { data } = await supabase
+        .from("user_roles")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
+        .is("tenant_id", null)
+        .maybeSingle();
       setIsSuperAdmin(Boolean(data));
     };
     void check();
