@@ -2,6 +2,8 @@ importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js')
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
 // Essas credenciais devem ser as mesmas do src/lib/firebase.ts
+// Nota: Em Service Workers, você não tem acesso a import.meta.env.
+// Substitua estes valores manualmente ou use um script de build para injetá-los.
 firebase.initializeApp({
   apiKey: "SUA_API_KEY",
   authDomain: "SEU_AUTH_DOMAIN",

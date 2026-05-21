@@ -12,6 +12,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
+import PushNotificationManager from "@/components/PushNotificationManager";
 
 import Landing from "./pages/Landing";
 import IndexRedirect from "./pages/IndexRedirect";
@@ -102,6 +103,7 @@ const App = () => (
           <BrandingProvider>
             <SplashScreen />
             <InstallPwaPrompt />
+            <PushNotificationManager />
             <Routes>
             {/* Redirecionamentos de Raiz */}
              <Route path="/" element={<IndexRedirect />} />
