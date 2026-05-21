@@ -1,14 +1,29 @@
-I will fix the onboarding flow for new users by making it tenant-aware and ensuring it correctly captures the context of the gym they are trying to join (like `alphateam`).
+I will set up the push notification infrastructure using Supabase Edge Functions and pg_cron to automate hydration, workout, and diet reminders.
 
-### Technical details:
-- **Routing**: Update `App.tsx` to support `/:slug/onboarding`, allowing the onboarding page to load the correct branding (logo, colors, background).
-- **Branding**: Modify `BrandingProvider.tsx` to stop treating "onboarding" as a reserved keyword, enabling slug detection for onboarding routes.
-- **Redirects**: 
-    - Update `IndexRedirect.tsx` to send new users to `/:slug/onboarding` if a slug is present in the URL or Branding context.
-    - Update `RequireAuth.tsx` to redirect non-members specifically to their intended tenant's onboarding page instead of a generic one.
-- **Onboarding Page**: 
-    - Update `Onboarding.tsx` to retrieve the `slug` from the URL.
-    - Ensure it uses the tenant ID from the Branding context if the user's profile doesn't have one yet.
-    - Fix the final navigation to correctly send users to their tenant's dashboard after completion.
+### Phase 1: Edge Function
+1. Create a new Edge Function `fcm-notifications` that:
+    - Authenticates with Google FCM V1 API using a Service Account.
+    - Sends notifications to a specific push token.
+    - Handles error cases and logging.
 
-These changes will prevent the "lost context" and potential redirect loops that were causing errors for new users.
+### Phase 2: Database Infrastructure
+1. Create a migration to:
+    - Enable the `pg_net` extension to allow the database to call Edge Functions.
+    - Create a helper function `public.send_push_notification` to encapsulate the HTTP call to the Edge Function.
+    - Create a scheduling function `public.check_and_send_reminders` that:
+        - Checks `refeicoes` for upcoming meals (diet reminders).
+        - Checks `treinos_prescritos` for daily workouts (workout reminders).
+        - Generates hydration reminders at set intervals (e.g., every 3 hours).
+    - Configure `pg_cron` jobs to run the checker function every minute.
+
+### Phase 3: Security & Configuration
+1. Use Supabase Vault or Edge Function secrets to store:
+    - `FIREBASE_SERVICE_ACCOUNT` (JSON containing project_id, client_email, private_key).
+    - The Supabase Service Role key (needed for the DB to call the Edge Function).
+
+**Note for the user:** To make this work, you will need to add the Firebase Service Account JSON as a secret in your Supabase project (Settings -> API -> Edge Function Secrets) with the name `FIREBASE_SERVICE_ACCOUNT`.
+
+### Technical Details
+- The Edge Function will use `deno-google-auth` or manual JWT signing for FCM V1.
+- `pg_cron` will call the DB function, which uses `pg_net` for asynchronous, non-blocking requests.
+- We will track sent notifications in a `notification_logs` table to prevent duplicates.
