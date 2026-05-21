@@ -1669,6 +1669,30 @@ export type Database = {
         }
         Relationships: []
       }
+      notification_logs: {
+        Row: {
+          id: string
+          reference_id: string | null
+          sent_at: string | null
+          type: string
+          user_id: string | null
+        }
+        Insert: {
+          id?: string
+          reference_id?: string | null
+          sent_at?: string | null
+          type: string
+          user_id?: string | null
+        }
+        Update: {
+          id?: string
+          reference_id?: string | null
+          sent_at?: string | null
+          type?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       parceiros: {
         Row: {
           ativo: boolean
@@ -2616,6 +2640,7 @@ export type Database = {
         Args: { _athlete_id: string; _caller: string }
         Returns: boolean
       }
+      check_and_send_reminders: { Args: never; Returns: undefined }
       complete_student_onboarding: {
         Args: {
           _anamnese: Json
@@ -2644,6 +2669,15 @@ export type Database = {
         Returns: boolean
       }
       redeem_voucher: { Args: { _code: string }; Returns: Json }
+      send_push_notification: {
+        Args: {
+          p_body: string
+          p_data?: Json
+          p_title: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       user_belongs_to_tenant: {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
