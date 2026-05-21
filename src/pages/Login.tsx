@@ -36,7 +36,7 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setLoading(false);
     if (error) {
       const msg = error.message?.toLowerCase() || "";
@@ -52,6 +52,21 @@ const Login = () => {
     const targetSlug = candidateSlug && /^[a-z0-9-]+$/i.test(candidateSlug) && candidateSlug !== "index" && candidateSlug !== "demo"
       ? candidateSlug
       : null;
+
+    // Coach (dono do tenant) entra direto no painel de controle
+    const userId = signInData?.user?.id;
+    if (userId) {
+      const { data: ownedTenant } = await supabase
+        .from("tenants")
+        .select("slug")
+        .eq("owner_user_id", userId)
+        .maybeSingle();
+      if (ownedTenant?.slug) {
+        navigate(`/${ownedTenant.slug}/app/controle`, { replace: true });
+        return;
+      }
+    }
+
     navigate(targetSlug ? `/${targetSlug}/app` : "/onboarding", { replace: true });
   };
 
