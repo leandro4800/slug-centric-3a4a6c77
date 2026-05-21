@@ -67,9 +67,10 @@ const MeusAtletas = () => {
       setCurrentUser(user);
       const { data } = await supabase
         .from("user_roles")
-        .select("role")
+        .select("id")
         .eq("user_id", user.id)
-        .eq("role", "admin");
+        .eq("role", "admin")
+        .is("tenant_id", null);
       setIsSuperAdmin((data?.length ?? 0) > 0);
     })();
   }, []);
