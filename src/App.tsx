@@ -47,6 +47,7 @@ import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
 import AdminAgendaPresencial from "./pages/admin/AdminAgendaPresencial";
+import AdminFaturamento from "./pages/admin/AdminFaturamento";
 
 const queryClient = new QueryClient();
 
@@ -167,6 +168,7 @@ const App = () => (
             <Route path="/:slug/admin/vlogs" element={<RequireAuth requireRole="coach" checkTenant><AdminVlogs /></RequireAuth>} />
             <Route path="/:slug/admin/videos-tecnicos" element={<RequireAuth requireRole="coach" checkTenant><AdminVideosTecnicos /></RequireAuth>} />
             <Route path="/:slug/admin/agenda-presencial" element={<RequireAuth requireRole="coach" checkTenant><AdminAgendaPresencial /></RequireAuth>} />
+            <Route path="/:slug/admin/faturamento" element={<RequireAuth requireRole="coach" checkTenant><AdminFaturamento /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
