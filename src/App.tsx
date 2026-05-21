@@ -47,6 +47,7 @@ import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
 import AdminAgendaPresencial from "./pages/admin/AdminAgendaPresencial";
+import AdminFaturamento from "./pages/admin/AdminFaturamento";
 
 const queryClient = new QueryClient();
 
