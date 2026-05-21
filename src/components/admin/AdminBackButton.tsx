@@ -40,9 +40,8 @@ export const AdminBackButton = ({
     if (to) {
       navigate(to);
     } else if (slug) {
-      // Sempre volta para a tela inicial do app do coach,
-      // evitando ficar preso no Painel do Coach.
-      navigate(`/${slug}/app`);
+      // Volta para o Painel de Controle (engrenagem) do coach
+      navigate(`/${slug}/app/controle`);
     } else {
       navigate(-1);
     }
