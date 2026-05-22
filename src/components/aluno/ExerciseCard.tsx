@@ -54,32 +54,11 @@ const isAvancado = (n?: string | null) => {
   return s.includes("avanc");
 };
 
-// Estrutura fixa para avançado: 1 aquecimento + 1 reconhecimento + 1 ajuste + 3 trabalho
-const ADVANCED_STRUCTURE = ["Aquecimento", "Reconhecimento", "Ajuste", "Trabalho", "Trabalho", "Trabalho"] as const;
+// Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
+const DEFAULT_STRUCTURE = ["Aquecimento", "Ajuste", "Trabalho", "Trabalho", "Trabalho"] as const;
 
-const buildSlotTypes = (seriesStr: string | null, nivel?: string | null): string[] => {
-  if (isAvancado(nivel)) return [...ADVANCED_STRUCTURE];
-
-  // Iniciante / intermediário: usa o que veio do coach, capado em 5
-  const str = (seriesStr || "").toLowerCase();
-  const aquecimentoMatch = str.match(/(\d+)\s*x?\s*aquecimento/);
-  const ajusteMatch = str.match(/(\d+)\s*x?\s*ajuste/);
-  const numAquecimento = aquecimentoMatch ? parseInt(aquecimentoMatch[1]) : 0;
-  const numAjuste = ajusteMatch ? parseInt(ajusteMatch[1]) : 0;
-
-  const matches = seriesStr ? seriesStr.match(/\d+/g) : null;
-  let total = matches && matches.length > 1
-    ? matches.reduce((acc, c) => acc + parseInt(c), 0)
-    : parseInt(matches?.[0] || "4");
-  total = Math.min(Math.max(total, 1), 5); // cap 5
-
-  const types: string[] = [];
-  for (let i = 0; i < total; i++) {
-    if (i < numAquecimento) types.push("Aquecimento");
-    else if (i < numAquecimento + numAjuste) types.push("Ajuste");
-    else types.push("Trabalho");
-  }
-  return types;
+const buildSlotTypes = (_seriesStr: string | null, _nivel?: string | null): string[] => {
+  return [...DEFAULT_STRUCTURE];
 };
 
 export const ExerciseCard = ({
