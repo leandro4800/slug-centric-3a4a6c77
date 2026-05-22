@@ -118,7 +118,7 @@ const AdminFaturamento = () => {
                 className="bg-secondary/40 border-white/10 text-white"
               />
               <p className="text-[9px] text-muted-foreground uppercase leading-relaxed">
-                Este é o ID da sua conta no Asaas. Você o encontra em Configurações > Integrações > API Keys ou através do suporte do Asaas.
+                Este é o ID da sua conta no Asaas. Você o encontra em Configurações &gt; Integrações &gt; API Keys ou através do suporte do Asaas.
               </p>
             </div>
 
