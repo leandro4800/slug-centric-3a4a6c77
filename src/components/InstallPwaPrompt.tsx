@@ -23,6 +23,9 @@ const InstallPwaPrompt = () => {
 
   useEffect(() => {
     if (!isMobile() || isStandalone()) return;
+    // Não mostrar em landing pages públicas
+    const path = window.location.pathname;
+    if (path === "/" || path === "/site" || path === "/marketplace" || path === "/seja-coach" || /^\/[^/]+\/site$/.test(path)) return;
     const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0);
     if (dismissedAt && Date.now() - dismissedAt < DISMISS_DAYS * 86400000) return;
 
