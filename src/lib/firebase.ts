@@ -1,8 +1,6 @@
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken, onMessage } from "firebase/messaging";
+import { getMessaging, getToken, onMessage, isSupported } from "firebase/messaging";
 
-// Essas são as credenciais que você deve obter no Console do Firebase
-// Configurações do Projeto > Seus aplicativos > SDK setup and configuration
 const firebaseConfig = {
   apiKey: "AIzaSyD1Wlvqsle1TGs0xOq9d1tCuUzMA0E72zs",
   authDomain: "alpha-coach-a3811.firebaseapp.com",
@@ -15,39 +13,76 @@ const firebaseConfig = {
 
 export const FIREBASE_VAPID_KEY = "BL833evNURyCcRNoGtMB2A2R_lhPFVpQoKBODsbqtCkHnG-m2swqO6-EY6VJiYkMH3J6EvgRWrx5BtWpAzqeYUg";
 
-// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
-export const messaging = typeof window !== 'undefined' ? getMessaging(app) : null;
 
-export const requestForToken = async (vapidKey: string) => {
-  if (!messaging) return null;
-  
+let _messaging: ReturnType<typeof getMessaging> | null = null;
+const getMessagingSafe = async () => {
+  if (_messaging) return _messaging;
+  if (typeof window === "undefined") return null;
   try {
-    const permission = await Notification.requestPermission();
-    if (permission === "granted") {
-      const currentToken = await getToken(messaging, {
-        vapidKey: vapidKey,
-      });
-      if (currentToken) {
-        return currentToken;
-      } else {
-        console.log("Nenhum token de registro disponível. Solicite permissão para gerar um.");
-        return null;
-      }
-    } else {
-      console.log("Permissão de notificação negada.");
+    const supported = await isSupported();
+    if (!supported) {
+      console.warn("[push] Firebase Messaging não suportado neste navegador");
       return null;
     }
-  } catch (err) {
-    console.log("Ocorreu um erro ao recuperar o token.", err);
+    _messaging = getMessaging(app);
+    return _messaging;
+  } catch (e) {
+    console.warn("[push] erro ao inicializar messaging", e);
     return null;
   }
 };
 
-export const onMessageListener = () =>
-  new Promise((resolve) => {
-    if (!messaging) return;
-    onMessage(messaging, (payload) => {
-      resolve(payload);
+export const messaging = typeof window !== "undefined" ? (() => { void getMessagingSafe(); return null; })() : null;
+
+/**
+ * Solicita permissão e obtém o token FCM.
+ * IMPORTANTE: deve ser chamado a partir de um clique/toque do usuário (gesto),
+ * principalmente no iOS (instalado como PWA) e em alguns navegadores Android.
+ */
+export const requestForToken = async (vapidKey: string): Promise<{ token: string | null; reason?: string }> => {
+  if (typeof window === "undefined") return { token: null, reason: "ssr" };
+  if (!("Notification" in window)) {
+    return { token: null, reason: "Navegador não suporta notificações" };
+  }
+  if (!("serviceWorker" in navigator)) {
+    return { token: null, reason: "Navegador não suporta Service Worker" };
+  }
+
+  const msg = await getMessagingSafe();
+  if (!msg) return { token: null, reason: "Firebase Messaging não disponível (iOS exige PWA instalado)" };
+
+  try {
+    // Registra o SW explicitamente para evitar race condition no getToken
+    const swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", {
+      scope: "/",
+      updateViaCache: "none",
     });
+    await navigator.serviceWorker.ready;
+
+    const permission = await Notification.requestPermission();
+    if (permission !== "granted") {
+      return { token: null, reason: `Permissão ${permission}` };
+    }
+
+    const token = await getToken(msg, {
+      vapidKey,
+      serviceWorkerRegistration: swReg,
+    });
+
+    if (!token) {
+      return { token: null, reason: "Token vazio retornado pelo FCM" };
+    }
+    return { token };
+  } catch (err: any) {
+    console.error("[push] erro getToken", err);
+    return { token: null, reason: err?.message || String(err) };
+  }
+};
+
+export const onMessageListener = () =>
+  new Promise(async (resolve) => {
+    const msg = await getMessagingSafe();
+    if (!msg) return;
+    onMessage(msg, (payload) => resolve(payload));
   });
