@@ -60,7 +60,8 @@ export default function TenantLanding() {
   const handleCheckout = async (plano_id: string) => {
     setCheckoutLoading(plano_id);
     try {
-      const { data, error } = await supabase.functions.invoke("stripe-checkout", {
+      // Alternando para Asaas conforme solicitado pelo usuário (Taxas menores)
+      const { data, error } = await supabase.functions.invoke("asaas-checkout", {
         body: { plano_id, type: "subscription" },
       });
       if (error) throw error;
