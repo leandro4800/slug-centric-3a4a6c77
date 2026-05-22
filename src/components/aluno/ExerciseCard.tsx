@@ -54,32 +54,11 @@ const isAvancado = (n?: string | null) => {
   return s.includes("avanc");
 };
 
-// Estrutura fixa para avançado: 1 aquecimento + 1 reconhecimento + 1 ajuste + 3 trabalho
-const ADVANCED_STRUCTURE = ["Aquecimento", "Reconhecimento", "Ajuste", "Trabalho", "Trabalho", "Trabalho"] as const;
+// Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
+const DEFAULT_STRUCTURE = ["Aquecimento", "Ajuste", "Trabalho", "Trabalho", "Trabalho"] as const;
 
-const buildSlotTypes = (seriesStr: string | null, nivel?: string | null): string[] => {
-  if (isAvancado(nivel)) return [...ADVANCED_STRUCTURE];
-
-  // Iniciante / intermediário: usa o que veio do coach, capado em 5
-  const str = (seriesStr || "").toLowerCase();
-  const aquecimentoMatch = str.match(/(\d+)\s*x?\s*aquecimento/);
-  const ajusteMatch = str.match(/(\d+)\s*x?\s*ajuste/);
-  const numAquecimento = aquecimentoMatch ? parseInt(aquecimentoMatch[1]) : 0;
-  const numAjuste = ajusteMatch ? parseInt(ajusteMatch[1]) : 0;
-
-  const matches = seriesStr ? seriesStr.match(/\d+/g) : null;
-  let total = matches && matches.length > 1
-    ? matches.reduce((acc, c) => acc + parseInt(c), 0)
-    : parseInt(matches?.[0] || "4");
-  total = Math.min(Math.max(total, 1), 5); // cap 5
-
-  const types: string[] = [];
-  for (let i = 0; i < total; i++) {
-    if (i < numAquecimento) types.push("Aquecimento");
-    else if (i < numAquecimento + numAjuste) types.push("Ajuste");
-    else types.push("Trabalho");
-  }
-  return types;
+const buildSlotTypes = (_seriesStr: string | null, _nivel?: string | null): string[] => {
+  return [...DEFAULT_STRUCTURE];
 };
 
 export const ExerciseCard = ({
@@ -191,13 +170,30 @@ export const ExerciseCard = ({
 
     const isBulk = index === -1 || bulkKeyword || !!qtdMatch;
 
+    // Detecta tipo específico ("trabalho", "aquecimento", "ajuste")
+    const tipoFilter: string | null =
+      /trabalho/i.test(transcript) ? "Trabalho" :
+      /aquecimento|aquec/i.test(transcript) ? "Aquecimento" :
+      /ajuste/i.test(transcript) ? "Ajuste" : null;
+
     if (reps || carga) {
       if (isBulk) {
-        const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), totalSlots) : totalSlots;
-        setSlots((prev) => prev.map((s, idx) => idx < qtd ? {
-          ...s, reps: reps || s.reps, carga: carga || s.carga,
-        } : s));
-        toast.success(`${qtd} séries preenchidas: ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        if (tipoFilter) {
+          // Preenche apenas os slots do tipo informado, limitado pela quantidade falada (ou todos do tipo)
+          const indicesDoTipo = slotTypes.map((t, idx) => t === tipoFilter ? idx : -1).filter((i) => i >= 0);
+          const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), indicesDoTipo.length) : indicesDoTipo.length;
+          const alvos = new Set(indicesDoTipo.slice(0, qtd));
+          setSlots((prev) => prev.map((s, idx) => alvos.has(idx) ? {
+            ...s, reps: reps || s.reps, carga: carga || s.carga,
+          } : s));
+          toast.success(`${qtd} série(s) de ${tipoFilter.toLowerCase()} preenchida(s): ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        } else {
+          const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), totalSlots) : totalSlots;
+          setSlots((prev) => prev.map((s, idx) => idx < qtd ? {
+            ...s, reps: reps || s.reps, carga: carga || s.carga,
+          } : s));
+          toast.success(`${qtd} séries preenchidas: ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        }
       } else {
         setSlots((prev) => prev.map((s, idx) => idx === index ? {
           ...s, reps: reps || s.reps, carga: carga || s.carga,
@@ -205,7 +201,7 @@ export const ExerciseCard = ({
         toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
       }
     } else {
-      toast.error("Não entendi. Tente: 'fiz 4 séries com 20kg e 12 repetições'", { id: "voice-toast" });
+      toast.error("Não entendi. Tente: 'fiz 3 séries de trabalho com 60kg e 10 repetições'", { id: "voice-toast" });
     }
   };
 
@@ -571,7 +567,7 @@ export const ExerciseCard = ({
 
           {/* Séries de trabalho */}
           <div className="flex items-center justify-between pt-1 gap-2">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries de trabalho</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries</p>
             <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
           </div>
 
