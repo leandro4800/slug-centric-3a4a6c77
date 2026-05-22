@@ -809,4 +809,49 @@ const NetflixCard = ({ label, value }: { label: string; value: string }) => (
   </div>
 );
 
+const NotificationToggle = () => {
+  const { permission, enable } = usePushNotifications();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    await enable(false);
+    setLoading(false);
+  };
+
+  if (permission === "unsupported") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-muted-foreground bg-secondary/40 border border-border rounded-lg px-3 py-2 mt-2">
+        <BellOff className="h-3.5 w-3.5" />
+        <span>Notificações não suportadas neste navegador. No iPhone, instale o app na tela inicial.</span>
+      </div>
+    );
+  }
+
+  if (permission === "granted") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-emerald-500 bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-3 py-2 mt-2">
+        <Bell className="h-3.5 w-3.5" />
+        <span className="font-bold">Notificações ativas neste aparelho</span>
+      </div>
+    );
+  }
+
+  if (permission === "denied") {
+    return (
+      <div className="flex items-center gap-2 text-xs text-amber-500 bg-amber-500/10 border border-amber-500/30 rounded-lg px-3 py-2 mt-2">
+        <BellOff className="h-3.5 w-3.5" />
+        <span>Notificações bloqueadas. Libere nas configurações do navegador/aparelho.</span>
+      </div>
+    );
+  }
+
+  return (
+    <Button onClick={handleClick} disabled={loading} className="w-full h-11 mt-2">
+      {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bell className="h-4 w-4" />}
+      Ativar notificações
+    </Button>
+  );
+};
+
 export default Perfil;
