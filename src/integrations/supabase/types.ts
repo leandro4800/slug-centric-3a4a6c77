@@ -497,6 +497,8 @@ export type Database = {
       assinaturas: {
         Row: {
           aluno_id: string
+          asaas_customer_id: string | null
+          asaas_subscription_id: string | null
           cancelada_em: string | null
           created_at: string
           current_period_end: string | null
@@ -510,6 +512,8 @@ export type Database = {
         }
         Insert: {
           aluno_id: string
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           cancelada_em?: string | null
           created_at?: string
           current_period_end?: string | null
@@ -523,6 +527,8 @@ export type Database = {
         }
         Update: {
           aluno_id?: string
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
           cancelada_em?: string | null
           created_at?: string
           current_period_end?: string | null
@@ -1878,6 +1884,7 @@ export type Database = {
       }
       planos: {
         Row: {
+          asaas_id: string | null
           ativo: boolean
           created_at: string
           descricao: string | null
@@ -1892,6 +1899,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          asaas_id?: string | null
           ativo?: boolean
           created_at?: string
           descricao?: string | null
@@ -1906,6 +1914,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          asaas_id?: string | null
           ativo?: boolean
           created_at?: string
           descricao?: string | null
@@ -2270,6 +2279,7 @@ export type Database = {
       tenants: {
         Row: {
           accent_hsl: string
+          asaas_wallet_id: string | null
           bio: string | null
           cidade: string | null
           created_at: string
@@ -2296,6 +2306,7 @@ export type Database = {
         }
         Insert: {
           accent_hsl?: string
+          asaas_wallet_id?: string | null
           bio?: string | null
           cidade?: string | null
           created_at?: string
@@ -2322,6 +2333,7 @@ export type Database = {
         }
         Update: {
           accent_hsl?: string
+          asaas_wallet_id?: string | null
           bio?: string | null
           cidade?: string | null
           created_at?: string
