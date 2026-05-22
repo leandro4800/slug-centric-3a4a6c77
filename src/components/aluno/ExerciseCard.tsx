@@ -567,7 +567,7 @@ export const ExerciseCard = ({
 
           {/* Séries de trabalho */}
           <div className="flex items-center justify-between pt-1 gap-2">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries de trabalho</p>
+            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries</p>
             <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
           </div>
 
