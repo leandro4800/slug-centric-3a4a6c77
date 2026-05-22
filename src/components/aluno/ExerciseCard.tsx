@@ -170,13 +170,30 @@ export const ExerciseCard = ({
 
     const isBulk = index === -1 || bulkKeyword || !!qtdMatch;
 
+    // Detecta tipo específico ("trabalho", "aquecimento", "ajuste")
+    const tipoFilter: string | null =
+      /trabalho/i.test(transcript) ? "Trabalho" :
+      /aquecimento|aquec/i.test(transcript) ? "Aquecimento" :
+      /ajuste/i.test(transcript) ? "Ajuste" : null;
+
     if (reps || carga) {
       if (isBulk) {
-        const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), totalSlots) : totalSlots;
-        setSlots((prev) => prev.map((s, idx) => idx < qtd ? {
-          ...s, reps: reps || s.reps, carga: carga || s.carga,
-        } : s));
-        toast.success(`${qtd} séries preenchidas: ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        if (tipoFilter) {
+          // Preenche apenas os slots do tipo informado, limitado pela quantidade falada (ou todos do tipo)
+          const indicesDoTipo = slotTypes.map((t, idx) => t === tipoFilter ? idx : -1).filter((i) => i >= 0);
+          const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), indicesDoTipo.length) : indicesDoTipo.length;
+          const alvos = new Set(indicesDoTipo.slice(0, qtd));
+          setSlots((prev) => prev.map((s, idx) => alvos.has(idx) ? {
+            ...s, reps: reps || s.reps, carga: carga || s.carga,
+          } : s));
+          toast.success(`${qtd} série(s) de ${tipoFilter.toLowerCase()} preenchida(s): ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        } else {
+          const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), totalSlots) : totalSlots;
+          setSlots((prev) => prev.map((s, idx) => idx < qtd ? {
+            ...s, reps: reps || s.reps, carga: carga || s.carga,
+          } : s));
+          toast.success(`${qtd} séries preenchidas: ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        }
       } else {
         setSlots((prev) => prev.map((s, idx) => idx === index ? {
           ...s, reps: reps || s.reps, carga: carga || s.carga,
@@ -184,7 +201,7 @@ export const ExerciseCard = ({
         toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
       }
     } else {
-      toast.error("Não entendi. Tente: 'fiz 4 séries com 20kg e 12 repetições'", { id: "voice-toast" });
+      toast.error("Não entendi. Tente: 'fiz 3 séries de trabalho com 60kg e 10 repetições'", { id: "voice-toast" });
     }
   };
 
