@@ -91,22 +91,50 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const validateStoredSession = async (sess: Session | null) => {
       if (!sess) return null;
 
-      const response = await withTimeout(
-        supabase.auth.getUser(),
-        { data: { user: null }, error: null } as Awaited<ReturnType<typeof supabase.auth.getUser>>,
-        "Validação da sessão salva",
-        SESSION_RESTORE_TIMEOUT_MS
-      );
+      // Confia na sessão persistida. O autoRefreshToken cuida da renovação.
+      // Tentamos validar com getUser, mas SE der timeout/erro de rede,
+      // mantemos a sessão local (não deslogamos) — caso contrário o app
+      // pede login toda vez que abre offline/com rede ruim (Android PWA).
+      const SENTINEL = Symbol("timeout");
+      let response: Awaited<ReturnType<typeof supabase.auth.getUser>> | typeof SENTINEL;
+      try {
+        response = await withTimeout(
+          supabase.auth.getUser(),
+          SENTINEL as unknown as Awaited<ReturnType<typeof supabase.auth.getUser>>,
+          "Validação da sessão salva",
+          SESSION_RESTORE_TIMEOUT_MS
+        );
+      } catch {
+        return sess;
+      }
 
-      if (response.error || !response.data.user) {
-        console.warn("[Auth] Sessão local inválida ou expirada; limpando e mantendo login.");
-        try {
-          await supabase.auth.signOut({ scope: "local" });
-        } catch {}
+      if (response === (SENTINEL as unknown)) {
+        // Timeout — mantém sessão local, deixa o refresh automático resolver depois.
+        return sess;
+      }
+
+      const res = response as Awaited<ReturnType<typeof supabase.auth.getUser>>;
+      const errMsg = res.error?.message?.toLowerCase() ?? "";
+      const isAuthError =
+        errMsg.includes("jwt") ||
+        errMsg.includes("invalid") ||
+        errMsg.includes("expired") ||
+        errMsg.includes("not_found") ||
+        errMsg.includes("user not found");
+
+      if (res.error && !isAuthError) {
+        // Erro de rede/servidor — mantém sessão.
+        console.warn("[Auth] getUser falhou por rede; mantendo sessão local.", res.error);
+        return sess;
+      }
+
+      if (!res.data.user) {
+        console.warn("[Auth] Sessão local inválida; limpando.");
+        try { await supabase.auth.signOut({ scope: "local" }); } catch {}
         return null;
       }
 
-      return { ...sess, user: response.data.user };
+      return { ...sess, user: res.data.user };
     };
 
     const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
@@ -141,6 +169,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         clearTimeout(restoreTimeout);
         applySession(validatedSession);
       })
+
       .catch((error) => {
         if (restoreSettled) return;
         restoreSettled = true;
