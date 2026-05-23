@@ -282,6 +282,21 @@ const AdminMontarDieta = () => {
       }
 
       toast.success(publish ? "Dieta publicada para o aluno!" : "Rascunho salvo com sucesso!", { id: toastId });
+      
+      // Enviar notificação push se for publicado
+      if (publish) {
+        try {
+          await supabase.functions.invoke("fcm-notifications", {
+            body: {
+              user_id: alunoId,
+              title: "Sua Nova Dieta Chegou! 🍎",
+              body: "Seu coach publicou seu novo plano alimentar. Dê uma olhada!",
+            },
+          });
+        } catch (pushErr) {
+          console.error("Erro ao enviar push:", pushErr);
+        }
+      }
     } catch (e: any) {
       toast.error("Erro ao salvar: " + e.message, { id: toastId });
     } finally {

@@ -399,6 +399,20 @@ const AdminMontarTreino = () => {
       const { error } = await supabase.from("treinos_prescritos").insert(rows);
       if (error) throw error;
       toast.success(`Prescrição salva para o aluno · ${rows.length} exercícios`);
+      
+      // Enviar notificação push
+      try {
+        await supabase.functions.invoke("fcm-notifications", {
+          body: {
+            user_id: alunoId,
+            title: "Novo Treino Disponível! 🏋️‍♂️",
+            body: "Seu coach atualizou sua ficha de treino. Confira agora no app!",
+          },
+        });
+      } catch (pushErr) {
+        console.error("Erro ao enviar push:", pushErr);
+      }
+
       setPendingReview(false);
     } catch (e: any) {
       toast.error(e.message || "Erro ao salvar prescrição.");
