@@ -752,6 +752,7 @@ const AtletaDetalhe = () => {
 
 
         <div className="space-y-2">
+          {/* 
           <button
             onClick={handleGenerateProtocol}
             disabled={isGeneratingProtocol}
@@ -771,6 +772,8 @@ const AtletaDetalhe = () => {
               </span>
             </span>
           </button>
+          */}
+
 
           <button
             onClick={() => {
