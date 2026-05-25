@@ -263,15 +263,18 @@ const AlunoHome = () => {
       </section>
 
       <section className="relative z-20 px-5 pt-10 pb-1 mt-4 space-y-3 bg-background">
-        <div className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-lg bg-card/50 border border-border flex items-center justify-center">
+        <Link 
+          to={`/${tenantSlug}/app/parceiros`}
+          className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 hover:border-primary/50 transition-all active:scale-[0.98] group"
+        >
+          <div className="w-12 h-12 rounded-lg bg-card/50 border border-border flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/30 transition-all">
             <TenantSymbol size={28} />
           </div>
           <div>
-            <p className="font-display text-lg text-foreground/80 leading-tight uppercase">Links Úteis</p>
+            <p className="font-display text-lg text-foreground/80 leading-tight uppercase group-hover:text-primary transition-colors">Links Úteis</p>
             <p className="text-xs text-muted-foreground">Parceiros & cupons exclusivos</p>
           </div>
-        </div>
+        </Link>
       </section>
 
       {/* Minha prescrição */}
