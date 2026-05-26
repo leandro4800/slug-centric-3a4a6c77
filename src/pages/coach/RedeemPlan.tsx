@@ -73,10 +73,10 @@ const RedeemPlan = () => {
         const { error: subError } = await supabase.from("assinaturas").insert({
           aluno_id: user.id,
           tenant_id: tenant.id,
-          status: "active",
+          status: "active" as any,
           price_id: "automated_delivery", // Marker
           created_at: new Date().toISOString()
-        });
+        } as any);
         if (subError) throw subError;
       }
 
