@@ -116,12 +116,14 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
     if (!user) return;
     setSaving(true);
     try {
-      const { error } = await supabase.from("coach_marketing_config").upsert({
+      const { phone, discount, ...persistable } = config as any;
+      const payload: any = {
         user_id: user.id,
         template,
-        ...config,
+        ...persistable,
         updated_at: new Date().toISOString(),
-      });
+      };
+      const { error } = await supabase.from("coach_marketing_config").upsert(payload);
       if (error) throw error;
       toast.success("Configurações salvas!");
     } catch (e: any) { toast.error("Erro: " + e.message); } finally { setSaving(false); }
