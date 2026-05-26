@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { SubscriptionLockScreen } from "@/components/SubscriptionLockScreen";
 
 interface Props {
   children: ReactNode;
@@ -180,7 +181,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
   }
 
   if (status !== "active" && status !== "trialing") {
-    return <Navigate to={`/${slug}/site`} replace />;
+    return <SubscriptionLockScreen />;
   }
 
   return <>{children}</>;
