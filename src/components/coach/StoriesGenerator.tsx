@@ -27,14 +27,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type TemplateId = "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit";
+type TemplateId = "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
-const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string }[] = [
-  { id: "consultoria-phone", label: "Consultoria Online", desc: "Phone mockup + amarelo", accent: "#FACC15" },
-  { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00" },
-  { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF" },
-  { id: "ironberg", label: "Ironberg Brutal", desc: "Tipografia gigante vazada", accent: "#CCFF00" },
-  { id: "gradient-fit", label: "Gradient Sport", desc: "Listras de aviso vibrantes", accent: "#FB923C" },
+const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; format: "9:16" | "1:1" }[] = [
+  { id: "consultoria-phone", label: "Consultoria Online", desc: "Phone mockup + amarelo", accent: "#FACC15", format: "9:16" },
+  { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00", format: "9:16" },
+  { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF", format: "9:16" },
+  { id: "ironberg", label: "Ironberg Brutal", desc: "Tipografia gigante vazada", accent: "#CCFF00", format: "9:16" },
+  { id: "gradient-fit", label: "Gradient Sport", desc: "Listras de aviso vibrantes", accent: "#FB923C", format: "9:16" },
+  { id: "feed-brutalist", label: "Feed Brutalista", desc: "Quadrado de alta conversão", accent: "#FFFFFF", format: "1:1" },
 ];
 
 // Mock workout templates fallback
@@ -124,7 +125,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
         ...persistable,
         updated_at: new Date().toISOString(),
       };
-      const { error } = await supabase.from("coach_marketing_config").upsert(payload);
+      const { error } = await supabase.from("coach_marketing_config").upsert(payload, { onConflict: 'user_id' });
       if (error) throw error;
       toast.success("Configurações salvas!");
     } catch (e: any) { toast.error("Erro: " + e.message); } finally { setSaving(false); }
@@ -179,17 +180,22 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
       case "dark-purple": return <DarkPurpleTemplate {...tplProps} />;
       case "ironberg": return <IronbergTemplate {...tplProps} />;
       case "gradient-fit": return <GradientFitTemplate {...tplProps} />;
+      case "feed-brutalist": return <FeedBrutalistTemplate {...tplProps} />;
     }
   };
 
   if (isFullScreen) {
+    const activeTemplate = TEMPLATES.find(t => t.id === template);
+    const aspectClass = activeTemplate?.format === "1:1" ? "aspect-square" : "aspect-[9/16]";
+    const heightClass = activeTemplate?.format === "1:1" ? "h-auto w-[95vw] max-w-[600px]" : "h-[100vh]";
+
     return (
       <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center print-clean">
         <style>{`
           body { overflow: hidden !important; }
           .print-clean::-webkit-scrollbar { display: none; }
         `}</style>
-        <div className="relative w-auto h-[100vh] aspect-[9/16] max-w-[100vw] bg-black overflow-hidden shadow-2xl">
+        <div className={cn("relative bg-black overflow-hidden shadow-2xl", aspectClass, heightClass)}>
           {renderTemplate()}
         </div>
         <Button
@@ -235,7 +241,10 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
       </div>
 
       {/* Preview */}
-      <div className="relative mx-auto bg-black shadow-2xl overflow-hidden h-[600px] aspect-[9/16] rounded-[2rem] ring-1 ring-white/10">
+      <div className={cn(
+        "relative mx-auto bg-black shadow-2xl overflow-hidden rounded-[2rem] ring-1 ring-white/10 transition-all duration-500",
+        TEMPLATES.find(t => t.id === template)?.format === "1:1" ? "aspect-square w-full" : "h-[600px] aspect-[9/16]"
+      )}>
         {renderTemplate()}
       </div>
 
@@ -327,7 +336,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />} Salvar
           </Button>
           <Button onClick={onEnterFullScreen} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-widest gap-2">
-            <Maximize className="h-5 w-5" /> Modo Print 9:16
+            <Maximize className="h-5 w-5" /> Modo Print {TEMPLATES.find(t => t.id === template)?.format || "9:16"}
           </Button>
         </div>
       </div>
@@ -746,6 +755,57 @@ const ConsultoriaPhoneTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitl
           <button className="px-3 py-2 rounded-md text-black font-black text-[11px] uppercase italic shadow-[0_4px_20px_rgba(250,204,21,0.4)] shrink-0" style={{ background: accent }}>
             {config.cta_text || "FALE COMIGO!"}
           </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   TEMPLATE 6 — FEED BRUTALISTA (1:1)
+   ============================================================ */
+const FeedBrutalistTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
+  const accent = config.branding_color || "#FFFFFF";
+  return (
+    <div className="relative w-full h-full bg-black overflow-hidden flex flex-col p-8 border-[12px]" style={{ borderColor: accent }}>
+      {/* Background large text */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+        <div className="font-['Anton'] text-[150px] leading-none text-white whitespace-nowrap rotate-[-10deg]">
+          ALPHA COACH
+        </div>
+      </div>
+
+      <div className="relative z-10 flex-1 flex flex-col justify-between">
+        <div>
+          <div className="inline-block px-3 py-1 bg-white text-black font-black text-xs uppercase tracking-[0.2em] mb-4">
+            {coachName}
+          </div>
+          <h2 className="font-['Anton'] text-[60px] leading-[0.9] text-white uppercase tracking-tighter">
+            {config.headline || "TRANSFORME SEU CORPO"}
+          </h2>
+        </div>
+
+        <div className="mt-4">
+           <p className="text-xl font-bold uppercase tracking-widest italic" style={{ color: accent }}>
+             {dynamicSubtitle}
+           </p>
+        </div>
+
+        {/* Floating image if exists */}
+        {cutoutUrl && (
+          <img src={cutoutUrl} alt="" className="absolute right-[-2rem] bottom-[-2rem] h-[100%] w-[60%] object-contain z-[5] drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]" />
+        )}
+
+        <div className="mt-auto pt-8 border-t border-white/20">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="text-[10px] uppercase font-black tracking-widest opacity-50">CLIQUE NO LINK</div>
+              <div className="text-lg font-black">{config.website_url || "bio.link/personal"}</div>
+            </div>
+            <div className="px-6 py-3 bg-white text-black font-black uppercase text-sm skew-x-[-12deg]">
+              {config.cta_text || "QUERO COMEÇAR"}
+            </div>
+          </div>
         </div>
       </div>
     </div>
