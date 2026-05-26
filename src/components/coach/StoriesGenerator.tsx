@@ -7,7 +7,7 @@ import {
   Minimize,
   Upload,
   Phone,
-  Instagram,
+  AtSign,
   Dumbbell,
   Apple,
   Heart,
