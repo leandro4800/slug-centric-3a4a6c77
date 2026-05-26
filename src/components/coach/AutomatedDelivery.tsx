@@ -46,7 +46,7 @@ export const AutomatedDelivery = () => {
       setLoading(true);
       const [linksRes, templatesRes] = await Promise.all([
         supabase.from("coach_automated_delivery").select("*").eq("user_id", user?.id).order("created_at", { ascending: false }),
-        supabase.from("templates_treino").select("id, titulo").eq("created_by", user?.id)
+        supabase.from("templates_treino").select("id, titulo").limit(100)
       ]);
 
       if (linksRes.data) setDeliveryLinks(linksRes.data);
