@@ -451,7 +451,7 @@ const DarkPurpleTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: a
           </button>
         </div>
         <div className="flex items-center gap-1 mt-2 text-[9px] opacity-70">
-          <Instagram className="h-2.5 w-2.5" />
+          <AtSign className="h-2.5 w-2.5" />
           <span>{config.instagram_handle}</span>
         </div>
       </div>
@@ -611,7 +611,7 @@ const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
               {config.phone}
             </div>
             <div className="flex items-center gap-1.5 text-[9px] opacity-70 mt-0.5">
-              <Instagram className="h-2.5 w-2.5" />
+              <AtSign className="h-2.5 w-2.5" />
               {config.instagram_handle}
             </div>
           </div>
