@@ -1,51 +1,48 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Camera,
   Loader2,
   Check,
   Maximize,
   Minimize,
-  AtSign,
+  Upload,
+  Phone,
+  Instagram,
   Dumbbell,
-  Trophy,
-  MapPin,
-  Laptop,
-  Shield,
-  Award,
-  Users,
-  Globe,
-  Zap,
   Apple,
-  Utensils,
-  TrendingUp,
-  MessageCircle,
+  Heart,
   Flame,
+  Trophy,
+  Zap,
   Target,
-  ClipboardList,
-  Smartphone,
-  ChevronRight,
+  TrendingUp,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-const ICONS: Record<string, any> = {
-  Dumbbell, Trophy, MapPin, Laptop, Shield, Award, Users, Globe, Zap,
-  Apple, Utensils, TrendingUp, MessageCircle, Flame, Target, ClipboardList, Smartphone,
-};
+type TemplateId = "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit";
 
-type TemplateId = "biografia" | "consultoria" | "treino-dieta" | "transforme";
+const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string }[] = [
+  { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00" },
+  { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF" },
+  { id: "ironberg", label: "Ironberg Brutal", desc: "Tipografia gigante vazada", accent: "#CCFF00" },
+  { id: "gradient-fit", label: "Gradient Sport", desc: "Listras de aviso vibrantes", accent: "#FB923C" },
+];
 
-const TEMPLATES: { id: TemplateId; label: string; desc: string }[] = [
-  { id: "biografia", label: "Biografia", desc: "Dark / vermelho — autoridade" },
-  { id: "consultoria", label: "Consultoria Online", desc: "Phone mockup + amarelo" },
-  { id: "treino-dieta", label: "Treino & Dieta", desc: "Grunge amarelo industrial" },
-  { id: "transforme", label: "Transformação", desc: "Verde neon / checklist" },
+// Mock workout templates fallback
+const MOCK_WORKOUTS = [
+  { id: "mock-1", titulo: "Hipertrofia de Glúteos" },
+  { id: "mock-2", titulo: "Peito & Tríceps Avançado" },
+  { id: "mock-3", titulo: "Costas & Bíceps Volume" },
+  { id: "mock-4", titulo: "Treino Full Body 30min" },
+  { id: "mock-5", titulo: "Definição Abdominal" },
 ];
 
 interface Props {
@@ -58,40 +55,29 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [template, setTemplate] = useState<TemplateId>("biografia");
+  const [removingBg, setRemovingBg] = useState(false);
+  const [template, setTemplate] = useState<TemplateId>("yellow-cyber");
   const [profileData, setProfileData] = useState<any>(null);
+  const [workouts, setWorkouts] = useState<{ id: string; titulo: string }[]>([]);
+  const [selectedWorkoutId, setSelectedWorkoutId] = useState<string>("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const [config, setConfig] = useState({
-    instagram_handle: "",
-    headline: "TRANSFORME SEU CORPO",
+    instagram_handle: "@seuperfil",
+    headline: "SHAPE YOUR BODY",
     subheadline: "TRANSFORME SUA VIDA",
-    tagline: "DISCIPLINA · FOCO · RESULTADOS",
     cta_text: "FALE COMIGO AGORA!",
-    website_url: "client.seudominio.com.br",
-    location_text: "IRONBERG SP & ALPHAVILLE",
+    website_url: "seusite.com.br",
+    phone: "+55 11 99999-0000",
+    discount: "30% OFF",
     photo_url: "",
-    topic1_label: "+34 ANOS DE EXPERIÊNCIA",
-    topic1_icon: "Dumbbell",
-    topic1_desc: "Mais de três décadas dedicadas à musculação de alto nível e à verdadeira transformação de vidas.",
-    topic2_label: "+30 ANOS COMO PERSONAL",
-    topic2_icon: "Trophy",
-    topic2_desc: "Atuando presencialmente e digital, gerando resultados reais com máxima excelência.",
-    topic3_label: "FOCO NO PÚBLICO 40+",
-    topic3_icon: "MapPin",
-    topic3_desc: "Especialista em devolver vitalidade e construir saúde blindada após os 40.",
-    topic4_label: "CONSULTORIA VIA APP",
-    topic4_icon: "Laptop",
-    topic4_desc: "Planejamento 100% individualizado na palma da mão, treine onde quiser.",
-    topic5_label: "ESTRUTURAS DE ELITE",
-    topic5_icon: "Shield",
-    topic5_desc: "Atuação presencial nas maiores e mais renomadas academias do Brasil.",
-    topic6_label: "RESULTADOS COMPROVADOS",
-    topic6_icon: "TrendingUp",
-    topic6_desc: "Método testado e aprovado por centenas de atletas.",
-    branding_color: "#E50914",
-    accent_secondary: "#FACC15",
+    branding_color: "#E0FF00",
   });
 
-  useEffect(() => { loadConfig(); }, [user]);
+  const selectedWorkout = workouts.find(w => w.id === selectedWorkoutId);
+  const dynamicSubtitle = selectedWorkout?.titulo || config.subheadline;
+
+  useEffect(() => { loadConfig(); loadWorkouts(); }, [user]);
 
   const loadConfig = async () => {
     if (!user) return;
@@ -101,7 +87,9 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
       setProfileData(p);
       const { data: c } = await supabase.from("coach_marketing_config").select("*").eq("user_id", user.id).maybeSingle();
       if (c) {
-        setTemplate((c.template as TemplateId) || "biografia");
+        if (["yellow-cyber", "dark-purple", "ironberg", "gradient-fit"].includes(c.template || "")) {
+          setTemplate(c.template as TemplateId);
+        }
         setConfig(prev => ({
           ...prev,
           ...Object.fromEntries(Object.entries(c).filter(([k, v]) => v != null && k in prev)),
@@ -110,15 +98,28 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
     } catch (e) { console.error(e); } finally { setLoading(false); }
   };
 
+  const loadWorkouts = async () => {
+    try {
+      // busca templates do tenant + globais
+      const { data } = await supabase.from("templates_treino").select("id, titulo").limit(50);
+      if (data && data.length > 0) {
+        setWorkouts(data);
+      } else {
+        setWorkouts(MOCK_WORKOUTS);
+      }
+    } catch {
+      setWorkouts(MOCK_WORKOUTS);
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
     try {
-      const { topic1_desc, topic2_desc, topic3_desc, topic4_desc, topic5_desc, topic6_desc, ...persistable } = config;
       const { error } = await supabase.from("coach_marketing_config").upsert({
         user_id: user.id,
         template,
-        ...persistable,
+        ...config,
         updated_at: new Date().toISOString(),
       });
       if (error) throw error;
@@ -126,393 +127,499 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
     } catch (e: any) { toast.error("Erro: " + e.message); } finally { setSaving(false); }
   };
 
-  const update = (k: string, v: string) => setConfig(prev => ({ ...prev, [k]: v }));
-  const coachName = (profileData?.nome_completo || "SEU NOME").toUpperCase();
-  const avatar = config.photo_url || profileData?.avatar_url || "https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800";
-
-  if (loading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
-
-  const renderTemplate = () => {
-    switch (template) {
-      case "biografia": return <BiografiaTemplate config={config} coachName={coachName} avatar={avatar} />;
-      case "consultoria": return <ConsultoriaTemplate config={config} coachName={coachName} avatar={avatar} />;
-      case "treino-dieta": return <TreinoDietaTemplate config={config} coachName={coachName} avatar={avatar} />;
-      case "transforme": return <TransformeTemplate config={config} coachName={coachName} avatar={avatar} />;
+  const handlePhotoUpload = async (file: File) => {
+    if (!user) return;
+    setRemovingBg(true);
+    try {
+      toast.info("Removendo o fundo da foto com IA...", { duration: 4000 });
+      // dynamic import — pesado
+      const { removeBackground } = await import("@imgly/background-removal");
+      const blob = await removeBackground(file, {
+        output: { format: "image/png", quality: 0.9 },
+      });
+      // upload to supabase storage
+      const path = `${user.id}/coach-cutout-${Date.now()}.png`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, blob, {
+        contentType: "image/png",
+        upsert: true,
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      setConfig(prev => ({ ...prev, photo_url: pub.publicUrl }));
+      toast.success("Fundo removido! Foto pronta para os templates.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao processar a foto. Tente outra imagem.");
+    } finally {
+      setRemovingBg(false);
     }
   };
 
+  const update = (k: string, v: string) => setConfig(prev => ({ ...prev, [k]: v }));
+  const coachName = (profileData?.nome_completo || "SEU NOME").toUpperCase();
+  const cutoutUrl = config.photo_url || profileData?.avatar_url || "";
+
+  if (loading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  const tplProps = {
+    config,
+    coachName,
+    cutoutUrl,
+    workoutTitle: selectedWorkout?.titulo,
+    dynamicSubtitle,
+  };
+
+  const renderTemplate = () => {
+    switch (template) {
+      case "yellow-cyber": return <YellowCyberTemplate {...tplProps} />;
+      case "dark-purple": return <DarkPurpleTemplate {...tplProps} />;
+      case "ironberg": return <IronbergTemplate {...tplProps} />;
+      case "gradient-fit": return <GradientFitTemplate {...tplProps} />;
+    }
+  };
+
+  if (isFullScreen) {
+    return (
+      <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center print-clean">
+        <style>{`
+          body { overflow: hidden !important; }
+          .print-clean::-webkit-scrollbar { display: none; }
+        `}</style>
+        <div className="relative w-auto h-[100vh] aspect-[9/16] max-w-[100vw] bg-black overflow-hidden shadow-2xl">
+          {renderTemplate()}
+        </div>
+        <Button
+          onClick={onExitFullScreen}
+          size="sm"
+          className="fixed bottom-4 right-4 bg-black/70 hover:bg-black border border-white/20 text-white rounded-full gap-2 opacity-60 hover:opacity-100 transition-opacity"
+        >
+          <Minimize className="h-4 w-4" /> Sair
+        </Button>
+      </div>
+    );
+  }
+
   return (
-    <div className={cn("space-y-6", isFullScreen && "fixed inset-0 z-[100] bg-black m-0 p-0 overflow-hidden flex flex-col items-center justify-center")}>
-      {!isFullScreen && (
-        <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+    <div className="space-y-6">
+      {/* Template selector — carousel */}
+      <div>
+        <div className="flex items-center gap-2 mb-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <h4 className="text-sm font-black uppercase tracking-wider">Templates Premium</h4>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           {TEMPLATES.map(t => (
             <button
               key={t.id}
-              onClick={() => setTemplate(t.id)}
+              onClick={() => { setTemplate(t.id); update("branding_color", t.accent); }}
               className={cn(
-                "shrink-0 px-4 py-2 rounded-xl border text-left transition-all",
+                "group relative rounded-xl border-2 p-3 text-left transition-all overflow-hidden",
                 template === t.id
-                  ? "bg-primary text-primary-foreground border-primary scale-[1.02]"
-                  : "bg-card border-border/40 hover:border-primary/40"
+                  ? "border-primary scale-[1.02] shadow-lg shadow-primary/20"
+                  : "border-border/40 hover:border-primary/40"
               )}
             >
-              <div className="text-xs font-black uppercase tracking-wider">{t.label}</div>
-              <div className="text-[10px] opacity-70">{t.desc}</div>
+              <div className="absolute inset-0 opacity-20" style={{ background: `radial-gradient(circle at top right, ${t.accent}, transparent 60%)` }} />
+              <div className="relative">
+                <div className="w-6 h-6 rounded-full mb-2" style={{ background: t.accent, boxShadow: `0 0 12px ${t.accent}` }} />
+                <div className="text-xs font-black uppercase tracking-wider">{t.label}</div>
+                <div className="text-[10px] opacity-70">{t.desc}</div>
+              </div>
             </button>
           ))}
         </div>
-      )}
+      </div>
 
-      <div className={cn(
-        "relative mx-auto bg-black shadow-2xl overflow-hidden transition-all ring-1 ring-white/10",
-        isFullScreen ? "h-[100vh] aspect-[9/16]" : "h-[600px] aspect-[9/16] rounded-[2rem]"
-      )}>
+      {/* Preview */}
+      <div className="relative mx-auto bg-black shadow-2xl overflow-hidden h-[600px] aspect-[9/16] rounded-[2rem] ring-1 ring-white/10">
         {renderTemplate()}
       </div>
 
-      {isFullScreen ? (
-        <Button variant="outline" size="lg" onClick={onExitFullScreen}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black/60 backdrop-blur-md border-white/20 text-white rounded-full gap-2 px-8">
-          <Minimize className="h-5 w-5" /> Sair do Modo Print
-        </Button>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mx-auto">
-          <ConfigPanel template={template} config={config} update={update} />
-          <div className="bg-card border border-border/40 rounded-2xl p-5 space-y-3">
-            <h5 className="font-bold flex items-center gap-2 text-sm"><Camera className="h-4 w-4 text-primary" /> Publicar</h5>
-            <p className="text-xs text-muted-foreground">Salve as configurações, depois entre em tela cheia e tire um print 9:16 para postar como Story.</p>
-            <Button onClick={handleSave} className="w-full" disabled={saving} variant="secondary">
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />} Salvar Configurações
-            </Button>
-            <Button onClick={onEnterFullScreen} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-widest gap-2">
-              <Maximize className="h-5 w-5" /> Modo Tela Cheia
-            </Button>
+      {/* Config + Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-card border border-border/40 rounded-2xl p-5 space-y-3">
+          <h5 className="font-bold flex items-center gap-2 text-sm">
+            <Upload className="h-4 w-4 text-primary" /> Foto do Personal (IA)
+          </h5>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handlePhotoUpload(e.target.files[0])}
+          />
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={removingBg}
+            className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-bold uppercase tracking-widest gap-2"
+          >
+            {removingBg ? <><Loader2 className="h-4 w-4 animate-spin" /> Processando IA…</> : <><Upload className="h-4 w-4" /> Carregar Foto (IA)</>}
+          </Button>
+          {cutoutUrl && (
+            <div className="flex items-center gap-3 p-2 bg-black/30 rounded-lg">
+              <img src={cutoutUrl} alt="cutout" className="w-12 h-12 rounded-lg object-cover bg-checkerboard" />
+              <div className="text-[10px] text-muted-foreground">Fundo removido com sucesso. Aplicado automaticamente nos templates.</div>
+            </div>
+          )}
+
+          <div className="pt-2 border-t border-border/40 space-y-2">
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase tracking-wider font-bold opacity-70">Treino destacado</Label>
+              <Select value={selectedWorkoutId} onValueChange={setSelectedWorkoutId}>
+                <SelectTrigger className="h-9 text-xs bg-black/20">
+                  <SelectValue placeholder="Selecione um treino..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {workouts.map(w => (
+                    <SelectItem key={w.id} value={w.id}>{w.titulo}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold opacity-70">Instagram</Label>
+                <Input value={config.instagram_handle} onChange={e => update("instagram_handle", e.target.value)} className="h-8 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold opacity-70">Telefone</Label>
+                <Input value={config.phone} onChange={e => update("phone", e.target.value)} className="h-8 text-xs" />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold opacity-70">Headline</Label>
+                <Input value={config.headline} onChange={e => update("headline", e.target.value)} className="h-8 text-xs font-bold" />
+              </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] uppercase font-bold opacity-70">Desconto</Label>
+                <Input value={config.discount} onChange={e => update("discount", e.target.value)} className="h-8 text-xs font-bold" />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold opacity-70">CTA</Label>
+              <Input value={config.cta_text} onChange={e => update("cta_text", e.target.value)} className="h-8 text-xs" />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold opacity-70">Site</Label>
+              <Input value={config.website_url} onChange={e => update("website_url", e.target.value)} className="h-8 text-xs" />
+            </div>
+
+            <div className="space-y-1">
+              <Label className="text-[10px] uppercase font-bold opacity-70">Cor de destaque</Label>
+              <Input type="color" value={config.branding_color} onChange={e => update("branding_color", e.target.value)} className="h-9 p-1 cursor-pointer" />
+            </div>
           </div>
         </div>
-      )}
+
+        <div className="bg-card border border-border/40 rounded-2xl p-5 space-y-3 h-fit">
+          <h5 className="font-bold flex items-center gap-2 text-sm"><Camera className="h-4 w-4 text-primary" /> Publicar</h5>
+          <p className="text-xs text-muted-foreground">Salve as configurações e ative o modo Print para capturar a tela em 9:16.</p>
+          <Button onClick={handleSave} className="w-full" disabled={saving} variant="secondary">
+            {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />} Salvar
+          </Button>
+          <Button onClick={onEnterFullScreen} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-widest gap-2">
+            <Maximize className="h-5 w-5" /> Modo Print 9:16
+          </Button>
+        </div>
+      </div>
     </div>
   );
 };
 
-/* ============ TEMPLATE 1: BIOGRAFIA (Jefferson Badboy style) ============ */
-const BiografiaTemplate = ({ config, coachName, avatar }: any) => {
-  const accent = config.branding_color;
-  const topics = [1, 2, 3, 4, 5].map(i => ({
-    label: config[`topic${i}_label`],
-    icon: config[`topic${i}_icon`],
-    desc: config[`topic${i}_desc`],
-  })).filter(t => t.label);
-
+/* ============================================================
+   TEMPLATE 1 — YELLOW CYBER (curvas neon amarelas)
+   ============================================================ */
+const YellowCyberTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
+  const accent = config.branding_color || "#E0FF00";
   return (
-    <div className="relative w-full h-full bg-[#0a0a0a] overflow-hidden text-white">
-      {/* Background gym */}
-      <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=1080')] bg-cover bg-center opacity-30 mix-blend-luminosity" />
-      <div className="absolute inset-0 bg-gradient-to-br from-black via-black/90 to-black/70" />
-      <div className="absolute -top-20 -left-20 w-64 h-64 blur-[80px] opacity-30" style={{ background: accent }} />
+    <div className="relative w-full h-full overflow-hidden text-white"
+      style={{ background: "linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 50%, #1a1a1a 100%)" }}>
+      {/* texture noise */}
+      <div className="absolute inset-0 opacity-30 mix-blend-overlay"
+        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E\")" }} />
 
-      {/* Photo right */}
-      <div className="absolute right-0 top-0 w-[55%] h-full">
-        <img src={avatar} alt="coach" className="w-full h-full object-cover object-top" style={{ maskImage: "linear-gradient(to left, black 60%, transparent)" , WebkitMaskImage: "linear-gradient(to left, black 60%, transparent)" }} />
-      </div>
+      {/* Big yellow curve — top right */}
+      <div className="absolute -top-32 -right-32 w-[400px] h-[400px] rounded-full" style={{ background: accent }} />
+      {/* Bottom right partial circle */}
+      <div className="absolute -bottom-24 -right-20 w-56 h-56 rounded-full" style={{ background: accent }} />
 
-      {/* Header title */}
-      <div className="relative z-10 pt-6 px-5">
-        <h1 className="font-['Anton'] text-[34px] leading-[0.9] tracking-tight italic text-white drop-shadow-[2px_2px_0_rgba(0,0,0,0.8)]">
-          {coachName}
-        </h1>
-        <div className="flex items-center gap-2 mt-1">
-          <div className="h-px w-8" style={{ background: accent }} />
-          <div className="text-[10px] font-bold tracking-[0.4em] uppercase" style={{ color: accent }}>BIOGRAFIA</div>
-          <div className="h-px flex-1" style={{ background: accent }} />
-        </div>
-      </div>
-
-      {/* Topics */}
-      <div className="relative z-10 px-4 mt-4 space-y-2.5 w-[62%]">
-        {topics.map((t, i) => {
-          const Icon = ICONS[t.icon] || Award;
-          return (
-            <div key={i} className="flex gap-2.5 items-start">
-              <div className="w-7 h-7 rounded-full border flex items-center justify-center shrink-0 mt-0.5" style={{ borderColor: accent }}>
-                <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
-              </div>
-              <div>
-                <div className="font-['Anton'] text-[11px] tracking-wide uppercase leading-tight">{t.label}</div>
-                <div className="text-[8.5px] opacity-70 leading-snug mt-0.5">{t.desc}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Bottom bar CTA */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-black/80 backdrop-blur-sm border-t-2 px-4 py-3 flex items-center justify-between" style={{ borderColor: accent }}>
+      {/* Header logo + brand */}
+      <div className="relative z-10 flex items-center justify-between p-4">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ background: accent }}>
-            <Target className="h-3 w-3 text-black" />
+          <div className="w-8 h-8 rounded bg-black border-2 flex items-center justify-center" style={{ borderColor: accent }}>
+            <Dumbbell className="h-4 w-4" style={{ color: accent }} />
           </div>
-          <div>
-            <div className="text-[8px] font-bold tracking-widest opacity-70">FOCO · DISCIPLINA · RESULTADOS</div>
-            <div className="text-[10px] font-black uppercase italic" style={{ color: accent }}>ESSE É O CAMINHO!</div>
-          </div>
-        </div>
-        <div className="text-right">
-          <div className="flex items-center gap-1 text-[9px] font-bold"><AtSign className="h-2.5 w-2.5" />{config.instagram_handle || "@seuperfil"}</div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ============ TEMPLATE 2: CONSULTORIA (white + yellow phone) ============ */
-const ConsultoriaTemplate = ({ config, coachName, avatar }: any) => {
-  const accent = config.accent_secondary || "#FACC15";
-  return (
-    <div className="relative w-full h-full overflow-hidden text-white">
-      <div className="absolute inset-0 bg-[#0a0a0a]" />
-      <img src={avatar} alt="" className="absolute right-0 top-0 h-full w-[70%] object-cover object-top grayscale contrast-125" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-black/20" />
-
-      <div className="relative z-10 p-5 pt-8 h-full flex flex-col">
-        <div>
-          <h2 className="font-['Anton'] text-[32px] leading-[0.85] uppercase tracking-tight">CONSULTORIA</h2>
-          <h3 className="font-['Anton'] text-[18px] leading-[1] uppercase opacity-90 mt-1">DE TREINO E DIETA</h3>
-          <div className="inline-block mt-2 px-3 py-1 rounded-md text-black font-black text-[16px] italic" style={{ background: accent }}>ON-LINE</div>
-        </div>
-
-        {/* Phone mockup + badges */}
-        <div className="flex items-center gap-3 mt-5 ml-2">
-          <div className="relative w-[80px] h-[160px] bg-[#1a1a1a] rounded-[18px] border-2 border-[#333] shadow-2xl shrink-0 overflow-hidden">
-            <div className="absolute top-1 left-1/2 -translate-x-1/2 w-10 h-2 bg-[#333] rounded-b-lg" />
-            <img src={avatar} alt="" className="absolute inset-1 rounded-[14px] object-cover w-[calc(100%-8px)] h-[calc(100%-8px)] grayscale" />
-          </div>
-          <div className="space-y-2">
-            <div className="bg-black/80 border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2">
-              <Dumbbell className="h-4 w-4" style={{ color: accent }} />
-              <div>
-                <div className="text-[8px] opacity-70">TREINOS</div>
-                <div className="font-black text-[11px] uppercase">Personalizados</div>
-              </div>
-            </div>
-            <div className="bg-black/80 border border-white/10 rounded-xl px-3 py-2 flex items-center gap-2">
-              <Apple className="h-4 w-4" style={{ color: accent }} />
-              <div>
-                <div className="text-[8px] opacity-70">DIETAS</div>
-                <div className="font-black text-[11px] uppercase">Individualizadas</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-auto space-y-3">
-          <div>
-            <div className="font-['Anton'] text-[28px] leading-[0.9] uppercase">QUER ALCANÇAR</div>
-            <div className="font-['Anton'] text-[28px] leading-[0.9] uppercase" style={{ color: accent }}>SEUS OBJETIVOS?</div>
-          </div>
-          <div className="inline-block px-4 py-2 rounded-md text-black font-black text-[14px] italic uppercase shadow-lg" style={{ background: accent }}>
-            {config.cta_text || "FALE COMIGO AGORA!"}
-          </div>
-          <div className="flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-3 py-1.5 w-fit">
-            <Globe className="h-3 w-3" style={{ color: accent }} />
-            <span className="text-[10px] font-bold">{config.website_url || "client.seudominio.com.br"}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ============ TEMPLATE 3: TREINO E DIETA (yellow grunge) ============ */
-const TreinoDietaTemplate = ({ config, coachName, avatar }: any) => {
-  const accent = config.accent_secondary || "#FACC15";
-  return (
-    <div className="relative w-full h-full overflow-hidden text-white bg-[#050505]">
-      <img src={avatar} alt="" className="absolute left-0 top-0 h-full w-[55%] object-cover grayscale contrast-150" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/70 to-black" />
-      <div className="absolute top-3 right-3 w-12 h-3 bg-[repeating-linear-gradient(45deg,#000_0_4px,#FACC15_4px_8px)]" />
-
-      <div className="relative z-10 p-5 h-full flex flex-col">
-        <div className="text-[9px] font-bold tracking-[0.3em] opacity-80 space-y-0.5">
-          <div>DISCIPLINA</div><div>FOCO</div><div>RESULTADOS</div>
-        </div>
-
-        <div className="ml-auto text-right mt-6">
-          <div className="font-['Anton'] text-[52px] leading-[0.85] uppercase italic">TREINO</div>
-          <div className="font-['Anton'] text-[52px] leading-[0.85] uppercase italic" style={{ color: accent }}>E DIETA</div>
-          <div className="inline-flex items-center gap-2 mt-2">
-            <div className="h-px w-6 bg-white" />
-            <span className="font-['Anton'] text-[16px] tracking-[0.2em]">ONLINE</span>
-            <div className="h-px w-6 bg-white" />
-          </div>
-          <div className="text-[9px] font-bold tracking-wider mt-2 opacity-90">TRANSFORME SEU CORPO</div>
-          <div className="text-[9px] font-bold tracking-wider opacity-90">TRANSFORME SUA VIDA</div>
-        </div>
-
-        <div className="mt-6 ml-auto space-y-2.5 w-[55%]">
-          {[
-            { i: "Dumbbell", t: "TREINOS PERSONALIZADOS", d: "Planejados para o seu objetivo." },
-            { i: "Utensils", t: "DIETAS PERSONALIZADAS", d: "Nutrição equilibrada para máximo resultado." },
-            { i: "TrendingUp", t: "ACOMPANHAMENTO CONTÍNUO", d: "Suporte e ajustes constantes." },
-          ].map((item, i) => {
-            const Icon = ICONS[item.i];
-            return (
-              <div key={i} className="flex gap-2 items-start">
-                <div className="w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: accent }}>
-                  <Icon className="h-3.5 w-3.5" style={{ color: accent }} />
-                </div>
-                <div>
-                  <div className="font-['Anton'] text-[11px] uppercase leading-tight">{item.t}</div>
-                  <div className="text-[8px] opacity-75 leading-snug">{item.d}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-auto">
-          <div className="inline-flex items-center gap-2 bg-black/60 border border-white/10 rounded-lg px-3 py-1.5 mb-3">
-            <Smartphone className="h-3 w-3" style={{ color: accent }} />
-            <div>
-              <div className="text-[10px] font-black">100% ONLINE</div>
-              <div className="text-[7px] opacity-70 tracking-widest">TREINE ONDE ESTIVER</div>
-            </div>
-          </div>
-          <div className="rounded-lg px-4 py-3 flex items-center gap-3 shadow-2xl" style={{ background: accent }}>
-            <MessageCircle className="h-5 w-5 text-black" />
-            <div className="text-black">
-              <div className="font-black text-[13px] uppercase italic">{config.cta_text || "FALE COMIGO AGORA!"}</div>
-              <div className="text-[8px] font-bold">COMECE SUA TRANSFORMAÇÃO HOJE MESMO!</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ============ TEMPLATE 4: TRANSFORME (green neon) ============ */
-const TransformeTemplate = ({ config, coachName, avatar }: any) => {
-  const accent = "#A3E635";
-  return (
-    <div className="relative w-full h-full overflow-hidden text-white bg-[#080808]">
-      <img src={avatar} alt="" className="absolute right-0 top-0 h-full w-[65%] object-cover object-top grayscale contrast-125" />
-      <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-      <div className="absolute right-0 bottom-0 w-[60%] h-[40%] opacity-30" style={{ background: `radial-gradient(circle at bottom right, ${accent}, transparent 70%)` }} />
-
-      <div className="relative z-10 p-5 h-full flex flex-col">
-        <div>
-          <div className="font-['Anton'] text-[28px] leading-[0.9] uppercase italic">TRANSFORME SEU</div>
-          <div className="font-['Anton'] text-[58px] leading-[0.85] uppercase italic" style={{ color: accent }}>CORPO.</div>
-          <div className="font-['Anton'] text-[26px] leading-[0.9] uppercase italic mt-1">TRANSFORME SUA</div>
-          <div className="font-['Anton'] text-[58px] leading-[0.85] uppercase italic" style={{ color: accent }}>VIDA.</div>
-        </div>
-
-        <div className="mt-3 text-[10px] font-bold tracking-wide leading-tight">
-          <div>TREINO INTELIGENTE.</div>
-          <div>DIETA ESTRATÉGICA.</div>
-          <div style={{ color: accent }}>RESULTADOS REAIS!</div>
-        </div>
-
-        <div className="mt-4 border-2 rounded-2xl p-3 bg-black/60 backdrop-blur-sm w-[60%] space-y-2" style={{ borderColor: accent }}>
-          <div className="text-[10px] font-black tracking-wider" style={{ color: accent }}>O QUE VOCÊ RECEBE:</div>
-          {[
-            { i: "Dumbbell", t: "TREINOS PERSONALIZADOS", s: "100% ON-LINE" },
-            { i: "ClipboardList", t: "DIETAS PERSONALIZADAS", s: "PARA SEU OBJETIVO" },
-            { i: "MessageCircle", t: "ACOMPANHAMENTO", s: "INDIVIDUAL" },
-            { i: "TrendingUp", t: "RESULTADOS COMPROVADOS", s: "MÉTODO APROVADO" },
-          ].map((b, i) => {
-            const Icon = ICONS[b.i];
-            return (
-              <div key={i} className="flex gap-2 items-center">
-                <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: accent }} />
-                <div>
-                  <div className="font-['Anton'] text-[9px] uppercase leading-tight">{b.t}</div>
-                  <div className="text-[7px] opacity-70 tracking-wider">{b.s}</div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="mt-auto">
-          <div className="grid grid-cols-5 gap-1 border-y border-white/10 py-2 mb-3">
-            {[
-              { i: Flame, t: "QUEIMA" },
-              { i: Dumbbell, t: "MASSA" },
-              { i: Zap, t: "ENERGIA" },
-              { i: Target, t: "FOCO" },
-              { i: Trophy, t: "CONFIANÇA" },
-            ].map((x, i) => (
-              <div key={i} className="flex flex-col items-center gap-0.5">
-                <x.i className="h-3 w-3" style={{ color: accent }} />
-                <div className="text-[6.5px] font-bold tracking-wider text-center">{x.t}</div>
-              </div>
-            ))}
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <div className="font-['Anton'] text-[16px] leading-tight uppercase italic" style={{ color: accent }}>COMECE HOJE</div>
-              <div className="text-[8px] opacity-80">A MELHOR VERSÃO DE VOCÊ!</div>
-            </div>
-            <div className="rounded-md px-3 py-2 text-black font-black text-[10px] uppercase italic flex items-center gap-1.5 shadow-lg" style={{ background: accent }}>
-              <MessageCircle className="h-3 w-3" />{config.cta_text || "FALE COMIGO!"}
-            </div>
-          </div>
-          <div className="text-[8px] text-center opacity-60 mt-1.5 tracking-widest">VAGAS LIMITADAS · {config.instagram_handle || "@seuperfil"}</div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-/* ============ Config Panel ============ */
-const ConfigPanel = ({ template, config, update }: any) => {
-  return (
-    <div className="bg-card border border-border/40 rounded-2xl p-5 space-y-3">
-      <h5 className="font-bold flex items-center gap-2 text-sm"><AtSign className="h-4 w-4 text-primary" /> Configurações</h5>
-
-      <div className="space-y-1.5">
-        <Label className="text-[10px] uppercase tracking-wider font-bold opacity-70">Instagram</Label>
-        <Input value={config.instagram_handle} onChange={e => update("instagram_handle", e.target.value)} placeholder="@seuperfil" className="h-9 text-sm" />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-[10px] uppercase tracking-wider font-bold opacity-70">CTA</Label>
-        <Input value={config.cta_text} onChange={e => update("cta_text", e.target.value)} placeholder="FALE COMIGO AGORA!" className="h-9 text-sm" />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-[10px] uppercase tracking-wider font-bold opacity-70">Link / Site</Label>
-        <Input value={config.website_url} onChange={e => update("website_url", e.target.value)} placeholder="client.seudominio.com.br" className="h-9 text-sm" />
-      </div>
-
-      <div className="space-y-1.5">
-        <Label className="text-[10px] uppercase tracking-wider font-bold opacity-70">Foto (URL pública)</Label>
-        <Input value={config.photo_url} onChange={e => update("photo_url", e.target.value)} placeholder="https://..." className="h-9 text-sm" />
-      </div>
-
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1.5">
-          <Label className="text-[10px] uppercase font-bold opacity-70">Cor primária</Label>
-          <Input type="color" value={config.branding_color} onChange={e => update("branding_color", e.target.value)} className="h-9 p-1 cursor-pointer" />
-        </div>
-        <div className="space-y-1.5">
-          <Label className="text-[10px] uppercase font-bold opacity-70">Cor destaque</Label>
-          <Input type="color" value={config.accent_secondary} onChange={e => update("accent_secondary", e.target.value)} className="h-9 p-1 cursor-pointer" />
+          <div className="text-[10px] font-black tracking-[0.25em] uppercase">{coachName}</div>
         </div>
       </div>
 
-      {template === "biografia" && (
-        <div className="pt-2 border-t border-border/40 space-y-2">
-          <div className="text-[10px] font-black uppercase opacity-70">Tópicos da Bio</div>
-          {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="space-y-1">
-              <Input value={config[`topic${i}_label`] || ""} onChange={e => update(`topic${i}_label`, e.target.value)} placeholder={`Título ${i}`} className="h-8 text-xs font-bold" />
-              <Textarea value={config[`topic${i}_desc`] || ""} onChange={e => update(`topic${i}_desc`, e.target.value)} placeholder="Descrição curta" className="text-[11px] min-h-[44px]" rows={2} />
-            </div>
-          ))}
-        </div>
+      {/* Cutout photo */}
+      {cutoutUrl && (
+        <img src={cutoutUrl} alt="" className="absolute right-2 top-16 h-[70%] w-[55%] object-contain z-[5] drop-shadow-[0_10px_30px_rgba(0,0,0,0.7)]" />
       )}
+
+      {/* Texts left */}
+      <div className="relative z-10 px-5 mt-6 max-w-[60%]">
+        <div className="font-['Anton'] text-[44px] leading-[0.85] uppercase tracking-tight">
+          {config.headline?.split(" ").slice(0, 2).join(" ") || "SHAPE YOUR"}
+        </div>
+        <div className="font-['Anton'] text-[64px] leading-[0.85] uppercase italic mt-1" style={{ color: accent }}>
+          {config.headline?.split(" ").slice(2).join(" ") || "BODY"}
+        </div>
+        <div className="text-[10px] font-bold uppercase tracking-widest mt-3 opacity-90 leading-snug">
+          {dynamicSubtitle}
+        </div>
+      </div>
+
+      {/* Discount circle */}
+      <div className="absolute right-4 bottom-28 z-10 w-20 h-20 rounded-full flex flex-col items-center justify-center text-black font-black shadow-[0_0_30px_rgba(224,255,0,0.6)]" style={{ background: accent }}>
+        <div className="font-['Anton'] text-[24px] leading-none italic">{config.discount?.split(" ")[0] || "30%"}</div>
+        <div className="text-[10px] font-black tracking-wider">{config.discount?.split(" ")[1] || "OFF"}</div>
+      </div>
+
+      {/* CTA bottom */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-4 bg-black/60 backdrop-blur-sm flex items-center justify-between border-t" style={{ borderColor: accent }}>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: accent }}>
+            <Phone className="h-3.5 w-3.5 text-black" />
+          </div>
+          <div>
+            <div className="text-[8px] opacity-60 tracking-widest">CALL ME</div>
+            <div className="text-[11px] font-black">{config.phone}</div>
+          </div>
+        </div>
+        <button className="px-4 py-2 rounded-full text-black font-black text-[11px] uppercase italic" style={{ background: accent }}>
+          {config.cta_text?.includes("!") ? "JOIN NOW" : config.cta_text || "JOIN NOW"}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   TEMPLATE 2 — DARK PURPLE NEON CIRCLES
+   ============================================================ */
+const DarkPurpleTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
+  const accent = config.branding_color || "#BF00FF";
+  return (
+    <div className="relative w-full h-full overflow-hidden text-white bg-black">
+      {/* dotted bg pattern */}
+      <div className="absolute inset-0 opacity-30"
+        style={{ backgroundImage: `radial-gradient(${accent}55 1px, transparent 1px)`, backgroundSize: "16px 16px" }} />
+
+      {/* Neon circles vazados */}
+      <div className="absolute top-8 left-6 w-32 h-32 rounded-full border-2 opacity-70" style={{ borderColor: accent, boxShadow: `0 0 30px ${accent}80` }} />
+      <div className="absolute top-20 left-20 w-20 h-20 rounded-full border opacity-60" style={{ borderColor: accent }} />
+      <div className="absolute bottom-32 right-4 w-40 h-40 rounded-full border-2 opacity-70" style={{ borderColor: accent, boxShadow: `0 0 40px ${accent}80` }} />
+      <div className="absolute bottom-20 right-16 w-16 h-16 rounded-full" style={{ background: accent, boxShadow: `0 0 30px ${accent}` }} />
+      <div className="absolute top-1/3 right-8 w-3 h-3 rounded-full" style={{ background: accent }} />
+      <div className="absolute top-1/2 left-4 w-2 h-2 rounded-full" style={{ background: accent }} />
+
+      {/* Cutout */}
+      {cutoutUrl && (
+        <img src={cutoutUrl} alt="" className="absolute left-1/2 -translate-x-1/2 top-14 h-[60%] object-contain z-[5] drop-shadow-[0_0_20px_rgba(191,0,255,0.6)]" />
+      )}
+
+      {/* Header brand */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-2 bg-black/70 border rounded-full px-3 py-1.5" style={{ borderColor: accent }}>
+        <Dumbbell className="h-3 w-3" style={{ color: accent }} />
+        <span className="text-[9px] font-black tracking-widest">{coachName}</span>
+      </div>
+
+      {/* Bottom content */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 p-5 bg-gradient-to-t from-black via-black/95 to-transparent pt-20">
+        <div className="font-['Anton'] text-[36px] leading-[0.85] uppercase">PERSONAL</div>
+        <div className="font-['Anton'] text-[40px] leading-[0.85] uppercase italic" style={{ color: accent }}>TRAINER</div>
+        <div className="text-[10px] font-bold tracking-[0.2em] mt-1 opacity-90">NEVER GIVE UP!</div>
+
+        <div className="text-[10px] mt-3 opacity-80 leading-snug max-w-[80%]">
+          {dynamicSubtitle}
+        </div>
+
+        <div className="flex items-center justify-between mt-4">
+          <div className="flex items-center gap-2 text-[10px]">
+            <Phone className="h-3 w-3" style={{ color: accent }} />
+            <span className="font-black">{config.phone}</span>
+          </div>
+          <button className="px-4 py-2 rounded-md font-black text-[10px] uppercase italic text-black" style={{ background: accent, clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)" }}>
+            START TODAY
+          </button>
+        </div>
+        <div className="flex items-center gap-1 mt-2 text-[9px] opacity-70">
+          <Instagram className="h-2.5 w-2.5" />
+          <span>{config.instagram_handle}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   TEMPLATE 3 — IRONBERG BRUTALIST
+   ============================================================ */
+const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
+  const accent = config.branding_color || "#CCFF00";
+  return (
+    <div className="relative w-full h-full overflow-hidden text-white"
+      style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%)" }}>
+      {/* texture */}
+      <div className="absolute inset-0 opacity-25 mix-blend-overlay"
+        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
+
+      {/* Warning stripe corner */}
+      <div className="absolute top-0 left-0 w-16 h-3 bg-[repeating-linear-gradient(45deg,#000_0_6px,#CCFF00_6px_12px)]" />
+      <div className="absolute top-3 left-0 w-3 h-16 bg-[repeating-linear-gradient(45deg,#000_0_6px,#CCFF00_6px_12px)]" />
+
+      {/* Vazado text background — NO PAIN NO GAIN */}
+      <div className="absolute inset-0 flex flex-col justify-center items-center overflow-hidden opacity-20 select-none">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div
+            key={i}
+            className="font-['Anton'] text-[44px] leading-[0.95] uppercase italic whitespace-nowrap"
+            style={{
+              WebkitTextStroke: `1px ${accent}`,
+              color: "transparent",
+              transform: i % 2 === 0 ? "translateX(-15%)" : "translateX(15%)",
+            }}
+          >
+            NO PAIN NO GAIN
+          </div>
+        ))}
+      </div>
+
+      {/* Header */}
+      <div className="relative z-10 pt-6 px-5">
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase tracking-tight">EXERCISE</div>
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase italic" style={{ color: accent }}>ROUTINE</div>
+        <div className="flex items-center gap-1 mt-1.5 opacity-80">
+          <div className="text-[10px] font-black tracking-[0.3em]" style={{ color: accent }}>›››</div>
+          <div className="text-[9px] uppercase tracking-widest opacity-80">{dynamicSubtitle}</div>
+        </div>
+      </div>
+
+      {/* Cutout */}
+      {cutoutUrl && (
+        <img src={cutoutUrl} alt="" className="absolute right-0 top-1/3 h-[55%] w-[55%] object-contain z-[5] grayscale contrast-125" />
+      )}
+
+      {/* Feature list */}
+      <div className="absolute left-5 top-[42%] z-10 space-y-3 max-w-[50%]">
+        {[
+          { i: Dumbbell, t: "STRENGTH", d: "Treinos pesados focados em força máxima." },
+          { i: Apple, t: "HEALTHY FOOD", d: "Dieta estratégica de alta performance." },
+          { i: Heart, t: "HYPERTROPHY", d: "Volume controlado para ganho de massa." },
+        ].map((b, i) => (
+          <div key={i} className="flex gap-2 items-start">
+            <div className="w-9 h-9 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: accent }}>
+              <b.i className="h-4 w-4" style={{ color: accent }} />
+            </div>
+            <div>
+              <div className="font-['Anton'] text-[12px] uppercase leading-tight">{b.t}</div>
+              <div className="text-[8px] opacity-70 leading-snug">{b.d}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom CTA */}
+      <div className="absolute bottom-0 left-0 right-0 z-10">
+        {/* Diagonal slash */}
+        <div className="h-2 bg-[repeating-linear-gradient(45deg,#000_0_6px,#CCFF00_6px_12px)]" />
+        <div className="bg-black p-4 flex items-center justify-between">
+          <div>
+            <div className="text-[8px] opacity-60 tracking-widest">FALE COMIGO</div>
+            <div className="text-[11px] font-black">{config.phone}</div>
+            <div className="text-[8px] opacity-60 mt-0.5">{config.instagram_handle}</div>
+          </div>
+          <div className="text-black font-black text-[14px] px-4 py-3 rounded-full italic uppercase" style={{ background: accent, clipPath: "polygon(8% 0, 100% 0, 92% 100%, 0 100%)" }}>
+            {config.discount || "10% OFF"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   TEMPLATE 4 — GRADIENT FITNESS (warning stripes orange/pink/yellow)
+   ============================================================ */
+const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
+  const gradient = "linear-gradient(135deg, #FB923C 0%, #EC4899 50%, #FACC15 100%)";
+  return (
+    <div className="relative w-full h-full overflow-hidden text-white bg-[#0a0a0a]">
+      {/* Subtle bg shapes */}
+      <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full opacity-20" style={{ background: gradient, filter: "blur(40px)" }} />
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-15" style={{ background: gradient, filter: "blur(50px)" }} />
+
+      {/* Top warning stripe */}
+      <div className="absolute top-0 left-0 right-0 h-2" style={{ background: gradient }} />
+      <div className="absolute top-2 left-0 right-0 h-1.5 bg-[repeating-linear-gradient(45deg,#000_0_8px,transparent_8px_14px)] opacity-60" />
+
+      {/* Header */}
+      <div className="relative z-10 pt-6 px-5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: gradient }}>
+            <Flame className="h-4 w-4 text-black" />
+          </div>
+          <div>
+            <div className="text-[8px] tracking-widest opacity-60">YOUR COACH</div>
+            <div className="text-[10px] font-black tracking-wider">{coachName}</div>
+          </div>
+        </div>
+
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase">GET IN SHAPE</div>
+        <div className="font-['Anton'] text-[48px] leading-[0.85] uppercase italic bg-clip-text text-transparent" style={{ backgroundImage: gradient }}>
+          TODAY!
+        </div>
+        <div className="flex items-center gap-2 mt-2">
+          <div className="text-sm" style={{ color: "#FB923C" }}>►</div>
+          <div className="text-[10px] font-bold uppercase tracking-widest opacity-90">{dynamicSubtitle}</div>
+        </div>
+      </div>
+
+      {/* Cutout */}
+      {cutoutUrl && (
+        <img src={cutoutUrl} alt="" className="absolute right-0 top-1/4 h-[60%] w-[65%] object-contain z-[5]" />
+      )}
+
+      {/* Feature mini-cards */}
+      <div className="absolute bottom-32 left-5 z-10 space-y-1.5 max-w-[55%]">
+        {[
+          { i: Dumbbell, t: "TREINOS PERSONALIZADOS" },
+          { i: Target, t: "DIETA ESTRATÉGICA" },
+          { i: TrendingUp, t: "ACOMPANHAMENTO 24/7" },
+        ].map((b, i) => (
+          <div key={i} className="flex items-center gap-2 bg-black/70 backdrop-blur-sm rounded-md px-2 py-1.5 border-l-2" style={{ borderColor: "#FB923C" }}>
+            <b.i className="h-3 w-3" style={{ color: "#FB923C" }} />
+            <span className="text-[9px] font-black tracking-wider uppercase">{b.t}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom warning stripe + CTA */}
+      <div className="absolute bottom-0 left-0 right-0 z-10">
+        <div className="h-2 bg-[repeating-linear-gradient(45deg,#000_0_8px,#FB923C_8px_14px,#000_14px_22px,#EC4899_22px_28px)]" />
+        <div className="bg-black/90 backdrop-blur-md p-4 flex items-center justify-between">
+          <div>
+            <div className="flex items-center gap-1.5 text-[10px] font-black">
+              <Phone className="h-3 w-3" style={{ color: "#FB923C" }} />
+              {config.phone}
+            </div>
+            <div className="flex items-center gap-1.5 text-[9px] opacity-70 mt-0.5">
+              <Instagram className="h-2.5 w-2.5" />
+              {config.instagram_handle}
+            </div>
+          </div>
+          <button className="px-4 py-2.5 rounded-md font-black text-[11px] uppercase italic text-black" style={{ background: gradient }}>
+            {config.cta_text || "FALE COMIGO!"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 };
