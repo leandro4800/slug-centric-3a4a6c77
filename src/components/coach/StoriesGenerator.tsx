@@ -174,6 +174,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
 
   const renderTemplate = () => {
     switch (template) {
+      case "consultoria-phone": return <ConsultoriaPhoneTemplate {...tplProps} />;
       case "yellow-cyber": return <YellowCyberTemplate {...tplProps} />;
       case "dark-purple": return <DarkPurpleTemplate {...tplProps} />;
       case "ironberg": return <IronbergTemplate {...tplProps} />;
