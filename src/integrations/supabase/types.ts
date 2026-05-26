@@ -1075,6 +1075,120 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_automated_delivery: {
+        Row: {
+          created_at: string
+          diet_id: string | null
+          id: string
+          is_active: boolean | null
+          plan_id: string | null
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          diet_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          plan_id?: string | null
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          diet_id?: string | null
+          id?: string
+          is_active?: boolean | null
+          plan_id?: string | null
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_marketing_config: {
+        Row: {
+          background_style: string | null
+          branding_color: string | null
+          created_at: string
+          id: string
+          instagram_handle: string | null
+          topic1_icon: string | null
+          topic1_label: string | null
+          topic2_icon: string | null
+          topic2_label: string | null
+          topic3_icon: string | null
+          topic3_label: string | null
+          topic4_icon: string | null
+          topic4_label: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          background_style?: string | null
+          branding_color?: string | null
+          created_at?: string
+          id?: string
+          instagram_handle?: string | null
+          topic1_icon?: string | null
+          topic1_label?: string | null
+          topic2_icon?: string | null
+          topic2_label?: string | null
+          topic3_icon?: string | null
+          topic3_label?: string | null
+          topic4_icon?: string | null
+          topic4_label?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          background_style?: string | null
+          branding_color?: string | null
+          created_at?: string
+          id?: string
+          instagram_handle?: string | null
+          topic1_icon?: string | null
+          topic1_label?: string | null
+          topic2_icon?: string | null
+          topic2_label?: string | null
+          topic3_icon?: string | null
+          topic3_label?: string | null
+          topic4_icon?: string | null
+          topic4_label?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_sales_links: {
+        Row: {
+          checkout_url: string | null
+          created_at: string
+          id: string
+          landing_page_url: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          landing_page_url?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          checkout_url?: string | null
+          created_at?: string
+          id?: string
+          landing_page_url?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comunidade_comentarios: {
         Row: {
           comentario: string
