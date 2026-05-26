@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
@@ -461,6 +461,18 @@ const Perfil = () => {
               <Ruler className="h-4 w-4" /> Nova Avaliação
             </Button>
           </div>
+          
+          {isCoach && (
+            <div className="pt-2">
+              <Button 
+                onClick={() => navigate(`/${slug}/admin/hub`)}
+                variant="outline"
+                className="w-full bg-primary/20 border-primary/40 hover:bg-primary/30 text-primary font-bold gap-2 rounded-xl h-12"
+              >
+                <Rocket className="h-5 w-5" /> HUB DO COACH
+              </Button>
+            </div>
+          )}
           
           <div className="flex gap-2 pt-1">
             <Button
