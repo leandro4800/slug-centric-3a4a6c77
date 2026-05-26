@@ -760,3 +760,54 @@ const ConsultoriaPhoneTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitl
     </div>
   );
 };
+
+/* ============================================================
+   TEMPLATE 6 — FEED BRUTALISTA (1:1)
+   ============================================================ */
+const FeedBrutalistTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
+  const accent = config.branding_color || "#FFFFFF";
+  return (
+    <div className="relative w-full h-full bg-black overflow-hidden flex flex-col p-8 border-[12px]" style={{ borderColor: accent }}>
+      {/* Background large text */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+        <div className="font-['Anton'] text-[150px] leading-none text-white whitespace-nowrap rotate-[-10deg]">
+          ALPHA COACH
+        </div>
+      </div>
+
+      <div className="relative z-10 flex-1 flex flex-col justify-between">
+        <div>
+          <div className="inline-block px-3 py-1 bg-white text-black font-black text-xs uppercase tracking-[0.2em] mb-4">
+            {coachName}
+          </div>
+          <h2 className="font-['Anton'] text-[60px] leading-[0.9] text-white uppercase tracking-tighter">
+            {config.headline || "TRANSFORME SEU CORPO"}
+          </h2>
+        </div>
+
+        <div className="mt-4">
+           <p className="text-xl font-bold uppercase tracking-widest italic" style={{ color: accent }}>
+             {dynamicSubtitle}
+           </p>
+        </div>
+
+        {/* Floating image if exists */}
+        {cutoutUrl && (
+          <img src={cutoutUrl} alt="" className="absolute right-[-2rem] bottom-[-2rem] h-[100%] w-[60%] object-contain z-[5] drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]" />
+        )}
+
+        <div className="mt-auto pt-8 border-t border-white/20">
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <div className="text-[10px] uppercase font-black tracking-widest opacity-50">CLIQUE NO LINK</div>
+              <div className="text-lg font-black">{config.website_url || "bio.link/personal"}</div>
+            </div>
+            <div className="px-6 py-3 bg-white text-black font-black uppercase text-sm skew-x-[-12deg]">
+              {config.cta_text || "QUERO COMEÇAR"}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
