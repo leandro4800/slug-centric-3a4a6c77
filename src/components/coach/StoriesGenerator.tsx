@@ -627,3 +627,127 @@ const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
     </div>
   );
 };
+
+/* ============================================================
+   TEMPLATE 5 — CONSULTORIA ONLINE (phone mockup + amarelo)
+   ============================================================ */
+const ConsultoriaPhoneTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
+  const accent = config.branding_color || "#FACC15";
+  const features = [
+    { i: Dumbbell, t: "TREINOS", s: "Personalizados" },
+    { i: Apple, t: "DIETAS", s: "Individualizadas" },
+    { i: TrendingUp, t: "EVOLUÇÃO", s: "Acompanhada 24/7" },
+    { i: Target, t: "METAS", s: "Plano sob medida" },
+  ];
+  const benefits = [
+    "Avaliação física completa",
+    "Ajustes semanais no plano",
+    "Suporte direto via WhatsApp",
+    "Vídeos demonstrativos HD",
+  ];
+
+  return (
+    <div className="relative w-full h-full overflow-hidden text-white bg-[#0a0a0a]">
+      {/* Glow background */}
+      <div className="absolute -top-32 -right-32 w-80 h-80 rounded-full opacity-30" style={{ background: accent, filter: "blur(80px)" }} />
+      <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full opacity-20" style={{ background: accent, filter: "blur(60px)" }} />
+
+      {/* Cutout grayscale */}
+      {cutoutUrl && (
+        <img src={cutoutUrl} alt="" className="absolute right-0 top-0 h-[65%] w-[60%] object-contain object-top grayscale contrast-125 opacity-90 z-[2]" />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black z-[3]" />
+
+      {/* Header */}
+      <div className="relative z-10 px-5 pt-5">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="w-8 h-8 rounded-md flex items-center justify-center" style={{ background: accent }}>
+            <Dumbbell className="h-4 w-4 text-black" />
+          </div>
+          <div>
+            <div className="text-[8px] tracking-widest opacity-60">YOUR COACH</div>
+            <div className="text-[10px] font-black tracking-wider">{coachName}</div>
+          </div>
+        </div>
+
+        <h2 className="font-['Anton'] text-[36px] leading-[0.85] uppercase tracking-tight">CONSULTORIA</h2>
+        <h3 className="font-['Anton'] text-[20px] leading-[1] uppercase opacity-90 mt-1">DE TREINO E DIETA</h3>
+        <div className="inline-block mt-2 px-3 py-1 rounded-md text-black font-black text-[14px] italic shadow-lg" style={{ background: accent }}>
+          ON-LINE
+        </div>
+      </div>
+
+      {/* Phone mockup + feature pills */}
+      <div className="relative z-10 flex items-start gap-3 mt-4 px-5">
+        {/* Phone */}
+        <div className="relative w-[88px] h-[170px] bg-[#1a1a1a] rounded-[20px] border-2 border-[#333] shadow-2xl shrink-0 overflow-hidden">
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-2 bg-[#333] rounded-b-lg z-10" />
+          {cutoutUrl ? (
+            <img src={cutoutUrl} alt="" className="absolute inset-1 rounded-[16px] object-cover w-[calc(100%-8px)] h-[calc(100%-8px)] grayscale" />
+          ) : (
+            <div className="absolute inset-1 rounded-[16px] bg-gradient-to-br from-zinc-800 to-black" />
+          )}
+          {/* Floating badge on phone */}
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[8px] font-black text-black" style={{ background: accent }}>
+            APP COACH
+          </div>
+        </div>
+
+        {/* Feature pills */}
+        <div className="grid grid-cols-2 gap-1.5 flex-1">
+          {features.map((f, i) => (
+            <div key={i} className="bg-black/80 border border-white/10 rounded-lg px-2 py-1.5 flex items-center gap-1.5 backdrop-blur-sm">
+              <f.i className="h-3.5 w-3.5 shrink-0" style={{ color: accent }} />
+              <div className="min-w-0">
+                <div className="text-[7px] opacity-60 tracking-widest">{f.t}</div>
+                <div className="font-black text-[9px] uppercase leading-tight truncate">{f.s}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Benefits checklist */}
+      <div className="relative z-10 mt-3 mx-5 bg-black/60 backdrop-blur-md border rounded-xl p-3 space-y-1.5" style={{ borderColor: `${accent}40` }}>
+        <div className="text-[9px] font-black tracking-widest mb-1" style={{ color: accent }}>O QUE VOCÊ RECEBE:</div>
+        {benefits.map((b, i) => (
+          <div key={i} className="flex items-center gap-2">
+            <Check className="h-3 w-3 shrink-0" style={{ color: accent }} />
+            <span className="text-[10px] font-medium">{b}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Dynamic workout highlight */}
+      {dynamicSubtitle && (
+        <div className="relative z-10 mt-2 mx-5 flex items-center gap-2">
+          <div className="text-sm" style={{ color: accent }}>►</div>
+          <div className="text-[9px] uppercase tracking-widest opacity-80">{dynamicSubtitle}</div>
+        </div>
+      )}
+
+      {/* Bottom CTA block */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-4 pt-3 bg-gradient-to-t from-black via-black/95 to-transparent">
+        <div className="font-['Anton'] text-[20px] leading-[0.95] uppercase">QUER ALCANÇAR</div>
+        <div className="font-['Anton'] text-[24px] leading-[0.95] uppercase italic" style={{ color: accent }}>SEUS OBJETIVOS?</div>
+
+        <div className="flex items-center justify-between mt-3 gap-2">
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-1.5 text-[10px] font-black">
+              <Phone className="h-3 w-3" style={{ color: accent }} />
+              {config.phone}
+            </div>
+            <div className="flex items-center gap-1.5 text-[9px] opacity-70">
+              <AtSign className="h-2.5 w-2.5" />
+              {config.instagram_handle}
+            </div>
+            <div className="text-[8px] opacity-60 tracking-wider">{config.website_url}</div>
+          </div>
+          <button className="px-3 py-2 rounded-md text-black font-black text-[11px] uppercase italic shadow-[0_4px_20px_rgba(250,204,21,0.4)] shrink-0" style={{ background: accent }}>
+            {config.cta_text || "FALE COMIGO!"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
