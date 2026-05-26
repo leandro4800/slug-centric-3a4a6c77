@@ -1777,6 +1777,27 @@ export type Database = {
         }
         Relationships: []
       }
+      link_reivindicacao_usos: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          token: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          token: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          token?: string
+        }
+        Relationships: []
+      }
       menu_templates: {
         Row: {
           created_at: string | null

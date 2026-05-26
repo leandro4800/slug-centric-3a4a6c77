@@ -27,14 +27,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type TemplateId = "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit";
+type TemplateId = "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
-const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string }[] = [
-  { id: "consultoria-phone", label: "Consultoria Online", desc: "Phone mockup + amarelo", accent: "#FACC15" },
-  { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00" },
-  { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF" },
-  { id: "ironberg", label: "Ironberg Brutal", desc: "Tipografia gigante vazada", accent: "#CCFF00" },
-  { id: "gradient-fit", label: "Gradient Sport", desc: "Listras de aviso vibrantes", accent: "#FB923C" },
+const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; format: "9:16" | "1:1" }[] = [
+  { id: "consultoria-phone", label: "Consultoria Online", desc: "Phone mockup + amarelo", accent: "#FACC15", format: "9:16" },
+  { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00", format: "9:16" },
+  { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF", format: "9:16" },
+  { id: "ironberg", label: "Ironberg Brutal", desc: "Tipografia gigante vazada", accent: "#CCFF00", format: "9:16" },
+  { id: "gradient-fit", label: "Gradient Sport", desc: "Listras de aviso vibrantes", accent: "#FB923C", format: "9:16" },
+  { id: "feed-brutalist", label: "Feed Brutalista", desc: "Quadrado de alta conversão", accent: "#FFFFFF", format: "1:1" },
 ];
 
 // Mock workout templates fallback
@@ -124,7 +125,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
         ...persistable,
         updated_at: new Date().toISOString(),
       };
-      const { error } = await supabase.from("coach_marketing_config").upsert(payload);
+      const { error } = await supabase.from("coach_marketing_config").upsert(payload, { onConflict: 'user_id' });
       if (error) throw error;
       toast.success("Configurações salvas!");
     } catch (e: any) { toast.error("Erro: " + e.message); } finally { setSaving(false); }
@@ -179,17 +180,22 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
       case "dark-purple": return <DarkPurpleTemplate {...tplProps} />;
       case "ironberg": return <IronbergTemplate {...tplProps} />;
       case "gradient-fit": return <GradientFitTemplate {...tplProps} />;
+      case "feed-brutalist": return <FeedBrutalistTemplate {...tplProps} />;
     }
   };
 
   if (isFullScreen) {
+    const activeTemplate = TEMPLATES.find(t => t.id === template);
+    const aspectClass = activeTemplate?.format === "1:1" ? "aspect-square" : "aspect-[9/16]";
+    const heightClass = activeTemplate?.format === "1:1" ? "h-auto w-[95vw] max-w-[600px]" : "h-[100vh]";
+
     return (
       <div className="fixed inset-0 z-[200] bg-black flex flex-col items-center justify-center print-clean">
         <style>{`
           body { overflow: hidden !important; }
           .print-clean::-webkit-scrollbar { display: none; }
         `}</style>
-        <div className="relative w-auto h-[100vh] aspect-[9/16] max-w-[100vw] bg-black overflow-hidden shadow-2xl">
+        <div className={cn("relative bg-black overflow-hidden shadow-2xl", aspectClass, heightClass)}>
           {renderTemplate()}
         </div>
         <Button
@@ -235,7 +241,10 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
       </div>
 
       {/* Preview */}
-      <div className="relative mx-auto bg-black shadow-2xl overflow-hidden h-[600px] aspect-[9/16] rounded-[2rem] ring-1 ring-white/10">
+      <div className={cn(
+        "relative mx-auto bg-black shadow-2xl overflow-hidden rounded-[2rem] ring-1 ring-white/10 transition-all duration-500",
+        TEMPLATES.find(t => t.id === template)?.format === "1:1" ? "aspect-square w-full" : "h-[600px] aspect-[9/16]"
+      )}>
         {renderTemplate()}
       </div>
 
@@ -327,7 +336,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />} Salvar
           </Button>
           <Button onClick={onEnterFullScreen} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-widest gap-2">
-            <Maximize className="h-5 w-5" /> Modo Print 9:16
+            <Maximize className="h-5 w-5" /> Modo Print {TEMPLATES.find(t => t.id === template)?.format || "9:16"}
           </Button>
         </div>
       </div>
