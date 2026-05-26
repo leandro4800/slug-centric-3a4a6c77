@@ -1110,11 +1110,19 @@ export type Database = {
       }
       coach_marketing_config: {
         Row: {
+          accent_secondary: string | null
           background_style: string | null
           branding_color: string | null
           created_at: string
+          cta_text: string | null
+          headline: string | null
           id: string
           instagram_handle: string | null
+          location_text: string | null
+          photo_url: string | null
+          subheadline: string | null
+          tagline: string | null
+          template: string | null
           topic1_icon: string | null
           topic1_label: string | null
           topic2_icon: string | null
@@ -1123,15 +1131,28 @@ export type Database = {
           topic3_label: string | null
           topic4_icon: string | null
           topic4_label: string | null
+          topic5_icon: string | null
+          topic5_label: string | null
+          topic6_icon: string | null
+          topic6_label: string | null
           updated_at: string
           user_id: string
+          website_url: string | null
         }
         Insert: {
+          accent_secondary?: string | null
           background_style?: string | null
           branding_color?: string | null
           created_at?: string
+          cta_text?: string | null
+          headline?: string | null
           id?: string
           instagram_handle?: string | null
+          location_text?: string | null
+          photo_url?: string | null
+          subheadline?: string | null
+          tagline?: string | null
+          template?: string | null
           topic1_icon?: string | null
           topic1_label?: string | null
           topic2_icon?: string | null
@@ -1140,15 +1161,28 @@ export type Database = {
           topic3_label?: string | null
           topic4_icon?: string | null
           topic4_label?: string | null
+          topic5_icon?: string | null
+          topic5_label?: string | null
+          topic6_icon?: string | null
+          topic6_label?: string | null
           updated_at?: string
           user_id: string
+          website_url?: string | null
         }
         Update: {
+          accent_secondary?: string | null
           background_style?: string | null
           branding_color?: string | null
           created_at?: string
+          cta_text?: string | null
+          headline?: string | null
           id?: string
           instagram_handle?: string | null
+          location_text?: string | null
+          photo_url?: string | null
+          subheadline?: string | null
+          tagline?: string | null
+          template?: string | null
           topic1_icon?: string | null
           topic1_label?: string | null
           topic2_icon?: string | null
@@ -1157,8 +1191,13 @@ export type Database = {
           topic3_label?: string | null
           topic4_icon?: string | null
           topic4_label?: string | null
+          topic5_icon?: string | null
+          topic5_label?: string | null
+          topic6_icon?: string | null
+          topic6_label?: string | null
           updated_at?: string
           user_id?: string
+          website_url?: string | null
         }
         Relationships: []
       }
