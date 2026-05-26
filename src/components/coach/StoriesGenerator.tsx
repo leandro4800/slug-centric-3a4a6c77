@@ -9,11 +9,12 @@ import {
   Zap, 
   Maximize, 
   Minimize,
-  Instagram,
   ChevronRight,
   ChevronLeft,
   Loader2,
-  Check
+  Check,
+  Share2,
+  AtSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -166,7 +167,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
                     {profileData?.nome_completo || "COACH ALPHA"}
                   </h4>
                   <div className="flex items-center justify-center gap-1.5 text-primary font-bold text-sm tracking-widest uppercase italic">
-                    <Instagram className="h-4 w-4" /> {config.instagram_handle || "@seuhandle"}
+                    <AtSign className="h-4 w-4" /> {config.instagram_handle || "@seuhandle"}
                   </div>
                 </div>
               </div>
@@ -264,7 +265,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-2xl">
           <div className="bg-card border border-border/40 rounded-2xl p-6 space-y-4">
             <h5 className="font-bold flex items-center gap-2">
-              <Instagram className="h-4 w-4 text-primary" /> Configurações
+              <AtSign className="h-4 w-4 text-primary" /> Configurações
             </h5>
             <div className="space-y-4">
               <div className="space-y-2">
