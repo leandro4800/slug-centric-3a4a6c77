@@ -27,9 +27,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type TemplateId = "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit";
+type TemplateId = "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string }[] = [
+  { id: "consultoria-phone", label: "Consultoria Online", desc: "Phone mockup + amarelo", accent: "#FACC15" },
   { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00" },
   { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF" },
   { id: "ironberg", label: "Ironberg Brutal", desc: "Tipografia gigante vazada", accent: "#CCFF00" },
