@@ -209,7 +209,7 @@ const Landing = () => {
     const loadCoaches = async () => {
       const { data } = await supabase
         .from("tenants")
-        .select("nome, tagline, bio, hero_url, foto_url, especialidades, cidade, estado, slug")
+        .select("nome, tagline, bio, hero_url, foto_url, logo_url, especialidades, cidade, estado, slug")
         .eq("status", "approved")
         .limit(10);
       
@@ -218,7 +218,7 @@ const Landing = () => {
           name: d.nome, 
           specialty: (d.especialidades && d.especialidades.length > 0) ? d.especialidades[0] : (d.tagline || ""), 
           bio: d.bio || "", 
-          video: d.hero_url || d.foto_url || "", 
+          video: d.hero_url || d.foto_url || (d as any).logo_url || "", 
           tag: "VERIFICADO", 
           cidade: d.cidade || "", 
           estado: d.estado || "", 
