@@ -139,15 +139,17 @@ const DemoAppScreen = ({ mode = "home", brandName = "Seu Coach Team", brandColor
       </div>
     </div>
     {mode === "home" && (
-      <div className="flex-1 flex flex-col overflow-y-auto scrollbar-hide">
-        <div className="relative h-64 shrink-0 overflow-hidden">
-          <video src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4" autoPlay muted loop playsInline className="h-full w-full object-cover opacity-60" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
-          <div className="absolute left-6 right-6 bottom-6">
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: brandColor }}>{brandName}</p>
-            <h3 className="text-3xl font-black uppercase leading-none mb-2">BEM-VINDO, CHAMP</h3>
-            <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Hoje é dia de braço e foco total.</p>
-          </div>
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        <img
+          src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1779216281370_7dlm0f_Screenshot_31.png"
+          alt="App Alpha Coach"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/10" />
+        <div className="absolute left-6 right-6 bottom-8">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] mb-1" style={{ color: brandColor }}>{brandName}</p>
+          <h3 className="text-3xl font-black uppercase leading-none mb-2">BEM-VINDO, CHAMP</h3>
+          <p className="text-[10px] text-gray-400 uppercase tracking-widest font-bold">Hoje é dia de braço e foco total.</p>
         </div>
       </div>
     )}
