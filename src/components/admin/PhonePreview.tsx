@@ -17,6 +17,7 @@ import mealDinner from "@/assets/meal-dinner.jpg";
 interface Props {
   onPick: (target: EditableTarget) => void;
   pickedTarget?: EditableTarget | null;
+  initialScreen?: ScreenId;
 }
 
 export type EditableTarget =
