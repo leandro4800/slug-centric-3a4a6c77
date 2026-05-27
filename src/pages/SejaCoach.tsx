@@ -11,15 +11,15 @@ import { Logo } from "@/components/Logo";
 import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 
-type Step = "signup" | "verify-email" | "personal" | "tenant" | "pending";
-const STEPS: Step[] = ["signup", "personal", "tenant", "pending"];
+type Step = "plans" | "signup" | "verify-email" | "personal" | "tenant" | "pending";
+const STEPS: Step[] = ["plans", "signup", "personal", "tenant", "pending"];
 
 export default function SejaCoach() {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [step, setStep] = useState<Step>("signup");
+  const [step, setStep] = useState<Step>("plans");
   const [busy, setBusy] = useState(false);
 
   // signup
@@ -83,6 +83,38 @@ export default function SejaCoach() {
     } else {
       setStep(perfil?.telefone ? "tenant" : "personal");
     }
+  };
+
+  const PLATFORM_PLANS = [
+    {
+      id: "basic",
+      name: "Alpha Start",
+      price: "R$ 97",
+      period: "/mês",
+      features: ["Até 10 alunos", "Treinos Ilimitados", "App Personalizado", "Suporte via Email"],
+      color: "border-zinc-800"
+    },
+    {
+      id: "pro",
+      name: "Alpha Pro",
+      price: "R$ 197",
+      period: "/mês",
+      features: ["Alunos Ilimitados", "Análise de Exames", "IA Nutricional", "Suporte Prioritário"],
+      color: "border-primary",
+      popular: true
+    },
+    {
+      id: "elite",
+      name: "Alpha Elite",
+      price: "R$ 497",
+      period: "/mês",
+      features: ["White Label Total", "Gestão de Equipe", "Mentoria de Negócios", "Gerente de Conta"],
+      color: "border-zinc-800"
+    }
+  ];
+
+  const handleSelectPlan = (planId: string) => {
+    setStep(user ? "personal" : "signup");
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -208,6 +240,52 @@ export default function SejaCoach() {
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card p-8">
+          {step === "plans" && (
+            <div className="space-y-8">
+              <div className="text-center">
+                <h2 className="font-display text-2xl uppercase italic">Escolha seu plano Alpha</h2>
+                <p className="text-sm text-muted-foreground mt-2">Selecione a melhor opção para sua escala.</p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {PLATFORM_PLANS.map((plan) => (
+                  <div 
+                    key={plan.id}
+                    className={`relative flex flex-col p-6 rounded-2xl border ${plan.color} bg-zinc-900/50 backdrop-blur-sm transition-all hover:scale-[1.02] cursor-pointer`}
+                    onClick={() => handleSelectPlan(plan.id)}
+                  >
+                    {plan.popular && (
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full">
+                        MAIS POPULAR
+                      </div>
+                    )}
+                    <div className="mb-4">
+                      <h3 className="font-black uppercase tracking-tighter text-lg">{plan.name}</h3>
+                      <div className="mt-2 flex items-baseline gap-1">
+                        <span className="text-2xl font-black">{plan.price}</span>
+                        <span className="text-xs text-muted-foreground">{plan.period}</span>
+                      </div>
+                    </div>
+                    <ul className="space-y-3 mb-8 flex-1">
+                      {plan.features.map((feature, i) => (
+                        <li key={i} className="flex items-center gap-2 text-xs text-zinc-400">
+                          <CheckCircle2 className="h-3 w-3 text-primary shrink-0" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
+                    <Button 
+                      variant={plan.popular ? "default" : "outline"} 
+                      className="w-full font-black uppercase tracking-widest text-[10px]"
+                    >
+                      Selecionar
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {step === "signup" && !user && (
             <form onSubmit={handleSignup} className="space-y-4">
               <h2 className="font-display text-2xl uppercase italic">1. Crie sua conta</h2>
