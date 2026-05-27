@@ -373,11 +373,11 @@ const YellowCyberTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
 
       {/* Cutout photo */}
       {cutoutUrl && (
-        <div className="absolute right-2 top-16 h-[70%] w-[55%] z-[5]>
+        <div className="absolute right-2 top-16 h-[70%] w-[55%] z-[5]">
           <img 
             src={cutoutUrl} 
-            alt= 
-            className="h-full w-full object-contain 
+            alt="" 
+            className="h-full w-full object-contain" 
             style={{ 
               maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
@@ -445,11 +445,11 @@ const DarkPurpleTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: a
 
       {/* Cutout */}
       {cutoutUrl && (
-        <div className="absolute left-1/2 -translate-x-1/2 top-14 h-[60%] z-[5]>
+        <div className="absolute left-1/2 -translate-x-1/2 top-14 h-[60%] z-[5]">
           <img 
             src={cutoutUrl} 
-            alt= 
-            className="h-full object-contain 
+            alt="" 
+            className="h-full object-contain" 
             style={{ 
               maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
@@ -537,11 +537,11 @@ const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any
 
       {/* Cutout */}
       {cutoutUrl && (
-        <div className="absolute right-0 top-1/3 h-[55%] w-[55%] z-[5]>
+        <div className="absolute right-0 top-1/3 h-[55%] w-[55%] z-[5]">
           <img 
             src={cutoutUrl} 
-            alt= 
-            className="h-full w-full object-contain grayscale contrast-125 
+            alt="" 
+            className="h-full w-full object-contain grayscale contrast-125" 
             style={{ 
               maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
@@ -610,8 +610,8 @@ const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
             <Flame className="h-4 w-4 text-black" />
           </div>
           <div>
-            <div className="text-[8px] tracking-widest opacity-60>SEU TREINADOR</div>
-            <div className="text-[10px] font-black tracking-wider>{coachName}</div>
+            <div className="text-[8px] tracking-widest opacity-60">SEU TREINADOR</div>
+            <div className="text-[10px] font-black tracking-wider">{coachName}</div>
           </div>
         </div>
 
@@ -627,11 +627,11 @@ const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
 
       {/* Cutout */}
       {cutoutUrl && (
-        <div className="absolute right-0 top-1/4 h-[60%] w-[65%] z-[5]>
+        <div className="absolute right-0 top-1/4 h-[60%] w-[65%] z-[5]">
           <img 
             src={cutoutUrl} 
-            alt= 
-            className="h-full w-full object-contain 
+            alt="" 
+            className="h-full w-full object-contain" 
             style={{ 
               maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
@@ -703,11 +703,11 @@ const ConsultoriaPhoneTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitl
 
       {/* Cutout grayscale */}
       {cutoutUrl && (
-        <div className="absolute right-0 top-0 h-[65%] w-[60%] z-[2]>
+        <div className="absolute right-0 top-0 h-[65%] w-[60%] z-[2]">
           <img 
             src={cutoutUrl} 
-            alt= 
-            className="h-full w-full object-contain object-top grayscale contrast-125 opacity-90 
+            alt="" 
+            className="h-full w-full object-contain object-top grayscale contrast-125 opacity-90" 
             style={{ 
               maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
@@ -724,8 +724,8 @@ const ConsultoriaPhoneTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitl
             <Dumbbell className="h-4 w-4 text-black" />
           </div>
           <div>
-            <div className="text-[8px] tracking-widest opacity-60>SEU TREINADOR</div>
-            <div className="text-[10px] font-black tracking-wider>{coachName}</div>
+            <div className="text-[8px] tracking-widest opacity-60">SEU TREINADOR</div>
+            <div className="text-[10px] font-black tracking-wider">{coachName}</div>
           </div>
         </div>
 
@@ -843,11 +843,11 @@ const FeedBrutalistTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }
 
         {/* Floating image if exists */}
         {cutoutUrl && (
-          <div className="absolute right-[-2rem] bottom-[-2rem] h-[100%] w-[60%] z-[4]>
+          <div className="absolute right-[-2rem] bottom-[-2rem] h-[100%] w-[60%] z-[4]">
             <img 
               src={cutoutUrl} 
-              alt= 
-              className="h-full w-full object-contain 
+              alt="" 
+              className="h-full w-full object-contain" 
               style={{ 
                 maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
                 WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
