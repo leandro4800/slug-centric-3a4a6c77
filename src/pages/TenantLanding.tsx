@@ -221,8 +221,8 @@ export default function TenantLanding() {
         </div>
 
         <div className="relative mx-auto max-w-5xl px-4 pt-6 md:px-8 flex justify-between items-center">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
-            <ArrowLeft className="h-4 w-4" /> Marketplace
+          <Link to="/site" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
+            <ArrowLeft className="h-4 w-4" /> Voltar ao Início
           </Link>
           <div className="flex items-center gap-2">
             <Button
