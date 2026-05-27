@@ -562,7 +562,7 @@ const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any
               <b.i className="h-4 w-4" style={{ color: accent }} />
             </div>
             <div>
-              <div className="font-['Anton'] text-[12px] uppercase leading-tight">{b.t}</div>
+              <div className="font-['Anton'] text-[12px] uppercase leading-tight">{b.t === "STRENGTH" ? "FORÇA" : b.t === "HEALTHY FOOD" ? "DIETA" : "HIPERTROFIA"}</div>
               <div className="text-[8px] opacity-70 leading-snug">{b.d}</div>
             </div>
           </div>
