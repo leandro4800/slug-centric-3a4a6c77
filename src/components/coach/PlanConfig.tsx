@@ -92,7 +92,11 @@ export const PlanConfig = () => {
       const { error } = await supabase
         .from("planos")
         .insert({
-          ...newPlan,
+          nome: newPlan.nome!,
+          descricao: newPlan.descricao,
+          preco_centavos: newPlan.preco_centavos!,
+          intervalo: newPlan.intervalo as any,
+          ativo: newPlan.ativo,
           tenant_id: tenant.id,
           ordem: plans.length
         });
