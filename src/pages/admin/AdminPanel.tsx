@@ -26,6 +26,7 @@ import heroDefault from "@/assets/hero-default.jpg";
 import { IdentidadeVisual } from "@/components/admin/IdentidadeVisual";
 import { VlogsAdmin } from "@/components/admin/VlogsAdmin";
 import heic2any from "heic2any";
+import { PhonePreview } from "@/components/admin/PhonePreview";
 
 interface Aluno { id: string; nome_completo: string | null; email: string | null; avatar_url: string | null; }
 
