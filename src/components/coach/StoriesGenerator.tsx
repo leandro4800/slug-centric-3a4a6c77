@@ -520,7 +520,7 @@ const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any
               transform: i % 2 === 0 ? "translateX(-15%)" : "translateX(15%)",
             }}
           >
-            NO PAIN NO GAIN
+            SEM DOR SEM GANHO
           </div>
         ))}
       </div>
