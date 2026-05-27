@@ -389,10 +389,10 @@ const YellowCyberTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
       {/* Texts left */}
       <div className="relative z-10 px-5 mt-6 max-w-[60%]">
         <div className="font-['Anton'] text-[44px] leading-[0.85] uppercase tracking-tight">
-          {config.headline?.split(" ").slice(0, 2).join(" ") || "SHAPE YOUR"}
+          {config.headline?.split(" ").slice(0, 2).join(" ") || "TREINE"}
         </div>
         <div className="font-['Anton'] text-[64px] leading-[0.85] uppercase italic mt-1" style={{ color: accent }}>
-          {config.headline?.split(" ").slice(2).join(" ") || "BODY"}
+          {config.headline?.split(" ").slice(2).join(" ") || "COMIGO"}
         </div>
         <div className="text-[10px] font-bold uppercase tracking-widest mt-3 opacity-90 leading-snug">
           {dynamicSubtitle}
