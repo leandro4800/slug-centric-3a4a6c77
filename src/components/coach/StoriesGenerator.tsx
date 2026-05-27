@@ -480,7 +480,7 @@ const DarkPurpleTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: a
             <span className="font-black">{config.phone}</span>
           </div>
           <button className="px-4 py-2 rounded-md font-black text-[10px] uppercase italic text-black" style={{ background: accent, clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)" }}>
-            START TODAY
+            COMECE HOJE
           </button>
         </div>
         <div className="flex items-center gap-1 mt-2 text-[9px] opacity-70">
