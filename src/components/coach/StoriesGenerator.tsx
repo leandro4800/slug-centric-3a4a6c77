@@ -527,8 +527,8 @@ const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any
 
       {/* Header */}
       <div className="relative z-10 pt-6 px-5">
-        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase tracking-tight">EXERCISE</div>
-        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase italic" style={{ color: accent }}>ROUTINE</div>
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase tracking-tight">ROTINA DE</div>
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase italic" style={{ color: accent }}>TREINO</div>
         <div className="flex items-center gap-1 mt-1.5 opacity-80">
           <div className="text-[10px] font-black tracking-[0.3em]" style={{ color: accent }}>›››</div>
           <div className="text-[9px] uppercase tracking-widest opacity-80">{dynamicSubtitle}</div>
