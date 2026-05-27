@@ -264,13 +264,14 @@ const AdminPanel = () => {
               </TabsContent>
 
               <TabsContent value="midia">
-                <div className="grid lg:grid-cols-2 gap-6">
-                  {/* Hero / Login background */}
-                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
-                    <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">FUNDO DA TELA DE LOGIN</h3>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Aparece atrás da tela de login do seu app. Você pode usar uma <strong>imagem</strong> <strong>OU</strong> enviar um <strong>vídeo</strong> em loop. Se houver vídeo, ele tem prioridade sobre a imagem.
-                    </p>
+                <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+                  <div className="space-y-6">
+                    {/* Hero / Login background */}
+                    <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+                      <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">FUNDO DA TELA DE LOGIN</h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Aparece atrás da tela de login do seu app. Você pode usar uma <strong>imagem</strong> <strong>OU</strong> enviar um <strong>vídeo</strong> em loop. Se houver vídeo, ele tem prioridade sobre a imagem. No celular e tablet, o vídeo se adapta dentro do container.
+                      </p>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Imagem */}
                       <div className="space-y-3">
