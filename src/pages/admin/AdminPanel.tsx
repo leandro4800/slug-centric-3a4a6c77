@@ -375,7 +375,7 @@ const AdminPanel = () => {
                   </div>
 
                   {/* Outros dados */}
-                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
                     <h3 className="font-display text-2xl mb-4 text-primary uppercase tracking-wider">DADOS DO TIME</h3>
                     <div className="grid sm:grid-cols-2 gap-6">
                       <div className="space-y-4">
@@ -406,7 +406,22 @@ const AdminPanel = () => {
                     </Button>
                   </div>
                 </div>
-              </TabsContent>
+
+                {/* Preview Column */}
+                <div className="hidden lg:block sticky top-24 space-y-4">
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4 text-center">
+                      Prévia do Login
+                    </p>
+                    <div className="flex justify-center">
+                      <PhonePreview onPick={() => {}} pickedTarget={null} />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-4 text-center uppercase tracking-tighter">
+                      Use o menu no celular acima para alternar entre as telas
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               <TabsContent value="vlogs">
                 <VlogsAdmin />
