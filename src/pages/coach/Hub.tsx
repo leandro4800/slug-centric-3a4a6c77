@@ -9,13 +9,14 @@ import {
   Layout,
   MousePointerClick,
   Share2,
-  Lock
+  Lock,
+  FileSpreadsheet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoriesGenerator } from "@/components/coach/StoriesGenerator";
 import { SalesLinkConfig } from "@/components/coach/SalesLinkConfig";
-import { AutomatedDelivery } from "@/components/coach/AutomatedDelivery";
+import { WorkoutSpreadsheetGenerator } from "@/components/coach/WorkoutSpreadsheetGenerator";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +47,7 @@ const Hub = () => {
         </Button>
         <div>
           <h1 className="text-xl font-bold tracking-tight">Hub do Coach</h1>
-          <p className="text-xs text-muted-foreground">Marketing e Automação de Vendas</p>
+          <p className="text-xs text-muted-foreground">Marketing e Gestão de Treinos</p>
         </div>
         <div className="ml-auto">
           <div className="bg-primary/10 text-primary text-[10px] font-bold px-2 py-0.5 rounded-full border border-primary/20">
@@ -74,8 +75,8 @@ const Hub = () => {
             <TabsTrigger value="marketing" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
               <Megaphone className="h-4 w-4" /> Marketing
             </TabsTrigger>
-            <TabsTrigger value="automação" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-              <Zap className="h-4 w-4" /> Automação
+            <TabsTrigger value="planilhas" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
+              <FileSpreadsheet className="h-4 w-4" /> Planilhas
             </TabsTrigger>
             <TabsTrigger value="vendas" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
               <LinkIcon className="h-4 w-4" /> Vendas
@@ -92,13 +93,13 @@ const Hub = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="automação" className="mt-0 focus-visible:outline-none">
+          <TabsContent value="planilhas" className="mt-0 focus-visible:outline-none">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
-                <Share2 className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-bold">Entrega de Planilhas</h3>
+                <FileSpreadsheet className="h-5 w-5 text-primary" />
+                <h3 className="text-lg font-bold">Gerador de Planilhas</h3>
               </div>
-              <AutomatedDelivery />
+              <WorkoutSpreadsheetGenerator />
             </div>
           </TabsContent>
 
