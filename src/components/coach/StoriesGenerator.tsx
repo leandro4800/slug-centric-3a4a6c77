@@ -354,7 +354,7 @@ const YellowCyberTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
       style={{ background: "linear-gradient(135deg, #1f1f1f 0%, #2a2a2a 50%, #1a1a1a 100%)" }}>
       {/* texture noise */}
       <div className="absolute inset-0 opacity-30 mix-blend-overlay"
-        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E\")" }} />
+        style={{ backgroundImage: "url(data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E)" }} />
 
       {/* Big yellow curve — top right */}
       <div className="absolute -top-32 -right-32 w-[400px] h-[400px] rounded-full" style={{ background: accent }} />
@@ -373,7 +373,17 @@ const YellowCyberTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
 
       {/* Cutout photo */}
       {cutoutUrl && (
-        <img src={cutoutUrl} alt="" className="absolute right-2 top-16 h-[70%] w-[55%] object-contain z-[5] drop-shadow-[0_10px_30px_rgba(0,0,0,0.7)]" />
+        <div className="absolute right-2 top-16 h-[70%] w-[55%] z-[5]">
+          <img 
+            src={cutoutUrl} 
+            alt="" 
+            className="h-full w-full object-contain" 
+            style={{ 
+              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
+            }} 
+          />
+        </div>
       )}
 
       {/* Texts left */}
@@ -435,7 +445,17 @@ const DarkPurpleTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: a
 
       {/* Cutout */}
       {cutoutUrl && (
-        <img src={cutoutUrl} alt="" className="absolute left-1/2 -translate-x-1/2 top-14 h-[60%] object-contain z-[5] drop-shadow-[0_0_20px_rgba(191,0,255,0.6)]" />
+        <div className="absolute left-1/2 -translate-x-1/2 top-14 h-[60%] z-[5]">
+          <img 
+            src={cutoutUrl} 
+            alt="" 
+            className="h-full object-contain" 
+            style={{ 
+              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
+            }} 
+          />
+        </div>
       )}
 
       {/* Header brand */}
@@ -482,7 +502,7 @@ const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any
       style={{ background: "linear-gradient(180deg, #0a0a0a 0%, #1a1a1a 100%)" }}>
       {/* texture */}
       <div className="absolute inset-0 opacity-25 mix-blend-overlay"
-        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }} />
+        style={{ backgroundImage: "url(data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E)" }} />
 
       {/* Warning stripe corner */}
       <div className="absolute top-0 left-0 w-16 h-3 bg-[repeating-linear-gradient(45deg,#000_0_6px,#CCFF00_6px_12px)]" />
@@ -517,7 +537,17 @@ const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any
 
       {/* Cutout */}
       {cutoutUrl && (
-        <img src={cutoutUrl} alt="" className="absolute right-0 top-1/3 h-[55%] w-[55%] object-contain z-[5] grayscale contrast-125" />
+        <div className="absolute right-0 top-1/3 h-[55%] w-[55%] z-[5]">
+          <img 
+            src={cutoutUrl} 
+            alt="" 
+            className="h-full w-full object-contain grayscale contrast-125" 
+            style={{ 
+              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
+            }} 
+          />
+        </div>
       )}
 
       {/* Feature list */}
@@ -580,7 +610,7 @@ const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
             <Flame className="h-4 w-4 text-black" />
           </div>
           <div>
-            <div className="text-[8px] tracking-widest opacity-60">YOUR COACH</div>
+            <div className="text-[8px] tracking-widest opacity-60">SEU TREINADOR</div>
             <div className="text-[10px] font-black tracking-wider">{coachName}</div>
           </div>
         </div>
@@ -597,7 +627,17 @@ const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
 
       {/* Cutout */}
       {cutoutUrl && (
-        <img src={cutoutUrl} alt="" className="absolute right-0 top-1/4 h-[60%] w-[65%] object-contain z-[5]" />
+        <div className="absolute right-0 top-1/4 h-[60%] w-[65%] z-[5]">
+          <img 
+            src={cutoutUrl} 
+            alt="" 
+            className="h-full w-full object-contain" 
+            style={{ 
+              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
+            }} 
+          />
+        </div>
       )}
 
       {/* Feature mini-cards */}
@@ -663,7 +703,17 @@ const ConsultoriaPhoneTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitl
 
       {/* Cutout grayscale */}
       {cutoutUrl && (
-        <img src={cutoutUrl} alt="" className="absolute right-0 top-0 h-[65%] w-[60%] object-contain object-top grayscale contrast-125 opacity-90 z-[2]" />
+        <div className="absolute right-0 top-0 h-[65%] w-[60%] z-[2]">
+          <img 
+            src={cutoutUrl} 
+            alt="" 
+            className="h-full w-full object-contain object-top grayscale contrast-125 opacity-90" 
+            style={{ 
+              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
+            }} 
+          />
+        </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black z-[3]" />
 
@@ -674,7 +724,7 @@ const ConsultoriaPhoneTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitl
             <Dumbbell className="h-4 w-4 text-black" />
           </div>
           <div>
-            <div className="text-[8px] tracking-widest opacity-60">YOUR COACH</div>
+            <div className="text-[8px] tracking-widest opacity-60">SEU TREINADOR</div>
             <div className="text-[10px] font-black tracking-wider">{coachName}</div>
           </div>
         </div>
@@ -793,7 +843,17 @@ const FeedBrutalistTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }
 
         {/* Floating image if exists */}
         {cutoutUrl && (
-          <img src={cutoutUrl} alt="" className="absolute right-[-2rem] bottom-[-2rem] h-[100%] w-[60%] object-contain z-[5] drop-shadow-[0_20px_50px_rgba(0,0,0,0.8)]" />
+          <div className="absolute right-[-2rem] bottom-[-2rem] h-[100%] w-[60%] z-[4]">
+            <img 
+              src={cutoutUrl} 
+              alt="" 
+              className="h-full w-full object-contain" 
+              style={{ 
+                maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+                WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)'
+              }} 
+            />
+          </div>
         )}
 
         <div className="mt-auto pt-8 border-t border-white/20">
