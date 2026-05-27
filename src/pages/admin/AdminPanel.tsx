@@ -422,6 +422,7 @@ const AdminPanel = () => {
                     </p>
                   </div>
                 </div>
+                </div>
               </TabsContent>
 
               <TabsContent value="vlogs">
