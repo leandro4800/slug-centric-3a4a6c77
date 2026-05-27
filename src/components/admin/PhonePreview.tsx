@@ -69,6 +69,7 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
   const isActive = (id: EditableTarget["id"]) => pickedTarget?.id === id;
 
   const navItems: { id: ScreenId; icon: typeof Home; label: string }[] = [
+    { id: "login", icon: KeyRound, label: "Login" },
     { id: "home", icon: Home, label: "Início" },
     { id: "treino", icon: Dumbbell, label: "Treino" },
     { id: "dieta", icon: Utensils, label: "Dieta" },
