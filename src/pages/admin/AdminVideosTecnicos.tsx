@@ -12,6 +12,8 @@ interface VideoReferencia {
   url_video: string;
 }
 
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
+
 const AdminVideosTecnicos = () => {
   const navigate = useNavigate();
   const { slug } = useParams();
