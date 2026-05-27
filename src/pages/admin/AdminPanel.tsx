@@ -251,38 +251,6 @@ const AdminPanel = () => {
             <TabsTrigger value="vlogs"><Clapperboard className="h-4 w-4 mr-2" /> Vlogs</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="elenco">
-            <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
-              <h2 className="font-display text-3xl mb-6 text-primary border-l-4 border-primary pl-4 uppercase tracking-wider">ALUNOS · {alunos.length}</h2>
-              {loading ? (
-                <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
-              ) : alunos.length === 0 ? (
-                <p className="text-muted-foreground text-sm py-8 text-center">Nenhum aluno vinculado ainda.</p>
-              ) : (
-                <div className="divide-y divide-border">
-                  {alunos.map((a) => (
-                    <Link
-                      key={a.id}
-                      to={`/${slug}/admin/atleta/${a.id}`}
-                      className="flex items-center gap-4 py-3 hover:bg-secondary/40 -mx-2 px-2 rounded transition-colors"
-                    >
-                      {a.avatar_url ? (
-                        <img src={a.avatar_url} alt="" className="w-10 h-10 rounded-full object-cover" />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xs">
-                          {(a.nome_completo || a.email || "?")[0]?.toUpperCase()}
-                        </div>
-                      )}
-                      <div className="flex-1">
-                        <p className="font-medium">{a.nome_completo || "Sem nome"}</p>
-                        <p className="text-xs text-muted-foreground">{a.email}</p>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          </TabsContent>
 
           <TabsContent value="aparencia">
             <Tabs defaultValue="visual">
