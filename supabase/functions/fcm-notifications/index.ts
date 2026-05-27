@@ -60,6 +60,40 @@ serve(async (req) => {
     // Get OAuth2 Access Token for FCM V1
     const accessToken = await getAccessToken(client_email, private_key)
 
+    // Build Payload for iOS and Android
+    const message = {
+      token: targetToken,
+      notification: {
+        title,
+        body,
+      },
+      data: data || {},
+      android: {
+        priority: 'high',
+        notification: {
+          sound: 'default',
+          channel_id: 'default',
+          priority: 'high',
+        },
+      },
+      apns: {
+        payload: {
+          aps: {
+            contentAvailable: true,
+            mutableContent: true,
+            sound: 'default',
+          },
+        },
+      },
+      webpush: {
+        notification: {
+          icon: 'https://alpha-coach.app/icon-192x192.png',
+        },
+      },
+    }
+
+    console.log('Sending message payload:', JSON.stringify(message))
+
     // Send notification via FCM V1
     const fcmResponse = await fetch(
       `https://fcm.googleapis.com/v1/projects/${project_id}/messages:send`,
@@ -69,21 +103,7 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({
-          message: {
-            token: targetToken,
-            notification: {
-              title,
-              body,
-            },
-            data: data || {},
-            webpush: {
-              notification: {
-                icon: 'https://alpha-coach.app/icon-192x192.png', // Replace with your app icon
-              },
-            },
-          },
-        }),
+        body: JSON.stringify({ message }),
       }
     )
 
