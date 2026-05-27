@@ -61,6 +61,12 @@ export const VlogsAdmin = () => {
   const [publishCaption, setPublishCaption] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  
+  // Upload direto
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [thumbFile, setThumbFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [vlogTitle, setVlogTitle] = useState("");
 
   const projectRef = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) || "";
   const webhookUrl = `https://${projectRef}.functions.supabase.co/vlog-ingest`;
