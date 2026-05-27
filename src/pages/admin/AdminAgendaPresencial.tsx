@@ -166,7 +166,11 @@ const AdminAgendaPresencial = () => {
               <Label>Capacidade</Label>
               <Input type="number" min="1" value={capacidade} onChange={(e) => setCapacidade(e.target.value)} />
             </div>
-            <div className="md:col-span-2">
+            <div>
+              <Label>Tipo de Aula</Label>
+              <Input value={tipoAula} onChange={(e) => setTipoAula(e.target.value)} placeholder="Ex: Musculação, Funcional" />
+            </div>
+            <div className="md:col-span-1">
               <Label>Nome do local *</Label>
               <Input value={localNome} onChange={(e) => setLocalNome(e.target.value)} placeholder="Ex: Alpha Studio Centro" required />
             </div>
