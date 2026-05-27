@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard, Wallet, Video, CalendarClock, MapPin, Dumbbell, Apple } from "lucide-react";
+import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard, Wallet, Video, CalendarClock, MapPin, Dumbbell, Apple, Settings, Stethoscope } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
@@ -82,12 +82,22 @@ const ControleCentral = () => {
 
   return (
     <div className="px-5 pt-6 pb-32 bg-black min-h-screen">
-      <button
-        onClick={() => navigate(`/${slug}/app`)}
-        className="flex items-center gap-2 text-primary text-sm font-semibold uppercase tracking-widest hover:brightness-125 transition-all"
-      >
-        <ArrowLeft className="h-4 w-4" /> Voltar
-      </button>
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => navigate(`/${slug}/app`)}
+          className="flex items-center gap-2 text-primary text-sm font-semibold uppercase tracking-widest hover:brightness-125 transition-all"
+        >
+          <ArrowLeft className="h-4 w-4" /> Voltar
+        </button>
+        
+        <Link 
+          to={`/${slug}/admin/aparencia?tab=aparencia`}
+          className="w-10 h-10 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary/20 transition-all group shadow-glow-sm"
+          title="Configurações e Identidade Visual"
+        >
+          <Settings className="h-5 w-5 group-hover:rotate-90 transition-transform duration-500" />
+        </Link>
+      </div>
 
       {isSuperAdmin && (
         <Link
@@ -112,20 +122,27 @@ const ControleCentral = () => {
       </h1>
       <div className="h-px bg-primary/20 mt-3" />
 
-      <div className="grid grid-cols-2 gap-4 mt-8 mb-6">
+      <div className="grid grid-cols-3 gap-3 mt-8 mb-6">
         <Link
           to={`/${slug}/admin/atleta/${user?.id}?action=generate-training`}
-          className="flex flex-col items-center justify-center p-6 rounded-none bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
+          className="flex flex-col items-center justify-center p-4 rounded-none bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
         >
-          <Dumbbell className="h-7 w-7 text-primary mb-2 group-hover:scale-110 transition-transform" />
-          <span className="text-[11px] font-bold uppercase tracking-widest text-primary text-center">Montar Meu Treino</span>
+          <Dumbbell className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-primary text-center leading-tight">Montar Meu Treino</span>
         </Link>
         <Link
           to={`/${slug}/admin/atleta/${user?.id}?action=generate-diet`}
-          className="flex flex-col items-center justify-center p-6 rounded-none bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
+          className="flex flex-col items-center justify-center p-4 rounded-none bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
         >
-          <Apple className="h-7 w-7 text-primary mb-2 group-hover:scale-110 transition-transform" />
-          <span className="text-[11px] font-bold uppercase tracking-widest text-primary text-center">Montar Minha Dieta</span>
+          <Apple className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-primary text-center leading-tight">Montar Minha Dieta</span>
+        </Link>
+        <Link
+          to={`/${slug}/admin/atleta/${user?.id}`}
+          className="flex flex-col items-center justify-center p-4 rounded-none bg-primary/10 border border-primary/30 hover:bg-primary/20 transition-all group"
+        >
+          <Stethoscope className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
+          <span className="text-[9px] font-bold uppercase tracking-widest text-primary text-center leading-tight">Minha Avaliação</span>
         </Link>
       </div>
 
@@ -142,20 +159,6 @@ const ControleCentral = () => {
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
               {isSuperAdmin ? "Controle de coaches e tenants" : "Atletas da equipe"}
             </p>
-          </div>
-          <span className="text-primary">→</span>
-        </Link>
-
-        <Link
-          to={`/${slug}/admin/aparencia`}
-          className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
-        >
-          <div className="w-12 h-12 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
-            <Palette className="h-5 w-5 text-primary" />
-          </div>
-          <div className="flex-1">
-            <p className="font-display text-lg text-white group-hover:text-primary transition-all">IDENTIDADE VISUAL</p>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Logo, cores e fontes · 1x/mês</p>
           </div>
           <span className="text-primary">→</span>
         </Link>

@@ -235,16 +235,6 @@ const AdminPanel = () => {
                 </Button>
               </Link>
             )}
-            <Link to={`/${slug}/admin/atletas`}>
-              <Button variant="outline" className="border-primary/40">
-                <Users className="h-4 w-4 mr-2" /> Gerenciar Elenco
-              </Button>
-            </Link>
-            <Link to={`/${slug}/admin/agenda-presencial`}>
-              <Button variant="outline" className="border-primary/40">
-                <CalendarClock className="h-4 w-4 mr-2" /> Agenda Presencial
-              </Button>
-            </Link>
             <Link to={`/${slug}/admin/base-conhecimento`}>
               <Button variant="outline" className="border-primary/40">
                 <Sparkles className="h-4 w-4 mr-2" /> Base de Conhecimento IA
@@ -253,35 +243,6 @@ const AdminPanel = () => {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
-          <Link to={`/${slug}/admin/montar-treino?aluno=${user?.id}&auto=true`}>
-            <Button className="w-full bg-primary/10 border-primary/40 text-primary hover:bg-primary/20 h-auto py-4 flex flex-col gap-2">
-              <Dumbbell className="h-6 w-6" />
-              <div className="text-center">
-                <p className="text-sm font-bold uppercase tracking-wider">Montar Meu Treino</p>
-                <p className="text-[10px] opacity-60 normal-case">Monte seu próprio plano de treino</p>
-              </div>
-            </Button>
-          </Link>
-          <Link to={`/${slug}/admin/montar-dieta?aluno=${user?.id}&auto=true`}>
-            <Button className="w-full bg-primary/10 border-primary/40 text-primary hover:bg-primary/20 h-auto py-4 flex flex-col gap-2">
-              <Apple className="h-6 w-6" />
-              <div className="text-center">
-                <p className="text-sm font-bold uppercase tracking-wider">Montar Minha Dieta</p>
-                <p className="text-[10px] opacity-60 normal-case">Monte sua própria dieta personalizada</p>
-              </div>
-            </Button>
-          </Link>
-          <Link to={`/${slug}/admin/atleta/${user?.id}`}>
-            <Button className="w-full bg-primary/10 border-primary/40 text-primary hover:bg-primary/20 h-auto py-4 flex flex-col gap-2">
-              <Stethoscope className="h-6 w-6" />
-              <div className="text-center">
-                <p className="text-sm font-bold uppercase tracking-wider">Minha Avaliação</p>
-                <p className="text-[10px] opacity-60 normal-case">Gerencie sua avaliação e anamnese</p>
-              </div>
-            </Button>
-          </Link>
-        </div>
 
         <Tabs value={tabValue} onValueChange={(v) => setSearchParams({ tab: v })}>
 
