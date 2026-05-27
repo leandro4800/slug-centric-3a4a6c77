@@ -859,7 +859,7 @@ const FeedBrutalistTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }
         <div className="mt-auto pt-8 border-t border-white/20">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <div className="text-[10px] uppercase font-black tracking-widest opacity-50">CLIQUE NO LINK</div>
+              <div className="text-[10px] uppercase font-black tracking-widest opacity-50">ACESSE O LINK</div>
               <div className="text-lg font-black">{config.website_url || "bio.link/personal"}</div>
             </div>
             <div className="px-6 py-3 bg-white text-black font-black uppercase text-sm skew-x-[-12deg]">
