@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { motion, AnimatePresence } from "framer-motion";
 import useEmblaCarousel from 'embla-carousel-react';
@@ -255,11 +256,48 @@ const Landing = () => {
     }
   };
 
-  const handleCoachLinkSubmit = (e: React.FormEvent) => {
+  const [coachModalOpen, setCoachModalOpen] = useState(false);
+  const [coachSlugError, setCoachSlugError] = useState("");
+  const [coachLookupLoading, setCoachLookupLoading] = useState(false);
+
+  const handleCoachLinkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (coachLink) {
-        const slug = coachLink.split("/").pop();
-        if (slug) navigate(`/${slug}/site`);
+    setCoachSlugError("");
+    const raw = coachLink.trim();
+    if (!raw) {
+      setCoachSlugError("Informe o link ou slug do seu coach.");
+      return;
+    }
+    // Aceita URL completa ou slug puro
+    let slug = raw;
+    try {
+      if (raw.includes("/")) {
+        const cleaned = raw.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+        const parts = cleaned.split("/").filter(Boolean);
+        slug = parts[parts.length - 1] === "site" ? parts[parts.length - 2] : parts[parts.length - 1];
+      }
+    } catch {}
+    slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    if (!slug) {
+      setCoachSlugError("Slug inválido.");
+      return;
+    }
+    setCoachLookupLoading(true);
+    try {
+      const { data } = await supabase
+        .from("tenants")
+        .select("slug")
+        .eq("slug", slug)
+        .eq("status", "approved")
+        .maybeSingle();
+      if (!data) {
+        setCoachSlugError("Coach não encontrado. Verifique o link e tente novamente.");
+        return;
+      }
+      setCoachModalOpen(false);
+      navigate(`/${data.slug}`);
+    } finally {
+      setCoachLookupLoading(false);
     }
   };
 
@@ -291,6 +329,13 @@ const Landing = () => {
           <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
         </nav>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setCoachModalOpen(true)}
+            className="hidden md:inline-flex border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
+          >
+            <KeyRound className="mr-2 h-4 w-4" /> Já tenho um coach
+          </Button>
           <Link to="/login">
             <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">
               {user ? "Acessar App" : "Entrar"}
@@ -304,6 +349,7 @@ const Landing = () => {
           </Button>
         </div>
       </header>
+
 
       {/* Hero Section com Carrossel de Públicos */}
       <section id="solucoes" className="relative h-[100vh] flex items-center overflow-hidden">
@@ -596,6 +642,51 @@ const Landing = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <Dialog open={coachModalOpen} onOpenChange={(open) => { setCoachModalOpen(open); if (!open) setCoachSlugError(""); }}>
+        <DialogContent className="bg-zinc-950 border border-white/10 text-white">
+          <DialogHeader>
+            <DialogTitle className="font-black uppercase tracking-widest text-xl flex items-center gap-2">
+              <KeyRound className="h-5 w-5 text-primary" /> Você já tem um coach?
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Cole o link ou digite o slug do seu coach para ir direto à página dele.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleCoachLinkSubmit} className="space-y-3">
+            <Input
+              value={coachLink}
+              onChange={(e) => { setCoachLink(e.target.value); setCoachSlugError(""); }}
+              placeholder="ex: alpha-coach.app/pikachu-team ou pikachu-team"
+              className="bg-white/5 border-white/10 text-white"
+              autoFocus
+            />
+            {coachSlugError && (
+              <p className="text-sm text-primary font-medium">{coachSlugError}</p>
+            )}
+            <Button
+              type="submit"
+              disabled={coachLookupLoading}
+              className="w-full font-black uppercase tracking-widest"
+            >
+              {coachLookupLoading ? "Buscando..." : "Ir para meu coach"}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          </form>
+          <div className="border-t border-white/10 pt-4 text-center">
+            <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-3">
+              É seu primeiro acesso e ainda não tem coach?
+            </p>
+            <Button
+              variant="outline"
+              onClick={() => { setCoachModalOpen(false); navigate("/seja-coach"); }}
+              className="w-full border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
+            >
+              Ver planos da plataforma
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
