@@ -208,7 +208,7 @@ const AdminAgendaPresencial = () => {
                   <div key={s.id} className={`bg-black/60 border rounded-xl p-4 ${s.ativo ? "border-white/20" : "border-white/5 opacity-50"}`}>
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
-                        <p className="font-display text-lg">{formatDate(s.data)} · {s.hora_inicio.slice(0,5)}–{s.hora_fim.slice(0,5)}</p>
+                        <p className="font-display text-lg">{formatDate(s.data)} · {s.hora_inicio.slice(0,5)}–{s.hora_fim.slice(0,5)} {s.tipo_aula && <span className="text-primary ml-2">[{s.tipo_aula}]</span>}</p>
                         <p className="text-xs flex items-center gap-1 mt-1"><MapPin className="h-3 w-3 text-primary" /> {s.local_nome}</p>
                         {s.local_endereco && <p className="text-xs text-muted-foreground">{s.local_endereco}</p>}
                         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
