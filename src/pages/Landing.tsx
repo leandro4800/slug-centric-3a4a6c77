@@ -26,7 +26,7 @@ const defaultCoaches: CoachData[] = [
     name: "PIKACHU TEAM",
     specialty: "HIPERTROFIA & ESTÉTICA",
     bio: "Treinos cinematográficos pra quem quer crescer.",
-    video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4",
+    video: "https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/branding/6c4ff89c-3d9f-4225-ae95-5bf1dbf35886/login-1779888616746.mp4",
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
@@ -36,7 +36,7 @@ const defaultCoaches: CoachData[] = [
     name: "TEAM JACKSON",
     specialty: "HIPERTROFIA & EMAGRECIMENTO",
     bio: "Performance e estética com método Team Jackson.",
-    video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4",
+    video: "https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/branding/ca38c1a1-06b8-4549-9bfa-f06603ac08e9/login-1778201125522.mov",
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
@@ -46,7 +46,7 @@ const defaultCoaches: CoachData[] = [
     name: "BADBOY TEAM",
     specialty: "ESTÉTICA & PERFORMANCE",
     bio: "Metodologia Badboy para resultados extremos.",
-    video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4",
+    video: "https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/branding/8c64bb80-9bed-45ff-bc0a-f4d1a2841d1c/login-1778205723254.mp4",
     tag: "VERIFICADO",
     cidade: "São Paulo",
     estado: "SP",
@@ -56,22 +56,12 @@ const defaultCoaches: CoachData[] = [
     name: "NUTRI SAMILA DIAS",
     specialty: "NUTRIÇÃO ESPORTIVA",
     bio: "Especialista em emagrecimento e saúde.",
-    video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4",
+    video: "https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/vlog_videos/5996d70b-9293-4c49-b143-42a4b60af267/1777921328726-83d10724.mp4",
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
     slug: "samila-dias"
-  },
-  {
-    name: "ALPHA COACH",
-    specialty: "PLATAFORMA DE ELITE",
-    bio: "Sua marca, seu app, sua escala.",
-    video: "https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1779216281370_7dlm0f_Screenshot_31.png",
-    tag: "PLATAFORMA",
-    cidade: "Digital",
-    estado: "BR",
-    slug: "alpha-coach"
-  },
+  }
 ];
 
 const useCases = [
@@ -181,10 +171,10 @@ const Landing = () => {
   const [price, setPrice] = useState(400);
   const [brandName, setBrandName] = useState("Seu Coach Team");
   const [brandColor, setBrandColor] = useState("#E00000");
-  const [screen1, setScreen1] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474299562_rgnobx_Treino_de_b_ceps____....._reels__gym__workout__academia__treino.mp4");
-  const [screen2, setScreen2] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777468713644_di4x57_WhatsApp_Video_2026-04-24_at_22.37.07__1_.mp4");
-  const [screen3, setScreen3] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474964273_njic9i_Testado_e_aprovado__oficialjeffersonbadboy____ARNOLD_SPORTS_SOUTH_AMERICA_2026.mp4");
-  const [screen4, setScreen4] = useState("https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1777474463996_dxa3r7_Make_notes_look_202604250428.mp4");
+  const [screen1, setScreen1] = useState("https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/branding/6c4ff89c-3d9f-4225-ae95-5bf1dbf35886/login-1779888616746.mp4");
+  const [screen2, setScreen2] = useState("https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/branding/ca38c1a1-06b8-4549-9bfa-f06603ac08e9/login-1778201125522.mov");
+  const [screen3, setScreen3] = useState("https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/branding/8c64bb80-9bed-45ff-bc0a-f4d1a2841d1c/login-1778205723254.mp4");
+  const [screen4, setScreen4] = useState("https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/vlog_videos/5996d70b-9293-4c49-b143-42a4b60af267/1777921328726-83d10724.mp4");
   const [coaches, setCoaches] = useState<CoachData[]>(defaultCoaches);
   const [hasCoachLink, setHasCoachLink] = useState<boolean | null>(null);
   const [coachLink, setCoachLink] = useState("");
@@ -211,30 +201,39 @@ const Landing = () => {
     const loadCoaches = async () => {
       const { data } = await supabase
         .from("tenants")
-        .select("nome, tagline, bio, hero_url, foto_url, logo_url, especialidades, cidade, estado, slug")
-        .eq("status", "approved")
-        .limit(10);
+        .select("nome, tagline, bio, hero_url, foto_url, logo_url, especialidades, cidade, estado, slug, login_video_url")
+        .eq("status", "approved");
       
-      if (data && data.length > 0) {
-        const mapped = data.map(d => ({ 
-          name: d.nome, 
-          specialty: (d.especialidades && d.especialidades.length > 0) ? d.especialidades[0] : (d.tagline || ""), 
-          bio: d.bio || "", 
-          video: d.hero_url || d.foto_url || (d as any).logo_url || "", 
-          tag: "VERIFICADO", 
-          cidade: d.cidade || "", 
-          estado: d.estado || "", 
-          slug: d.slug 
-        }));
+      if (data) {
+        // Slugs to exclude to avoid duplicates or problematic cards
+        const excludedSlugs = ["alpha-coach", "nutrisamiladias", "alphateam", "metodojackson", "badboyteam"];
         
-        // Use default static coaches first, then add approved tenants if they are not already there
-        const finalCoaches = [...defaultCoaches];
+        const mapped = data
+          .filter(d => !excludedSlugs.includes(d.slug))
+          .map(d => ({ 
+            name: d.nome, 
+            specialty: (d.especialidades && d.especialidades.length > 0) ? d.especialidades[0] : (d.tagline || ""), 
+            bio: d.bio || "", 
+            video: d.hero_url || d.foto_url || d.login_video_url || d.logo_url || "", 
+            tag: "VERIFICADO", 
+            cidade: d.cidade || "", 
+            estado: d.estado || "", 
+            slug: d.slug 
+          }));
+        
+        // Combine with defaultCoaches, ensuring no duplicates by name
+        const combined = [...defaultCoaches];
         mapped.forEach(m => {
-          if (!finalCoaches.find(c => c.slug === m.slug)) {
-            finalCoaches.push(m);
+          const isDuplicate = combined.some(c => 
+            c.name.toLowerCase().includes(m.name.toLowerCase()) || 
+            m.name.toLowerCase().includes(c.name.toLowerCase())
+          );
+          if (!isDuplicate) {
+            combined.push(m);
           }
         });
-        setCoaches(finalCoaches);
+        
+        setCoaches(combined);
       } else {
         setCoaches(defaultCoaches);
       }
