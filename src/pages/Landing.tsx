@@ -474,7 +474,7 @@ const Landing = () => {
                       <MapPin className="w-3 h-3" />
                       {coach.cidade}, {coach.estado}
                     </div>
-                    <Link to={`/${coach.slug}/site`} className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:text-primary transition-colors opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                    <Link to={`/${coach.slug}`} className="mt-4 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-white hover:text-primary transition-colors opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
                       Ver Perfil <ArrowRight className="w-3 h-3" />
                     </Link>
                   </div>

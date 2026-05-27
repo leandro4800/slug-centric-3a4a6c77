@@ -196,7 +196,7 @@ export default function Marketplace() {
             {filtered.map((c) => (
               <button
                 type="button"
-                onClick={() => navigate(`/${c.slug}/site`)}
+                onClick={() => navigate(`/${c.slug}`)}
                 key={c.id}
                 className="group relative overflow-hidden rounded-2xl border border-border/50 bg-card transition-all hover:border-primary/60 hover:shadow-glow text-left"
               >

@@ -127,11 +127,10 @@ const App = () => (
             {/* Admin AlphaCoach (super admin) */}
             <Route path="/admin/coaches" element={<RequireAuth requireRole="admin"><AdminCoaches /></RequireAuth>} />
 
-            {/* Landing pública do tenant */}
+            {/* Landing pública do coach (Vendas) */}
+            <Route path="/:slug" element={<TenantLanding />} />
             <Route path="/:slug/site" element={<TenantLanding />} />
-            
-            {/* Redireciona a raiz do coach para o login por padrão */}
-            <Route path="/:slug" element={<IndexRedirect />} />
+
 
             {/* App do aluno */}
             <Route path="/index.html" element={<NativeStartupRedirect />} />
