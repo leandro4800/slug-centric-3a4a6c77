@@ -332,10 +332,18 @@ const Landing = () => {
           <Button
             variant="outline"
             onClick={() => setCoachModalOpen(true)}
-            className="hidden md:inline-flex border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
+            className="hidden lg:inline-flex border-white/10 bg-white/5 text-white hover:bg-white/10 font-bold uppercase tracking-wider"
           >
             <KeyRound className="mr-2 h-4 w-4" /> Já tenho um coach
           </Button>
+          <Link to="/seja-coach" className="hidden md:inline-flex">
+            <Button
+              variant="outline"
+              className="border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
+            >
+              <UserRound className="mr-2 h-4 w-4" /> Sou Coach
+            </Button>
+          </Link>
           <Link to="/login">
             <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">
               {user ? "Acessar App" : "Entrar"}
@@ -675,14 +683,14 @@ const Landing = () => {
           </form>
           <div className="border-t border-white/10 pt-4 text-center">
             <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-3">
-              É seu primeiro acesso e ainda não tem coach?
+              Quer criar seu próprio aplicativo de consultoria?
             </p>
             <Button
               variant="outline"
               onClick={() => { setCoachModalOpen(false); navigate("/seja-coach"); }}
               className="w-full border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
             >
-              Ver planos da plataforma
+              Sou Coach - Ver planos
             </Button>
           </div>
         </DialogContent>
