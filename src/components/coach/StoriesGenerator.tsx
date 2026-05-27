@@ -466,9 +466,9 @@ const DarkPurpleTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: a
 
       {/* Bottom content */}
       <div className="absolute bottom-0 left-0 right-0 z-10 p-5 bg-gradient-to-t from-black via-black/95 to-transparent pt-20">
-        <div className="font-['Anton'] text-[36px] leading-[0.85] uppercase">PERSONAL</div>
-        <div className="font-['Anton'] text-[40px] leading-[0.85] uppercase italic" style={{ color: accent }}>TRAINER</div>
-        <div className="text-[10px] font-bold tracking-[0.2em] mt-1 opacity-90">NEVER GIVE UP!</div>
+        <div className="font-['Anton'] text-[36px] leading-[0.85] uppercase">TREINADOR</div>
+        <div className="font-['Anton'] text-[40px] leading-[0.85] uppercase italic" style={{ color: accent }}>PESSOAL</div>
+        <div className="text-[10px] font-bold tracking-[0.2em] mt-1 opacity-90">DESISTIR NÃO É OPÇÃO!</div>
 
         <div className="text-[10px] mt-3 opacity-80 leading-snug max-w-[80%]">
           {dynamicSubtitle}
