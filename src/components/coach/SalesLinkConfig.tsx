@@ -112,7 +112,7 @@ export const SalesLinkConfig = () => {
       <div className="bg-primary/5 border border-primary/20 rounded-2xl p-6 space-y-4">
         <div className="flex items-center gap-2">
           <Lock className="h-5 w-5 text-primary" />
-          <h4 className="font-bold">Como funciona a Barreira de Vendas?</h4>
+          <h4 className="font-bold">Como funciona o bloqueio de vendas?</h4>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
           Sempre que um usuário tentar acessar conteúdos restritos sem uma assinatura ativa, o app mostrará uma tela de bloqueio premium. O botão dessa tela redirecionará automaticamente para o <strong>Link de Checkout</strong> que você cadastrou acima.

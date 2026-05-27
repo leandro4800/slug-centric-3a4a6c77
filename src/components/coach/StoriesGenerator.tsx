@@ -30,7 +30,7 @@ import { cn } from "@/lib/utils";
 type TemplateId = "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; format: "9:16" | "1:1" }[] = [
-  { id: "consultoria-phone", label: "Consultoria Online", desc: "Phone mockup + amarelo", accent: "#FACC15", format: "9:16" },
+  { id: "consultoria-phone", label: "Consultoria Online", desc: "Mockup de celular + amarelo", accent: "#FACC15", format: "9:16" },
   { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00", format: "9:16" },
   { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF", format: "9:16" },
   { id: "ironberg", label: "Ironberg Brutal", desc: "Tipografia gigante vazada", accent: "#CCFF00", format: "9:16" },
@@ -66,8 +66,8 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
 
   const [config, setConfig] = useState({
     instagram_handle: "@seuperfil",
-    headline: "SHAPE YOUR BODY",
-    subheadline: "TRANSFORME SUA VIDA",
+    headline: "TREINE COMIGO",
+    subheadline: "TRANSFORME SEU CORPO",
     cta_text: "FALE COMIGO AGORA!",
     website_url: "seusite.com.br",
     phone: "+55 11 99999-0000",
@@ -389,10 +389,10 @@ const YellowCyberTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
       {/* Texts left */}
       <div className="relative z-10 px-5 mt-6 max-w-[60%]">
         <div className="font-['Anton'] text-[44px] leading-[0.85] uppercase tracking-tight">
-          {config.headline?.split(" ").slice(0, 2).join(" ") || "SHAPE YOUR"}
+          {config.headline?.split(" ").slice(0, 2).join(" ") || "TREINE"}
         </div>
         <div className="font-['Anton'] text-[64px] leading-[0.85] uppercase italic mt-1" style={{ color: accent }}>
-          {config.headline?.split(" ").slice(2).join(" ") || "BODY"}
+          {config.headline?.split(" ").slice(2).join(" ") || "COMIGO"}
         </div>
         <div className="text-[10px] font-bold uppercase tracking-widest mt-3 opacity-90 leading-snug">
           {dynamicSubtitle}
@@ -412,12 +412,12 @@ const YellowCyberTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
             <Phone className="h-3.5 w-3.5 text-black" />
           </div>
           <div>
-            <div className="text-[8px] opacity-60 tracking-widest">CALL ME</div>
+            <div className="text-[8px] opacity-60 tracking-widest">MEU CONTATO</div>
             <div className="text-[11px] font-black">{config.phone}</div>
           </div>
         </div>
         <button className="px-4 py-2 rounded-full text-black font-black text-[11px] uppercase italic" style={{ background: accent }}>
-          {config.cta_text?.includes("!") ? "JOIN NOW" : config.cta_text || "JOIN NOW"}
+          {config.cta_text?.includes("!") ? "SAIBA MAIS" : config.cta_text || "SAIBA MAIS"}
         </button>
       </div>
     </div>
@@ -466,9 +466,9 @@ const DarkPurpleTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: a
 
       {/* Bottom content */}
       <div className="absolute bottom-0 left-0 right-0 z-10 p-5 bg-gradient-to-t from-black via-black/95 to-transparent pt-20">
-        <div className="font-['Anton'] text-[36px] leading-[0.85] uppercase">PERSONAL</div>
-        <div className="font-['Anton'] text-[40px] leading-[0.85] uppercase italic" style={{ color: accent }}>TRAINER</div>
-        <div className="text-[10px] font-bold tracking-[0.2em] mt-1 opacity-90">NEVER GIVE UP!</div>
+        <div className="font-['Anton'] text-[36px] leading-[0.85] uppercase">TREINADOR</div>
+        <div className="font-['Anton'] text-[40px] leading-[0.85] uppercase italic" style={{ color: accent }}>PESSOAL</div>
+        <div className="text-[10px] font-bold tracking-[0.2em] mt-1 opacity-90">DESISTIR NÃO É OPÇÃO!</div>
 
         <div className="text-[10px] mt-3 opacity-80 leading-snug max-w-[80%]">
           {dynamicSubtitle}
@@ -480,7 +480,7 @@ const DarkPurpleTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: a
             <span className="font-black">{config.phone}</span>
           </div>
           <button className="px-4 py-2 rounded-md font-black text-[10px] uppercase italic text-black" style={{ background: accent, clipPath: "polygon(0 0, 100% 0, 95% 100%, 5% 100%)" }}>
-            START TODAY
+            COMECE HOJE
           </button>
         </div>
         <div className="flex items-center gap-1 mt-2 text-[9px] opacity-70">
@@ -520,15 +520,15 @@ const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any
               transform: i % 2 === 0 ? "translateX(-15%)" : "translateX(15%)",
             }}
           >
-            NO PAIN NO GAIN
+            SEM DOR SEM GANHO
           </div>
         ))}
       </div>
 
       {/* Header */}
       <div className="relative z-10 pt-6 px-5">
-        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase tracking-tight">EXERCISE</div>
-        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase italic" style={{ color: accent }}>ROUTINE</div>
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase tracking-tight">ROTINA DE</div>
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase italic" style={{ color: accent }}>TREINO</div>
         <div className="flex items-center gap-1 mt-1.5 opacity-80">
           <div className="text-[10px] font-black tracking-[0.3em]" style={{ color: accent }}>›››</div>
           <div className="text-[9px] uppercase tracking-widest opacity-80">{dynamicSubtitle}</div>
@@ -562,7 +562,7 @@ const IronbergTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any
               <b.i className="h-4 w-4" style={{ color: accent }} />
             </div>
             <div>
-              <div className="font-['Anton'] text-[12px] uppercase leading-tight">{b.t}</div>
+              <div className="font-['Anton'] text-[12px] uppercase leading-tight">{b.t === "STRENGTH" ? "FORÇA" : b.t === "HEALTHY FOOD" ? "DIETA" : "HIPERTROFIA"}</div>
               <div className="text-[8px] opacity-70 leading-snug">{b.d}</div>
             </div>
           </div>
@@ -615,9 +615,9 @@ const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
           </div>
         </div>
 
-        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase">GET IN SHAPE</div>
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase">FIQUE EM SHAPE</div>
         <div className="font-['Anton'] text-[48px] leading-[0.85] uppercase italic bg-clip-text text-transparent" style={{ backgroundImage: gradient }}>
-          TODAY!
+          HOJE MESMO!
         </div>
         <div className="flex items-center gap-2 mt-2">
           <div className="text-sm" style={{ color: "#FB923C" }}>►</div>
@@ -859,7 +859,7 @@ const FeedBrutalistTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }
         <div className="mt-auto pt-8 border-t border-white/20">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
-              <div className="text-[10px] uppercase font-black tracking-widest opacity-50">CLIQUE NO LINK</div>
+              <div className="text-[10px] uppercase font-black tracking-widest opacity-50">ACESSE O LINK</div>
               <div className="text-lg font-black">{config.website_url || "bio.link/personal"}</div>
             </div>
             <div className="px-6 py-3 bg-white text-black font-black uppercase text-sm skew-x-[-12deg]">
