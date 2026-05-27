@@ -79,7 +79,7 @@ const AdminAgendaPresencial = () => {
       if (alunoIds.length) {
         const { data: p } = await supabase
           .from("perfis")
-          .select("id, nome_completo, email")
+          .select("id, nome_completo, email, avatar_url")
           .in("id", alunoIds);
         (p || []).forEach((x: any) => { perfis[x.id] = x; });
       }
