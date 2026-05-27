@@ -36,7 +36,7 @@ export const EDITABLE_TARGETS: EditableTarget[] = [
   { id: "border", label: "Bordas", tokens: ["border"] },
 ];
 
-type ScreenId = "home" | "treino" | "dieta" | "evolucao" | "perfil";
+type ScreenId = "home" | "treino" | "dieta" | "evolucao" | "perfil" | "login";
 
 const HotZone = ({
   active, onClick, className, children, label,
