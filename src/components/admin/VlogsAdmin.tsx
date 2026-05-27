@@ -290,6 +290,53 @@ export const VlogsAdmin = () => {
     void load();
   };
 
+  const handleFileUpload = async () => {
+    if (!tenant || !videoFile) return;
+    setUploading(true);
+    try {
+      // 1. Upload Video
+      const videoExt = videoFile.name.split(".").pop();
+      const videoPath = `${tenant.id}/${Date.now()}-vlog.${videoExt}`;
+      const { error: vErr } = await supabase.storage.from("vlog_videos").upload(videoPath, videoFile);
+      if (vErr) throw vErr;
+      const { data: vUrl } = supabase.storage.from("vlog_videos").getPublicUrl(videoPath);
+
+      // 2. Upload Thumb (optional)
+      let finalThumb = null;
+      if (thumbFile) {
+        const thumbExt = thumbFile.name.split(".").pop();
+        const thumbPath = `${tenant.id}/${Date.now()}-thumb.${thumbExt}`;
+        const { error: tErr } = await supabase.storage.from("vlog_videos").upload(thumbPath, thumbFile);
+        if (tErr) throw tErr;
+        const { data: tUrl } = supabase.storage.from("vlog_videos").getPublicUrl(thumbPath);
+        finalThumb = tUrl.publicUrl;
+      }
+
+      // 3. Insert into DB
+      const { error: dbErr } = await supabase.from("vlog_posts").insert({
+        tenant_id: tenant.id,
+        url: vUrl.publicUrl,
+        platform: "other",
+        title: vlogTitle.trim() || null,
+        thumbnail_url: finalThumb,
+        source: "upload",
+        posted_at: new Date().toISOString(),
+        visivel: true,
+      });
+      if (dbErr) throw dbErr;
+
+      toast.success("Vlog enviado com sucesso!");
+      setVideoFile(null);
+      setThumbFile(null);
+      setVlogTitle("");
+      void load();
+    } catch (e: any) {
+      toast.error("Falha no upload: " + e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const exemploCurl = `curl -X POST '${webhookUrl}' \\
   -H 'Content-Type: application/json' \\
   -d '{
