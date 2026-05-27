@@ -139,12 +139,12 @@ const AdminVideosTecnicos = () => {
 
   return (
     <div className="px-5 pt-6 pb-32 bg-black min-h-screen">
-      <button
-        onClick={() => navigate(`/${slug}/app/controle`)}
-        className="flex items-center gap-2 text-primary text-sm font-semibold uppercase tracking-widest hover:brightness-125 transition-all mb-8"
-      >
-        <ArrowLeft className="h-4 w-4" /> Voltar ao Controle
-      </button>
+      <AdminBackButton 
+        to={`/${slug}/app/controle`}
+        className="mb-8"
+        showLabel
+        variant="ghost"
+      />
 
       <div className="flex items-center gap-2 text-primary/80">
         <Video className="h-4 w-4" />
