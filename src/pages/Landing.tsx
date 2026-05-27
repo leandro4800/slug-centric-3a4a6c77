@@ -26,7 +26,7 @@ const defaultCoaches: CoachData[] = [
     name: "PIKACHU TEAM",
     specialty: "HIPERTROFIA & ESTÉTICA",
     bio: "Treinos cinematográficos pra quem quer crescer.",
-    video: "https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/branding/6c4ff89c-3d9f-4225-ae95-5bf1dbf35886/login-1779888616746.mp4",
+    video: "/videos/pikachu-team.mp4",
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
