@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, ShieldCheck, CalendarClock, Save, Dumbbell, Apple, Stethoscope } from "lucide-react";
+import { ArrowLeft, Loader2, Upload, Users, Palette, LogOut, ImagePlus, Sparkles, Clapperboard, ShieldCheck, CalendarClock, Save, Dumbbell, Apple, Stethoscope, KeyRound } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import {
@@ -26,6 +26,7 @@ import heroDefault from "@/assets/hero-default.jpg";
 import { IdentidadeVisual } from "@/components/admin/IdentidadeVisual";
 import { VlogsAdmin } from "@/components/admin/VlogsAdmin";
 import heic2any from "heic2any";
+import { PhonePreview } from "@/components/admin/PhonePreview";
 
 interface Aluno { id: string; nome_completo: string | null; email: string | null; avatar_url: string | null; }
 
@@ -264,13 +265,14 @@ const AdminPanel = () => {
               </TabsContent>
 
               <TabsContent value="midia">
-                <div className="grid lg:grid-cols-2 gap-6">
-                  {/* Hero / Login background */}
-                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
-                    <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">FUNDO DA TELA DE LOGIN</h3>
-                    <p className="text-xs text-muted-foreground mb-4">
-                      Aparece atrás da tela de login do seu app. Você pode usar uma <strong>imagem</strong> <strong>OU</strong> enviar um <strong>vídeo</strong> em loop. Se houver vídeo, ele tem prioridade sobre a imagem.
-                    </p>
+                <div className="grid lg:grid-cols-[1fr_320px] gap-6">
+                  <div className="space-y-6">
+                    {/* Hero / Login background */}
+                    <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+                      <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">FUNDO DA TELA DE LOGIN</h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Aparece atrás da tela de login do seu app. Você pode usar uma <strong>imagem</strong> <strong>OU</strong> enviar um <strong>vídeo</strong> em loop. Se houver vídeo, ele tem prioridade sobre a imagem. No celular e tablet, o vídeo se adapta dentro do container.
+                      </p>
                     <div className="grid sm:grid-cols-2 gap-4">
                       {/* Imagem */}
                       <div className="space-y-3">
@@ -321,7 +323,7 @@ const AdminPanel = () => {
                   </div>
 
                   {/* Splash (logo do tenant ou vídeo de abertura) */}
-                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
                     <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">TELA DE ABERTURA (SPLASH)</h3>
                     <p className="text-xs text-muted-foreground mb-4">
                       Aparece por alguns segundos quando o aluno entra no app. Você pode usar apenas a sua <strong>logo</strong> (já configurada ao lado) <strong>OU</strong> enviar um <strong>vídeo curto</strong> (5–8s, MP4, sem áudio). Se o vídeo for enviado, ele tem prioridade.
@@ -374,7 +376,7 @@ const AdminPanel = () => {
                   </div>
 
                   {/* Outros dados */}
-                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
                     <h3 className="font-display text-2xl mb-4 text-primary uppercase tracking-wider">DADOS DO TIME</h3>
                     <div className="grid sm:grid-cols-2 gap-6">
                       <div className="space-y-4">
@@ -404,6 +406,22 @@ const AdminPanel = () => {
                       <Save className="h-4 w-4 mr-2" /> Salvar Alterações
                     </Button>
                   </div>
+                </div>
+
+                {/* Preview Column */}
+                <div className="hidden lg:block sticky top-24 space-y-4">
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground mb-4 text-center">
+                      Prévia do Login
+                    </p>
+                    <div className="flex justify-center">
+                      <PhonePreview onPick={() => {}} pickedTarget={null} initialScreen="login" />
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-4 text-center uppercase tracking-tighter">
+                      Use o menu no celular acima para alternar entre as telas
+                    </p>
+                  </div>
+                </div>
                 </div>
               </TabsContent>
 

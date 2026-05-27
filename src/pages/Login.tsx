@@ -144,17 +144,24 @@ const Login = () => {
           loop
           muted
           playsInline
-          className="absolute inset-0 w-full h-full object-cover scale-110"
+          className="absolute inset-0 w-full h-full object-cover scale-110 lg:block hidden"
         >
           <source src={tenant.login_video_url} type="video/mp4" />
         </video>
       ) : (
         <div
-          className="absolute inset-0 bg-cover bg-center scale-110"
+          className="absolute inset-0 bg-cover bg-center scale-110 lg:block hidden"
           style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
         />
       )}
-      <div className="absolute inset-0 bg-black/40" />
+      
+      {/* Background for mobile/tablet when video is inside the container */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center scale-110 lg:hidden block"
+        style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
+      />
+
+      <div className="absolute inset-0 bg-black/60 lg:bg-black/40" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,hsl(var(--primary)/0.1),transparent_70%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.4)_100%)]" />
 
@@ -177,8 +184,25 @@ const Login = () => {
             )}
           </div>
         </Link>
-        <div className="relative bg-black/10 border border-white/20 rounded-none p-8 shadow-card overflow-hidden min-h-[400px]">
-          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
+        <div className="relative bg-black/40 lg:bg-black/10 border border-white/20 rounded-none shadow-card overflow-hidden min-h-[400px]">
+          {/* Responsive Video Container for Mobile/Tablet */}
+          {tenant?.login_video_url && (
+            <div className="lg:hidden block relative w-full aspect-video border-b border-white/10">
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-full object-cover"
+              >
+                <source src={tenant.login_video_url} type="video/mp4" />
+              </video>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            </div>
+          )}
+
+          <div className="p-8">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           <Tabs defaultValue="login">
             <TabsList className="grid grid-cols-2 w-full mb-8 bg-transparent p-1 rounded-none border border-white/5">
               <TabsTrigger value="login" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Entrar</TabsTrigger>
@@ -285,13 +309,14 @@ const Login = () => {
               </form>
             </TabsContent>
             </Tabs>
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
-        </p>
+            <p className="text-center text-xs text-muted-foreground mt-6">
+              {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default Login;
