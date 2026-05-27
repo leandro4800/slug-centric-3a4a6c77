@@ -102,7 +102,7 @@ const classificarNivel = (tempo: string | null): "Iniciante" | "Intermediário" 
   return "Iniciante";
 };
 
-// === PRESETS DE DIVISÃO (baseados no curso "Além da Genética" - Pacholok) ===
+// === PRESETS DE DIVISÃO (baseados no curso "Além da Genética") ===
 // Cada preset tem id, label amigável, frequência ideal e os dias com combinações musculares já definidas.
 type DivisaoPreset = {
   id: string;
@@ -135,11 +135,11 @@ const DIVISOES_PRESETS: DivisaoPreset[] = [
   { id: "fem-4x-ul", label: "Mulher 4x — Upper/Lower com foco Glúteo", freq: 4, publico: "feminino", nivel: ["Intermediário", "Avançado"], dias: ["Lower A — Glúteo/Posterior", "Upper A — Costas/Ombro", "Lower B — Quadríceps/Glúteo", "Upper B — Peito/Braços"] },
 
   // ===== 5x semana =====
-  { id: "abcde-inf", label: "ABCDE 5x — Ênfase Inferiores (Pacholok)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Quadríceps", "B — Peito + Tríceps", "C — Costas + Bíceps", "D — Posterior + Glúteo", "E — Ombro + Trapézio"] },
-  { id: "abcde-sup", label: "ABCDE 5x — Ênfase Superiores (Pacholok)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Peito (Foco)", "B — Costas (Largura)", "C — Pernas Completas", "D — Ombro Completo", "E — Braços (Bi+Tri)"] },
+  { id: "abcde-inf", label: "ABCDE 5x — Ênfase Inferiores", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Quadríceps", "B — Peito + Tríceps", "C — Costas + Bíceps", "D — Posterior + Glúteo", "E — Ombro + Trapézio"] },
+  { id: "abcde-sup", label: "ABCDE 5x — Ênfase Superiores", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["A — Peito (Foco)", "B — Costas (Largura)", "C — Pernas Completas", "D — Ombro Completo", "E — Braços (Bi+Tri)"] },
   { id: "ppl-ul-5x", label: "PPL+UL 5x — Push/Pull/Legs/Upper/Lower", freq: 5, publico: "unisex", nivel: ["Avançado"], dias: ["Push", "Pull", "Legs", "Upper (Ênfase fraco)", "Lower (Ênfase fraco)"] },
   { id: "fem-5x-quad", label: "Mulher 5x — Ênfase Quadríceps", freq: 5, publico: "feminino", nivel: ["Avançado"], dias: ["A — Quadríceps", "B — Glúteo/Posterior", "C — Peito/Ombro", "D — Quadríceps + Panturrilha", "E — Costas/Braços"] },
-  { id: "abcde-classic-pacho", label: "ABCDE 5x — Clássica Pacholok (Peito+Tri / Costas+Bi / Pernas Quad / Ombro / Pernas Posterior)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Seg — Peito + Tríceps + Estímulo Anterior de Ombro", "Ter — Costas + Bíceps + Estímulo Posterior de Ombro", "Qua — Perna Completa (ênfase Quadríceps)", "Sex — Ombro Completo (Anterior/Lateral/Posterior + Trapézio)", "Sáb — Perna Completa (ênfase Posterior + Glúteo)"] },
+  { id: "abcde-classic-pacho", label: "ABCDE 5x — Clássica (Peito+Tri / Costas+Bi / Pernas Quad / Ombro / Pernas Posterior)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Seg — Peito + Tríceps + Estímulo Anterior de Ombro", "Ter — Costas + Bíceps + Estímulo Posterior de Ombro", "Qua — Perna Completa (ênfase Quadríceps)", "Sex — Ombro Completo (Anterior/Lateral/Posterior + Trapézio)", "Sáb — Perna Completa (ênfase Posterior + Glúteo)"] },
   { id: "abcde-dorsal-sab", label: "ABCDE 5x — Sábado Dorsal+Peito (ênfase Dorsal)", freq: 5, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Seg — Peito + Tríceps + Estímulo Anterior de Ombro", "Ter — Costas + Bíceps + Estímulo Posterior de Ombro", "Qua — Perna Completa (ênfase Quadríceps + Panturrilha)", "Sex — Ombro Completo (Anterior/Lateral/Posterior + Trapézio)", "Sáb — Costas + Peito (ênfase Dorsal — Largura e Espessura)"] },
 
   // ===== 6x semana =====

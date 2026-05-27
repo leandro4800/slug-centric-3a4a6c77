@@ -59,7 +59,7 @@ export const WorkoutSpreadsheetGenerator = () => {
       if (!plan) throw new Error("Plano não encontrado");
 
       // Criar conteúdo do CSV
-      let csvContent = "Metodologia Pacholok - Planilha de Treino\n";
+      let csvContent = "Metodologia Alpha - Planilha de Treino\n";
       csvContent += `Plano: ${plan.title}\n`;
       csvContent += `Descricao: ${plan.description}\n\n`;
 
@@ -100,7 +100,7 @@ export const WorkoutSpreadsheetGenerator = () => {
           </div>
           <div>
             <h4 className="font-bold">Gerar Nova Planilha</h4>
-            <p className="text-xs text-muted-foreground">Selecione uma fase da Metodologia Pacholok para exportar.</p>
+            <p className="text-xs text-muted-foreground">Selecione uma fase da Metodologia Alpha para exportar.</p>
           </div>
         </div>
 
@@ -151,7 +151,7 @@ export const WorkoutSpreadsheetGenerator = () => {
         </h5>
         <div className="space-y-4 text-xs text-muted-foreground leading-relaxed">
           <p>
-            As planilhas são geradas seguindo rigorosamente a <strong>Metodologia Pacholok</strong> contida no material técnico.
+            As planilhas são geradas seguindo rigorosamente a <strong>Metodologia Alpha</strong> contida no material técnico.
           </p>
           <ul className="list-disc list-inside space-y-2">
             <li>O arquivo exportado está em formato CSV, compatível com Excel e Google Sheets.</li>
