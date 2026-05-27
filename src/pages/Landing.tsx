@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
 import { motion, AnimatePresence } from "framer-motion";
 import useEmblaCarousel from 'embla-carousel-react';
@@ -255,11 +256,48 @@ const Landing = () => {
     }
   };
 
-  const handleCoachLinkSubmit = (e: React.FormEvent) => {
+  const [coachModalOpen, setCoachModalOpen] = useState(false);
+  const [coachSlugError, setCoachSlugError] = useState("");
+  const [coachLookupLoading, setCoachLookupLoading] = useState(false);
+
+  const handleCoachLinkSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (coachLink) {
-        const slug = coachLink.split("/").pop();
-        if (slug) navigate(`/${slug}/site`);
+    setCoachSlugError("");
+    const raw = coachLink.trim();
+    if (!raw) {
+      setCoachSlugError("Informe o link ou slug do seu coach.");
+      return;
+    }
+    // Aceita URL completa ou slug puro
+    let slug = raw;
+    try {
+      if (raw.includes("/")) {
+        const cleaned = raw.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+        const parts = cleaned.split("/").filter(Boolean);
+        slug = parts[parts.length - 1] === "site" ? parts[parts.length - 2] : parts[parts.length - 1];
+      }
+    } catch {}
+    slug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "");
+    if (!slug) {
+      setCoachSlugError("Slug inválido.");
+      return;
+    }
+    setCoachLookupLoading(true);
+    try {
+      const { data } = await supabase
+        .from("tenants")
+        .select("slug")
+        .eq("slug", slug)
+        .eq("status", "approved")
+        .maybeSingle();
+      if (!data) {
+        setCoachSlugError("Coach não encontrado. Verifique o link e tente novamente.");
+        return;
+      }
+      setCoachModalOpen(false);
+      navigate(`/${data.slug}`);
+    } finally {
+      setCoachLookupLoading(false);
     }
   };
 
