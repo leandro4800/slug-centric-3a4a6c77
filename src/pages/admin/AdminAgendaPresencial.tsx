@@ -21,6 +21,7 @@ interface Slot {
   local_lat: number | null;
   local_lng: number | null;
   ativo: boolean;
+  tipo_aula: string | null;
 }
 
 interface Reserva {
@@ -30,7 +31,7 @@ interface Reserva {
   status: string;
   academia_confirmada: string | null;
   created_at: string;
-  aluno?: { nome_completo: string | null; email: string | null };
+  aluno?: { nome_completo: string | null; email: string | null; avatar_url: string | null };
 }
 
 const formatDate = (iso: string) => {
