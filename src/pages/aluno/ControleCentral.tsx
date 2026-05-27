@@ -91,7 +91,7 @@ const ControleCentral = () => {
         </button>
         
         <Link 
-          to={`/${slug}/admin/aparencia`}
+          to={`/${slug}/admin/aparencia?tab=aparencia`}
           className="w-10 h-10 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center text-primary hover:bg-primary/20 transition-all group shadow-glow-sm"
           title="Configurações e Identidade Visual"
         >
