@@ -21,6 +21,7 @@ interface Slot {
   local_lat: number | null;
   local_lng: number | null;
   ativo: boolean;
+  tipo_aula: string | null;
 }
 
 interface Reserva {
@@ -30,7 +31,7 @@ interface Reserva {
   status: string;
   academia_confirmada: string | null;
   created_at: string;
-  aluno?: { nome_completo: string | null; email: string | null };
+  aluno?: { nome_completo: string | null; email: string | null; avatar_url: string | null };
 }
 
 const formatDate = (iso: string) => {
@@ -52,6 +53,7 @@ const AdminAgendaPresencial = () => {
   const [localEndereco, setLocalEndereco] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
+  const [tipoAula, setTipoAula] = useState("Musculação");
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
@@ -77,7 +79,7 @@ const AdminAgendaPresencial = () => {
       if (alunoIds.length) {
         const { data: p } = await supabase
           .from("perfis")
-          .select("id, nome_completo, email")
+          .select("id, nome_completo, email, avatar_url")
           .in("id", alunoIds);
         (p || []).forEach((x: any) => { perfis[x.id] = x; });
       }
@@ -108,6 +110,7 @@ const AdminAgendaPresencial = () => {
       local_endereco: localEndereco || null,
       local_lat: lat ? parseFloat(lat) : null,
       local_lng: lng ? parseFloat(lng) : null,
+      tipo_aula: tipoAula,
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
@@ -163,7 +166,11 @@ const AdminAgendaPresencial = () => {
               <Label>Capacidade</Label>
               <Input type="number" min="1" value={capacidade} onChange={(e) => setCapacidade(e.target.value)} />
             </div>
-            <div className="md:col-span-2">
+            <div>
+              <Label>Tipo de Aula</Label>
+              <Input value={tipoAula} onChange={(e) => setTipoAula(e.target.value)} placeholder="Ex: Musculação, Funcional" />
+            </div>
+            <div className="md:col-span-1">
               <Label>Nome do local *</Label>
               <Input value={localNome} onChange={(e) => setLocalNome(e.target.value)} placeholder="Ex: Alpha Studio Centro" required />
             </div>
@@ -201,7 +208,7 @@ const AdminAgendaPresencial = () => {
                   <div key={s.id} className={`bg-black/60 border rounded-xl p-4 ${s.ativo ? "border-white/20" : "border-white/5 opacity-50"}`}>
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div>
-                        <p className="font-display text-lg">{formatDate(s.data)} · {s.hora_inicio.slice(0,5)}–{s.hora_fim.slice(0,5)}</p>
+                        <p className="font-display text-lg">{formatDate(s.data)} · {s.hora_inicio.slice(0,5)}–{s.hora_fim.slice(0,5)} {s.tipo_aula && <span className="text-primary ml-2">[{s.tipo_aula}]</span>}</p>
                         <p className="text-xs flex items-center gap-1 mt-1"><MapPin className="h-3 w-3 text-primary" /> {s.local_nome}</p>
                         {s.local_endereco && <p className="text-xs text-muted-foreground">{s.local_endereco}</p>}
                         <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">

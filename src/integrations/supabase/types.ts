@@ -77,6 +77,7 @@ export type Database = {
           local_nome: string
           reservados: number
           tenant_id: string
+          tipo_aula: string | null
           updated_at: string
         }
         Insert: {
@@ -93,6 +94,7 @@ export type Database = {
           local_nome?: string
           reservados?: number
           tenant_id: string
+          tipo_aula?: string | null
           updated_at?: string
         }
         Update: {
@@ -109,6 +111,7 @@ export type Database = {
           local_nome?: string
           reservados?: number
           tenant_id?: string
+          tipo_aula?: string | null
           updated_at?: string
         }
         Relationships: [
