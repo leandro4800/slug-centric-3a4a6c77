@@ -184,10 +184,10 @@ const Login = () => {
             )}
           </div>
         </Link>
-        <div className="relative bg-black/40 lg:bg-black/10 border border-white/20 rounded-none shadow-card overflow-hidden min-h-[400px]">
+        <div className="relative bg-black/40 lg:bg-black/10 border border-white/20 rounded-none shadow-card overflow-hidden min-h-screen lg:min-h-[400px] flex flex-col">
           {/* Responsive Video Container for Mobile/Tablet */}
           {tenant?.login_video_url && (
-            <div className="lg:hidden block relative w-full aspect-video border-b border-white/10">
+            <div className="lg:hidden absolute inset-0 z-0">
               <video
                 autoPlay
                 loop
@@ -197,11 +197,11 @@ const Login = () => {
               >
                 <source src={tenant.login_video_url} type="video/mp4" />
               </video>
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+              <div className="absolute inset-0 bg-black/40" />
             </div>
           )}
 
-          <div className="p-8">
+          <div className="p-8 relative z-10 flex-1 flex flex-col justify-center">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
           <Tabs defaultValue="login">
             <TabsList className="grid grid-cols-2 w-full mb-8 bg-transparent p-1 rounded-none border border-white/5">
