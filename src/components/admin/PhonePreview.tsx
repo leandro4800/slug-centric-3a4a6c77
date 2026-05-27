@@ -61,10 +61,10 @@ const HotZone = ({
 
 const find = (id: EditableTarget["id"]) => EDITABLE_TARGETS.find((t) => t.id === id)!;
 
-export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
+export const PhonePreview = ({ onPick, pickedTarget, initialScreen = "home" }: Props) => {
   const { tenant } = useBranding();
   const hero = tenant?.hero_url || heroDefault;
-  const [screen, setScreen] = useState<ScreenId>("home");
+  const [screen, setScreen] = useState<ScreenId>(initialScreen);
 
   const pick = (id: EditableTarget["id"]) => () => onPick(find(id));
   const isActive = (id: EditableTarget["id"]) => pickedTarget?.id === id;
