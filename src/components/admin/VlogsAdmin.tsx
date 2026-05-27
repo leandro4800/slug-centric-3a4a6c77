@@ -566,6 +566,83 @@ Data:
         )}
       </div>
 
+      {/* Upload direto */}
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-4 text-primary flex items-center gap-2">
+          <Upload className="h-6 w-6" /> ENVIAR VÍDEO (UPLOAD)
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Suba o arquivo de vídeo e uma imagem de capa diretamente para o nosso servidor.
+        </p>
+
+        <div className="grid gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Arquivo de Vídeo (MP4, MOV)</Label>
+              <div className="relative group">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                />
+                <div className={cn(
+                  "flex items-center gap-3 p-3 border border-dashed rounded-lg transition-all",
+                  videoFile ? "border-primary/50 bg-primary/5" : "border-white/20 hover:border-primary/30"
+                )}>
+                  <Video className={cn("h-5 w-5", videoFile ? "text-primary" : "text-muted-foreground")} />
+                  <span className="text-sm truncate">
+                    {videoFile ? videoFile.name : "Clique para selecionar o vídeo"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Thumbnail / Capa (PNG, JPG)</Label>
+              <div className="relative group">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setThumbFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                />
+                <div className={cn(
+                  "flex items-center gap-3 p-3 border border-dashed rounded-lg transition-all",
+                  thumbFile ? "border-primary/50 bg-primary/5" : "border-white/20 hover:border-primary/30"
+                )}>
+                  <Star className={cn("h-5 w-5", thumbFile ? "text-primary" : "text-muted-foreground")} />
+                  <span className="text-sm truncate">
+                    {thumbFile ? thumbFile.name : "Clique para selecionar a capa"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Título do Episódio (opcional)</Label>
+            <Input 
+              value={vlogTitle} 
+              onChange={(e) => setVlogTitle(e.target.value)} 
+              placeholder="Ex: Bastidores do Treino #01" 
+            />
+          </div>
+
+          <Button 
+            onClick={handleFileUpload} 
+            disabled={uploading || !videoFile} 
+            className="bg-gradient-primary shadow-glow h-12"
+          >
+            {uploading ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>
+            ) : (
+              <><Upload className="h-4 w-4 mr-2" /> Iniciar Upload</>
+            )}
+          </Button>
+        </div>
+      </div>
+
       {/* Manual add */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
