@@ -110,6 +110,7 @@ const AdminAgendaPresencial = () => {
       local_endereco: localEndereco || null,
       local_lat: lat ? parseFloat(lat) : null,
       local_lng: lng ? parseFloat(lng) : null,
+      tipo_aula: tipoAula,
     });
     setSaving(false);
     if (error) { toast.error(error.message); return; }
