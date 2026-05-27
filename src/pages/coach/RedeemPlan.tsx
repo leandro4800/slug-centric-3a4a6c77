@@ -25,11 +25,8 @@ const RedeemPlan = () => {
   const loadDeliveryInfo = async () => {
     if (!token) return;
     try {
-      const { data, error } = await supabase
-        .from("coach_automated_delivery")
-        .select("*, templates_treino(titulo, descricao)")
-        .eq("token", token)
-        .eq("is_active", true)
+      const { data, error } = await (supabase as any)
+        .rpc("redeem_delivery_lookup", { p_token: token })
         .maybeSingle();
 
       if (error || !data) {
@@ -38,13 +35,27 @@ const RedeemPlan = () => {
         return;
       }
 
-      setDeliveryData(data);
+      // Reshape to match prior `coach_automated_delivery` shape with templates_treino join
+      const shaped = {
+        id: data.id,
+        user_id: data.user_id,
+        token: data.token,
+        plan_id: data.plan_id,
+        diet_id: data.diet_id,
+        is_active: data.is_active,
+        created_at: data.created_at,
+        templates_treino: data.plan_id
+          ? { titulo: data.template_titulo, descricao: data.template_resumo }
+          : null,
+      };
+      setDeliveryData(shaped);
       setStatus('landing');
     } catch (err) {
       setStatus('error');
       setErrorMsg("Erro ao carregar informações do plano.");
     }
   };
+
 
   const handleStartClaim = () => {
     if (!user) {

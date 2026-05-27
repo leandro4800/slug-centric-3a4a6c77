@@ -41,9 +41,16 @@ const AdminFaturamento = () => {
 
   useEffect(() => {
     if (tenant) {
-      setAsaasWalletId((tenant as any).asaas_wallet_id || "");
-      void loadMetrics();
-      setLoading(false);
+      void (async () => {
+        const { data } = await supabase
+          .from("tenants_private")
+          .select("asaas_wallet_id")
+          .eq("tenant_id", tenant.id)
+          .maybeSingle();
+        setAsaasWalletId(((data as any)?.asaas_wallet_id) || "");
+        await loadMetrics();
+        setLoading(false);
+      })();
     }
   }, [tenant?.id]);
 
@@ -52,10 +59,12 @@ const AdminFaturamento = () => {
     setBusy(true);
     try {
       const { error } = await supabase
-        .from("tenants")
-        .update({ asaas_wallet_id: asaasWalletId })
-        .eq("id", tenant.id);
-      
+        .from("tenants_private")
+        .upsert(
+          { tenant_id: tenant.id, asaas_wallet_id: asaasWalletId },
+          { onConflict: "tenant_id" }
+        );
+
       if (error) throw error;
       toast.success("ID da Carteira Asaas salvo com sucesso!");
       await refresh();
@@ -65,6 +74,7 @@ const AdminFaturamento = () => {
       setBusy(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-black px-5 pt-6 pb-32">

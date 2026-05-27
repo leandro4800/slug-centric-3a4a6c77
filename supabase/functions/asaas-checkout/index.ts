@@ -74,17 +74,25 @@ Deno.serve(async (req) => {
       if (!plano_id) throw new Error("plano_id required");
       const { data: plano } = await supabase
         .from("planos")
-        .select("*, tenants!inner(id,slug,nome,status,asaas_wallet_id)")
+        .select("*, tenants!inner(id,slug,nome,status)")
         .eq("id", plano_id)
         .eq("ativo", true)
         .maybeSingle();
       if (!plano) throw new Error("plano not found");
-      
+
       // @ts-ignore
       tenant_to_use = plano.tenants;
+      const { data: priv } = await supabase
+        .from("tenants_private")
+        .select("asaas_wallet_id")
+        .eq("tenant_id", tenant_to_use.id)
+        .maybeSingle();
+      // @ts-ignore
+      tenant_to_use.asaas_wallet_id = priv?.asaas_wallet_id || null;
       amount = plano.preco_centavos / 100;
       plan_name = plano.nome;
     }
+
 
     if (tenant_to_use.status !== "approved") throw new Error("tenant not approved");
     
