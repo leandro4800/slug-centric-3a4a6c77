@@ -434,9 +434,9 @@ export const PhonePreview = ({ onPick, pickedTarget, initialScreen = "home" }: P
                     </span>
                   </div>
 
-                  <div className="bg-black/40 border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+                  <div className="bg-black/40 border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[400px] flex flex-col relative">
                     {tenant?.login_video_url && (
-                      <div className="w-full aspect-video border-b border-white/10 relative bg-black">
+                      <div className="absolute inset-0 z-0">
                         <video 
                           src={tenant.login_video_url} 
                           autoPlay 
@@ -445,10 +445,10 @@ export const PhonePreview = ({ onPick, pickedTarget, initialScreen = "home" }: P
                           playsInline 
                           className="w-full h-full object-cover" 
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                        <div className="absolute inset-0 bg-black/40" />
                       </div>
                     )}
-                    <div className="p-4 space-y-3">
+                    <div className="p-4 space-y-3 relative z-10 flex-1 flex flex-col justify-center">
                       <div className="space-y-1">
                         <div className="h-1.5 w-8 bg-foreground/20 rounded" />
                         <div className="h-7 w-full bg-white/5 border border-white/10 rounded" />
