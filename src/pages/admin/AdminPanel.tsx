@@ -322,7 +322,7 @@ const AdminPanel = () => {
                   </div>
 
                   {/* Splash (logo do tenant ou vídeo de abertura) */}
-                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md lg:col-span-2">
+                  <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
                     <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">TELA DE ABERTURA (SPLASH)</h3>
                     <p className="text-xs text-muted-foreground mb-4">
                       Aparece por alguns segundos quando o aluno entra no app. Você pode usar apenas a sua <strong>logo</strong> (já configurada ao lado) <strong>OU</strong> enviar um <strong>vídeo curto</strong> (5–8s, MP4, sem áudio). Se o vídeo for enviado, ele tem prioridade.
