@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video, Star } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video, Star, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface VlogPost {
   id: string;
