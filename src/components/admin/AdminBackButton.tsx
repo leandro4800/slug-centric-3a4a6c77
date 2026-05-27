@@ -39,8 +39,9 @@ export const AdminBackButton = ({
   const handleBack = () => {
     if (to) {
       navigate(to);
+    } else if (window.history.length > 1) {
+      navigate(-1);
     } else if (slug) {
-      // Volta para o Painel de Controle (engrenagem) do coach
       navigate(`/${slug}/app/controle`);
     } else {
       navigate(-1);
