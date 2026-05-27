@@ -412,12 +412,12 @@ const YellowCyberTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
             <Phone className="h-3.5 w-3.5 text-black" />
           </div>
           <div>
-            <div className="text-[8px] opacity-60 tracking-widest">CALL ME</div>
+            <div className="text-[8px] opacity-60 tracking-widest">MEU CONTATO</div>
             <div className="text-[11px] font-black">{config.phone}</div>
           </div>
         </div>
         <button className="px-4 py-2 rounded-full text-black font-black text-[11px] uppercase italic" style={{ background: accent }}>
-          {config.cta_text?.includes("!") ? "JOIN NOW" : config.cta_text || "JOIN NOW"}
+          {config.cta_text?.includes("!") ? "SAIBA MAIS" : config.cta_text || "SAIBA MAIS"}
         </button>
       </div>
     </div>
