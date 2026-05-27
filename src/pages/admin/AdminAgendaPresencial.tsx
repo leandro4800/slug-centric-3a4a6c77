@@ -53,6 +53,7 @@ const AdminAgendaPresencial = () => {
   const [localEndereco, setLocalEndereco] = useState("");
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
+  const [tipoAula, setTipoAula] = useState("Musculação");
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
