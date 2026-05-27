@@ -5,9 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video, Star } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video, Star, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 
 interface VlogPost {
   id: string;
@@ -60,6 +61,12 @@ export const VlogsAdmin = () => {
   const [publishCaption, setPublishCaption] = useState("");
   const [downloading, setDownloading] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  
+  // Upload direto
+  const [videoFile, setVideoFile] = useState<File | null>(null);
+  const [thumbFile, setThumbFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [vlogTitle, setVlogTitle] = useState("");
 
   const projectRef = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) || "";
   const webhookUrl = `https://${projectRef}.functions.supabase.co/vlog-ingest`;
@@ -281,6 +288,53 @@ export const VlogsAdmin = () => {
     if (error) return toast.error(error.message);
     toast.success("Vídeo adicionado aos seus Vlogs!");
     void load();
+  };
+
+  const handleFileUpload = async () => {
+    if (!tenant || !videoFile) return;
+    setUploading(true);
+    try {
+      // 1. Upload Video
+      const videoExt = videoFile.name.split(".").pop();
+      const videoPath = `${tenant.id}/${Date.now()}-vlog.${videoExt}`;
+      const { error: vErr } = await supabase.storage.from("vlog_videos").upload(videoPath, videoFile);
+      if (vErr) throw vErr;
+      const { data: vUrl } = supabase.storage.from("vlog_videos").getPublicUrl(videoPath);
+
+      // 2. Upload Thumb (optional)
+      let finalThumb = null;
+      if (thumbFile) {
+        const thumbExt = thumbFile.name.split(".").pop();
+        const thumbPath = `${tenant.id}/${Date.now()}-thumb.${thumbExt}`;
+        const { error: tErr } = await supabase.storage.from("vlog_videos").upload(thumbPath, thumbFile);
+        if (tErr) throw tErr;
+        const { data: tUrl } = supabase.storage.from("vlog_videos").getPublicUrl(thumbPath);
+        finalThumb = tUrl.publicUrl;
+      }
+
+      // 3. Insert into DB
+      const { error: dbErr } = await supabase.from("vlog_posts").insert({
+        tenant_id: tenant.id,
+        url: vUrl.publicUrl,
+        platform: "other",
+        title: vlogTitle.trim() || null,
+        thumbnail_url: finalThumb,
+        source: "upload",
+        posted_at: new Date().toISOString(),
+        visivel: true,
+      });
+      if (dbErr) throw dbErr;
+
+      toast.success("Vlog enviado com sucesso!");
+      setVideoFile(null);
+      setThumbFile(null);
+      setVlogTitle("");
+      void load();
+    } catch (e: any) {
+      toast.error("Falha no upload: " + e.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const exemploCurl = `curl -X POST '${webhookUrl}' \\
@@ -510,6 +564,83 @@ Data:
             )}
           </div>
         )}
+      </div>
+
+      {/* Upload direto */}
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-4 text-primary flex items-center gap-2">
+          <Upload className="h-6 w-6" /> ENVIAR VÍDEO (UPLOAD)
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Suba o arquivo de vídeo e uma imagem de capa diretamente para o nosso servidor.
+        </p>
+
+        <div className="grid gap-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label>Arquivo de Vídeo (MP4, MOV)</Label>
+              <div className="relative group">
+                <input
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) => setVideoFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                />
+                <div className={cn(
+                  "flex items-center gap-3 p-3 border border-dashed rounded-lg transition-all",
+                  videoFile ? "border-primary/50 bg-primary/5" : "border-white/20 hover:border-primary/30"
+                )}>
+                  <Video className={cn("h-5 w-5", videoFile ? "text-primary" : "text-muted-foreground")} />
+                  <span className="text-sm truncate">
+                    {videoFile ? videoFile.name : "Clique para selecionar o vídeo"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label>Thumbnail / Capa (PNG, JPG)</Label>
+              <div className="relative group">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setThumbFile(e.target.files?.[0] || null)}
+                  className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                />
+                <div className={cn(
+                  "flex items-center gap-3 p-3 border border-dashed rounded-lg transition-all",
+                  thumbFile ? "border-primary/50 bg-primary/5" : "border-white/20 hover:border-primary/30"
+                )}>
+                  <Star className={cn("h-5 w-5", thumbFile ? "text-primary" : "text-muted-foreground")} />
+                  <span className="text-sm truncate">
+                    {thumbFile ? thumbFile.name : "Clique para selecionar a capa"}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Título do Episódio (opcional)</Label>
+            <Input 
+              value={vlogTitle} 
+              onChange={(e) => setVlogTitle(e.target.value)} 
+              placeholder="Ex: Bastidores do Treino #01" 
+            />
+          </div>
+
+          <Button 
+            onClick={handleFileUpload} 
+            disabled={uploading || !videoFile} 
+            className="bg-gradient-primary shadow-glow h-12"
+          >
+            {uploading ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Enviando...</>
+            ) : (
+              <><Upload className="h-4 w-4 mr-2" /> Iniciar Upload</>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Manual add */}
