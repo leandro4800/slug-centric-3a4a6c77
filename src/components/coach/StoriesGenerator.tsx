@@ -615,9 +615,9 @@ const GradientFitTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: 
           </div>
         </div>
 
-        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase">GET IN SHAPE</div>
+        <div className="font-['Anton'] text-[42px] leading-[0.85] uppercase">FIQUE EM SHAPE</div>
         <div className="font-['Anton'] text-[48px] leading-[0.85] uppercase italic bg-clip-text text-transparent" style={{ backgroundImage: gradient }}>
-          TODAY!
+          HOJE MESMO!
         </div>
         <div className="flex items-center gap-2 mt-2">
           <div className="text-sm" style={{ color: "#FB923C" }}>►</div>
