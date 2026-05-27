@@ -33,7 +33,7 @@ const AdminPanel = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const tabValue = searchParams.get("tab") || "elenco";
+  const tabValue = searchParams.get("tab") || "aparencia";
   const { user, signOut } = useAuth();
   const { tenant, refresh } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
