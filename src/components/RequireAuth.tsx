@@ -141,11 +141,12 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
     const isMember = isOwnerOrStaff || hasRole("aluno", tenant.id) || tenantMembership === true;
 
     if (!isMember) {
-      const onboardingPath = `/${slug}/onboarding`;
-      if (location.pathname !== onboardingPath) {
-        console.warn(`[RequireAuth] User ${user.id} is not a member of tenant: ${tenant.id} (${slug}) — enviando para onboarding.`);
-        return <SafeNavigate to={onboardingPath} />;
+      const salesPath = `/${slug}`;
+      if (location.pathname !== salesPath) {
+        console.warn(`[RequireAuth] User ${user.id} is not a member of tenant: ${tenant.id} (${slug}) — enviando para página de vendas.`);
+        return <SafeNavigate to={salesPath} />;
       }
+
       console.warn(`[RequireAuth] User ${user.id} is not a member, but already on onboarding page.`);
     }
   }
