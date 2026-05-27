@@ -53,7 +53,7 @@ const Login = () => {
       ? candidateSlug
       : null;
 
-    // Coach (dono do tenant) entra direto no painel de controle
+    // Coach (dono do tenant) também entra na tela inicial do app
     const userId = signInData?.user?.id;
     if (userId) {
       const { data: ownedTenant } = await supabase
@@ -62,12 +62,13 @@ const Login = () => {
         .eq("owner_user_id", userId)
         .maybeSingle();
       if (ownedTenant?.slug) {
-        navigate(`/${ownedTenant.slug}/app/controle`, { replace: true });
+        navigate(`/${ownedTenant.slug}/app`, { replace: true });
         return;
       }
     }
 
     navigate(targetSlug ? `/${targetSlug}/app` : "/onboarding", { replace: true });
+
   };
 
   const handleResendConfirmation = async () => {
