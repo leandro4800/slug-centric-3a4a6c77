@@ -415,7 +415,7 @@ const AdminPanel = () => {
                       Prévia do Login
                     </p>
                     <div className="flex justify-center">
-                      <PhonePreview onPick={() => {}} pickedTarget={null} />
+                      <PhonePreview onPick={() => {}} pickedTarget={null} initialScreen="login" />
                     </div>
                     <p className="text-[10px] text-muted-foreground mt-4 text-center uppercase tracking-tighter">
                       Use o menu no celular acima para alternar entre as telas
