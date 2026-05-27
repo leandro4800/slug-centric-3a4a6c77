@@ -409,6 +409,61 @@ export const PhonePreview = ({ onPick, pickedTarget }: Props) => {
               </div>
             )}
 
+            {/* ====== LOGIN ====== */}
+            {screen === "login" && (
+              <div className="absolute inset-0 flex flex-col items-center justify-center px-4 bg-background overflow-hidden">
+                {/* Background inside phone */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center opacity-40"
+                  style={{ backgroundImage: `url(${tenant?.hero_url || heroDefault})` }}
+                />
+                
+                <div className="relative w-full space-y-4">
+                  <div className="flex flex-col items-center gap-2 mb-4">
+                    <div className="w-10 h-10 rounded bg-primary/20 flex items-center justify-center border border-primary/30">
+                      {tenant?.logo_url ? (
+                        <img src={tenant.logo_url} alt="" className="w-6 h-6 object-contain" />
+                      ) : (
+                        <Dumbbell className="h-5 w-5 text-primary" />
+                      )}
+                    </div>
+                    <span className="font-display text-[10px] tracking-wider uppercase text-foreground">
+                      {tenant?.nome || "ALPHA COACH"}
+                    </span>
+                  </div>
+
+                  <div className="bg-black/40 border border-white/10 rounded-xl overflow-hidden shadow-2xl">
+                    {tenant?.login_video_url && (
+                      <div className="w-full aspect-video border-b border-white/10 relative bg-black">
+                        <video 
+                          src={tenant.login_video_url} 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                          className="w-full h-full object-cover" 
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                      </div>
+                    )}
+                    <div className="p-4 space-y-3">
+                      <div className="space-y-1">
+                        <div className="h-1.5 w-8 bg-foreground/20 rounded" />
+                        <div className="h-7 w-full bg-white/5 border border-white/10 rounded" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="h-1.5 w-8 bg-foreground/20 rounded" />
+                        <div className="h-7 w-full bg-white/5 border border-white/10 rounded" />
+                      </div>
+                      <div className="h-8 w-full bg-primary rounded flex items-center justify-center text-[8px] font-bold text-primary-foreground tracking-widest">
+                        ACESSAR AGORA
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* ====== PERFIL ====== */}
             {screen === "perfil" && (
               <div className="pt-6 px-3">
