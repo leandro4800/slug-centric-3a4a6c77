@@ -66,8 +66,8 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
 
   const [config, setConfig] = useState({
     instagram_handle: "@seuperfil",
-    headline: "SHAPE YOUR BODY",
-    subheadline: "TRANSFORME SUA VIDA",
+    headline: "TREINE COMIGO",
+    subheadline: "TRANSFORME SEU CORPO",
     cta_text: "FALE COMIGO AGORA!",
     website_url: "seusite.com.br",
     phone: "+55 11 99999-0000",
