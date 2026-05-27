@@ -329,6 +329,13 @@ const Landing = () => {
           <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
         </nav>
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            onClick={() => setCoachModalOpen(true)}
+            className="hidden md:inline-flex border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
+          >
+            <KeyRound className="mr-2 h-4 w-4" /> Já tenho um coach
+          </Button>
           <Link to="/login">
             <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">
               {user ? "Acessar App" : "Entrar"}
@@ -342,6 +349,7 @@ const Landing = () => {
           </Button>
         </div>
       </header>
+
 
       {/* Hero Section com Carrossel de Públicos */}
       <section id="solucoes" className="relative h-[100vh] flex items-center overflow-hidden">
