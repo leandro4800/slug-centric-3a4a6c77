@@ -2453,7 +2453,6 @@ export type Database = {
       tenants: {
         Row: {
           accent_hsl: string
-          asaas_wallet_id: string | null
           bio: string | null
           cidade: string | null
           created_at: string
@@ -2480,7 +2479,6 @@ export type Database = {
         }
         Insert: {
           accent_hsl?: string
-          asaas_wallet_id?: string | null
           bio?: string | null
           cidade?: string | null
           created_at?: string
@@ -2507,7 +2505,6 @@ export type Database = {
         }
         Update: {
           accent_hsl?: string
-          asaas_wallet_id?: string | null
           bio?: string | null
           cidade?: string | null
           created_at?: string
@@ -2536,6 +2533,7 @@ export type Database = {
       }
       tenants_private: {
         Row: {
+          asaas_wallet_id: string | null
           created_at: string
           instagram_access_token: string | null
           instagram_business_account_id: string | null
@@ -2547,6 +2545,7 @@ export type Database = {
           vlog_webhook_secret: string | null
         }
         Insert: {
+          asaas_wallet_id?: string | null
           created_at?: string
           instagram_access_token?: string | null
           instagram_business_account_id?: string | null
@@ -2558,6 +2557,7 @@ export type Database = {
           vlog_webhook_secret?: string | null
         }
         Update: {
+          asaas_wallet_id?: string | null
           created_at?: string
           instagram_access_token?: string | null
           instagram_business_account_id?: string | null
@@ -2853,6 +2853,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      redeem_delivery_lookup: {
+        Args: { p_token: string }
+        Returns: {
+          created_at: string
+          diet_id: string
+          id: string
+          is_active: boolean
+          plan_id: string
+          template_resumo: string
+          template_titulo: string
+          token: string
+          user_id: string
+        }[]
       }
       redeem_voucher: { Args: { _code: string }; Returns: Json }
       send_push_notification: {
