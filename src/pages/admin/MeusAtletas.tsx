@@ -502,7 +502,7 @@ const MeusAtletas = () => {
             <Button
               variant="secondary"
               className="w-full gap-2"
-              onClick={() => navigate("/")}
+              onClick={() => navigate("/login")}
             >
               <Home className="h-4 w-4" />
               Voltar para tela inicial
