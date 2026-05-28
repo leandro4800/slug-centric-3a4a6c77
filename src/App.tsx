@@ -110,8 +110,8 @@ const App = () => (
             <Routes>
             {/* Redirecionamentos de Raiz */}
              <Route path="/" element={<IndexRedirect />} />
-             <Route path="/site" element={<Landing />} />
-             <Route path="/marketplace" element={<Landing />} />
+             {/* <Route path="/site" element={<Landing />} /> */}
+             {/* <Route path="/marketplace" element={<Landing />} /> */}
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
             <Route path="/:slug/login" element={<Login />} />
@@ -129,7 +129,7 @@ const App = () => (
 
             {/* Landing pública do coach (Vendas) */}
             <Route path="/:slug" element={<TenantLanding />} />
-            <Route path="/:slug/site" element={<TenantLanding />} />
+            {/* <Route path="/:slug/site" element={<TenantLanding />} /> */}
 
 
             {/* App do aluno */}
