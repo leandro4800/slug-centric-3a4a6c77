@@ -318,18 +318,16 @@ const Perfil = () => {
     if (!user?.id) return toast.error("Usuário não identificado.");
     setSaving(true);
     
-    // Usar upsert para garantir que o registro existe, mantendo o tenant_id original
+    // Garantir que campos obrigatórios para os triggers (tabela alunos) não sejam nulos
     const fallbackName = user?.email?.split('@')[0] || "Atleta";
     const cleanData = {
       ...formProfile,
       nome_completo: formProfile.nome_completo.trim() || profile?.nome_completo || fallbackName,
-      telefone: formProfile.telefone.trim() || null,
-      data_nascimento: formProfile.data_nascimento || null,
-      music_url: formProfile.music_url.trim() || null,
+      telefone: formProfile.telefone?.trim() || null,
+      data_nascimento: formProfile.data_nascimento || null, // Convert "" to null for date column
+      music_url: formProfile.music_url?.trim() || null,
     };
     
-    
-    // Usar upsert para garantir que o registro existe, mantendo o tenant_id original
     const { error } = await supabase.from("perfis").upsert({
       id: user.id,
       email: user.email,
