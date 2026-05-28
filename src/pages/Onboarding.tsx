@@ -98,7 +98,7 @@ export default function Onboarding() {
         const { data: t } = perfil.tenant_id
           ? await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle()
           : { data: null };
-        const target = t?.slug ? `/${t.slug}/app` : "/";
+        const target = t?.slug ? `/${t.slug}/app` : "/login";
         if (window.location.pathname !== target) {
           console.log("[Onboarding] Concluído, redirecionando para:", target);
           navigate(target, { replace: true });
@@ -184,7 +184,7 @@ export default function Onboarding() {
       if (!result?.ok) throw new Error(result?.error || "Falha ao concluir cadastro");
 
       toast({ title: "Tudo pronto!", description: "Bem-vindo ao seu painel." });
-      navigate(tenantSlug ? `/${tenantSlug}/app` : "/", { replace: true });
+      navigate(tenantSlug ? `/${tenantSlug}/app` : "/login", { replace: true });
     } catch (e: any) {
       console.error("[Onboarding] Erro ao finalizar:", e);
       toast({ title: "Erro ao salvar", description: e?.message || "Tente novamente.", variant: "destructive" });

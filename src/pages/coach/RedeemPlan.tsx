@@ -169,7 +169,7 @@ const RedeemPlan = () => {
       if (coachTenant) {
         navigate(`/${coachTenant.slug}/app`);
       } else {
-        navigate("/");
+        navigate("/login");
       }
   };
 
@@ -188,7 +188,7 @@ const RedeemPlan = () => {
         <XCircle className="h-20 w-20 text-destructive mb-6" />
         <h2 className="text-3xl font-black text-white uppercase italic mb-2">Ops! Link Inválido</h2>
         <p className="text-muted-foreground max-w-sm mb-8">{errorMsg}</p>
-        <Button variant="outline" onClick={() => navigate('/')} className="w-full max-w-xs h-12 rounded-xl border-white/20 text-white hover:bg-white/10">
+        <Button variant="outline" onClick={() => navigate('/login')} className="w-full max-w-xs h-12 rounded-xl border-white/20 text-white hover:bg-white/10">
           Voltar ao Início
         </Button>
       </div>

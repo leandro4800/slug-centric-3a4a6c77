@@ -131,8 +131,21 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
 
   // Se requer um papel específico e não o possui
   if (requireRole && !hasRole(requireRole)) {
-    console.warn(`[RequireAuth] User ${user.id} does not have required role: ${requireRole}. Redirecionando para landing.`);
-    return <Navigate to={slug ? `/${slug}` : "/"} replace />;
+    console.warn(`[RequireAuth] User ${user.id} does not have required role: ${requireRole}. Bloqueando acesso.`);
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center">
+        <div className="max-w-sm space-y-4">
+          <p className="text-sm font-semibold uppercase tracking-widest text-primary">Acesso Restrito</p>
+          <p className="text-sm text-muted-foreground">Você não possui permissão para acessar esta área.</p>
+          <button 
+            onClick={() => window.history.back()}
+            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+          >
+            Voltar
+          </button>
+        </div>
+      </div>
+    );
   }
 
   // Se deve verificar o tenant e o slug não condiz com o tenant do usuário
@@ -144,7 +157,20 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
       const salesPath = `/${slug}`;
       if (location.pathname !== salesPath) {
         console.warn(`[RequireAuth] User ${user.id} is not a member of tenant: ${tenant.id} (${slug}) — enviando para página de vendas.`);
-        return <SafeNavigate to={salesPath} />;
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center">
+            <div className="max-w-sm space-y-4">
+              <p className="text-sm font-semibold uppercase tracking-widest text-primary">Acesso Restrito</p>
+              <p className="text-sm text-muted-foreground">Você não está vinculado a este time ou não possui acesso ativo.</p>
+              <button 
+                onClick={() => window.location.href = "/login"}
+                className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+              >
+                Ir para Login
+              </button>
+            </div>
+          </div>
+        );
       }
 
       console.warn(`[RequireAuth] User ${user.id} is not a member, but already on onboarding page.`);
