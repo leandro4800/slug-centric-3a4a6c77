@@ -321,13 +321,17 @@ const Perfil = () => {
     // Garantir que campos obrigatórios para os triggers (tabela alunos) não sejam nulos
     const fallbackName = user?.email?.split('@')[0] || "Atleta";
     const cleanData = {
-      ...formProfile,
       nome_completo: formProfile.nome_completo.trim() || profile?.nome_completo || fallbackName,
       telefone: formProfile.telefone?.trim() || null,
-      data_nascimento: formProfile.data_nascimento || null, // Convert "" to null for date column
+      data_nascimento: formProfile.data_nascimento === "" ? null : formProfile.data_nascimento,
+      sexo: formProfile.sexo || "M",
+      avatar_url: formProfile.avatar_url || null,
       music_url: formProfile.music_url?.trim() || null,
+      avatar_pos_y: formProfile.avatar_pos_y ?? 50,
     };
     
+    console.log("[Perfil] Salvando dados limpos:", cleanData);
+
     const { error } = await supabase.from("perfis").upsert({
       id: user.id,
       email: user.email,
@@ -335,6 +339,7 @@ const Perfil = () => {
       tenant_id: profile?.tenant_id || tenant?.id,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
+
 
     setSaving(false);
     if (error) {
