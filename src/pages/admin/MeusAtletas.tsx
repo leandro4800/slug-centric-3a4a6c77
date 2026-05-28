@@ -136,7 +136,7 @@ const MeusAtletas = () => {
         .eq("tenant_id", tenantId)
         .order("nome_completo", { ascending: true }),
       supabase.from("tenants").select("owner_user_id").eq("id", tenantId).maybeSingle(),
-      supabase.from("user_roles").select("user_id").eq("tenant_id", tenantId).eq("role", "coach"),
+      supabase.from("user_roles").select("user_id").eq("tenant_id", tenantId).in("role", ["coach", "admin"]),
     ]);
 
     // Não excluir mais o coach/owner para que ele possa gerenciar seu próprio perfil de atleta
