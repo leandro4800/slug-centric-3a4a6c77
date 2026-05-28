@@ -53,7 +53,7 @@ const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string, 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
-  const [rolesLoading, setRolesLoading] = useState(false);
+  const [rolesLoading, setRolesLoading] = useState(true);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const roleRequestId = useRef(0);
 

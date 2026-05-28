@@ -57,7 +57,7 @@ export default function AdminCoaches() {
   const { toast } = useToast();
   const [tenants, setTenants] = useState<PendingTenant[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(true); // Always true because of RequireAuth
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"all" | "pending" | "approved" | "other">("all");
   const [selected, setSelected] = useState<PendingTenant | null>(null);
@@ -65,36 +65,23 @@ export default function AdminCoaches() {
   const [mySlug, setMySlug] = useState<string | null>(null);
 
   useEffect(() => {
-    if (isLoading) return;
-    if (!user) {
-      navigate("/login");
-      return;
-    }
-    void check();
+    if (isLoading || !user) return;
+    void load();
   }, [user, isLoading]);
 
-  const check = async () => {
+  useEffect(() => {
     if (!user) return;
-    const { data: roles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", user.id)
-      .eq("role", "admin");
-    if (!roles || roles.length === 0) {
-      toast({ title: "Acesso negado", variant: "destructive" });
-      navigate("/");
-      return;
-    }
-    setIsAdmin(true);
     // pega slug do tenant do próprio admin (se tiver) para link "Meus Atletas"
-    const { data: ownTenant } = await supabase
-      .from("tenants")
-      .select("slug")
-      .eq("owner_user_id", user.id)
-      .maybeSingle();
-    if (ownTenant?.slug) setMySlug(ownTenant.slug);
-    void load();
-  };
+    const getOwnSlug = async () => {
+      const { data: ownTenant } = await supabase
+        .from("tenants")
+        .select("slug")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (ownTenant?.slug) setMySlug(ownTenant.slug);
+    };
+    void getOwnSlug();
+  }, [user]);
 
   const load = async () => {
     setLoading(true);
