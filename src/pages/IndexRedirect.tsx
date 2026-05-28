@@ -186,8 +186,13 @@ const IndexRedirect = () => {
   }, [decisionDone, user, safeSlug, tenant?.slug, confirmed]);
 
   if (sessionReady && !user) {
-    const loginPath = safeSlug ? `/${safeSlug}/login` : "/login";
-    return <Navigate to={loginPath} replace />;
+    // Se estiver em um slug específico, vai para o login do coach
+    if (safeSlug) {
+      const loginPath = `/${safeSlug}/login`;
+      return <Navigate to={loginPath} replace />;
+    }
+    // Senão, a porta de entrada é o site
+    return <Navigate to="/site" replace />;
   }
 
   if (destination) return <Navigate to={destination} replace />;
