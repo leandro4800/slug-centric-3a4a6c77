@@ -166,7 +166,7 @@ const Login = () => {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(0,0,0,0.4)_100%)]" />
 
       <div className="relative w-full max-w-md">
-        <Link to={urlSlug ? `/${urlSlug}` : "/"} className="flex justify-center mb-8">
+        <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
             {tenant?.logo_url ? (
               <img src={tenant.logo_url} alt={tenant.nome} className="h-12 w-auto object-contain" />
@@ -183,7 +183,7 @@ const Login = () => {
               </span>
             )}
           </div>
-        </Link>
+        </div>
         <div className="relative bg-black/40 lg:bg-black/10 border border-white/20 rounded-none shadow-card overflow-hidden min-h-screen lg:min-h-[400px] flex flex-col">
           {/* Responsive Video Container for Mobile/Tablet */}
           {tenant?.login_video_url && (
