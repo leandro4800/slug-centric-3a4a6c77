@@ -42,7 +42,7 @@ export const SubscriptionLockScreen = () => {
     if (checkoutUrl) {
       window.location.href = checkoutUrl;
     } else {
-      window.location.href = `/${slug}/site`;
+      console.warn("Nenhum link de checkout configurado.");
     }
   };
 
@@ -100,13 +100,6 @@ export const SubscriptionLockScreen = () => {
             Pagamento Seguro via {checkoutUrl?.includes('kiwify') ? 'Kiwify' : checkoutUrl?.includes('hotmart') ? 'Hotmart' : 'Plataforma Alpha'}
           </p>
         </div>
-
-        <button 
-          onClick={() => window.location.href = `/${slug}/site`}
-          className="text-white/40 text-[10px] font-bold uppercase tracking-[0.3em] hover:text-white transition-colors"
-        >
-          Voltar para o site do Coach
-        </button>
       </div>
     </div>
   );
