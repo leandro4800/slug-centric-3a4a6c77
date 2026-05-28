@@ -318,11 +318,20 @@ const Perfil = () => {
     if (!user?.id) return toast.error("Usuário não identificado.");
     setSaving(true);
     
+    // Limpar dados antes de enviar
+    const cleanData = {
+      ...formProfile,
+      nome_completo: formProfile.nome_completo.trim() || null,
+      telefone: formProfile.telefone.trim() || null,
+      data_nascimento: formProfile.data_nascimento || null,
+      music_url: formProfile.music_url.trim() || null,
+    };
+    
     // Usar upsert para garantir que o registro existe, mantendo o tenant_id original
     const { error } = await supabase.from("perfis").upsert({
       id: user.id,
       email: user.email,
-      ...formProfile,
+      ...cleanData,
       tenant_id: profile?.tenant_id || tenant?.id,
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
@@ -332,11 +341,11 @@ const Perfil = () => {
       console.error("Erro ao salvar perfil:", error);
       // Fallback: tentar update se upsert falhar
       const { error: updateError } = await supabase.from("perfis")
-        .update({ ...formProfile, updated_at: new Date().toISOString() })
+        .update({ ...cleanData, updated_at: new Date().toISOString() })
         .eq('id', user.id);
         
       if (updateError) {
-        return toast.error("Erro ao salvar: " + updateError.message);
+        return toast.error("Erro ao salvar: " + (updateError.message || "Tente novamente mais tarde."));
       }
     }
     
