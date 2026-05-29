@@ -40,17 +40,25 @@ export default function CoachDashboard() {
 
       const { data: pp } = await supabase
         .from("assinaturas")
-        .select("id, current_period_end, perfis!assinaturas_aluno_id_fkey(nome_completo), planos(nome)")
+        .select("id, current_period_end, aluno_id, plano_id")
         .eq("tenant_id", tenant.id)
         .in("status", ["active", "trialing"])
         .gt("current_period_end", new Date().toISOString())
         .order("current_period_end", { ascending: true })
         .limit(5);
+      const alunoIds = Array.from(new Set((pp || []).map((p: any) => p.aluno_id).filter(Boolean)));
+      const planoIds = Array.from(new Set((pp || []).map((p: any) => p.plano_id).filter(Boolean)));
+      const [{ data: perfisData }, { data: planosData }] = await Promise.all([
+        alunoIds.length ? supabase.from("perfis").select("id, nome_completo").in("id", alunoIds) : Promise.resolve({ data: [] as any[] }),
+        planoIds.length ? supabase.from("planos").select("id, nome").in("id", planoIds) : Promise.resolve({ data: [] as any[] }),
+      ]);
+      const perfilMap = new Map((perfisData || []).map((p: any) => [p.id, p.nome_completo]));
+      const planoMap = new Map((planosData || []).map((p: any) => [p.id, p.nome]));
       setProximos(
         (pp || []).map((p: any) => ({
           id: p.id,
-          nome: p.perfis?.nome_completo || "Aluno",
-          plano: p.planos?.nome || "—",
+          nome: perfilMap.get(p.aluno_id) || "Aluno",
+          plano: planoMap.get(p.plano_id) || "—",
           vence: p.current_period_end,
         })),
       );
