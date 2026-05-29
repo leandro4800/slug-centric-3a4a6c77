@@ -133,7 +133,7 @@ export default function SejaCoach() {
       if (checkErr) throw checkErr;
       if (exists) {
         toast({ title: "E-mail já cadastrado", description: "Faça login para continuar.", variant: "destructive" });
-        navigate(`/login?redirect=/seja-coach`);
+        navigate(`/site/login?redirect=/seja-coach`);
         return;
       }
 
@@ -277,7 +277,7 @@ export default function SejaCoach() {
               </Button>
               <p className="text-center text-xs text-muted-foreground">
                 Já tem uma conta?{" "}
-                <Link to="/login?redirect=/seja-coach" className="font-bold text-primary hover:underline">
+                <Link to="/site/login?redirect=/seja-coach" className="font-bold text-primary hover:underline">
                   Fazer login
                 </Link>
               </p>

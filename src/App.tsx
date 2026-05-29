@@ -21,6 +21,7 @@ import TenantLanding from "./pages/TenantLanding";
 import SejaCoach from "./pages/SejaCoach";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
+import SiteLogin from "./pages/SiteLogin";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AlunoLayout from "./pages/aluno/AlunoLayout";
@@ -115,6 +116,7 @@ const App = () => (
              <Route path="/marketplace" element={<Landing />} />
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/site/login" element={<SiteLogin />} />
             <Route path="/:slug/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
