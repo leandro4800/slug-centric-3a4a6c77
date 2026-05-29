@@ -248,6 +248,49 @@ export default function SejaCoach() {
         </div>
 
         <div className="rounded-2xl border border-border/50 bg-card p-8">
+          {step === "welcome" && !user && (
+            <form onSubmit={handleSignup} className="space-y-5">
+              <div className="text-center space-y-2">
+                <h2 className="font-display text-2xl uppercase italic">Aproveite a avaliação gratuita</h2>
+                <p className="text-sm text-muted-foreground">
+                  Ganhe 3 dias grátis e depois 1 mês por apenas <span className="font-black text-primary">R$ 1,00</span>
+                </p>
+              </div>
+              <div>
+                <Label>Nome completo</Label>
+                <Input value={nome} onChange={(e) => setNome(e.target.value)} placeholder="Seu nome" required />
+              </div>
+              <div>
+                <Label>E-mail</Label>
+                <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
+              </div>
+              <div>
+                <Label>WhatsApp</Label>
+                <Input value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="+55 (11) 99999-9999" required />
+              </div>
+              <div>
+                <Label>Senha</Label>
+                <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} />
+              </div>
+              <Button type="submit" disabled={busy} className="w-full font-black uppercase tracking-widest">
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Criar minha conta Alpha"}
+              </Button>
+              <p className="text-center text-xs text-muted-foreground">
+                Já tem uma conta?{" "}
+                <Link to="/login?redirect=/seja-coach" className="font-bold text-primary hover:underline">
+                  Fazer login
+                </Link>
+              </p>
+              <p className="text-center text-[10px] text-muted-foreground/70">
+                Ao criar uma conta, você concorda com nossos Termos de Serviço e Política de Privacidade.
+              </p>
+            </form>
+          )}
+
+          {step === "welcome" && user && (
+            <CoachQuiz email={user?.email ?? null} userId={user?.id ?? null} onComplete={handleQuizComplete} />
+          )}
+
           {step === "quiz" && (
             <CoachQuiz email={user?.email ?? null} userId={user?.id ?? null} onComplete={handleQuizComplete} />
           )}
