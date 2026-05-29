@@ -202,7 +202,7 @@ export default function SejaCoach() {
         await supabase.from("user_roles").insert({ user_id: user.id, role: "coach" as any, tenant_id: data.id });
       }
       setTenantId(currentTenantId);
-      setStep("pending");
+      setStep(selectedPlan ? "checkout" : "pending");
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
