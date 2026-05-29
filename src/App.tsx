@@ -116,6 +116,7 @@ const App = () => (
              <Route path="/marketplace" element={<Landing />} />
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/site/login" element={<SiteLogin />} />
             <Route path="/:slug/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
