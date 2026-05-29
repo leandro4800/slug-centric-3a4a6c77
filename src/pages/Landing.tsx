@@ -329,13 +329,6 @@ const Landing = () => {
           <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
         </nav>
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => setCoachModalOpen(true)}
-            className="hidden lg:inline-flex border-white/10 bg-white/5 text-white hover:bg-white/10 font-bold uppercase tracking-wider"
-          >
-            <KeyRound className="mr-2 h-4 w-4" /> Já tenho um coach
-          </Button>
           <Link to="/seja-coach" className="hidden md:inline-flex">
             <Button
               variant="outline"
@@ -344,17 +337,11 @@ const Landing = () => {
               <UserRound className="mr-2 h-4 w-4" /> Sou Coach
             </Button>
           </Link>
-          <Link to="/login">
-            <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">
-              {user ? "Acessar App" : "Entrar"}
+          <Link to="/seja-coach">
+            <Button className="px-6 font-black uppercase tracking-widest">
+              Começar 30 dias Grátis
             </Button>
           </Link>
-          <Button 
-            onClick={() => setShowSimulador(true)}
-            className="px-6 font-black uppercase tracking-widest hidden sm:flex"
-          >
-            {user ? "Dashboard" : "Criar meu App"}
-          </Button>
         </div>
       </header>
 
