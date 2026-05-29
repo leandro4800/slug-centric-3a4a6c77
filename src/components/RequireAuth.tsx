@@ -154,7 +154,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
     const isMember = isOwnerOrStaff || hasRole("aluno", tenant.id) || tenantMembership === true;
 
     if (!isMember) {
-      const isSpecialTestEmail = user.email?.toLowerCase() === "48mineiro@gmail.com";
+      const isSpecialTestEmail = ["48mineiro@gmail.com", "executionmode48@gmail.com"].includes(user.email?.toLowerCase() || "");
       
       if (isSpecialTestEmail || location.pathname.includes("/onboarding")) {
         console.log("[RequireAuth] Usuário de teste ou em rota de onboarding, permitindo acesso.");

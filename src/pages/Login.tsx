@@ -100,7 +100,7 @@ const Login = () => {
 
     // Verifica se já existe perfil para este e-mail
     const { data: exists } = await supabase.rpc("email_is_registered", { _email: cleanEmail });
-    const isSpecialTestEmail = cleanEmail === "48mineiro@gmail.com";
+    const isSpecialTestEmail = ["48mineiro@gmail.com", "executionmode48@gmail.com"].includes(cleanEmail);
     if (exists && !isSpecialTestEmail) {
       setLoading(false);
       toast.error("Este e-mail já está cadastrado. Faça login.");

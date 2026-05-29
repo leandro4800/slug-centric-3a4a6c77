@@ -95,7 +95,7 @@ export default function Onboarding() {
       const { count: avaliacaoCount } = await supabase.from("avaliacoes_fisicas").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
 
       const isDifferentTenant = tenant?.id && perfil?.tenant_id && tenant.id !== perfil.tenant_id;
-      const isSpecialTestEmail = user.email?.toLowerCase() === "48mineiro@gmail.com";
+      const isSpecialTestEmail = ["48mineiro@gmail.com", "executionmode48@gmail.com"].includes(user.email?.toLowerCase() || "");
 
       if (perfil?.onboarding_completo && anamneseCount && avaliacaoCount && !isDifferentTenant && !isSpecialTestEmail) {
         const { data: t } = perfil.tenant_id
