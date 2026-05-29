@@ -80,7 +80,7 @@ export default function SejaCoach() {
       setEspecialidades((data.especialidades ?? []).join(", "));
 
       if (data.status === "approved") {
-        navigate(`/${data.slug}/admin`);
+        navigate(`/site/admin/dashboard`);
         return;
       }
       setStep("pending");
