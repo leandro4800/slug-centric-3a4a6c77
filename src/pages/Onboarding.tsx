@@ -94,7 +94,10 @@ export default function Onboarding() {
       const { count: anamneseCount } = await supabase.from("anamnese_aluno").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
       const { count: avaliacaoCount } = await supabase.from("avaliacoes_fisicas").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
 
-      if (perfil?.onboarding_completo && anamneseCount && avaliacaoCount) {
+      const isDifferentTenant = tenant?.id && perfil?.tenant_id && tenant.id !== perfil.tenant_id;
+      const isSpecialTestEmail = user.email?.toLowerCase() === "48mineiro@gmail.com";
+
+      if (perfil?.onboarding_completo && anamneseCount && avaliacaoCount && !isDifferentTenant && !isSpecialTestEmail) {
         const { data: t } = perfil.tenant_id
           ? await supabase.from("tenants").select("slug").eq("id", perfil.tenant_id).maybeSingle()
           : { data: null };
