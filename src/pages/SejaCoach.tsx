@@ -20,7 +20,7 @@ export default function SejaCoach() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [step, setStep] = useState<Step>("quiz");
+  const [step, setStep] = useState<Step>("welcome");
   const [busy, setBusy] = useState(false);
   const [quiz, setQuiz] = useState<QuizAnswers | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<CoachPlanTier | null>(null);
