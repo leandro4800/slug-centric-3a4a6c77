@@ -180,6 +180,7 @@ const App = () => (
             <Route path="/:slug/admin/agenda-presencial" element={<RequireAuth requireRole="coach" checkTenant><AdminAgendaPresencial /></RequireAuth>} />
             <Route path="/:slug/admin/faturamento" element={<RequireAuth requireRole="coach" checkTenant><AdminFaturamento /></RequireAuth>} />
             <Route path="/:slug/admin/hub" element={<RequireAuth requireRole="coach" checkTenant><Hub /></RequireAuth>} />
+            <Route path="/:slug/admin/dashboard" element={<RequireAuth requireRole="coach" checkTenant><CoachDashboard /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
