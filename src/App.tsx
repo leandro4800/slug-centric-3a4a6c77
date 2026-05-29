@@ -55,6 +55,12 @@ import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import Hub from "./pages/coach/Hub";
 import CoachDashboard from "./pages/coach/CoachDashboard";
 import RedeemPlan from "./pages/coach/RedeemPlan";
+import SiteAdminLayout from "./pages/site-admin/SiteAdminLayout";
+import SiteAdminDashboard from "./pages/site-admin/Dashboard";
+import SiteAdminAlunos from "./pages/site-admin/Alunos";
+import SiteAdminNovoAluno from "./pages/site-admin/NovoAluno";
+import SiteAdminPlaceholder from "./pages/site-admin/Placeholder";
+import { Dumbbell, Apple, Ruler, Palette, Wallet } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -117,6 +123,19 @@ const App = () => (
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
             <Route path="/site/login" element={<SiteLogin />} />
+
+            {/* Site admin (painel do coach, isolado do app) */}
+            <Route path="/site/admin" element={<SiteAdminLayout />}>
+              <Route index element={<Navigate to="/site/admin/dashboard" replace />} />
+              <Route path="dashboard" element={<SiteAdminDashboard />} />
+              <Route path="alunos" element={<SiteAdminAlunos />} />
+              <Route path="alunos/novo" element={<SiteAdminNovoAluno />} />
+              <Route path="treinos" element={<SiteAdminPlaceholder icon={Dumbbell} title="Montar treino" description="Em breve você poderá montar treinos completos direto daqui no site." />} />
+              <Route path="dieta" element={<SiteAdminPlaceholder icon={Apple} title="Montar dieta" description="Em breve você poderá montar planos alimentares completos direto daqui." />} />
+              <Route path="avaliacao-fisica" element={<SiteAdminPlaceholder icon={Ruler} title="Avaliação física" description="Em breve: avaliação física completa com cálculo automático de 7 dobras (Jackson-Pollock)." />} />
+              <Route path="aparencia" element={<SiteAdminPlaceholder icon={Palette} title="Aparência" description="Em breve você poderá customizar cores, logo e branding do seu app direto daqui." />} />
+              <Route path="faturamento" element={<SiteAdminPlaceholder icon={Wallet} title="Faturamento" description="Em breve: relatórios financeiros e gestão de assinaturas." />} />
+            </Route>
             <Route path="/:slug/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
