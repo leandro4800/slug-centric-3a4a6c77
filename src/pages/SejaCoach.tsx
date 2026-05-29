@@ -12,8 +12,8 @@ import { buildAuthRedirectUrl } from "@/lib/app-url";
 import { CoachQuiz, type QuizAnswers } from "@/components/coach/CoachQuiz";
 import { CoachPlanSelector, COACH_PLANS, type CoachPlanTier } from "@/components/coach/CoachPlanSelector";
 
-type Step = "quiz" | "plans" | "signup" | "verify-email" | "personal" | "tenant" | "checkout" | "pending";
-const STEPS: Step[] = ["quiz", "plans", "signup", "personal", "tenant", "checkout", "pending"];
+type Step = "welcome" | "quiz" | "plans" | "signup" | "verify-email" | "personal" | "tenant" | "checkout" | "pending";
+const STEPS: Step[] = ["welcome", "quiz", "plans", "personal", "tenant", "checkout", "pending"];
 
 export default function SejaCoach() {
   const { user, isLoading } = useAuth();
