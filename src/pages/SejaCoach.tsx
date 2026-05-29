@@ -133,7 +133,7 @@ export default function SejaCoach() {
       if (checkErr) throw checkErr;
       if (exists) {
         toast({ title: "E-mail já cadastrado", description: "Faça login para continuar.", variant: "destructive" });
-        navigate(`/login?redirect=/seja-coach`);
+        navigate(`/site/login?redirect=/seja-coach`);
         return;
       }
 
