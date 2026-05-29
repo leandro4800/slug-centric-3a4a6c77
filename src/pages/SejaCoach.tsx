@@ -85,7 +85,8 @@ export default function SejaCoach() {
       }
       setStep("pending");
     } else {
-      setStep(perfil?.telefone ? "tenant" : "personal");
+      // Coach autenticado sem tenant: começa pelo quiz
+      setStep("quiz");
     }
   };
 
