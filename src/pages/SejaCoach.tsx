@@ -20,8 +20,11 @@ export default function SejaCoach() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const [step, setStep] = useState<Step>("plans");
+  const [step, setStep] = useState<Step>("quiz");
   const [busy, setBusy] = useState(false);
+  const [quiz, setQuiz] = useState<QuizAnswers | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<CoachPlanTier | null>(null);
+  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
 
   // signup
   const [email, setEmail] = useState("");
