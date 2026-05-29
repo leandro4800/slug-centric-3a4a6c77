@@ -4,15 +4,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
-import { ArrowLeft, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, ExternalLink } from "lucide-react";
 import { buildAuthRedirectUrl } from "@/lib/app-url";
+import { CoachQuiz, type QuizAnswers } from "@/components/coach/CoachQuiz";
+import { CoachPlanSelector, COACH_PLANS, type CoachPlanTier } from "@/components/coach/CoachPlanSelector";
 
-type Step = "plans" | "signup" | "verify-email" | "personal" | "tenant" | "pending";
-const STEPS: Step[] = ["plans", "signup", "personal", "tenant", "pending"];
+type Step = "quiz" | "plans" | "signup" | "verify-email" | "personal" | "tenant" | "checkout" | "pending";
+const STEPS: Step[] = ["quiz", "plans", "signup", "personal", "tenant", "checkout", "pending"];
 
 export default function SejaCoach() {
   const { user, isLoading } = useAuth();
