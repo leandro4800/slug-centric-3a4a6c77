@@ -122,6 +122,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agenda_presencial_slots_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       agendamentos_aula_avulsa: {
@@ -229,6 +236,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "agendamentos_presenciais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       alimentos_taco: {
@@ -315,6 +329,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alunos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -495,6 +516,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "anamnese_aluno_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       assinaturas: {
@@ -557,6 +585,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinaturas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -758,6 +793,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "avaliacoes_fisicas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       biblioteca_abdominais_pacho: {
@@ -843,6 +885,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_exercicios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -1204,6 +1253,90 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_platform_subscriptions: {
+        Row: {
+          asaas_customer_id: string | null
+          asaas_subscription_id: string | null
+          created_at: string
+          current_period_end: string | null
+          fee_pct: number
+          first_payment_value: number
+          full_price: number
+          id: string
+          plan_tier: Database["public"]["Enums"]["coach_plan_tier"]
+          status: Database["public"]["Enums"]["coach_sub_status"]
+          tenant_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          fee_pct?: number
+          first_payment_value?: number
+          full_price: number
+          id?: string
+          plan_tier: Database["public"]["Enums"]["coach_plan_tier"]
+          status?: Database["public"]["Enums"]["coach_sub_status"]
+          tenant_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          asaas_customer_id?: string | null
+          asaas_subscription_id?: string | null
+          created_at?: string
+          current_period_end?: string | null
+          fee_pct?: number
+          first_payment_value?: number
+          full_price?: number
+          id?: string
+          plan_tier?: Database["public"]["Enums"]["coach_plan_tier"]
+          status?: Database["public"]["Enums"]["coach_sub_status"]
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      coach_qualification_leads: {
+        Row: {
+          alunos_atuais: string | null
+          created_at: string
+          email: string | null
+          faturamento_mensal: string | null
+          id: string
+          plano_recomendado: string | null
+          profissao: string | null
+          profissao_outro: string | null
+          user_id: string | null
+        }
+        Insert: {
+          alunos_atuais?: string | null
+          created_at?: string
+          email?: string | null
+          faturamento_mensal?: string | null
+          id?: string
+          plano_recomendado?: string | null
+          profissao?: string | null
+          profissao_outro?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          alunos_atuais?: string | null
+          created_at?: string
+          email?: string | null
+          faturamento_mensal?: string | null
+          id?: string
+          plano_recomendado?: string | null
+          profissao?: string | null
+          profissao_outro?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       coach_sales_links: {
         Row: {
           checkout_url: string | null
@@ -1335,6 +1468,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "fk_comunidade_posts_tenant"
+            columns: ["profissional_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+          {
             foreignKeyName: "fk_comunidade_posts_usuario"
             columns: ["usuario_id"]
             isOneToOne: false
@@ -1375,6 +1515,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "configuracoes_tenant_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -1685,6 +1832,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "historico_cargas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       inteligencia_clinica: {
@@ -1921,6 +2075,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "parceiros_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       perfis: {
@@ -1985,6 +2146,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "perfis_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -2057,6 +2225,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "perfis_treino_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       planos: {
@@ -2113,6 +2288,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "planos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       profissionais: {
@@ -2156,6 +2338,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profissionais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -2259,6 +2448,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referencia_videos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -2579,6 +2775,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "tenants_private_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       treinos_prescritos: {
@@ -2663,6 +2866,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "treinos_prescritos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       user_roles: {
@@ -2694,6 +2904,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "tenants"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -2760,6 +2977,13 @@ export type Database = {
             referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "vlog_posts_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
         ]
       }
       vouchers: {
@@ -2797,7 +3021,33 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_coach_dashboard_kpis: {
+        Row: {
+          alunos_ativos: number | null
+          alunos_inativos: number | null
+          faturamento_mes_liquido: number | null
+          proximo_pagamento: string | null
+          slug: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          alunos_ativos?: never
+          alunos_inativos?: never
+          faturamento_mes_liquido?: never
+          proximo_pagamento?: never
+          slug?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          alunos_ativos?: never
+          alunos_inativos?: never
+          faturamento_mes_liquido?: never
+          proximo_pagamento?: never
+          slug?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       buscar_templates_treino: {
@@ -2895,6 +3145,13 @@ export type Database = {
         | "trialing"
         | "incomplete"
         | "unpaid"
+      coach_plan_tier: "standard" | "premium" | "pro"
+      coach_sub_status:
+        | "pending"
+        | "trialing"
+        | "active"
+        | "past_due"
+        | "canceled"
       plano_intervalo: "mensal" | "trimestral" | "anual" | "semestral"
       tenant_status: "pending" | "approved" | "rejected" | "suspended"
       vlog_platform: "youtube" | "instagram" | "tiktok" | "other"
@@ -3033,6 +3290,14 @@ export const Constants = {
         "trialing",
         "incomplete",
         "unpaid",
+      ],
+      coach_plan_tier: ["standard", "premium", "pro"],
+      coach_sub_status: [
+        "pending",
+        "trialing",
+        "active",
+        "past_due",
+        "canceled",
       ],
       plano_intervalo: ["mensal", "trimestral", "anual", "semestral"],
       tenant_status: ["pending", "approved", "rejected", "suspended"],

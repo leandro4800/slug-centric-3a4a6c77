@@ -52,6 +52,7 @@ import NotFound from "./pages/NotFound";
 import AdminAgendaPresencial from "./pages/admin/AdminAgendaPresencial";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import Hub from "./pages/coach/Hub";
+import CoachDashboard from "./pages/coach/CoachDashboard";
 import RedeemPlan from "./pages/coach/RedeemPlan";
 
 const queryClient = new QueryClient();
@@ -179,6 +180,7 @@ const App = () => (
             <Route path="/:slug/admin/agenda-presencial" element={<RequireAuth requireRole="coach" checkTenant><AdminAgendaPresencial /></RequireAuth>} />
             <Route path="/:slug/admin/faturamento" element={<RequireAuth requireRole="coach" checkTenant><AdminFaturamento /></RequireAuth>} />
             <Route path="/:slug/admin/hub" element={<RequireAuth requireRole="coach" checkTenant><Hub /></RequireAuth>} />
+            <Route path="/:slug/admin/dashboard" element={<RequireAuth requireRole="coach" checkTenant><CoachDashboard /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
