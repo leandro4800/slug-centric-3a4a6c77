@@ -329,13 +329,6 @@ const Landing = () => {
           <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
         </nav>
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            onClick={() => setCoachModalOpen(true)}
-            className="hidden lg:inline-flex border-white/10 bg-white/5 text-white hover:bg-white/10 font-bold uppercase tracking-wider"
-          >
-            <KeyRound className="mr-2 h-4 w-4" /> Já tenho um coach
-          </Button>
           <Link to="/seja-coach" className="hidden md:inline-flex">
             <Button
               variant="outline"
@@ -344,17 +337,11 @@ const Landing = () => {
               <UserRound className="mr-2 h-4 w-4" /> Sou Coach
             </Button>
           </Link>
-          <Link to="/login">
-            <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">
-              {user ? "Acessar App" : "Entrar"}
+          <Link to="/seja-coach">
+            <Button className="px-6 font-black uppercase tracking-widest">
+              Começar 30 dias Grátis
             </Button>
           </Link>
-          <Button 
-            onClick={() => setShowSimulador(true)}
-            className="px-6 font-black uppercase tracking-widest hidden sm:flex"
-          >
-            {user ? "Dashboard" : "Criar meu App"}
-          </Button>
         </div>
       </header>
 
@@ -384,8 +371,8 @@ const Landing = () => {
                         <p className="text-xl md:text-2xl text-gray-300 font-medium max-w-xl mb-10 leading-relaxed drop-shadow-lg">{useCase.description}</p>
                         
                         <div className="flex flex-wrap gap-4">
-                          <Button onClick={() => setShowSimulador(true)} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
-                            30 Dias Grátis
+                          <Button onClick={() => navigate('/seja-coach')} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
+                            Começar 30 Dias Grátis
                           </Button>
                           <Button variant="outline" onClick={() => {
                             document.getElementById('coaches')?.scrollIntoView({ behavior: 'smooth' });
@@ -651,50 +638,6 @@ const Landing = () => {
         )}
       </AnimatePresence>
 
-      <Dialog open={coachModalOpen} onOpenChange={(open) => { setCoachModalOpen(open); if (!open) setCoachSlugError(""); }}>
-        <DialogContent className="bg-zinc-950 border border-white/10 text-white">
-          <DialogHeader>
-            <DialogTitle className="font-black uppercase tracking-widest text-xl flex items-center gap-2">
-              <KeyRound className="h-5 w-5 text-primary" /> Você já tem um coach?
-            </DialogTitle>
-            <DialogDescription className="text-gray-400">
-              Cole o link ou digite o slug do seu coach para ir direto à página dele.
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleCoachLinkSubmit} className="space-y-3">
-            <Input
-              value={coachLink}
-              onChange={(e) => { setCoachLink(e.target.value); setCoachSlugError(""); }}
-              placeholder="ex: alpha-coach.app/pikachu-team ou pikachu-team"
-              className="bg-white/5 border-white/10 text-white"
-              autoFocus
-            />
-            {coachSlugError && (
-              <p className="text-sm text-primary font-medium">{coachSlugError}</p>
-            )}
-            <Button
-              type="submit"
-              disabled={coachLookupLoading}
-              className="w-full font-black uppercase tracking-widest"
-            >
-              {coachLookupLoading ? "Buscando..." : "Ir para meu coach"}
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
-          </form>
-          <div className="border-t border-white/10 pt-4 text-center">
-            <p className="text-xs text-gray-400 uppercase tracking-widest font-bold mb-3">
-              Quer criar seu próprio aplicativo de consultoria?
-            </p>
-            <Button
-              variant="outline"
-              onClick={() => { setCoachModalOpen(false); navigate("/seja-coach"); }}
-              className="w-full border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
-            >
-              Sou Coach - Ver planos
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
