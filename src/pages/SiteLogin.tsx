@@ -61,7 +61,7 @@ const SiteLogin = () => {
     setLoading(false);
 
     if (ownedTenant?.slug) {
-      navigate(`/${ownedTenant.slug}/admin/dashboard`, { replace: true });
+      navigate(`/site/admin/dashboard`, { replace: true });
       return;
     }
 

@@ -10,7 +10,9 @@ export interface TemplateEntry {
 }
 
 import { template as coachApproved } from './coach-approved.tsx'
+import { template as alunoCredenciais } from './aluno-credenciais.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'coach-approved': coachApproved,
+  'aluno-credenciais': alunoCredenciais,
 }

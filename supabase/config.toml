@@ -46,3 +46,5 @@ additional_redirect_urls = [
     verify_jwt = false
   [functions.agendamento-aula]
     verify_jwt = false
+  [functions.site-create-aluno]
+    verify_jwt = true
