@@ -277,7 +277,7 @@ export default function SejaCoach() {
               </Button>
               <p className="text-center text-xs text-muted-foreground">
                 Já tem uma conta?{" "}
-                <Link to="/login?redirect=/seja-coach" className="font-bold text-primary hover:underline">
+                <Link to="/site/login?redirect=/seja-coach" className="font-bold text-primary hover:underline">
                   Fazer login
                 </Link>
               </p>
