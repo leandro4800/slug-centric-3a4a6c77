@@ -1,29 +1,72 @@
-I will set up the push notification infrastructure using Supabase Edge Functions and pg_cron to automate hydration, workout, and diet reminders.
+# Painel admin do site — isolado do aplicativo
 
-### Phase 1: Edge Function
-1. Create a new Edge Function `fcm-notifications` that:
-    - Authenticates with Google FCM V1 API using a Service Account.
-    - Sends notifications to a specific push token.
-    - Handles error cases and logging.
+## Problema
 
-### Phase 2: Database Infrastructure
-1. Create a migration to:
-    - Enable the `pg_net` extension to allow the database to call Edge Functions.
-    - Create a helper function `public.send_push_notification` to encapsulate the HTTP call to the Edge Function.
-    - Create a scheduling function `public.check_and_send_reminders` that:
-        - Checks `refeicoes` for upcoming meals (diet reminders).
-        - Checks `treinos_prescritos` for daily workouts (workout reminders).
-        - Generates hydration reminders at set intervals (e.g., every 3 hours).
-    - Configure `pg_cron` jobs to run the checker function every minute.
+O painel atual do coach reaproveita rotas `/{slug}/admin/*` e componentes (`AdminBackButton`, `MeusAtletas`, `CoachDashboard`) que voltam para `/{slug}/app/...` — ou seja, caem dentro do aplicativo do aluno. Não é isso que queremos no site.
 
-### Phase 3: Security & Configuration
-1. Use Supabase Vault or Edge Function secrets to store:
-    - `FIREBASE_SERVICE_ACCOUNT` (JSON containing project_id, client_email, private_key).
-    - The Supabase Service Role key (needed for the DB to call the Edge Function).
+## Objetivo
 
-**Note for the user:** To make this work, you will need to add the Firebase Service Account JSON as a secret in your Supabase project (Settings -> API -> Edge Function Secrets) with the name `FIREBASE_SERVICE_ACCOUNT`.
+Criar uma área **`/site/admin/*`** completamente separada, com sidebar fixa, navegação só entre telas do site, e fluxo de cadastro de aluno por email — sem nenhuma referência ao app.
 
-### Technical Details
-- The Edge Function will use `deno-google-auth` or manual JWT signing for FCM V1.
-- `pg_cron` will call the DB function, which uses `pg_net` for asynchronous, non-blocking requests.
-- We will track sent notifications in a `notification_logs` table to prevent duplicates.
+## Estrutura nova
+
+```
+/site/admin                       → redireciona para /site/admin/dashboard
+/site/admin/dashboard             → visão geral (KPIs, próximos pagamentos)
+/site/admin/alunos                → lista de alunos do coach
+/site/admin/alunos/novo           → cadastro de aluno (envia email com credenciais)
+/site/admin/alunos/:id            → detalhe / edição do aluno
+/site/admin/treinos               → montar treino
+/site/admin/dieta                 → montar dieta
+/site/admin/avaliacao-fisica      → avaliação física + 7 dobras
+/site/admin/aparencia             → branding do tenant
+/site/admin/faturamento           → financeiro
+```
+
+Todas usam `SiteAdminLayout` com sidebar lateral própria — nenhuma reusa componentes do app (`PageHeader`, `AdminBackButton`, `BackHandler`).
+
+## Arquivos a criar
+
+- `src/pages/site-admin/SiteAdminLayout.tsx` — layout com sidebar + outlet
+- `src/components/site-admin/SiteAdminSidebar.tsx` — menu lateral com ícones/labels das 8 telas
+- `src/pages/site-admin/Dashboard.tsx` — KPIs do tenant (reaproveita queries, não componentes do app)
+- `src/pages/site-admin/Alunos.tsx` — lista própria (query direta em `perfis` pelo `tenant_id`)
+- `src/pages/site-admin/NovoAluno.tsx` — formulário (nome, email, telefone, plano) → cria conta + envia email com user/senha
+- `src/pages/site-admin/AlunoDetalhe.tsx` — perfil, treino atual, dieta atual
+- `src/pages/site-admin/MontarTreino.tsx` — wrapper que envolve o builder existente sem o header/back do app
+- `src/pages/site-admin/MontarDieta.tsx` — idem
+- `src/pages/site-admin/AvaliacaoFisica.tsx` — formulário com cálculo de 7 dobras (Jackson-Pollock)
+- `src/pages/site-admin/Aparencia.tsx` — wrapper do AdminPanel sem chrome do app
+- `src/pages/site-admin/Faturamento.tsx` — wrapper
+
+## Cadastro de aluno + email
+
+1. Form em `NovoAluno.tsx` coleta nome, email, telefone, plano.
+2. Chama edge function nova `site-create-aluno`:
+   - cria usuário em `auth.users` (admin API) com senha aleatória
+   - insere em `perfis` com `tenant_id` do coach
+   - cria assinatura ativa no plano escolhido
+3. Após criar, dispara email transacional `aluno-credenciais` com: link do app, email, senha temporária, instruções (igual à imagem de referência enviada antes).
+
+Pré-requisito: infraestrutura de email transacional (`setup_email_infra` + `scaffold_transactional_email`). Se não estiver pronta, pedimos para configurar primeiro.
+
+## Roteamento (`App.tsx`)
+
+- Adicionar bloco `<Route path="/site/admin" element={<RequireAuth><SiteAdminLayout/></RequireAuth>}>` com filhos para cada tela.
+- Atualizar `SiteLogin.tsx` para redirecionar para `/site/admin/dashboard` (em vez de `/{slug}/admin/dashboard`).
+- Manter as rotas `/{slug}/admin/*` antigas intocadas (não quebrar nada do app).
+
+## O que NÃO será tocado
+
+- Nada em `src/pages/aluno/**`
+- Nada em `src/pages/admin/**` (rotas antigas continuam funcionando para o app)
+- `BackHandler`, `PageHeader`, `AdminBackButton` — permanecem como estão
+- Capacitor / build mobile
+
+## Implementação em duas fases
+
+**Fase 1 (esta entrega):** layout + sidebar + dashboard + lista de alunos + cadastro de aluno com email + redirect do SiteLogin. Telas de treino/dieta/avaliação ficam como "Em breve" linkando para as antigas até a fase 2.
+
+**Fase 2 (próxima):** Construir versões standalone de Montar Treino, Montar Dieta, Avaliação Física + 7 Dobras dentro de `/site/admin/*` sem dependências do app.
+
+Posso começar pela Fase 1?
