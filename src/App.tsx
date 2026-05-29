@@ -21,6 +21,7 @@ import TenantLanding from "./pages/TenantLanding";
 import SejaCoach from "./pages/SejaCoach";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
+import SiteLogin from "./pages/SiteLogin";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AlunoLayout from "./pages/aluno/AlunoLayout";
