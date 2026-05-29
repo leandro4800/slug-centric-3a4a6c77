@@ -141,18 +141,19 @@ export default function SejaCoach() {
         email: cleanEmail,
         password,
         options: {
-          data: { nome_completo: nome, is_coach: true },
+          data: { nome_completo: nome, telefone, is_coach: true },
           emailRedirectTo: buildAuthRedirectUrl("/seja-coach", { confirmed: "1" }),
         },
       });
       if (error) throw error;
-      
+
       if (!data?.session) {
         setStep("verify-email");
         toast({ title: "Confirme seu e-mail", description: "Enviamos um link para o seu e-mail." });
         return;
       }
       toast({ title: "Conta criada!" });
+      setStep("quiz");
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
