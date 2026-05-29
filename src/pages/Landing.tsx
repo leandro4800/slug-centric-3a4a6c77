@@ -334,7 +334,7 @@ const Landing = () => {
               variant="outline"
               className="border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
             >
-              <UserRound className="mr-2 h-4 w-4" /> Sou Coach
+              <UserRound className="mr-2 h-4 w-4" /> Testar por R$ 1
             </Button>
           </Link>
           <Link to="/seja-coach">
