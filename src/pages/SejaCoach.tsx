@@ -89,37 +89,39 @@ export default function SejaCoach() {
     }
   };
 
-  const PLATFORM_PLANS = [
-    {
-      id: "basic",
-      name: "Alpha Start",
-      price: "R$ 97",
-      period: "/mês",
-      features: ["Até 10 alunos", "Treinos Ilimitados", "App Personalizado", "Suporte via Email"],
-      color: "border-zinc-800"
-    },
-    {
-      id: "pro",
-      name: "Alpha Pro",
-      price: "R$ 197",
-      period: "/mês",
-      features: ["Alunos Ilimitados", "Análise de Exames", "IA Nutricional", "Suporte Prioritário"],
-      color: "border-primary",
-      popular: true
-    },
-    {
-      id: "elite",
-      name: "Alpha Elite",
-      price: "R$ 497",
-      period: "/mês",
-      features: ["White Label Total", "Gestão de Equipe", "Mentoria de Negócios", "Gerente de Conta"],
-      color: "border-zinc-800"
-    }
-  ];
+  const handleQuizComplete = (answers: QuizAnswers) => {
+    setQuiz(answers);
+    setSelectedPlan(answers.plano_recomendado);
+    setStep("plans");
+  };
 
-  const handleSelectPlan = (planId: string) => {
+  const handleSelectPlan = (planId: CoachPlanTier) => {
+    setSelectedPlan(planId);
     setStep(user ? "personal" : "signup");
   };
+
+  const handleStartCheckout = async () => {
+    if (!user || !selectedPlan) return;
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("coach-platform-checkout", {
+        body: { plan_tier: selectedPlan, nome, telefone },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error || "Falha no checkout");
+      if (data.payment_url) {
+        setCheckoutUrl(data.payment_url);
+        window.open(data.payment_url, "_blank");
+      } else {
+        toast({ title: "Assinatura criada", description: "Aguardando link de pagamento do Asaas." });
+      }
+    } catch (e: any) {
+      toast({ title: "Erro", description: e.message, variant: "destructive" });
+    } finally {
+      setBusy(false);
+    }
+  };
+
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
