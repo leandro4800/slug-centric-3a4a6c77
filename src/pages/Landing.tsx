@@ -181,6 +181,24 @@ const Landing = () => {
   const [coachLink, setCoachLink] = useState("");
   const [searchCoach, setSearchCoach] = useState("");
   const [searchRegion, setSearchRegion] = useState("");
+  const [trialTarget, setTrialTarget] = useState<string>("/seja-coach");
+
+  useEffect(() => {
+    if (!user) { setTrialTarget("/seja-coach"); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("tenants")
+        .select("status")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      // Coach já dono de painel: vai direto para o admin do site (NUNCA para o app)
+      if (data) setTrialTarget("/site/admin/dashboard");
+      else setTrialTarget("/seja-coach");
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 });
   useEffect(() => {
