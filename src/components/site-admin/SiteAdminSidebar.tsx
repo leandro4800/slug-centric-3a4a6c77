@@ -1,21 +1,36 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, LogOut } from "lucide-react";
+import {
+  Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet,
+  LogOut, Calendar, Wrench, UserCog, LifeBuoy
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 
-const items = [
-  { to: "/site/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/site/admin/alunos", label: "Alunos", icon: Users },
-  { to: "/site/admin/alunos/novo", label: "Cadastrar aluno", icon: UserPlus },
-  { to: "/site/admin/treinos", label: "Montar treino", icon: Dumbbell },
-  { to: "/site/admin/dieta", label: "Montar dieta", icon: Apple },
-  { to: "/site/admin/avaliacao-fisica", label: "Avaliação física", icon: Ruler },
-  { to: "/site/admin/aparencia", label: "Aparência", icon: Palette },
-  { to: "/site/admin/faturamento", label: "Faturamento", icon: Wallet },
+type Item = { to: string; label: string; icon: any; section?: string };
+
+const items: Item[] = [
+  { to: "/site/admin/dashboard", label: "Resumo", icon: Home, section: "Painel" },
+  { to: "/site/admin/agenda", label: "Agenda", icon: Calendar, section: "Painel" },
+
+  { to: "/site/admin/alunos", label: "Alunos", icon: Users, section: "Alunos" },
+  { to: "/site/admin/alunos/novo", label: "Cadastrar aluno", icon: UserPlus, section: "Alunos" },
+
+  { to: "/site/admin/treinos", label: "Montar treino", icon: Dumbbell, section: "Programação" },
+  { to: "/site/admin/dieta", label: "Montar dieta", icon: Apple, section: "Programação" },
+  { to: "/site/admin/avaliacao-fisica", label: "Avaliação física", icon: Ruler, section: "Programação" },
+
+  { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench, section: "Negócio" },
+  { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet, section: "Negócio" },
+  { to: "/site/admin/aparencia", label: "Aparência", icon: Palette, section: "Negócio" },
+
+  { to: "/site/admin/minha-conta", label: "Minha conta", icon: UserCog, section: "Conta" },
+  { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy, section: "Conta" },
 ];
+
+const SECTIONS = ["Painel", "Alunos", "Programação", "Negócio", "Conta"] as const;
 
 export const SiteAdminSidebar = () => {
   const { pathname } = useLocation();
@@ -42,27 +57,37 @@ export const SiteAdminSidebar = () => {
         )}
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {items.map((item) => {
-          const active = pathname === item.to || (item.to !== "/site/admin/alunos/novo" && pathname.startsWith(item.to));
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.to === "/site/admin/alunos"}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors",
-                active
-                  ? "bg-primary/15 text-primary border-l-2 border-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-white/5"
-              )}
-            >
-              <Icon className="h-4 w-4 shrink-0" />
-              <span className="truncate">{item.label}</span>
-            </NavLink>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
+        {SECTIONS.map((section) => (
+          <div key={section}>
+            <p className="px-3 mb-1 text-[9px] uppercase tracking-widest text-muted-foreground/60">{section}</p>
+            <div className="space-y-0.5">
+              {items.filter((i) => i.section === section).map((item) => {
+                const exact = item.to === "/site/admin/alunos" || item.to === "/site/admin/alunos/novo";
+                const active = exact
+                  ? pathname === item.to
+                  : pathname === item.to || pathname.startsWith(item.to + "/");
+                const Icon = item.icon;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={exact}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                      active
+                        ? "bg-primary/15 text-primary border-l-2 border-primary"
+                        : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                    )}
+                  >
+                    <Icon className="h-4 w-4 shrink-0" />
+                    <span className="truncate">{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       <div className="border-t border-white/10 p-3">
