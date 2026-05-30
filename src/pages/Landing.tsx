@@ -181,6 +181,24 @@ const Landing = () => {
   const [coachLink, setCoachLink] = useState("");
   const [searchCoach, setSearchCoach] = useState("");
   const [searchRegion, setSearchRegion] = useState("");
+  const [trialTarget, setTrialTarget] = useState<string>("/seja-coach");
+
+  useEffect(() => {
+    if (!user) { setTrialTarget("/seja-coach"); return; }
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("tenants")
+        .select("status")
+        .eq("owner_user_id", user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      // Coach já dono de painel: vai direto para o admin do site (NUNCA para o app)
+      if (data) setTrialTarget("/site/admin/dashboard");
+      else setTrialTarget("/seja-coach");
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
 
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true, duration: 40 });
   useEffect(() => {
@@ -329,17 +347,17 @@ const Landing = () => {
           <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
         </nav>
         <div className="flex items-center gap-3">
-          <Link to="/seja-coach" className="hidden md:inline-flex">
+          <Link to={trialTarget} className="hidden md:inline-flex">
             <Button
               variant="outline"
               className="border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
             >
-              <UserRound className="mr-2 h-4 w-4" /> Testar por R$ 1
+              <UserRound className="mr-2 h-4 w-4" /> {user ? "Meu painel" : "Testar por R$ 1"}
             </Button>
           </Link>
-          <Link to="/seja-coach">
+          <Link to={trialTarget}>
             <Button className="px-6 font-black uppercase tracking-widest">
-              Começar 30 dias Grátis
+              {user ? "Acessar painel" : "Começar 30 dias Grátis"}
             </Button>
           </Link>
         </div>
@@ -371,8 +389,8 @@ const Landing = () => {
                         <p className="text-xl md:text-2xl text-gray-300 font-medium max-w-xl mb-10 leading-relaxed drop-shadow-lg">{useCase.description}</p>
                         
                         <div className="flex flex-wrap gap-4">
-                          <Button onClick={() => navigate('/seja-coach')} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
-                            Começar 30 Dias Grátis
+                          <Button onClick={() => navigate(trialTarget)} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
+                            {user ? "Acessar meu painel" : "Começar 30 Dias Grátis"}
                           </Button>
                           <Button variant="outline" onClick={() => {
                             document.getElementById('coaches')?.scrollIntoView({ behavior: 'smooth' });
