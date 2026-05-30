@@ -16,7 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import { WORKOUT_PLANS, CATEGORIAS, type PlanoTreino } from "@/data/workoutPlans";
+import { WORKOUT_PLANS, type PlanoTreino } from "@/data/workoutPlans";
 
 const CATEGORIA_ORDEM = [
   "Iniciante",
