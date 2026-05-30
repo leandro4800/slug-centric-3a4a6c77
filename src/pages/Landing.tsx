@@ -347,17 +347,17 @@ const Landing = () => {
           <button onClick={() => setShowSimulador(true)} className="hover:text-primary transition-colors">Simulador</button>
         </nav>
         <div className="flex items-center gap-3">
-          <Link to="/seja-coach" className="hidden md:inline-flex">
+          <Link to={trialTarget} className="hidden md:inline-flex">
             <Button
               variant="outline"
               className="border-primary/40 bg-primary/10 text-white hover:bg-primary/20 font-bold uppercase tracking-wider"
             >
-              <UserRound className="mr-2 h-4 w-4" /> Testar por R$ 1
+              <UserRound className="mr-2 h-4 w-4" /> {user ? "Meu painel" : "Testar por R$ 1"}
             </Button>
           </Link>
-          <Link to="/seja-coach">
+          <Link to={trialTarget}>
             <Button className="px-6 font-black uppercase tracking-widest">
-              Começar 30 dias Grátis
+              {user ? "Acessar painel" : "Começar 30 dias Grátis"}
             </Button>
           </Link>
         </div>
