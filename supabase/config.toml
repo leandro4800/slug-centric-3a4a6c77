@@ -48,3 +48,5 @@ additional_redirect_urls = [
     verify_jwt = false
   [functions.site-create-aluno]
     verify_jwt = true
+  [functions.site-create-aluno-avulso]
+    verify_jwt = true
