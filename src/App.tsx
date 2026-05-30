@@ -60,7 +60,13 @@ import SiteAdminDashboard from "./pages/site-admin/Dashboard";
 import SiteAdminAlunos from "./pages/site-admin/Alunos";
 import SiteAdminNovoAluno from "./pages/site-admin/NovoAluno";
 import SiteAdminPlaceholder from "./pages/site-admin/Placeholder";
-import { Dumbbell, Apple, Ruler, Palette, Wallet } from "lucide-react";
+import SiteAdminMontarTreino from "./pages/site-admin/MontarTreino";
+import SiteAdminMontarDieta from "./pages/site-admin/MontarDieta";
+import SiteAdminAvaliacaoFisica from "./pages/site-admin/AvaliacaoFisica";
+import SiteAdminFerramentas from "./pages/site-admin/Ferramentas";
+import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
+import SiteAdminSuporte from "./pages/site-admin/Suporte";
+import { Calendar as CalendarIcon, Palette, Wallet } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -130,11 +136,16 @@ const App = () => (
               <Route path="dashboard" element={<SiteAdminDashboard />} />
               <Route path="alunos" element={<SiteAdminAlunos />} />
               <Route path="alunos/novo" element={<SiteAdminNovoAluno />} />
-              <Route path="treinos" element={<SiteAdminPlaceholder icon={Dumbbell} title="Montar treino" description="Em breve você poderá montar treinos completos direto daqui no site." />} />
-              <Route path="dieta" element={<SiteAdminPlaceholder icon={Apple} title="Montar dieta" description="Em breve você poderá montar planos alimentares completos direto daqui." />} />
-              <Route path="avaliacao-fisica" element={<SiteAdminPlaceholder icon={Ruler} title="Avaliação física" description="Em breve: avaliação física completa com cálculo automático de 7 dobras (Jackson-Pollock)." />} />
+              <Route path="treinos" element={<SiteAdminMontarTreino />} />
+              <Route path="dieta" element={<SiteAdminMontarDieta />} />
+              <Route path="avaliacao-fisica" element={<SiteAdminAvaliacaoFisica />} />
+              <Route path="agenda" element={<SiteAdminPlaceholder icon={CalendarIcon} title="Agenda" description="Em breve: agenda de aulas presenciais e online." />} />
+              <Route path="ferramentas" element={<SiteAdminFerramentas />} />
               <Route path="aparencia" element={<SiteAdminPlaceholder icon={Palette} title="Aparência" description="Em breve você poderá customizar cores, logo e branding do seu app direto daqui." />} />
-              <Route path="faturamento" element={<SiteAdminPlaceholder icon={Wallet} title="Faturamento" description="Em breve: relatórios financeiros e gestão de assinaturas." />} />
+              <Route path="faturamento" element={<SiteAdminPlaceholder icon={Wallet} title="Financeiro" description="Em breve: relatórios financeiros e gestão de assinaturas." />} />
+              <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
+              <Route path="suporte" element={<SiteAdminSuporte />} />
+              <Route path="resumo" element={<Navigate to="/site/admin/dashboard" replace />} />
             </Route>
             <Route path="/:slug/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
