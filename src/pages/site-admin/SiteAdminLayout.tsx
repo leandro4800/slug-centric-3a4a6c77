@@ -1,5 +1,5 @@
 import { Outlet, Navigate, useLocation, NavLink } from "react-router-dom";
-import { Loader2, LayoutDashboard, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Menu } from "lucide-react";
+import { Loader2, Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Menu, Wrench, UserCog, LifeBuoy, Calendar } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteTenantProvider, useSiteTenant } from "@/hooks/use-site-tenant";
 import { SiteAdminSidebar } from "@/components/site-admin/SiteAdminSidebar";
@@ -7,14 +7,18 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 const mobileItems = [
-  { to: "/site/admin/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/site/admin/dashboard", label: "Resumo", icon: Home },
   { to: "/site/admin/alunos", label: "Alunos", icon: Users },
-  { to: "/site/admin/alunos/novo", label: "Cadastrar aluno", icon: UserPlus },
+  { to: "/site/admin/alunos/novo", label: "Cadastrar", icon: UserPlus },
+  { to: "/site/admin/agenda", label: "Agenda", icon: Calendar },
   { to: "/site/admin/treinos", label: "Treino", icon: Dumbbell },
   { to: "/site/admin/dieta", label: "Dieta", icon: Apple },
   { to: "/site/admin/avaliacao-fisica", label: "Avaliação", icon: Ruler },
+  { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench },
+  { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet },
   { to: "/site/admin/aparencia", label: "Aparência", icon: Palette },
-  { to: "/site/admin/faturamento", label: "Faturamento", icon: Wallet },
+  { to: "/site/admin/minha-conta", label: "Minha conta", icon: UserCog },
+  { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy },
 ];
 
 const Inner = () => {
