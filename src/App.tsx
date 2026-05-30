@@ -60,7 +60,13 @@ import SiteAdminDashboard from "./pages/site-admin/Dashboard";
 import SiteAdminAlunos from "./pages/site-admin/Alunos";
 import SiteAdminNovoAluno from "./pages/site-admin/NovoAluno";
 import SiteAdminPlaceholder from "./pages/site-admin/Placeholder";
-import { Dumbbell, Apple, Ruler, Palette, Wallet } from "lucide-react";
+import SiteAdminMontarTreino from "./pages/site-admin/MontarTreino";
+import SiteAdminMontarDieta from "./pages/site-admin/MontarDieta";
+import SiteAdminAvaliacaoFisica from "./pages/site-admin/AvaliacaoFisica";
+import SiteAdminFerramentas from "./pages/site-admin/Ferramentas";
+import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
+import SiteAdminSuporte from "./pages/site-admin/Suporte";
+import { Calendar as CalendarIcon, Palette, Wallet } from "lucide-react";
 
 const queryClient = new QueryClient();
 
