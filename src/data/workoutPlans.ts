@@ -983,7 +983,7 @@ export const WORKOUT_PLANS: PlanoTreino[] = [
   {
     "id": "plano_8",
     "title": "ABCDE ÊNFASE EM INFERIORES (5X NA SEMANA)",
-    "categoria": "Geral",
+    "categoria": "Avançado",
     "recomendacoes": "",
     "divisao": [
       "SEGUNDA: TREINO A",
@@ -1282,7 +1282,7 @@ export const WORKOUT_PLANS: PlanoTreino[] = [
   {
     "id": "plano_9",
     "title": "ABCDE ÊNFASE EM SUPERIORES (5X NA SEMANA)",
-    "categoria": "Geral",
+    "categoria": "Avançado",
     "recomendacoes": "",
     "divisao": [
       "SEGUNDA: TREINO A",
