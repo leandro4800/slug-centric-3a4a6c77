@@ -389,8 +389,8 @@ const Landing = () => {
                         <p className="text-xl md:text-2xl text-gray-300 font-medium max-w-xl mb-10 leading-relaxed drop-shadow-lg">{useCase.description}</p>
                         
                         <div className="flex flex-wrap gap-4">
-                          <Button onClick={() => navigate('/seja-coach')} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
-                            Começar 30 Dias Grátis
+                          <Button onClick={() => navigate(trialTarget)} size="lg" className="h-16 px-10 text-lg font-black uppercase tracking-widest">
+                            {user ? "Acessar meu painel" : "Começar 30 Dias Grátis"}
                           </Button>
                           <Button variant="outline" onClick={() => {
                             document.getElementById('coaches')?.scrollIntoView({ behavior: 'smooth' });
