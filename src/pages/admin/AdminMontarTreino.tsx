@@ -180,6 +180,19 @@ const AdminMontarTreino = () => {
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
+  const [biblioteca, setBiblioteca] = useState<Array<{ id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null }>>([]);
+
+  useEffect(() => {
+    if (!tenant) return;
+    void (async () => {
+      const { data } = await supabase
+        .from("biblioteca_exercicios")
+        .select("id, nome, grupo_muscular, video_url, video_coach_url")
+        .eq("tenant_id", tenant.id)
+        .order("nome");
+      setBiblioteca((data as any) || []);
+    })();
+  }, [tenant]);
 
   useEffect(() => {
     if (!tenant) return;
