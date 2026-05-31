@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Save, Trash2, Plus, ArrowUp, ArrowDown, Video } from "lucide-react";
+import { Loader2, Sparkles, Save, Trash2, Plus, ArrowUp, ArrowDown, Video, ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
@@ -185,12 +185,41 @@ const AdminMontarTreino = () => {
   useEffect(() => {
     if (!tenant) return;
     void (async () => {
-      const { data } = await supabase
-        .from("biblioteca_exercicios")
-        .select("id, nome, grupo_muscular, video_url, video_coach_url")
-        .eq("tenant_id", tenant.id)
-        .order("nome");
-      setBiblioteca((data as any) || []);
+      // Merge biblioteca tenant-scoped + referencia_exercicios (vídeos técnicos globais)
+      const [bibRes, refRes] = await Promise.all([
+        supabase
+          .from("biblioteca_exercicios")
+          .select("id, nome, grupo_muscular, video_url, video_coach_url")
+          .eq("tenant_id", tenant.id),
+        supabase
+          .from("referencia_exercicios")
+          .select("id, nome_exercicio, grupamento_muscular, url_video"),
+      ]);
+      const bib = ((bibRes.data as any[]) || []).map((b) => ({
+        id: b.id,
+        nome: b.nome,
+        grupo_muscular: b.grupo_muscular || "",
+        video_url: b.video_url,
+        video_coach_url: b.video_coach_url,
+      }));
+      const ref = ((refRes.data as any[]) || []).map((r) => ({
+        id: r.id,
+        nome: r.nome_exercicio,
+        grupo_muscular: r.grupamento_muscular || "",
+        video_url: r.url_video,
+        video_coach_url: null as string | null,
+      }));
+      // Dedup por nome normalizado, biblioteca tenant tem prioridade
+      const seen = new Set<string>();
+      const merged: typeof bib = [];
+      for (const item of [...bib, ...ref]) {
+        const key = normalizarTexto(item.nome || "");
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        merged.push(item);
+      }
+      merged.sort((a, b) => a.nome.localeCompare(b.nome));
+      setBiblioteca(merged);
     })();
   }, [tenant]);
 
@@ -340,16 +369,19 @@ const AdminMontarTreino = () => {
     setGenerating(true);
     try {
       await salvarPerfil(true);
-      const { data: biblioteca } = await supabase
-        .from("biblioteca_exercicios")
-        .select("nome, grupo_muscular, contraindicacoes")
-        .eq("tenant_id", tenant.id);
+      // Usa a biblioteca já mesclada (biblioteca_exercicios + referencia_exercicios/vídeos técnicos)
+      // para garantir que a IA gere com os MESMOS nomes que têm vídeo cadastrado.
+      const bibliotecaParaIA = biblioteca.map((b) => ({
+        nome: b.nome,
+        grupo_muscular: b.grupo_muscular,
+        tem_video: !!(b.video_coach_url || b.video_url),
+      }));
 
       const promptFromUrl = searchParams.get("prompt");
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: biblioteca || [], divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
+        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: bibliotecaParaIA, divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
@@ -782,8 +814,8 @@ const AdminMontarTreino = () => {
                                 className="flex-1"
                               />
                               <PopoverTrigger asChild>
-                                <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" title="Sugerir da biblioteca">
-                                  <Video className="h-3.5 w-3.5" />
+                                <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" title="Escolher dos exercícios salvos (com vídeo)">
+                                  <ChevronDown className="h-3.5 w-3.5" />
                                 </Button>
                               </PopoverTrigger>
                             </div>
