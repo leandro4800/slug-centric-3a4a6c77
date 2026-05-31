@@ -840,7 +840,8 @@ const AdminMontarTreino = () => {
                           <Textarea className="min-h-[50px] text-xs mt-1" placeholder="Observações para o aluno..." value={e.observacao} onChange={(ev) => updateEx(globalIdx, { observacao: ev.target.value })} />
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                 </div>
               ))}
 
