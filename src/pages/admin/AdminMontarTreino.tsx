@@ -445,6 +445,38 @@ const AdminMontarTreino = () => {
       { dia_semana: dia, ordem: prev.filter((e) => e.dia_semana === dia).length, exercicio: "", series: "3", repeticoes: "10-12", observacao: "" },
     ]);
   };
+  const moveEx = (globalIdx: number, dir: -1 | 1) => {
+    setExercicios((prev) => {
+      const item = prev[globalIdx];
+      if (!item) return prev;
+      const sameDayIdx = prev
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.dia_semana === item.dia_semana)
+        .map(({ i }) => i);
+      const pos = sameDayIdx.indexOf(globalIdx);
+      const targetPos = pos + dir;
+      if (targetPos < 0 || targetPos >= sameDayIdx.length) return prev;
+      const swapWith = sameDayIdx[targetPos];
+      const next = [...prev];
+      [next[globalIdx], next[swapWith]] = [next[swapWith], next[globalIdx]];
+      // recompute ordem per day
+      const counters: Record<string, number> = {};
+      return next.map((e) => {
+        const ord = counters[e.dia_semana] ?? 0;
+        counters[e.dia_semana] = ord + 1;
+        return { ...e, ordem: ord };
+      });
+    });
+  };
+
+  const suggestionsForDia = (dia: string) => {
+    const tokens = tokensMusculares(dia);
+    if (tokens.length === 0) return biblioteca;
+    return biblioteca.filter((b) => {
+      const hay = normalizarTexto(`${b.grupo_muscular} ${b.nome}`);
+      return tokens.some((t) => hay.includes(t));
+    });
+  };
 
   const dias = [...new Set(exercicios.map((e) => e.dia_semana))];
 
