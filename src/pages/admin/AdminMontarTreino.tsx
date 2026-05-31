@@ -369,16 +369,19 @@ const AdminMontarTreino = () => {
     setGenerating(true);
     try {
       await salvarPerfil(true);
-      const { data: biblioteca } = await supabase
-        .from("biblioteca_exercicios")
-        .select("nome, grupo_muscular, contraindicacoes")
-        .eq("tenant_id", tenant.id);
+      // Usa a biblioteca já mesclada (biblioteca_exercicios + referencia_exercicios/vídeos técnicos)
+      // para garantir que a IA gere com os MESMOS nomes que têm vídeo cadastrado.
+      const bibliotecaParaIA = biblioteca.map((b) => ({
+        nome: b.nome,
+        grupo_muscular: b.grupo_muscular,
+        tem_video: !!(b.video_coach_url || b.video_url),
+      }));
 
       const promptFromUrl = searchParams.get("prompt");
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: biblioteca || [], divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
+        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: bibliotecaParaIA, divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
       if ((data as any)?.error) throw new Error((data as any).error);
