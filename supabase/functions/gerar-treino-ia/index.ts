@@ -344,8 +344,9 @@ ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição complet
 ${biomarkerTier ? `- Tier biomarcador: ${biomarkerTier.toUpperCase()} (aplique a Regra 7)\n` : ""}${divisoesEscolhidas ? `\n⚠️ DIVISÃO OBRIGATÓRIA (não invente outra, NÃO USE FULL BODY): ${divisoesEscolhidas.map((d: string, i: number) => `Dia ${i + 1} = "${d}"`).join(" | ")}\n` : ""}
 ${Array.isArray(estimulos_extras) && estimulos_extras.length > 0 ? `\n🎯 ESTÍMULOS EXTRAS (acessórios obrigatórios): ${estimulos_extras.join(", ")}.\nDistribua esses grupos como exercícios ACESSÓRIOS (1-2 exercícios por grupo) ao FINAL dos dias mais coerentes da divisão (ex: panturrilha em dia de pernas, ombro lateral em dia de ombro/peito, core em 3 dias separados). NÃO substituem os grupos principais do dia — são adições.\n` : ""}
 ${customPrompt ? `\n=== PEDIDO ESPECÍFICO DO COACH (PRIORIDADE MÁXIMA) ===\n"${customPrompt}"\n\nINTERPRETE este pedido e aplique a Diretriz #6 (Ênfase/Pontos Fracos): aumente o volume e a frequência semanal dos grupos mencionados.\n` : ""}
-Use exercícios desta biblioteca:
-${(biblioteca || []).map((e: any) => `- ${e.nome} [${e.grupo_muscular}]`).join("\n")}`;
+⚠️ REGRA OBRIGATÓRIA DE NOMENCLATURA: Use SEMPRE e EXATAMENTE os nomes desta biblioteca (case e acentos idênticos). NÃO invente variações ("Supino reto barra" vs "Supino Reto com Barra"). Se não houver exercício adequado na lista para um grupo, use o mais próximo dela. Os nomes precisam bater exatamente para vincular o vídeo técnico ao aluno.
+Biblioteca disponível (✓ = tem vídeo técnico cadastrado — PREFIRA estes):
+${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} [${e.grupo_muscular}]`).join("\n")}`;
 
     const tools = [
       {
