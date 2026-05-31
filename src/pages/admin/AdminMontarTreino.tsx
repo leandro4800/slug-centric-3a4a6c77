@@ -185,12 +185,41 @@ const AdminMontarTreino = () => {
   useEffect(() => {
     if (!tenant) return;
     void (async () => {
-      const { data } = await supabase
-        .from("biblioteca_exercicios")
-        .select("id, nome, grupo_muscular, video_url, video_coach_url")
-        .eq("tenant_id", tenant.id)
-        .order("nome");
-      setBiblioteca((data as any) || []);
+      // Merge biblioteca tenant-scoped + referencia_exercicios (vídeos técnicos globais)
+      const [bibRes, refRes] = await Promise.all([
+        supabase
+          .from("biblioteca_exercicios")
+          .select("id, nome, grupo_muscular, video_url, video_coach_url")
+          .eq("tenant_id", tenant.id),
+        supabase
+          .from("referencia_exercicios")
+          .select("id, nome_exercicio, grupamento_muscular, url_video"),
+      ]);
+      const bib = ((bibRes.data as any[]) || []).map((b) => ({
+        id: b.id,
+        nome: b.nome,
+        grupo_muscular: b.grupo_muscular || "",
+        video_url: b.video_url,
+        video_coach_url: b.video_coach_url,
+      }));
+      const ref = ((refRes.data as any[]) || []).map((r) => ({
+        id: r.id,
+        nome: r.nome_exercicio,
+        grupo_muscular: r.grupamento_muscular || "",
+        video_url: r.url_video,
+        video_coach_url: null as string | null,
+      }));
+      // Dedup por nome normalizado, biblioteca tenant tem prioridade
+      const seen = new Set<string>();
+      const merged: typeof bib = [];
+      for (const item of [...bib, ...ref]) {
+        const key = normalizarTexto(item.nome || "");
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+        merged.push(item);
+      }
+      merged.sort((a, b) => a.nome.localeCompare(b.nome));
+      setBiblioteca(merged);
     })();
   }, [tenant]);
 
