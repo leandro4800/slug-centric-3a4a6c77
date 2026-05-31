@@ -814,8 +814,8 @@ const AdminMontarTreino = () => {
                                 className="flex-1"
                               />
                               <PopoverTrigger asChild>
-                                <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" title="Sugerir da biblioteca">
-                                  <Video className="h-3.5 w-3.5" />
+                                <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" title="Escolher dos exercícios salvos (com vídeo)">
+                                  <ChevronDown className="h-3.5 w-3.5" />
                                 </Button>
                               </PopoverTrigger>
                             </div>
