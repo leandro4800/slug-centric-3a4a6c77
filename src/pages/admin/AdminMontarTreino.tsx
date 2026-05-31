@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Save, Trash2, Plus } from "lucide-react";
+import { Loader2, Sparkles, Save, Trash2, Plus, ArrowUp, ArrowDown, Video } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
@@ -179,6 +180,19 @@ const AdminMontarTreino = () => {
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
+  const [biblioteca, setBiblioteca] = useState<Array<{ id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null }>>([]);
+
+  useEffect(() => {
+    if (!tenant) return;
+    void (async () => {
+      const { data } = await supabase
+        .from("biblioteca_exercicios")
+        .select("id, nome, grupo_muscular, video_url, video_coach_url")
+        .eq("tenant_id", tenant.id)
+        .order("nome");
+      setBiblioteca((data as any) || []);
+    })();
+  }, [tenant]);
 
   useEffect(() => {
     if (!tenant) return;
@@ -430,6 +444,38 @@ const AdminMontarTreino = () => {
       ...prev,
       { dia_semana: dia, ordem: prev.filter((e) => e.dia_semana === dia).length, exercicio: "", series: "3", repeticoes: "10-12", observacao: "" },
     ]);
+  };
+  const moveEx = (globalIdx: number, dir: -1 | 1) => {
+    setExercicios((prev) => {
+      const item = prev[globalIdx];
+      if (!item) return prev;
+      const sameDayIdx = prev
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.dia_semana === item.dia_semana)
+        .map(({ i }) => i);
+      const pos = sameDayIdx.indexOf(globalIdx);
+      const targetPos = pos + dir;
+      if (targetPos < 0 || targetPos >= sameDayIdx.length) return prev;
+      const swapWith = sameDayIdx[targetPos];
+      const next = [...prev];
+      [next[globalIdx], next[swapWith]] = [next[swapWith], next[globalIdx]];
+      // recompute ordem per day
+      const counters: Record<string, number> = {};
+      return next.map((e) => {
+        const ord = counters[e.dia_semana] ?? 0;
+        counters[e.dia_semana] = ord + 1;
+        return { ...e, ordem: ord };
+      });
+    });
+  };
+
+  const suggestionsForDia = (dia: string) => {
+    const tokens = tokensMusculares(dia);
+    if (tokens.length === 0) return biblioteca;
+    return biblioteca.filter((b) => {
+      const hay = normalizarTexto(`${b.grupo_muscular} ${b.nome}`);
+      return tokens.some((t) => hay.includes(t));
+    });
   };
 
   const dias = [...new Set(exercicios.map((e) => e.dia_semana))];
@@ -698,17 +744,78 @@ const AdminMontarTreino = () => {
                   {exercicios
                     .map((e, globalIdx) => ({ e, globalIdx }))
                     .filter(({ e }) => e.dia_semana === dia)
-                    .map(({ e, globalIdx }, localIdx) => (
+                    .map(({ e, globalIdx }, localIdx, arr) => {
+                      const sugestoes = suggestionsForDia(dia);
+                      const match = biblioteca.find((b) => normalizarTexto(b.nome) === normalizarTexto(e.exercicio || ""));
+                      const temVideo = !!(match?.video_coach_url || match?.video_url);
+                      return (
                       <div key={globalIdx} className="bg-secondary/30 border border-border/60 rounded-lg p-3 space-y-2.5 relative">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-[10px] uppercase tracking-wider text-primary font-bold">Exercício {localIdx + 1}</span>
-                          <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeEx(globalIdx)}>
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                          </Button>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] uppercase tracking-wider text-primary font-bold">Exercício {localIdx + 1}</span>
+                            {temVideo && (
+                              <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-emerald-400 font-bold">
+                                <Video className="h-3 w-3" /> vídeo
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-0.5">
+                            <Button size="icon" variant="ghost" className="h-7 w-7" disabled={localIdx === 0} onClick={() => moveEx(globalIdx, -1)} title="Mover para cima">
+                              <ArrowUp className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" disabled={localIdx === arr.length - 1} onClick={() => moveEx(globalIdx, 1)} title="Mover para baixo">
+                              <ArrowDown className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => removeEx(globalIdx)}>
+                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                            </Button>
+                          </div>
                         </div>
                         <div>
                           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nome do exercício</Label>
-                          <Input placeholder="Ex: Supino Reto" value={e.exercicio} onChange={(ev) => updateEx(globalIdx, { exercicio: ev.target.value })} className="mt-1" />
+                          <Popover>
+                            <div className="flex gap-1 mt-1">
+                              <Input
+                                placeholder="Ex: Supino Reto"
+                                value={e.exercicio}
+                                onChange={(ev) => updateEx(globalIdx, { exercicio: ev.target.value })}
+                                className="flex-1"
+                              />
+                              <PopoverTrigger asChild>
+                                <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" title="Sugerir da biblioteca">
+                                  <Video className="h-3.5 w-3.5" />
+                                </Button>
+                              </PopoverTrigger>
+                            </div>
+                            <PopoverContent align="end" className="w-[280px] p-0 max-h-80 overflow-auto">
+                              <div className="p-2 border-b border-border/40 text-[10px] uppercase tracking-wider text-muted-foreground">
+                                Da biblioteca · {sugestoes.length} sugestões
+                              </div>
+                              {sugestoes.length === 0 ? (
+                                <div className="p-3 text-xs text-muted-foreground">Nenhum exercício salvo para esse grupo. Cadastre na Biblioteca.</div>
+                              ) : (
+                                <ul className="divide-y divide-border/30">
+                                  {sugestoes.map((b) => (
+                                    <li key={b.id}>
+                                      <button
+                                        type="button"
+                                        onClick={(ev) => {
+                                          updateEx(globalIdx, { exercicio: b.nome });
+                                          // close popover
+                                          (ev.currentTarget.closest("[data-radix-popper-content-wrapper]") as HTMLElement | null)
+                                            ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+                                        }}
+                                        className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center justify-between gap-2"
+                                      >
+                                        <span className="text-xs truncate">{b.nome}</span>
+                                        <span className="text-[9px] uppercase text-muted-foreground shrink-0">{b.grupo_muscular}</span>
+                                      </button>
+                                    </li>
+                                  ))}
+                                </ul>
+                              )}
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
@@ -733,7 +840,8 @@ const AdminMontarTreino = () => {
                           <Textarea className="min-h-[50px] text-xs mt-1" placeholder="Observações para o aluno..." value={e.observacao} onChange={(ev) => updateEx(globalIdx, { observacao: ev.target.value })} />
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                 </div>
               ))}
 
