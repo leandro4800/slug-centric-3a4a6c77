@@ -100,7 +100,7 @@ const AdminFaturamento = () => {
           <p className="font-display text-3xl text-white mt-1">{alunos}</p>
         </div>
         <div className="bg-card/40 border border-white/10 p-4">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Estim. mensal (90%)</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Estim. mensal (92,01%)</p>
           <p className="font-display text-3xl text-primary mt-1">
             R$ {receitaMes.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
           </p>
