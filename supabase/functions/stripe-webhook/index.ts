@@ -133,6 +133,7 @@ Deno.serve(async (req) => {
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
+        // Assinatura aluno → tenant
         await supabase
           .from("assinaturas")
           .update({
@@ -142,8 +143,27 @@ Deno.serve(async (req) => {
             cancelada_em: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
           })
           .eq("stripe_subscription_id", sub.id);
+
+        // Assinatura coach → plataforma
+        const platformStatus =
+          sub.status === "active" || sub.status === "trialing"
+            ? "active"
+            : sub.status === "canceled" || sub.status === "incomplete_expired"
+              ? "canceled"
+              : sub.status === "past_due" || sub.status === "unpaid"
+                ? "past_due"
+                : "pending";
+        await supabase
+          .from("coach_platform_subscriptions")
+          .update({
+            status: platformStatus as any,
+            // @ts-ignore
+            current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+          })
+          .eq("stripe_subscription_id", sub.id);
         break;
       }
+
 
       case "account.updated": {
         const acc = event.data.object as Stripe.Account;
