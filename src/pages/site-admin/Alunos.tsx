@@ -99,15 +99,15 @@ const Alunos = () => {
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
                       <Link to={`/site/admin/treinos?aluno=${a.id}`}>
-                        <Button size="sm" variant="outline" className="gap-1.5 h-8">
+                        <Button size="sm" variant="outline" className="gap-1.5 h-8" title="Ver e editar o treino gerado pela IA">
                           <Dumbbell className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline text-xs">Treino</span>
+                          <span className="hidden sm:inline text-xs">Ver/Editar treino</span>
                         </Button>
                       </Link>
                       <Link to={`/site/admin/dieta?aluno=${a.id}`}>
-                        <Button size="sm" variant="outline" className="gap-1.5 h-8">
+                        <Button size="sm" variant="outline" className="gap-1.5 h-8" title="Ver e editar a dieta gerada pela IA">
                           <Apple className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline text-xs">Dieta</span>
+                          <span className="hidden sm:inline text-xs">Ver/Editar dieta</span>
                         </Button>
                       </Link>
                     </div>
