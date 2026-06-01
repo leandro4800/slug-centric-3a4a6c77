@@ -156,7 +156,7 @@ Deno.serve(async (req) => {
       body.split = [
         {
           walletId: tenant_to_use.asaas_wallet_id,
-          fixedValue: Number(coachFixedValue.toFixed(2)),
+          fixedValue: coachFixedValue,
         }
       ];
     }
