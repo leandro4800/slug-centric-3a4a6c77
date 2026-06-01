@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Wallet, ExternalLink, Loader2, CheckCircle2, AlertCircle, Save } from "lucide-react";
+import { ArrowLeft, Wallet, ExternalLink, Loader2, CheckCircle2, AlertCircle, ShieldCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
 const AdminFaturamento = () => {
@@ -15,7 +14,8 @@ const AdminFaturamento = () => {
   const [busy, setBusy] = useState(false);
   const [alunos, setAlunos] = useState(0);
   const [receitaMes, setReceitaMes] = useState(0);
-  const [asaasWalletId, setAsaasWalletId] = useState("");
+  const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
 
   const loadMetrics = async () => {
     if (!tenant?.id) return;
@@ -24,57 +24,74 @@ const AdminFaturamento = () => {
       .select("id", { count: "exact", head: true })
       .eq("tenant_id", tenant.id);
     setAlunos(count || 0);
-    
-    // Busca planos para estimar receita
+
     const { data: planos } = await supabase
       .from("planos")
       .select("preco_centavos")
       .eq("tenant_id", tenant.id)
       .eq("ativo", true);
-    
-    const precoMedio = planos && planos.length > 0 
-      ? planos.reduce((acc, p) => acc + p.preco_centavos, 0) / planos.length / 100
-      : 0;
 
-    setReceitaMes((count || 0) * precoMedio * 0.9201); // -7,99% plataforma (taxas Asaas por conta da plataforma)
+    const precoMedio =
+      planos && planos.length > 0
+        ? planos.reduce((acc, p) => acc + p.preco_centavos, 0) / planos.length / 100
+        : 0;
+
+    // Coach recebe 92,01% do preço-base de cada aluno
+    setReceitaMes((count || 0) * precoMedio * 0.9201);
+  };
+
+  const refreshStripeStatus = async () => {
+    if (!tenant?.id) return;
+    const { data: t } = await supabase
+      .from("tenants")
+      .select("stripe_account_id, stripe_onboarding_completed")
+      .eq("id", tenant.id)
+      .maybeSingle();
+    setStripeAccountId((t as any)?.stripe_account_id || null);
+    setOnboardingCompleted(!!(t as any)?.stripe_onboarding_completed);
+
+    if ((t as any)?.stripe_account_id) {
+      try {
+        await supabase.functions.invoke("stripe-connect-status", {
+          body: { tenant_id: tenant.id },
+        });
+        const { data: t2 } = await supabase
+          .from("tenants")
+          .select("stripe_onboarding_completed")
+          .eq("id", tenant.id)
+          .maybeSingle();
+        setOnboardingCompleted(!!(t2 as any)?.stripe_onboarding_completed);
+      } catch (e) {
+        console.warn("stripe-connect-status falhou", e);
+      }
+    }
   };
 
   useEffect(() => {
     if (tenant) {
       void (async () => {
-        const { data } = await supabase
-          .from("tenants_private")
-          .select("asaas_wallet_id")
-          .eq("tenant_id", tenant.id)
-          .maybeSingle();
-        setAsaasWalletId(((data as any)?.asaas_wallet_id) || "");
-        await loadMetrics();
+        await Promise.all([refreshStripeStatus(), loadMetrics()]);
         setLoading(false);
       })();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant?.id]);
 
-  const handleSaveAsaas = async () => {
+  const handleConnectStripe = async () => {
     if (!tenant?.id) return;
     setBusy(true);
     try {
-      const { error } = await supabase
-        .from("tenants_private")
-        .upsert(
-          { tenant_id: tenant.id, asaas_wallet_id: asaasWalletId },
-          { onConflict: "tenant_id" }
-        );
-
+      const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", {
+        body: { tenant_id: tenant.id },
+      });
       if (error) throw error;
-      toast.success("ID da Carteira Asaas salvo com sucesso!");
-      await refresh();
+      if (!data?.url) throw new Error("URL de onboarding não retornada");
+      window.location.href = data.url;
     } catch (e: any) {
-      toast.error(e?.message || "Erro ao salvar carteira Asaas.");
-    } finally {
+      toast.error(e?.message || "Erro ao iniciar onboarding Stripe.");
       setBusy(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-black px-5 pt-6 pb-32">
@@ -89,9 +106,7 @@ const AdminFaturamento = () => {
         <Wallet className="h-4 w-4" />
         <span className="text-[10px] uppercase tracking-[0.3em] font-bold">Gestão Financeira</span>
       </div>
-      <h1 className="font-display text-4xl mt-2 text-white leading-tight">
-        FATURAMENTO
-      </h1>
+      <h1 className="font-display text-4xl mt-2 text-white leading-tight">FATURAMENTO</h1>
       <div className="h-px bg-primary/20 mt-3" />
 
       <div className="grid grid-cols-2 gap-3 mt-6">
@@ -109,8 +124,8 @@ const AdminFaturamento = () => {
 
       <div className="mt-8 bg-card/40 border border-white/10 p-5">
         <div className="flex items-center gap-2 mb-4">
-          <Wallet className="h-5 w-5 text-primary" />
-          <p className="font-display text-lg text-white">CONFIGURAÇÃO ASAAS</p>
+          <ShieldCheck className="h-5 w-5 text-primary" />
+          <p className="font-display text-lg text-white">CONTA STRIPE CONNECT</p>
         </div>
 
         {loading ? (
@@ -119,55 +134,58 @@ const AdminFaturamento = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest text-muted-foreground">ID da Carteira Asaas (Wallet ID)</label>
-              <Input 
-                value={asaasWalletId}
-                onChange={(e) => setAsaasWalletId(e.target.value)}
-                placeholder="Ex: 48548710-9baa-4ec1-a11f-9010193527c6"
-                className="bg-secondary/40 border-white/10 text-white"
-              />
-              <p className="text-[9px] text-muted-foreground uppercase leading-relaxed">
-                Este é o ID da sua conta no Asaas. Você o encontra em Configurações &gt; Integrações &gt; API Keys ou através do suporte do Asaas.
-              </p>
-            </div>
-
-            <Button onClick={handleSaveAsaas} disabled={busy} className="w-full bg-gradient-primary">
-              {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Save className="h-4 w-4 mr-2" /> Salvar Configuração</>}
-            </Button>
-
-            {asaasWalletId ? (
-              <div className="flex items-center gap-2 text-emerald-400 text-[10px] uppercase font-bold tracking-widest">
-                <CheckCircle2 className="h-3 w-3" /> Configurado para receber 92,01%
-              </div>
+            {onboardingCompleted ? (
+              <>
+                <div className="flex items-center gap-2 text-emerald-400 text-[10px] uppercase font-bold tracking-widest">
+                  <CheckCircle2 className="h-3 w-3" /> Conta verificada — recebendo 92,01% por aluno
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Seus pagamentos são depositados automaticamente na sua conta Stripe.
+                  Cartão, Pix e Boleto disponíveis para o aluno no checkout.
+                </p>
+                <Button
+                  onClick={handleConnectStripe}
+                  disabled={busy}
+                  variant="outline"
+                  className="w-full"
+                >
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Atualizar dados bancários / Stripe"}
+                </Button>
+              </>
             ) : (
-              <div className="flex items-center gap-2 text-amber-400 text-[10px] uppercase font-bold tracking-widest">
-                <AlertCircle className="h-3 w-3" /> Aguardando configuração
-              </div>
+              <>
+                <div className="flex items-center gap-2 text-amber-400 text-[10px] uppercase font-bold tracking-widest">
+                  <AlertCircle className="h-3 w-3" />
+                  {stripeAccountId ? "Onboarding incompleto" : "Conta ainda não conectada"}
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Pra receber pagamentos dos seus alunos, conecte/conclua sua conta Stripe.
+                  Leva ~3 minutos — você fornece dados bancários e documento.
+                </p>
+                <Button onClick={handleConnectStripe} disabled={busy} className="w-full bg-gradient-primary">
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                    <><ExternalLink className="h-4 w-4 mr-2" />
+                      {stripeAccountId ? "Continuar cadastro Stripe" : "Conectar conta Stripe"}
+                    </>
+                  )}
+                </Button>
+              </>
             )}
           </div>
         )}
       </div>
 
       <div className="mt-6 bg-primary/5 border border-primary/20 p-4">
-        <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-2">Como funciona o Split (90/10)</p>
+        <p className="text-[10px] uppercase tracking-widest text-primary font-bold mb-2">
+          Como funciona o split
+        </p>
         <ul className="text-xs text-muted-foreground space-y-1.5">
-          <li>• O aluno paga o valor total via Asaas</li>
-          <li>• <strong>90%</strong> do valor líquido é transferido para sua Wallet Asaas instantaneamente</li>
-          <li>• <strong>10%</strong> de taxa de plataforma é retida pela Alpha Coach</li>
-          <li>• As taxas do Asaas são descontadas antes da divisão</li>
+          <li>• Aluno paga o valor do plano + 2,99% de taxa de processamento</li>
+          <li>• <strong>Coach (você)</strong> recebe <strong>92,01%</strong> do preço-base do plano, líquido</li>
+          <li>• <strong>Plataforma</strong> retém <strong>7,99%</strong> (≈6,99% líquido após Stripe)</li>
+          <li>• Plataforma absorve ~1% da taxa Stripe pra reduzir o impacto no aluno</li>
+          <li>• Depósitos automáticos pela Stripe na sua conta bancária</li>
         </ul>
-      </div>
-
-      <div className="mt-6 text-center">
-        <a 
-          href="https://www.asaas.com/" 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="text-[10px] text-muted-foreground hover:text-primary transition-colors uppercase tracking-widest flex items-center justify-center gap-1"
-        >
-          Acessar Painel Asaas <ExternalLink className="h-3 w-3" />
-        </a>
       </div>
     </div>
   );
