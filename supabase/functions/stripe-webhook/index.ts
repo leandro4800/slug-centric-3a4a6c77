@@ -41,6 +41,25 @@ Deno.serve(async (req) => {
       case "checkout.session.completed": {
         const s = event.data.object as Stripe.Checkout.Session;
         const meta = s.metadata || {};
+
+        // ====== Assinatura da PLATAFORMA (coach paga Alpha Coach) ======
+        if (meta.type === "platform_subscription") {
+          if (s.subscription) {
+            const sub = await stripe.subscriptions.retrieve(s.subscription as string);
+            await supabase
+              .from("coach_platform_subscriptions")
+              .update({
+                status: "active",
+                stripe_subscription_id: sub.id,
+                stripe_customer_id: sub.customer as string,
+                // @ts-ignore
+                current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+              })
+              .eq("user_id", meta.user_id!);
+          }
+          break;
+        }
+
         const tenant_id = meta.tenant_id;
         const plano_id = meta.plano_id;
         const aluno_id = meta.aluno_id || null;
@@ -78,7 +97,7 @@ Deno.serve(async (req) => {
               .update({
                 status: 'pago',
                 stripe_session_id: s.id,
-                email: customerEmail || '', // Garante que o email do agendamento seja o do pagamento
+                email: customerEmail || '',
               })
               .eq("token", meta.agendamento_token);
           }
@@ -109,6 +128,7 @@ Deno.serve(async (req) => {
         }
         break;
       }
+
 
       case "customer.subscription.updated":
       case "customer.subscription.deleted": {
