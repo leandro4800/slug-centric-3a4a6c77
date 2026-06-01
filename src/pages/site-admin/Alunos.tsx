@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Loader2, Search, Mail, UserPlus, User } from "lucide-react";
+import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple } from "lucide-react";
 
 interface Aluno {
   id: string;
@@ -74,6 +74,7 @@ const Alunos = () => {
                 <th className="text-left px-4 py-3">Aluno</th>
                 <th className="text-left px-4 py-3 hidden md:table-cell">E-mail</th>
                 <th className="text-left px-4 py-3 hidden lg:table-cell">Telefone</th>
+                <th className="text-right px-4 py-3">Ações</th>
               </tr>
             </thead>
             <tbody>
@@ -95,6 +96,22 @@ const Alunos = () => {
                     <span className="inline-flex items-center gap-1.5"><Mail className="h-3 w-3" />{a.email || "—"}</span>
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{a.telefone || "—"}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center justify-end gap-2">
+                      <Link to={`/site/admin/treinos?aluno=${a.id}`}>
+                        <Button size="sm" variant="outline" className="gap-1.5 h-8">
+                          <Dumbbell className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline text-xs">Treino</span>
+                        </Button>
+                      </Link>
+                      <Link to={`/site/admin/dieta?aluno=${a.id}`}>
+                        <Button size="sm" variant="outline" className="gap-1.5 h-8">
+                          <Apple className="h-3.5 w-3.5" />
+                          <span className="hidden sm:inline text-xs">Dieta</span>
+                        </Button>
+                      </Link>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
