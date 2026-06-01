@@ -138,7 +138,7 @@ const AdminFaturamento = () => {
 
             {asaasWalletId ? (
               <div className="flex items-center gap-2 text-emerald-400 text-[10px] uppercase font-bold tracking-widest">
-                <CheckCircle2 className="h-3 w-3" /> Configurado para receber 90%
+                <CheckCircle2 className="h-3 w-3" /> Configurado para receber 92,01%
               </div>
             ) : (
               <div className="flex items-center gap-2 text-amber-400 text-[10px] uppercase font-bold tracking-widest">
