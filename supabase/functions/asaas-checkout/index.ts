@@ -6,7 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PLATFORM_FEE_PCT = 10;
+// Plataforma retém 7,99% bruto da venda de cada aluno.
+// As taxas do Asaas saem da fatia da plataforma (coach recebe valor fixo líquido garantido).
+const PLATFORM_FEE_PCT = 7.99;
 const ASAAS_API_URL = Deno.env.get("ASAAS_API_URL") || "https://sandbox.asaas.com/api/v3";
 const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY");
 
