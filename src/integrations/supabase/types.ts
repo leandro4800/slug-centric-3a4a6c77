@@ -1265,6 +1265,9 @@ export type Database = {
           id: string
           plan_tier: Database["public"]["Enums"]["coach_plan_tier"]
           status: Database["public"]["Enums"]["coach_sub_status"]
+          stripe_checkout_session_id: string | null
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
           tenant_id: string | null
           updated_at: string
           user_id: string
@@ -1280,6 +1283,9 @@ export type Database = {
           id?: string
           plan_tier: Database["public"]["Enums"]["coach_plan_tier"]
           status?: Database["public"]["Enums"]["coach_sub_status"]
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           tenant_id?: string | null
           updated_at?: string
           user_id: string
@@ -1295,6 +1301,9 @@ export type Database = {
           id?: string
           plan_tier?: Database["public"]["Enums"]["coach_plan_tier"]
           status?: Database["public"]["Enums"]["coach_sub_status"]
+          stripe_checkout_session_id?: string | null
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
           tenant_id?: string | null
           updated_at?: string
           user_id?: string

@@ -112,10 +112,11 @@ export default function SejaCoach() {
       if (!data?.ok) throw new Error(data?.error || "Falha no checkout");
       if (data.payment_url) {
         setCheckoutUrl(data.payment_url);
-        window.open(data.payment_url, "_blank");
+        window.location.href = data.payment_url;
       } else {
-        toast({ title: "Assinatura criada", description: "Aguardando link de pagamento do Asaas." });
+        toast({ title: "Assinatura criada", description: "Aguardando link de pagamento do Stripe." });
       }
+
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
@@ -322,7 +323,7 @@ export default function SejaCoach() {
               </div>
               {!checkoutUrl ? (
                 <Button onClick={handleStartCheckout} disabled={busy} className="w-full font-black uppercase tracking-widest">
-                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pagar R$ 1,00 (Asaas)"}
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Pagar R$ 1,00 (Stripe)"}
                 </Button>
               ) : (
                 <div className="space-y-3">
@@ -331,12 +332,13 @@ export default function SejaCoach() {
                       Abrir pagamento <ExternalLink className="ml-2 h-4 w-4" />
                     </Button>
                   </a>
-                  <p className="text-xs text-muted-foreground">Conclua o pagamento no Asaas. Após confirmação, seu painel será liberado.</p>
+                  <p className="text-xs text-muted-foreground">Conclua o pagamento no Stripe. Após confirmação, seu painel será liberado.</p>
                 </div>
               )}
               <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                Pagamento processado por Asaas. Cartão, Pix ou Boleto.
+                Pagamento processado por Stripe. Cartão de crédito.
               </p>
+
             </div>
           )}
 

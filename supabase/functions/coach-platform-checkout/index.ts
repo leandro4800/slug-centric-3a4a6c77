@@ -1,6 +1,10 @@
-// Checkout da assinatura da plataforma (coach paga o Alpha Coach)
-// Cria customer no Asaas e uma assinatura mensal recorrente.
-// Primeira fatura é gerada pelo valor promocional (R$1,00) e a partir do segundo ciclo cobra o valor cheio.
+// Checkout da assinatura da plataforma (coach paga o Alpha Coach) via Stripe Checkout.
+// Modelo:
+//   - full_price = preço-base do plano (mostrado pro coach)
+//   - Stripe cobra o coach: full_price * 1,0299 (gross-up 2,99%) — cobre taxa Stripe cartão
+//   - Plataforma absorve ~1% da taxa Stripe (margem)
+//   - Primeiro mês promocional R$1 via cupom one-time
+import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -8,24 +12,21 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const ASAAS_API_URL = Deno.env.get("ASAAS_API_URL") || "https://sandbox.asaas.com/api/v3";
-const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY");
-
 type PlanTier = "standard" | "premium" | "pro";
 const PLAN_PRICES: Record<PlanTier, { full: number; label: string; max_alunos: number | null }> = {
-  standard: { full: 59.90, label: "Alpha Standard", max_alunos: 25 },
-  premium:  { full: 99.90, label: "Alpha Premium", max_alunos: 50 },
-  pro:      { full: 189.90, label: "Alpha Pro", max_alunos: null },
+  standard: { full: 59.9, label: "Alpha Standard", max_alunos: 25 },
+  premium: { full: 99.9, label: "Alpha Premium", max_alunos: 50 },
+  pro: { full: 189.9, label: "Alpha Pro", max_alunos: null },
 };
-const FIRST_MONTH_VALUE = 1.00;
-const PLATFORM_FEE_PCT = 7.99;
+const FIRST_MONTH_VALUE = 1.0;
+const COACH_FEE_PCT = 2.99; // gross-up Stripe repassado ao coach
+const PLATFORM_ABSORB_PCT = 1.0; // plataforma absorve
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    if (!ASAAS_API_KEY) throw new Error("ASAAS_API_KEY não configurada. Adicione o secret para habilitar pagamentos.");
-
+    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -41,83 +42,123 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const plan_tier = String(body.plan_tier || "").toLowerCase() as PlanTier;
     if (!PLAN_PRICES[plan_tier]) throw new Error("plan_tier inválido");
-    const { nome, telefone, cpfCnpj } = body;
+    const { nome, telefone } = body;
 
     const plan = PLAN_PRICES[plan_tier];
+    const grossedUpFull = Math.round(plan.full * (1 + COACH_FEE_PCT / 100) * 100); // centavos
 
-    // 1. Buscar/criar customer no Asaas
-    let customerId: string | null = null;
-    const listRes = await fetch(`${ASAAS_API_URL}/customers?email=${encodeURIComponent(user.email!)}`, {
-      headers: { access_token: ASAAS_API_KEY },
-    });
-    const listData = await listRes.json();
-    if (listData?.data?.length) {
-      customerId = listData.data[0].id;
+    // 1. Customer Stripe (busca ou cria)
+    let customerId: string | undefined;
+    const existing = await stripe.customers.list({ email: user.email!, limit: 1 });
+    if (existing.data.length > 0) {
+      customerId = existing.data[0].id;
     } else {
-      const createRes = await fetch(`${ASAAS_API_URL}/customers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", access_token: ASAAS_API_KEY },
-        body: JSON.stringify({
-          name: nome || user.email!.split("@")[0],
-          email: user.email,
-          mobilePhone: telefone || undefined,
-          cpfCnpj: cpfCnpj || undefined,
-          externalReference: user.id,
-        }),
+      const created = await stripe.customers.create({
+        email: user.email!,
+        name: nome || user.email!.split("@")[0],
+        phone: telefone || undefined,
+        metadata: { user_id: user.id, plan_tier },
       });
-      const createData = await createRes.json();
-      if (createData.errors) throw new Error(createData.errors[0].description);
-      customerId = createData.id;
+      customerId = created.id;
     }
 
-    // 2. Criar assinatura (primeira cobrança = R$1)
-    const firstDue = new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString().split("T")[0];
-    const subRes = await fetch(`${ASAAS_API_URL}/subscriptions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", access_token: ASAAS_API_KEY },
-      body: JSON.stringify({
-        customer: customerId,
-        billingType: "UNDEFINED",
-        value: FIRST_MONTH_VALUE,
-        nextDueDate: firstDue,
-        cycle: "MONTHLY",
-        description: `${plan.label} — 1º mês promocional R$ ${FIRST_MONTH_VALUE.toFixed(2)} (depois R$ ${plan.full.toFixed(2)}/mês)`,
-        externalReference: JSON.stringify({ user_id: user.id, plan_tier, type: "platform_subscription" }),
+    // 2. Product + Price recorrente (procura por metadata, cria se não existir)
+    const productSearch = await stripe.products.search({
+      query: `metadata['platform_plan_tier']:'${plan_tier}'`,
+      limit: 1,
+    });
+    let productId: string;
+    if (productSearch.data.length > 0) {
+      productId = productSearch.data[0].id;
+    } else {
+      const product = await stripe.products.create({
+        name: plan.label,
+        metadata: { platform_plan_tier: plan_tier },
+      });
+      productId = product.id;
+    }
+
+    const priceSearch = await stripe.prices.search({
+      query: `product:'${productId}' AND metadata['gross_up']:'${COACH_FEE_PCT}' AND active:'true'`,
+      limit: 1,
+    });
+    let priceId: string;
+    if (priceSearch.data.length > 0 && priceSearch.data[0].unit_amount === grossedUpFull) {
+      priceId = priceSearch.data[0].id;
+    } else {
+      const price = await stripe.prices.create({
+        product: productId,
+        currency: "brl",
+        unit_amount: grossedUpFull,
+        recurring: { interval: "month" },
+        metadata: { gross_up: String(COACH_FEE_PCT), base_amount: String(Math.round(plan.full * 100)) },
+      });
+      priceId = price.id;
+    }
+
+    // 3. Cupom one-time pra deixar a 1ª fatura em R$1
+    // Desconto = (grossedUpFull - 100 centavos)
+    const discountAmount = Math.max(0, grossedUpFull - Math.round(FIRST_MONTH_VALUE * 100));
+    const coupon = await stripe.coupons.create({
+      amount_off: discountAmount,
+      currency: "brl",
+      duration: "once",
+      name: `Promo 1º mês ${plan.label}`,
+      metadata: { plan_tier },
+    });
+
+    const origin = req.headers.get("origin") || "http://localhost:3000";
+
+    // 4. Checkout Session (mode subscription)
+    const session = await stripe.checkout.sessions.create({
+      mode: "subscription",
+      customer: customerId,
+      payment_method_types: ["card"],
+      line_items: [{ price: priceId, quantity: 1 }],
+      discounts: [{ coupon: coupon.id }],
+      allow_promotion_codes: false,
+      success_url: `${origin}/seja-coach?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/seja-coach?checkout=cancel`,
+      subscription_data: {
+        metadata: {
+          user_id: user.id,
+          plan_tier,
+          type: "platform_subscription",
+        },
+      },
+      metadata: {
+        user_id: user.id,
+        plan_tier,
+        type: "platform_subscription",
+      },
+    });
+
+    // 5. Persistir (pré-cria registro pending)
+    await supabase.from("coach_platform_subscriptions").upsert(
+      {
+        user_id: user.id,
+        plan_tier,
+        status: "pending",
+        stripe_customer_id: customerId,
+        stripe_checkout_session_id: session.id,
+        first_payment_value: FIRST_MONTH_VALUE,
+        full_price: plan.full,
+        fee_pct: PLATFORM_ABSORB_PCT,
+      },
+      { onConflict: "user_id" }
+    );
+
+    return new Response(
+      JSON.stringify({
+        ok: true,
+        session_id: session.id,
+        payment_url: session.url,
       }),
-    });
-    const sub = await subRes.json();
-    if (sub.errors) throw new Error(sub.errors[0].description);
-
-    // 3. Persistir assinatura
-    await supabase.from("coach_platform_subscriptions").upsert({
-      user_id: user.id,
-      plan_tier,
-      status: "pending",
-      asaas_customer_id: customerId,
-      asaas_subscription_id: sub.id,
-      first_payment_value: FIRST_MONTH_VALUE,
-      full_price: plan.full,
-      fee_pct: PLATFORM_FEE_PCT,
-    }, { onConflict: "user_id" });
-
-    // 4. Buscar link de pagamento da primeira cobrança
-    let payment_url: string | null = null;
-    for (let i = 0; i < 5 && !payment_url; i++) {
-      await new Promise((r) => setTimeout(r, 600));
-      const payRes = await fetch(`${ASAAS_API_URL}/payments?subscription=${sub.id}&limit=1`, {
-        headers: { access_token: ASAAS_API_KEY },
-      });
-      const payData = await payRes.json();
-      const first = payData?.data?.[0];
-      if (first?.invoiceUrl) payment_url = first.invoiceUrl;
-    }
-
-    return new Response(JSON.stringify({ ok: true, subscription_id: sub.id, payment_url }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+    );
   } catch (e: any) {
-    return new Response(JSON.stringify({ ok: false, error: e.message }), {
+    console.error("[coach-platform-checkout]", e?.message);
+    return new Response(JSON.stringify({ ok: false, error: e?.message || String(e) }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 400,
     });
