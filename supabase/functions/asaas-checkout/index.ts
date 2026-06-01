@@ -6,7 +6,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PLATFORM_FEE_PCT = 10;
+// Plataforma retém 7,99% bruto da venda de cada aluno.
+// As taxas do Asaas saem da fatia da plataforma (coach recebe valor fixo líquido garantido).
+const PLATFORM_FEE_PCT = 7.99;
 const ASAAS_API_URL = Deno.env.get("ASAAS_API_URL") || "https://sandbox.asaas.com/api/v3";
 const ASAAS_API_KEY = Deno.env.get("ASAAS_API_KEY");
 
@@ -146,12 +148,15 @@ Deno.serve(async (req) => {
       }),
     };
 
-    // Configurar Split (90% para o coach, 10% para a plataforma)
+    // Split por VALOR FIXO: coach recebe exatamente (100% - 7,99%) do bruto.
+    // O restante (7,99%) fica na conta da plataforma, e as taxas do Asaas
+    // são debitadas dessa fatia — o coach NÃO paga taxa do Asaas.
     if (tenant_to_use.asaas_wallet_id) {
+      const coachFixedValue = Number((amount * (100 - PLATFORM_FEE_PCT) / 100).toFixed(2));
       body.split = [
         {
           walletId: tenant_to_use.asaas_wallet_id,
-          percentualValue: 100 - PLATFORM_FEE_PCT, // 90%
+          fixedValue: coachFixedValue,
         }
       ];
     }

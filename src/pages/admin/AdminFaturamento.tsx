@@ -36,7 +36,7 @@ const AdminFaturamento = () => {
       ? planos.reduce((acc, p) => acc + p.preco_centavos, 0) / planos.length / 100
       : 0;
 
-    setReceitaMes((count || 0) * precoMedio * 0.9); // -10% plataforma
+    setReceitaMes((count || 0) * precoMedio * 0.9201); // -7,99% plataforma (taxas Asaas por conta da plataforma)
   };
 
   useEffect(() => {
@@ -100,7 +100,7 @@ const AdminFaturamento = () => {
           <p className="font-display text-3xl text-white mt-1">{alunos}</p>
         </div>
         <div className="bg-card/40 border border-white/10 p-4">
-          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Estim. mensal (90%)</p>
+          <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Estim. mensal (92,01%)</p>
           <p className="font-display text-3xl text-primary mt-1">
             R$ {receitaMes.toLocaleString("pt-BR", { minimumFractionDigits: 0 })}
           </p>
@@ -138,7 +138,7 @@ const AdminFaturamento = () => {
 
             {asaasWalletId ? (
               <div className="flex items-center gap-2 text-emerald-400 text-[10px] uppercase font-bold tracking-widest">
-                <CheckCircle2 className="h-3 w-3" /> Configurado para receber 90%
+                <CheckCircle2 className="h-3 w-3" /> Configurado para receber 92,01%
               </div>
             ) : (
               <div className="flex items-center gap-2 text-amber-400 text-[10px] uppercase font-bold tracking-widest">
