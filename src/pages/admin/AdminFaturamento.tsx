@@ -36,7 +36,7 @@ const AdminFaturamento = () => {
       ? planos.reduce((acc, p) => acc + p.preco_centavos, 0) / planos.length / 100
       : 0;
 
-    setReceitaMes((count || 0) * precoMedio * 0.9); // -10% plataforma
+    setReceitaMes((count || 0) * precoMedio * 0.9201); // -7,99% plataforma (taxas Asaas por conta da plataforma)
   };
 
   useEffect(() => {
