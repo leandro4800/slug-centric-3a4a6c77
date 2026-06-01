@@ -112,10 +112,11 @@ export default function SejaCoach() {
       if (!data?.ok) throw new Error(data?.error || "Falha no checkout");
       if (data.payment_url) {
         setCheckoutUrl(data.payment_url);
-        window.open(data.payment_url, "_blank");
+        window.location.href = data.payment_url;
       } else {
-        toast({ title: "Assinatura criada", description: "Aguardando link de pagamento do Asaas." });
+        toast({ title: "Assinatura criada", description: "Aguardando link de pagamento do Stripe." });
       }
+
     } catch (e: any) {
       toast({ title: "Erro", description: e.message, variant: "destructive" });
     } finally {
