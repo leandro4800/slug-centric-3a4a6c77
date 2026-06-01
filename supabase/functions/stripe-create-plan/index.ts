@@ -61,12 +61,22 @@ Deno.serve(async (req) => {
     }
 
     const recurring = intervalMap[plano.intervalo] ?? intervalMap.mensal;
+    // Gross-up de 2,99% repassado ao aluno para cobrir taxa Stripe
+    // (plataforma absorve apenas 1% da taxa via margem; coach segue recebendo
+    //  92,01% do preço-base configurado pelo coach).
+    const STUDENT_FEE_PCT = 2.99;
+    const grossedUpAmount = Math.round(plano.preco_centavos * (1 + STUDENT_FEE_PCT / 100));
     const price = await stripe.prices.create({
       product: productId,
       currency: "brl",
-      unit_amount: plano.preco_centavos,
+      unit_amount: grossedUpAmount,
       recurring,
-      metadata: { plano_id, tenant_id: plano.tenant_id },
+      metadata: {
+        plano_id,
+        tenant_id: plano.tenant_id,
+        base_amount: String(plano.preco_centavos),
+        student_fee_pct: String(STUDENT_FEE_PCT),
+      },
     });
 
     await supabase
