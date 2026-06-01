@@ -1,4 +1,9 @@
-// Cria Checkout Session com split 90/10 via application_fee_percent + transfer_data.destination
+// Cria Checkout Session no Stripe com split via Connect.
+// Modelo de taxa:
+//   - Coach define preco_centavos = preço-base do plano (mostrado na landing)
+//   - Aluno paga preco_centavos * 1,0299 (gross-up de 2,99% pra cobrir taxa Stripe)
+//   - application_fee_percent ≈ 10,66% (do total cobrado) → coach recebe 92,01% do preço-base
+//   - Stripe debita ~3,99% do total da conta da PLATAFORMA → plataforma absorve só ~1% e fica com ~6,99% líquido sobre o preço-base
 import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 
@@ -7,7 +12,17 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const PLATFORM_FEE_PCT = 10;
+// Margem da plataforma sobre o preço-base do coach (líquido alvo após Stripe ≈ 6,99%)
+const PLATFORM_FEE_PCT_OF_BASE = 7.99;
+// Gross-up cobrado do aluno em cima do preço-base
+const STUDENT_FEE_PCT = 2.99;
+
+// Application fee % aplicada sobre o TOTAL cobrado (que já inclui o gross-up).
+// (PLATFORM_FEE_PCT_OF_BASE + STUDENT_FEE_PCT) / (100 + STUDENT_FEE_PCT) * 100
+// = (7.99 + 2.99) / 102.99 * 100 ≈ 10.66 → coach recebe 92,01% do preço-base
+const APPLICATION_FEE_PCT = Number(
+  (((PLATFORM_FEE_PCT_OF_BASE + STUDENT_FEE_PCT) / (100 + STUDENT_FEE_PCT)) * 100).toFixed(2)
+);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -32,13 +47,14 @@ Deno.serve(async (req) => {
     }
 
     const { plano_id, tenant_id, type, email, nome, telefone } = await req.json();
-    
-    let tenant_to_use;
-    let line_items;
+
+    let tenant_to_use: any;
+    let line_items: any;
     let mode: "subscription" | "payment" = "subscription";
     let agendamento_token: string | null = null;
+    let baseUnitAmount = 0; // centavos do preço-base (para calcular fee de aula avulsa)
 
-    if (type === 'aula_avulsa') {
+    if (type === "aula_avulsa") {
       if (!tenant_id) throw new Error("tenant_id required for aula_avulsa");
       const { data: t } = await supabase
         .from("tenants")
@@ -47,21 +63,26 @@ Deno.serve(async (req) => {
         .maybeSingle();
       if (!t) throw new Error("tenant not found");
       if (!t.permite_aula_avulsa || !t.preco_aula_avulsa) throw new Error("aula avulsa not available");
-      
+
       tenant_to_use = t;
       mode = "payment";
-      line_items = [{
-        price_data: {
-          currency: 'brl',
-          product_data: {
-            name: `Aula Avulsa - ${t.nome}`,
-            description: 'Treino presencial único com acompanhamento profissional.',
+      baseUnitAmount = Math.round(t.preco_aula_avulsa * 100);
+      const grossedUp = Math.round(baseUnitAmount * (1 + STUDENT_FEE_PCT / 100));
+
+      line_items = [
+        {
+          price_data: {
+            currency: "brl",
+            product_data: {
+              name: `Aula Avulsa - ${t.nome}`,
+              description: "Treino presencial único com acompanhamento profissional.",
+            },
+            unit_amount: grossedUp,
           },
-          unit_amount: Math.round(t.preco_aula_avulsa * 100),
+          quantity: 1,
         },
-        quantity: 1,
-      }];
-      // Pré-cria agendamento pendente para gerar token público
+      ];
+
       const customerEmailForBooking = (email || userEmail || "").trim().toLowerCase();
       const { data: agend, error: agendErr } = await supabase
         .from("agendamentos_aula_avulsa")
@@ -70,7 +91,7 @@ Deno.serve(async (req) => {
           nome: nome || customerEmailForBooking || "Cliente",
           email: customerEmailForBooking,
           telefone: telefone || null,
-          valor_centavos: Math.round(t.preco_aula_avulsa * 100),
+          valor_centavos: baseUnitAmount,
           status: "pendente",
         })
         .select("token")
@@ -89,12 +110,15 @@ Deno.serve(async (req) => {
       // @ts-ignore
       tenant_to_use = plano.tenants;
       if (!plano.stripe_price_id) throw new Error("plano has no stripe_price_id");
+      baseUnitAmount = plano.preco_centavos;
       line_items = [{ price: plano.stripe_price_id, quantity: 1 }];
     }
 
     if (tenant_to_use.status !== "approved") throw new Error("tenant not approved");
-    const skipStripeConnect = !tenant_to_use.stripe_account_id || !tenant_to_use.stripe_onboarding_completed;
-    
+    if (!tenant_to_use.stripe_account_id || !tenant_to_use.stripe_onboarding_completed) {
+      throw new Error("Coach ainda não concluiu o cadastro Stripe Connect para receber pagamentos.");
+    }
+
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const customerEmail = userEmail || email;
 
@@ -104,39 +128,43 @@ Deno.serve(async (req) => {
       allow_promotion_codes: true,
       line_items,
       customer_email: customerEmail || undefined,
-      success_url: type === 'aula_avulsa' && agendamento_token
-        ? `${origin}/${tenant_to_use.slug}/agendar-aula/${agendamento_token}?session_id={CHECKOUT_SESSION_ID}`
-        : `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${tenant_to_use.slug}`,
+      success_url:
+        type === "aula_avulsa" && agendamento_token
+          ? `${origin}/${tenant_to_use.slug}/agendar-aula/${agendamento_token}?session_id={CHECKOUT_SESSION_ID}`
+          : `${origin}/checkout/sucesso?session_id={CHECKOUT_SESSION_ID}&slug=${tenant_to_use.slug}`,
       cancel_url: `${origin}/${tenant_to_use.slug}`,
       metadata: {
         plano_id: plano_id ?? "",
         tenant_id: tenant_to_use.id,
         aluno_id: userId ?? "",
         tenant_slug: tenant_to_use.slug,
-        type: type ?? 'subscription',
+        type: type ?? "subscription",
         nome: nome ?? "",
         telefone: telefone ?? "",
         agendamento_token: agendamento_token ?? "",
+        base_amount_centavos: String(baseUnitAmount),
+        student_fee_pct: String(STUDENT_FEE_PCT),
+        platform_fee_pct_of_base: String(PLATFORM_FEE_PCT_OF_BASE),
       },
     };
 
-    if (!skipStripeConnect) {
-      // IMPORTANTE: NÃO usamos `on_behalf_of`. Assim a cobrança fica na conta
-      // da PLATAFORMA, que absorve as taxas do Stripe. Repassamos 90% ao coach
-      // via transfer_data.destination — o coach só "paga" os 10% da plataforma,
-      // sem nenhuma taxa adicional do Stripe descontada dele.
-      if (mode === 'subscription') {
-        sessionParams.subscription_data = {
-          trial_period_days: 30,
-          application_fee_percent: PLATFORM_FEE_PCT,
-          transfer_data: { destination: tenant_to_use.stripe_account_id },
-        };
-      } else {
-        sessionParams.payment_intent_data = {
-          application_fee_amount: Math.round(line_items[0].price_data.unit_amount * (PLATFORM_FEE_PCT / 100)),
-          transfer_data: { destination: tenant_to_use.stripe_account_id },
-        };
-      }
+    // Charge fica na conta da PLATAFORMA (sem on_behalf_of).
+    // Plataforma absorve a taxa Stripe; coach recebe valor cheio via transfer_data.
+    if (mode === "subscription") {
+      sessionParams.subscription_data = {
+        trial_period_days: 30,
+        application_fee_percent: APPLICATION_FEE_PCT,
+        transfer_data: { destination: tenant_to_use.stripe_account_id },
+      };
+    } else {
+      const totalAmount = line_items[0].price_data.unit_amount;
+      // application_fee_amount = total cobrado - quanto vai pro coach (92,01% do base)
+      const coachAmount = Math.round(baseUnitAmount * (1 - PLATFORM_FEE_PCT_OF_BASE / 100));
+      const applicationFee = totalAmount - coachAmount;
+      sessionParams.payment_intent_data = {
+        application_fee_amount: applicationFee,
+        transfer_data: { destination: tenant_to_use.stripe_account_id },
+      };
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
