@@ -148,15 +148,14 @@ Deno.serve(async (req) => {
       }),
     };
 
-    // Split por VALOR FIXO: coach recebe exatamente (100% - 7,99%) do bruto.
-    // O restante (7,99%) fica na conta da plataforma, e as taxas do Asaas
-    // são debitadas dessa fatia — o coach NÃO paga taxa do Asaas.
+    // Split por PERCENTUAL: coach recebe 92,01% e plataforma fica com 7,99% íntegros.
+    // As taxas do Asaas (boleto/pix/cartão) são debitadas da fatia do coach —
+    // a plataforma NÃO absorve taxa do Asaas.
     if (tenant_to_use.asaas_wallet_id) {
-      const coachFixedValue = Number((amount * (100 - PLATFORM_FEE_PCT) / 100).toFixed(2));
       body.split = [
         {
           walletId: tenant_to_use.asaas_wallet_id,
-          fixedValue: coachFixedValue,
+          percentualValue: 100 - PLATFORM_FEE_PCT, // 92,01%
         }
       ];
     }
