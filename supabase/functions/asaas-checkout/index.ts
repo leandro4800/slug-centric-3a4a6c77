@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
     // O restante (7,99%) fica na conta da plataforma, e as taxas do Asaas
     // são debitadas dessa fatia — o coach NÃO paga taxa do Asaas.
     if (tenant_to_use.asaas_wallet_id) {
-      const coachFixedValue = Math.round((amount * (100 - PLATFORM_FEE_PCT)) ) / 100;
+      const coachFixedValue = Number((amount * (100 - PLATFORM_FEE_PCT) / 100).toFixed(2));
       body.split = [
         {
           walletId: tenant_to_use.asaas_wallet_id,
