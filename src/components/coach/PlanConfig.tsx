@@ -92,7 +92,7 @@ export const PlanConfig = () => {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("planos")
         .insert({
           nome: newPlan.nome!,
@@ -102,11 +102,24 @@ export const PlanConfig = () => {
           ativo: newPlan.ativo,
           tenant_id: tenant.id,
           ordem: plans.length
-        });
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
 
-      toast({ title: "Plano criado com sucesso!" });
+      const createdPlanId = (data as any)?.id;
+      if (createdPlanId) {
+        const stripeData = await syncPlanWithStripe(createdPlanId);
+        if (stripeData) {
+          toast({ title: "Plano criado e sincronizado com Stripe!" });
+        } else {
+          toast({ title: "Plano criado", description: "Sincronização com Stripe falhou. Tente editar o plano mais tarde." });
+        }
+      } else {
+        toast({ title: "Plano criado com sucesso!" });
+      }
+
       setShowAddForm(false);
       setNewPlan({
         nome: "",
