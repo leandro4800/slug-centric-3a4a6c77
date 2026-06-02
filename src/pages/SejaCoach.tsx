@@ -79,7 +79,12 @@ export default function SejaCoach() {
       setEstado(data.estado ?? "");
       setEspecialidades((data.especialidades ?? []).join(", "));
 
+      const wantsPlans = new URLSearchParams(window.location.search).get("view") === "planos";
       if (data.status === "approved") {
+        if (wantsPlans) {
+          setStep("plans");
+          return;
+        }
         navigate(`/site/admin/dashboard`);
         return;
       }
