@@ -116,7 +116,7 @@ Deno.serve(async (req) => {
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
       discounts: [{ coupon: coupon.id }],
-      allow_promotion_codes: false,
+      
       success_url: `${origin}/seja-coach?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${origin}/seja-coach?checkout=cancel`,
       subscription_data: {
