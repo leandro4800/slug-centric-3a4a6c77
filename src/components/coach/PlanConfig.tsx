@@ -176,7 +176,12 @@ export const PlanConfig = () => {
 
       if (error) throw error;
 
-      toast({ title: "Plano atualizado!" });
+      const stripeData = await syncPlanWithStripe(plan.id);
+      if (stripeData) {
+        toast({ title: "Plano atualizado e sincronizado com Stripe!" });
+      } else {
+        toast({ title: "Plano atualizado!" });
+      }
       fetchPlans();
     } catch (error: any) {
       toast({
