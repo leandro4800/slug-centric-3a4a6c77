@@ -43,6 +43,9 @@ const Alunos = () => {
 
   return (
     <div className="p-4 md:p-8 space-y-6">
+      <div className="flex items-center gap-3">
+        <AdminBackButton to="/site/admin/dashboard" />
+      </div>
       <div className="flex items-end justify-between gap-3 flex-wrap">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Gestão</p>
