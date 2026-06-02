@@ -27,6 +27,25 @@ export default function CoachDashboard() {
   const [kpis, setKpis] = useState<KPIs | null>(null);
   const [proximos, setProximos] = useState<ProximoPagamento[]>([]);
   const [serieAlunos, setSerieAlunos] = useState<{ mes: string; ativos: number }[]>([]);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  const openBillingPortal = async () => {
+    setPortalLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-portal");
+      if (error) throw error;
+      if (data?.url) window.location.href = data.url;
+      else throw new Error("URL do portal não retornada");
+    } catch (e: any) {
+      toast({
+        title: "Não foi possível abrir o portal",
+        description: e?.message || "Verifique se você já tem uma assinatura ativa.",
+        variant: "destructive",
+      });
+    } finally {
+      setPortalLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!tenant?.id) return;
