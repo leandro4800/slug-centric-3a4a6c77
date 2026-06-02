@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { Wrench, Link as LinkIcon, FileSpreadsheet, Megaphone } from "lucide-react";
 import { SalesLinkConfig } from "@/components/coach/SalesLinkConfig";
 import { WorkoutSpreadsheetGenerator } from "@/components/coach/WorkoutSpreadsheetGenerator";
@@ -9,6 +10,9 @@ const Ferramentas = () => {
   const [tab, setTab] = useState("links");
   return (
     <div className="p-4 md:p-8 space-y-6">
+      <div className="flex items-center gap-3">
+        <AdminBackButton to="/site/admin/dashboard" />
+      </div>
       <div>
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Negócio</p>
         <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter flex items-center gap-3">
