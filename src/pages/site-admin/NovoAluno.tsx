@@ -5,6 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { Loader2, UserPlus, Mail, CheckCircle2 } from "lucide-react";
 
