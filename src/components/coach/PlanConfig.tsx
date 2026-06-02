@@ -79,6 +79,24 @@ export const PlanConfig = () => {
     fetchPlans();
   }, [tenant?.id]);
 
+  const syncPlanWithStripe = async (planoId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-create-plan", {
+        body: { plano_id: planoId },
+      });
+      if (error) throw error;
+      return data as { product_id: string; price_id: string };
+    } catch (e: any) {
+      console.error("[syncPlanWithStripe]", e);
+      toast({
+        title: "Aviso: Stripe",
+        description: "Plano salvo no app, mas não foi sincronizado com o Stripe: " + e.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const handleAddPlan = async () => {
     if (!tenant?.id) return;
     if (!newPlan.nome || !newPlan.preco_centavos) {
