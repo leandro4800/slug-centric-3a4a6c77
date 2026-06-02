@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const portal = await stripe.billingPortal.sessions.create({
-      customer: assin.stripe_customer_id,
+      customer: customerId,
       return_url: `${origin}/`,
     });
     return new Response(JSON.stringify({ url: portal.url }), {
