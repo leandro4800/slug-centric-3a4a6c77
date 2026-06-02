@@ -86,6 +86,9 @@ const NovoAluno = () => {
 
   return (
     <div className="p-4 md:p-8 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3 mb-4">
+        <AdminBackButton to="/site/admin/alunos" />
+      </div>
       <div className="mb-6">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Gestão</p>
         <h1 className="font-display text-3xl uppercase italic tracking-tighter flex items-center gap-3">
