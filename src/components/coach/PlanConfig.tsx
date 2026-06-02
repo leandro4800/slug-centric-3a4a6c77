@@ -58,7 +58,7 @@ export const PlanConfig = () => {
     try {
       const { data, error } = await supabase
         .from("planos")
-        .select("*")
+        .select("id,nome,descricao,preco_centavos,intervalo,ativo,ordem,stripe_product_id,stripe_price_id")
         .eq("tenant_id", tenant.id)
         .order("ordem", { ascending: true });
 
