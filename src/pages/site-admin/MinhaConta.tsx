@@ -84,7 +84,7 @@ const MinhaConta = () => {
         ) : (
           <div className="text-center py-6">
             <p className="text-sm text-muted-foreground mb-3">Você ainda não tem um plano de assinatura ativo.</p>
-            <a href="/seja-coach" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-bold text-primary-foreground">
+            <a href="/seja-coach?view=planos" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-bold text-primary-foreground">
               Ver planos disponíveis
             </a>
           </div>
