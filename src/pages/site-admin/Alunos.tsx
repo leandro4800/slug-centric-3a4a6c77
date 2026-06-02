@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple } from "lucide-react";
 
 interface Aluno {
