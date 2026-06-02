@@ -15,7 +15,8 @@ import {
   Clock, 
   CheckCircle2, 
   XCircle,
-  Loader2
+  Loader2,
+  CreditCard
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -29,6 +30,8 @@ interface Plan {
   intervalo: "mensal" | "trimestral" | "semestral" | "anual";
   ativo: boolean;
   ordem: number;
+  stripe_product_id?: string | null;
+  stripe_price_id?: string | null;
 }
 
 export const PlanConfig = () => {
@@ -55,7 +58,7 @@ export const PlanConfig = () => {
     try {
       const { data, error } = await supabase
         .from("planos")
-        .select("*")
+        .select("id,nome,descricao,preco_centavos,intervalo,ativo,ordem,stripe_product_id,stripe_price_id")
         .eq("tenant_id", tenant.id)
         .order("ordem", { ascending: true });
 
@@ -76,6 +79,24 @@ export const PlanConfig = () => {
     fetchPlans();
   }, [tenant?.id]);
 
+  const syncPlanWithStripe = async (planoId: string) => {
+    try {
+      const { data, error } = await supabase.functions.invoke("stripe-create-plan", {
+        body: { plano_id: planoId },
+      });
+      if (error) throw error;
+      return data as { product_id: string; price_id: string };
+    } catch (e: any) {
+      console.error("[syncPlanWithStripe]", e);
+      toast({
+        title: "Aviso: Stripe",
+        description: "Plano salvo no app, mas não foi sincronizado com o Stripe: " + e.message,
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const handleAddPlan = async () => {
     if (!tenant?.id) return;
     if (!newPlan.nome || !newPlan.preco_centavos) {
@@ -89,7 +110,7 @@ export const PlanConfig = () => {
 
     setIsSaving(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("planos")
         .insert({
           nome: newPlan.nome!,
@@ -99,11 +120,24 @@ export const PlanConfig = () => {
           ativo: newPlan.ativo,
           tenant_id: tenant.id,
           ordem: plans.length
-        });
+        })
+        .select("id")
+        .single();
 
       if (error) throw error;
 
-      toast({ title: "Plano criado com sucesso!" });
+      const createdPlanId = (data as any)?.id;
+      if (createdPlanId) {
+        const stripeData = await syncPlanWithStripe(createdPlanId);
+        if (stripeData) {
+          toast({ title: "Plano criado e sincronizado com Stripe!" });
+        } else {
+          toast({ title: "Plano criado", description: "Sincronização com Stripe falhou. Tente editar o plano mais tarde." });
+        }
+      } else {
+        toast({ title: "Plano criado com sucesso!" });
+      }
+
       setShowAddForm(false);
       setNewPlan({
         nome: "",
@@ -142,7 +176,12 @@ export const PlanConfig = () => {
 
       if (error) throw error;
 
-      toast({ title: "Plano atualizado!" });
+      const stripeData = await syncPlanWithStripe(plan.id);
+      if (stripeData) {
+        toast({ title: "Plano atualizado e sincronizado com Stripe!" });
+      } else {
+        toast({ title: "Plano atualizado!" });
+      }
       fetchPlans();
     } catch (error: any) {
       toast({
@@ -278,13 +317,22 @@ export const PlanConfig = () => {
           <Card key={plan.id} className="relative overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {plan.ativo ? (
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                   ) : (
                     <XCircle className="h-4 w-4 text-zinc-500" />
                   )}
                   <CardTitle className="text-lg">{plan.nome}</CardTitle>
+                  {plan.stripe_price_id ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-500 uppercase tracking-wider">
+                      <CreditCard className="h-3 w-3" /> Stripe OK
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-500 uppercase tracking-wider">
+                      <CreditCard className="h-3 w-3" /> Stripe Pendente
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button 
