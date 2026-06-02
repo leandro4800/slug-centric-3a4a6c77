@@ -317,13 +317,22 @@ export const PlanConfig = () => {
           <Card key={plan.id} className="relative overflow-hidden">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {plan.ativo ? (
                     <CheckCircle2 className="h-4 w-4 text-green-500" />
                   ) : (
                     <XCircle className="h-4 w-4 text-zinc-500" />
                   )}
                   <CardTitle className="text-lg">{plan.nome}</CardTitle>
+                  {plan.stripe_price_id ? (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-green-500/10 px-2 py-0.5 text-[10px] font-bold text-green-500 uppercase tracking-wider">
+                      <CreditCard className="h-3 w-3" /> Stripe OK
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-yellow-500/10 px-2 py-0.5 text-[10px] font-bold text-yellow-500 uppercase tracking-wider">
+                      <CreditCard className="h-3 w-3" /> Stripe Pendente
+                    </span>
+                  )}
                 </div>
                 <div className="flex items-center gap-2">
                   <Button 
