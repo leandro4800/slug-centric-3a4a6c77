@@ -49,6 +49,9 @@ const MontarDieta = () => {
 
   return (
     <div className="p-4 md:p-8">
+      <div className="flex items-center gap-3 mb-2">
+        <AdminBackButton to="/site/admin/dashboard" />
+      </div>
       <div className="mb-6">
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Programação</p>
         <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter flex items-center gap-3">
