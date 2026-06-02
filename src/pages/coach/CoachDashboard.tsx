@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
-import { Loader2, Users, UserMinus, Wallet, Calendar, ArrowRight, Dumbbell, MessageSquare, Palette, BarChart3 } from "lucide-react";
+import { Loader2, Users, UserMinus, Wallet, Calendar, ArrowRight, Dumbbell, MessageSquare, Palette, BarChart3, CreditCard } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 interface KPIs {
