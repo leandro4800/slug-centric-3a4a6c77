@@ -21,14 +21,26 @@ Deno.serve(async (req) => {
     if (!claimsRes?.claims) throw new Error("unauthorized");
     const userId = claimsRes.claims.sub as string;
 
-    const { data: assin } = await supabase
-      .from("assinaturas")
+    // 1º procura assinatura da plataforma (coach), depois cai pra assinatura de aluno
+    let customerId: string | null = null;
+    const { data: coachSub } = await supabase
+      .from("coach_platform_subscriptions")
       .select("stripe_customer_id")
-      .eq("aluno_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
+      .eq("user_id", userId)
       .maybeSingle();
-    if (!assin?.stripe_customer_id) throw new Error("no customer");
+    if (coachSub?.stripe_customer_id) {
+      customerId = coachSub.stripe_customer_id;
+    } else {
+      const { data: assin } = await supabase
+        .from("assinaturas")
+        .select("stripe_customer_id")
+        .eq("aluno_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      customerId = assin?.stripe_customer_id ?? null;
+    }
+    if (!customerId) throw new Error("no customer");
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const portal = await stripe.billingPortal.sessions.create({
