@@ -30,6 +30,8 @@ interface Plan {
   intervalo: "mensal" | "trimestral" | "semestral" | "anual";
   ativo: boolean;
   ordem: number;
+  stripe_product_id?: string | null;
+  stripe_price_id?: string | null;
 }
 
 export const PlanConfig = () => {
