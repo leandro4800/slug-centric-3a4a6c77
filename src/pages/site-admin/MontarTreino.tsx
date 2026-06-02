@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import AdminMontarTreino from "@/pages/admin/AdminMontarTreino";
 import { Dumbbell, Loader2, ChevronRight, User } from "lucide-react";
 
