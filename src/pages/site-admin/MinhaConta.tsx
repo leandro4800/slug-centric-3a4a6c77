@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { UserCog, Loader2, ExternalLink, Calendar, Mail, Users, Crown } from "lucide-react";
 
 const MinhaConta = () => {
@@ -36,6 +37,9 @@ const MinhaConta = () => {
 
   return (
     <div className="p-4 md:p-8 space-y-6 max-w-4xl">
+      <div className="flex items-center gap-3">
+        <AdminBackButton to="/site/admin/dashboard" />
+      </div>
       <div>
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Conta</p>
         <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter flex items-center gap-3">

@@ -1,4 +1,5 @@
 import { LifeBuoy, MessageCircle, Users, ExternalLink } from "lucide-react";
+import { AdminBackButton } from "@/components/admin/AdminBackButton";
 
 const TUTORIAIS = [
   { titulo: "1. Configuração inicial do painel", desc: "O que você precisa para configurar e começar." },
@@ -9,6 +10,9 @@ const TUTORIAIS = [
 
 const Suporte = () => (
   <div className="p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
+    <div className="flex items-center gap-3">
+      <AdminBackButton to="/site/admin/dashboard" />
+    </div>
     <div className="text-center">
       <LifeBuoy className="h-10 w-10 text-primary mx-auto mb-2" />
       <h1 className="font-display text-3xl uppercase italic tracking-tighter">Suporte</h1>
