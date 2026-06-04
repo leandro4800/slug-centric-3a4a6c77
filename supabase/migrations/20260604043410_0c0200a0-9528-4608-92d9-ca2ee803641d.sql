@@ -1,0 +1,4 @@
+UPDATE public.planos SET stripe_product_id='prod_UdkIRQlBPnMxzw', stripe_price_id='price_1TeSnf6nn8CNI7JFD8gB1q7O' WHERE id='6eec1a95-0530-4755-bce1-ac7c9c1f7531';
+UPDATE public.planos SET stripe_product_id='prod_UdkKEkSIZ0ko3K', stripe_price_id='price_1TeSxl6nn8CNI7JFQBNvGDD0' WHERE id='f384e4c5-7721-482f-b9ab-f636347d91e9';
+UPDATE public.planos SET stripe_product_id='prod_UdkKLjRo1pQD3U', stripe_price_id='price_1TeSxl6nn8CNI7JFip6n2dpk' WHERE id='d6393df3-fba2-4bcf-8f17-b49f8ae73731';
+UPDATE public.planos SET stripe_product_id='prod_UdkIcJoXvK3Xe4', stripe_price_id='price_1TeSo66nn8CNI7JFd0YlAjI9' WHERE id='c452caf8-824c-42d8-abe1-448009552deb';
