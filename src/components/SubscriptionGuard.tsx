@@ -172,7 +172,8 @@ export const SubscriptionGuard = ({ children }: Props) => {
   if (isCoach) return <>{children}</>;
 
   if (status === "redirect_to_site_voucher") {
-    return <SubscriptionLockScreen />;
+    const landingPath = slug ? `/${slug}` : "/";
+    return <Navigate to={landingPath} replace />;
   }
 
   if (status === "incomplete") {
@@ -181,7 +182,8 @@ export const SubscriptionGuard = ({ children }: Props) => {
   }
 
   if (status !== "active" && status !== "trialing") {
-    return <SubscriptionLockScreen />;
+    const landingPath = slug ? `/${slug}` : "/";
+    return <Navigate to={landingPath} replace />;
   }
 
   return <>{children}</>;
