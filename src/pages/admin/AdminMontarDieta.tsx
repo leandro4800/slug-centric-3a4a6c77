@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Save, Apple, Trash2, Plus, Mic, MicOff, Send } from "lucide-react";
+import { Loader2, Sparkles, Save, Apple, Trash2, Plus, Mic, MicOff, Send, Calculator } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
@@ -51,6 +51,8 @@ const AdminMontarDieta = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
+  const [macrosCalculados, setMacrosCalculados] = useState<{ kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number } | null>(null);
   const [iaCommand, setIaCommand] = useState(searchParams.get("prompt") || "");
   const recognitionRef = useRef<any>(null);
 
@@ -342,6 +344,53 @@ const AdminMontarDieta = () => {
     }
   };
 
+  const recalcularMacros = async () => {
+    if (!alunoId || refeicoes.length === 0 || !dietaId) {
+      toast.error("Salve a dieta antes de recalcular.");
+      return;
+    }
+    setRecalculating(true);
+    const toastId = toast.loading("Recalculando macros a partir dos alimentos editados...");
+    try {
+      // Persiste edições atuais antes de recalcular
+      await supabase.from("refeicoes").delete().eq("dieta_id", dietaId);
+      if (refeicoes.length > 0) {
+        await supabase.from("refeicoes").insert(
+          refeicoes.map((r, i) => ({
+            dieta_id: dietaId,
+            nome: r.nome,
+            horario: r.horario,
+            ordem: i,
+            descricao_ia: r.descricao_ia,
+          }))
+        );
+      }
+
+      const { data, error } = await supabase.functions.invoke("gerar-dieta", {
+        body: {
+          mode: "recalc",
+          aluno_id: alunoId,
+          dieta_id: dietaId,
+          refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
+        },
+      });
+      if (error) throw error;
+      if (data?.totais) {
+        setMacrosCalculados({
+          kcal: Math.round(data.totais.kcal || 0),
+          proteina_g: Math.round(data.totais.proteina_g || 0),
+          carboidrato_g: Math.round(data.totais.carboidrato_g || 0),
+          lipideos_g: Math.round(data.totais.lipideos_g || 0),
+        });
+      }
+      toast.success("Macros recalculados com sucesso!", { id: toastId });
+    } catch (e: any) {
+      toast.error("Erro ao recalcular: " + e.message, { id: toastId });
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
   const startVoice = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
@@ -526,6 +575,10 @@ const AdminMontarDieta = () => {
                   <Button variant="outline" size="sm" onClick={addRefeicao}>
                     <Plus className="h-4 w-4 mr-1" /> Refeição
                   </Button>
+                  <Button variant="outline" size="sm" onClick={recalcularMacros} disabled={recalculating || !dietaId} className="border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10">
+                    {recalculating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Calculator className="h-4 w-4 mr-1" />}
+                    Recalcular Macros
+                  </Button>
                   <Button variant="outline" size="sm" onClick={equilibrarMacros} disabled={adjusting || !dietaId} className="border-primary/50 text-primary hover:bg-primary/10">
                     {adjusting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     Equilibrar Macros
@@ -540,6 +593,20 @@ const AdminMontarDieta = () => {
                   </Button>
                 </div>
               </div>
+
+              {macrosCalculados && (
+                <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-emerald-500 font-bold mb-2 flex items-center gap-1">
+                    <Calculator className="h-3 w-3" /> Macros recalculados (com base nos alimentos editados)
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div><div className="font-display text-xl">{macrosCalculados.kcal}</div><div className="text-[9px] uppercase text-muted-foreground">kcal</div></div>
+                    <div><div className="font-display text-xl text-emerald-400">{macrosCalculados.proteina_g}g</div><div className="text-[9px] uppercase text-muted-foreground">Proteína</div></div>
+                    <div><div className="font-display text-xl text-yellow-400">{macrosCalculados.carboidrato_g}g</div><div className="text-[9px] uppercase text-muted-foreground">Carbo</div></div>
+                    <div><div className="font-display text-xl text-red-400">{macrosCalculados.lipideos_g}g</div><div className="text-[9px] uppercase text-muted-foreground">Gordura</div></div>
+                  </div>
+                </div>
+              )}
 
               {refeicoes.length === 0 ? (
                 <div className="bg-secondary/20 border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground">
