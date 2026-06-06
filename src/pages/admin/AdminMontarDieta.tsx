@@ -596,6 +596,22 @@ const AdminMontarDieta = () => {
 
               {refeicoes.length === 0 ? (
                 <div className="bg-secondary/20 border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground">
+              {macrosCalculados && (
+                <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3">
+                  <div className="text-[10px] uppercase tracking-widest text-emerald-500 font-bold mb-2 flex items-center gap-1">
+                    <Calculator className="h-3 w-3" /> Macros recalculados (com base nos alimentos editados)
+                  </div>
+                  <div className="grid grid-cols-4 gap-2 text-center">
+                    <div><div className="font-display text-xl">{macrosCalculados.kcal}</div><div className="text-[9px] uppercase text-muted-foreground">kcal</div></div>
+                    <div><div className="font-display text-xl text-emerald-400">{macrosCalculados.proteina_g}g</div><div className="text-[9px] uppercase text-muted-foreground">Proteína</div></div>
+                    <div><div className="font-display text-xl text-yellow-400">{macrosCalculados.carboidrato_g}g</div><div className="text-[9px] uppercase text-muted-foreground">Carbo</div></div>
+                    <div><div className="font-display text-xl text-red-400">{macrosCalculados.lipideos_g}g</div><div className="text-[9px] uppercase text-muted-foreground">Gordura</div></div>
+                  </div>
+                </div>
+              )}
+
+              {refeicoes.length === 0 ? (
+                <div className="bg-secondary/20 border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground">
                   Nenhuma refeição definida. Use a IA acima ou adicione manualmente.
                 </div>
               ) : (
