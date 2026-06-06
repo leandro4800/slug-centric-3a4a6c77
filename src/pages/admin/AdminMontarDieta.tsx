@@ -575,6 +575,10 @@ const AdminMontarDieta = () => {
                   <Button variant="outline" size="sm" onClick={addRefeicao}>
                     <Plus className="h-4 w-4 mr-1" /> Refeição
                   </Button>
+                  <Button variant="outline" size="sm" onClick={recalcularMacros} disabled={recalculating || !dietaId} className="border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10">
+                    {recalculating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Calculator className="h-4 w-4 mr-1" />}
+                    Recalcular Macros
+                  </Button>
                   <Button variant="outline" size="sm" onClick={equilibrarMacros} disabled={adjusting || !dietaId} className="border-primary/50 text-primary hover:bg-primary/10">
                     {adjusting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     Equilibrar Macros
