@@ -594,8 +594,6 @@ const AdminMontarDieta = () => {
                 </div>
               </div>
 
-              {refeicoes.length === 0 ? (
-                <div className="bg-secondary/20 border border-dashed border-border rounded-xl p-8 text-center text-muted-foreground">
               {macrosCalculados && (
                 <div className="rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3">
                   <div className="text-[10px] uppercase tracking-widest text-emerald-500 font-bold mb-2 flex items-center gap-1">
