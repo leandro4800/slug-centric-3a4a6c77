@@ -11,7 +11,7 @@ const corsHeaders = {
 };
 
 interface DietRequest {
-  mode?: "generate" | "refine";
+  mode?: "generate" | "refine" | "recalc";
   objetivo?: string;
   peso_kg?: number;
   altura_cm?: number;
