@@ -51,6 +51,8 @@ const AdminMontarDieta = () => {
   const [isPublished, setIsPublished] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [adjusting, setAdjusting] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
+  const [macrosCalculados, setMacrosCalculados] = useState<{ kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number } | null>(null);
   const [iaCommand, setIaCommand] = useState(searchParams.get("prompt") || "");
   const recognitionRef = useRef<any>(null);
 
