@@ -344,6 +344,53 @@ const AdminMontarDieta = () => {
     }
   };
 
+  const recalcularMacros = async () => {
+    if (!alunoId || refeicoes.length === 0 || !dietaId) {
+      toast.error("Salve a dieta antes de recalcular.");
+      return;
+    }
+    setRecalculating(true);
+    const toastId = toast.loading("Recalculando macros a partir dos alimentos editados...");
+    try {
+      // Persiste edições atuais antes de recalcular
+      await supabase.from("refeicoes").delete().eq("dieta_id", dietaId);
+      if (refeicoes.length > 0) {
+        await supabase.from("refeicoes").insert(
+          refeicoes.map((r, i) => ({
+            dieta_id: dietaId,
+            nome: r.nome,
+            horario: r.horario,
+            ordem: i,
+            descricao_ia: r.descricao_ia,
+          }))
+        );
+      }
+
+      const { data, error } = await supabase.functions.invoke("gerar-dieta", {
+        body: {
+          mode: "recalc",
+          aluno_id: alunoId,
+          dieta_id: dietaId,
+          refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
+        },
+      });
+      if (error) throw error;
+      if (data?.totais) {
+        setMacrosCalculados({
+          kcal: Math.round(data.totais.kcal || 0),
+          proteina_g: Math.round(data.totais.proteina_g || 0),
+          carboidrato_g: Math.round(data.totais.carboidrato_g || 0),
+          lipideos_g: Math.round(data.totais.lipideos_g || 0),
+        });
+      }
+      toast.success("Macros recalculados com sucesso!", { id: toastId });
+    } catch (e: any) {
+      toast.error("Erro ao recalcular: " + e.message, { id: toastId });
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
   const startVoice = () => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
