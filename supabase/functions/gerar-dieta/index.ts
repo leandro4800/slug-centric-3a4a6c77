@@ -70,6 +70,75 @@ serve(async (req) => {
       targetUserId = body.aluno_id;
     }
 
+    if (mode === "recalc") {
+      const refeicoesIn = body.refeicoes || [];
+      if (refeicoesIn.length === 0) {
+        return new Response(JSON.stringify({ error: "Nenhuma refeição para recalcular." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const refeicoesTxt = refeicoesIn
+        .map((r, i) => `Refeição ${i + 1} — ${r.nome}\n${r.descricao}`)
+        .join("\n\n");
+
+      const systemPrompt = `Você é um nutricionista. Receberá uma lista de refeições com os alimentos e quantidades (em gramas) ATUAIS prescritos.
+Sua tarefa: CALCULAR os macros e calorias REAIS de cada alimento (use a tabela TACO como referência mental) e somar.
+
+Regras:
+- Considere TODAS as quantidades listadas (em g, ml ou unidades padronizadas — converta unidades para g quando necessário, ex.: 1 ovo ≈ 50g, 1 fatia de pão ≈ 25g, 1 colher de sopa de azeite ≈ 13g).
+- NÃO altere os alimentos. Apenas compute o que está descrito.
+- Arredonde para inteiros.
+
+Retorne APENAS JSON neste formato:
+{
+  "refeicoes": [
+    { "nome": "...", "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
+  ],
+  "totais": { "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
+}`;
+
+      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: refeicoesTxt },
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0,
+        }),
+      });
+
+      if (!aiResp.ok) {
+        const txt = await aiResp.text();
+        console.error("[gerar-dieta recalc] AI error", aiResp.status, txt);
+        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições da IA atingido. Tente em alguns segundos." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        throw new Error(`IA falhou no recálculo (${aiResp.status}): ${txt.slice(0, 200)}`);
+      }
+      const aiData = await aiResp.json();
+      const parsed = JSON.parse(aiData.choices[0].message.content);
+      const totais = parsed.totais || { kcal: 0, proteina_g: 0, carboidrato_g: 0, lipideos_g: 0 };
+
+      if (body.dieta_id) {
+        await supabase.from("dietas").update({
+          kcal_alvo: Math.round(Number(totais.kcal) || 0),
+          macros_alvo: {
+            proteina_g: Math.round(Number(totais.proteina_g) || 0),
+            carboidrato_g: Math.round(Number(totais.carboidrato_g) || 0),
+            lipideos_g: Math.round(Number(totais.lipideos_g) || 0),
+            badge: "Recalculado",
+          },
+        }).eq("id", body.dieta_id);
+      }
+
+      return new Response(JSON.stringify({ success: true, refeicoes: parsed.refeicoes || [], totais }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (mode === "refine") {
       const kcalAlvo = body.kcal_alvo || 2500;
       const macros = body.macros_alvo || { proteina_g: 200, carboidrato_g: 250, lipideos_g: 60 };
