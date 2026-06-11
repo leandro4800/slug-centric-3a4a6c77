@@ -72,7 +72,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   useEffect(() => {
     let mounted = true;
-    let restoreSettled = false;
 
     const clearSplashMarks = () => {
       try {
@@ -88,106 +87,38 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setSessionReady(true);
     };
 
-    const validateStoredSession = async (sess: Session | null) => {
-      if (!sess) return null;
-
-      // Confia na sessão persistida. O autoRefreshToken cuida da renovação.
-      // Tentamos validar com getUser, mas SE der timeout/erro de rede,
-      // mantemos a sessão local (não deslogamos) — caso contrário o app
-      // pede login toda vez que abre offline/com rede ruim (Android PWA).
-      const SENTINEL = Symbol("timeout");
-      let response: Awaited<ReturnType<typeof supabase.auth.getUser>> | typeof SENTINEL;
-      try {
-        response = await withTimeout(
-          supabase.auth.getUser(),
-          SENTINEL as unknown as Awaited<ReturnType<typeof supabase.auth.getUser>>,
-          "Validação da sessão salva",
-          SESSION_RESTORE_TIMEOUT_MS
-        );
-      } catch {
-        return sess;
-      }
-
-      if (response === (SENTINEL as unknown)) {
-        // Timeout — mantém sessão local, deixa o refresh automático resolver depois.
-        return sess;
-      }
-
-      const res = response as Awaited<ReturnType<typeof supabase.auth.getUser>>;
-      const errMsg = res.error?.message?.toLowerCase() ?? "";
-      const isAuthError =
-        errMsg.includes("jwt") ||
-        errMsg.includes("invalid") ||
-        errMsg.includes("expired") ||
-        errMsg.includes("not_found") ||
-        errMsg.includes("user not found");
-
-      if (res.error && !isAuthError) {
-        // Erro de rede/servidor — mantém sessão.
-        console.warn("[Auth] getUser falhou por rede; mantendo sessão local.", res.error);
-        return sess;
-      }
-
-      if (!res.data.user) {
-        console.warn("[Auth] Sessão local inválida; limpando.");
-        try { await supabase.auth.signOut({ scope: "local" }); } catch {}
-        return null;
-      }
-
-      return { ...sess, user: res.data.user };
-    };
-
+    // Confiamos na sessão restaurada do localStorage pelo supabase-js.
+    // Não chamamos getUser() nem usamos timeout que zera a sessão — isso
+    // fazia o app "esquecer" o login ao reabrir a aba em redes lentas.
+    // O autoRefreshToken cuida da renovação; se o refresh falhar de verdade,
+    // o supabase dispara SIGNED_OUT explicitamente.
     const { data: sub } = supabase.auth.onAuthStateChange((event, sess) => {
-      if (event === "INITIAL_SESSION") return;
-
       if (event === "SIGNED_OUT") {
         clearSplashMarks();
         applySession(null);
         return;
       }
-
-      if (sess) applySession(sess);
+      // INITIAL_SESSION, SIGNED_IN, TOKEN_REFRESHED, USER_UPDATED
+      applySession(sess ?? null);
     });
 
-    const restoreTimeout = setTimeout(() => {
-      if (!mounted || restoreSettled) return;
-      restoreSettled = true;
-      console.warn("[Auth] Restauração da sessão demorou demais; abrindo login para evitar loop.");
-      setSession(null);
-      setRoles([]);
-      setRolesLoading(false);
-      setSessionReady(true);
-    }, SESSION_RESTORE_TIMEOUT_MS);
-
     void supabase.auth.getSession()
-      .then(async ({ data, error }) => {
-        if (restoreSettled) return;
-        if (error) console.error("Error restoring auth session:", error);
-        const validatedSession = await validateStoredSession(data.session);
-        if (restoreSettled) return;
-        restoreSettled = true;
-        clearTimeout(restoreTimeout);
-        applySession(validatedSession);
-      })
-
-      .catch((error) => {
-        if (restoreSettled) return;
-        restoreSettled = true;
-        clearTimeout(restoreTimeout);
-        console.error("Error restoring auth session:", error);
+      .then(({ data, error }) => {
         if (!mounted) return;
-        setSession(null);
-        setRoles([]);
-        setRolesLoading(false);
-        setSessionReady(true);
+        if (error) console.warn("[Auth] getSession falhou; mantendo estado atual.", error);
+        applySession(data?.session ?? null);
+      })
+      .catch((error) => {
+        console.error("[Auth] Erro restaurando sessão:", error);
+        if (mounted) setSessionReady(true);
       });
 
     return () => {
       mounted = false;
-      clearTimeout(restoreTimeout);
       sub.subscription.unsubscribe();
     };
   }, []);
+
 
   useEffect(() => {
     if (!sessionReady) return;
