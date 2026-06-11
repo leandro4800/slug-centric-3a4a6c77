@@ -66,7 +66,7 @@ import SiteAdminAvaliacaoFisica from "./pages/site-admin/AvaliacaoFisica";
 import SiteAdminFerramentas from "./pages/site-admin/Ferramentas";
 import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
 import SiteAdminSuporte from "./pages/site-admin/Suporte";
-import { Calendar as CalendarIcon, Palette, Wallet } from "lucide-react";
+import { Calendar as CalendarIcon, Loader2, Palette, Wallet } from "lucide-react";
 
 const queryClient = new QueryClient();
 
@@ -105,7 +105,20 @@ const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
 
 const NativeStartupRedirect = () => {
   const location = useLocation();
+  const { user, sessionReady } = useAuth();
   const search = location.search || window.location.search;
+
+  if (!sessionReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="sr-only">Carregando...</span>
+      </div>
+    );
+  }
+
+  if (user) return <IndexRedirect />;
+
   return <Navigate to={`/login${search}`} replace />;
 };
 
