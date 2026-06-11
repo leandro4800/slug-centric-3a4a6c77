@@ -2,7 +2,7 @@
   "name": "AlphaCoach",
   "short_name": "AlphaCoach",
   "description": "Plataforma multi-tenant para coaches e alunos",
-  "start_url": "/login",
+  "start_url": "/index",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
