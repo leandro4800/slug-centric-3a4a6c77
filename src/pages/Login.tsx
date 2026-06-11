@@ -10,18 +10,51 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { useAuth } from "@/hooks/use-auth";
 
 import { buildAuthRedirectUrl } from "@/lib/app-url";
+
+const getSafeAppSlug = (slug?: string | null) => {
+  if (!slug || !/^[a-z0-9-]+$/i.test(slug) || slug === "index" || slug === "demo") return null;
+  return slug;
+};
 
 const Login = () => {
   const navigate = useNavigate();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
+  const { user, sessionReady } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [nome, setNome] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+
+  const resolveAppDestination = async (userId: string) => {
+    const candidateSlug = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
+    const targetSlug = getSafeAppSlug(candidateSlug);
+
+    const { data: ownedTenant } = await supabase
+      .from("tenants")
+      .select("slug")
+      .eq("owner_user_id", userId)
+      .maybeSingle();
+
+    return ownedTenant?.slug ? `/${ownedTenant.slug}/app` : targetSlug ? `/${targetSlug}/app` : "/onboarding";
+  };
+
+  useEffect(() => {
+    if (!sessionReady || !user || loading) return;
+    let cancelled = false;
+
+    void resolveAppDestination(user.id).then((destination) => {
+      if (!cancelled) navigate(destination, { replace: true });
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sessionReady, user?.id, loading, urlSlug, tenant?.slug, navigate]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -48,26 +81,13 @@ const Login = () => {
       return;
     }
 
-    const candidateSlug = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
-    const targetSlug = candidateSlug && /^[a-z0-9-]+$/i.test(candidateSlug) && candidateSlug !== "index" && candidateSlug !== "demo"
-      ? candidateSlug
-      : null;
-
-    // Coach (dono do tenant) também entra na tela inicial do app
     const userId = signInData?.user?.id;
     if (userId) {
-      const { data: ownedTenant } = await supabase
-        .from("tenants")
-        .select("slug")
-        .eq("owner_user_id", userId)
-        .maybeSingle();
-      if (ownedTenant?.slug) {
-        navigate(`/${ownedTenant.slug}/app`, { replace: true });
-        return;
-      }
+      navigate(await resolveAppDestination(userId), { replace: true });
+      return;
     }
 
-    navigate(targetSlug ? `/${targetSlug}/app` : "/onboarding", { replace: true });
+    navigate("/onboarding", { replace: true });
 
   };
 
