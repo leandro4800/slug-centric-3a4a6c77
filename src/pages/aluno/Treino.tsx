@@ -369,23 +369,30 @@ const Treino = () => {
       <PageHeader icon={Dumbbell} title="MEUS TREINOS" subtitle={`${treinos.length} exercícios`} />
 
       <div className="px-5">
-        {/* Saudação personalizada com avatar treinando */}
-        {avatarTreinando && (
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-card to-card mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
-            <div className="flex items-center gap-3 p-3">
-              <img
-                src={avatarTreinando}
-                alt="Você treinando"
-                className="w-20 h-24 object-cover rounded-xl shadow-[0_0_24px_-6px_hsl(var(--primary)/0.6)]"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">{horaSaudacao}</p>
-                <p className="font-display text-xl leading-tight truncate">{primeiroNome.toUpperCase()},</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Bora treinar pesado hoje. 💪</p>
-              </div>
+        {/* Saudação personalizada com foto do perfil (lateralizada) */}
+        <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-card to-card mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex items-center gap-3 p-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">BORA TREINAR,</p>
+              <p className="font-display text-2xl leading-tight truncate">{primeiroNome.toUpperCase()}!</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">
+                Disciplina hoje,<br/>resultado amanhã.
+              </p>
             </div>
+            {avatarPerfil ? (
+              <img
+                src={avatarPerfil}
+                alt="Foto de perfil"
+                className="w-24 h-28 object-cover rounded-xl shadow-[0_0_24px_-6px_hsl(var(--primary)/0.6)] shrink-0"
+              />
+            ) : (
+              <div className="w-24 h-28 rounded-xl bg-secondary/60 border border-border flex items-center justify-center shrink-0">
+                <Dumbbell className="h-8 w-8 text-muted-foreground" />
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
 
         {treinos.length === 0 && (
           <div className="bg-card border border-primary/20 rounded-2xl px-5 py-8 flex flex-col items-center justify-center gap-3 text-center mb-4">
