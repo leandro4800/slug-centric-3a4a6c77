@@ -42,6 +42,7 @@ const Treino = () => {
   const [reloadKey, setReloadKey] = useState(0);
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
+  const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const completedKey = `treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`;
   const [completedIds, setCompletedIds] = useState<Set<string>>(() => {
     try {
