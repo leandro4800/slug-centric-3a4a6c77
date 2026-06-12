@@ -43,6 +43,7 @@ const Treino = () => {
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const completedKey = `treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`;
   const [completedIds, setCompletedIds] = useState<Set<string>>(() => {
     try {
