@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Dumbbell, Music, Loader2, Trophy } from "lucide-react";
+import { Dumbbell, Music, Loader2, Trophy, Clock, Flame } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -43,6 +43,7 @@ const Treino = () => {
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
+  const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const completedKey = `treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`;
   const [completedIds, setCompletedIds] = useState<Set<string>>(() => {
     try {
@@ -73,6 +74,30 @@ const Treino = () => {
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => setAvatarPerfil((data as any)?.avatar_url || null));
+
+    // Stats: deriva treinos concluídos, minutos e sequência a partir de historico_cargas
+    (async () => {
+      const { data } = await supabase
+        .from("historico_cargas")
+        .select("data_treino")
+        .eq("user_id", user.id);
+      if (!data) return;
+      const dias = Array.from(new Set(data.map((r: any) => r.data_treino).filter(Boolean))).sort();
+      const treinos = dias.length;
+      const minutos = treinos * 60;
+      // sequência: dias consecutivos até hoje (ou ontem)
+      let sequencia = 0;
+      const set = new Set(dias);
+      const d = new Date();
+      // se hoje não treinou, começa de ontem
+      const today = d.toISOString().split("T")[0];
+      if (!set.has(today)) d.setDate(d.getDate() - 1);
+      while (set.has(d.toISOString().split("T")[0])) {
+        sequencia++;
+        d.setDate(d.getDate() - 1);
+      }
+      setStats({ treinos, minutos, sequencia });
+    })();
   }, [user?.id]);
 
   // Persiste seleção de dia / exercício aberto
@@ -324,12 +349,14 @@ const Treino = () => {
       { key: "biceps", label: "BÍCEPS" },
       { key: "triceps", label: "TRÍCEPS" },
       { key: "quadriceps", label: "QUADRÍCEPS" },
-      { key: "posterior", label: "POSTERIOR" },
+      { key: "posterior", label: "POSTERIOR DE COXA" },
+      { key: "isquio", label: "POSTERIOR DE COXA" },
+      { key: "stiff", label: "POSTERIOR DE COXA" },
       { key: "gluteo", label: "GLÚTEO" },
       { key: "panturrilha", label: "PANTURRILHA" },
+      { key: "gemeo", label: "PANTURRILHA" },
       { key: "abdomen", label: "ABDÔMEN" },
       { key: "abdominal", label: "ABDÔMEN" },
-      { key: "perna", label: "PERNA" },
     ];
     const encontrados: string[] = [];
     for (const g of grupos) {
@@ -369,27 +396,57 @@ const Treino = () => {
       <PageHeader icon={Dumbbell} title="MEUS TREINOS" subtitle={`${treinos.length} exercícios`} />
 
       <div className="px-5">
-        {/* Saudação personalizada com foto do perfil (lateralizada) */}
-        <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-card to-card mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
-          <div className="flex items-center gap-3 p-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">BORA TREINAR,</p>
-              <p className="font-display text-2xl leading-tight truncate">{primeiroNome.toUpperCase()}!</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                Disciplina hoje,<br/>resultado amanhã.
-              </p>
-            </div>
-            {avatarPerfil ? (
+        {/* Saudação com foto do perfil flush nas bordas */}
+        <div className="relative overflow-hidden rounded-2xl bg-card mb-3 animate-in fade-in slide-in-from-top-2 duration-500 h-44">
+          <div className="relative z-10 h-full flex flex-col justify-center px-5 max-w-[55%]">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-foreground/80 font-bold">BORA TREINAR,</p>
+            <p className="font-display text-3xl leading-tight truncate">{primeiroNome.toUpperCase()}!</p>
+            <p className="text-xs text-muted-foreground mt-2 leading-snug">
+              Disciplina hoje,<br/>resultado amanhã.
+            </p>
+          </div>
+          {avatarPerfil ? (
+            <>
               <img
                 src={avatarPerfil}
                 alt="Foto de perfil"
-                className="w-24 h-28 object-cover rounded-xl shadow-[0_0_24px_-6px_hsl(var(--primary)/0.6)] shrink-0"
+                className="absolute inset-y-0 right-0 h-full w-[55%] object-cover object-top"
               />
-            ) : (
-              <div className="w-24 h-28 rounded-xl bg-secondary/60 border border-border flex items-center justify-center shrink-0">
-                <Dumbbell className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
+              {/* fade da esquerda da foto para o card */}
+              <div className="absolute inset-y-0 right-[45%] w-32 bg-gradient-to-r from-card to-transparent pointer-events-none" />
+            </>
+          ) : (
+            <div className="absolute inset-y-0 right-0 w-[55%] bg-secondary/40 flex items-center justify-center">
+              <Dumbbell className="h-10 w-10 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+
+        {/* Stats: treinos, minutos, sequência */}
+        <div className="grid grid-cols-3 gap-2 bg-card rounded-2xl p-3 mb-4 border border-border/50">
+          <div className="flex items-center gap-2">
+            <Dumbbell className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">TREINOS</p>
+              <p className="font-display text-xl leading-none">{stats.treinos}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">concluídos</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">MINUTOS</p>
+              <p className="font-display text-xl leading-none">{stats.minutos.toLocaleString("pt-BR")}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">treinados</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">SEQUÊNCIA</p>
+              <p className="font-display text-xl leading-none">{stats.sequencia}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">dias</p>
+            </div>
           </div>
         </div>
 
