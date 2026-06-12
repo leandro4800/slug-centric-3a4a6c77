@@ -440,11 +440,14 @@ const Treino = () => {
         </div>
 
         <div className="mt-6">
-          <h2 className="font-display text-base flex items-center gap-2">
-            <span>▶️</span> TREINO DE HOJE — {treinosDoDia.length} EXERCÍCIOS
+          <h2 className="font-display text-lg flex items-center gap-2 uppercase tracking-wide">
+            <span>▶️</span> {grupoMuscularDoDia || `TREINO DE HOJE — ${treinosDoDia.length} EXERCÍCIOS`}
           </h2>
-          <p className="text-xs text-muted-foreground mt-1">Toque em um exercício para abrir o modo execução</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {treinosDoDia.length} exercícios · Toque em um para abrir o modo execução
+          </p>
         </div>
+
 
         <div className="space-y-3 mt-4">
           {treinosDoDia.map((t, i) => (
