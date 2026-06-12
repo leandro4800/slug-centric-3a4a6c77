@@ -74,6 +74,30 @@ const Treino = () => {
       .eq("id", user.id)
       .maybeSingle()
       .then(({ data }) => setAvatarPerfil((data as any)?.avatar_url || null));
+
+    // Stats: deriva treinos concluídos, minutos e sequência a partir de historico_cargas
+    (async () => {
+      const { data } = await supabase
+        .from("historico_cargas")
+        .select("data_treino")
+        .eq("user_id", user.id);
+      if (!data) return;
+      const dias = Array.from(new Set(data.map((r: any) => r.data_treino).filter(Boolean))).sort();
+      const treinos = dias.length;
+      const minutos = treinos * 60;
+      // sequência: dias consecutivos até hoje (ou ontem)
+      let sequencia = 0;
+      const set = new Set(dias);
+      const d = new Date();
+      // se hoje não treinou, começa de ontem
+      const today = d.toISOString().split("T")[0];
+      if (!set.has(today)) d.setDate(d.getDate() - 1);
+      while (set.has(d.toISOString().split("T")[0])) {
+        sequencia++;
+        d.setDate(d.getDate() - 1);
+      }
+      setStats({ treinos, minutos, sequencia });
+    })();
   }, [user?.id]);
 
   // Persiste seleção de dia / exercício aberto
