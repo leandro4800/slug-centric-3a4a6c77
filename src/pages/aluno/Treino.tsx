@@ -396,27 +396,57 @@ const Treino = () => {
       <PageHeader icon={Dumbbell} title="MEUS TREINOS" subtitle={`${treinos.length} exercícios`} />
 
       <div className="px-5">
-        {/* Saudação personalizada com foto do perfil (lateralizada) */}
-        <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-card to-card mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
-          <div className="flex items-center gap-3 p-4">
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">BORA TREINAR,</p>
-              <p className="font-display text-2xl leading-tight truncate">{primeiroNome.toUpperCase()}!</p>
-              <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                Disciplina hoje,<br/>resultado amanhã.
-              </p>
-            </div>
-            {avatarPerfil ? (
+        {/* Saudação com foto do perfil flush nas bordas */}
+        <div className="relative overflow-hidden rounded-2xl bg-card mb-3 animate-in fade-in slide-in-from-top-2 duration-500 h-44">
+          <div className="relative z-10 h-full flex flex-col justify-center px-5 max-w-[55%]">
+            <p className="text-[10px] uppercase tracking-[0.25em] text-foreground/80 font-bold">BORA TREINAR,</p>
+            <p className="font-display text-3xl leading-tight truncate">{primeiroNome.toUpperCase()}!</p>
+            <p className="text-xs text-muted-foreground mt-2 leading-snug">
+              Disciplina hoje,<br/>resultado amanhã.
+            </p>
+          </div>
+          {avatarPerfil ? (
+            <>
               <img
                 src={avatarPerfil}
                 alt="Foto de perfil"
-                className="w-24 h-28 object-cover rounded-xl shadow-[0_0_24px_-6px_hsl(var(--primary)/0.6)] shrink-0"
+                className="absolute inset-y-0 right-0 h-full w-[55%] object-cover object-top"
               />
-            ) : (
-              <div className="w-24 h-28 rounded-xl bg-secondary/60 border border-border flex items-center justify-center shrink-0">
-                <Dumbbell className="h-8 w-8 text-muted-foreground" />
-              </div>
-            )}
+              {/* fade da esquerda da foto para o card */}
+              <div className="absolute inset-y-0 right-[45%] w-32 bg-gradient-to-r from-card to-transparent pointer-events-none" />
+            </>
+          ) : (
+            <div className="absolute inset-y-0 right-0 w-[55%] bg-secondary/40 flex items-center justify-center">
+              <Dumbbell className="h-10 w-10 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+
+        {/* Stats: treinos, minutos, sequência */}
+        <div className="grid grid-cols-3 gap-2 bg-card rounded-2xl p-3 mb-4 border border-border/50">
+          <div className="flex items-center gap-2">
+            <Dumbbell className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">TREINOS</p>
+              <p className="font-display text-xl leading-none">{stats.treinos}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">concluídos</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">MINUTOS</p>
+              <p className="font-display text-xl leading-none">{stats.minutos.toLocaleString("pt-BR")}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">treinados</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Flame className="h-5 w-5 text-primary shrink-0" />
+            <div className="min-w-0">
+              <p className="text-[9px] uppercase tracking-wider text-muted-foreground">SEQUÊNCIA</p>
+              <p className="font-display text-xl leading-none">{stats.sequencia}</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5">dias</p>
+            </div>
           </div>
         </div>
 
