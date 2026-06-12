@@ -780,7 +780,13 @@ const AdminMontarTreino = () => {
               {dias.map((dia) => (
                 <div key={dia} className="border border-border rounded-xl p-3 sm:p-4 space-y-3">
                   <div className="flex items-center justify-between gap-2">
-                    <h3 className="font-display text-sm sm:text-lg leading-tight flex-1 min-w-0">{dia}</h3>
+                    <Input
+                      defaultValue={dia}
+                      onBlur={(ev) => renameDia(dia, ev.target.value)}
+                      onKeyDown={(ev) => { if (ev.key === "Enter") (ev.target as HTMLInputElement).blur(); }}
+                      className="flex-1 min-w-0 font-display text-sm sm:text-lg h-9 bg-transparent border-dashed"
+                      title="Edite o nome do treino do dia (ex: Peito e Tríceps)"
+                    />
                     <Button size="sm" variant="ghost" onClick={() => addEx(dia)} className="shrink-0 h-8 px-2 text-xs">
                       <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
                     </Button>
