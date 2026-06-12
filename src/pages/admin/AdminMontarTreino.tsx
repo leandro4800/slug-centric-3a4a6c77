@@ -471,6 +471,18 @@ const AdminMontarTreino = () => {
     setExercicios((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
   };
   const removeEx = (idx: number) => setExercicios((prev) => prev.filter((_, i) => i !== idx));
+  const renameDia = (oldName: string, newName: string) => {
+    const trimmed = (newName || "").trim();
+    if (!trimmed || trimmed === oldName) return;
+    setExercicios((prev) => {
+      // evita colisão com dia existente
+      if (prev.some((e) => e.dia_semana === trimmed)) {
+        toast.error(`Já existe um dia chamado "${trimmed}".`);
+        return prev;
+      }
+      return prev.map((e) => (e.dia_semana === oldName ? { ...e, dia_semana: trimmed } : e));
+    });
+  };
   const addEx = (dia: string) => {
     setExercicios((prev) => [
       ...prev,
