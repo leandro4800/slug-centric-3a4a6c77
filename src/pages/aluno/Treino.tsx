@@ -42,6 +42,7 @@ const Treino = () => {
   const [reloadKey, setReloadKey] = useState(0);
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
+  const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const completedKey = `treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`;
   const [completedIds, setCompletedIds] = useState<Set<string>>(() => {
     try {
@@ -57,7 +58,7 @@ const Treino = () => {
     });
   };
 
-  // Carrega nível de experiência (avançado / intermediário / iniciante) do aluno
+  // Carrega nível de experiência + avatar do perfil
   useEffect(() => {
     if (!user) return;
     supabase
@@ -66,6 +67,12 @@ const Treino = () => {
       .eq("aluno_id", user.id)
       .maybeSingle()
       .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
+    supabase
+      .from("perfis")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setAvatarPerfil((data as any)?.avatar_url || null));
   }, [user?.id]);
 
   // Persiste seleção de dia / exercício aberto
@@ -304,7 +311,35 @@ const Treino = () => {
   const dias = [...new Set(treinos.map((t) => t.dia_semana))];
   const treinosDoDia = treinos.filter((t) => t.dia_semana === diaAtual);
 
-  const { url: avatarTreinando } = useAvatarVariant("treinando");
+  // Deriva nome do grupo muscular a partir dos exercícios do dia
+  const grupoMuscularDoDia = (() => {
+    const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const texto = treinosDoDia.map((t) => `${t.exercicio} ${t.observacao || ""}`).map(norm).join(" ");
+    const grupos: { key: string; label: string }[] = [
+      { key: "peito", label: "PEITO" },
+      { key: "costas", label: "COSTAS" },
+      { key: "dorsal", label: "COSTAS" },
+      { key: "ombro", label: "OMBRO" },
+      { key: "deltoide", label: "OMBRO" },
+      { key: "biceps", label: "BÍCEPS" },
+      { key: "triceps", label: "TRÍCEPS" },
+      { key: "quadriceps", label: "QUADRÍCEPS" },
+      { key: "posterior", label: "POSTERIOR" },
+      { key: "gluteo", label: "GLÚTEO" },
+      { key: "panturrilha", label: "PANTURRILHA" },
+      { key: "abdomen", label: "ABDÔMEN" },
+      { key: "abdominal", label: "ABDÔMEN" },
+      { key: "perna", label: "PERNA" },
+    ];
+    const encontrados: string[] = [];
+    for (const g of grupos) {
+      if (texto.includes(g.key) && !encontrados.includes(g.label)) encontrados.push(g.label);
+    }
+    if (encontrados.length === 0) return null;
+    if (encontrados.length === 1) return encontrados[0];
+    return encontrados.slice(0, 2).join(" E ");
+  })();
+
   const primeiroNome = (user?.user_metadata?.nome_completo || user?.email || "Atleta")
     .toString()
     .split(/\s|@/)[0];
@@ -334,23 +369,30 @@ const Treino = () => {
       <PageHeader icon={Dumbbell} title="MEUS TREINOS" subtitle={`${treinos.length} exercícios`} />
 
       <div className="px-5">
-        {/* Saudação personalizada com avatar treinando */}
-        {avatarTreinando && (
-          <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-card to-card mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
-            <div className="flex items-center gap-3 p-3">
-              <img
-                src={avatarTreinando}
-                alt="Você treinando"
-                className="w-20 h-24 object-cover rounded-xl shadow-[0_0_24px_-6px_hsl(var(--primary)/0.6)]"
-              />
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">{horaSaudacao}</p>
-                <p className="font-display text-xl leading-tight truncate">{primeiroNome.toUpperCase()},</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Bora treinar pesado hoje. 💪</p>
-              </div>
+        {/* Saudação personalizada com foto do perfil (lateralizada) */}
+        <div className="relative overflow-hidden rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/15 via-card to-card mb-4 animate-in fade-in slide-in-from-top-2 duration-500">
+          <div className="flex items-center gap-3 p-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">BORA TREINAR,</p>
+              <p className="font-display text-2xl leading-tight truncate">{primeiroNome.toUpperCase()}!</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-snug">
+                Disciplina hoje,<br/>resultado amanhã.
+              </p>
             </div>
+            {avatarPerfil ? (
+              <img
+                src={avatarPerfil}
+                alt="Foto de perfil"
+                className="w-24 h-28 object-cover rounded-xl shadow-[0_0_24px_-6px_hsl(var(--primary)/0.6)] shrink-0"
+              />
+            ) : (
+              <div className="w-24 h-28 rounded-xl bg-secondary/60 border border-border flex items-center justify-center shrink-0">
+                <Dumbbell className="h-8 w-8 text-muted-foreground" />
+              </div>
+            )}
           </div>
-        )}
+        </div>
+
 
         {treinos.length === 0 && (
           <div className="bg-card border border-primary/20 rounded-2xl px-5 py-8 flex flex-col items-center justify-center gap-3 text-center mb-4">
@@ -398,11 +440,14 @@ const Treino = () => {
         </div>
 
         <div className="mt-6">
-          <h2 className="font-display text-base flex items-center gap-2">
-            <span>▶️</span> TREINO DE HOJE — {treinosDoDia.length} EXERCÍCIOS
+          <h2 className="font-display text-lg flex items-center gap-2 uppercase tracking-wide">
+            <span>▶️</span> {grupoMuscularDoDia || `TREINO DE HOJE — ${treinosDoDia.length} EXERCÍCIOS`}
           </h2>
-          <p className="text-xs text-muted-foreground mt-1">Toque em um exercício para abrir o modo execução</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {treinosDoDia.length} exercícios · Toque em um para abrir o modo execução
+          </p>
         </div>
+
 
         <div className="space-y-3 mt-4">
           {treinosDoDia.map((t, i) => (
