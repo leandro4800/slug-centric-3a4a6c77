@@ -349,12 +349,14 @@ const Treino = () => {
       { key: "biceps", label: "BÍCEPS" },
       { key: "triceps", label: "TRÍCEPS" },
       { key: "quadriceps", label: "QUADRÍCEPS" },
-      { key: "posterior", label: "POSTERIOR" },
+      { key: "posterior", label: "POSTERIOR DE COXA" },
+      { key: "isquio", label: "POSTERIOR DE COXA" },
+      { key: "stiff", label: "POSTERIOR DE COXA" },
       { key: "gluteo", label: "GLÚTEO" },
       { key: "panturrilha", label: "PANTURRILHA" },
+      { key: "gemeo", label: "PANTURRILHA" },
       { key: "abdomen", label: "ABDÔMEN" },
       { key: "abdominal", label: "ABDÔMEN" },
-      { key: "perna", label: "PERNA" },
     ];
     const encontrados: string[] = [];
     for (const g of grupos) {
