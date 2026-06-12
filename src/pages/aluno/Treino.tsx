@@ -410,13 +410,13 @@ const Treino = () => {
               <img
                 src={avatarPerfil}
                 alt="Foto de perfil"
-                className="absolute inset-y-0 right-0 h-full w-[55%] object-cover object-top"
+                className="absolute inset-y-0 right-0 h-full w-[55%] sm:w-[50%] md:w-[45%] object-cover object-[center_20%]"
               />
               {/* fade da esquerda da foto para o card */}
-              <div className="absolute inset-y-0 right-[45%] w-32 bg-gradient-to-r from-card to-transparent pointer-events-none" />
+              <div className="absolute inset-y-0 right-[45%] sm:right-[50%] md:right-[55%] w-24 sm:w-32 bg-gradient-to-r from-card to-transparent pointer-events-none" />
             </>
           ) : (
-            <div className="absolute inset-y-0 right-0 w-[55%] bg-secondary/40 flex items-center justify-center">
+            <div className="absolute inset-y-0 right-0 w-[55%] sm:w-[50%] md:w-[45%] bg-secondary/40 flex items-center justify-center">
               <Dumbbell className="h-10 w-10 text-muted-foreground" />
             </div>
           )}
