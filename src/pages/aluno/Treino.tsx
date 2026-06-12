@@ -311,7 +311,35 @@ const Treino = () => {
   const dias = [...new Set(treinos.map((t) => t.dia_semana))];
   const treinosDoDia = treinos.filter((t) => t.dia_semana === diaAtual);
 
-  const { url: avatarTreinando } = useAvatarVariant("treinando");
+  // Deriva nome do grupo muscular a partir dos exercícios do dia
+  const grupoMuscularDoDia = (() => {
+    const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const texto = treinosDoDia.map((t) => `${t.exercicio} ${t.observacao || ""}`).map(norm).join(" ");
+    const grupos: { key: string; label: string }[] = [
+      { key: "peito", label: "PEITO" },
+      { key: "costas", label: "COSTAS" },
+      { key: "dorsal", label: "COSTAS" },
+      { key: "ombro", label: "OMBRO" },
+      { key: "deltoide", label: "OMBRO" },
+      { key: "biceps", label: "BÍCEPS" },
+      { key: "triceps", label: "TRÍCEPS" },
+      { key: "quadriceps", label: "QUADRÍCEPS" },
+      { key: "posterior", label: "POSTERIOR" },
+      { key: "gluteo", label: "GLÚTEO" },
+      { key: "panturrilha", label: "PANTURRILHA" },
+      { key: "abdomen", label: "ABDÔMEN" },
+      { key: "abdominal", label: "ABDÔMEN" },
+      { key: "perna", label: "PERNA" },
+    ];
+    const encontrados: string[] = [];
+    for (const g of grupos) {
+      if (texto.includes(g.key) && !encontrados.includes(g.label)) encontrados.push(g.label);
+    }
+    if (encontrados.length === 0) return null;
+    if (encontrados.length === 1) return encontrados[0];
+    return encontrados.slice(0, 2).join(" E ");
+  })();
+
   const primeiroNome = (user?.user_metadata?.nome_completo || user?.email || "Atleta")
     .toString()
     .split(/\s|@/)[0];
