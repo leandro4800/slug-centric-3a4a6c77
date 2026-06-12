@@ -58,7 +58,7 @@ const Treino = () => {
     });
   };
 
-  // Carrega nível de experiência (avançado / intermediário / iniciante) do aluno
+  // Carrega nível de experiência + avatar do perfil
   useEffect(() => {
     if (!user) return;
     supabase
@@ -67,6 +67,12 @@ const Treino = () => {
       .eq("aluno_id", user.id)
       .maybeSingle()
       .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
+    supabase
+      .from("perfis")
+      .select("avatar_url")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => setAvatarPerfil((data as any)?.avatar_url || null));
   }, [user?.id]);
 
   // Persiste seleção de dia / exercício aberto
