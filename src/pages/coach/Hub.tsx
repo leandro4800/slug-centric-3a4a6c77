@@ -75,18 +75,12 @@ const Hub = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full h-12 bg-card border border-border/40 p-1 rounded-xl">
+          <TabsList className="grid grid-cols-3 w-full h-12 bg-card border border-border/40 p-1 rounded-xl">
             <TabsTrigger value="marketing" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
               <Megaphone className="h-4 w-4" /> Marketing
             </TabsTrigger>
             <TabsTrigger value="planilhas" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
               <FileSpreadsheet className="h-4 w-4" /> Planilhas
-            </TabsTrigger>
-            <TabsTrigger value="vendas" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-              <LinkIcon className="h-4 w-4" /> Vendas
-            </TabsTrigger>
-            <TabsTrigger value="planos" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-              <DollarSign className="h-4 w-4" /> Planos
             </TabsTrigger>
             <TabsTrigger value="config" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
               <Settings className="h-4 w-4" /> Config
