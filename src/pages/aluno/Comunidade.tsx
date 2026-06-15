@@ -379,7 +379,16 @@ const Comunidade = () => {
                   )}
                 </div>
 
-                {post.imagem_url && (
+                {post.video_url ? (
+                  <div className="relative w-full max-h-[80vh] bg-black flex items-center justify-center overflow-hidden">
+                    <video
+                      src={post.video_url}
+                      controls
+                      playsInline
+                      className="w-full h-auto max-h-[80vh] object-contain"
+                    />
+                  </div>
+                ) : post.imagem_url && (
                   <div className="relative aspect-square w-full bg-card/50 flex items-center justify-center overflow-hidden">
                     <img
                       src={post.imagem_url}
