@@ -31,6 +31,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import pratoRefeicao from "@/assets/prato-refeicao-realista.png";
 
 type TemplateId = "treino-dieta-pro" | "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
@@ -1007,28 +1008,16 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle 
 
       {/* Phone mockup + plate of food — bottom right */}
       <div className="absolute right-2 bottom-[110px] z-[6] flex items-end" style={{ filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.7))" }}>
-        {/* Plate (in front, overlapping) */}
-        <div className="relative w-[88px] h-[88px] -mr-6 mb-2 z-[7]">
-          {/* Plate ring */}
-          <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle at 35% 30%, #4a4a4a, #1a1a1a 70%)", boxShadow: "inset 0 -3px 6px rgba(0,0,0,0.7), 0 6px 12px rgba(0,0,0,0.6)" }} />
-          <div className="absolute inset-[6px] rounded-full" style={{ background: "radial-gradient(circle at 40% 30%, #2b2b2b, #0e0e0e 80%)" }} />
-          {/* Food: chicken (brown grill), rice (beige), broccoli (green), carrot (orange) */}
-          {/* Grilled chicken */}
-          <div className="absolute left-[18%] bottom-[18%] w-[42%] h-[36%] rounded-[40%]"
-            style={{ background: "linear-gradient(160deg,#a0521f 0%, #6b2e10 100%)", boxShadow: "inset 0 -2px 3px rgba(0,0,0,0.5)" }}>
-            <div className="absolute inset-x-1 top-1 h-[2px] rounded bg-black/60" />
-            <div className="absolute inset-x-1 top-3 h-[2px] rounded bg-black/60" />
-            <div className="absolute inset-x-1 top-5 h-[2px] rounded bg-black/60" />
-          </div>
-          {/* Rice */}
-          <div className="absolute left-[15%] top-[18%] w-[34%] h-[34%] rounded-full"
-            style={{ background: "radial-gradient(circle at 40% 30%, #e8d9a8, #b89968)" }} />
-          {/* Broccoli */}
-          <div className="absolute right-[15%] top-[18%] w-[28%] h-[28%] rounded-full"
-            style={{ background: "radial-gradient(circle at 30% 30%, #6dbf3f, #2f6b1d)", boxShadow: "inset 0 -2px 4px rgba(0,0,0,0.4)" }} />
-          {/* Carrot */}
-          <div className="absolute right-[12%] bottom-[20%] w-[26%] h-[24%] rounded-[40%]"
-            style={{ background: "radial-gradient(circle at 30% 30%, #ffae5c, #c6671a)" }} />
+        {/* Realistic meal photo (in front, overlapping the phone) */}
+        <div className="relative w-[110px] h-[110px] -mr-8 mb-2 z-[7]"
+          style={{ filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.8))" }}>
+          <img
+            src={pratoRefeicao}
+            alt="Prato de refeição saudável"
+            crossOrigin="anonymous"
+            className="w-full h-full object-contain"
+            draggable={false}
+          />
         </div>
 
         {/* Phone */}
