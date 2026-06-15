@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Move, Sparkles, Music, Bell, BellOff, Rocket } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
@@ -504,18 +504,6 @@ const Perfil = () => {
             </Button>
           </div>
           
-          {isCoach && (
-            <div className="flex gap-2 pt-1">
-              <Button
-                onClick={() => navigate(`/${slug}/app/controle`)}
-                variant="outline"
-                className="flex-1 border-primary/40 text-primary hover:bg-primary/10"
-              >
-                <Settings className="h-4 w-4" /> Painel do Coach
-              </Button>
-            </div>
-          )}
-
           <div className="flex gap-2 pt-1">
             <Button
               onClick={() => setPwOpen(true)}
