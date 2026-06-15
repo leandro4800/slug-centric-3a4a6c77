@@ -39,7 +39,11 @@ serve(async (req) => {
         .single()
 
       if (error || !profile?.push_token) {
-        throw new Error(`Push token not found for user ${user_id}`)
+        console.warn(`Push token not found for user ${user_id} — skipping`)
+        return new Response(
+          JSON.stringify({ success: false, skipped: true, reason: 'push_token_not_found', user_id }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
+        )
       }
       targetToken = profile.push_token
     }
