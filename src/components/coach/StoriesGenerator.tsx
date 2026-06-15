@@ -593,7 +593,7 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
         <div className="font-['Anton'] text-[46px] leading-[0.85] uppercase tracking-tight" style={titleWhite}>TREINO</div>
         <div className="font-['Anton'] text-[46px] leading-[0.85] uppercase tracking-tight mt-1" style={titleAccent}>E DIETA</div>
         <div className="inline-block mt-2 px-2.5 py-0.5 font-['Anton'] text-[16px] uppercase tracking-wider text-black shadow-lg" style={{ background: accent }}>
-          PERSONALIZADOS
+          {(config.headline?.trim()) || "PERSONALIZADOS"}
         </div>
         <div className="mt-2 inline-flex items-center gap-2 border-2 rounded-full px-2.5 py-0.5 bg-black/40" style={{ borderColor: "#ffffff30" }}>
           <Wifi className="h-3 w-3" style={{ color: accent }} />
