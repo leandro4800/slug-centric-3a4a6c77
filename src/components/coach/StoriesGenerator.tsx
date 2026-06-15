@@ -33,16 +33,17 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import pratoRefeicao from "@/assets/prato-refeicao-realista.png";
 
-type TemplateId = "treino-dieta-pro" | "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
+type TemplateId = "treino-dieta-pro" | "consultoria-online" | "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; format: "9:16" | "1:1" }[] = [
-  { id: "treino-dieta-pro", label: "Consultoria Gold", desc: "Pôster premium dourado", accent: "#D4A24A", format: "9:16" },
-  { id: "consultoria-phone", label: "Consultoria Cyan", desc: "Mesma arte em cyan", accent: "#22D3EE", format: "9:16" },
-  { id: "yellow-cyber", label: "Consultoria Neon", desc: "Mesma arte em amarelo neon", accent: "#E0FF00", format: "9:16" },
-  { id: "dark-purple", label: "Consultoria Purple", desc: "Mesma arte em roxo", accent: "#BF00FF", format: "9:16" },
-  { id: "ironberg", label: "Consultoria Lime", desc: "Mesma arte em verde lima", accent: "#CCFF00", format: "9:16" },
-  { id: "gradient-fit", label: "Consultoria Orange", desc: "Mesma arte em laranja", accent: "#FB923C", format: "9:16" },
-  { id: "feed-brutalist", label: "Consultoria Red", desc: "Mesma arte em vermelho", accent: "#EF4444", format: "9:16" },
+  { id: "treino-dieta-pro", label: "Treino & Dieta Pro", desc: "Pôster fitness com IA (cyan)", accent: "#22D3EE", format: "9:16" },
+  { id: "consultoria-online", label: "Consultoria On-Line", desc: "Pôster premium dourado", accent: "#D4A24A", format: "9:16" },
+  { id: "consultoria-phone", label: "Método Exclusivo", desc: "Cyan elétrico premium", accent: "#22D3EE", format: "9:16" },
+  { id: "yellow-cyber", label: "Transformação Total", desc: "Amarelo neon high-energy", accent: "#E0FF00", format: "9:16" },
+  { id: "dark-purple", label: "Elite Performance", desc: "Roxo neon premium", accent: "#BF00FF", format: "9:16" },
+  { id: "ironberg", label: "Força & Foco", desc: "Verde lima brutal", accent: "#CCFF00", format: "9:16" },
+  { id: "gradient-fit", label: "Alta Performance", desc: "Laranja vibrante", accent: "#FB923C", format: "9:16" },
+  { id: "feed-brutalist", label: "Resultado Real", desc: "Vermelho impacto", accent: "#EF4444", format: "9:16" },
 ];
 
 // Mock workout templates fallback
