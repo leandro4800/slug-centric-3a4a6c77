@@ -110,8 +110,14 @@ serve(async (req) => {
     const requestedTarget = perfil?.aluno_id || perfil?.user_id;
     let resolvedUserId = callerIdE;
     if (requestedTarget && requestedTarget !== callerIdE) {
-      const { data: alunoRow } = await adminE
-        .from("alunos").select("tenant_id").eq("id", requestedTarget).maybeSingle();
+      const { data: alunoPerfil } = await adminE
+        .from("perfis").select("tenant_id").eq("id", requestedTarget).maybeSingle();
+      let alunoRow = alunoPerfil;
+      if (!alunoRow?.tenant_id) {
+        const { data: alunoLegacy } = await adminE
+          .from("alunos").select("tenant_id").eq("id", requestedTarget).maybeSingle();
+        alunoRow = alunoLegacy;
+      }
       if (!alunoRow) {
         return new Response(JSON.stringify({ error: "Aluno não encontrado" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
