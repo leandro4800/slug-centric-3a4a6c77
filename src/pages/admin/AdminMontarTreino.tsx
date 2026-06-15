@@ -653,8 +653,34 @@ const AdminMontarTreino = () => {
                   {presetsDisponiveis.length} opções p/ {perfil.frequencia_semanal}x · {nivel}
                 </span>
               </div>
+
+              {/* Começar do zero — sempre no topo, para o coach montar seu próprio treino */}
+              <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                  <p className="text-sm font-bold">Começar do zero</p>
+                  <p className="text-[11px] text-muted-foreground">Monte um treino em branco e adicione cada exercício manualmente.</p>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setPendingReview(false);
+                    setCardio("");
+                    setExercicios([]);
+                    setDivisaoSelecionadaId("custom");
+                    const novosDias = Array.from({ length: perfil.frequencia_semanal || 4 }, (_, i) => `Treino ${String.fromCharCode(65 + i)}`);
+                    setDivisaoCustom(novosDias);
+                    novosDias.forEach((d) => addEx(d));
+                    toast.success("Treino em branco criado. Edite os dias e adicione exercícios.");
+                  }}
+                  className="border-primary/50 text-primary hover:bg-primary/10 shrink-0"
+                >
+                  <Plus className="h-4 w-4 mr-1" /> Treino em branco
+                </Button>
+              </div>
+
               <p className="text-xs text-muted-foreground">
-                Escolha como o aluno vai estruturar a semana. Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
+                Ou escolha uma divisão pronta abaixo ({presetsDisponiveis.length} opções específicas para {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {perfil.frequencia_semanal}x · {nivel}). Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
               </p>
 
               <div className="grid md:grid-cols-2 gap-2">
