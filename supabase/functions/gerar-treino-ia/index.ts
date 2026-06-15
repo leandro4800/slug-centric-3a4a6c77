@@ -391,7 +391,7 @@ PSE (Percepção de Esforço) por nível — informe no campo "observacao":
 - Avançado treinando 1 músculo/dia: MÍNIMO 4-5 exercícios + técnicas avançadas obrigatórias.
 - Anti-repetição: respeite o histórico — varie pelo menos 60% dos exercícios protagonistas em relação ao último ciclo, mantendo o padrão/divisão do coach se existente.
 
-ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição completa (7 dias). Sempre preencha "observacao_clinica" com parecer baseado em biomarcadores (tier) e estratégia de variação vs treino anterior. Respeite TODAS as regras acima sem exceção.`;
+ESTRUTURA DE RESPOSTA: Retorne APENAS um JSON válido com a prescrição completa no formato { "dias": [{ "dia": "...", "exercicios": [{ "nome": "...", "series": "...", "repeticoes": "...", "cadencia": "...", "detalhes_execucao": "...", "observacao": "..." }] }], "cardio": "...", "observacao_clinica": "..." }. Sempre preencha "observacao_clinica" com parecer baseado em biomarcadores (tier) e estratégia de variação vs treino anterior. Respeite TODAS as regras acima sem exceção.`;
 
     const userPrompt = `Monte o treino Pacho-style para:
 - Sexo: ${perfil?.sexo || "não informado"}
@@ -465,8 +465,6 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
-          tools,
-          tool_choice: { type: "function", function: { name: "montar_treino" } },
           response_format: { type: "json_object" },
           temperature: 0.35,
         }),
