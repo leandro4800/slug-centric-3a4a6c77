@@ -343,40 +343,8 @@ const MeusAtletas = () => {
       </div>
 
       <main className="px-5 pb-16">
-        {(() => {
-          const linkSlug = slug || tenant?.slug;
-          return linkSlug ? (
-            <div className="bg-primary/5 border border-primary/30 rounded-2xl p-4 space-y-3 mb-6">
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-primary font-bold">Link do seu app</p>
-                <p className="text-sm font-mono mt-1 break-all">https://alpha-coach.app/{linkSlug}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-primary/40"
-                  onClick={() => {
-                    navigator.clipboard.writeText(`https://alpha-coach.app/${linkSlug}`);
-                    toast.success("Link copiado!");
-                  }}
-                >
-                  <Copy className="h-4 w-4" /> Copiar link
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full gap-2 border-primary/40"
-                  onClick={() => {
-                    const url = `https://alpha-coach.app/${linkSlug}`;
-                    const msg = encodeURIComponent(`Olá! Acesse meu app de coach: ${url}`);
-                    window.open(`https://wa.me/?text=${msg}`, "_blank");
-                  }}
-                >
-                  <Share2 className="h-4 w-4" /> WhatsApp
-                </Button>
-              </div>
-            </div>
-          ) : null;
-        })()}
+        {(() => null)()}
+
 
         {loading ? (
           <div className="flex justify-center py-16">
