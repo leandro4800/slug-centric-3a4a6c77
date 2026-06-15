@@ -376,7 +376,11 @@ type PosterVariant = {
 };
 
 const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
-  const accent: string = v.accent;
+  const accent: string = config?.branding_color || v.accent;
+  // Permite que o coach sobrescreva o conteúdo do template via formulário
+  const headlineBig = (config?.headline?.trim()) || v.headlineBig;
+  const ctaBig = (config?.cta_text?.trim()) || v.ctaBig;
+  const badgeTop = (config?.discount?.trim()) || v.badge.top;
   const bigStyle: React.CSSProperties = {
     backgroundImage: `linear-gradient(180deg, #ffffff 0%, ${accent} 45%, #1a1a1a 100%)`,
     WebkitBackgroundClip: "text",
