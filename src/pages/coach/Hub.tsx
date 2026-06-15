@@ -3,24 +3,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import { 
   Rocket, 
   Megaphone, 
-  Link as LinkIcon, 
-  Zap, 
   ChevronLeft,
   Layout,
-  MousePointerClick,
-  Share2,
-  Lock,
   FileSpreadsheet,
   Settings,
-  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoriesGenerator } from "@/components/coach/StoriesGenerator";
-import { SalesLinkConfig } from "@/components/coach/SalesLinkConfig";
 import { WorkoutSpreadsheetGenerator } from "@/components/coach/WorkoutSpreadsheetGenerator";
 import { PushTester } from "@/components/coach/PushTester";
-import { PlanConfig } from "@/components/coach/PlanConfig";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,18 +67,12 @@ const Hub = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid grid-cols-5 w-full h-12 bg-card border border-border/40 p-1 rounded-xl">
+          <TabsList className="grid grid-cols-3 w-full h-12 bg-card border border-border/40 p-1 rounded-xl">
             <TabsTrigger value="marketing" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
               <Megaphone className="h-4 w-4" /> Marketing
             </TabsTrigger>
             <TabsTrigger value="planilhas" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
               <FileSpreadsheet className="h-4 w-4" /> Planilhas
-            </TabsTrigger>
-            <TabsTrigger value="vendas" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-              <LinkIcon className="h-4 w-4" /> Vendas
-            </TabsTrigger>
-            <TabsTrigger value="planos" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
-              <DollarSign className="h-4 w-4" /> Planos
             </TabsTrigger>
             <TabsTrigger value="config" className="rounded-lg gap-2 text-xs font-bold uppercase tracking-wider">
               <Settings className="h-4 w-4" /> Config
@@ -113,25 +99,6 @@ const Hub = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="vendas" className="mt-0 focus-visible:outline-none">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <MousePointerClick className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-bold">Links de Vendas</h3>
-              </div>
-              <SalesLinkConfig />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="planos" className="mt-0 focus-visible:outline-none">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-bold">Planos de Consultoria</h3>
-              </div>
-              <PlanConfig />
-            </div>
-          </TabsContent>
 
           <TabsContent value="config" className="mt-0 focus-visible:outline-none">
             <div className="space-y-4">
