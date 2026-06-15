@@ -8,8 +8,9 @@ const AdminVlogs = () => {
         <AdminBackButton />
         <h1 className="font-display text-4xl text-primary mb-2 mt-4">VLOGS</h1>
         <p className="text-sm text-muted-foreground mb-6">
-          Publique novos episódios e configure a automação do seu canal.
+          Publique novos episódios do seu canal.
         </p>
+
         <VlogsAdmin />
       </div>
     </div>
