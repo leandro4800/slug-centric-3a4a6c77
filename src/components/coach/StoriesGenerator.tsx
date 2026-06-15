@@ -415,7 +415,7 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
           className={`font-['Anton'] leading-[0.85] uppercase tracking-tight ${v.headlineBigItalic ? "italic" : ""} mt-1 break-words`}
           style={{ ...bigStyle, fontSize: "clamp(34px, 11vw, 56px)" }}
         >
-          {v.headlineBig}
+          {headlineBig}
         </div>
         {v.headlineSub && <div className="font-['Anton'] text-[15px] leading-[1] uppercase tracking-wide mt-1.5">{v.headlineSub}</div>}
 
