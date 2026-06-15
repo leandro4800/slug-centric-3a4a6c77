@@ -678,13 +678,13 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
             </div>
             <div className="leading-tight">
               <div className="font-bold text-[9px] uppercase">COMECE HOJE</div>
-              <div className="font-black text-[10px] uppercase">SUA TRANSFORMAÇÃO!</div>
+              <div className="font-black text-[10px] uppercase">{(config.cta_text?.trim()) || "SUA TRANSFORMAÇÃO!"}</div>
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10">
-          <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider opacity-90">
-            <Lock className="h-3 w-3" style={{ color: accent }} /> VAGAS LIMITADAS!
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10 gap-2">
+          <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider opacity-90">
+            <Phone className="h-3 w-3" style={{ color: accent }} /> {config.phone}
           </div>
           <div className="text-right leading-tight">
             <div className="text-[8px] opacity-60 tracking-widest">{coachName}</div>
@@ -693,6 +693,11 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
             </div>
           </div>
         </div>
+        {config.website_url && (
+          <div className="mt-1 text-center text-[8px] tracking-[0.3em] uppercase opacity-70">
+            {config.website_url}
+          </div>
+        )}
       </div>
     </div>
   );
