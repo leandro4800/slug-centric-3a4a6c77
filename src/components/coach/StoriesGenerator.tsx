@@ -33,16 +33,17 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import pratoRefeicao from "@/assets/prato-refeicao-realista.png";
 
-type TemplateId = "treino-dieta-pro" | "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
+type TemplateId = "treino-dieta-pro" | "consultoria-online" | "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; format: "9:16" | "1:1" }[] = [
-  { id: "treino-dieta-pro", label: "Consultoria Gold", desc: "Pôster premium dourado", accent: "#D4A24A", format: "9:16" },
-  { id: "consultoria-phone", label: "Consultoria Cyan", desc: "Mesma arte em cyan", accent: "#22D3EE", format: "9:16" },
-  { id: "yellow-cyber", label: "Consultoria Neon", desc: "Mesma arte em amarelo neon", accent: "#E0FF00", format: "9:16" },
-  { id: "dark-purple", label: "Consultoria Purple", desc: "Mesma arte em roxo", accent: "#BF00FF", format: "9:16" },
-  { id: "ironberg", label: "Consultoria Lime", desc: "Mesma arte em verde lima", accent: "#CCFF00", format: "9:16" },
-  { id: "gradient-fit", label: "Consultoria Orange", desc: "Mesma arte em laranja", accent: "#FB923C", format: "9:16" },
-  { id: "feed-brutalist", label: "Consultoria Red", desc: "Mesma arte em vermelho", accent: "#EF4444", format: "9:16" },
+  { id: "treino-dieta-pro", label: "Treino & Dieta Pro", desc: "Pôster fitness com IA (cyan)", accent: "#22D3EE", format: "9:16" },
+  { id: "consultoria-online", label: "Consultoria On-Line", desc: "Pôster premium dourado", accent: "#D4A24A", format: "9:16" },
+  { id: "consultoria-phone", label: "Método Exclusivo", desc: "Cyan elétrico premium", accent: "#22D3EE", format: "9:16" },
+  { id: "yellow-cyber", label: "Transformação Total", desc: "Amarelo neon high-energy", accent: "#E0FF00", format: "9:16" },
+  { id: "dark-purple", label: "Elite Performance", desc: "Roxo neon premium", accent: "#BF00FF", format: "9:16" },
+  { id: "ironberg", label: "Força & Foco", desc: "Verde lima brutal", accent: "#CCFF00", format: "9:16" },
+  { id: "gradient-fit", label: "Alta Performance", desc: "Laranja vibrante", accent: "#FB923C", format: "9:16" },
+  { id: "feed-brutalist", label: "Resultado Real", desc: "Vermelho impacto", accent: "#EF4444", format: "9:16" },
 ];
 
 // Mock workout templates fallback
@@ -183,6 +184,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
   const renderTemplate = () => {
     switch (template) {
       case "treino-dieta-pro": return <TreinoDietaProTemplate {...tplProps} />;
+      case "consultoria-online": return <ConsultoriaOnlineTemplate {...tplProps} />;
       case "consultoria-phone": return <ConsultoriaPhoneTemplate {...tplProps} />;
       case "yellow-cyber": return <YellowCyberTemplate {...tplProps} />;
       case "dark-purple": return <DarkPurpleTemplate {...tplProps} />;
@@ -353,29 +355,30 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
 };
 
 /* ============================================================
-   SHARED — Consultoria On-Line poster (clones reference image)
-   All 7 templates reuse this layout with different accent colors.
+   SHARED POSTER SCAFFOLD — used by Consultoria Online + variants.
+   Each variant passes its own title, accent, copy, and CTAs.
    ============================================================ */
-const ConsultoriaPoster = ({ config, coachName, cutoutUrl, accent: accentOverride }: any) => {
-  const accent = accentOverride || config.branding_color || "#D4A24A";
+type PosterVariant = {
+  accent: string;
+  preHeadline?: string;
+  headlineBig: string;
+  headlineBigItalic?: boolean;
+  headlineSub?: string;
+  subline1: string;
+  subline2: string;
+  badge: { top: string; mid: string; bot: string };
+  features: { i: any; t: string; s: string; d: string }[];
+  ctaTop: string;
+  ctaBig: string;
+  bottomIcons: { i: any; t1: string; t2: string }[];
+  footerLeft: string;
+  footerRight: string;
+};
 
-  const features = [
-    { i: Dumbbell, t: "TREINOS", s: "PERSONALIZADOS", d: "Planejamentos de treino\nadaptados ao seu objetivo,\nnível e rotina." },
-    { i: Utensils, t: "DIETAS", s: "INDIVIDUALIZADAS", d: "Planos alimentares práticos\ne flexíveis, de acordo com\nsuas necessidades." },
-    { i: Phone, t: "ACOMPANHAMENTO", s: "PRÓXIMO", d: "Suporte contínuo para ajustes,\ndúvidas e motivação." },
-    { i: TrendingUp, t: "RESULTADOS", s: "COMPROVADOS", d: "Mais performance, mais saúde\ne a melhor versão de você." },
-  ];
-
-  const bottomIcons = [
-    { i: Check, t1: "TREINE NO SEU", t2: "TEMPO" },
-    { i: Target, t1: "DE ONDE", t2: "ESTIVER" },
-    { i: Target, t1: "FOCO NO QUE", t2: "IMPORTA" },
-    { i: Trophy, t1: "DISCIPLINA", t2: "RESULTADOS" },
-  ];
-
-  // Premium metallic gradient for the big ON-LINE word
-  const onlineStyle: React.CSSProperties = {
-    backgroundImage: `linear-gradient(180deg, #fff2c2 0%, ${accent} 45%, #6b4a16 100%)`,
+const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
+  const accent: string = v.accent;
+  const bigStyle: React.CSSProperties = {
+    backgroundImage: `linear-gradient(180deg, #ffffff 0%, ${accent} 45%, #1a1a1a 100%)`,
     WebkitBackgroundClip: "text",
     backgroundClip: "text",
     color: "transparent",
@@ -385,58 +388,51 @@ const ConsultoriaPoster = ({ config, coachName, cutoutUrl, accent: accentOverrid
 
   return (
     <div className="relative w-full h-full overflow-hidden text-white bg-black">
-      {/* BG */}
       <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 75% 25%, #1a1a1a 0%, #050505 70%)" }} />
       <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none"
         style={{ backgroundImage: "url(data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E)" }} />
 
-      {/* Coach cutout — right */}
       {cutoutUrl && (
         <div className="absolute right-[-6%] top-[1%] h-[62%] w-[64%] z-[2]">
-          <img
-            src={cutoutUrl}
-            alt=""
-            className="h-full w-full object-contain object-right grayscale contrast-125"
+          <img src={cutoutUrl} alt="" className="h-full w-full object-contain object-right grayscale contrast-125"
             style={{
               filter: "drop-shadow(0 10px 30px rgba(0,0,0,0.8))",
               maskImage: 'linear-gradient(to bottom, black 82%, transparent 100%)',
               WebkitMaskImage: 'linear-gradient(to bottom, black 82%, transparent 100%)',
-            }}
-          />
+            }} />
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/30 to-transparent z-[3]" />
 
-      {/* Headline block */}
+      {/* Headline */}
       <div className="relative z-10 pt-6 px-5">
-        <div className="font-['Anton'] text-[26px] leading-[0.95] uppercase tracking-wide">CONSULTORIA</div>
-        <div className="font-['Anton'] text-[78px] leading-[0.82] uppercase tracking-tight italic mt-1" style={onlineStyle}>
-          ON-LINE
+        {v.preHeadline && <div className="font-['Anton'] text-[26px] leading-[0.95] uppercase tracking-wide">{v.preHeadline}</div>}
+        <div className={`font-['Anton'] text-[78px] leading-[0.82] uppercase tracking-tight ${v.headlineBigItalic ? "italic" : ""} mt-1`} style={bigStyle}>
+          {v.headlineBig}
         </div>
-        <div className="font-['Anton'] text-[20px] leading-[1] uppercase tracking-wide mt-1">DE TREINO E DIETA</div>
+        {v.headlineSub && <div className="font-['Anton'] text-[20px] leading-[1] uppercase tracking-wide mt-1">{v.headlineSub}</div>}
 
         <div className="mt-4">
-          <div className="font-['Anton'] text-[16px] leading-tight uppercase opacity-95">RESULTADOS REAIS,</div>
-          <div className="font-['Anton'] text-[16px] leading-tight uppercase" style={{ color: accent }}>ONDE VOCÊ ESTIVER.</div>
+          <div className="font-['Anton'] text-[16px] leading-tight uppercase opacity-95">{v.subline1}</div>
+          <div className="font-['Anton'] text-[16px] leading-tight uppercase" style={{ color: accent }}>{v.subline2}</div>
         </div>
       </div>
 
-      {/* 100% ON-LINE badge */}
+      {/* Badge */}
       <div className="absolute right-3 top-[44%] z-10">
         <div className="w-[78px] h-[78px] rounded-full border-2 flex flex-col items-center justify-center text-center bg-black/60 backdrop-blur-sm"
           style={{ borderColor: accent, boxShadow: `0 0 24px ${accent}55` }}>
-          <div className="font-['Anton'] text-[18px] leading-none" style={{ color: accent }}>100%</div>
-          <div className="font-['Anton'] text-[10px] leading-tight" style={{ color: accent }}>ON-LINE</div>
-          <div className="text-[6px] opacity-80 tracking-widest mt-0.5">PRA VOCÊ</div>
+          <div className="font-['Anton'] text-[18px] leading-none" style={{ color: accent }}>{v.badge.top}</div>
+          <div className="font-['Anton'] text-[10px] leading-tight" style={{ color: accent }}>{v.badge.mid}</div>
+          <div className="text-[6px] opacity-80 tracking-widest mt-0.5">{v.badge.bot}</div>
         </div>
       </div>
 
       {/* Features */}
       <div className="relative z-10 mt-5 px-5 space-y-3 max-w-[58%]">
-        {features.map((f, i) => (
+        {v.features.map((f: any, i: number) => (
           <div key={i} className="flex gap-2.5 items-start">
-            <div className="w-9 h-9 rounded-full border-2 flex items-center justify-center shrink-0 bg-black/40"
-              style={{ borderColor: accent }}>
+            <div className="w-9 h-9 rounded-full border-2 flex items-center justify-center shrink-0 bg-black/40" style={{ borderColor: accent }}>
               <f.i className="h-4 w-4" style={{ color: accent }} />
             </div>
             <div className="leading-tight">
@@ -448,10 +444,9 @@ const ConsultoriaPoster = ({ config, coachName, cutoutUrl, accent: accentOverrid
         ))}
       </div>
 
-      {/* Phone + meal mockup — bottom right */}
+      {/* Phone + meal mockup */}
       <div className="absolute right-2 bottom-[150px] z-[6] flex items-end" style={{ filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.7))" }}>
-        <div className="relative w-[95px] h-[95px] -mr-7 mb-2 z-[7]"
-          style={{ filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.8))" }}>
+        <div className="relative w-[95px] h-[95px] -mr-7 mb-2 z-[7]" style={{ filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.8))" }}>
           <img src={pratoRefeicao} alt="" crossOrigin="anonymous" className="w-full h-full object-contain" draggable={false} />
         </div>
         <div className="relative w-[105px] h-[175px] bg-[#0d1117] rounded-[18px] border border-[#2a2a2a] overflow-hidden"
@@ -481,7 +476,7 @@ const ConsultoriaPoster = ({ config, coachName, cutoutUrl, accent: accentOverrid
         </div>
       </div>
 
-      {/* WhatsApp CTA box */}
+      {/* WhatsApp CTA */}
       <div className="absolute left-3 right-3 bottom-[78px] z-10 rounded-xl border px-3 py-2.5"
         style={{ borderColor: `${accent}80`, background: "rgba(0,0,0,0.55)" }}>
         <div className="flex items-center gap-2.5">
@@ -489,8 +484,8 @@ const ConsultoriaPoster = ({ config, coachName, cutoutUrl, accent: accentOverrid
             <MessageCircle className="h-5 w-5 text-white" fill="white" />
           </div>
           <div className="leading-tight">
-            <div className="font-bold text-[10px] uppercase tracking-wide" style={{ color: accent }}>VAMOS JUNTOS</div>
-            <div className="font-black text-[12px] uppercase tracking-wide">ALCANÇAR SEUS OBJETIVOS!</div>
+            <div className="font-bold text-[10px] uppercase tracking-wide" style={{ color: accent }}>{v.ctaTop}</div>
+            <div className="font-black text-[12px] uppercase tracking-wide">{v.ctaBig}</div>
           </div>
         </div>
         <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between">
@@ -504,10 +499,9 @@ const ConsultoriaPoster = ({ config, coachName, cutoutUrl, accent: accentOverrid
       {/* Bottom 4-icon strip */}
       <div className="absolute left-0 right-0 bottom-[34px] z-10 px-3">
         <div className="flex items-center justify-between gap-1 border-y border-white/15 py-2">
-          {bottomIcons.map((b, i) => (
+          {v.bottomIcons.map((b: any, i: number) => (
             <div key={i} className="flex items-center gap-1.5 flex-1">
-              <div className="w-6 h-6 rounded-md border flex items-center justify-center shrink-0"
-                style={{ borderColor: accent }}>
+              <div className="w-6 h-6 rounded-md border flex items-center justify-center shrink-0" style={{ borderColor: accent }}>
                 <b.i className="h-3 w-3" style={{ color: accent }} />
               </div>
               <div className="leading-tight">
@@ -522,20 +516,376 @@ const ConsultoriaPoster = ({ config, coachName, cutoutUrl, accent: accentOverrid
       {/* Footer tagline */}
       <div className="absolute left-0 right-0 bottom-2 z-10 text-center">
         <div className="text-[8px] tracking-[0.35em] uppercase opacity-80">
-          <span className="font-bold">DISCIPLINA HOJE,</span>{" "}
-          <span style={{ color: accent }} className="font-bold">LIBERDADE AMANHÃ.</span>
+          <span className="font-bold">{v.footerLeft},</span>{" "}
+          <span style={{ color: accent }} className="font-bold">{v.footerRight}.</span>
         </div>
       </div>
     </div>
   );
 };
 
-/* Variants — same poster, different accent colors */
-const TreinoDietaProTemplate  = (p: any) => <ConsultoriaPoster {...p} accent="#D4A24A" />;
-const ConsultoriaPhoneTemplate = (p: any) => <ConsultoriaPoster {...p} accent="#22D3EE" />;
-const YellowCyberTemplate     = (p: any) => <ConsultoriaPoster {...p} accent="#E0FF00" />;
-const DarkPurpleTemplate      = (p: any) => <ConsultoriaPoster {...p} accent="#BF00FF" />;
-const IronbergTemplate        = (p: any) => <ConsultoriaPoster {...p} accent="#CCFF00" />;
-const GradientFitTemplate     = (p: any) => <ConsultoriaPoster {...p} accent="#FB923C" />;
-const FeedBrutalistTemplate   = (p: any) => <ConsultoriaPoster {...p} accent="#EF4444" />;
+/* ============================================================
+   TEMPLATE — TREINO & DIETA PRO (original, com "TREINO / E DIETA")
+   ============================================================ */
+const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
+  const accent = config.branding_color || "#22D3EE";
+  const accentDark = "#0E7490";
+  const features = [
+    { i: Dumbbell, t: "TREINOS", s: "PERSONALIZADOS", d: "de acordo com\nseu objetivo" },
+    { i: Utensils, t: "DIETAS", s: "ADAPTADAS", d: "ao seu estilo de vida\ne rotina" },
+    { i: TrendingUp, t: "ACOMPANHAMENTO", s: "CONSTANTE", d: "suporte e ajustes\nsempre que precisar" },
+    { i: MessageCircle, t: "SUPORTE VIA APP", s: "E WHATSAPP", d: "fácil, prático e\nsempre à mão" },
+  ];
+  const grungeMask =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.5 1.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)'/%3E%3C/svg%3E\")";
+  const titleWhite: React.CSSProperties = {
+    backgroundImage: "linear-gradient(180deg, #ffffff 0%, #e8f6fa 55%, #b9d9e0 100%)",
+    WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+    WebkitTextStroke: "1px rgba(0,0,0,0.35)",
+    filter: "drop-shadow(2px 3px 0 rgba(0,0,0,0.55))",
+    WebkitMaskImage: grungeMask, maskImage: grungeMask,
+    WebkitMaskSize: "180px 180px", maskSize: "180px 180px",
+  };
+  const titleAccent: React.CSSProperties = {
+    backgroundImage: `linear-gradient(180deg, #a5f3fc 0%, ${accent} 55%, ${accentDark} 100%)`,
+    WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent",
+    WebkitTextStroke: "1px rgba(0,0,0,0.35)",
+    filter: "drop-shadow(2px 3px 0 rgba(0,0,0,0.55))",
+    WebkitMaskImage: grungeMask, maskImage: grungeMask,
+    WebkitMaskSize: "180px 180px", maskSize: "180px 180px",
+  };
+
+  return (
+    <div className="relative w-full h-full overflow-hidden text-white bg-[#0a0f14]">
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 30%, #1e2d3a 0%, #0a0f14 70%)" }} />
+      <div className="absolute inset-0 opacity-50 mix-blend-overlay pointer-events-none"
+        style={{ backgroundImage: "url(data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E)" }} />
+
+      {cutoutUrl && (
+        <div className="absolute right-[-8%] top-[2%] h-[68%] w-[68%] z-[2]">
+          <img src={cutoutUrl} alt="" className="h-full w-full object-contain object-right contrast-110 saturate-75"
+            style={{
+              filter: "drop-shadow(0 10px 30px rgba(0,0,0,0.7))",
+              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+            }} />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f14]/95 via-[#0a0f14]/20 to-transparent z-[3]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f14] via-transparent to-transparent z-[3]" />
+
+      <div className="relative z-10 pt-5 px-5">
+        <div className="text-[9px] font-bold tracking-[0.3em] opacity-85">TRANSFORME SEU CORPO.</div>
+        <div className="text-[9px] font-bold tracking-[0.3em] opacity-85">TRANSFORME SUA VIDA.</div>
+      </div>
+
+      <div className="relative z-10 px-5 mt-2">
+        <div className="font-['Anton'] text-[62px] leading-[0.85] uppercase tracking-tight" style={titleWhite}>TREINO</div>
+        <div className="font-['Anton'] text-[62px] leading-[0.85] uppercase tracking-tight mt-1" style={titleAccent}>E DIETA</div>
+        <div className="inline-block mt-2 px-3 py-1 font-['Anton'] text-[20px] uppercase tracking-wider text-black shadow-lg" style={{ background: accent }}>
+          PERSONALIZADOS
+        </div>
+        <div className="mt-2 inline-flex items-center gap-2 border-2 rounded-full px-3 py-1 bg-black/40" style={{ borderColor: "#ffffff30" }}>
+          <Wifi className="h-3.5 w-3.5" style={{ color: accent }} />
+          <span className="font-['Anton'] text-[16px] uppercase italic tracking-wide" style={{ color: accent }}>ONLINE</span>
+        </div>
+      </div>
+
+      <div className="absolute right-3 top-[40%] z-10 flex items-center gap-1.5 bg-black/70 border border-white/20 rounded-full px-2 py-1 backdrop-blur-sm">
+        <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center" style={{ borderColor: accent }}>
+          <Check className="h-2.5 w-2.5" style={{ color: accent }} />
+        </div>
+        <div className="leading-none">
+          <div className="font-['Anton'] text-[14px]" style={{ color: accent }}>100%</div>
+          <div className="text-[6px] tracking-widest opacity-80">ACOMPANHAMENTO<br />INDIVIDUAL</div>
+        </div>
+      </div>
+
+      <div className="relative z-10 px-5 mt-4">
+        <div className="font-['Anton'] text-[18px] leading-tight uppercase">RESULTADOS REAIS,</div>
+        <div className="font-['Anton'] text-[18px] leading-tight uppercase">ONDE VOCÊ ESTIVER!</div>
+      </div>
+
+      <div className="relative z-10 mt-3 px-5 space-y-2.5 max-w-[58%]">
+        {features.map((f, i) => (
+          <div key={i} className="flex gap-2.5 items-start">
+            <div className="w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 bg-black/40" style={{ borderColor: accent }}>
+              <f.i className="h-3.5 w-3.5" style={{ color: accent }} />
+            </div>
+            <div className="leading-tight">
+              <div className="font-bold text-[10px] uppercase tracking-wide">{f.t}</div>
+              <div className="font-black text-[11px] uppercase tracking-wide">{f.s}</div>
+              <div className="text-[8px] opacity-75 mt-0.5 whitespace-pre-line">{f.d}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="absolute right-2 bottom-[110px] z-[6] flex items-end" style={{ filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.7))" }}>
+        <div className="relative w-[110px] h-[110px] -mr-8 mb-2 z-[7]" style={{ filter: "drop-shadow(0 8px 16px rgba(0,0,0,0.8))" }}>
+          <img src={pratoRefeicao} alt="" crossOrigin="anonymous" className="w-full h-full object-contain" draggable={false} />
+        </div>
+        <div className="relative w-[120px] h-[200px] bg-[#0d1117] rounded-[20px] border border-[#2a2a2a] overflow-hidden"
+          style={{ boxShadow: "inset 0 0 0 2px #1a1a1a, 0 8px 24px rgba(0,0,0,0.8)" }}>
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-2 bg-black rounded-b-lg z-10" />
+          <div className="absolute inset-0 pt-5 px-2 pb-2 flex flex-col gap-1.5 text-[6px]">
+            <div className="font-['Anton'] text-[11px] uppercase tracking-wide pt-1 px-1" style={{ color: accent }}>PLANO DO DIA</div>
+            <div className="bg-white/[0.04] rounded-md p-1.5 space-y-1">
+              <div className="flex items-center gap-1 pb-0.5 border-b border-white/10">
+                <Dumbbell className="h-2 w-2" style={{ color: accent }} />
+                <span className="font-bold text-[6px] uppercase tracking-wider opacity-90">TREINO</span>
+              </div>
+              <div className="text-[6px] font-bold opacity-95">Peito e Tríceps</div>
+              <div className="flex justify-between text-[5.5px] opacity-80"><span>Supino Reto</span><span className="opacity-70">4x 10-12</span></div>
+              <div className="flex justify-between text-[5.5px] opacity-80"><span>Crucifixo</span><span className="opacity-70">3x 12-15</span></div>
+            </div>
+            <div className="bg-white/[0.04] rounded-md p-1.5 space-y-1">
+              <div className="flex items-center gap-1 pb-0.5 border-b border-white/10">
+                <Utensils className="h-2 w-2" style={{ color: accent }} />
+                <span className="font-bold text-[6px] uppercase tracking-wider opacity-90">DIETA</span>
+              </div>
+              <div className="flex justify-around gap-1 pt-0.5">
+                {[{ l: "PROT", v: "150g" }, { l: "CARB", v: "200g" }, { l: "GORD", v: "60g" }].map((m, i) => (
+                  <div key={i} className="flex-1 text-center">
+                    <div className="text-[4.5px] opacity-60 tracking-wider">{m.l}</div>
+                    <div className="rounded-full border border-white/15 mt-0.5 py-0.5 text-[6px] font-black">{m.v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-md py-1 text-center text-[6px] font-black uppercase text-black mt-auto" style={{ background: accent }}>
+              VER PLANO COMPLETO
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-3 pt-4 bg-gradient-to-t from-[#0a0f14] via-[#0a0f14]/95 to-transparent">
+        <div className="flex items-start gap-3">
+          <div className="flex items-start gap-2 bg-black/70 border border-white/15 rounded-md px-2.5 py-2 flex-1">
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#25D366" }}>
+              <MessageCircle className="h-3.5 w-3.5 text-white" fill="white" />
+            </div>
+            <div className="leading-tight">
+              <div className="font-bold text-[9px] uppercase">COMECE HOJE</div>
+              <div className="font-black text-[10px] uppercase">SUA TRANSFORMAÇÃO!</div>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10">
+          <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider opacity-90">
+            <Lock className="h-3 w-3" style={{ color: accent }} /> VAGAS LIMITADAS!
+          </div>
+          <div className="text-right leading-tight">
+            <div className="text-[8px] opacity-60 tracking-widest">{coachName}</div>
+            <div className="flex items-center gap-1 justify-end text-[9px] font-bold">
+              <AtSign className="h-2.5 w-2.5" style={{ color: accent }} />{config.instagram_handle}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   POSTER VARIANTS — same scaffold, different title + accent + copy
+   ============================================================ */
+const ConsultoriaOnlineTemplate = (p: any) => (
+  <PosterScaffold {...p} v={{
+    accent: "#D4A24A",
+    preHeadline: "CONSULTORIA",
+    headlineBig: "ON-LINE",
+    headlineBigItalic: true,
+    headlineSub: "DE TREINO E DIETA",
+    subline1: "RESULTADOS REAIS,",
+    subline2: "ONDE VOCÊ ESTIVER.",
+    badge: { top: "100%", mid: "ON-LINE", bot: "PRA VOCÊ" },
+    features: [
+      { i: Dumbbell, t: "TREINOS", s: "PERSONALIZADOS", d: "Planejamentos adaptados\nao seu objetivo,\nnível e rotina." },
+      { i: Utensils, t: "DIETAS", s: "INDIVIDUALIZADAS", d: "Planos práticos e flexíveis,\nde acordo com\nsuas necessidades." },
+      { i: Phone, t: "ACOMPANHAMENTO", s: "PRÓXIMO", d: "Suporte contínuo para\najustes, dúvidas\ne motivação." },
+      { i: TrendingUp, t: "RESULTADOS", s: "COMPROVADOS", d: "Mais performance, saúde\ne a melhor versão\nde você." },
+    ],
+    ctaTop: "VAMOS JUNTOS",
+    ctaBig: "ALCANÇAR SEUS OBJETIVOS!",
+    bottomIcons: [
+      { i: Check, t1: "TREINE NO SEU", t2: "TEMPO" },
+      { i: Target, t1: "DE ONDE", t2: "ESTIVER" },
+      { i: Target, t1: "FOCO NO QUE", t2: "IMPORTA" },
+      { i: Trophy, t1: "DISCIPLINA", t2: "RESULTADOS" },
+    ],
+    footerLeft: "DISCIPLINA HOJE",
+    footerRight: "LIBERDADE AMANHÃ",
+  }} />
+);
+
+const ConsultoriaPhoneTemplate = (p: any) => (
+  <PosterScaffold {...p} v={{
+    accent: "#22D3EE",
+    preHeadline: "MÉTODO",
+    headlineBig: "EXCLUSIVO",
+    headlineSub: "PARA SUA EVOLUÇÃO",
+    subline1: "PROTOCOLO ÚNICO,",
+    subline2: "FEITO PARA VOCÊ.",
+    badge: { top: "MÉTODO", mid: "ÚNICO", bot: "EXCLUSIVO" },
+    features: [
+      { i: Target, t: "PROTOCOLO", s: "ESTRUTURADO", d: "Etapas claras\ndo início ao\nresultado final." },
+      { i: Dumbbell, t: "TREINO", s: "INTELIGENTE", d: "Volume e intensidade\ncalibrados pra você." },
+      { i: Apple, t: "NUTRIÇÃO", s: "ESTRATÉGICA", d: "Cardápio prático\nque cabe na sua\nrotina." },
+      { i: Zap, t: "EVOLUÇÃO", s: "MENSURÁVEL", d: "Métricas reais\nde performance\ne composição." },
+    ],
+    ctaTop: "BORA COMEÇAR",
+    ctaBig: "SUA EVOLUÇÃO HOJE!",
+    bottomIcons: [
+      { i: Target, t1: "MÉTODO", t2: "VALIDADO" },
+      { i: TrendingUp, t1: "EVOLUÇÃO", t2: "REAL" },
+      { i: Zap, t1: "ALTA", t2: "PERFORMANCE" },
+      { i: Trophy, t1: "RESULTADO", t2: "GARANTIDO" },
+    ],
+    footerLeft: "MÉTODO COMPROVADO",
+    footerRight: "RESULTADO INEVITÁVEL",
+  }} />
+);
+
+const YellowCyberTemplate = (p: any) => (
+  <PosterScaffold {...p} v={{
+    accent: "#E0FF00",
+    preHeadline: "TRANSFORMAÇÃO",
+    headlineBig: "TOTAL",
+    headlineSub: "CORPO E MENTE",
+    subline1: "VOCÊ NO COMANDO,",
+    subline2: "DO INÍCIO AO FIM.",
+    badge: { top: "12", mid: "SEMANAS", bot: "DE FOCO" },
+    features: [
+      { i: Flame, t: "QUEIMA", s: "DE GORDURA", d: "Estratégia agressiva\npra emagrecer\ncom saúde." },
+      { i: Dumbbell, t: "GANHO", s: "DE MASSA", d: "Hipertrofia real\ncom volume\nprogressivo." },
+      { i: Heart, t: "SAÚDE", s: "EM 1º LUGAR", d: "Mais energia,\nsono e\ndisposição." },
+      { i: Sparkles, t: "MENTALIDADE", s: "DE ATLETA", d: "Foco, disciplina\ne consistência\ndiária." },
+    ],
+    ctaTop: "CHEGOU SUA VEZ",
+    ctaBig: "DE SE TRANSFORMAR!",
+    bottomIcons: [
+      { i: Flame, t1: "QUEIMA", t2: "GORDURA" },
+      { i: Dumbbell, t1: "GANHA", t2: "MÚSCULO" },
+      { i: Heart, t1: "MAIS", t2: "ENERGIA" },
+      { i: Trophy, t1: "NOVA", t2: "VERSÃO" },
+    ],
+    footerLeft: "TRANSFORME O CORPO",
+    footerRight: "MUDE A VIDA",
+  }} />
+);
+
+const DarkPurpleTemplate = (p: any) => (
+  <PosterScaffold {...p} v={{
+    accent: "#BF00FF",
+    preHeadline: "ELITE",
+    headlineBig: "PERFORMANCE",
+    headlineSub: "PARA QUEM QUER MAIS",
+    subline1: "ALTO NÍVEL,",
+    subline2: "SEM ATALHOS.",
+    badge: { top: "TOP", mid: "1%", bot: "ELITE" },
+    features: [
+      { i: Trophy, t: "MENTALIDADE", s: "DE CAMPEÃO", d: "Pensamento de\nalta performance\ntodo dia." },
+      { i: Dumbbell, t: "TREINO", s: "DE ELITE", d: "Periodização\nde atleta\nprofissional." },
+      { i: Apple, t: "NUTRIÇÃO", s: "AVANÇADA", d: "Estratégia\nalimentar\nde competidor." },
+      { i: TrendingUp, t: "EVOLUÇÃO", s: "CONSTANTE", d: "Métricas e\najustes\nsemanais." },
+    ],
+    ctaTop: "ENTRE PRA ELITE",
+    ctaBig: "DOS QUE FAZEM ACONTECER!",
+    bottomIcons: [
+      { i: Trophy, t1: "TOP", t2: "PERFORMANCE" },
+      { i: Target, t1: "FOCO", t2: "TOTAL" },
+      { i: Zap, t1: "INTENSIDADE", t2: "MÁXIMA" },
+      { i: Sparkles, t1: "MENTALIDADE", t2: "DE ELITE" },
+    ],
+    footerLeft: "ELITE NÃO É SORTE",
+    footerRight: "É CONSTÂNCIA",
+  }} />
+);
+
+const IronbergTemplate = (p: any) => (
+  <PosterScaffold {...p} v={{
+    accent: "#CCFF00",
+    preHeadline: "FORÇA",
+    headlineBig: "& FOCO",
+    headlineSub: "SEM DESCULPAS",
+    subline1: "DISCIPLINA DE FERRO,",
+    subline2: "RESULTADO DE OURO.",
+    badge: { top: "100%", mid: "FOCO", bot: "TOTAL" },
+    features: [
+      { i: Dumbbell, t: "FORÇA", s: "PROGRESSIVA", d: "Carga aumentando\nsemana após\nsemana." },
+      { i: Flame, t: "INTENSIDADE", s: "CONTROLADA", d: "Cada treino\nno limite\ncerto." },
+      { i: Target, t: "FOCO", s: "INABALÁVEL", d: "Sem distração,\nsó o\nobjetivo." },
+      { i: Trophy, t: "RESULTADO", s: "INEVITÁVEL", d: "Consistência\nvira\nconquista." },
+    ],
+    ctaTop: "BORA TREINAR",
+    ctaBig: "SEM DESCULPAS!",
+    bottomIcons: [
+      { i: Dumbbell, t1: "FORÇA", t2: "REAL" },
+      { i: Flame, t1: "INTENSIDADE", t2: "MÁXIMA" },
+      { i: Target, t1: "FOCO", t2: "TOTAL" },
+      { i: Trophy, t1: "RESULTADO", t2: "GARANTIDO" },
+    ],
+    footerLeft: "DOR HOJE",
+    footerRight: "ORGULHO AMANHÃ",
+  }} />
+);
+
+const GradientFitTemplate = (p: any) => (
+  <PosterScaffold {...p} v={{
+    accent: "#FB923C",
+    preHeadline: "ALTA",
+    headlineBig: "PERFORMANCE",
+    headlineSub: "PRA VOCÊ EVOLUIR",
+    subline1: "MAIS RÁPIDO,",
+    subline2: "MAIS LONGE.",
+    badge: { top: "2X", mid: "MAIS", bot: "RÁPIDO" },
+    features: [
+      { i: Zap, t: "ENERGIA", s: "EM ALTA", d: "Mais disposição\nno dia\na dia." },
+      { i: TrendingUp, t: "PROGRESSO", s: "ACELERADO", d: "Resultado\nvisível\nem semanas." },
+      { i: Dumbbell, t: "TREINO", s: "OTIMIZADO", d: "Cada série\ncom\npropósito." },
+      { i: Apple, t: "DIETA", s: "EFICIENTE", d: "Comida\nque rende\ne sacia." },
+    ],
+    ctaTop: "ACELERE AGORA",
+    ctaBig: "SUA TRANSFORMAÇÃO!",
+    bottomIcons: [
+      { i: Zap, t1: "ENERGIA", t2: "MÁXIMA" },
+      { i: TrendingUp, t1: "EVOLUÇÃO", t2: "RÁPIDA" },
+      { i: Target, t1: "FOCO", t2: "CIRÚRGICO" },
+      { i: Trophy, t1: "RESULTADO", t2: "REAL" },
+    ],
+    footerLeft: "VELOCIDADE COM TÉCNICA",
+    footerRight: "EVOLUÇÃO REAL",
+  }} />
+);
+
+const FeedBrutalistTemplate = (p: any) => (
+  <PosterScaffold {...p} v={{
+    accent: "#EF4444",
+    preHeadline: "RESULTADO",
+    headlineBig: "REAL",
+    headlineSub: "SEM ENROLAÇÃO",
+    subline1: "PROMESSA HONESTA,",
+    subline2: "ENTREGA COMPROVADA.",
+    badge: { top: "+500", mid: "ALUNOS", bot: "REAIS" },
+    features: [
+      { i: Check, t: "RESULTADO", s: "COMPROVADO", d: "Centenas de\ncases reais\ndocumentados." },
+      { i: Heart, t: "SAÚDE", s: "EM 1º LUGAR", d: "Sem fórmula\nmágica, só\nciência." },
+      { i: Dumbbell, t: "TREINO", s: "DE VERDADE", d: "Estímulo\ncerto pra\nseu corpo." },
+      { i: Apple, t: "DIETA", s: "QUE FUNCIONA", d: "Sem dieta\nmaluca, só\nestratégia." },
+    ],
+    ctaTop: "CHEGA DE ENROLAÇÃO",
+    ctaBig: "BORA PRO RESULTADO!",
+    bottomIcons: [
+      { i: Check, t1: "RESULTADO", t2: "REAL" },
+      { i: Heart, t1: "SAÚDE", t2: "EM 1º" },
+      { i: Target, t1: "ESTRATÉGIA", t2: "CLARA" },
+      { i: Trophy, t1: "ENTREGA", t2: "GARANTIDA" },
+    ],
+    footerLeft: "SEM PROMESSA VAZIA",
+    footerRight: "SÓ RESULTADO REAL",
+  }} />
+);
+
 
