@@ -12,6 +12,66 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const stripAccents = (s: string) =>
+  String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+const extractJsonObject = (text: string) => {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) return null;
+  try { return JSON.parse(trimmed); } catch {}
+  const match = trimmed.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try { return JSON.parse(match[0]); } catch { return null; }
+};
+
+const fallbackExercises = (dia: string, biblioteca: any[]) => {
+  const normalizedDay = stripAccents(dia);
+  const pick = (terms: string[], defaults: string[]) => {
+    const found = biblioteca
+      .filter((e: any) => terms.some((t) => stripAccents(`${e?.nome || ""} ${e?.grupo_muscular || ""}`).includes(t)))
+      .slice(0, defaults.length)
+      .map((e: any) => e.nome)
+      .filter(Boolean);
+    return found.length >= 3 ? found : defaults;
+  };
+  const names = normalizedDay.includes("peito")
+    ? [...pick(["peito", "supino", "crucifixo", "crossover"], ["Supino Reto", "Supino Inclinado", "Crucifixo", "Crossover"]), ...pick(["triceps", "tríceps"], ["Tríceps Polia", "Tríceps Testa"])]
+    : normalizedDay.includes("costa") || normalizedDay.includes("pull")
+      ? [...pick(["costas", "dorsal", "remada", "puxada"], ["Puxada Frente", "Remada Baixa", "Remada Curvada", "Pulldown"]), ...pick(["biceps", "bíceps"], ["Rosca Direta", "Rosca Alternada"])]
+      : normalizedDay.includes("glute") || normalizedDay.includes("posterior")
+        ? pick(["glute", "posterior", "stiff", "pelvica", "flexora"], ["Elevação Pélvica", "Stiff", "Mesa Flexora", "Cadeira Abdutora", "Coice na Polia"])
+        : normalizedDay.includes("quad") || normalizedDay.includes("perna") || normalizedDay.includes("legs")
+          ? pick(["quadriceps", "perna", "agach", "leg", "extensora", "panturrilha"], ["Agachamento Livre", "Leg Press", "Cadeira Extensora", "Afundo", "Panturrilha em Pé"])
+          : normalizedDay.includes("ombro") || normalizedDay.includes("push")
+            ? pick(["ombro", "desenvolvimento", "elevacao", "elevação"], ["Desenvolvimento", "Elevação Lateral", "Elevação Posterior", "Encolhimento"])
+            : pick([], ["Agachamento Livre", "Supino Reto", "Puxada Frente", "Desenvolvimento", "Rosca Direta"]);
+
+  return names.slice(0, 6).map((nome, idx) => ({
+    nome,
+    series: idx === 0 ? "2x Série de Aquecimento + 1x Série de Ajuste + 2x Série de Trabalho" : "1x Série de Aquecimento + 1x Série de Ajuste + 2x Série de Trabalho",
+    repeticoes: "8-12",
+    cadencia: "3-1-X-0",
+    detalhes_execucao: "Aquecimento leve, série de ajuste sem falha e séries de trabalho com execução controlada até próximo da falha técnica.",
+    observacao: "Rascunho automático para revisão do coach; ajuste cargas, ordem e técnicas antes de enviar.",
+  }));
+};
+
+const buildFallbackWorkout = (divisoes: string[] | null, biblioteca: any[]) => ({
+  dias: (divisoes && divisoes.length > 0 ? divisoes : ["Treino A", "Treino B", "Treino C"]).map((dia) => ({
+    dia,
+    exercicios: fallbackExercises(dia, Array.isArray(biblioteca) ? biblioteca : []),
+  })),
+  cardio: "Cardio pós-treino: 20 minutos em intensidade moderada.",
+  fallback: true,
+  error: "A IA ficou temporariamente indisponível; geramos um rascunho técnico para revisão.",
+});
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
