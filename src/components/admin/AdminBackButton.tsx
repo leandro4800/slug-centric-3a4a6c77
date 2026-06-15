@@ -38,16 +38,28 @@ export const AdminBackButton = ({
   const location = useLocation();
   const { slug } = useParams<{ slug: string }>();
 
+  const getAdminFallbackPath = () => {
+    if (!slug) return null;
+    const adminBase = `/${slug}/admin`;
+    const path = location.pathname.replace(/\/$/, "");
+
+    if (path === `${adminBase}/atletas`) return `/${slug}/app/controle`;
+    if (path.startsWith(`${adminBase}/atleta/`)) return `${adminBase}/atletas`;
+    if (path.startsWith(adminBase)) return `/${slug}/app/controle`;
+
+    return null;
+  };
+
   const handleBack = (event?: MouseEvent<HTMLButtonElement>) => {
     event?.preventDefault();
     event?.stopPropagation();
 
+    const adminFallbackPath = getAdminFallbackPath();
+
     if (to) {
       navigate(to, { replace: true });
-    } else if (slug && location.pathname.includes(`/${slug}/admin/atleta/`)) {
-      navigate(`/${slug}/admin/atletas`, { replace: true });
-    } else if (slug && location.pathname.includes(`/${slug}/admin`)) {
-      navigate(`/${slug}/admin/atletas`, { replace: true });
+    } else if (adminFallbackPath) {
+      navigate(adminFallbackPath, { replace: true });
     } else if (window.history.length > 1) {
       navigate(-1);
     } else if (slug) {

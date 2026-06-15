@@ -160,7 +160,7 @@ const AtletaDetalhe = () => {
   const [iaPrompt, setIaPrompt] = useState("");
   const [showPrescricaoViewer, setShowPrescricaoViewer] = useState(false);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const action = searchParams.get("action");
   const openEval = searchParams.get("openEval");
 
@@ -541,12 +541,22 @@ const AtletaDetalhe = () => {
       setPromptType("treino");
       setIaPrompt("");
       setShowPromptDialog(true);
+      setSearchParams((params) => {
+        const next = new URLSearchParams(params);
+        next.delete("action");
+        return next;
+      }, { replace: true });
     } else if (action === "generate-diet" && canGenerate && !loading) {
       setPromptType("dieta");
       setIaPrompt("");
       setShowPromptDialog(true);
+      setSearchParams((params) => {
+        const next = new URLSearchParams(params);
+        next.delete("action");
+        return next;
+      }, { replace: true });
     }
-  }, [action, canGenerate, loading]);
+  }, [action, canGenerate, loading, setSearchParams]);
 
   if (loading) {
     return (
@@ -560,7 +570,7 @@ const AtletaDetalhe = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-3">
         <p className="text-muted-foreground">Atleta não encontrado.</p>
-        <Button onClick={() => navigate(`/${slug}/admin/atletas`)}>Voltar</Button>
+        <Button type="button" onClick={() => navigate(`/${slug}/admin/atletas`, { replace: true })}>Voltar</Button>
       </div>
     );
   }
@@ -611,10 +621,12 @@ const AtletaDetalhe = () => {
         <div className="absolute top-0 inset-x-0 px-4 pt-4 z-10 flex flex-col gap-2">
           <div className="flex items-center justify-between gap-2">
             <AdminBackButton
+              to={`/${slug}/admin/atletas`}
               className="w-10 h-10 rounded-full bg-background/70 backdrop-blur shrink-0"
             />
             <button
-              onClick={() => navigate(`/${slug}/admin/atletas`)}
+              type="button"
+              onClick={() => navigate(`/${slug}/admin/atletas`, { replace: true })}
               className="flex items-center gap-1.5 px-3 h-9 rounded-full bg-background/70 backdrop-blur border border-white/10 text-foreground text-[10px] font-bold uppercase tracking-wider hover:bg-background"
             >
               <ChevronLeft className="h-3.5 w-3.5" /> Atletas

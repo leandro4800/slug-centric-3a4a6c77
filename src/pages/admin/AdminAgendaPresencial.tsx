@@ -139,7 +139,7 @@ const AdminAgendaPresencial = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 px-6 py-4 flex items-center gap-4 sticky top-0 bg-black/95 z-10">
-        <AdminBackButton to={`/${slug}/admin`} />
+        <AdminBackButton to={`/${slug}/app/controle`} />
         <h1 className="font-display text-xl uppercase tracking-wider">Agenda — Presencial</h1>
       </header>
 
