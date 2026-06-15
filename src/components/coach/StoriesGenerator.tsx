@@ -527,6 +527,7 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
         <div className="text-[8px] tracking-[0.35em] uppercase opacity-80">
           <span className="font-bold">{v.footerLeft},</span>{" "}
           <span style={{ color: accent }} className="font-bold">{v.footerRight}.</span>
+          {config.website_url && <span className="opacity-70"> · {config.website_url}</span>}
         </div>
       </div>
     </div>
