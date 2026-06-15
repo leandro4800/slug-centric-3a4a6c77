@@ -582,15 +582,15 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
         <div className="text-[9px] font-bold tracking-[0.3em] opacity-85">TRANSFORME SUA VIDA.</div>
       </div>
 
-      <div className="relative z-10 px-5 mt-2">
-        <div className="font-['Anton'] text-[62px] leading-[0.85] uppercase tracking-tight" style={titleWhite}>TREINO</div>
-        <div className="font-['Anton'] text-[62px] leading-[0.85] uppercase tracking-tight mt-1" style={titleAccent}>E DIETA</div>
-        <div className="inline-block mt-2 px-3 py-1 font-['Anton'] text-[20px] uppercase tracking-wider text-black shadow-lg" style={{ background: accent }}>
+      <div className="relative z-10 px-5 mt-2 max-w-[60%]">
+        <div className="font-['Anton'] text-[46px] leading-[0.85] uppercase tracking-tight" style={titleWhite}>TREINO</div>
+        <div className="font-['Anton'] text-[46px] leading-[0.85] uppercase tracking-tight mt-1" style={titleAccent}>E DIETA</div>
+        <div className="inline-block mt-2 px-2.5 py-0.5 font-['Anton'] text-[16px] uppercase tracking-wider text-black shadow-lg" style={{ background: accent }}>
           PERSONALIZADOS
         </div>
-        <div className="mt-2 inline-flex items-center gap-2 border-2 rounded-full px-3 py-1 bg-black/40" style={{ borderColor: "#ffffff30" }}>
-          <Wifi className="h-3.5 w-3.5" style={{ color: accent }} />
-          <span className="font-['Anton'] text-[16px] uppercase italic tracking-wide" style={{ color: accent }}>ONLINE</span>
+        <div className="mt-2 inline-flex items-center gap-2 border-2 rounded-full px-2.5 py-0.5 bg-black/40" style={{ borderColor: "#ffffff30" }}>
+          <Wifi className="h-3 w-3" style={{ color: accent }} />
+          <span className="font-['Anton'] text-[13px] uppercase italic tracking-wide" style={{ color: accent }}>ONLINE</span>
         </div>
       </div>
 
