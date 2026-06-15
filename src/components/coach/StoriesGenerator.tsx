@@ -32,9 +32,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type TemplateId = "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
+type TemplateId = "treino-dieta-pro" | "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; format: "9:16" | "1:1" }[] = [
+  { id: "treino-dieta-pro", label: "Treino & Dieta Pro", desc: "Pôster fitness com IA (cyan)", accent: "#22D3EE", format: "9:16" },
   { id: "consultoria-phone", label: "Consultoria Online", desc: "Mockup de celular + amarelo", accent: "#FACC15", format: "9:16" },
   { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00", format: "9:16" },
   { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF", format: "9:16" },
