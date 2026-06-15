@@ -606,7 +606,7 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
           <Check className="h-2.5 w-2.5" style={{ color: accent }} />
         </div>
         <div className="leading-none">
-          <div className="font-['Anton'] text-[14px]" style={{ color: accent }}>100%</div>
+          <div className="font-['Anton'] text-[14px]" style={{ color: accent }}>{(config.discount?.trim()) || "100%"}</div>
           <div className="text-[6px] tracking-widest opacity-80">ACOMPANHAMENTO<br />INDIVIDUAL</div>
         </div>
       </div>
