@@ -456,16 +456,19 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
         method: "POST",
         headers: {
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Lovable-API-Key": LOVABLE_API_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
           tools,
           tool_choice: { type: "function", function: { name: "montar_treino" } },
+          response_format: { type: "json_object" },
+          temperature: 0.35,
         }),
       });
 
@@ -494,15 +497,14 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "A IA está temporariamente indisponível. Tente novamente em alguns segundos." }), {
-        status: 503,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
     const data = await resp.json();
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
-    const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : null;
+    const content = data.choices?.[0]?.message?.content;
+    let args = call?.function?.arguments ? extractJsonObject(call.function.arguments) : null;
+    if (!args && content) args = extractJsonObject(content);
 
     if (nivelKey !== "iniciante" && Array.isArray(args?.dias) && args.dias.some((d: any) => hasFullBody(String(d?.dia || "")))) {
       return new Response(JSON.stringify({ error: "A IA tentou gerar Full Body para um aluno intermediário/avançado. Ajuste a divisão e gere novamente." }), {
@@ -533,10 +535,7 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
 
     if (!args || !Array.isArray(args.dias) || args.dias.length === 0) {
       console.error("IA retornou sem dias", { raw: data });
-      return new Response(JSON.stringify({ error: "A IA não retornou exercícios. Tente novamente." }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
     return new Response(JSON.stringify(args), {
