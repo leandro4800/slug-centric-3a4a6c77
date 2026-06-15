@@ -111,12 +111,16 @@ export const ExerciseCard = ({
 
       try {
         const exerciseName = data.exercicio.trim();
+        // RLS já restringe a globais (tenant_id NULL) + vídeos do tenant do usuário.
+        // Ordena por tenant_id desc (NULLs por último) para priorizar o vídeo do coach sobre o global.
         const { data: refData, error } = await supabase
           .from('referencia_exercicios')
-          .select('url_video')
+          .select('url_video, tenant_id')
           .ilike('nome_exercicio', exerciseName)
+          .not('url_video', 'is', null)
+          .order('tenant_id', { ascending: false, nullsFirst: false })
           .limit(1);
-        
+
         if (!error && refData && refData.length > 0) {
           setReferenceVideoUrl(refData[0].url_video);
         }
