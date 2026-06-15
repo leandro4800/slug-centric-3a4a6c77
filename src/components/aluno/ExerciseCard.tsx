@@ -138,13 +138,10 @@ export const ExerciseCard = ({
   const processTranscript = (rawTranscript: string, index: number) => {
     const transcript = (rawTranscript || "").toLowerCase();
 
-    const bulkKeyword = /\b(todas?|tudo|todas as series|todas as séries|todos os slots|todas iguais)\b/i.test(transcript);
-    const qtdMatch = transcript.match(/(\d+)\s*(?:s[eé]ries?|sets?)/i);
-
     const cargaRegexes = [
       /(\d+(?:[.,]\d+)?)\s*(?:kg|quilos?|kilos?)/i,
-      /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?carga/i,
       /carga\s*(?:de\s+)?(\d+(?:[.,]\d+)?)/i,
+      /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?carga/i,
       /(\d+(?:[.,]\d+)?)\s*(?:de\s+)?peso/i,
     ];
     const repsRegexes = [
@@ -152,51 +149,97 @@ export const ExerciseCard = ({
       /(?:repeti[cç][õo]es?|reps?|movimentos?|vezes?)\s*(?:de\s+)?(\d+)/i,
     ];
 
-    let carga = "";
-    let reps = "";
-    for (const r of cargaRegexes) { const m = transcript.match(r); if (m) { carga = m[1].replace(",", "."); break; } }
-    for (const r of repsRegexes) { const m = transcript.match(r); if (m) { reps = m[1]; break; } }
+    const detectTipo = (txt: string): string | null =>
+      /trabalho/i.test(txt) ? "Trabalho" :
+      /aquecimento|aquec/i.test(txt) ? "Aquecimento" :
+      /ajuste/i.test(txt) ? "Ajuste" : null;
 
-    if (!reps && !carga) {
-      const numbers = (transcript.match(/\d+(?:[.,]\d+)?/g) || [])
-        .map((n) => n.replace(",", ""))
-        .filter((n) => !(qtdMatch && n === qtdMatch[1]));
-      if (numbers.length === 1) {
-        const n = parseFloat(numbers[0]);
-        if (n <= 30) reps = numbers[0]; else carga = numbers[0];
-      } else if (numbers.length >= 2) {
-        const n1 = parseFloat(numbers[0]);
-        const n2 = parseFloat(numbers[1]);
-        if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
-        else { reps = numbers[0]; carga = numbers[1]; }
+    const parseSegment = (txt: string) => {
+      const qtdMatch = txt.match(/(\d+)\s*(?:s[eé]ries?|sets?)/i);
+      const tipo = detectTipo(txt);
+      let carga = "";
+      let reps = "";
+      for (const r of cargaRegexes) { const m = txt.match(r); if (m) { carga = m[1].replace(",", "."); break; } }
+      for (const r of repsRegexes) { const m = txt.match(r); if (m) { reps = m[1]; break; } }
+
+      if (!reps && !carga) {
+        const numbers = (txt.match(/\d+(?:[.,]\d+)?/g) || [])
+          .map((n) => n.replace(",", ""))
+          .filter((n) => !(qtdMatch && n === qtdMatch[1]));
+        if (numbers.length === 1) {
+          const n = parseFloat(numbers[0]);
+          if (n <= 30) reps = numbers[0]; else carga = numbers[0];
+        } else if (numbers.length >= 2) {
+          const n1 = parseFloat(numbers[0]);
+          const n2 = parseFloat(numbers[1]);
+          if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
+          else { reps = numbers[0]; carga = numbers[1]; }
+        }
       }
+      const qtd = qtdMatch ? parseInt(qtdMatch[1]) : (tipo ? 1 : null);
+      return { tipo, qtd, carga, reps };
+    };
+
+    // Quebra em segmentos por conectores (" e ", vírgula, ponto, ponto-e-vírgula)
+    const rawSegments = transcript
+      .split(/\s+e\s+|[,.;]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    // Mantém apenas segmentos que tenham tipo + (reps ou carga)
+    const parsedAll = rawSegments
+      .map(parseSegment)
+      .filter((p) => p.tipo && (p.reps || p.carga));
+
+    // Modo multi-segmento: pelo menos 2 blocos com tipo
+    if (index === -1 && parsedAll.length >= 2) {
+      const used: Record<string, number> = {};
+      const totalPreenchido: string[] = [];
+      setSlots((prev: any[]) => {
+        const next = [...prev];
+        parsedAll.forEach((p) => {
+          if (!p.tipo) return;
+          const indices = slotTypes.map((t, i) => t === p.tipo ? i : -1).filter((i) => i >= 0);
+          const start = used[p.tipo] || 0;
+          const restante = indices.length - start;
+          const qtd = Math.min(p.qtd ?? restante, restante);
+          for (let k = 0; k < qtd; k++) {
+            const idx = indices[start + k];
+            if (idx == null) break;
+            next[idx] = { ...next[idx], reps: p.reps || next[idx].reps, carga: p.carga || next[idx].carga };
+          }
+          used[p.tipo] = start + qtd;
+          if (qtd > 0) totalPreenchido.push(`${qtd} ${p.tipo.toLowerCase()}`);
+        });
+        return next;
+      });
+      toast.success(`Preenchido: ${totalPreenchido.join(", ")}`, { id: "voice-toast" });
+      return;
     }
 
-    const isBulk = index === -1 || bulkKeyword || !!qtdMatch;
-
-    // Detecta tipo específico ("trabalho", "aquecimento", "ajuste")
-    const tipoFilter: string | null =
-      /trabalho/i.test(transcript) ? "Trabalho" :
-      /aquecimento|aquec/i.test(transcript) ? "Aquecimento" :
-      /ajuste/i.test(transcript) ? "Ajuste" : null;
+    // Fallback: comportamento original (segmento único)
+    const single = parseSegment(transcript);
+    const { tipo: tipoFilter, qtd: qtdNum, carga, reps } = single;
+    const qtdMatch = transcript.match(/(\d+)\s*(?:s[eé]ries?|sets?)/i);
+    const bulkKeyword = /\b(todas?|tudo|todas as series|todas as séries|todos os slots|todas iguais)\b/i.test(transcript);
+    const isBulk = index === -1 || bulkKeyword || !!qtdMatch || !!tipoFilter;
 
     if (reps || carga) {
       if (isBulk) {
         if (tipoFilter) {
-          // Preenche apenas os slots do tipo informado, limitado pela quantidade falada (ou todos do tipo)
           const indicesDoTipo = slotTypes.map((t, idx) => t === tipoFilter ? idx : -1).filter((i) => i >= 0);
-          const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), indicesDoTipo.length) : indicesDoTipo.length;
+          const qtd = qtdNum ? Math.min(qtdNum, indicesDoTipo.length) : indicesDoTipo.length;
           const alvos = new Set(indicesDoTipo.slice(0, qtd));
           setSlots((prev) => prev.map((s, idx) => alvos.has(idx) ? {
             ...s, reps: reps || s.reps, carga: carga || s.carga,
           } : s));
-          toast.success(`${qtd} série(s) de ${tipoFilter.toLowerCase()} preenchida(s): ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+          toast.success(`${qtd} série(s) de ${tipoFilter.toLowerCase()} preenchida(s)`, { id: "voice-toast" });
         } else {
           const qtd = qtdMatch ? Math.min(parseInt(qtdMatch[1]), totalSlots) : totalSlots;
           setSlots((prev) => prev.map((s, idx) => idx < qtd ? {
             ...s, reps: reps || s.reps, carga: carga || s.carga,
           } : s));
-          toast.success(`${qtd} séries preenchidas: ${carga ? carga + "kg" : ""}${carga && reps ? " × " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+          toast.success(`${qtd} séries preenchidas`, { id: "voice-toast" });
         }
       } else {
         setSlots((prev) => prev.map((s, idx) => idx === index ? {
@@ -205,7 +248,7 @@ export const ExerciseCard = ({
         toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
       }
     } else {
-      toast.error("Não entendi. Tente: 'fiz 3 séries de trabalho com 60kg e 10 repetições'", { id: "voice-toast" });
+      toast.error("Não entendi. Tente: 'fiz 1 aquecimento com 20kg 12 reps, 1 ajuste com 40kg 10 reps e 3 de trabalho com 60kg 10 reps'", { id: "voice-toast" });
     }
   };
 
