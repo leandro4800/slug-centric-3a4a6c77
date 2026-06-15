@@ -884,6 +884,7 @@ const FeedBrutalistTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }
    ============================================================ */
 const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
   const accent = config.branding_color || "#22D3EE";
+  const accentDark = "#0E7490";
   const features = [
     { i: Dumbbell, t: "TREINOS", s: "PERSONALIZADOS", d: "de acordo com\nseu objetivo" },
     { i: Utensils, t: "DIETAS", s: "ADAPTADAS", d: "ao seu estilo de vida\ne rotina" },
@@ -891,30 +892,58 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle 
     { i: MessageCircle, t: "SUPORTE VIA APP", s: "E WHATSAPP", d: "fácil, prático e\nsempre à mão" },
   ];
 
+  // Distressed gradient text — realistic teal with grunge mask
+  const grungeMask =
+    "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 300'%3E%3Cfilter id='r'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -2.5 1.6'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23r)'/%3E%3C/svg%3E\")";
+  const titleStyleWhite: React.CSSProperties = {
+    backgroundImage: "linear-gradient(180deg, #ffffff 0%, #e8f6fa 55%, #b9d9e0 100%)",
+    WebkitBackgroundClip: "text",
+    backgroundClip: "text",
+    color: "transparent",
+    WebkitTextStroke: "1px rgba(0,0,0,0.35)",
+    filter: "drop-shadow(2px 3px 0 rgba(0,0,0,0.55))",
+    WebkitMaskImage: grungeMask,
+    maskImage: grungeMask,
+    WebkitMaskSize: "180px 180px",
+    maskSize: "180px 180px",
+  };
+  const titleStyleAccent: React.CSSProperties = {
+    backgroundImage: `linear-gradient(180deg, #a5f3fc 0%, ${accent} 55%, ${accentDark} 100%)`,
+    WebkitBackgroundClip: "text",
+    backgroundClip: "text",
+    color: "transparent",
+    WebkitTextStroke: "1px rgba(0,0,0,0.35)",
+    filter: "drop-shadow(2px 3px 0 rgba(0,0,0,0.55))",
+    WebkitMaskImage: grungeMask,
+    maskImage: grungeMask,
+    WebkitMaskSize: "180px 180px",
+    maskSize: "180px 180px",
+  };
+
   return (
     <div className="relative w-full h-full overflow-hidden text-white bg-[#0a0f14]">
       {/* Dark gym BG gradient */}
-      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 30%, #1a2530 0%, #0a0f14 70%)" }} />
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 30%, #1e2d3a 0%, #0a0f14 70%)" }} />
       {/* Grunge texture */}
-      <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none"
-        style={{ backgroundImage: "url(data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E)" }} />
+      <div className="absolute inset-0 opacity-50 mix-blend-overlay pointer-events-none"
+        style={{ backgroundImage: "url(data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E)" }} />
 
       {/* Coach cutout — right side, large */}
       {cutoutUrl && (
-        <div className="absolute right-[-8%] top-[2%] h-[72%] w-[68%] z-[2]">
+        <div className="absolute right-[-8%] top-[2%] h-[68%] w-[68%] z-[2]">
           <img
             src={cutoutUrl}
             alt=""
             className="h-full w-full object-contain object-right contrast-110 saturate-75"
             style={{
               filter: "drop-shadow(0 10px 30px rgba(0,0,0,0.7))",
-              maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
-              WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+              maskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 80%, transparent 100%)',
             }}
           />
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f14]/95 via-[#0a0f14]/30 to-transparent z-[3]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f14]/95 via-[#0a0f14]/20 to-transparent z-[3]" />
       <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f14] via-transparent to-transparent z-[3]" />
 
       {/* Top tagline */}
@@ -925,16 +954,14 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle 
 
       {/* Massive distressed headline */}
       <div className="relative z-10 px-5 mt-2">
-        <div className="font-['Anton'] text-[58px] leading-[0.85] uppercase tracking-tight"
-          style={{ textShadow: "2px 2px 0 rgba(0,0,0,0.5)" }}>
+        <div className="font-['Anton'] text-[62px] leading-[0.85] uppercase tracking-tight" style={titleStyleWhite}>
           TREINO
         </div>
-        <div className="font-['Anton'] text-[58px] leading-[0.85] uppercase tracking-tight mt-1"
-          style={{ color: accent, textShadow: `2px 2px 0 rgba(0,0,0,0.5)` }}>
+        <div className="font-['Anton'] text-[62px] leading-[0.85] uppercase tracking-tight mt-1" style={titleStyleAccent}>
           E DIETA
         </div>
         {/* PERSONALIZADOS highlight box */}
-        <div className="inline-block mt-2 px-3 py-1 font-['Anton'] text-[20px] uppercase tracking-wider text-black"
+        <div className="inline-block mt-2 px-3 py-1 font-['Anton'] text-[20px] uppercase tracking-wider text-black shadow-lg"
           style={{ background: accent }}>
           PERSONALIZADOS
         </div>
@@ -945,8 +972,8 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle 
         </div>
       </div>
 
-      {/* 100% Badge top-right */}
-      <div className="absolute right-3 top-[42%] z-10 flex items-center gap-1.5 bg-black/70 border border-white/20 rounded-full px-2 py-1 backdrop-blur-sm">
+      {/* 100% Badge */}
+      <div className="absolute right-3 top-[40%] z-10 flex items-center gap-1.5 bg-black/70 border border-white/20 rounded-full px-2 py-1 backdrop-blur-sm">
         <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center" style={{ borderColor: accent }}>
           <Check className="h-2.5 w-2.5" style={{ color: accent }} />
         </div>
@@ -963,7 +990,7 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle 
       </div>
 
       {/* Feature list */}
-      <div className="relative z-10 mt-3 px-5 space-y-2.5 max-w-[62%]">
+      <div className="relative z-10 mt-3 px-5 space-y-2.5 max-w-[58%]">
         {features.map((f, i) => (
           <div key={i} className="flex gap-2.5 items-start">
             <div className="w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 bg-black/40" style={{ borderColor: accent }}>
@@ -978,12 +1005,89 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle 
         ))}
       </div>
 
+      {/* Phone mockup + plate of food — bottom right */}
+      <div className="absolute right-2 bottom-[110px] z-[6] flex items-end" style={{ filter: "drop-shadow(0 12px 24px rgba(0,0,0,0.7))" }}>
+        {/* Plate (in front, overlapping) */}
+        <div className="relative w-[88px] h-[88px] -mr-6 mb-2 z-[7]">
+          {/* Plate ring */}
+          <div className="absolute inset-0 rounded-full" style={{ background: "radial-gradient(circle at 35% 30%, #4a4a4a, #1a1a1a 70%)", boxShadow: "inset 0 -3px 6px rgba(0,0,0,0.7), 0 6px 12px rgba(0,0,0,0.6)" }} />
+          <div className="absolute inset-[6px] rounded-full" style={{ background: "radial-gradient(circle at 40% 30%, #2b2b2b, #0e0e0e 80%)" }} />
+          {/* Food: chicken (brown grill), rice (beige), broccoli (green), carrot (orange) */}
+          {/* Grilled chicken */}
+          <div className="absolute left-[18%] bottom-[18%] w-[42%] h-[36%] rounded-[40%]"
+            style={{ background: "linear-gradient(160deg,#a0521f 0%, #6b2e10 100%)", boxShadow: "inset 0 -2px 3px rgba(0,0,0,0.5)" }}>
+            <div className="absolute inset-x-1 top-1 h-[2px] rounded bg-black/60" />
+            <div className="absolute inset-x-1 top-3 h-[2px] rounded bg-black/60" />
+            <div className="absolute inset-x-1 top-5 h-[2px] rounded bg-black/60" />
+          </div>
+          {/* Rice */}
+          <div className="absolute left-[15%] top-[18%] w-[34%] h-[34%] rounded-full"
+            style={{ background: "radial-gradient(circle at 40% 30%, #e8d9a8, #b89968)" }} />
+          {/* Broccoli */}
+          <div className="absolute right-[15%] top-[18%] w-[28%] h-[28%] rounded-full"
+            style={{ background: "radial-gradient(circle at 30% 30%, #6dbf3f, #2f6b1d)", boxShadow: "inset 0 -2px 4px rgba(0,0,0,0.4)" }} />
+          {/* Carrot */}
+          <div className="absolute right-[12%] bottom-[20%] w-[26%] h-[24%] rounded-[40%]"
+            style={{ background: "radial-gradient(circle at 30% 30%, #ffae5c, #c6671a)" }} />
+        </div>
+
+        {/* Phone */}
+        <div className="relative w-[120px] h-[200px] bg-[#0d1117] rounded-[20px] border border-[#2a2a2a] overflow-hidden"
+          style={{ boxShadow: "inset 0 0 0 2px #1a1a1a, 0 8px 24px rgba(0,0,0,0.8)" }}>
+          {/* Notch */}
+          <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-10 h-2 bg-black rounded-b-lg z-10" />
+          {/* Status bar */}
+          <div className="absolute top-0 left-0 right-0 px-3 pt-1 flex justify-between text-[6px] font-bold opacity-80">
+            <span>9:41</span>
+            <span>●●●●●</span>
+          </div>
+          {/* Screen content */}
+          <div className="absolute inset-0 pt-5 px-2 pb-2 flex flex-col gap-1.5 text-[6px]">
+            <div className="font-['Anton'] text-[11px] uppercase tracking-wide pt-1 px-1" style={{ color: accent }}>PLANO DO DIA</div>
+            {/* Treino block */}
+            <div className="bg-white/[0.04] rounded-md p-1.5 space-y-1">
+              <div className="flex items-center gap-1 pb-0.5 border-b border-white/10">
+                <Dumbbell className="h-2 w-2" style={{ color: accent }} />
+                <span className="font-bold text-[6px] uppercase tracking-wider opacity-90">TREINO</span>
+              </div>
+              <div className="text-[6px] font-bold opacity-95">Peito e Tríceps</div>
+              <div className="flex justify-between text-[5.5px] opacity-80"><span>Supino Reto</span><span className="opacity-70">4x 10-12</span></div>
+              <div className="flex justify-between text-[5.5px] opacity-80"><span>Crucifixo</span><span className="opacity-70">3x 12-15</span></div>
+              <div className="flex justify-between text-[5.5px] opacity-80"><span>Tríceps Pulley</span><span className="opacity-70">3x 12-15</span></div>
+            </div>
+            {/* Dieta block */}
+            <div className="bg-white/[0.04] rounded-md p-1.5 space-y-1">
+              <div className="flex items-center gap-1 pb-0.5 border-b border-white/10">
+                <Utensils className="h-2 w-2" style={{ color: accent }} />
+                <span className="font-bold text-[6px] uppercase tracking-wider opacity-90">DIETA</span>
+              </div>
+              <div className="flex justify-around gap-1 pt-0.5">
+                {[
+                  { l: "PROTEÍNAS", v: "150g" },
+                  { l: "CARBOS", v: "200g" },
+                  { l: "GORDURAS", v: "60g" },
+                ].map((m, i) => (
+                  <div key={i} className="flex-1 text-center">
+                    <div className="text-[4.5px] opacity-60 tracking-wider">{m.l}</div>
+                    <div className="rounded-full border border-white/15 mt-0.5 py-0.5 text-[6px] font-black">{m.v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* CTA */}
+            <div className="rounded-md py-1 text-center text-[6px] font-black uppercase text-black mt-auto" style={{ background: accent }}>
+              VER PLANO COMPLETO
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Bottom CTAs */}
       <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-3 pt-4 bg-gradient-to-t from-[#0a0f14] via-[#0a0f14]/95 to-transparent">
         <div className="flex items-start gap-3">
           <div className="flex items-start gap-2 bg-black/70 border border-white/15 rounded-md px-2.5 py-2 flex-1">
-            <div className="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: accent }}>
-              <MessageCircle className="h-3.5 w-3.5" style={{ color: accent }} />
+            <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: "#25D366" }}>
+              <MessageCircle className="h-3.5 w-3.5 text-white" fill="white" />
             </div>
             <div className="leading-tight">
               <div className="font-bold text-[9px] uppercase">COMECE HOJE</div>
