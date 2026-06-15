@@ -2398,7 +2398,10 @@ export type Database = {
           grupamento_muscular: string | null
           id: string
           nome_exercicio: string
+          origem: string
           profissional_id: string | null
+          storage_path: string | null
+          tenant_id: string | null
           thumbnail_url: string | null
           url_video: string | null
         }
@@ -2407,7 +2410,10 @@ export type Database = {
           grupamento_muscular?: string | null
           id?: string
           nome_exercicio: string
+          origem?: string
           profissional_id?: string | null
+          storage_path?: string | null
+          tenant_id?: string | null
           thumbnail_url?: string | null
           url_video?: string | null
         }
@@ -2416,11 +2422,29 @@ export type Database = {
           grupamento_muscular?: string | null
           id?: string
           nome_exercicio?: string
+          origem?: string
           profissional_id?: string | null
+          storage_path?: string | null
+          tenant_id?: string | null
           thumbnail_url?: string | null
           url_video?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "referencia_exercicios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referencia_exercicios_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
       }
       referencia_videos: {
         Row: {
