@@ -260,7 +260,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
           {TEMPLATES.map(t => (
             <button
               key={t.id}
-              onClick={() => { setTemplate(t.id); update("branding_color", t.accent); }}
+              onClick={() => handleTemplateChange(t.id)}
               className={cn(
                 "group relative rounded-xl border-2 p-3 text-left transition-all overflow-hidden",
                 template === t.id
