@@ -335,7 +335,19 @@ const AdminMontarDieta = () => {
           ...r,
           descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia
         })));
-        toast.success("Macros equilibrados com sucesso!", { id: toastId });
+        if (data?.totais) {
+          setMacrosCalculados({
+            kcal: Math.round(data.totais.kcal || 0),
+            proteina_g: Math.round(data.totais.proteina_g || 0),
+            carboidrato_g: Math.round(data.totais.carboidrato_g || 0),
+            lipideos_g: Math.round(data.totais.lipideos_g || 0),
+          });
+        }
+        if (data?.recalculado) {
+          toast.success(`Dieta ajustada: ${data.kcal_alvo} kcal • P${data.macros_alvo?.proteina_g}g C${data.macros_alvo?.carboidrato_g}g G${data.macros_alvo?.lipideos_g}g`, { id: toastId });
+        } else {
+          toast.success("Macros equilibrados com sucesso!", { id: toastId });
+        }
       }
     } catch (e: any) {
       toast.error("Erro ao ajustar: " + e.message, { id: toastId });

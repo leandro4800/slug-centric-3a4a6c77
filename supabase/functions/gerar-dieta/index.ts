@@ -143,21 +143,69 @@ Retorne APENAS JSON neste formato:
       const kcalAlvo = body.kcal_alvo || 2500;
       const macros = body.macros_alvo || { proteina_g: 200, carboidrato_g: 250, lipideos_g: 60 };
       const refeicoesTxt = (body.refeicoes || []).map(r => `Refeição: ${r.nome}\nDescrição atual: ${r.descricao}`).join("\n\n");
+      const coachPrompt = (body.prompt || "").trim();
 
-      // Anamnese também no refine
-      const { data: anamneseRef } = await supabase
-        .from("anamnese_aluno")
-        .select("alimentos_ama, alimentos_evita, restricoes_alimentares")
-        .eq("aluno_id", targetUserId)
-        .maybeSingle();
+      // Anamnese + perfil (peso/bf) para decisões de cutting/hipertrofia
+      const [{ data: anamneseRef }, { data: perfilRef }, { data: avalRef }] = await Promise.all([
+        supabase.from("anamnese_aluno")
+          .select("alimentos_ama, alimentos_evita, restricoes_alimentares")
+          .eq("aluno_id", targetUserId).maybeSingle(),
+        supabase.from("perfis")
+          .select("peso_kg, altura_cm, idade, sexo")
+          .eq("id", targetUserId).maybeSingle(),
+        supabase.from("avaliacoes_fisicas")
+          .select("peso_kg, percentual_gordura, massa_magra_kg")
+          .eq("aluno_id", targetUserId)
+          .order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      ]);
       const amaR = anamneseRef?.alimentos_ama?.trim() || "";
       const evitaR = anamneseRef?.alimentos_evita?.trim() || "";
       const restR = (anamneseRef?.restricoes_alimentares || []).join(", ");
+      const pesoAtual = Number(avalRef?.peso_kg || perfilRef?.peso_kg || body.peso_kg || 75);
+      const bfAtual = Number(avalRef?.percentual_gordura || body.bf_pct || 0);
+      const sexoAtual = (perfilRef?.sexo || body.sexo || "M").toUpperCase();
 
-      const systemPrompt = `Você é um nutricionista esportivo. Ajuste APENAS AS QUANTIDADES (gramas) das refeições para bater EXATAMENTE os macros alvo, mantendo os alimentos que o aluno já gosta.
+      // Detecta intenção do comando do coach
+      const promptLower = coachPrompt.toLowerCase();
+      const querReduzirKcal = /diminu|reduz|baix|menos calor|cut|emagrec|perder gordura|perder peso/.test(promptLower);
+      const querManterProteina = /mant[eê].*prote|prote[ií]na.*mant|sem mexer.*prote/.test(promptLower) || querReduzirKcal;
+      const querMaisVolume = /volume|saciedade|encher|mais comida|vegetal|legume|salada/.test(promptLower);
 
-META ALVO:
-Kcal: ${kcalAlvo} | Proteína: ${macros.proteina_g}g | Carbo: ${macros.carboidrato_g}g | Gordura: ${macros.lipideos_g}g
+      // Recalcula alvos quando o coach pede cutting/redução
+      let novoKcal = kcalAlvo;
+      let novaProt = Number(macros.proteina_g) || Math.round(pesoAtual * 2);
+      let novoCarbo = Number(macros.carboidrato_g) || 250;
+      let novaGord = Number(macros.lipideos_g) || 60;
+
+      if (querReduzirKcal) {
+        // Travas: proteína em 2.0–2.4g/kg (preserva massa magra), kcal -15% a -20%, gordura mínima 0.8g/kg
+        const protAlvo = Math.round(pesoAtual * 2.2);
+        const gordAlvo = Math.max(Math.round(pesoAtual * 0.8), 50);
+        const kcalReduzido = Math.round(kcalAlvo * 0.82); // -18%
+        const carboAlvo = Math.max(Math.round((kcalReduzido - protAlvo * 4 - gordAlvo * 9) / 4), 120);
+        novoKcal = protAlvo * 4 + carboAlvo * 4 + gordAlvo * 9;
+        novaProt = protAlvo;
+        novoCarbo = carboAlvo;
+        novaGord = gordAlvo;
+      } else if (querManterProteina) {
+        novaProt = Math.max(novaProt, Math.round(pesoAtual * 2));
+      }
+
+      const systemPrompt = `Você é um nutricionista esportivo. Ajuste as refeições com base no COMANDO DO COACH e nos macros alvo abaixo.
+
+PERFIL ATUAL DO ALUNO:
+- Sexo: ${sexoAtual === "M" ? "Masculino" : "Feminino"} | Peso: ${pesoAtual}kg${bfAtual ? ` | %Gordura: ${bfAtual}%` : ""}
+
+COMANDO DO COACH (PRIORIDADE MÁXIMA):
+"${coachPrompt || "Sem comando explícito — apenas equilibrar quantidades para bater os macros."}"
+
+INTENÇÃO DETECTADA:
+${querReduzirKcal ? "- REDUZIR CALORIAS / CUTTING: o aluno precisa baixar % de gordura. Os macros abaixo JÁ foram recalculados (kcal -18%, proteína travada para preservar massa magra)." : ""}
+${querManterProteina ? "- MANTER PROTEÍNA: NÃO reduza fontes proteicas (frango, ovo, carne, peixe, whey, atum). Mexer só nos carboidratos e gorduras." : ""}
+${querMaisVolume ? "- AUMENTAR VOLUME COM BAIXA CALORIA: adicione/aumente legumes de baixa densidade calórica em almoço e jantar (cenoura cozida, abobrinha refogada, abóbora cabotiá, brócolis, couve-flor, chuchu, berinjela, vagem, espinafre refogado, alface, tomate, pepino). Mantém a sensação de saciedade reduzindo kcal." : ""}
+
+META DE MACROS ${querReduzirKcal ? "(RECALCULADA)" : "(MANTIDA)"}:
+${novoKcal} kcal | Proteína: ${novaProt}g | Carbo: ${novoCarbo}g | Gordura: ${novaGord}g
 
 ANAMNESE (RESPEITAR):
 ${amaR ? `Ama: ${amaR}` : ""}
@@ -165,21 +213,27 @@ ${evitaR ? `Evita (NÃO usar): ${evitaR}` : ""}
 ${restR ? `Restrições: ${restR}` : ""}
 
 REGRAS:
-1. Mantenha os alimentos já presentes nas refeições — só altere quantidades. Só substitua alimento se ele violar a anamnese (ex.: aluno evita).
-2. FIBRA: máximo 35g/dia.
-3. AVEIA: quantidade variável conforme volume da refeição. NUNCA fixar 100g por padrão. Limite absoluto 100g/refeição. Se o carbo já está ok com menos, use menos.
-4. NÃO adicione creme de arroz se a refeição não tinha — só ajuste o que existe. NÃO empilhe creme de arroz + aveia se só um dos dois resolve.
-5. Sem castanhas.
-6. FORMATO OBRIGATÓRIO do campo "descricao_ia" (DUAS PARTES separadas por uma linha em branco):
-   PARTE 1 — RESUMO (lista enxuta, uma linha por alimento, começando com "• "):
-   • 150g de arroz branco cozido
+1. Bate os macros alvo acima. Se o coach pediu redução de kcal, ENTREGUE refeições com menos kcal — não mantenha o total antigo.
+2. PROTEÍNA é a última coisa a ser cortada. Mantém/ajusta gramas de fontes proteicas para bater ${novaProt}g/dia.
+3. Para reduzir kcal mantendo o prato cheio: SUBSTITUA parte do arroz/massa por legumes (cenoura, abobrinha, abóbora, brócolis, couve-flor) — ex.: "100g de arroz + 150g de abobrinha refogada" em vez de "200g de arroz".
+4. Almoço e jantar SEMPRE devem ter pelo menos uma porção de legume/vegetal cozido quando o objetivo for cutting.
+5. Mantenha os alimentos já presentes — só substitua/adicione conforme as regras 3 e 4 ou se violar a anamnese.
+6. FIBRA: máximo 35g/dia. AVEIA: variável, nunca fixar 100g. Sem castanhas. Sem creme de arroz salvo se já existia.
+7. FORMATO OBRIGATÓRIO do campo "descricao_ia" (DUAS PARTES separadas por UMA linha em branco):
+   PARTE 1 — RESUMO (lista, uma linha por alimento, começando com "• "):
+   • 100g de arroz branco cozido
+   • 150g de abobrinha refogada
    • 120g de peito de frango grelhado
-   • 80g de feijão carioca
 
-   PARTE 2 — DETALHE (parágrafo amigável atual, com modo de preparo/contexto).
-7. Retorne JSON: { "refeicoes": [ { "nome": "...", "descricao_ia": "..." } ] } na MESMA ORDEM recebida.`;
+   PARTE 2 — DETALHE (parágrafo amigável com modo de preparo/contexto).
+8. Retorne JSON:
+{
+  "refeicoes": [ { "nome": "...", "descricao_ia": "..." } ],
+  "totais": { "kcal": ${novoKcal}, "proteina_g": ${novaProt}, "carboidrato_g": ${novoCarbo}, "lipideos_g": ${novaGord} }
+}
+na MESMA ORDEM recebida.`;
 
-      const userPrompt = `Refeições atuais:${body.prompt ? `\n\nINSTRUÇÕES ADICIONAIS DO COACH: ${body.prompt}` : ""}\n\n${refeicoesTxt}`;
+      const userPrompt = `Refeições atuais:\n\n${refeicoesTxt}`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
@@ -191,7 +245,7 @@ REGRAS:
             { role: "user", content: userPrompt },
           ],
           response_format: { type: "json_object" },
-          temperature: 0.1,
+          temperature: 0.2,
         }),
       });
 
@@ -206,8 +260,33 @@ REGRAS:
       const content = aiData.choices[0].message.content;
       const plano = JSON.parse(content);
 
-      // O retorno esperado do JSON é { "refeicoes": [ { "nome": "...", "descricao_ia": "..." } ] }
-      return new Response(JSON.stringify({ success: true, refeicoes: plano.refeicoes }), {
+      const totais = plano.totais || { kcal: novoKcal, proteina_g: novaProt, carboidrato_g: novoCarbo, lipideos_g: novaGord };
+
+      // Persiste novos alvos na dieta quando houve recalculo
+      if (body.dieta_id && querReduzirKcal) {
+        await supabase.from("dietas").update({
+          kcal_alvo: Math.round(Number(totais.kcal) || novoKcal),
+          macros_alvo: {
+            proteina_g: Math.round(Number(totais.proteina_g) || novaProt),
+            carboidrato_g: Math.round(Number(totais.carboidrato_g) || novoCarbo),
+            lipideos_g: Math.round(Number(totais.lipideos_g) || novaGord),
+            badge: "Ajustado pela IA",
+          },
+        }).eq("id", body.dieta_id);
+      }
+
+      return new Response(JSON.stringify({
+        success: true,
+        refeicoes: plano.refeicoes,
+        totais,
+        kcal_alvo: Math.round(Number(totais.kcal) || novoKcal),
+        macros_alvo: {
+          proteina_g: Math.round(Number(totais.proteina_g) || novaProt),
+          carboidrato_g: Math.round(Number(totais.carboidrato_g) || novoCarbo),
+          lipideos_g: Math.round(Number(totais.lipideos_g) || novaGord),
+        },
+        recalculado: querReduzirKcal,
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
