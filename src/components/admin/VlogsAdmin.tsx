@@ -349,6 +349,29 @@ export const VlogsAdmin = () => {
     <div className="space-y-6">
       {/* Automação externa e tutoriais de Zapier/Make removidos — a estruturar */}
 
+      {/* Manual add — primeira opção */}
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
+        <div className="grid gap-3 items-end">
+          <div>
+            <Label>URL (YouTube,  TikTok…)</Label>
+            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+          </div>
+          <div>
+            <Label>Thumbnail (opcional · cole URL de uma imagem)</Label>
+            <Input value={thumbInput} onChange={(e) => setThumbInput(e.target.value)} placeholder="https://...jpg — útil para Instagram" />
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Instagram não fornece thumb pública. Se não colar uma imagem, geramos um screenshot automático.
+            </p>
+          </div>
+          <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow">
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-2" /> Adicionar</>}
+          </Button>
+        </div>
+      </div>
+
+
+
 
       {/* IG Graph API config */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
