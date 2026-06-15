@@ -17,6 +17,11 @@ import {
   Target,
   TrendingUp,
   Sparkles,
+  Wifi,
+  MessageCircle,
+  User,
+  Lock,
+  Utensils,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,9 +32,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
-type TemplateId = "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
+type TemplateId = "treino-dieta-pro" | "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; format: "9:16" | "1:1" }[] = [
+  { id: "treino-dieta-pro", label: "Treino & Dieta Pro", desc: "Pôster fitness com IA (cyan)", accent: "#22D3EE", format: "9:16" },
   { id: "consultoria-phone", label: "Consultoria Online", desc: "Mockup de celular + amarelo", accent: "#FACC15", format: "9:16" },
   { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00", format: "9:16" },
   { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF", format: "9:16" },
@@ -58,7 +64,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [removingBg, setRemovingBg] = useState(false);
-  const [template, setTemplate] = useState<TemplateId>("yellow-cyber");
+  const [template, setTemplate] = useState<TemplateId>("treino-dieta-pro");
   const [profileData, setProfileData] = useState<any>(null);
   const [workouts, setWorkouts] = useState<{ id: string; titulo: string }[]>([]);
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string>("");
@@ -175,6 +181,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
 
   const renderTemplate = () => {
     switch (template) {
+      case "treino-dieta-pro": return <TreinoDietaProTemplate {...tplProps} />;
       case "consultoria-phone": return <ConsultoriaPhoneTemplate {...tplProps} />;
       case "yellow-cyber": return <YellowCyberTemplate {...tplProps} />;
       case "dark-purple": return <DarkPurpleTemplate {...tplProps} />;
@@ -864,6 +871,151 @@ const FeedBrutalistTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }
             </div>
             <div className="px-6 py-3 bg-white text-black font-black uppercase text-sm skew-x-[-12deg]">
               {config.cta_text || "QUERO COMEÇAR"}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================
+   TEMPLATE 7 — TREINO & DIETA PRO (clone do pôster fitness)
+   ============================================================ */
+const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl, dynamicSubtitle }: any) => {
+  const accent = config.branding_color || "#22D3EE";
+  const features = [
+    { i: Dumbbell, t: "TREINOS", s: "PERSONALIZADOS", d: "de acordo com\nseu objetivo" },
+    { i: Utensils, t: "DIETAS", s: "ADAPTADAS", d: "ao seu estilo de vida\ne rotina" },
+    { i: TrendingUp, t: "ACOMPANHAMENTO", s: "CONSTANTE", d: "suporte e ajustes\nsempre que precisar" },
+    { i: MessageCircle, t: "SUPORTE VIA APP", s: "E WHATSAPP", d: "fácil, prático e\nsempre à mão" },
+  ];
+
+  return (
+    <div className="relative w-full h-full overflow-hidden text-white bg-[#0a0f14]">
+      {/* Dark gym BG gradient */}
+      <div className="absolute inset-0" style={{ background: "radial-gradient(ellipse at 70% 30%, #1a2530 0%, #0a0f14 70%)" }} />
+      {/* Grunge texture */}
+      <div className="absolute inset-0 opacity-40 mix-blend-overlay pointer-events-none"
+        style={{ backgroundImage: "url(data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E)" }} />
+
+      {/* Coach cutout — right side, large */}
+      {cutoutUrl && (
+        <div className="absolute right-[-8%] top-[2%] h-[72%] w-[68%] z-[2]">
+          <img
+            src={cutoutUrl}
+            alt=""
+            className="h-full w-full object-contain object-right contrast-110 saturate-75"
+            style={{
+              filter: "drop-shadow(0 10px 30px rgba(0,0,0,0.7))",
+              maskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+              WebkitMaskImage: 'linear-gradient(to bottom, black 85%, transparent 100%)',
+            }}
+          />
+        </div>
+      )}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f14]/95 via-[#0a0f14]/30 to-transparent z-[3]" />
+      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f14] via-transparent to-transparent z-[3]" />
+
+      {/* Top tagline */}
+      <div className="relative z-10 pt-5 px-5">
+        <div className="text-[9px] font-bold tracking-[0.3em] opacity-85">TRANSFORME SEU CORPO.</div>
+        <div className="text-[9px] font-bold tracking-[0.3em] opacity-85">TRANSFORME SUA VIDA.</div>
+      </div>
+
+      {/* Massive distressed headline */}
+      <div className="relative z-10 px-5 mt-2">
+        <div className="font-['Anton'] text-[58px] leading-[0.85] uppercase tracking-tight"
+          style={{ textShadow: "2px 2px 0 rgba(0,0,0,0.5)" }}>
+          TREINO
+        </div>
+        <div className="font-['Anton'] text-[58px] leading-[0.85] uppercase tracking-tight mt-1"
+          style={{ color: accent, textShadow: `2px 2px 0 rgba(0,0,0,0.5)` }}>
+          E DIETA
+        </div>
+        {/* PERSONALIZADOS highlight box */}
+        <div className="inline-block mt-2 px-3 py-1 font-['Anton'] text-[20px] uppercase tracking-wider text-black"
+          style={{ background: accent }}>
+          PERSONALIZADOS
+        </div>
+        {/* Online pill */}
+        <div className="mt-2 inline-flex items-center gap-2 border-2 rounded-full px-3 py-1 bg-black/40" style={{ borderColor: "#ffffff30" }}>
+          <Wifi className="h-3.5 w-3.5" style={{ color: accent }} />
+          <span className="font-['Anton'] text-[16px] uppercase italic tracking-wide" style={{ color: accent }}>ONLINE</span>
+        </div>
+      </div>
+
+      {/* 100% Badge top-right */}
+      <div className="absolute right-3 top-[42%] z-10 flex items-center gap-1.5 bg-black/70 border border-white/20 rounded-full px-2 py-1 backdrop-blur-sm">
+        <div className="w-5 h-5 rounded-full border-2 flex items-center justify-center" style={{ borderColor: accent }}>
+          <Check className="h-2.5 w-2.5" style={{ color: accent }} />
+        </div>
+        <div className="leading-none">
+          <div className="font-['Anton'] text-[14px]" style={{ color: accent }}>100%</div>
+          <div className="text-[6px] tracking-widest opacity-80">ACOMPANHAMENTO<br />INDIVIDUAL</div>
+        </div>
+      </div>
+
+      {/* Subhead */}
+      <div className="relative z-10 px-5 mt-4">
+        <div className="font-['Anton'] text-[18px] leading-tight uppercase">RESULTADOS REAIS,</div>
+        <div className="font-['Anton'] text-[18px] leading-tight uppercase">ONDE VOCÊ ESTIVER!</div>
+      </div>
+
+      {/* Feature list */}
+      <div className="relative z-10 mt-3 px-5 space-y-2.5 max-w-[62%]">
+        {features.map((f, i) => (
+          <div key={i} className="flex gap-2.5 items-start">
+            <div className="w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 bg-black/40" style={{ borderColor: accent }}>
+              <f.i className="h-3.5 w-3.5" style={{ color: accent }} />
+            </div>
+            <div className="leading-tight">
+              <div className="font-bold text-[10px] uppercase tracking-wide">{f.t}</div>
+              <div className="font-black text-[11px] uppercase tracking-wide">{f.s}</div>
+              <div className="text-[8px] opacity-75 mt-0.5 whitespace-pre-line">{f.d}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Bottom CTAs */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 px-5 pb-3 pt-4 bg-gradient-to-t from-[#0a0f14] via-[#0a0f14]/95 to-transparent">
+        <div className="flex items-start gap-3">
+          <div className="flex items-start gap-2 bg-black/70 border border-white/15 rounded-md px-2.5 py-2 flex-1">
+            <div className="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: accent }}>
+              <MessageCircle className="h-3.5 w-3.5" style={{ color: accent }} />
+            </div>
+            <div className="leading-tight">
+              <div className="font-bold text-[9px] uppercase">COMECE HOJE</div>
+              <div className="font-black text-[10px] uppercase">SUA TRANSFORMAÇÃO!</div>
+            </div>
+          </div>
+          <div className="flex items-start gap-2 flex-1">
+            <div className="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0" style={{ borderColor: accent }}>
+              <User className="h-3.5 w-3.5" style={{ color: accent }} />
+            </div>
+            <div className="leading-tight">
+              <div className="font-bold text-[9px] uppercase">SEU TREINO. SUA DIETA.</div>
+              <div className="font-black text-[10px] uppercase">SEUS RESULTADOS.</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Coach contact + vagas */}
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10">
+          <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider opacity-90">
+            <Lock className="h-3 w-3" style={{ color: accent }} />
+            VAGAS LIMITADAS!
+          </div>
+          <div className="text-right leading-tight">
+            <div className="text-[8px] opacity-60 tracking-widest">{coachName}</div>
+            <div className="flex items-center gap-1 justify-end text-[9px] font-bold">
+              <AtSign className="h-2.5 w-2.5" style={{ color: accent }} />
+              {config.instagram_handle}
+            </div>
+            <div className="flex items-center gap-1 justify-end text-[9px] font-bold opacity-80">
+              <Phone className="h-2.5 w-2.5" style={{ color: accent }} />
+              {config.phone}
             </div>
           </div>
         </div>
