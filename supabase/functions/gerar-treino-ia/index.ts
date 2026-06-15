@@ -476,14 +476,20 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
         }),
       });
 
-    let resp = await callGateway();
-    let attempts = 0;
-    while (!resp.ok && (resp.status === 503 || resp.status === 502 || resp.status === 504 || resp.status === 429) && attempts < 2) {
-      attempts++;
-      const delay = 800 * attempts;
-      console.warn(`AI gateway ${resp.status} — retry ${attempts} em ${delay}ms`);
-      await new Promise((r) => setTimeout(r, delay));
+    let resp: Response;
+    try {
       resp = await callGateway();
+      let attempts = 0;
+      while (!resp.ok && (resp.status === 503 || resp.status === 502 || resp.status === 504 || resp.status === 429) && attempts < 2) {
+        attempts++;
+        const delay = 800 * attempts;
+        console.warn(`AI gateway ${resp.status} — retry ${attempts} em ${delay}ms`);
+        await new Promise((r) => setTimeout(r, delay));
+        resp = await callGateway();
+      }
+    } catch (gatewayErr) {
+      console.error("AI gateway fetch failed:", gatewayErr);
+      return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
     if (!resp.ok) {
