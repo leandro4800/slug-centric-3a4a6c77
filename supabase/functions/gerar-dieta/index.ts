@@ -191,33 +191,37 @@ Retorne APENAS JSON neste formato:
         novaProt = Math.max(novaProt, Math.round(pesoAtual * 2));
       }
 
-      const systemPrompt = `Você é um nutricionista esportivo. Ajuste as refeições com base no COMANDO DO COACH e nos macros alvo abaixo.
+      const temComando = coachPrompt.length > 0;
+
+      const systemPrompt = `Você é um nutricionista esportivo. Sua tarefa é AJUSTAR as refeições aplicando integralmente o COMANDO DO COACH e respeitando a ANAMNESE. Se houver comando, SEMPRE faça mudanças concretas nos alimentos e/ou quantidades — NÃO devolva as mesmas descrições.
 
 PERFIL ATUAL DO ALUNO:
 - Sexo: ${sexoAtual === "M" ? "Masculino" : "Feminino"} | Peso: ${pesoAtual}kg${bfAtual ? ` | %Gordura: ${bfAtual}%` : ""}
 
-COMANDO DO COACH (PRIORIDADE MÁXIMA):
+COMANDO DO COACH (PRIORIDADE MÁXIMA — OBRIGATÓRIO APLICAR):
 "${coachPrompt || "Sem comando explícito — apenas equilibrar quantidades para bater os macros."}"
 
-INTENÇÃO DETECTADA:
-${querReduzirKcal ? "- REDUZIR CALORIAS / CUTTING: o aluno precisa baixar % de gordura. Os macros abaixo JÁ foram recalculados (kcal -18%, proteína travada para preservar massa magra)." : ""}
-${querManterProteina ? "- MANTER PROTEÍNA: NÃO reduza fontes proteicas (frango, ovo, carne, peixe, whey, atum). Mexer só nos carboidratos e gorduras." : ""}
-${querMaisVolume ? "- AUMENTAR VOLUME COM BAIXA CALORIA: adicione/aumente legumes de baixa densidade calórica em almoço e jantar (cenoura cozida, abobrinha refogada, abóbora cabotiá, brócolis, couve-flor, chuchu, berinjela, vagem, espinafre refogado, alface, tomate, pepino). Mantém a sensação de saciedade reduzindo kcal." : ""}
+${temComando ? `INSTRUÇÃO CRÍTICA: O coach DEU um comando acima. Você DEVE refletir esse comando nas refeições retornadas. É PROIBIDO devolver as mesmas descrições. Interprete o pedido (trocar alimentos, adicionar/remover itens, mudar quantidades, ajustar horários de carbo, aumentar volume, reduzir kcal, mudar fontes proteicas, alinhar com a anamnese, etc.) e APLIQUE em cada refeição que faça sentido.` : ""}
 
-META DE MACROS ${querReduzirKcal ? "(RECALCULADA)" : "(MANTIDA)"}:
+INTENÇÃO DETECTADA (heurística — só reforça, não substitui o comando acima):
+${querReduzirKcal ? "- REDUZIR CALORIAS / CUTTING: macros recalculados (kcal -18%, proteína travada)." : ""}
+${querManterProteina ? "- MANTER PROTEÍNA: não reduza fontes proteicas." : ""}
+${querMaisVolume ? "- MAIS VOLUME: adicione legumes de baixa densidade (abobrinha, cenoura, abóbora, brócolis, couve-flor, chuchu, berinjela, vagem, espinafre, alface, tomate, pepino)." : ""}
+
+META DE MACROS ${querReduzirKcal ? "(RECALCULADA)" : "(REFERÊNCIA)"}:
 ${novoKcal} kcal | Proteína: ${novaProt}g | Carbo: ${novoCarbo}g | Gordura: ${novaGord}g
 
-ANAMNESE (RESPEITAR):
-${amaR ? `Ama: ${amaR}` : ""}
-${evitaR ? `Evita (NÃO usar): ${evitaR}` : ""}
+ANAMNESE (RESPEITAR SEMPRE — se algum item das refeições atuais violar, TROQUE):
+${amaR ? `Ama (priorize): ${amaR}` : ""}
+${evitaR ? `Evita / NÃO usar (REMOVA se aparecer): ${evitaR}` : ""}
 ${restR ? `Restrições: ${restR}` : ""}
 
 REGRAS:
-1. Bate os macros alvo acima. Se o coach pediu redução de kcal, ENTREGUE refeições com menos kcal — não mantenha o total antigo.
-2. PROTEÍNA é a última coisa a ser cortada. Mantém/ajusta gramas de fontes proteicas para bater ${novaProt}g/dia.
-3. Para reduzir kcal mantendo o prato cheio: SUBSTITUA parte do arroz/massa por legumes (cenoura, abobrinha, abóbora, brócolis, couve-flor) — ex.: "100g de arroz + 150g de abobrinha refogada" em vez de "200g de arroz".
-4. Almoço e jantar SEMPRE devem ter pelo menos uma porção de legume/vegetal cozido quando o objetivo for cutting.
-5. Mantenha os alimentos já presentes — só substitua/adicione conforme as regras 3 e 4 ou se violar a anamnese.
+1. Aplique o COMANDO DO COACH literalmente. Se ele pediu trocar X por Y, troque. Se pediu adicionar legumes, adicione. Se pediu alinhar à anamnese, substitua os itens conflitantes por equivalentes que o aluno aceita.
+2. Bate os macros alvo. Se houve redução de kcal, ENTREGUE refeições com menos kcal.
+3. PROTEÍNA é a última coisa a ser cortada — ajuste gramas para bater ${novaProt}g/dia.
+4. Para reduzir kcal mantendo o prato cheio: SUBSTITUA parte do arroz/massa por legumes.
+5. Almoço e jantar SEMPRE com pelo menos uma porção de vegetal cozido em cutting.
 6. FIBRA: máximo 35g/dia. AVEIA: variável, nunca fixar 100g. Sem castanhas. Sem creme de arroz salvo se já existia.
 7. FORMATO OBRIGATÓRIO do campo "descricao_ia" (DUAS PARTES separadas por UMA linha em branco):
    PARTE 1 — RESUMO (lista, uma linha por alimento, começando com "• "):
