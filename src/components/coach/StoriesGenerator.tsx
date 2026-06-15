@@ -36,13 +36,13 @@ import pratoRefeicao from "@/assets/prato-refeicao-realista.png";
 type TemplateId = "treino-dieta-pro" | "consultoria-phone" | "yellow-cyber" | "dark-purple" | "ironberg" | "gradient-fit" | "feed-brutalist";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; format: "9:16" | "1:1" }[] = [
-  { id: "treino-dieta-pro", label: "Treino & Dieta Pro", desc: "Pôster fitness com IA (cyan)", accent: "#22D3EE", format: "9:16" },
-  { id: "consultoria-phone", label: "Consultoria Online", desc: "Mockup de celular + amarelo", accent: "#FACC15", format: "9:16" },
-  { id: "yellow-cyber", label: "Yellow Cyber", desc: "Curvas neon amarelas", accent: "#E0FF00", format: "9:16" },
-  { id: "dark-purple", label: "Purple Neon", desc: "Círculos roxos vazados", accent: "#BF00FF", format: "9:16" },
-  { id: "ironberg", label: "Ironberg Brutal", desc: "Tipografia gigante vazada", accent: "#CCFF00", format: "9:16" },
-  { id: "gradient-fit", label: "Gradient Sport", desc: "Listras de aviso vibrantes", accent: "#FB923C", format: "9:16" },
-  { id: "feed-brutalist", label: "Feed Brutalista", desc: "Quadrado de alta conversão", accent: "#FFFFFF", format: "1:1" },
+  { id: "treino-dieta-pro", label: "Consultoria Gold", desc: "Pôster premium dourado", accent: "#D4A24A", format: "9:16" },
+  { id: "consultoria-phone", label: "Consultoria Cyan", desc: "Mesma arte em cyan", accent: "#22D3EE", format: "9:16" },
+  { id: "yellow-cyber", label: "Consultoria Neon", desc: "Mesma arte em amarelo neon", accent: "#E0FF00", format: "9:16" },
+  { id: "dark-purple", label: "Consultoria Purple", desc: "Mesma arte em roxo", accent: "#BF00FF", format: "9:16" },
+  { id: "ironberg", label: "Consultoria Lime", desc: "Mesma arte em verde lima", accent: "#CCFF00", format: "9:16" },
+  { id: "gradient-fit", label: "Consultoria Orange", desc: "Mesma arte em laranja", accent: "#FB923C", format: "9:16" },
+  { id: "feed-brutalist", label: "Consultoria Red", desc: "Mesma arte em vermelho", accent: "#EF4444", format: "9:16" },
 ];
 
 // Mock workout templates fallback
