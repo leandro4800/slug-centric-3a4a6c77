@@ -12,6 +12,66 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+const jsonResponse = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+
+const stripAccents = (s: string) =>
+  String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+const extractJsonObject = (text: string) => {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) return null;
+  try { return JSON.parse(trimmed); } catch {}
+  const match = trimmed.match(/\{[\s\S]*\}/);
+  if (!match) return null;
+  try { return JSON.parse(match[0]); } catch { return null; }
+};
+
+const fallbackExercises = (dia: string, biblioteca: any[]) => {
+  const normalizedDay = stripAccents(dia);
+  const pick = (terms: string[], defaults: string[]) => {
+    const found = biblioteca
+      .filter((e: any) => terms.some((t) => stripAccents(`${e?.nome || ""} ${e?.grupo_muscular || ""}`).includes(t)))
+      .slice(0, defaults.length)
+      .map((e: any) => e.nome)
+      .filter(Boolean);
+    return found.length >= 3 ? found : defaults;
+  };
+  const names = normalizedDay.includes("peito")
+    ? [...pick(["peito", "supino", "crucifixo", "crossover"], ["Supino Reto", "Supino Inclinado", "Crucifixo", "Crossover"]), ...pick(["triceps", "tríceps"], ["Tríceps Polia", "Tríceps Testa"])]
+    : normalizedDay.includes("costa") || normalizedDay.includes("pull")
+      ? [...pick(["costas", "dorsal", "remada", "puxada"], ["Puxada Frente", "Remada Baixa", "Remada Curvada", "Pulldown"]), ...pick(["biceps", "bíceps"], ["Rosca Direta", "Rosca Alternada"])]
+      : normalizedDay.includes("glute") || normalizedDay.includes("posterior")
+        ? pick(["glute", "posterior", "stiff", "pelvica", "flexora"], ["Elevação Pélvica", "Stiff", "Mesa Flexora", "Cadeira Abdutora", "Coice na Polia"])
+        : normalizedDay.includes("quad") || normalizedDay.includes("perna") || normalizedDay.includes("legs")
+          ? pick(["quadriceps", "perna", "agach", "leg", "extensora", "panturrilha"], ["Agachamento Livre", "Leg Press", "Cadeira Extensora", "Afundo", "Panturrilha em Pé"])
+          : normalizedDay.includes("ombro") || normalizedDay.includes("push")
+            ? pick(["ombro", "desenvolvimento", "elevacao", "elevação"], ["Desenvolvimento", "Elevação Lateral", "Elevação Posterior", "Encolhimento"])
+            : pick([], ["Agachamento Livre", "Supino Reto", "Puxada Frente", "Desenvolvimento", "Rosca Direta"]);
+
+  return names.slice(0, 6).map((nome, idx) => ({
+    nome,
+    series: idx === 0 ? "2x Série de Aquecimento + 1x Série de Ajuste + 2x Série de Trabalho" : "1x Série de Aquecimento + 1x Série de Ajuste + 2x Série de Trabalho",
+    repeticoes: "8-12",
+    cadencia: "3-1-X-0",
+    detalhes_execucao: "Aquecimento leve, série de ajuste sem falha e séries de trabalho com execução controlada até próximo da falha técnica.",
+    observacao: "Rascunho automático para revisão do coach; ajuste cargas, ordem e técnicas antes de enviar.",
+  }));
+};
+
+const buildFallbackWorkout = (divisoes: string[] | null, biblioteca: any[]) => ({
+  dias: (divisoes && divisoes.length > 0 ? divisoes : ["Treino A", "Treino B", "Treino C"]).map((dia) => ({
+    dia,
+    exercicios: fallbackExercises(dia, Array.isArray(biblioteca) ? biblioteca : []),
+  })),
+  cardio: "Cardio pós-treino: 20 minutos em intensidade moderada.",
+  fallback: true,
+  error: "A IA ficou temporariamente indisponível; geramos um rascunho técnico para revisão.",
+});
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -50,8 +110,14 @@ serve(async (req) => {
     const requestedTarget = perfil?.aluno_id || perfil?.user_id;
     let resolvedUserId = callerIdE;
     if (requestedTarget && requestedTarget !== callerIdE) {
-      const { data: alunoRow } = await adminE
-        .from("alunos").select("tenant_id").eq("id", requestedTarget).maybeSingle();
+      const { data: alunoPerfil } = await adminE
+        .from("perfis").select("tenant_id").eq("id", requestedTarget).maybeSingle();
+      let alunoRow = alunoPerfil;
+      if (!alunoRow?.tenant_id) {
+        const { data: alunoLegacy } = await adminE
+          .from("alunos").select("tenant_id").eq("id", requestedTarget).maybeSingle();
+        alunoRow = alunoLegacy;
+      }
       if (!alunoRow) {
         return new Response(JSON.stringify({ error: "Aluno não encontrado" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -331,7 +397,7 @@ PSE (Percepção de Esforço) por nível — informe no campo "observacao":
 - Avançado treinando 1 músculo/dia: MÍNIMO 4-5 exercícios + técnicas avançadas obrigatórias.
 - Anti-repetição: respeite o histórico — varie pelo menos 60% dos exercícios protagonistas em relação ao último ciclo, mantendo o padrão/divisão do coach se existente.
 
-ESTRUTURA DE RESPOSTA: Chame a função montar_treino com a prescrição completa (7 dias). Sempre preencha "observacao_clinica" com parecer baseado em biomarcadores (tier) e estratégia de variação vs treino anterior. Respeite TODAS as regras acima sem exceção.`;
+ESTRUTURA DE RESPOSTA: Retorne APENAS um JSON válido com a prescrição completa no formato { "dias": [{ "dia": "...", "exercicios": [{ "nome": "...", "series": "...", "repeticoes": "...", "cadencia": "...", "detalhes_execucao": "...", "observacao": "..." }] }], "cardio": "...", "observacao_clinica": "..." }. Sempre preencha "observacao_clinica" com parecer baseado em biomarcadores (tier) e estratégia de variação vs treino anterior. Respeite TODAS as regras acima sem exceção.`;
 
     const userPrompt = `Monte o treino Pacho-style para:
 - Sexo: ${perfil?.sexo || "não informado"}
@@ -396,27 +462,34 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
         method: "POST",
         headers: {
           Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "Lovable-API-Key": LOVABLE_API_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
+          model: "google/gemini-3-flash-preview",
           messages: [
             { role: "system", content: systemPrompt },
             { role: "user", content: userPrompt },
           ],
-          tools,
-          tool_choice: { type: "function", function: { name: "montar_treino" } },
+          response_format: { type: "json_object" },
+          temperature: 0.35,
         }),
       });
 
-    let resp = await callGateway();
-    let attempts = 0;
-    while (!resp.ok && (resp.status === 503 || resp.status === 502 || resp.status === 504 || resp.status === 429) && attempts < 2) {
-      attempts++;
-      const delay = 800 * attempts;
-      console.warn(`AI gateway ${resp.status} — retry ${attempts} em ${delay}ms`);
-      await new Promise((r) => setTimeout(r, delay));
+    let resp: Response;
+    try {
       resp = await callGateway();
+      let attempts = 0;
+      while (!resp.ok && (resp.status === 503 || resp.status === 502 || resp.status === 504 || resp.status === 429) && attempts < 2) {
+        attempts++;
+        const delay = 800 * attempts;
+        console.warn(`AI gateway ${resp.status} — retry ${attempts} em ${delay}ms`);
+        await new Promise((r) => setTimeout(r, delay));
+        resp = await callGateway();
+      }
+    } catch (gatewayErr) {
+      console.error("AI gateway fetch failed:", gatewayErr);
+      return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
     if (!resp.ok) {
@@ -434,15 +507,14 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      return new Response(JSON.stringify({ error: "A IA está temporariamente indisponível. Tente novamente em alguns segundos." }), {
-        status: 503,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
     const data = await resp.json();
     const call = data.choices?.[0]?.message?.tool_calls?.[0];
-    const args = call?.function?.arguments ? JSON.parse(call.function.arguments) : null;
+    const content = data.choices?.[0]?.message?.content;
+    let args = call?.function?.arguments ? extractJsonObject(call.function.arguments) : null;
+    if (!args && content) args = extractJsonObject(content);
 
     if (nivelKey !== "iniciante" && Array.isArray(args?.dias) && args.dias.some((d: any) => hasFullBody(String(d?.dia || "")))) {
       return new Response(JSON.stringify({ error: "A IA tentou gerar Full Body para um aluno intermediário/avançado. Ajuste a divisão e gere novamente." }), {
@@ -473,10 +545,7 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
 
     if (!args || !Array.isArray(args.dias) || args.dias.length === 0) {
       console.error("IA retornou sem dias", { raw: data });
-      return new Response(JSON.stringify({ error: "A IA não retornou exercícios. Tente novamente." }), {
-        status: 502,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
     return new Response(JSON.stringify(args), {
