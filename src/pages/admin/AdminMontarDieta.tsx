@@ -462,7 +462,7 @@ const AdminMontarDieta = () => {
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
         <div className="flex items-center gap-3">
-          <AdminBackButton to={alunoId ? `/${slug}/admin/atleta/${alunoId}` : `/${slug}/admin`} />
+          <AdminBackButton to={alunoId ? `/${slug}/admin/atleta/${alunoId}` : `/${slug}/admin/atletas`} />
           <h1 className="font-display text-2xl uppercase">Montar Dieta</h1>
           <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30">IA Coach</span>
         </div>
