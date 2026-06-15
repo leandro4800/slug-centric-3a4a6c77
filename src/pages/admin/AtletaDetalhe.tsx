@@ -160,7 +160,7 @@ const AtletaDetalhe = () => {
   const [iaPrompt, setIaPrompt] = useState("");
   const [showPrescricaoViewer, setShowPrescricaoViewer] = useState(false);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const action = searchParams.get("action");
   const openEval = searchParams.get("openEval");
 
@@ -541,12 +541,22 @@ const AtletaDetalhe = () => {
       setPromptType("treino");
       setIaPrompt("");
       setShowPromptDialog(true);
+      setSearchParams((params) => {
+        const next = new URLSearchParams(params);
+        next.delete("action");
+        return next;
+      }, { replace: true });
     } else if (action === "generate-diet" && canGenerate && !loading) {
       setPromptType("dieta");
       setIaPrompt("");
       setShowPromptDialog(true);
+      setSearchParams((params) => {
+        const next = new URLSearchParams(params);
+        next.delete("action");
+        return next;
+      }, { replace: true });
     }
-  }, [action, canGenerate, loading]);
+  }, [action, canGenerate, loading, setSearchParams]);
 
   if (loading) {
     return (
