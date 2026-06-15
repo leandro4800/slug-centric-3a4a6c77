@@ -190,6 +190,7 @@ const fullBodyBloqueado = (nivel: string, divisoes: string[]) =>
 
 const AdminMontarTreino = () => {
   const [searchParams] = useSearchParams();
+  const { slug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
