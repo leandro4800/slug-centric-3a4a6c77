@@ -555,7 +555,7 @@ const AdminMontarTreino = () => {
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-          <AdminBackButton />
+          <AdminBackButton to={alunoId ? `/${slug}/admin/atleta/${alunoId}` : `/${slug}/admin`} />
           <h1 className="font-display text-base sm:text-2xl truncate">MONTAR TREINO</h1>
           <span className="shrink-0 text-[9px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-wider border border-primary/30">IA Coach</span>
         </div>
