@@ -355,11 +355,6 @@ export default function AdminCoaches() {
 
                 {selected.status === "approved" && (
                   <div className="flex flex-wrap gap-2 border-t border-border pt-4">
-                    <Link to={`/${selected.slug}/admin`}>
-                      <Button size="sm" variant="outline" className="border-primary/40">
-                        <Sparkles className="mr-1 h-3 w-3" /> Painel do Coach
-                      </Button>
-                    </Link>
                     <Button size="sm" variant="outline" onClick={() => seedAlunos(selected.slug)} disabled={seeding === selected.slug}>
                       {seeding === selected.slug ? (
                         <Loader2 className="mr-1 h-3 w-3 animate-spin" />
