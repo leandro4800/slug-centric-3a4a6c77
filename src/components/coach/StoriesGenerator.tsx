@@ -87,15 +87,31 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
 
   const [config, setConfig] = useState({
     instagram_handle: "@seuperfil",
-    headline: "TREINE COMIGO",
-    subheadline: "TRANSFORME SEU CORPO",
-    cta_text: "FALE COMIGO AGORA!",
+    headline: TEMPLATE_DEFAULTS["treino-dieta-pro"].headline,
+    subheadline: TEMPLATE_DEFAULTS["treino-dieta-pro"].subheadline,
+    cta_text: TEMPLATE_DEFAULTS["treino-dieta-pro"].cta_text,
     website_url: "seusite.com.br",
     phone: "+55 11 99999-0000",
-    discount: "30% OFF",
+    discount: TEMPLATE_DEFAULTS["treino-dieta-pro"].discount,
     photo_url: "",
-    branding_color: "#E0FF00",
+    branding_color: "#22D3EE",
   });
+
+  // Ao trocar de template, repopula os textos do formulário com o conteúdo daquele template
+  const handleTemplateChange = (id: TemplateId) => {
+    setTemplate(id);
+    const d = TEMPLATE_DEFAULTS[id];
+    const accent = TEMPLATES.find(t => t.id === id)?.accent || config.branding_color;
+    setConfig(prev => ({
+      ...prev,
+      headline: d.headline,
+      cta_text: d.cta_text,
+      discount: d.discount,
+      subheadline: d.subheadline,
+      branding_color: accent,
+    }));
+  };
+
 
   const selectedWorkout = workouts.find(w => w.id === selectedWorkoutId);
   const dynamicSubtitle = selectedWorkout?.titulo || config.subheadline;
