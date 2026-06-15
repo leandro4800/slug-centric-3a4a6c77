@@ -376,7 +376,11 @@ type PosterVariant = {
 };
 
 const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
-  const accent: string = v.accent;
+  const accent: string = config?.branding_color || v.accent;
+  // Permite que o coach sobrescreva o conteúdo do template via formulário
+  const headlineBig = (config?.headline?.trim()) || v.headlineBig;
+  const ctaBig = (config?.cta_text?.trim()) || v.ctaBig;
+  const badgeTop = (config?.discount?.trim()) || v.badge.top;
   const bigStyle: React.CSSProperties = {
     backgroundImage: `linear-gradient(180deg, #ffffff 0%, ${accent} 45%, #1a1a1a 100%)`,
     WebkitBackgroundClip: "text",
@@ -411,7 +415,7 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
           className={`font-['Anton'] leading-[0.85] uppercase tracking-tight ${v.headlineBigItalic ? "italic" : ""} mt-1 break-words`}
           style={{ ...bigStyle, fontSize: "clamp(34px, 11vw, 56px)" }}
         >
-          {v.headlineBig}
+          {headlineBig}
         </div>
         {v.headlineSub && <div className="font-['Anton'] text-[15px] leading-[1] uppercase tracking-wide mt-1.5">{v.headlineSub}</div>}
 
@@ -425,7 +429,7 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
       <div className="absolute right-3 top-[44%] z-10">
         <div className="w-[78px] h-[78px] rounded-full border-2 flex flex-col items-center justify-center text-center bg-black/60 backdrop-blur-sm"
           style={{ borderColor: accent, boxShadow: `0 0 24px ${accent}55` }}>
-          <div className="font-['Anton'] text-[18px] leading-none" style={{ color: accent }}>{v.badge.top}</div>
+          <div className="font-['Anton'] text-[18px] leading-none" style={{ color: accent }}>{badgeTop}</div>
           <div className="font-['Anton'] text-[10px] leading-tight" style={{ color: accent }}>{v.badge.mid}</div>
           <div className="text-[6px] opacity-80 tracking-widest mt-0.5">{v.badge.bot}</div>
         </div>
@@ -488,11 +492,13 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
           </div>
           <div className="leading-tight">
             <div className="font-bold text-[10px] uppercase tracking-wide" style={{ color: accent }}>{v.ctaTop}</div>
-            <div className="font-black text-[12px] uppercase tracking-wide">{v.ctaBig}</div>
+            <div className="font-black text-[12px] uppercase tracking-wide">{ctaBig}</div>
           </div>
         </div>
-        <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between">
-          <div className="text-[8px] opacity-70 uppercase tracking-widest">Fale comigo agora:</div>
+        <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 text-[9px] font-bold opacity-90">
+            <Phone className="h-2.5 w-2.5" style={{ color: accent }} />{config.phone}
+          </div>
           <div className="flex items-center gap-1 text-[9px] font-bold" style={{ color: accent }}>
             <AtSign className="h-2.5 w-2.5" />{config.instagram_handle}
           </div>
@@ -521,6 +527,7 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
         <div className="text-[8px] tracking-[0.35em] uppercase opacity-80">
           <span className="font-bold">{v.footerLeft},</span>{" "}
           <span style={{ color: accent }} className="font-bold">{v.footerRight}.</span>
+          {config.website_url && <span className="opacity-70"> · {config.website_url}</span>}
         </div>
       </div>
     </div>
@@ -586,7 +593,7 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
         <div className="font-['Anton'] text-[46px] leading-[0.85] uppercase tracking-tight" style={titleWhite}>TREINO</div>
         <div className="font-['Anton'] text-[46px] leading-[0.85] uppercase tracking-tight mt-1" style={titleAccent}>E DIETA</div>
         <div className="inline-block mt-2 px-2.5 py-0.5 font-['Anton'] text-[16px] uppercase tracking-wider text-black shadow-lg" style={{ background: accent }}>
-          PERSONALIZADOS
+          {(config.headline?.trim()) || "PERSONALIZADOS"}
         </div>
         <div className="mt-2 inline-flex items-center gap-2 border-2 rounded-full px-2.5 py-0.5 bg-black/40" style={{ borderColor: "#ffffff30" }}>
           <Wifi className="h-3 w-3" style={{ color: accent }} />
@@ -599,7 +606,7 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
           <Check className="h-2.5 w-2.5" style={{ color: accent }} />
         </div>
         <div className="leading-none">
-          <div className="font-['Anton'] text-[14px]" style={{ color: accent }}>100%</div>
+          <div className="font-['Anton'] text-[14px]" style={{ color: accent }}>{(config.discount?.trim()) || "100%"}</div>
           <div className="text-[6px] tracking-widest opacity-80">ACOMPANHAMENTO<br />INDIVIDUAL</div>
         </div>
       </div>
@@ -671,13 +678,13 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
             </div>
             <div className="leading-tight">
               <div className="font-bold text-[9px] uppercase">COMECE HOJE</div>
-              <div className="font-black text-[10px] uppercase">SUA TRANSFORMAÇÃO!</div>
+              <div className="font-black text-[10px] uppercase">{(config.cta_text?.trim()) || "SUA TRANSFORMAÇÃO!"}</div>
             </div>
           </div>
         </div>
-        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10">
-          <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-wider opacity-90">
-            <Lock className="h-3 w-3" style={{ color: accent }} /> VAGAS LIMITADAS!
+        <div className="flex items-center justify-between mt-3 pt-2 border-t border-white/10 gap-2">
+          <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wider opacity-90">
+            <Phone className="h-3 w-3" style={{ color: accent }} /> {config.phone}
           </div>
           <div className="text-right leading-tight">
             <div className="text-[8px] opacity-60 tracking-widest">{coachName}</div>
@@ -686,6 +693,11 @@ const TreinoDietaProTemplate = ({ config, coachName, cutoutUrl }: any) => {
             </div>
           </div>
         </div>
+        {config.website_url && (
+          <div className="mt-1 text-center text-[8px] tracking-[0.3em] uppercase opacity-70">
+            {config.website_url}
+          </div>
+        )}
       </div>
     </div>
   );
