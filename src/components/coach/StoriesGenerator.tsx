@@ -46,6 +46,19 @@ const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; 
   { id: "feed-brutalist", label: "Resultado Real", desc: "Vermelho impacto", accent: "#EF4444", format: "9:16" },
 ];
 
+// Conteúdo padrão de cada template — mostrado no formulário ao selecionar
+// para que o coach veja e edite exatamente o texto que aparece no pôster.
+const TEMPLATE_DEFAULTS: Record<TemplateId, { headline: string; cta_text: string; discount: string; subheadline: string }> = {
+  "treino-dieta-pro":   { headline: "PERSONALIZADOS",          cta_text: "SUA TRANSFORMAÇÃO!",        discount: "100%",        subheadline: "RESULTADOS REAIS, ONDE VOCÊ ESTIVER!" },
+  "consultoria-online": { headline: "ON-LINE",                 cta_text: "ALCANÇAR SEUS OBJETIVOS!",  discount: "100%",        subheadline: "RESULTADOS REAIS, ONDE VOCÊ ESTIVER." },
+  "consultoria-phone":  { headline: "EXCLUSIVO",               cta_text: "SUA EVOLUÇÃO HOJE!",        discount: "MÉTODO",      subheadline: "PROTOCOLO ÚNICO, FEITO PARA VOCÊ." },
+  "yellow-cyber":       { headline: "TOTAL",                   cta_text: "DE SE TRANSFORMAR!",        discount: "12 SEMANAS",  subheadline: "VOCÊ NO COMANDO, DO INÍCIO AO FIM." },
+  "dark-purple":        { headline: "PERFORMANCE",             cta_text: "DOS QUE FAZEM ACONTECER!",  discount: "TOP 1%",      subheadline: "ALTO NÍVEL, SEM ATALHOS." },
+  "ironberg":           { headline: "& FOCO",                  cta_text: "SEM DESCULPAS!",            discount: "100% FOCO",   subheadline: "DISCIPLINA DE FERRO, RESULTADO DE OURO." },
+  "gradient-fit":       { headline: "PERFORMANCE",             cta_text: "SUA TRANSFORMAÇÃO!",        discount: "2X RÁPIDO",   subheadline: "MAIS RÁPIDO, MAIS LONGE." },
+  "feed-brutalist":     { headline: "REAL",                    cta_text: "BORA PRO RESULTADO!",       discount: "+500 ALUNOS", subheadline: "PROMESSA HONESTA, ENTREGA COMPROVADA." },
+};
+
 // Mock workout templates fallback
 const MOCK_WORKOUTS = [
   { id: "mock-1", titulo: "Hipertrofia de Glúteos" },
