@@ -533,8 +533,12 @@ const Comunidade = () => {
             </div>
 
             {previewUrl && (
-              <div className="relative rounded-2xl overflow-hidden aspect-video bg-card/50 border border-border">
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              <div className="relative rounded-2xl overflow-hidden max-h-[50vh] bg-black border border-border flex items-center justify-center">
+                {selectedFile?.type.startsWith("video") ? (
+                  <video src={previewUrl} controls playsInline className="w-full max-h-[50vh] object-contain" />
+                ) : (
+                  <img src={previewUrl} alt="Preview" className="w-full max-h-[50vh] object-contain" />
+                )}
                 <Button
                   onClick={() => {
                     setSelectedFile(null);
