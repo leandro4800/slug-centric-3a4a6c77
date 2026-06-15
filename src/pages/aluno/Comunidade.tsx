@@ -244,12 +244,13 @@ const Comunidade = () => {
   const handleCreatePost = async () => {
     if (!user || !tenant) return;
     if (!newPostText && !selectedFile) {
-      toast({ title: "Conteúdo vazio", description: "Escreva algo ou selecione uma imagem.", variant: "destructive" });
+      toast({ title: "Conteúdo vazio", description: "Escreva algo ou selecione uma mídia.", variant: "destructive" });
       return;
     }
     try {
       setIsUploading(true);
       let publicUrl: string | null = null;
+      const isVideo = !!selectedFile?.type.startsWith("video");
       if (selectedFile) {
         const fileExt = selectedFile.name.split(".").pop();
         const filePath = `${user.id}/${Date.now()}.${fileExt}`;
@@ -261,8 +262,9 @@ const Comunidade = () => {
       const { error: insertError } = await supabase.from("comunidade_posts").insert({
         usuario_id: user.id,
         conteudo: newPostText,
-        imagem_url: publicUrl,
-        tipo: selectedFile?.type.startsWith("video") ? "video" : "foto",
+        imagem_url: isVideo ? null : publicUrl,
+        video_url: isVideo ? publicUrl : null,
+        tipo: isVideo ? "video" : "foto",
         profissional_id: tenant.id,
       });
       if (insertError) throw insertError;
@@ -377,7 +379,16 @@ const Comunidade = () => {
                   )}
                 </div>
 
-                {post.imagem_url && (
+                {post.video_url ? (
+                  <div className="relative w-full max-h-[80vh] bg-black flex items-center justify-center overflow-hidden">
+                    <video
+                      src={post.video_url}
+                      controls
+                      playsInline
+                      className="w-full h-auto max-h-[80vh] object-contain"
+                    />
+                  </div>
+                ) : post.imagem_url && (
                   <div className="relative aspect-square w-full bg-card/50 flex items-center justify-center overflow-hidden">
                     <img
                       src={post.imagem_url}
@@ -522,8 +533,12 @@ const Comunidade = () => {
             </div>
 
             {previewUrl && (
-              <div className="relative rounded-2xl overflow-hidden aspect-video bg-card/50 border border-border">
-                <img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
+              <div className="relative rounded-2xl overflow-hidden max-h-[50vh] bg-black border border-border flex items-center justify-center">
+                {selectedFile?.type.startsWith("video") ? (
+                  <video src={previewUrl} controls playsInline className="w-full max-h-[50vh] object-contain" />
+                ) : (
+                  <img src={previewUrl} alt="Preview" className="w-full max-h-[50vh] object-contain" />
+                )}
                 <Button
                   onClick={() => {
                     setSelectedFile(null);
