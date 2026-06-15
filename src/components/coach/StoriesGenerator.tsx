@@ -492,11 +492,13 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
           </div>
           <div className="leading-tight">
             <div className="font-bold text-[10px] uppercase tracking-wide" style={{ color: accent }}>{v.ctaTop}</div>
-            <div className="font-black text-[12px] uppercase tracking-wide">{v.ctaBig}</div>
+            <div className="font-black text-[12px] uppercase tracking-wide">{ctaBig}</div>
           </div>
         </div>
-        <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between">
-          <div className="text-[8px] opacity-70 uppercase tracking-widest">Fale comigo agora:</div>
+        <div className="mt-1.5 pt-1.5 border-t border-white/10 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1 text-[9px] font-bold opacity-90">
+            <Phone className="h-2.5 w-2.5" style={{ color: accent }} />{config.phone}
+          </div>
           <div className="flex items-center gap-1 text-[9px] font-bold" style={{ color: accent }}>
             <AtSign className="h-2.5 w-2.5" />{config.instagram_handle}
           </div>
