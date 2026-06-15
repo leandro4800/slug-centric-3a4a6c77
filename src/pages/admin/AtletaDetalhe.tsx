@@ -1046,7 +1046,12 @@ const AtletaDetalhe = () => {
           
           <div className="py-6">
             {anamnese ? (
-              <AnamneseDetails data={anamnese} />
+              <AnamneseDetails
+                data={anamnese}
+                alunoId={atletaId}
+                editable
+                onSaved={() => load()}
+              />
             ) : (
               <p className="text-center text-muted-foreground py-10">Dados não encontrados.</p>
       )}

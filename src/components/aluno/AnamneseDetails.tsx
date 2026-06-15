@@ -1,4 +1,12 @@
-import { CheckCircle2, XCircle } from "lucide-react";
+import { useState } from "react";
+import { Pencil, Save, X, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AnamneseData {
   doencas: string[];
@@ -26,60 +34,223 @@ interface AnamneseData {
   tempo_recuperacao: string | null;
 }
 
-export const AnamneseDetails = ({ data }: { data: AnamneseData }) => {
-  return (
-    <div className="space-y-6 text-sm">
-      <section className="space-y-3">
-        <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Saúde & Histórico</h3>
-        <div className="grid gap-2">
-          <DetailItem label="Doenças" value={data.doencas?.join(", ") || "Nenhuma"} />
-          <DetailItem label="Medicamentos" value={data.medicamentos} />
-          <DetailItem label="Cirurgias" value={data.cirurgias} />
-          <DetailItem label="Lesões Atuais" value={data.lesoes_atuais} />
-          <DetailItem label="Histórico Familiar" value={data.historico_familiar} />
-        </div>
-      </section>
+interface Props {
+  data: AnamneseData;
+  alunoId?: string;
+  editable?: boolean;
+  onSaved?: (updated: AnamneseData) => void;
+}
 
-      <section className="space-y-3">
-        <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Hábitos</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <DetailItem label="Horas de Sono" value={data.horas_sono ? `${data.horas_sono}h` : null} />
-          <DetailItem label="Nível Estresse" value={data.nivel_estresse ? `${data.nivel_estresse}/10` : null} />
-          <DetailItem label="Fumante" value={data.tabagismo ? "Sim" : "Não"} />
-          <DetailItem label="Álcool" value={data.alcool} />
-        </div>
-      </section>
+export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState<AnamneseData>(data);
 
-      <section className="space-y-3">
-        <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Nutrição</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <DetailItem label="Refeições/Dia" value={data.refeicoes_dia} />
-          <DetailItem label="Água/Dia" value={data.agua_litros ? `${data.agua_litros}L` : null} />
-        </div>
-        <DetailItem label="Suplementos" value={data.suplementos?.join(", ")} />
-        <DetailItem label="Restrições" value={data.restricoes_alimentares?.join(", ")} />
-        <DetailItem label="Ama" value={data.alimentos_ama} />
-        <DetailItem label="Evita" value={data.alimentos_evita} />
-      </section>
+  const arrFromCsv = (s: string) => s.split(",").map(x => x.trim()).filter(Boolean);
+  const csv = (a: string[] | null | undefined) => (a || []).join(", ");
 
-      <section className="space-y-3">
-        <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Treino</h3>
-        <div className="grid grid-cols-2 gap-3">
-          <DetailItem label="Anos de Treino" value={data.anos_treino} />
-          <DetailItem label="Experiência" value={data.nivel_experiencia} />
-        </div>
-        <DetailItem label="Disponibilidade" value={data.disponibilidade_dias?.join(", ")} />
-      </section>
+  const handleSave = async () => {
+    if (!alunoId) return;
+    setSaving(true);
+    try {
+      const payload: any = {
+        doencas: form.doencas,
+        medicamentos: form.medicamentos,
+        lesoes_atuais: form.lesoes_atuais,
+        horas_sono: form.horas_sono,
+        qualidade_sono: form.qualidade_sono,
+        nivel_estresse: form.nivel_estresse,
+        tabagismo: form.tabagismo,
+        alcool: form.alcool,
+        suplementos: form.suplementos,
+        restricoes_alimentares: form.restricoes_alimentares,
+        refeicoes_dia: form.refeicoes_dia,
+        agua_litros: form.agua_litros,
+        anos_treino: form.anos_treino,
+        disponibilidade_dias: form.disponibilidade_dias,
+        nivel_experiencia: form.nivel_experiencia,
+        faz_uso_ergogenicos: form.faz_uso_ergogenicos,
+        detalhes_ergogenicos: form.detalhes_ergogenicos,
+        historico_familiar: form.historico_familiar,
+        cirurgias: form.cirurgias,
+        alimentos_ama: form.alimentos_ama,
+        alimentos_evita: form.alimentos_evita,
+        modalidades_anteriores: form.modalidades_anteriores,
+        tempo_recuperacao: form.tempo_recuperacao,
+        updated_at: new Date().toISOString(),
+      };
+      const { error } = await supabase
+        .from("anamnese_aluno")
+        .update(payload)
+        .eq("aluno_id", alunoId);
+      if (error) throw error;
+      toast.success("Anamnese atualizada!");
+      setEditing(false);
+      onSaved?.(form);
+    } catch (e: any) {
+      toast.error("Erro ao salvar: " + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
 
-      {data.faz_uso_ergogenicos && (
-        <section className="space-y-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-          <h3 className="font-display text-sm uppercase text-primary tracking-widest">Recursos Ergogênicos</h3>
-          <p className="text-xs text-foreground/90">{data.detalhes_ergogenicos || "Uso confirmado, sem detalhes."}</p>
+  if (!editing) {
+    return (
+      <div className="space-y-6 text-sm">
+        {editable && alunoId && (
+          <div className="flex justify-end">
+            <Button size="sm" variant="outline" onClick={() => { setForm(data); setEditing(true); }} className="gap-2">
+              <Pencil className="h-3 w-3" /> Editar
+            </Button>
+          </div>
+        )}
+        <section className="space-y-3">
+          <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Saúde & Histórico</h3>
+          <div className="grid gap-2">
+            <DetailItem label="Doenças" value={data.doencas?.join(", ") || "Nenhuma"} />
+            <DetailItem label="Medicamentos" value={data.medicamentos} />
+            <DetailItem label="Cirurgias" value={data.cirurgias} />
+            <DetailItem label="Lesões Atuais" value={data.lesoes_atuais} />
+            <DetailItem label="Histórico Familiar" value={data.historico_familiar} />
+          </div>
         </section>
+        <section className="space-y-3">
+          <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Hábitos</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <DetailItem label="Horas de Sono" value={data.horas_sono ? `${data.horas_sono}h` : null} />
+            <DetailItem label="Nível Estresse" value={data.nivel_estresse ? `${data.nivel_estresse}/10` : null} />
+            <DetailItem label="Fumante" value={data.tabagismo ? "Sim" : "Não"} />
+            <DetailItem label="Álcool" value={data.alcool} />
+          </div>
+        </section>
+        <section className="space-y-3">
+          <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Nutrição</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <DetailItem label="Refeições/Dia" value={data.refeicoes_dia} />
+            <DetailItem label="Água/Dia" value={data.agua_litros ? `${data.agua_litros}L` : null} />
+          </div>
+          <DetailItem label="Suplementos" value={data.suplementos?.join(", ")} />
+          <DetailItem label="Restrições" value={data.restricoes_alimentares?.join(", ")} />
+          <DetailItem label="Ama" value={data.alimentos_ama} />
+          <DetailItem label="Evita" value={data.alimentos_evita} />
+        </section>
+        <section className="space-y-3">
+          <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Treino</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <DetailItem label="Anos de Treino" value={data.anos_treino} />
+            <DetailItem label="Experiência" value={data.nivel_experiencia} />
+          </div>
+          <DetailItem label="Disponibilidade" value={data.disponibilidade_dias?.join(", ")} />
+        </section>
+        {data.faz_uso_ergogenicos && (
+          <section className="space-y-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
+            <h3 className="font-display text-sm uppercase text-primary tracking-widest">Recursos Ergogênicos</h3>
+            <p className="text-xs text-foreground/90">{data.detalhes_ergogenicos || "Uso confirmado, sem detalhes."}</p>
+          </section>
+        )}
+      </div>
+    );
+  }
+
+  // Edit mode
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="flex justify-end gap-2 sticky top-0 bg-card z-10 py-2">
+        <Button size="sm" variant="ghost" onClick={() => setEditing(false)} disabled={saving} className="gap-2">
+          <X className="h-3 w-3" /> Cancelar
+        </Button>
+        <Button size="sm" onClick={handleSave} disabled={saving} className="gap-2">
+          {saving ? <Loader2 className="h-3 w-3 animate-spin" /> : <Save className="h-3 w-3" />} Salvar
+        </Button>
+      </div>
+
+      <Field label="Doenças (separe por vírgula)">
+        <Input value={csv(form.doencas)} onChange={e => setForm({ ...form, doencas: arrFromCsv(e.target.value) })} />
+      </Field>
+      <Field label="Medicamentos">
+        <Textarea value={form.medicamentos || ""} onChange={e => setForm({ ...form, medicamentos: e.target.value })} />
+      </Field>
+      <Field label="Cirurgias">
+        <Input value={form.cirurgias || ""} onChange={e => setForm({ ...form, cirurgias: e.target.value })} />
+      </Field>
+      <Field label="Lesões Atuais">
+        <Textarea value={form.lesoes_atuais || ""} onChange={e => setForm({ ...form, lesoes_atuais: e.target.value })} />
+      </Field>
+      <Field label="Histórico Familiar">
+        <Textarea value={form.historico_familiar || ""} onChange={e => setForm({ ...form, historico_familiar: e.target.value })} />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Horas de Sono">
+          <Input type="number" value={form.horas_sono ?? ""} onChange={e => setForm({ ...form, horas_sono: e.target.value === "" ? null : Number(e.target.value) })} />
+        </Field>
+        <Field label="Nível Estresse (1-10)">
+          <Input type="number" min={1} max={10} value={form.nivel_estresse ?? ""} onChange={e => setForm({ ...form, nivel_estresse: e.target.value === "" ? null : Number(e.target.value) })} />
+        </Field>
+        <Field label="Qualidade do Sono (1-10)">
+          <Input type="number" min={1} max={10} value={form.qualidade_sono ?? ""} onChange={e => setForm({ ...form, qualidade_sono: e.target.value === "" ? null : Number(e.target.value) })} />
+        </Field>
+        <Field label="Álcool">
+          <Input value={form.alcool || ""} onChange={e => setForm({ ...form, alcool: e.target.value })} />
+        </Field>
+      </div>
+      <div className="flex items-center gap-2">
+        <Checkbox id="tab" checked={!!form.tabagismo} onCheckedChange={v => setForm({ ...form, tabagismo: !!v })} />
+        <Label htmlFor="tab">Fumante</Label>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Refeições/Dia">
+          <Input type="number" value={form.refeicoes_dia ?? ""} onChange={e => setForm({ ...form, refeicoes_dia: e.target.value === "" ? null : Number(e.target.value) })} />
+        </Field>
+        <Field label="Água/Dia (L)">
+          <Input type="number" step="0.1" value={form.agua_litros ?? ""} onChange={e => setForm({ ...form, agua_litros: e.target.value === "" ? null : Number(e.target.value) })} />
+        </Field>
+      </div>
+      <Field label="Suplementos (separe por vírgula)">
+        <Input value={csv(form.suplementos)} onChange={e => setForm({ ...form, suplementos: arrFromCsv(e.target.value) })} />
+      </Field>
+      <Field label="Restrições Alimentares (separe por vírgula)">
+        <Input value={csv(form.restricoes_alimentares)} onChange={e => setForm({ ...form, restricoes_alimentares: arrFromCsv(e.target.value) })} />
+      </Field>
+      <Field label="Alimentos que ama">
+        <Textarea value={form.alimentos_ama || ""} onChange={e => setForm({ ...form, alimentos_ama: e.target.value })} />
+      </Field>
+      <Field label="Alimentos que evita">
+        <Textarea value={form.alimentos_evita || ""} onChange={e => setForm({ ...form, alimentos_evita: e.target.value })} />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Anos de Treino">
+          <Input type="number" step="0.5" value={form.anos_treino ?? ""} onChange={e => setForm({ ...form, anos_treino: e.target.value === "" ? null : Number(e.target.value) })} />
+        </Field>
+        <Field label="Nível Experiência">
+          <Input value={form.nivel_experiencia || ""} onChange={e => setForm({ ...form, nivel_experiencia: e.target.value })} />
+        </Field>
+      </div>
+      <Field label="Disponibilidade Dias (separe por vírgula)">
+        <Input value={csv(form.disponibilidade_dias)} onChange={e => setForm({ ...form, disponibilidade_dias: arrFromCsv(e.target.value) })} />
+      </Field>
+
+      <div className="flex items-center gap-2">
+        <Checkbox id="erg" checked={!!form.faz_uso_ergogenicos} onCheckedChange={v => setForm({ ...form, faz_uso_ergogenicos: !!v })} />
+        <Label htmlFor="erg">Usa Ergogênicos</Label>
+      </div>
+      {form.faz_uso_ergogenicos && (
+        <Field label="Detalhes Ergogênicos">
+          <Textarea value={form.detalhes_ergogenicos || ""} onChange={e => setForm({ ...form, detalhes_ergogenicos: e.target.value })} />
+        </Field>
       )}
     </div>
   );
 };
+
+const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="space-y-1">
+    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</Label>
+    {children}
+  </div>
+);
 
 const DetailItem = ({ label, value }: { label: string; value: any }) => (
   <div>
