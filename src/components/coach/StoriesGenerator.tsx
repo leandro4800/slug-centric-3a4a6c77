@@ -429,7 +429,7 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
       <div className="absolute right-3 top-[44%] z-10">
         <div className="w-[78px] h-[78px] rounded-full border-2 flex flex-col items-center justify-center text-center bg-black/60 backdrop-blur-sm"
           style={{ borderColor: accent, boxShadow: `0 0 24px ${accent}55` }}>
-          <div className="font-['Anton'] text-[18px] leading-none" style={{ color: accent }}>{v.badge.top}</div>
+          <div className="font-['Anton'] text-[18px] leading-none" style={{ color: accent }}>{badgeTop}</div>
           <div className="font-['Anton'] text-[10px] leading-tight" style={{ color: accent }}>{v.badge.mid}</div>
           <div className="text-[6px] opacity-80 tracking-widest mt-0.5">{v.badge.bot}</div>
         </div>
