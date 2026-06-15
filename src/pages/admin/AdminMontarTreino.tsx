@@ -331,13 +331,7 @@ const AdminMontarTreino = () => {
 
   // Presets aplicáveis ao perfil atual (freq + sexo + nível)
   const presetsDisponiveis = useMemo(() => {
-    const fem = perfil.sexo?.toLowerCase().startsWith("f");
-    return DIVISOES_PRESETS.filter(
-      (p) =>
-        p.freq === (perfil.frequencia_semanal || 4) &&
-        (fem ? p.publico === "feminino" || p.publico === "unisex" : p.publico === "unisex") &&
-        p.nivel.includes(nivel as any)
-    );
+    return filtrarPresets(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
   }, [perfil.frequencia_semanal, perfil.sexo, nivel]);
 
   // Auto-seleciona primeiro preset quando muda contexto
