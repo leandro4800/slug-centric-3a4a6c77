@@ -46,6 +46,19 @@ const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; 
   { id: "feed-brutalist", label: "Resultado Real", desc: "Vermelho impacto", accent: "#EF4444", format: "9:16" },
 ];
 
+// Conteúdo padrão de cada template — mostrado no formulário ao selecionar
+// para que o coach veja e edite exatamente o texto que aparece no pôster.
+const TEMPLATE_DEFAULTS: Record<TemplateId, { headline: string; cta_text: string; discount: string; subheadline: string }> = {
+  "treino-dieta-pro":   { headline: "PERSONALIZADOS",          cta_text: "SUA TRANSFORMAÇÃO!",        discount: "100%",        subheadline: "RESULTADOS REAIS, ONDE VOCÊ ESTIVER!" },
+  "consultoria-online": { headline: "ON-LINE",                 cta_text: "ALCANÇAR SEUS OBJETIVOS!",  discount: "100%",        subheadline: "RESULTADOS REAIS, ONDE VOCÊ ESTIVER." },
+  "consultoria-phone":  { headline: "EXCLUSIVO",               cta_text: "SUA EVOLUÇÃO HOJE!",        discount: "MÉTODO",      subheadline: "PROTOCOLO ÚNICO, FEITO PARA VOCÊ." },
+  "yellow-cyber":       { headline: "TOTAL",                   cta_text: "DE SE TRANSFORMAR!",        discount: "12 SEMANAS",  subheadline: "VOCÊ NO COMANDO, DO INÍCIO AO FIM." },
+  "dark-purple":        { headline: "PERFORMANCE",             cta_text: "DOS QUE FAZEM ACONTECER!",  discount: "TOP 1%",      subheadline: "ALTO NÍVEL, SEM ATALHOS." },
+  "ironberg":           { headline: "& FOCO",                  cta_text: "SEM DESCULPAS!",            discount: "100% FOCO",   subheadline: "DISCIPLINA DE FERRO, RESULTADO DE OURO." },
+  "gradient-fit":       { headline: "PERFORMANCE",             cta_text: "SUA TRANSFORMAÇÃO!",        discount: "2X RÁPIDO",   subheadline: "MAIS RÁPIDO, MAIS LONGE." },
+  "feed-brutalist":     { headline: "REAL",                    cta_text: "BORA PRO RESULTADO!",       discount: "+500 ALUNOS", subheadline: "PROMESSA HONESTA, ENTREGA COMPROVADA." },
+};
+
 // Mock workout templates fallback
 const MOCK_WORKOUTS = [
   { id: "mock-1", titulo: "Hipertrofia de Glúteos" },
@@ -74,15 +87,31 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
 
   const [config, setConfig] = useState({
     instagram_handle: "@seuperfil",
-    headline: "TREINE COMIGO",
-    subheadline: "TRANSFORME SEU CORPO",
-    cta_text: "FALE COMIGO AGORA!",
+    headline: TEMPLATE_DEFAULTS["treino-dieta-pro"].headline,
+    subheadline: TEMPLATE_DEFAULTS["treino-dieta-pro"].subheadline,
+    cta_text: TEMPLATE_DEFAULTS["treino-dieta-pro"].cta_text,
     website_url: "seusite.com.br",
     phone: "+55 11 99999-0000",
-    discount: "30% OFF",
+    discount: TEMPLATE_DEFAULTS["treino-dieta-pro"].discount,
     photo_url: "",
-    branding_color: "#E0FF00",
+    branding_color: "#22D3EE",
   });
+
+  // Ao trocar de template, repopula os textos do formulário com o conteúdo daquele template
+  const handleTemplateChange = (id: TemplateId) => {
+    setTemplate(id);
+    const d = TEMPLATE_DEFAULTS[id];
+    const accent = TEMPLATES.find(t => t.id === id)?.accent || config.branding_color;
+    setConfig(prev => ({
+      ...prev,
+      headline: d.headline,
+      cta_text: d.cta_text,
+      discount: d.discount,
+      subheadline: d.subheadline,
+      branding_color: accent,
+    }));
+  };
+
 
   const selectedWorkout = workouts.find(w => w.id === selectedWorkoutId);
   const dynamicSubtitle = selectedWorkout?.titulo || config.subheadline;
@@ -231,7 +260,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
           {TEMPLATES.map(t => (
             <button
               key={t.id}
-              onClick={() => { setTemplate(t.id); update("branding_color", t.accent); }}
+              onClick={() => handleTemplateChange(t.id)}
               className={cn(
                 "group relative rounded-xl border-2 p-3 text-left transition-all overflow-hidden",
                 template === t.id
