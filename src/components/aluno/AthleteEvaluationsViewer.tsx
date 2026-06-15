@@ -91,7 +91,7 @@ export const AthleteEvaluationsViewer = ({ open, onOpenChange, alunoId }: Props)
       });
       const { error } = await supabase
         .from("avaliacoes_fisicas")
-        .update(payload)
+        .update(payload as any)
         .eq("id", id);
       if (error) throw error;
       toast.success("Avaliação atualizada!");
