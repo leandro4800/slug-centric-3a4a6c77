@@ -107,25 +107,6 @@ const Hub = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="vendas" className="mt-0 focus-visible:outline-none">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <MousePointerClick className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-bold">Links de Vendas</h3>
-              </div>
-              <SalesLinkConfig />
-            </div>
-          </TabsContent>
-
-          <TabsContent value="planos" className="mt-0 focus-visible:outline-none">
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="h-5 w-5 text-primary" />
-                <h3 className="text-lg font-bold">Planos de Consultoria</h3>
-              </div>
-              <PlanConfig />
-            </div>
-          </TabsContent>
 
           <TabsContent value="config" className="mt-0 focus-visible:outline-none">
             <div className="space-y-4">
