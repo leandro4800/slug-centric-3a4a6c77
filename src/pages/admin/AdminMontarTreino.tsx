@@ -406,14 +406,18 @@ const AdminMontarTreino = () => {
         body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: bibliotecaParaIA, divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
-      if ((data as any)?.error) throw new Error((data as any).error);
+      if ((data as any)?.error && !(data as any)?.fallback) throw new Error((data as any).error);
 
       const novos = mapearDiasParaEstrutura((data.dias || []) as DiaGeradoIA[], divisoesParaGerar);
       if (novos.length === 0) throw new Error("A IA não retornou exercícios para a divisão escolhida. Tente gerar novamente.");
       setExercicios(novos);
       setCardio(data.cardio || "");
       setPendingReview(true);
-      toast.success(`Treino gerado · ${novos.length} exercícios — revise antes de salvar`);
+      if ((data as any)?.fallback) {
+        toast.warning((data as any).error || "Rascunho gerado para revisão porque a IA oscilou.");
+      } else {
+        toast.success(`Treino gerado · ${novos.length} exercícios — revise antes de salvar`);
+      }
 
       if (searchParams.get("andDiet") === "true") {
         toast.info("Revise e confirme o treino antes de montar a dieta.");
