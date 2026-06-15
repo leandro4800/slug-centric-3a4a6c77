@@ -405,12 +405,15 @@ const PosterScaffold = ({ config, coachName, cutoutUrl, v }: any) => {
       <div className="absolute inset-0 bg-gradient-to-r from-black/95 via-black/30 to-transparent z-[3]" />
 
       {/* Headline */}
-      <div className="relative z-10 pt-6 px-5">
-        {v.preHeadline && <div className="font-['Anton'] text-[26px] leading-[0.95] uppercase tracking-wide">{v.preHeadline}</div>}
-        <div className={`font-['Anton'] text-[78px] leading-[0.82] uppercase tracking-tight ${v.headlineBigItalic ? "italic" : ""} mt-1`} style={bigStyle}>
+      <div className="relative z-10 pt-6 px-5 max-w-[62%]">
+        {v.preHeadline && <div className="font-['Anton'] text-[22px] leading-[0.95] uppercase tracking-wide">{v.preHeadline}</div>}
+        <div
+          className={`font-['Anton'] leading-[0.85] uppercase tracking-tight ${v.headlineBigItalic ? "italic" : ""} mt-1 break-words`}
+          style={{ ...bigStyle, fontSize: "clamp(34px, 11vw, 56px)" }}
+        >
           {v.headlineBig}
         </div>
-        {v.headlineSub && <div className="font-['Anton'] text-[20px] leading-[1] uppercase tracking-wide mt-1">{v.headlineSub}</div>}
+        {v.headlineSub && <div className="font-['Anton'] text-[15px] leading-[1] uppercase tracking-wide mt-1.5">{v.headlineSub}</div>}
 
         <div className="mt-4">
           <div className="font-['Anton'] text-[16px] leading-tight uppercase opacity-95">{v.subline1}</div>
