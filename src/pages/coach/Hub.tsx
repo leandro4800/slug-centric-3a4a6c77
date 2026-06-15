@@ -3,24 +3,16 @@ import { useNavigate, useParams } from "react-router-dom";
 import { 
   Rocket, 
   Megaphone, 
-  Link as LinkIcon, 
-  Zap, 
   ChevronLeft,
   Layout,
-  MousePointerClick,
-  Share2,
-  Lock,
   FileSpreadsheet,
   Settings,
-  DollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { StoriesGenerator } from "@/components/coach/StoriesGenerator";
-import { SalesLinkConfig } from "@/components/coach/SalesLinkConfig";
 import { WorkoutSpreadsheetGenerator } from "@/components/coach/WorkoutSpreadsheetGenerator";
 import { PushTester } from "@/components/coach/PushTester";
-import { PlanConfig } from "@/components/coach/PlanConfig";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
