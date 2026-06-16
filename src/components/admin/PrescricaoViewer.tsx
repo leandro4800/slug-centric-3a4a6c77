@@ -594,42 +594,17 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
                                 placeholder="Ex: 100g frango, 200g arroz, salada à vontade..."
                                 className="min-h-[90px] flex-1"
                               />
-                              <div className="flex flex-col gap-1">
-                                <Button
-                                  type="button"
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => startVoice(idx)}
-                                  className={
-                                    recIdx === idx
-                                      ? "bg-red-500/20 text-red-500 border-red-500/50 h-8 w-8"
-                                      : "h-8 w-8"
-                                  }
-                                  title={recIdx === idx ? "Parar gravação" : "Ditar por voz"}
-                                >
-                                  {recIdx === idx ? (
-                                    <MicOff className="h-4 w-4 animate-pulse" />
-                                  ) : (
-                                    <Mic className="h-4 w-4" />
-                                  )}
-                                </Button>
-                                <Button
-                                  type="button"
-                                  size="icon"
-                                  variant="outline"
-                                  onClick={() => removeRefeicao(idx)}
-                                  className="h-8 w-8 text-destructive"
-                                  title="Remover refeição"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="outline"
+                                onClick={() => removeRefeicao(idx)}
+                                className="h-8 w-8 text-destructive"
+                                title="Remover refeição"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
-                            {recIdx === idx && (
-                              <p className="text-[10px] text-red-500 animate-pulse uppercase tracking-widest">
-                                Ouvindo... fale os alimentos e quantidades
-                              </p>
-                            )}
                           </>
                         ) : (
                           <>
