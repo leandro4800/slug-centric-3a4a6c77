@@ -81,10 +81,24 @@ serve(async (req) => {
         .map((r, i) => `Refeição ${i + 1} — ${r.nome}\n${r.descricao}`)
         .join("\n\n");
 
+      // Carrega tabela TACO para o cálculo (fonte oficial de macros)
+      const { data: tacoRows } = await supabase
+        .from("alimentos_taco")
+        .select("nome, energia_kcal, proteina_g, carboidrato_g, lipideos_g")
+        .limit(500);
+      const tacoTxt = (tacoRows || [])
+        .map((a: any) => `${a.nome} | kcal:${a.energia_kcal} P:${a.proteina_g} C:${a.carboidrato_g} G:${a.lipideos_g} (por 100g)`)
+        .join("\n");
+
       const systemPrompt = `Você é um nutricionista. Receberá uma lista de refeições com os alimentos e quantidades (em gramas) ATUAIS prescritos.
-Sua tarefa: CALCULAR os macros e calorias REAIS de cada alimento (use a tabela TACO como referência mental) e somar.
+Sua tarefa: CALCULAR os macros e calorias REAIS de cada alimento USANDO OBRIGATORIAMENTE a TABELA TACO fornecida abaixo como fonte de macros por 100g, e somar.
+
+TABELA TACO (use estes valores — são por 100g do alimento):
+${tacoTxt}
 
 Regras:
+- Para cada item, encontre o alimento mais próximo na TABELA TACO acima e use os macros dela proporcionalmente à quantidade prescrita.
+- Se o item não estiver listado, use o valor TACO do equivalente mais próximo (ex.: "frango grelhado" ≈ "frango, peito, sem pele, grelhado").
 - Considere TODAS as quantidades listadas (em g, ml ou unidades padronizadas — converta unidades para g quando necessário, ex.: 1 ovo ≈ 50g, 1 fatia de pão ≈ 25g, 1 colher de sopa de azeite ≈ 13g).
 - NÃO altere os alimentos. Apenas compute o que está descrito.
 - Arredonde para inteiros.
@@ -96,6 +110,7 @@ Retorne APENAS JSON neste formato:
   ],
   "totais": { "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
 }`;
+
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
