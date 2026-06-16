@@ -85,6 +85,9 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
   const [workouts, setWorkouts] = useState<{ id: string; titulo: string }[]>([]);
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const fullScreenRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const [config, setConfig] = useState({
     instagram_handle: "@seuperfil",
