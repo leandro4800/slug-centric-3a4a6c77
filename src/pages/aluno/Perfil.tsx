@@ -436,16 +436,7 @@ const Perfil = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent" />
 
-        <button
-          type="button"
-          onClick={() => setAdjustOpen(true)}
-          className="absolute top-4 right-4 z-10 bg-black/60 backdrop-blur border border-white/20 text-white text-[11px] uppercase tracking-widest font-bold px-3 py-2 rounded-full flex items-center gap-1.5 hover:bg-black/80 transition"
-          aria-label="Ajustar foto"
-        >
-          <Move className="h-3.5 w-3.5" /> Ajustar foto
-        </button>
-
-        <div className="absolute inset-x-0 bottom-3 px-5 space-y-2">
+        <div className="absolute inset-x-0 bottom-0 pb-1 px-5 space-y-2">
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">FILME</span>
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
