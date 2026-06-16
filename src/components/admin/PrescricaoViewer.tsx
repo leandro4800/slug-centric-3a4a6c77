@@ -664,6 +664,70 @@ interface TreinoEditItem {
   observacao: string;
 }
 
+// Campo compacto que abre um editor maior em modal ao clicar
+const ExpandableField = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value);
+  useEffect(() => {
+    if (open) setDraft(value);
+  }, [open, value]);
+  return (
+    <>
+      <Input
+        value={value}
+        onChange={(ev) => onChange(ev.target.value)}
+        onFocus={(ev) => {
+          ev.currentTarget.blur();
+          setOpen(true);
+        }}
+        readOnly
+        placeholder={placeholder}
+        className="cursor-pointer"
+      />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{label}</DialogTitle>
+            <DialogDescription>Edite o valor completo abaixo.</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            autoFocus
+            rows={4}
+            value={draft}
+            onChange={(ev) => setDraft(ev.target.value)}
+            placeholder={placeholder}
+            className="text-base"
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                onChange(draft);
+                setOpen(false);
+              }}
+            >
+              Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+
 const TreinoEditor = ({
   alunoId,
   tenantId,
@@ -990,29 +1054,33 @@ const TreinoEditor = ({
                       <div className="grid grid-cols-3 gap-2">
                         <div>
                           <Label className="text-[10px] uppercase">Séries</Label>
-                          <Input
+                          <ExpandableField
+                            label="Séries"
                             value={e.series}
-                            onChange={(ev) => updateItem(e._key, { series: ev.target.value })}
+                            onChange={(v) => updateItem(e._key, { series: v })}
                             placeholder="3x"
                           />
                         </div>
                         <div>
                           <Label className="text-[10px] uppercase">Reps</Label>
-                          <Input
+                          <ExpandableField
+                            label="Repetições"
                             value={e.repeticoes}
-                            onChange={(ev) => updateItem(e._key, { repeticoes: ev.target.value })}
+                            onChange={(v) => updateItem(e._key, { repeticoes: v })}
                             placeholder="8-12"
                           />
                         </div>
                         <div>
                           <Label className="text-[10px] uppercase">Cadência</Label>
-                          <Input
+                          <ExpandableField
+                            label="Cadência"
                             value={e.cadencia}
-                            onChange={(ev) => updateItem(e._key, { cadencia: ev.target.value })}
+                            onChange={(v) => updateItem(e._key, { cadencia: v })}
                             placeholder="3-1-X-0"
                           />
                         </div>
                       </div>
+
 
                       <div>
                         <Label className="text-[10px] uppercase">Detalhes de execução</Label>
