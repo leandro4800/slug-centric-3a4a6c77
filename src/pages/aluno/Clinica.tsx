@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Stethoscope, Upload, FlaskConical, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
+import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
 // Fundo do Centro de Análise Metabólica é fixo (anéis de scan + boneco holográfico). Hero do tenant não é usado aqui.
@@ -8,11 +8,15 @@ import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
@@ -83,25 +87,39 @@ const Clinica = () => {
     }
   };
 
+  const analyzeText = async (texto: string) => {
+    try {
+      setPasteOpen(false);
+      setIsAnalyzing(true);
+      const { data, error: functionError } = await supabase.functions.invoke("analyze-exams", {
+        body: { texto_exame: texto }
+      });
+      if (functionError) throw functionError;
+      setCurrentAnalysis(data);
+      setPasteText("");
+      queryClient.invalidateQueries({ queryKey: ["analises_clinicas"] });
+      toast.success("Análise concluída com sucesso!");
+    } catch (error: any) {
+      console.error("Erro na análise:", error);
+      toast.error(error.message || "Erro ao processar análise. Tente novamente.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const actions = [
-    { 
-      icon: Upload, 
-      title: "ENVIAR PROTOCOLO OU EXAME", 
-      sub: "PDF (Recomendado)", 
+    {
+      icon: Upload,
+      title: "ENVIAR PROTOCOLO OU EXAME",
+      sub: "PDF (Recomendado)",
       dashed: true,
       onClick: () => fileInputRef.current?.click()
     },
-    { 
-      icon: FlaskConical, 
-      title: "RELATAR PROTOCOLO", 
-      sub: "Descreva substâncias, dosagens e ciclos em uso.",
-      onClick: () => toast.info("Funcionalidade em desenvolvimento")
-    },
-    { 
-      icon: Send, 
-      title: "COLAR EXAMES MANUALMENTE", 
+    {
+      icon: Send,
+      title: "COLAR EXAMES MANUALMENTE",
       sub: "Digite ou cole seus resultados laboratoriais.",
-      onClick: () => toast.info("Funcionalidade em desenvolvimento")
+      onClick: () => setPasteOpen(true)
     },
   ];
 
@@ -377,6 +395,32 @@ const Clinica = () => {
           </div>
         )}
       </div>
+
+      <Dialog open={pasteOpen} onOpenChange={setPasteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Colar exames manualmente</DialogTitle>
+            <DialogDescription>
+              Cole os resultados laboratoriais (nome do marcador, valor e unidade). O Dr. IA vai interpretar e montar sua análise.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            placeholder={"Ex.:\nTestosterona Total: 720 ng/dL\nHematócrito: 48%\nGlicemia: 92 mg/dL\nVitamina D: 28 ng/mL"}
+            className="min-h-[220px] font-mono text-sm"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPasteOpen(false)}>Cancelar</Button>
+            <Button
+              onClick={() => analyzeText(pasteText.trim())}
+              disabled={pasteText.trim().length < 20}
+            >
+              Analisar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -44,10 +44,10 @@ serve(async (req) => {
       })
     }
 
-    const { file_path } = await req.json()
+    const { file_path, texto_exame } = await req.json()
 
-    if (!file_path) {
-      return new Response(JSON.stringify({ error: 'file_path is required' }), {
+    if (!file_path && !texto_exame) {
+      return new Response(JSON.stringify({ error: 'file_path ou texto_exame é obrigatório' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -83,36 +83,38 @@ serve(async (req) => {
     const { data: refData } = await supabase.from('referencias_exames').select('*')
     const { data: intelData } = await supabase.from('inteligencia_clinica').select('*')
 
-    // Authorization: file_path MUST be inside the authenticated user's folder.
-    // Storage RLS is bypassed by the service role key, so we enforce ownership here.
-    if (typeof file_path !== 'string' || !file_path.startsWith(`${user.id}/`)) {
-      return new Response(JSON.stringify({ error: 'forbidden' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    let base64PDF: string | null = null
 
-    // Download PDF
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('exames_pdfs')
-      .download(file_path)
+    if (file_path) {
+      // Authorization: file_path MUST be inside the authenticated user's folder.
+      if (typeof file_path !== 'string' || !file_path.startsWith(`${user.id}/`)) {
+        return new Response(JSON.stringify({ error: 'forbidden' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
 
-    if (downloadError) {
-      console.error('Error downloading file:', downloadError)
-      return new Response(JSON.stringify({ error: 'Error downloading file' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('exames_pdfs')
+        .download(file_path)
 
-    const arrayBuffer = await fileData.arrayBuffer()
-    const bytes = new Uint8Array(arrayBuffer)
-    let binary = ''
-    const chunkSize = 0x8000
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
+      if (downloadError) {
+        console.error('Error downloading file:', downloadError)
+        return new Response(JSON.stringify({ error: 'Error downloading file' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const arrayBuffer = await fileData.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+      let binary = ''
+      const chunkSize = 0x8000
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
+      }
+      base64PDF = btoa(binary)
     }
-    const base64PDF = btoa(binary)
 
     // Context for AI
     const referenceContext = JSON.stringify(refData?.map(r => ({
@@ -170,7 +172,7 @@ ${intelligenceContext}`
           },
           {
             role: 'user',
-            content: [
+            content: base64PDF ? [
               {
                 type: 'text',
                 text: 'Analise este exame laboratorial. Retorne um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "sugestão genérica de medicamento/suplemento OU vazio se Otimizado" }], "conduta_sugerida": ["ação 1", "ação 2"], "sugestoes_medicamentos": ["sugestão consolidada 1", "..."], "aviso_medico": "texto orientando consulta médica obrigatória antes de qualquer uso de medicamento" }'
@@ -182,7 +184,7 @@ ${intelligenceContext}`
                   file_data: `data:application/pdf;base64,${base64PDF}`
                 }
               }
-            ]
+            ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "sugestão genérica de medicamento/suplemento OU vazio se Otimizado" }], "conduta_sugerida": ["ação 1", "ação 2"], "sugestoes_medicamentos": ["sugestão consolidada 1", "..."], "aviso_medico": "texto orientando consulta médica obrigatória antes de qualquer uso de medicamento" }\n\nDADOS DO EXAME:\n${texto_exame}`
           }
         ],
         response_format: { type: 'json_object' }
@@ -205,7 +207,7 @@ ${intelligenceContext}`
         user_id: user.id,
         parecer_ia: analysisData.resumo_executivo,
         score_performance: analysisData.pontuacao_geral,
-        url_arquivo: file_path,
+        url_arquivo: file_path ?? null,
         status: 'concluido',
         dados_extraidos: analysisData,
         resumo_clinico: analysisData.conduta_sugerida.join('\n')
