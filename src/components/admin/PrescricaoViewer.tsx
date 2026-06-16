@@ -664,6 +664,70 @@ interface TreinoEditItem {
   observacao: string;
 }
 
+// Campo compacto que abre um editor maior em modal ao clicar
+const ExpandableField = ({
+  label,
+  value,
+  onChange,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState(value);
+  useEffect(() => {
+    if (open) setDraft(value);
+  }, [open, value]);
+  return (
+    <>
+      <Input
+        value={value}
+        onChange={(ev) => onChange(ev.target.value)}
+        onFocus={(ev) => {
+          ev.currentTarget.blur();
+          setOpen(true);
+        }}
+        readOnly
+        placeholder={placeholder}
+        className="cursor-pointer"
+      />
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{label}</DialogTitle>
+            <DialogDescription>Edite o valor completo abaixo.</DialogDescription>
+          </DialogHeader>
+          <Textarea
+            autoFocus
+            rows={4}
+            value={draft}
+            onChange={(ev) => setDraft(ev.target.value)}
+            placeholder={placeholder}
+            className="text-base"
+          />
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setOpen(false)}>
+              Cancelar
+            </Button>
+            <Button
+              onClick={() => {
+                onChange(draft);
+                setOpen(false);
+              }}
+            >
+              Salvar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+};
+
+
 const TreinoEditor = ({
   alunoId,
   tenantId,
