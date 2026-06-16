@@ -63,7 +63,16 @@ const Clinica = () => {
         body: { file_path: fileName }
       });
 
-      if (functionError) throw functionError;
+      if (functionError) {
+        let detail = functionError.message;
+        try {
+          const ctx: any = (functionError as any).context;
+          if (ctx?.json) detail = (await ctx.json()).message || (await ctx.json()).error || detail;
+          else if (ctx?.text) detail = await ctx.text();
+        } catch {}
+        throw new Error(detail);
+      }
+      if ((data as any)?.error) throw new Error((data as any).message || (data as any).error);
 
       setCurrentAnalysis(data);
       queryClient.invalidateQueries({ queryKey: ["analises_clinicas"] });
@@ -96,7 +105,16 @@ const Clinica = () => {
       const { data, error: functionError } = await supabase.functions.invoke("analyze-exams", {
         body: { texto_exame: texto }
       });
-      if (functionError) throw functionError;
+      if (functionError) {
+        let detail = functionError.message;
+        try {
+          const ctx: any = (functionError as any).context;
+          if (ctx?.json) detail = (await ctx.json()).message || (await ctx.json()).error || detail;
+          else if (ctx?.text) detail = await ctx.text();
+        } catch {}
+        throw new Error(detail);
+      }
+      if ((data as any)?.error) throw new Error((data as any).message || (data as any).error);
       setCurrentAnalysis(data);
       setPasteText("");
       queryClient.invalidateQueries({ queryKey: ["analises_clinicas"] });

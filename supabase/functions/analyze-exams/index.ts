@@ -33,12 +33,19 @@ serve(async (req) => {
     )
 
     // Get user from JWT
-    const authHeader = req.headers.get('Authorization')!
-    const token = authHeader.replace('Bearer ', '')
+    const authHeader = req.headers.get('Authorization') || req.headers.get('authorization')
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: 'Unauthorized: missing auth header' }), {
+        status: 401,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+    const token = authHeader.replace(/^Bearer\s+/i, '')
     const { data: { user }, error: authError } = await supabase.auth.getUser(token)
 
     if (authError || !user) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+      console.error('Auth error:', authError)
+      return new Response(JSON.stringify({ error: 'Unauthorized', details: authError?.message }), {
         status: 401,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
@@ -66,7 +73,7 @@ serve(async (req) => {
 
     if (countError) {
       console.error('Erro ao verificar limite mensal:', countError)
-    } else if ((monthCount ?? 0) >= 1) {
+    } else if ((monthCount ?? 0) >= 10) {
       const nextMonth = new Date(startOfMonth)
       nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1)
       return new Response(JSON.stringify({
@@ -266,7 +273,8 @@ ${intelligenceContext}`
 
   } catch (error) {
     console.error('Unhandled Error:', error)
-    return new Response(JSON.stringify({ error: 'Erro interno no servidor' }), {
+    const msg = error instanceof Error ? error.message : String(error)
+    return new Response(JSON.stringify({ error: 'Erro interno no servidor', details: msg }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
