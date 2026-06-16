@@ -21,8 +21,36 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { WORKOUT_PLANS } from "@/data/workoutPlans";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
+// Seleciona até 2 planos oficiais Metodologia Alpha como referência para a IA.
+function pickExamples(sexo: string, nivel: string, frequencia: number) {
+  const nivelMap: Record<string, string[]> = {
+    Iniciante: ["Iniciante"],
+    Intermediário: ["Intermediário"],
+    Avançado: ["Avançado", "Super Avançado"],
+    Atleta: ["Super Avançado", "Avançado"],
+  };
+  const alvo = sexo === "feminino" ? ["Feminino"] : nivelMap[nivel] || ["Intermediário"];
+  const candidatos = WORKOUT_PLANS.filter((p) => alvo.includes(p.categoria));
+  // ordena pela proximidade de frequência baseada no título (procura "Nx")
+  const score = (t: string) => {
+    const m = t.match(/(\d)\s*X/i);
+    return m ? Math.abs(Number(m[1]) - frequencia) : 9;
+  };
+  const sorted = [...candidatos].sort((a, b) => score(a.title) - score(b.title));
+  return sorted.slice(0, 2).map((p) => ({
+    title: p.title,
+    categoria: p.categoria,
+    divisao: p.divisao,
+    workouts: p.workouts.map((w) => ({
+      nome: w.nome,
+      exercicios: w.exercicios.map((e) => ({ nome: e.nome, detalhes: e.detalhes })),
+    })),
+  }));
+}
 
 interface Exercicio {
   nome: string;
@@ -171,6 +199,7 @@ export const WorkoutSpreadsheetGenerator = () => {
   const [nivel, setNivel] = useState("");
   const [frequencia, setFrequencia] = useState("");
   const [objetivo, setObjetivo] = useState("");
+  const [enfase, setEnfase] = useState<"posterior_gluteo" | "quadriceps" | "balanceado" | "">("");
   const [foco, setFoco] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -181,17 +210,24 @@ export const WorkoutSpreadsheetGenerator = () => {
       toast.error("Preencha sexo, nível, frequência e objetivo.");
       return;
     }
+    if (sexo === "feminino" && !enfase) {
+      toast.error("Escolha a ênfase do treino feminino.");
+      return;
+    }
     setLoading(true);
     setPlano(null);
     try {
+      const exemplos = pickExamples(sexo, nivel, Number(frequencia));
       const { data, error } = await supabase.functions.invoke("gerar-planilha-treino", {
         body: {
           sexo,
           nivel,
           frequencia: Number(frequencia),
           objetivo,
+          enfase: sexo === "feminino" ? enfase : undefined,
           foco,
           observacoes,
+          exemplos,
         },
       });
       if (error) throw error;
