@@ -32,6 +32,8 @@ serve(async (req) => {
     const objetivo = String(body.objetivo || "Hipertrofia");
     const foco = String(body.foco || "").trim();
     const observacoes = String(body.observacoes || "").trim();
+    const enfase = String(body.enfase || "").trim();
+    const exemplos = Array.isArray(body.exemplos) ? body.exemplos : [];
 
     if (!["masculino", "feminino"].includes(sexo)) {
       return json({ error: "Sexo inválido (use masculino ou feminino)" }, 400);
@@ -40,29 +42,54 @@ serve(async (req) => {
       return json({ error: "Frequência deve ser entre 2 e 6" }, 400);
     }
 
+    let femEnfaseBlock = "";
+    if (sexo === "feminino") {
+      if (enfase === "posterior_gluteo") {
+        femEnfaseBlock = `\n- ÊNFASE SELECIONADA: POSTERIOR + GLÚTEO. Dedique no MÍNIMO 60% do volume semanal de inferiores para posterior de coxa e glúteo. Hip Thrust pesado, Stiff, Levantamento Terra Romeno, Cadeira Flexora, Mesa Flexora, Coice na Polia, Glúteo Máquina, Búlgaro com foco em posterior. Quadríceps entra apenas como acessório (2-3 exercícios em 1 dia).`;
+      } else if (enfase === "quadriceps") {
+        femEnfaseBlock = `\n- ÊNFASE SELECIONADA: QUADRÍCEPS. Dedique no MÍNIMO 60% do volume de inferiores para quadríceps. Agachamento livre, Hack, Leg Press 45, Cadeira Extensora (pico 2s), Afundo, Sissy Squat. Glúteo/posterior mantidos com 1 dia dedicado + finalizadores (Hip Thrust, Stiff).`;
+      } else {
+        femEnfaseBlock = `\n- ÊNFASE SELECIONADA: BALANCEADO. Distribua o volume igualmente entre glúteo/posterior e quadríceps ao longo da semana.`;
+      }
+    }
+
     const femBlock = sexo === "feminino"
       ? `\n\nPÚBLICO FEMININO — REGRAS INVIOLÁVEIS:
-- Foco estético: GLÚTEOS, POSTERIOR e QUADRÍCEPS são prioridade absoluta. Mínimo 2 dias dedicados a posterior/glúteo + 1 dia de quadríceps OU integrar quad nos dias de glúteo.
-- Em CADA dia de inferiores: incluir Hip Thrust/Elevação Pélvica, Cadeira Abdutora, Stiff/Levantamento Terra Romeno, Avanço Búlgaro e Coice na Polia/Glúteo Máquina (5-6 exercícios mínimo).
+- Foco estético em inferiores. Mínimo 2 dias de posterior/glúteo + 1 dia de quadríceps (ajustar conforme ênfase).
+- Em CADA dia de inferiores: 5-6 exercícios mínimo, sempre incluindo movimento de quadril dominante (Hip Thrust/Stiff/Terra Romeno).
 - Membros superiores: volume moderado, foco em tônus. Costas e ombro lateral priorizados.
 - Peito: máximo 3 exercícios por sessão.
 - Repetições: pernas/glúteo 12-20 reps; superiores 10-15 reps.
-- Use técnicas como drop set, rest-pause e pico de contração em glúteo.`
-      : `\n\nPÚBLICO MASCULINO — FOCO HIPERTROFIA CLÁSSICA:
+- Use técnicas como drop set, rest-pause e pico de contração em glúteo.${femEnfaseBlock}`
+      : `\n\nPÚBLICO MASCULINO — METODOLOGIA ALPHA:
 - Volume equilibrado entre todos os grupos com ênfase em peito, costas, ombro e braços.
-- Compostos pesados (Supino, Agachamento, Levantamento Terra, Desenvolvimento) sempre presentes.`;
+- Compostos pesados (Supino, Agachamento, Levantamento Terra, Desenvolvimento) sempre presentes.
+- Siga FIELMENTE o padrão de seleção/ordem/volume dos EXEMPLOS DE REFERÊNCIA abaixo (planilhas oficiais Metodologia Alpha do nível do aluno). Adapte apenas à frequência e objetivo.`;
+
+    const exemplosBlock = exemplos.length
+      ? `\n\nEXEMPLOS DE REFERÊNCIA (planilhas oficiais Metodologia Alpha — base de seleção/ordem de exercícios):\n${JSON.stringify(exemplos).slice(0, 12000)}`
+      : "";
 
     const divisaoSugerida = (() => {
       if (sexo === "feminino") {
-        if (frequencia <= 3) return ["Inferiores A (Glúteo/Posterior)", "Superiores (Costas/Ombro/Braços/Peito)", "Inferiores B (Quadríceps/Glúteo)"];
-        if (frequencia === 4) return ["Glúteo/Posterior", "Superiores (Push)", "Quadríceps/Glúteo", "Superiores (Pull)"];
-        if (frequencia === 5) return ["Glúteo/Posterior A", "Peito/Ombro/Tríceps", "Quadríceps/Glúteo", "Costas/Bíceps", "Glúteo/Posterior B"];
-        return ["Glúteo/Posterior A", "Peito/Tríceps", "Costas/Bíceps", "Quadríceps/Glúteo", "Ombro/Trapézio", "Glúteo/Posterior B"];
+        const eq = enfase === "quadriceps";
+        if (frequencia <= 3) return eq
+          ? ["Quadríceps A", "Superiores", "Quadríceps B + Glúteo"]
+          : ["Inferiores A (Glúteo/Posterior)", "Superiores", "Inferiores B (Quadríceps/Glúteo)"];
+        if (frequencia === 4) return eq
+          ? ["Quadríceps A", "Superiores (Push)", "Quadríceps B + Posterior", "Superiores (Pull)"]
+          : ["Glúteo/Posterior", "Superiores (Push)", "Quadríceps/Glúteo", "Superiores (Pull)"];
+        if (frequencia === 5) return eq
+          ? ["Quadríceps A", "Peito/Ombro/Tríceps", "Quadríceps B", "Costas/Bíceps", "Glúteo/Posterior"]
+          : ["Glúteo/Posterior A", "Peito/Ombro/Tríceps", "Quadríceps/Glúteo", "Costas/Bíceps", "Glúteo/Posterior B"];
+        return eq
+          ? ["Quadríceps A", "Peito/Tríceps", "Costas/Bíceps", "Quadríceps B", "Ombro/Trapézio", "Glúteo/Posterior"]
+          : ["Glúteo/Posterior A", "Peito/Tríceps", "Costas/Bíceps", "Quadríceps/Glúteo", "Ombro/Trapézio", "Glúteo/Posterior B"];
       }
       if (frequencia <= 3) return ["Push (Peito/Ombro/Tríceps)", "Pull (Costas/Bíceps)", "Legs (Pernas)"];
       if (frequencia === 4) return ["Peito/Bíceps", "Costas/Lombar", "Ombro/Tríceps", "Pernas"];
-      if (frequencia === 5) return ["Peito", "Costas", "Pernas (Quadríceps)", "Ombro/Trapézio", "Braços (Bíceps/Tríceps)+Posterior"];
-      return ["Peito", "Costas", "Pernas (Quadríceps)", "Ombro/Trapézio", "Braços (Bíceps/Tríceps)", "Posterior/Glúteo/Panturrilha"];
+      if (frequencia === 5) return ["Peito", "Costas", "Pernas (Quadríceps)", "Ombro/Trapézio", "Braços + Posterior"];
+      return ["Peito", "Costas", "Pernas (Quadríceps)", "Ombro/Trapézio", "Braços", "Posterior/Glúteo/Panturrilha"];
     })();
 
     const systemPrompt = `Você é o mestre treinador da Metodologia Alpha — referência em prescrição de musculação avançada. Gere planilhas PREMIUM, NUNCA genéricas.
@@ -100,7 +127,7 @@ Retorne APENAS um JSON válido (sem markdown, sem \`\`\`) no formato exato:
       ]
     }
   ]
-}${femBlock}`;
+}${femBlock}${exemplosBlock}`;
 
     const userPrompt = `Monte uma planilha de treino PREMIUM com os seguintes parâmetros:
 - Sexo: ${sexo}

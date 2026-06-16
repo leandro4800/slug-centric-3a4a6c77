@@ -21,8 +21,36 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { WORKOUT_PLANS } from "@/data/workoutPlans";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+
+// Seleciona até 2 planos oficiais Metodologia Alpha como referência para a IA.
+function pickExamples(sexo: string, nivel: string, frequencia: number) {
+  const nivelMap: Record<string, string[]> = {
+    Iniciante: ["Iniciante"],
+    Intermediário: ["Intermediário"],
+    Avançado: ["Avançado", "Super Avançado"],
+    Atleta: ["Super Avançado", "Avançado"],
+  };
+  const alvo = sexo === "feminino" ? ["Feminino"] : nivelMap[nivel] || ["Intermediário"];
+  const candidatos = WORKOUT_PLANS.filter((p) => alvo.includes(p.categoria));
+  // ordena pela proximidade de frequência baseada no título (procura "Nx")
+  const score = (t: string) => {
+    const m = t.match(/(\d)\s*X/i);
+    return m ? Math.abs(Number(m[1]) - frequencia) : 9;
+  };
+  const sorted = [...candidatos].sort((a, b) => score(a.title) - score(b.title));
+  return sorted.slice(0, 2).map((p) => ({
+    title: p.title,
+    categoria: p.categoria,
+    divisao: p.divisao,
+    workouts: p.workouts.map((w) => ({
+      nome: w.nome,
+      exercicios: w.exercicios.map((e) => ({ nome: e.nome, detalhes: e.detalhes })),
+    })),
+  }));
+}
 
 interface Exercicio {
   nome: string;
@@ -171,6 +199,7 @@ export const WorkoutSpreadsheetGenerator = () => {
   const [nivel, setNivel] = useState("");
   const [frequencia, setFrequencia] = useState("");
   const [objetivo, setObjetivo] = useState("");
+  const [enfase, setEnfase] = useState<"posterior_gluteo" | "quadriceps" | "balanceado" | "">("");
   const [foco, setFoco] = useState("");
   const [observacoes, setObservacoes] = useState("");
   const [loading, setLoading] = useState(false);
@@ -181,17 +210,24 @@ export const WorkoutSpreadsheetGenerator = () => {
       toast.error("Preencha sexo, nível, frequência e objetivo.");
       return;
     }
+    if (sexo === "feminino" && !enfase) {
+      toast.error("Escolha a ênfase do treino feminino.");
+      return;
+    }
     setLoading(true);
     setPlano(null);
     try {
+      const exemplos = pickExamples(sexo, nivel, Number(frequencia));
       const { data, error } = await supabase.functions.invoke("gerar-planilha-treino", {
         body: {
           sexo,
           nivel,
           frequencia: Number(frequencia),
           objetivo,
+          enfase: sexo === "feminino" ? enfase : undefined,
           foco,
           observacoes,
+          exemplos,
         },
       });
       if (error) throw error;
@@ -246,8 +282,43 @@ export const WorkoutSpreadsheetGenerator = () => {
               >
                 <Venus className="h-4 w-4" /> Feminino
               </Button>
+          </div>
+        </div>
+
+        {sexo === "feminino" && (
+          <div className="space-y-2 sm:col-span-2">
+
+            <label className="text-xs font-bold uppercase tracking-widest opacity-70">
+              Ênfase do treino (feminino)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <Button
+                type="button"
+                variant={enfase === "posterior_gluteo" ? "default" : "outline"}
+                onClick={() => setEnfase("posterior_gluteo")}
+                className="h-12 text-xs font-bold"
+              >
+                Posterior + Glúteo
+              </Button>
+              <Button
+                type="button"
+                variant={enfase === "quadriceps" ? "default" : "outline"}
+                onClick={() => setEnfase("quadriceps")}
+                className="h-12 text-xs font-bold"
+              >
+                Quadríceps
+              </Button>
+              <Button
+                type="button"
+                variant={enfase === "balanceado" ? "default" : "outline"}
+                onClick={() => setEnfase("balanceado")}
+                className="h-12 text-xs font-bold"
+              >
+                Balanceado
+              </Button>
             </div>
           </div>
+        )}
 
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-widest opacity-70">Nível</label>
