@@ -207,7 +207,7 @@ ${intelligenceContext}`
         user_id: user.id,
         parecer_ia: analysisData.resumo_executivo,
         score_performance: analysisData.pontuacao_geral,
-        url_arquivo: file_path,
+        url_arquivo: file_path ?? null,
         status: 'concluido',
         dados_extraidos: analysisData,
         resumo_clinico: analysisData.conduta_sugerida.join('\n')
