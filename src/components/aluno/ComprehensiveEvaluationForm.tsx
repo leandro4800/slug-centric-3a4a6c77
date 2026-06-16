@@ -241,9 +241,32 @@ export const ComprehensiveEvaluationForm = ({
       });
 
       if (error) throw error;
+
+      // Propaga sexo + métricas chave para perfis_treino e perfis (essencial p/ montar treino)
+      try {
+        await supabase.from("perfis_treino").upsert({
+          aluno_id: alunoId,
+          tenant_id: tenantId || null,
+          sexo: sexoN,
+          peso_kg: num(form.peso),
+          altura_cm: num(form.altura),
+          idade: idadeN || null,
+          bf_pct: bf ? Number(bf.toFixed(2)) : null,
+          pescoco_cm: num(form.perimetros.pescoco),
+          cintura_cm: num(form.perimetros.cintura),
+          quadril_cm: num(form.perimetros.quadril),
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "aluno_id" });
+
+        await supabase.from("perfis").update({ sexo: sexoN }).eq("id", alunoId).is("sexo", null);
+      } catch (syncErr) {
+        console.warn("Falha ao sincronizar sexo/perfil:", syncErr);
+      }
+
       toast.success("Avaliação salva com sucesso!");
       onSaved?.(goToDiet);
       onOpenChange(false);
+
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
     } finally {
