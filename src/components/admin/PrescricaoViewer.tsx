@@ -487,23 +487,12 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
                         <span className="text-[9px] text-muted-foreground uppercase">Muda a dieta por inteiro</span>
                       </div>
                       <div className="flex gap-2">
-                        <div className="relative flex-1">
-                          <Textarea 
-                            value={iaCommand}
-                            onChange={(e) => setIaCommand(e.target.value)}
-                            placeholder="Ex: Dieta com muito volume, colocar no máximo 100g de aveia por refeição..."
-                            className="min-h-[70px] bg-background/50 text-xs pr-10"
-                          />
-                          <Button
-                            type="button"
-                            size="icon"
-                            variant="ghost"
-                            onClick={startVoiceGeneral}
-                            className={`absolute bottom-2 right-2 h-7 w-7 rounded-full ${isRecordingGeneral ? 'text-red-500 animate-pulse' : 'text-muted-foreground'}`}
-                          >
-                            {isRecordingGeneral ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                          </Button>
-                        </div>
+                        <Textarea 
+                          value={iaCommand}
+                          onChange={(e) => setIaCommand(e.target.value)}
+                          placeholder="Ex: Dieta com muito volume, colocar no máximo 100g de aveia por refeição..."
+                          className="min-h-[70px] flex-1 bg-background/50 text-xs"
+                        />
                         <Button
                           type="button"
                           onClick={ajustarComIA}
