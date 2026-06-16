@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Capacitor } from "@capacitor/core";
+import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 import { useBranding } from "@/contexts/BrandingProvider";
 import {
   Dialog,
@@ -28,6 +30,7 @@ import {
   Plus,
   Trash2,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -83,6 +86,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
   const [isRecordingGeneral, setIsRecordingGeneral] = useState(false);
   const [iaCommand, setIaCommand] = useState("");
   const [adjusting, setAdjusting] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -187,10 +191,48 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
     recognitionRef.current = rec;
   };
 
-  const startVoiceGeneral = () => {
+  const startVoiceGeneralNative = async () => {
+    if (isRecordingGeneral) return;
+    try {
+      const available = await NativeSpeech.available();
+      if (!available.available) {
+        toast.error("Reconhecimento de voz não disponível neste aparelho.");
+        return;
+      }
+      const perm = await NativeSpeech.checkPermissions();
+      if (perm.speechRecognition !== "granted") {
+        const req = await NativeSpeech.requestPermissions();
+        if (req.speechRecognition !== "granted") {
+          toast.error("Permita o microfone para ditar o comando da IA.");
+          return;
+        }
+      }
+      setIsRecordingGeneral(true);
+      toast.info("Ouvindo comando para ajustar a dieta...");
+      const result: any = await NativeSpeech.start({
+        language: "pt-BR",
+        maxResults: 1,
+        prompt: "Diga o ajuste da dieta",
+        partialResults: false,
+        popup: false,
+      });
+      const transcript = result?.matches?.[0] || "";
+      if (transcript.trim()) {
+        setIaCommand((prev) => (prev + " " + transcript).trim());
+      } else {
+        toast.error("Não ouvi nada. Tente novamente mais perto do microfone.");
+      }
+    } catch (e: any) {
+      toast.error(`Erro ao ouvir: ${e?.message || e}`);
+    } finally {
+      setIsRecordingGeneral(false);
+    }
+  };
+
+  const startVoiceGeneralWeb = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      toast.error("Reconhecimento de voz não disponível neste navegador/app. Use o microfone do teclado ou digite o comando.");
       return;
     }
     if (isRecordingGeneral) {
@@ -198,21 +240,111 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       setIsRecordingGeneral(false);
       return;
     }
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        recognitionRef.current = null;
+      }
+    }
     const rec = new SR();
     rec.lang = "pt-BR";
     rec.continuous = true;
-    rec.interimResults = false;
+    rec.interimResults = true;
     rec.onstart = () => setIsRecordingGeneral(true);
     rec.onend = () => setIsRecordingGeneral(false);
-    rec.onerror = () => setIsRecordingGeneral(false);
+    rec.onerror = (event: any) => {
+      setIsRecordingGeneral(false);
+      const reason = event?.error === "not-allowed"
+        ? "Permita o acesso ao microfone para ditar o comando."
+        : "Não consegui captar o áudio. Tente novamente ou use o microfone do teclado.";
+      toast.error(reason);
+    };
     rec.onresult = (event: any) => {
       const transcript = Array.from(event.results)
+        .slice(event.resultIndex)
+        .filter((r: any) => r.isFinal)
         .map((r: any) => r[0].transcript)
         .join(" ");
-      setIaCommand(prev => (prev + " " + transcript).trim());
+      if (transcript.trim()) {
+        setIaCommand(prev => (prev + " " + transcript).trim());
+      }
     };
-    rec.start();
+    try {
+      rec.start();
+    } catch {
+      setIsRecordingGeneral(false);
+      toast.error("Não foi possível iniciar o microfone agora.");
+    }
     recognitionRef.current = rec;
+  };
+
+  const startVoiceGeneral = () => {
+    if (Capacitor.isNativePlatform()) {
+      void startVoiceGeneralNative();
+    } else {
+      startVoiceGeneralWeb();
+    }
+  };
+
+  const aplicarTotaisDieta = (totais: any) => {
+    if (!totais) return;
+    const kcal = Math.round(Number(totais.kcal) || 0);
+    const macros = {
+      proteina_g: Math.round(Number(totais.proteina_g) || 0),
+      carboidrato_g: Math.round(Number(totais.carboidrato_g) || 0),
+      lipideos_g: Math.round(Number(totais.lipideos_g) || 0),
+      badge: "Recalculado",
+    };
+    setDieta((d) => ({
+      ...(d || ({} as any)),
+      kcal_alvo: kcal,
+      macros_alvo: macros,
+    }));
+  };
+
+  const recalcularMacros = async (baseRefeicoes = refeicoes, showToast = true) => {
+    if (!alunoId || baseRefeicoes.length === 0 || !dieta?.id) {
+      if (showToast) toast.error("Salve a dieta antes de recalcular.");
+      return null;
+    }
+    setRecalculating(true);
+    const tId = showToast ? toast.loading("Recalculando calorias e macros...") : undefined;
+    try {
+      await supabase.from("refeicoes").delete().eq("dieta_id", dieta.id);
+      const { error: refsError } = await supabase.from("refeicoes").insert(
+        baseRefeicoes.map((r, i) => ({
+          dieta_id: dieta.id,
+          nome: r.nome,
+          horario: r.horario,
+          ordem: i,
+          descricao_ia: r.descricao_ia,
+        })),
+      );
+      if (refsError) throw refsError;
+
+      const { data, error } = await supabase.functions.invoke("gerar-dieta", {
+        body: {
+          mode: "recalc",
+          aluno_id: alunoId,
+          dieta_id: dieta.id,
+          refeicoes: baseRefeicoes.map((r) => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
+        },
+      });
+      if (error) throw error;
+      if (data?.totais) {
+        aplicarTotaisDieta(data.totais);
+        if (showToast) {
+          toast.success(`Recalculado: ${Math.round(data.totais.kcal || 0)} kcal`, { id: tId });
+        }
+      }
+      return data;
+    } catch (e: any) {
+      if (showToast) toast.error("Erro ao recalcular: " + e.message, { id: tId });
+      throw e;
+    } finally {
+      setRecalculating(false);
+    }
   };
 
   const ajustarComIA = async () => {
@@ -235,20 +367,16 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       if (error) throw error;
 
       if (data?.refeicoes) {
-        setRefeicoes(prev => prev.map((r, i) => ({
+        const ajustadas = refeicoes.map((r, i) => ({
           ...r,
-          descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia
-        })));
-        // Atualizar kcal e macros recalculados pela IA
-        if (data.kcal_alvo || data.macros_alvo) {
-          setDieta((d) => ({
-            ...(d || ({} as any)),
-            kcal_alvo: data.kcal_alvo ?? d?.kcal_alvo,
-            macros_alvo: data.macros_alvo ?? d?.macros_alvo,
-          }));
-        }
+          descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia,
+        }));
+        setRefeicoes(ajustadas);
+        if (data?.totais) aplicarTotaisDieta(data.totais);
+        const recalc = await recalcularMacros(ajustadas, false).catch(() => null);
+        if (recalc?.totais) aplicarTotaisDieta(recalc.totais);
         toast.success(
-          `Dieta ajustada! ${data.kcal_alvo ? `${data.kcal_alvo} kcal` : ""}`,
+          `Dieta ajustada e recalculada! ${recalc?.totais?.kcal ? `${Math.round(recalc.totais.kcal)} kcal` : ""}`,
           { id: tId }
         );
       }
@@ -425,6 +553,20 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
                     )}
                     Importar PDF/Foto
                   </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void recalcularMacros()}
+                      disabled={recalculating || refeicoes.length === 0 || !dieta?.id}
+                      className="border-primary/40 text-primary"
+                    >
+                      {recalculating ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-1" />
+                      )}
+                      Recalcular macros
+                    </Button>
                   {!editing ? (
                     <Button
                       size="sm"
