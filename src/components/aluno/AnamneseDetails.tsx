@@ -228,8 +228,26 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
           <Input value={form.nivel_experiencia || ""} onChange={e => setForm({ ...form, nivel_experiencia: e.target.value })} />
         </Field>
       </div>
-      <Field label="Disponibilidade Dias (separe por vírgula)">
-        <Input value={csv(form.disponibilidade_dias)} onChange={e => setForm({ ...form, disponibilidade_dias: arrFromCsv(e.target.value) })} />
+      <Field label="Disponibilidade Dias">
+        <div className="flex flex-wrap gap-2">
+          {["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"].map(dia => {
+            const selected = (form.disponibilidade_dias || []).includes(dia);
+            return (
+              <button
+                key={dia}
+                type="button"
+                onClick={() => {
+                  const atual = form.disponibilidade_dias || [];
+                  const novo = selected ? atual.filter(d => d !== dia) : [...atual, dia];
+                  setForm({ ...form, disponibilidade_dias: novo });
+                }}
+                className={`px-3 py-2 rounded-md border text-sm font-medium transition ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-input hover:bg-accent"}`}
+              >
+                {dia}
+              </button>
+            );
+          })}
+        </div>
       </Field>
 
       <div className="flex items-center gap-2">
