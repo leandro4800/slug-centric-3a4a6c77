@@ -44,10 +44,10 @@ serve(async (req) => {
       })
     }
 
-    const { file_path } = await req.json()
+    const { file_path, texto_exame } = await req.json()
 
-    if (!file_path) {
-      return new Response(JSON.stringify({ error: 'file_path is required' }), {
+    if (!file_path && !texto_exame) {
+      return new Response(JSON.stringify({ error: 'file_path ou texto_exame é obrigatório' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
