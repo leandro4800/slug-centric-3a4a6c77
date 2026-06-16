@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, Brain, Plus, Camera, Image as ImageIcon } from "lucide-react";
+import { TrendingUp, Brain, Plus, Camera, Image as ImageIcon, Loader2, Sparkles, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { TenantSymbol } from "@/components/TenantSymbol";
