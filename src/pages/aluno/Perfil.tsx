@@ -445,7 +445,7 @@ const Perfil = () => {
           <Move className="h-3.5 w-3.5" /> Ajustar foto
         </button>
 
-        <div className="absolute inset-x-0 bottom-[10%] px-5 space-y-2">
+        <div className="absolute inset-x-0 bottom-3 px-5 space-y-2">
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">FILME</span>
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
