@@ -286,7 +286,8 @@ export const WorkoutSpreadsheetGenerator = () => {
         </div>
 
         {sexo === "feminino" && (
-          <div className="space-y-2">
+          <div className="space-y-2 sm:col-span-2">
+
             <label className="text-xs font-bold uppercase tracking-widest opacity-70">
               Ênfase do treino (feminino)
             </label>
