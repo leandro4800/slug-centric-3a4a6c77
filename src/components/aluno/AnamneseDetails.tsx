@@ -113,7 +113,8 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
       <div className="space-y-6 text-sm">
         {editable && alunoId && (
           <div className="flex justify-end">
-            <Button size="sm" variant="outline" onClick={() => { setForm(data); setEditing(true); }} className="gap-2">
+            <Button size="sm" variant="outline" onClick={startEdit} className="gap-2">
+
               <Pencil className="h-3 w-3" /> Editar
             </Button>
           </div>
