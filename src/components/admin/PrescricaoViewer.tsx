@@ -373,62 +373,15 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
             </TabsList>
 
             <TabsContent value="treino" className="mt-4 space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  Visualização idêntica ao app do aluno
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    onOpenChange(false);
-                    navigate(`/${slug}/admin/montar-treino?aluno=${alunoId}&edit=true`);
-                  }}
-                  className="border-primary/50 text-primary"
-                >
-                  <Pencil className="h-4 w-4 mr-1" />
-                  {treinos.length === 0 ? "Montar Treino" : "Editar Treino"}
-                </Button>
-              </div>
-
-              {treinos.length === 0 ? (
-                <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
-                  <AlertCircle className="h-6 w-6" />
-                  <p className="text-sm">Nenhum treino prescrito ainda.</p>
-                  <p className="text-[11px]">Use "Montar Treino" para criar.</p>
-                </div>
-              ) : (
-                dias.map((dia) => {
-                  const exs = treinos.filter((t) => t.dia_semana === dia);
-                  return (
-                    <div key={dia} className="rounded-xl border border-border bg-secondary/30 p-4">
-                      <h3 className="font-display text-sm uppercase tracking-wider text-primary mb-3">
-                        {dia}
-                      </h3>
-                      <ol className="space-y-2">
-                        {exs.map((e, i) => (
-                          <li key={e.id} className="text-sm border-l-2 border-primary/40 pl-3">
-                            <p className="font-bold">
-                              {i + 1}. {e.exercicio}
-                            </p>
-                            <p className="text-xs text-muted-foreground">
-                              {e.series && <>Séries: <b>{e.series}</b> · </>}
-                              {e.repeticoes && <>Reps: <b>{e.repeticoes}</b></>}
-                              {e.cadencia && <> · Cadência: {e.cadencia}</>}
-                            </p>
-                            {e.observacao && (
-                              <p className="text-[11px] text-muted-foreground italic mt-1">
-                                {e.observacao}
-                              </p>
-                            )}
-                          </li>
-                        ))}
-                      </ol>
-                    </div>
-                  );
-                })
-              )}
+              <TreinoEditor
+                alunoId={alunoId}
+                tenantId={tenant?.id || null}
+                treinos={treinos}
+                onSaved={reload}
+              />
             </TabsContent>
+
+
 
 
             <TabsContent value="dieta" className="mt-4 space-y-4">
@@ -716,5 +669,408 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
         )}
       </DialogContent>
     </Dialog>
+  );
+};
+
+// ====================== Treino inline editor ======================
+interface TreinoEditItem {
+  _key: string;
+  id?: string;
+  dia_semana: string;
+  ordem: number;
+  exercicio: string;
+  series: string;
+  repeticoes: string;
+  cadencia: string;
+  detalhes_execucao: string;
+  observacao: string;
+}
+
+const TreinoEditor = ({
+  alunoId,
+  tenantId,
+  treinos,
+  onSaved,
+}: {
+  alunoId: string;
+  tenantId: string | null;
+  treinos: TreinoRow[];
+  onSaved: () => Promise<void> | void;
+}) => {
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [items, setItems] = useState<TreinoEditItem[]>([]);
+
+  const buildFromTreinos = (): TreinoEditItem[] =>
+    treinos.map((t, i) => ({
+      _key: t.id || `k-${i}`,
+      id: t.id,
+      dia_semana: t.dia_semana || "",
+      ordem: typeof t.ordem === "number" ? t.ordem : i,
+      exercicio: t.exercicio || "",
+      series: t.series || "",
+      repeticoes: t.repeticoes || "",
+      cadencia: t.cadencia || "",
+      detalhes_execucao: t.detalhes_execucao || "",
+      observacao: t.observacao || "",
+    }));
+
+  useEffect(() => {
+    if (!editing) setItems(buildFromTreinos());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [treinos, editing]);
+
+  const dias = [...new Set(items.map((i) => i.dia_semana))];
+
+  const updateItem = (key: string, patch: Partial<TreinoEditItem>) =>
+    setItems((prev) => prev.map((it) => (it._key === key ? { ...it, ...patch } : it)));
+
+  const removeItem = (key: string) =>
+    setItems((prev) => prev.filter((it) => it._key !== key));
+
+  const moveItem = (key: string, dir: -1 | 1) => {
+    setItems((prev) => {
+      const dia = prev.find((i) => i._key === key)?.dia_semana;
+      if (!dia) return prev;
+      const arr = [...prev];
+      const dayIdxs = arr.map((it, i) => ({ it, i })).filter((x) => x.it.dia_semana === dia);
+      const localIdx = dayIdxs.findIndex((x) => x.it._key === key);
+      const targetLocal = localIdx + dir;
+      if (targetLocal < 0 || targetLocal >= dayIdxs.length) return prev;
+      const globA = dayIdxs[localIdx].i;
+      const globB = dayIdxs[targetLocal].i;
+      [arr[globA], arr[globB]] = [arr[globB], arr[globA]];
+      return arr;
+    });
+  };
+
+  const addExercicio = (dia: string) => {
+    setItems((prev) => {
+      const indices = prev.map((i, idx) => (i.dia_semana === dia ? idx : -1)).filter((x) => x >= 0);
+      const lastIdx = indices.length > 0 ? indices[indices.length - 1] : undefined;
+      const novo: TreinoEditItem = {
+        _key: `new-${Date.now()}-${Math.random()}`,
+        dia_semana: dia,
+        ordem: 0,
+        exercicio: "",
+        series: "",
+        repeticoes: "",
+        cadencia: "",
+        detalhes_execucao: "",
+        observacao: "",
+      };
+      if (lastIdx === undefined) return [...prev, novo];
+      const arr = [...prev];
+      arr.splice(lastIdx + 1, 0, novo);
+      return arr;
+    });
+  };
+
+  const addDia = () => {
+    const letras = ["A", "B", "C", "D", "E", "F", "G"];
+    const usados = new Set(dias.map((d) => d.trim().charAt(0).toUpperCase()));
+    const proxima = letras.find((l) => !usados.has(l)) || `Dia ${dias.length + 1}`;
+    const label = `${proxima} — Novo Treino`;
+    setItems((prev) => [
+      ...prev,
+      {
+        _key: `new-${Date.now()}-${Math.random()}`,
+        dia_semana: label,
+        ordem: 0,
+        exercicio: "",
+        series: "",
+        repeticoes: "",
+        cadencia: "",
+        detalhes_execucao: "",
+        observacao: "",
+      },
+    ]);
+  };
+
+  const renameDia = (diaAntigo: string, novo: string) => {
+    setItems((prev) => prev.map((it) => (it.dia_semana === diaAntigo ? { ...it, dia_semana: novo } : it)));
+  };
+
+  const removeDia = (dia: string) => {
+    if (!confirm(`Remover o dia "${dia}" e todos os seus exercícios?`)) return;
+    setItems((prev) => prev.filter((it) => it.dia_semana !== dia));
+  };
+
+  const salvar = async () => {
+    if (!tenantId) {
+      toast.error("Tenant não identificado.");
+      return;
+    }
+    const validos = items.filter((i) => i.exercicio.trim() && i.dia_semana.trim());
+    if (validos.length === 0) {
+      toast.error("Adicione ao menos 1 exercício antes de salvar.");
+      return;
+    }
+    setSaving(true);
+    const tId = toast.loading("Salvando treino...");
+    try {
+      const { error: delErr } = await supabase
+        .from("treinos_prescritos")
+        .delete()
+        .eq("aluno_id", alunoId)
+        .eq("tenant_id", tenantId);
+      if (delErr) throw delErr;
+
+      const porDia: Record<string, number> = {};
+      const rows = validos.map((i) => {
+        porDia[i.dia_semana] = (porDia[i.dia_semana] ?? -1) + 1;
+        return {
+          aluno_id: alunoId,
+          tenant_id: tenantId,
+          dia_semana: i.dia_semana,
+          ordem: porDia[i.dia_semana],
+          exercicio: i.exercicio,
+          series: i.series || null,
+          repeticoes: i.repeticoes || null,
+          cadencia: i.cadencia || null,
+          detalhes_execucao: i.detalhes_execucao || null,
+          observacao: i.observacao || null,
+        };
+      });
+
+      const { error: insErr } = await supabase.from("treinos_prescritos").insert(rows);
+      if (insErr) throw insErr;
+
+      toast.success("Treino atualizado!", { id: tId });
+      setEditing(false);
+      await onSaved();
+    } catch (e: any) {
+      toast.error("Erro: " + e.message, { id: tId });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+          {editing ? "Editando o treino do atleta" : "Visualização idêntica ao app do aluno"}
+        </div>
+        <div className="flex flex-wrap gap-2">
+          {!editing ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => {
+                setItems(buildFromTreinos());
+                setEditing(true);
+              }}
+              className="border-primary/50 text-primary"
+            >
+              <Pencil className="h-4 w-4 mr-1" />
+              {treinos.length === 0 ? "Montar Treino" : "Editar Treino"}
+            </Button>
+          ) : (
+            <>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setEditing(false);
+                  setItems(buildFromTreinos());
+                }}
+                disabled={saving}
+              >
+                <X className="h-4 w-4 mr-1" /> Cancelar
+              </Button>
+              <Button
+                size="sm"
+                onClick={salvar}
+                disabled={saving}
+                className="bg-primary hover:bg-primary/90"
+              >
+                {saving ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                ) : (
+                  <Save className="h-4 w-4 mr-1" />
+                )}
+                Confirmar e Enviar
+              </Button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {!editing && treinos.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
+          <AlertCircle className="h-6 w-6" />
+          <p className="text-sm">Nenhum treino prescrito ainda.</p>
+          <p className="text-[11px]">Clique em "Montar Treino" para começar.</p>
+        </div>
+      ) : !editing ? (
+        <>
+          {dias.map((dia) => {
+            const exs = items.filter((t) => t.dia_semana === dia);
+            return (
+              <div key={dia} className="rounded-xl border border-border bg-secondary/30 p-4">
+                <h3 className="font-display text-sm uppercase tracking-wider text-primary mb-3">
+                  {dia}
+                </h3>
+                <ol className="space-y-2">
+                  {exs.map((e, i) => (
+                    <li key={e._key} className="text-sm border-l-2 border-primary/40 pl-3">
+                      <p className="font-bold">
+                        {i + 1}. {e.exercicio}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {e.series && <>Séries: <b>{e.series}</b> · </>}
+                        {e.repeticoes && <>Reps: <b>{e.repeticoes}</b></>}
+                        {e.cadencia && <> · Cadência: {e.cadencia}</>}
+                      </p>
+                      {e.observacao && (
+                        <p className="text-[11px] text-muted-foreground italic mt-1">
+                          {e.observacao}
+                        </p>
+                      )}
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            );
+          })}
+        </>
+      ) : (
+        <>
+          {dias.map((dia) => {
+            const exs = items.filter((t) => t.dia_semana === dia);
+            return (
+              <div key={dia} className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={dia}
+                    onChange={(e) => renameDia(dia, e.target.value)}
+                    className="flex-1 font-display uppercase tracking-wider text-primary bg-background"
+                  />
+                  <Button size="sm" variant="ghost" onClick={() => addExercicio(dia)}>
+                    <Plus className="h-4 w-4 mr-1" /> Adicionar
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeDia(dia)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {exs.map((e, i) => (
+                    <div
+                      key={e._key}
+                      className="rounded-lg border border-border bg-background p-3 space-y-2"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
+                          Exercício {i + 1}
+                        </span>
+                        <div className="flex gap-1">
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => moveItem(e._key, -1)}
+                            disabled={i === 0}
+                          >
+                            ↑
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7"
+                            onClick={() => moveItem(e._key, 1)}
+                            disabled={i === exs.length - 1}
+                          >
+                            ↓
+                          </Button>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-destructive hover:text-destructive"
+                            onClick={() => removeItem(e._key)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-[10px] uppercase">Nome do exercício</Label>
+                        <Input
+                          value={e.exercicio}
+                          onChange={(ev) => updateItem(e._key, { exercicio: ev.target.value })}
+                          placeholder="Ex: Agachamento Livre"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-2">
+                        <div>
+                          <Label className="text-[10px] uppercase">Séries</Label>
+                          <Input
+                            value={e.series}
+                            onChange={(ev) => updateItem(e._key, { series: ev.target.value })}
+                            placeholder="3x"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase">Reps</Label>
+                          <Input
+                            value={e.repeticoes}
+                            onChange={(ev) => updateItem(e._key, { repeticoes: ev.target.value })}
+                            placeholder="8-12"
+                          />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase">Cadência</Label>
+                          <Input
+                            value={e.cadencia}
+                            onChange={(ev) => updateItem(e._key, { cadencia: ev.target.value })}
+                            placeholder="3-1-X-0"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <Label className="text-[10px] uppercase">Detalhes de execução</Label>
+                        <Textarea
+                          rows={2}
+                          value={e.detalhes_execucao}
+                          onChange={(ev) => updateItem(e._key, { detalhes_execucao: ev.target.value })}
+                          placeholder="Warm-up, feeder, work sets..."
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-[10px] uppercase">Observação</Label>
+                        <Textarea
+                          rows={2}
+                          value={e.observacao}
+                          onChange={(ev) => updateItem(e._key, { observacao: ev.target.value })}
+                          placeholder="PSE, ponto fraco, foco..."
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+
+          <Button
+            variant="outline"
+            className="w-full border-dashed border-primary/50 text-primary"
+            onClick={addDia}
+          >
+            <Plus className="h-4 w-4 mr-1" /> Adicionar Dia (A, B, C...)
+          </Button>
+        </>
+      )}
+    </div>
   );
 };
