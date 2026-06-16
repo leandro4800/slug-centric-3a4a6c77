@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Stethoscope, Upload, FlaskConical, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
+import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
 // Fundo do Centro de Análise Metabólica é fixo (anéis de scan + boneco holográfico). Hero do tenant não é usado aqui.
@@ -8,6 +8,8 @@ import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
