@@ -233,23 +233,27 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
           {(() => {
             const DIAS = ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"];
             const norm = (s: string) =>
-              s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().slice(0, 3);
-            const selecionadosNorm = new Set(
-              (form.disponibilidade_dias || []).map(d => norm(String(d)))
-            );
+              s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().slice(0, 3);
+            // achata possíveis strings csv ("Seg, Ter") dentro do array
+            const flat = (form.disponibilidade_dias || [])
+              .flatMap(d => String(d).split(","))
+              .map(s => s.trim())
+              .filter(Boolean);
+            // canoniza para os rótulos de DIAS
+            const canon = DIAS.filter(d => flat.some(f => norm(f) === norm(d)));
             return DIAS.map(dia => {
-              const selected = selecionadosNorm.has(norm(dia));
+              const selected = canon.includes(dia);
               return (
                 <button
                   key={dia}
                   type="button"
-                  onClick={() => {
-                    // normaliza lista atual para os rótulos canônicos
-                    const canon = DIAS.filter(d => selecionadosNorm.has(norm(d)));
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     const novo = selected
                       ? canon.filter(d => d !== dia)
                       : [...canon, dia];
-                    setForm({ ...form, disponibilidade_dias: novo });
+                    setForm(prev => ({ ...prev, disponibilidade_dias: novo }));
                   }}
                   className={`px-3 py-2 rounded-md border text-sm font-medium transition ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-input hover:bg-accent"}`}
                 >
