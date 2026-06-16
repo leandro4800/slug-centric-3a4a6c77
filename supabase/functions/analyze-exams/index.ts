@@ -83,10 +83,10 @@ serve(async (req) => {
     const { data: refData } = await supabase.from('referencias_exames').select('*')
     const { data: intelData } = await supabase.from('inteligencia_clinica').select('*')
 
-    let base64PDF: string | null = null
+    let fileBase64: string | null = null
+    let fileMime: string = 'application/pdf'
 
     if (file_path) {
-      // Authorization: file_path MUST be inside the authenticated user's folder.
       if (typeof file_path !== 'string' || !file_path.startsWith(`${user.id}/`)) {
         return new Response(JSON.stringify({ error: 'forbidden' }), {
           status: 403,
@@ -100,11 +100,17 @@ serve(async (req) => {
 
       if (downloadError) {
         console.error('Error downloading file:', downloadError)
-        return new Response(JSON.stringify({ error: 'Error downloading file' }), {
+        return new Response(JSON.stringify({ error: 'Error downloading file', details: downloadError.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+
+      const ext = (file_path.split('.').pop() || '').toLowerCase()
+      if (ext === 'jpg' || ext === 'jpeg') fileMime = 'image/jpeg'
+      else if (ext === 'png') fileMime = 'image/png'
+      else if (ext === 'webp') fileMime = 'image/webp'
+      else fileMime = 'application/pdf'
 
       const arrayBuffer = await fileData.arrayBuffer()
       const bytes = new Uint8Array(arrayBuffer)
@@ -113,7 +119,7 @@ serve(async (req) => {
       for (let i = 0; i < bytes.length; i += chunkSize) {
         binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
       }
-      base64PDF = btoa(binary)
+      fileBase64 = btoa(binary)
     }
 
     // Context for AI
@@ -142,7 +148,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'openai/gpt-5-mini',
+        model: 'google/gemini-2.5-flash',
         messages: [
           {
             role: 'system',
@@ -159,10 +165,10 @@ REGRAS DE ANÁLISE:
 5. CÁLCULOS: Se encontrar Testosterona Total, SHBG e Albumina, calcule a Testosterona Livre estimada.
 
 REGRAS DE SUGESTÃO DE MEDICAMENTOS / SUPLEMENTAÇÃO:
-- Quando um marcador estiver "Alerta", "Critico" ou "Subotimizado", inclua em "sugestao_medicamento" do marcador uma sugestão GENÉRICA de classe terapêutica ou suplemento (ex.: "Reposição de Vitamina D3 5.000UI/dia", "Considerar suplementação de Ômega-3 EPA/DHA 2g/dia", "Avaliar uso de estatina de baixa potência").
+- Quando um marcador estiver "Alerta", "Critico" ou "Subotimizado", inclua em "sugestao_medicamento" do marcador uma sugestão GENÉRICA de classe terapêutica ou suplemento.
 - NUNCA prescreva. Sempre escreva no tom de "sugestão para discussão com seu médico".
 - Em "sugestoes_medicamentos" (array no nível raiz) liste de forma consolidada as principais sugestões priorizadas.
-- SEMPRE preencha "aviso_medico" with um disclaimer claro orientando o usuário a procurar um médico antes de iniciar qualquer medicamento ou suplemento. Esta análise é educativa e não substitui consulta médica.
+- SEMPRE preencha "aviso_medico" com um disclaimer claro orientando o usuário a procurar um médico antes de iniciar qualquer medicamento ou suplemento.
 
 DADOS DE REFERÊNCIA:
 ${referenceContext}
@@ -172,19 +178,22 @@ ${intelligenceContext}`
           },
           {
             role: 'user',
-            content: base64PDF ? [
+            content: fileBase64 ? [
               {
                 type: 'text',
-                text: 'Analise este exame laboratorial. Retorne um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "sugestão genérica de medicamento/suplemento OU vazio se Otimizado" }], "conduta_sugerida": ["ação 1", "ação 2"], "sugestoes_medicamentos": ["sugestão consolidada 1", "..."], "aviso_medico": "texto orientando consulta médica obrigatória antes de qualquer uso de medicamento" }'
+                text: 'Analise este exame laboratorial. Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }'
               },
-              {
+              fileMime === 'application/pdf' ? {
                 type: 'file',
                 file: {
                   filename: 'exame.pdf',
-                  file_data: `data:application/pdf;base64,${base64PDF}`
+                  file_data: `data:application/pdf;base64,${fileBase64}`
                 }
+              } : {
+                type: 'image_url',
+                image_url: { url: `data:${fileMime};base64,${fileBase64}` }
               }
-            ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "sugestão genérica de medicamento/suplemento OU vazio se Otimizado" }], "conduta_sugerida": ["ação 1", "ação 2"], "sugestoes_medicamentos": ["sugestão consolidada 1", "..."], "aviso_medico": "texto orientando consulta médica obrigatória antes de qualquer uso de medicamento" }\n\nDADOS DO EXAME:\n${texto_exame}`
+            ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }\n\nDADOS DO EXAME:\n${texto_exame}`
           }
         ],
         response_format: { type: 'json_object' }
@@ -193,8 +202,8 @@ ${intelligenceContext}`
 
     if (!response.ok) {
       const errorText = await response.text()
-      console.error('AI Gateway Error:', errorText)
-      return new Response(JSON.stringify({ error: 'Erro ao processar análise com IA' }), { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      console.error('AI Gateway Error:', response.status, errorText)
+      return new Response(JSON.stringify({ error: 'Erro ao processar análise com IA', status: response.status, details: errorText }), { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
     const aiResult = await response.json()

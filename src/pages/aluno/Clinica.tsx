@@ -78,9 +78,11 @@ const Clinica = () => {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = ""; // permitir reenviar mesmo arquivo
     if (file) {
-      if (file.type !== "application/pdf") {
-        toast.error("Por favor, envie um arquivo PDF.");
+      const ok = file.type === "application/pdf" || file.type.startsWith("image/");
+      if (!ok) {
+        toast.error("Envie um PDF ou foto do exame.");
         return;
       }
       uploadAndAnalyze(file);
@@ -129,7 +131,7 @@ const Clinica = () => {
         type="file" 
         ref={fileInputRef} 
         className="hidden" 
-        accept="application/pdf"
+        accept="application/pdf,image/*"
         onChange={handleFileChange}
       />
 
