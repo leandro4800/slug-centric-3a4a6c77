@@ -41,6 +41,14 @@ interface Props {
   onSaved?: (updated: AnamneseData) => void;
 }
 
+const DIAS_SEMANA = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+const normDia = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().slice(0, 3);
+const canonizarDias = (arr: string[] | null | undefined): string[] => {
+  const flat = (arr || []).flatMap(d => String(d).split(",")).map(s => s.trim()).filter(Boolean);
+  return DIAS_SEMANA.filter(d => flat.some(f => normDia(f) === normDia(d)));
+};
+
 export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -48,6 +56,12 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
 
   const arrFromCsv = (s: string) => s.split(",").map(x => x.trim()).filter(Boolean);
   const csv = (a: string[] | null | undefined) => (a || []).join(", ");
+
+  const startEdit = () => {
+    setForm({ ...data, disponibilidade_dias: canonizarDias(data.disponibilidade_dias) });
+    setEditing(true);
+  };
+
 
   const handleSave = async () => {
     if (!alunoId) return;
