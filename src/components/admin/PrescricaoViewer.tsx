@@ -241,7 +241,11 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       return;
     }
     if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch { recognitionRef.current = null; }
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        recognitionRef.current = null;
+      }
     }
     const rec = new SR();
     rec.lang = "pt-BR";
