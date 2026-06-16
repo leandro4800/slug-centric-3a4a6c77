@@ -73,7 +73,7 @@ serve(async (req) => {
 
     if (countError) {
       console.error('Erro ao verificar limite mensal:', countError)
-    } else if ((monthCount ?? 0) >= 1) {
+    } else if ((monthCount ?? 0) >= 10) {
       const nextMonth = new Date(startOfMonth)
       nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1)
       return new Response(JSON.stringify({
