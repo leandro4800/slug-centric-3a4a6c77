@@ -373,10 +373,29 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
             </TabsList>
 
             <TabsContent value="treino" className="mt-4 space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Visualização idêntica ao app do aluno
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    onOpenChange(false);
+                    navigate(`/${slug}/admin/montar-treino?aluno=${alunoId}&edit=true`);
+                  }}
+                  className="border-primary/50 text-primary"
+                >
+                  <Pencil className="h-4 w-4 mr-1" />
+                  {treinos.length === 0 ? "Montar Treino" : "Editar Treino"}
+                </Button>
+              </div>
+
               {treinos.length === 0 ? (
                 <div className="flex flex-col items-center gap-2 py-12 text-muted-foreground">
                   <AlertCircle className="h-6 w-6" />
                   <p className="text-sm">Nenhum treino prescrito ainda.</p>
+                  <p className="text-[11px]">Use "Montar Treino" para criar.</p>
                 </div>
               ) : (
                 dias.map((dia) => {
@@ -410,6 +429,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
                 })
               )}
             </TabsContent>
+
 
             <TabsContent value="dieta" className="mt-4 space-y-4">
               {/* Toolbar de edição */}
