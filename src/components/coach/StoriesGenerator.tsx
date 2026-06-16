@@ -209,15 +209,26 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
     if (!node) return;
     setDownloading(true);
     try {
-      const html2canvas = (await import("html2canvas")).default;
-      const canvas = await html2canvas(node, {
-        useCORS: true,
-        allowTaint: true,
+      // html-to-image preserva CSS moderno (oklch, gradientes, fontes customizadas)
+      // muito melhor que html2canvas — captura exatamente o que está na tela.
+      const { toPng } = await import("html-to-image");
+      const activeTemplate = TEMPLATES.find(t => t.id === template);
+      const isSquare = activeTemplate?.format === "1:1";
+      const rect = node.getBoundingClientRect();
+      // Resolução fixa de saída para qualidade consistente (story 1080x1920 / post 1080x1080)
+      const targetW = isSquare ? 1080 : 1080;
+      const targetH = isSquare ? 1080 : 1920;
+      const pixelRatio = Math.max(targetW / rect.width, targetH / rect.height);
+
+      const dataUrl = await toPng(node, {
+        cacheBust: true,
+        pixelRatio,
         backgroundColor: "#000000",
-        scale: 2,
-        logging: false,
+        width: rect.width,
+        height: rect.height,
+        skipFonts: false,
       });
-      const dataUrl = canvas.toDataURL("image/png");
+
       const link = document.createElement("a");
       link.href = dataUrl;
       link.download = `story-${template}-${Date.now()}.png`;
