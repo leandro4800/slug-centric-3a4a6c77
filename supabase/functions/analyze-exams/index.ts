@@ -83,36 +83,38 @@ serve(async (req) => {
     const { data: refData } = await supabase.from('referencias_exames').select('*')
     const { data: intelData } = await supabase.from('inteligencia_clinica').select('*')
 
-    // Authorization: file_path MUST be inside the authenticated user's folder.
-    // Storage RLS is bypassed by the service role key, so we enforce ownership here.
-    if (typeof file_path !== 'string' || !file_path.startsWith(`${user.id}/`)) {
-      return new Response(JSON.stringify({ error: 'forbidden' }), {
-        status: 403,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+    let base64PDF: string | null = null
 
-    // Download PDF
-    const { data: fileData, error: downloadError } = await supabase.storage
-      .from('exames_pdfs')
-      .download(file_path)
+    if (file_path) {
+      // Authorization: file_path MUST be inside the authenticated user's folder.
+      if (typeof file_path !== 'string' || !file_path.startsWith(`${user.id}/`)) {
+        return new Response(JSON.stringify({ error: 'forbidden' }), {
+          status: 403,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
 
-    if (downloadError) {
-      console.error('Error downloading file:', downloadError)
-      return new Response(JSON.stringify({ error: 'Error downloading file' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      })
-    }
+      const { data: fileData, error: downloadError } = await supabase.storage
+        .from('exames_pdfs')
+        .download(file_path)
 
-    const arrayBuffer = await fileData.arrayBuffer()
-    const bytes = new Uint8Array(arrayBuffer)
-    let binary = ''
-    const chunkSize = 0x8000
-    for (let i = 0; i < bytes.length; i += chunkSize) {
-      binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
+      if (downloadError) {
+        console.error('Error downloading file:', downloadError)
+        return new Response(JSON.stringify({ error: 'Error downloading file' }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+
+      const arrayBuffer = await fileData.arrayBuffer()
+      const bytes = new Uint8Array(arrayBuffer)
+      let binary = ''
+      const chunkSize = 0x8000
+      for (let i = 0; i < bytes.length; i += chunkSize) {
+        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
+      }
+      base64PDF = btoa(binary)
     }
-    const base64PDF = btoa(binary)
 
     // Context for AI
     const referenceContext = JSON.stringify(refData?.map(r => ({
