@@ -44,19 +44,40 @@ const Treino = () => {
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
-  const completedKey = `treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`;
-  const [completedIds, setCompletedIds] = useState<Set<string>>(() => {
+  const isoWeekKey = (() => {
+    const d = new Date();
+    const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNr = (target.getUTCDay() + 6) % 7;
+    target.setUTCDate(target.getUTCDate() - dayNr + 3);
+    const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+    const week = 1 + Math.round(((target.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+    return `${target.getUTCFullYear()}-W${week}`;
+  })();
+  const completedKey = `treino:completed:${user?.id || "anon"}:${isoWeekKey}:${diaAtual}`;
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  // Recarrega completedIds quando muda dia/semana/usuário
+  useEffect(() => {
     try {
-      const raw = localStorage.getItem(`treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`);
-      return new Set<string>(raw ? JSON.parse(raw) : []);
-    } catch { return new Set<string>(); }
-  });
+      const raw = localStorage.getItem(completedKey);
+      setCompletedIds(new Set<string>(raw ? JSON.parse(raw) : []));
+    } catch { setCompletedIds(new Set<string>()); }
+  }, [completedKey]);
   const markCompleted = (id: string) => {
     setCompletedIds((prev) => {
       const next = new Set(prev); next.add(id);
       try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
       return next;
     });
+  };
+  const resetTreinoDoDia = () => {
+    // Limpa estado dos cards do dia (carga/reps/done) e a marcação de concluído
+    treinosDoDia.forEach((t) => {
+      try { localStorage.removeItem(`treino-state:${user?.id || "anon"}:${t.id}:${isoWeekKey}`); } catch {}
+    });
+    try { localStorage.removeItem(completedKey); } catch {}
+    setCompletedIds(new Set());
+    setActiveIndex(null);
+    setReloadKey((k) => k + 1);
   };
 
   // Carrega nível de experiência + avatar do perfil
@@ -526,7 +547,42 @@ const Treino = () => {
 
         {treinosDoDia.length > 0 && (
           <button
-            onClick={() => setShowConclusao(true)}
+            onClick={async () => {
+              // Registra um marker do treino concluído (alimenta stats/evolução)
+              if (user && tenant) {
+                try {
+                  const hoje = new Date().toISOString().split("T")[0];
+                  const { data: existe } = await supabase
+                    .from("historico_cargas")
+                    .select("id")
+                    .eq("user_id", user.id)
+                    .eq("data_treino", hoje)
+                    .eq("exercicio_nome", `__treino_concluido__:${diaAtual}`)
+                    .maybeSingle();
+                  if (!existe) {
+                    await supabase.from("historico_cargas").insert({
+                      tenant_id: tenant.id,
+                      user_id: user.id,
+                      exercicio_nome: `__treino_concluido__:${diaAtual}`,
+                      carga_kg: 0,
+                      repeticoes_feitas: treinosDoDia.length,
+                      tipo_serie: "Conclusao",
+                      serie_index: 0,
+                    });
+                  }
+                  // marca todos como concluído na UI
+                  const next = new Set(completedIds);
+                  treinosDoDia.forEach((t) => next.add(t.id));
+                  setCompletedIds(next);
+                  try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
+                  // recarrega stats
+                  setReloadKey((k) => k + 1);
+                } catch (e) {
+                  console.warn("Não foi possível registrar conclusão", e);
+                }
+              }
+              setShowConclusao(true);
+            }}
             className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition"
           >
             <Trophy className="h-5 w-5" />
@@ -536,7 +592,7 @@ const Treino = () => {
 
         <TreinoConclusaoCard
           open={showConclusao}
-          onClose={() => setShowConclusao(false)}
+          onClose={() => { setShowConclusao(false); resetTreinoDoDia(); }}
           diaTreino={diaAtual}
           totalExercicios={treinosDoDia.length}
         />

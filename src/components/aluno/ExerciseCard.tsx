@@ -76,7 +76,17 @@ export const ExerciseCard = ({
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
   const getSlotType = (i: number) => slotTypes[i] || "Trabalho";
-  const storageKey = `treino-state:${userId || "anon"}:${data.id}`;
+  // ISO week key — garante que cada semana começa com os campos em branco
+  const isoWeekKey = (() => {
+    const d = new Date();
+    const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNr = (target.getUTCDay() + 6) % 7;
+    target.setUTCDate(target.getUTCDate() - dayNr + 3);
+    const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+    const week = 1 + Math.round(((target.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+    return `${target.getUTCFullYear()}-W${week}`;
+  })();
+  const storageKey = `treino-state:${userId || "anon"}:${data.id}:${isoWeekKey}`;
   const [slots, setSlots] = useState(() => {
     try {
       const raw = localStorage.getItem(storageKey);
