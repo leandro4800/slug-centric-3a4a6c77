@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Capacitor } from "@capacitor/core";
-import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 import { useBranding } from "@/contexts/BrandingProvider";
 import {
   Dialog,
@@ -24,8 +22,6 @@ import {
   Pencil,
   Save,
   X,
-  Mic,
-  MicOff,
   Upload,
   Plus,
   Trash2,
@@ -82,12 +78,9 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [recIdx, setRecIdx] = useState<number | null>(null);
-  const [isRecordingGeneral, setIsRecordingGeneral] = useState(false);
   const [iaCommand, setIaCommand] = useState("");
   const [adjusting, setAdjusting] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
-  const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reload = async () => {
@@ -154,138 +147,6 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
     setRefeicoes((prev) => prev.filter((_, i) => i !== idx));
   };
 
-  const startVoice = (idx: number) => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      toast.error("Seu navegador não suporta reconhecimento de voz.");
-      return;
-    }
-    if (recIdx === idx) {
-      recognitionRef.current?.stop();
-      setRecIdx(null);
-      return;
-    }
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
-    }
-    const rec = new SR();
-    rec.lang = "pt-BR";
-    rec.continuous = true;
-    rec.interimResults = false;
-    rec.onstart = () => setRecIdx(idx);
-    rec.onend = () => setRecIdx(null);
-    rec.onerror = () => setRecIdx(null);
-    rec.onresult = (event: any) => {
-      const transcript = Array.from(event.results)
-        .map((r: any) => r[0].transcript)
-        .join(" ");
-      setRefeicoes((prev) =>
-        prev.map((r, i) =>
-          i === idx
-            ? { ...r, descricao_ia: ((r.descricao_ia || "") + " " + transcript).trim() }
-            : r,
-        ),
-      );
-    };
-    rec.start();
-    recognitionRef.current = rec;
-  };
-
-  const startVoiceGeneralNative = async () => {
-    if (isRecordingGeneral) return;
-    try {
-      const available = await NativeSpeech.available();
-      if (!available.available) {
-        toast.error("Reconhecimento de voz não disponível neste aparelho.");
-        return;
-      }
-      const perm = await NativeSpeech.checkPermissions();
-      if (perm.speechRecognition !== "granted") {
-        const req = await NativeSpeech.requestPermissions();
-        if (req.speechRecognition !== "granted") {
-          toast.error("Permita o microfone para ditar o comando da IA.");
-          return;
-        }
-      }
-      setIsRecordingGeneral(true);
-      toast.info("Ouvindo comando para ajustar a dieta...");
-      const result: any = await NativeSpeech.start({
-        language: "pt-BR",
-        maxResults: 1,
-        prompt: "Diga o ajuste da dieta",
-        partialResults: false,
-        popup: false,
-      });
-      const transcript = result?.matches?.[0] || "";
-      if (transcript.trim()) {
-        setIaCommand((prev) => (prev + " " + transcript).trim());
-      } else {
-        toast.error("Não ouvi nada. Tente novamente mais perto do microfone.");
-      }
-    } catch (e: any) {
-      toast.error(`Erro ao ouvir: ${e?.message || e}`);
-    } finally {
-      setIsRecordingGeneral(false);
-    }
-  };
-
-  const startVoiceGeneralWeb = () => {
-    const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SR) {
-      toast.error("Reconhecimento de voz não disponível neste navegador/app. Use o microfone do teclado ou digite o comando.");
-      return;
-    }
-    if (isRecordingGeneral) {
-      recognitionRef.current?.stop();
-      setIsRecordingGeneral(false);
-      return;
-    }
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch {
-        recognitionRef.current = null;
-      }
-    }
-    const rec = new SR();
-    rec.lang = "pt-BR";
-    rec.continuous = true;
-    rec.interimResults = true;
-    rec.onstart = () => setIsRecordingGeneral(true);
-    rec.onend = () => setIsRecordingGeneral(false);
-    rec.onerror = (event: any) => {
-      setIsRecordingGeneral(false);
-      const reason = event?.error === "not-allowed"
-        ? "Permita o acesso ao microfone para ditar o comando."
-        : "Não consegui captar o áudio. Tente novamente ou use o microfone do teclado.";
-      toast.error(reason);
-    };
-    rec.onresult = (event: any) => {
-      const transcript = Array.from(event.results)
-        .slice(event.resultIndex)
-        .filter((r: any) => r.isFinal)
-        .map((r: any) => r[0].transcript)
-        .join(" ");
-      if (transcript.trim()) {
-        setIaCommand(prev => (prev + " " + transcript).trim());
-      }
-    };
-    try {
-      rec.start();
-    } catch {
-      setIsRecordingGeneral(false);
-      toast.error("Não foi possível iniciar o microfone agora.");
-    }
-    recognitionRef.current = rec;
-  };
-
-  const startVoiceGeneral = () => {
-    if (Capacitor.isNativePlatform()) {
-      void startVoiceGeneralNative();
-    } else {
-      startVoiceGeneralWeb();
-    }
-  };
 
   const aplicarTotaisDieta = (totais: any) => {
     if (!totais) return;
