@@ -131,7 +131,7 @@ const Clinica = () => {
         type="file" 
         ref={fileInputRef} 
         className="hidden" 
-        accept="application/pdf"
+        accept="application/pdf,image/*"
         onChange={handleFileChange}
       />
 
