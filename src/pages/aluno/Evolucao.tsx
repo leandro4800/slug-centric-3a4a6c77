@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, Brain, Plus, Camera, Image as ImageIcon } from "lucide-react";
+import { TrendingUp, Brain, Plus, Camera, Image as ImageIcon, Loader2, Sparkles, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { TenantSymbol } from "@/components/TenantSymbol";
@@ -23,6 +24,34 @@ const Evolucao = () => {
   const [beforeUrl, setBeforeUrl] = useState("https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop&q=60");
   const [afterUrl, setAfterUrl] = useState("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=60");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [aiAnalise, setAiAnalise] = useState<string | null>(null);
+  const [aiMeta, setAiMeta] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const gerarAnalise = async () => {
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analise-performance");
+      if (error) {
+        let msg = error.message;
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx) {
+            const j = await ctx.json?.();
+            if (j?.error) msg = j.error;
+          }
+        } catch {}
+        throw new Error(msg);
+      }
+      if (data?.error) throw new Error(data.error);
+      setAiAnalise(data?.analise ?? null);
+      setAiMeta(data?.meta ?? null);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar análise");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -115,17 +144,61 @@ const Evolucao = () => {
           <EvolutionChart data={chartData} type={tab} />
         </div>
 
-        {/* Inteligência Alpha */}
+        {/* Inteligência Alpha — Análise de Performance com IA real */}
         <div className="bg-card/40 border border-border rounded-xl p-5 mt-5">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/40 flex items-center justify-center">
-              <Brain className="h-4 w-4 text-primary" />
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-primary/15 border border-primary/40 flex items-center justify-center">
+                <Brain className="h-4 w-4 text-primary" />
+              </div>
+              <p className="font-display text-lg text-primary tracking-widest uppercase">Análise de Performance</p>
             </div>
-            <p className="font-display text-lg text-primary tracking-widest uppercase">Análise de Performance</p>
+            {aiAnalise && !aiLoading && (
+              <Button variant="ghost" size="sm" onClick={gerarAnalise} className="h-7 px-2 text-[10px] tracking-widest">
+                <RefreshCw className="h-3 w-3" />
+              </Button>
+            )}
           </div>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Sua perda de peso está constante em 1.2kg por semana. Mantendo este ritmo, você atingirá sua meta em <span className="text-primary font-bold">4 semanas</span>. 🧠
-          </p>
+
+          {!aiAnalise && !aiLoading && (
+            <>
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                Análise inteligente do seu progresso usando IA: ritmo de evolução, projeção realista e ajustes práticos baseados nos seus check-ins, avaliações e anamnese.
+              </p>
+              <Button onClick={gerarAnalise} className="w-full bg-primary hover:bg-primary/90 text-primary-foreground tracking-widest uppercase text-xs font-bold">
+                <Sparkles className="mr-2 h-4 w-4" /> Gerar Análise com IA
+              </Button>
+            </>
+          )}
+
+          {aiLoading && (
+            <div className="flex items-center gap-3 py-4 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              Analisando sua evolução com IA…
+            </div>
+          )}
+
+          {aiAnalise && !aiLoading && (
+            <>
+              <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">{aiAnalise}</p>
+              {aiMeta && (
+                <div className="mt-4 grid grid-cols-3 gap-2 text-center">
+                  <div className="bg-background/40 rounded-lg p-2">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest">Δ Peso</p>
+                    <p className="text-sm font-bold text-primary">{aiMeta.delta_peso?.toFixed?.(1) ?? "—"}kg</p>
+                  </div>
+                  <div className="bg-background/40 rounded-lg p-2">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest">Δ BF%</p>
+                    <p className="text-sm font-bold text-primary">{aiMeta.delta_bf?.toFixed?.(1) ?? "—"}</p>
+                  </div>
+                  <div className="bg-background/40 rounded-lg p-2">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-widest">Ritmo/sem</p>
+                    <p className="text-sm font-bold text-primary">{aiMeta.ritmo_semanal_kg?.toFixed?.(2) ?? "—"}kg</p>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Histórico de Check-ins (com excluir) */}
