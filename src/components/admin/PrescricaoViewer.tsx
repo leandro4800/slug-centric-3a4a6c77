@@ -28,6 +28,7 @@ import {
   Plus,
   Trash2,
   Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -83,6 +84,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
   const [isRecordingGeneral, setIsRecordingGeneral] = useState(false);
   const [iaCommand, setIaCommand] = useState("");
   const [adjusting, setAdjusting] = useState(false);
+  const [recalculating, setRecalculating] = useState(false);
   const recognitionRef = useRef<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -190,7 +192,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
   const startVoiceGeneral = () => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
-      toast.error("Seu navegador não suporta reconhecimento de voz.");
+      toast.error("Reconhecimento de voz não disponível neste navegador/app. Use o microfone do teclado ou digite o comando.");
       return;
     }
     if (isRecordingGeneral) {
@@ -198,20 +200,38 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       setIsRecordingGeneral(false);
       return;
     }
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
     const rec = new SR();
     rec.lang = "pt-BR";
     rec.continuous = true;
-    rec.interimResults = false;
+    rec.interimResults = true;
     rec.onstart = () => setIsRecordingGeneral(true);
     rec.onend = () => setIsRecordingGeneral(false);
-    rec.onerror = () => setIsRecordingGeneral(false);
+    rec.onerror = (event: any) => {
+      setIsRecordingGeneral(false);
+      const reason = event?.error === "not-allowed"
+        ? "Permita o acesso ao microfone para ditar o comando."
+        : "Não consegui captar o áudio. Tente novamente ou use o microfone do teclado.";
+      toast.error(reason);
+    };
     rec.onresult = (event: any) => {
       const transcript = Array.from(event.results)
+        .slice(event.resultIndex)
+        .filter((r: any) => r.isFinal)
         .map((r: any) => r[0].transcript)
         .join(" ");
-      setIaCommand(prev => (prev + " " + transcript).trim());
+      if (transcript.trim()) {
+        setIaCommand(prev => (prev + " " + transcript).trim());
+      }
     };
-    rec.start();
+    try {
+      rec.start();
+    } catch {
+      setIsRecordingGeneral(false);
+      toast.error("Não foi possível iniciar o microfone agora.");
+    }
     recognitionRef.current = rec;
   };
 
