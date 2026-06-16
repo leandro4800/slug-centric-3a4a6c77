@@ -83,10 +83,10 @@ serve(async (req) => {
     const { data: refData } = await supabase.from('referencias_exames').select('*')
     const { data: intelData } = await supabase.from('inteligencia_clinica').select('*')
 
-    let base64PDF: string | null = null
+    let fileBase64: string | null = null
+    let fileMime: string = 'application/pdf'
 
     if (file_path) {
-      // Authorization: file_path MUST be inside the authenticated user's folder.
       if (typeof file_path !== 'string' || !file_path.startsWith(`${user.id}/`)) {
         return new Response(JSON.stringify({ error: 'forbidden' }), {
           status: 403,
@@ -100,11 +100,17 @@ serve(async (req) => {
 
       if (downloadError) {
         console.error('Error downloading file:', downloadError)
-        return new Response(JSON.stringify({ error: 'Error downloading file' }), {
+        return new Response(JSON.stringify({ error: 'Error downloading file', details: downloadError.message }), {
           status: 500,
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         })
       }
+
+      const ext = (file_path.split('.').pop() || '').toLowerCase()
+      if (ext === 'jpg' || ext === 'jpeg') fileMime = 'image/jpeg'
+      else if (ext === 'png') fileMime = 'image/png'
+      else if (ext === 'webp') fileMime = 'image/webp'
+      else fileMime = 'application/pdf'
 
       const arrayBuffer = await fileData.arrayBuffer()
       const bytes = new Uint8Array(arrayBuffer)
@@ -113,7 +119,7 @@ serve(async (req) => {
       for (let i = 0; i < bytes.length; i += chunkSize) {
         binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
       }
-      base64PDF = btoa(binary)
+      fileBase64 = btoa(binary)
     }
 
     // Context for AI
