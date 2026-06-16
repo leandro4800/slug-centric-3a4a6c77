@@ -239,7 +239,18 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
           ...r,
           descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia
         })));
-        toast.success("Dieta ajustada com sucesso!", { id: tId });
+        // Atualizar kcal e macros recalculados pela IA
+        if (data.kcal_alvo || data.macros_alvo) {
+          setDieta((d) => ({
+            ...(d || ({} as any)),
+            kcal_alvo: data.kcal_alvo ?? d?.kcal_alvo,
+            macros_alvo: data.macros_alvo ?? d?.macros_alvo,
+          }));
+        }
+        toast.success(
+          `Dieta ajustada! ${data.kcal_alvo ? `${data.kcal_alvo} kcal` : ""}`,
+          { id: tId }
+        );
       }
     } catch (e: any) {
       toast.error("Erro ao ajustar: " + e.message, { id: tId });
