@@ -69,6 +69,8 @@ interface RefeicaoRow {
 
 export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Props) => {
   const { tenant } = useBranding();
+  const navigate = useNavigate();
+  const { slug } = useParams<{ slug: string }>();
   const [loading, setLoading] = useState(true);
   const [treinos, setTreinos] = useState<TreinoRow[]>([]);
   const [dieta, setDieta] = useState<DietaRow | null>(null);
