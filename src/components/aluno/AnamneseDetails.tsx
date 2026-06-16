@@ -245,40 +245,32 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
       </div>
       <Field label="Disponibilidade Dias">
         <div className="flex flex-wrap gap-2">
-          {(() => {
-            const DIAS = ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"];
-            const norm = (s: string) =>
-              s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().slice(0, 3);
-            // achata possíveis strings csv ("Seg, Ter") dentro do array
-            const flat = (form.disponibilidade_dias || [])
-              .flatMap(d => String(d).split(","))
-              .map(s => s.trim())
-              .filter(Boolean);
-            // canoniza para os rótulos de DIAS
-            const canon = DIAS.filter(d => flat.some(f => norm(f) === norm(d)));
-            return DIAS.map(dia => {
-              const selected = canon.includes(dia);
-              return (
-                <button
-                  key={dia}
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const novo = selected
-                      ? canon.filter(d => d !== dia)
-                      : [...canon, dia];
-                    setForm(prev => ({ ...prev, disponibilidade_dias: novo }));
-                  }}
-                  className={`px-3 py-2 rounded-md border text-sm font-medium transition ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-input hover:bg-accent"}`}
-                >
-                  {dia}
-                </button>
-              );
-            });
-          })()}
+          {DIAS_SEMANA.map(dia => {
+            const selected = (form.disponibilidade_dias || []).includes(dia);
+            return (
+              <button
+                key={dia}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setForm(prev => {
+                    const atuais = prev.disponibilidade_dias || [];
+                    const novo = atuais.includes(dia)
+                      ? atuais.filter(d => d !== dia)
+                      : [...atuais, dia];
+                    return { ...prev, disponibilidade_dias: novo };
+                  });
+                }}
+                className={`px-3 py-2 rounded-md border text-sm font-medium transition ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-input hover:bg-accent"}`}
+              >
+                {dia}
+              </button>
+            );
+          })}
         </div>
       </Field>
+
 
       <div className="flex items-center gap-2">
         <Checkbox id="erg" checked={!!form.faz_uso_ergogenicos} onCheckedChange={v => setForm({ ...form, faz_uso_ergogenicos: !!v })} />
