@@ -134,7 +134,18 @@ Retorne APENAS JSON neste formato:
         }).eq("id", body.dieta_id);
       }
 
-      return new Response(JSON.stringify({ success: true, refeicoes: parsed.refeicoes || [], totais }), {
+      return new Response(JSON.stringify({
+        success: true,
+        refeicoes: parsed.refeicoes || [],
+        totais,
+        kcal_alvo: Math.round(Number(totais.kcal) || 0),
+        macros_alvo: {
+          proteina_g: Math.round(Number(totais.proteina_g) || 0),
+          carboidrato_g: Math.round(Number(totais.carboidrato_g) || 0),
+          lipideos_g: Math.round(Number(totais.lipideos_g) || 0),
+          badge: "Recalculado",
+        },
+      }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -266,8 +277,8 @@ na MESMA ORDEM recebida.`;
 
       const totais = plano.totais || { kcal: novoKcal, proteina_g: novaProt, carboidrato_g: novoCarbo, lipideos_g: novaGord };
 
-      // Persiste novos alvos na dieta quando houve recalculo
-      if (body.dieta_id && querReduzirKcal) {
+      // Persiste os novos totais sempre que a dieta foi ajustada por IA.
+      if (body.dieta_id) {
         await supabase.from("dietas").update({
           kcal_alvo: Math.round(Number(totais.kcal) || novoKcal),
           macros_alvo: {
