@@ -204,6 +204,35 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
   const coachName = (profileData?.nome_completo || "SEU NOME").toUpperCase();
   const cutoutUrl = config.photo_url || profileData?.avatar_url || "";
 
+  const handleDownload = async () => {
+    const node = (fullScreenRef.current || previewRef.current);
+    if (!node) return;
+    setDownloading(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(node, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#000000",
+        scale: 2,
+        logging: false,
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `story-${template}-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Template baixado!");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao baixar: " + (e?.message || "tente novamente"));
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   const tplProps = {
