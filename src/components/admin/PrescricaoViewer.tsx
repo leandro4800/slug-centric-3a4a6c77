@@ -501,6 +501,20 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
                     )}
                     Importar PDF/Foto
                   </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => void recalcularMacros()}
+                      disabled={recalculating || refeicoes.length === 0 || !dieta?.id}
+                      className="border-primary/40 text-primary"
+                    >
+                      {recalculating ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-1" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4 mr-1" />
+                      )}
+                      Recalcular macros
+                    </Button>
                   {!editing ? (
                     <Button
                       size="sm"
