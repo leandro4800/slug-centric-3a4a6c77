@@ -15,6 +15,8 @@ const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
