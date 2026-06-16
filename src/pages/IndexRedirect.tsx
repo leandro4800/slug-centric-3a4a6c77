@@ -191,8 +191,8 @@ const IndexRedirect = () => {
       const loginPath = `/${safeSlug}/login`;
       return <Navigate to={loginPath} replace />;
     }
-    // Senão, a porta de entrada é o site
-    return <Navigate to="/site" replace />;
+    // Senão, a porta de entrada é o login do app
+    return <Navigate to="/login" replace />;
   }
 
   if (destination) return <Navigate to={destination} replace />;
