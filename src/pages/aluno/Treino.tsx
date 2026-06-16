@@ -547,7 +547,42 @@ const Treino = () => {
 
         {treinosDoDia.length > 0 && (
           <button
-            onClick={() => setShowConclusao(true)}
+            onClick={async () => {
+              // Registra um marker do treino concluído (alimenta stats/evolução)
+              if (user && tenant) {
+                try {
+                  const hoje = new Date().toISOString().split("T")[0];
+                  const { data: existe } = await supabase
+                    .from("historico_cargas")
+                    .select("id")
+                    .eq("user_id", user.id)
+                    .eq("data_treino", hoje)
+                    .eq("exercicio_nome", `__treino_concluido__:${diaAtual}`)
+                    .maybeSingle();
+                  if (!existe) {
+                    await supabase.from("historico_cargas").insert({
+                      tenant_id: tenant.id,
+                      user_id: user.id,
+                      exercicio_nome: `__treino_concluido__:${diaAtual}`,
+                      carga_kg: 0,
+                      repeticoes_feitas: treinosDoDia.length,
+                      tipo_serie: "Conclusao",
+                      serie_index: 0,
+                    });
+                  }
+                  // marca todos como concluído na UI
+                  const next = new Set(completedIds);
+                  treinosDoDia.forEach((t) => next.add(t.id));
+                  setCompletedIds(next);
+                  try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
+                  // recarrega stats
+                  setReloadKey((k) => k + 1);
+                } catch (e) {
+                  console.warn("Não foi possível registrar conclusão", e);
+                }
+              }
+              setShowConclusao(true);
+            }}
             className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition"
           >
             <Trophy className="h-5 w-5" />
@@ -557,7 +592,7 @@ const Treino = () => {
 
         <TreinoConclusaoCard
           open={showConclusao}
-          onClose={() => setShowConclusao(false)}
+          onClose={() => { setShowConclusao(false); resetTreinoDoDia(); }}
           diaTreino={diaAtual}
           totalExercicios={treinosDoDia.length}
         />
