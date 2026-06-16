@@ -176,9 +176,10 @@ ${intelligenceContext}`
                 text: 'Analise este exame laboratorial. Retorne um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "sugestão genérica de medicamento/suplemento OU vazio se Otimizado" }], "conduta_sugerida": ["ação 1", "ação 2"], "sugestoes_medicamentos": ["sugestão consolidada 1", "..."], "aviso_medico": "texto orientando consulta médica obrigatória antes de qualquer uso de medicamento" }'
               },
               {
-                type: 'image_url',
-                image_url: {
-                  url: `data:application/pdf;base64,${base64PDF}`
+                type: 'file',
+                file: {
+                  filename: 'exame.pdf',
+                  file_data: `data:application/pdf;base64,${base64PDF}`
                 }
               }
             ]
