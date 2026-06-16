@@ -87,25 +87,39 @@ const Clinica = () => {
     }
   };
 
+  const analyzeText = async (texto: string) => {
+    try {
+      setPasteOpen(false);
+      setIsAnalyzing(true);
+      const { data, error: functionError } = await supabase.functions.invoke("analyze-exams", {
+        body: { texto_exame: texto }
+      });
+      if (functionError) throw functionError;
+      setCurrentAnalysis(data);
+      setPasteText("");
+      queryClient.invalidateQueries({ queryKey: ["analises_clinicas"] });
+      toast.success("Análise concluída com sucesso!");
+    } catch (error: any) {
+      console.error("Erro na análise:", error);
+      toast.error(error.message || "Erro ao processar análise. Tente novamente.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const actions = [
-    { 
-      icon: Upload, 
-      title: "ENVIAR PROTOCOLO OU EXAME", 
-      sub: "PDF (Recomendado)", 
+    {
+      icon: Upload,
+      title: "ENVIAR PROTOCOLO OU EXAME",
+      sub: "PDF (Recomendado)",
       dashed: true,
       onClick: () => fileInputRef.current?.click()
     },
-    { 
-      icon: FlaskConical, 
-      title: "RELATAR PROTOCOLO", 
-      sub: "Descreva substâncias, dosagens e ciclos em uso.",
-      onClick: () => toast.info("Funcionalidade em desenvolvimento")
-    },
-    { 
-      icon: Send, 
-      title: "COLAR EXAMES MANUALMENTE", 
+    {
+      icon: Send,
+      title: "COLAR EXAMES MANUALMENTE",
       sub: "Digite ou cole seus resultados laboratoriais.",
-      onClick: () => toast.info("Funcionalidade em desenvolvimento")
+      onClick: () => setPasteOpen(true)
     },
   ];
 
