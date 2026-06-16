@@ -210,6 +210,9 @@ const AdminMontarTreino = () => {
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
   const [biblioteca, setBiblioteca] = useState<Array<{ id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null }>>([]);
+  // === MODO AVANÇADO (edição livre da divisão antes de gerar com IA) ===
+  const [modoAvancado, setModoAvancado] = useState(false);
+  const [diasAvancado, setDiasAvancado] = useState<Array<{ label: string; qtd: number }>>([]);
 
   useEffect(() => {
     if (!tenant) return;
