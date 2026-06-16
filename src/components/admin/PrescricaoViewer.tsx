@@ -235,6 +235,66 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
     recognitionRef.current = rec;
   };
 
+  const aplicarTotaisDieta = (totais: any) => {
+    if (!totais) return;
+    const kcal = Math.round(Number(totais.kcal) || 0);
+    const macros = {
+      proteina_g: Math.round(Number(totais.proteina_g) || 0),
+      carboidrato_g: Math.round(Number(totais.carboidrato_g) || 0),
+      lipideos_g: Math.round(Number(totais.lipideos_g) || 0),
+      badge: "Recalculado",
+    };
+    setDieta((d) => ({
+      ...(d || ({} as any)),
+      kcal_alvo: kcal,
+      macros_alvo: macros,
+    }));
+  };
+
+  const recalcularMacros = async (baseRefeicoes = refeicoes, showToast = true) => {
+    if (!alunoId || baseRefeicoes.length === 0 || !dieta?.id) {
+      if (showToast) toast.error("Salve a dieta antes de recalcular.");
+      return null;
+    }
+    setRecalculating(true);
+    const tId = showToast ? toast.loading("Recalculando calorias e macros...") : undefined;
+    try {
+      await supabase.from("refeicoes").delete().eq("dieta_id", dieta.id);
+      const { error: refsError } = await supabase.from("refeicoes").insert(
+        baseRefeicoes.map((r, i) => ({
+          dieta_id: dieta.id,
+          nome: r.nome,
+          horario: r.horario,
+          ordem: i,
+          descricao_ia: r.descricao_ia,
+        })),
+      );
+      if (refsError) throw refsError;
+
+      const { data, error } = await supabase.functions.invoke("gerar-dieta", {
+        body: {
+          mode: "recalc",
+          aluno_id: alunoId,
+          dieta_id: dieta.id,
+          refeicoes: baseRefeicoes.map((r) => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
+        },
+      });
+      if (error) throw error;
+      if (data?.totais) {
+        aplicarTotaisDieta(data.totais);
+        if (showToast) {
+          toast.success(`Recalculado: ${Math.round(data.totais.kcal || 0)} kcal`, { id: tId });
+        }
+      }
+      return data;
+    } catch (e: any) {
+      if (showToast) toast.error("Erro ao recalcular: " + e.message, { id: tId });
+      throw e;
+    } finally {
+      setRecalculating(false);
+    }
+  };
+
   const ajustarComIA = async () => {
     if (!alunoId || refeicoes.length === 0) return;
     setAdjusting(true);
@@ -255,20 +315,16 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       if (error) throw error;
 
       if (data?.refeicoes) {
-        setRefeicoes(prev => prev.map((r, i) => ({
+        const ajustadas = refeicoes.map((r, i) => ({
           ...r,
-          descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia
-        })));
-        // Atualizar kcal e macros recalculados pela IA
-        if (data.kcal_alvo || data.macros_alvo) {
-          setDieta((d) => ({
-            ...(d || ({} as any)),
-            kcal_alvo: data.kcal_alvo ?? d?.kcal_alvo,
-            macros_alvo: data.macros_alvo ?? d?.macros_alvo,
-          }));
-        }
+          descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia,
+        }));
+        setRefeicoes(ajustadas);
+        if (data?.totais) aplicarTotaisDieta(data.totais);
+        const recalc = await recalcularMacros(ajustadas, false).catch(() => null);
+        if (recalc?.totais) aplicarTotaisDieta(recalc.totais);
         toast.success(
-          `Dieta ajustada! ${data.kcal_alvo ? `${data.kcal_alvo} kcal` : ""}`,
+          `Dieta ajustada e recalculada! ${recalc?.totais?.kcal ? `${Math.round(recalc.totais.kcal)} kcal` : ""}`,
           { id: tId }
         );
       }
