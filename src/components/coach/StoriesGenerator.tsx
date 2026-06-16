@@ -323,7 +323,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
       </div>
 
       {/* Preview */}
-      <div className={cn(
+      <div ref={previewRef} className={cn(
         "relative mx-auto bg-black shadow-2xl overflow-hidden rounded-[2rem] ring-1 ring-white/10 transition-all duration-500",
         TEMPLATES.find(t => t.id === template)?.format === "1:1" ? "aspect-square w-full" : "h-[600px] aspect-[9/16]"
       )}>
