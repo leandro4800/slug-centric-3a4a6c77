@@ -44,19 +44,40 @@ const Treino = () => {
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
-  const completedKey = `treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`;
-  const [completedIds, setCompletedIds] = useState<Set<string>>(() => {
+  const isoWeekKey = (() => {
+    const d = new Date();
+    const target = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    const dayNr = (target.getUTCDay() + 6) % 7;
+    target.setUTCDate(target.getUTCDate() - dayNr + 3);
+    const firstThursday = new Date(Date.UTC(target.getUTCFullYear(), 0, 4));
+    const week = 1 + Math.round(((target.getTime() - firstThursday.getTime()) / 86400000 - 3 + ((firstThursday.getUTCDay() + 6) % 7)) / 7);
+    return `${target.getUTCFullYear()}-W${week}`;
+  })();
+  const completedKey = `treino:completed:${user?.id || "anon"}:${isoWeekKey}:${diaAtual}`;
+  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  // Recarrega completedIds quando muda dia/semana/usuário
+  useEffect(() => {
     try {
-      const raw = localStorage.getItem(`treino:completed:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}`);
-      return new Set<string>(raw ? JSON.parse(raw) : []);
-    } catch { return new Set<string>(); }
-  });
+      const raw = localStorage.getItem(completedKey);
+      setCompletedIds(new Set<string>(raw ? JSON.parse(raw) : []));
+    } catch { setCompletedIds(new Set<string>()); }
+  }, [completedKey]);
   const markCompleted = (id: string) => {
     setCompletedIds((prev) => {
       const next = new Set(prev); next.add(id);
       try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
       return next;
     });
+  };
+  const resetTreinoDoDia = () => {
+    // Limpa estado dos cards do dia (carga/reps/done) e a marcação de concluído
+    treinosDoDia.forEach((t) => {
+      try { localStorage.removeItem(`treino-state:${user?.id || "anon"}:${t.id}:${isoWeekKey}`); } catch {}
+    });
+    try { localStorage.removeItem(completedKey); } catch {}
+    setCompletedIds(new Set());
+    setActiveIndex(null);
+    setReloadKey((k) => k + 1);
   };
 
   // Carrega nível de experiência + avatar do perfil
