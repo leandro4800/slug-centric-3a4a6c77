@@ -395,6 +395,32 @@ const Clinica = () => {
           </div>
         )}
       </div>
+
+      <Dialog open={pasteOpen} onOpenChange={setPasteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Colar exames manualmente</DialogTitle>
+            <DialogDescription>
+              Cole os resultados laboratoriais (nome do marcador, valor e unidade). O Dr. IA vai interpretar e montar sua análise.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={pasteText}
+            onChange={(e) => setPasteText(e.target.value)}
+            placeholder={"Ex.:\nTestosterona Total: 720 ng/dL\nHematócrito: 48%\nGlicemia: 92 mg/dL\nVitamina D: 28 ng/mL"}
+            className="min-h-[220px] font-mono text-sm"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setPasteOpen(false)}>Cancelar</Button>
+            <Button
+              onClick={() => analyzeText(pasteText.trim())}
+              disabled={pasteText.trim().length < 20}
+            >
+              Analisar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
