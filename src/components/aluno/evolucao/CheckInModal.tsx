@@ -162,9 +162,12 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
                   <input 
                     type="file" 
                     accept="image/*" 
-                    capture="environment" 
                     className="hidden" 
-                    onChange={(e) => e.target.files?.[0] && handleFoto(tipo, e.target.files[0])}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFoto(tipo, file);
+                      e.target.value = "";
+                    }}
                   />
                 </label>
               ))}
