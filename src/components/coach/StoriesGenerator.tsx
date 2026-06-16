@@ -267,16 +267,26 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
           body { overflow: hidden !important; }
           .print-clean::-webkit-scrollbar { display: none; }
         `}</style>
-        <div className={cn("relative bg-black overflow-hidden shadow-2xl", aspectClass, heightClass)}>
+        <div ref={fullScreenRef} className={cn("relative bg-black overflow-hidden shadow-2xl", aspectClass, heightClass)}>
           {renderTemplate()}
         </div>
-        <Button
-          onClick={onExitFullScreen}
-          size="sm"
-          className="fixed bottom-4 right-4 bg-black/70 hover:bg-black border border-white/20 text-white rounded-full gap-2 opacity-60 hover:opacity-100 transition-opacity"
-        >
-          <Minimize className="h-4 w-4" /> Sair
-        </Button>
+        <div className="fixed bottom-4 right-4 flex gap-2">
+          <Button
+            onClick={handleDownload}
+            disabled={downloading}
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full gap-2"
+          >
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Baixar PNG
+          </Button>
+          <Button
+            onClick={onExitFullScreen}
+            size="sm"
+            className="bg-black/70 hover:bg-black border border-white/20 text-white rounded-full gap-2 opacity-60 hover:opacity-100 transition-opacity"
+          >
+            <Minimize className="h-4 w-4" /> Sair
+          </Button>
+        </div>
       </div>
     );
   }
