@@ -282,8 +282,42 @@ export const WorkoutSpreadsheetGenerator = () => {
               >
                 <Venus className="h-4 w-4" /> Feminino
               </Button>
+          </div>
+        </div>
+
+        {sexo === "feminino" && (
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest opacity-70">
+              Ênfase do treino (feminino)
+            </label>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <Button
+                type="button"
+                variant={enfase === "posterior_gluteo" ? "default" : "outline"}
+                onClick={() => setEnfase("posterior_gluteo")}
+                className="h-12 text-xs font-bold"
+              >
+                Posterior + Glúteo
+              </Button>
+              <Button
+                type="button"
+                variant={enfase === "quadriceps" ? "default" : "outline"}
+                onClick={() => setEnfase("quadriceps")}
+                className="h-12 text-xs font-bold"
+              >
+                Quadríceps
+              </Button>
+              <Button
+                type="button"
+                variant={enfase === "balanceado" ? "default" : "outline"}
+                onClick={() => setEnfase("balanceado")}
+                className="h-12 text-xs font-bold"
+              >
+                Balanceado
+              </Button>
             </div>
           </div>
+        )}
 
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-widest opacity-70">Nível</label>
