@@ -22,6 +22,7 @@ import {
   User,
   Lock,
   Utensils,
+  Download,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -84,6 +85,9 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
   const [workouts, setWorkouts] = useState<{ id: string; titulo: string }[]>([]);
   const [selectedWorkoutId, setSelectedWorkoutId] = useState<string>("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const previewRef = useRef<HTMLDivElement>(null);
+  const fullScreenRef = useRef<HTMLDivElement>(null);
+  const [downloading, setDownloading] = useState(false);
 
   const [config, setConfig] = useState({
     instagram_handle: "@seuperfil",
@@ -200,6 +204,35 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
   const coachName = (profileData?.nome_completo || "SEU NOME").toUpperCase();
   const cutoutUrl = config.photo_url || profileData?.avatar_url || "";
 
+  const handleDownload = async () => {
+    const node = (fullScreenRef.current || previewRef.current);
+    if (!node) return;
+    setDownloading(true);
+    try {
+      const html2canvas = (await import("html2canvas")).default;
+      const canvas = await html2canvas(node, {
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: "#000000",
+        scale: 2,
+        logging: false,
+      });
+      const dataUrl = canvas.toDataURL("image/png");
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `story-${template}-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Template baixado!");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Erro ao baixar: " + (e?.message || "tente novamente"));
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
 
   const tplProps = {
@@ -234,16 +267,26 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
           body { overflow: hidden !important; }
           .print-clean::-webkit-scrollbar { display: none; }
         `}</style>
-        <div className={cn("relative bg-black overflow-hidden shadow-2xl", aspectClass, heightClass)}>
+        <div ref={fullScreenRef} className={cn("relative bg-black overflow-hidden shadow-2xl", aspectClass, heightClass)}>
           {renderTemplate()}
         </div>
-        <Button
-          onClick={onExitFullScreen}
-          size="sm"
-          className="fixed bottom-4 right-4 bg-black/70 hover:bg-black border border-white/20 text-white rounded-full gap-2 opacity-60 hover:opacity-100 transition-opacity"
-        >
-          <Minimize className="h-4 w-4" /> Sair
-        </Button>
+        <div className="fixed bottom-4 right-4 flex gap-2">
+          <Button
+            onClick={handleDownload}
+            disabled={downloading}
+            size="sm"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-full gap-2"
+          >
+            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Baixar PNG
+          </Button>
+          <Button
+            onClick={onExitFullScreen}
+            size="sm"
+            className="bg-black/70 hover:bg-black border border-white/20 text-white rounded-full gap-2 opacity-60 hover:opacity-100 transition-opacity"
+          >
+            <Minimize className="h-4 w-4" /> Sair
+          </Button>
+        </div>
       </div>
     );
   }
@@ -280,7 +323,7 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
       </div>
 
       {/* Preview */}
-      <div className={cn(
+      <div ref={previewRef} className={cn(
         "relative mx-auto bg-black shadow-2xl overflow-hidden rounded-[2rem] ring-1 ring-white/10 transition-all duration-500",
         TEMPLATES.find(t => t.id === template)?.format === "1:1" ? "aspect-square w-full" : "h-[600px] aspect-[9/16]"
       )}>
@@ -373,6 +416,9 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
           <p className="text-xs text-muted-foreground">Salve as configurações e ative o modo Print para capturar a tela em 9:16.</p>
           <Button onClick={handleSave} className="w-full" disabled={saving} variant="secondary">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />} Salvar
+          </Button>
+          <Button onClick={handleDownload} disabled={downloading} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold uppercase tracking-widest gap-2">
+            {downloading ? <><Loader2 className="h-5 w-5 animate-spin" /> Gerando…</> : <><Download className="h-5 w-5" /> Baixar PNG</>}
           </Button>
           <Button onClick={onEnterFullScreen} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-widest gap-2">
             <Maximize className="h-5 w-5" /> Modo Print {TEMPLATES.find(t => t.id === template)?.format || "9:16"}
