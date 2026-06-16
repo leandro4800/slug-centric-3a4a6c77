@@ -417,6 +417,9 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
           <Button onClick={handleSave} className="w-full" disabled={saving} variant="secondary">
             {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Check className="h-4 w-4 mr-2" />} Salvar
           </Button>
+          <Button onClick={handleDownload} disabled={downloading} className="w-full h-12 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white font-bold uppercase tracking-widest gap-2">
+            {downloading ? <><Loader2 className="h-5 w-5 animate-spin" /> Gerando…</> : <><Download className="h-5 w-5" /> Baixar PNG</>}
+          </Button>
           <Button onClick={onEnterFullScreen} className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold uppercase tracking-widest gap-2">
             <Maximize className="h-5 w-5" /> Modo Print {TEMPLATES.find(t => t.id === template)?.format || "9:16"}
           </Button>
