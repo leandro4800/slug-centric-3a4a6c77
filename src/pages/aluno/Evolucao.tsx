@@ -24,6 +24,34 @@ const Evolucao = () => {
   const [beforeUrl, setBeforeUrl] = useState("https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop&q=60");
   const [afterUrl, setAfterUrl] = useState("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=60");
   const [refreshKey, setRefreshKey] = useState(0);
+  const [aiAnalise, setAiAnalise] = useState<string | null>(null);
+  const [aiMeta, setAiMeta] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const gerarAnalise = async () => {
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("analise-performance");
+      if (error) {
+        let msg = error.message;
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx) {
+            const j = await ctx.json?.();
+            if (j?.error) msg = j.error;
+          }
+        } catch {}
+        throw new Error(msg);
+      }
+      if (data?.error) throw new Error(data.error);
+      setAiAnalise(data?.analise ?? null);
+      setAiMeta(data?.meta ?? null);
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao gerar análise");
+    } finally {
+      setAiLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (user) {
