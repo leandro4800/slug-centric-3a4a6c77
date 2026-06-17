@@ -224,112 +224,59 @@ const Login = () => {
 
           <div className="p-8 relative z-10 flex-1 flex flex-col justify-center">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
-          <Tabs defaultValue="login">
-            <TabsList className="grid grid-cols-2 w-full mb-8 bg-transparent p-1 rounded-none border border-white/5">
-              <TabsTrigger value="login" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Entrar</TabsTrigger>
-              <TabsTrigger value="signup" className="rounded-none data-[state=active]:btn-premium-primary data-[state=active]:bg-primary data-[state=active]:text-white font-bold uppercase tracking-widest text-[10px] md:text-xs py-3">Criar conta</TabsTrigger>
-            </TabsList>
-            <TabsContent value="login">
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div>
-                  <Label htmlFor="email">E-mail</Label>
-                  <div className="relative">
-                    <Input 
-                      id="email" 
-                      type="email" 
-                      required 
-                      value={email} 
-                      onChange={(e) => setEmail(e.target.value)} 
-                      className="bg-white/5 border-white/10" 
-                    />
-                  </div>
-                </div>
-                <div>
-                  <Label htmlFor="password">Senha</Label>
-                  <div className="relative group">
-                    <Input 
-                      id="password" 
-                      type={showPassword ? "text" : "password"} 
-                      required 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10 focus:ring-primary/50" 
-                    />
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-all duration-200 z-10 p-1"
-                      aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ACESSAR AGORA"}
-                </Button>
-                <div className="text-center space-y-2">
-                  <Link to="/forgot-password" className="text-sm text-primary hover:underline block">
-                    Esqueceu a senha?
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleResendConfirmation}
-                    disabled={loading}
-                    className="text-xs text-muted-foreground hover:text-primary underline transition-colors"
-                  >
-                    Reenviar e-mail de confirmação
-                  </button>
-                </div>
-              </form>
-            </TabsContent>
-            <TabsContent value="signup">
-              <form onSubmit={handleSignup} className="space-y-4">
-                <div>
-                  <Label htmlFor="nome">Nome completo</Label>
-                  <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} className="bg-white/5 border-white/10" />
-                </div>
-                <div>
-                  <Label htmlFor="email-s">E-mail</Label>
-                  <Input 
-                    id="email-s" 
-                    type="email" 
-                    required 
-                    value={email} 
-                    onChange={(e) => setEmail(e.target.value)} 
-                    className="bg-white/5 border-white/10" 
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="password-s">Senha</Label>
-                  <div className="relative group">
-                    <Input 
-                      id="password-s" 
-                      type={showPassword ? "text" : "password"} 
-                      minLength={6} 
-                      required 
-                      value={password} 
-                      onChange={(e) => setPassword(e.target.value)} 
-                      className="bg-white/5 border-white/10 pr-10 focus:ring-primary/50" 
-                    />
-                    <button
-                      type="button"
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-all duration-200 z-10 p-1"
-                      aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
-                    >
-                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
-                    </button>
-                  </div>
-                </div>
-                <Button type="submit" disabled={loading} className="w-full">
-                  {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "CRIAR CONTA ALPHA"}
-                </Button>
-              </form>
-            </TabsContent>
-            </Tabs>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div>
+              <Label htmlFor="email">E-mail</Label>
+              <div className="relative">
+                <Input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-white/5 border-white/10"
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="password">Senha</Label>
+              <div className="relative group">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-white/5 border-white/10 pr-10 focus:ring-primary/50"
+                />
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white transition-all duration-200 z-10 p-1"
+                  aria-label={showPassword ? "Esconder senha" : "Mostrar senha"}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
+            </div>
+            <Button type="submit" disabled={loading} className="w-full">
+              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ACESSAR AGORA"}
+            </Button>
+            <div className="text-center space-y-2">
+              <Link to="/forgot-password" className="text-sm text-primary hover:underline block">
+                Esqueceu a senha?
+              </Link>
+              <button
+                type="button"
+                onClick={handleResendConfirmation}
+                disabled={loading}
+                className="text-xs text-muted-foreground hover:text-primary underline transition-colors"
+              >
+                Reenviar e-mail de confirmação
+              </button>
+            </div>
+          </form>
             <p className="text-center text-xs text-muted-foreground mt-6">
               {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
             </p>
