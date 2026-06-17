@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 
 const Clinica = () => {
+  const fileInputId = "clinica-exame-upload";
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
@@ -146,9 +147,10 @@ const Clinica = () => {
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
       <input 
+        id={fileInputId}
         type="file" 
         ref={fileInputRef} 
-        className="hidden" 
+        className="sr-only" 
         accept="application/pdf,image/*"
         onChange={handleFileChange}
       />
@@ -307,17 +309,11 @@ const Clinica = () => {
               <Button
                 key={a.title}
                 variant="secondary"
-                onClick={a.onClick}
+                onClick={a.dashed ? undefined : a.onClick}
+                asChild={a.dashed}
                 className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
               >
-                <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
-                  <a.icon className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 tracking-widest">{a.sub}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-primary" />
+                {a.dashed ? <label htmlFor={fileInputId} className="cursor-pointer">{renderActionContent(a)}</label> : renderActionContent(a)}
               </Button>
             ))}
 
@@ -442,6 +438,22 @@ const Clinica = () => {
         </DialogContent>
       </Dialog>
     </div>
+  );
+};
+
+const renderActionContent = (a: { icon: typeof Upload; title: string; sub: string }) => {
+  const Icon = a.icon;
+  return (
+    <>
+                <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
+        <Icon className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 tracking-widest">{a.sub}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-primary" />
+    </>
   );
 };
 
