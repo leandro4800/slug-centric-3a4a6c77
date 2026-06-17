@@ -363,23 +363,24 @@ const AdminMontarTreino = () => {
     return filtrarPresets(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
   }, [perfil.frequencia_semanal, perfil.sexo, nivel]);
 
-  // Presets do nível + frequência atuais do aluno — evita poluir a tela
-  // com divisões de outras frequências. Se o coach quiser mudar, basta
-  // alterar a frequência no perfil que os cards atualizam automaticamente.
+  // Presets do nível do aluno — agrupados por frequência semanal.
+  // Mostra todas as divisões disponíveis para o nível (ex: intermediário
+  // aparece 2x, 3x, 4x, 5x conforme os presets cadastrados).
   const presetsPorFrequencia = useMemo(() => {
     const fem = !!perfil.sexo?.toLowerCase().startsWith("f");
     const publicoAlvo: ("feminino" | "unisex")[] = fem ? ["feminino", "unisex"] : ["unisex"];
-    const freqAlvo = perfil.frequencia_semanal || 4;
     const todos = DIVISOES_PRESETS.filter(
-      (p) => publicoAlvo.includes(p.publico) && p.nivel.includes(nivel as any) && p.freq === freqAlvo,
+      (p) => publicoAlvo.includes(p.publico) && p.nivel.includes(nivel as any),
     );
     const porFreq = new Map<number, DivisaoPreset[]>();
-    const doFreq = todos.filter((p) => p.freq === freqAlvo);
-    const femDoFreq = doFreq.filter((p) => p.publico === "feminino");
-    const lista = fem && femDoFreq.length > 0 ? femDoFreq : doFreq;
-    if (lista.length > 0) porFreq.set(freqAlvo, lista);
-    return porFreq;
-  }, [perfil.sexo, nivel, perfil.frequencia_semanal]);
+    for (const p of todos) {
+      const lista = porFreq.get(p.freq) || [];
+      lista.push(p);
+      porFreq.set(p.freq, lista);
+    }
+    // Ordena frequências crescentes
+    return new Map([...porFreq.entries()].sort((a, b) => a[0] - b[0]));
+  }, [perfil.sexo, nivel]);
 
   // Auto-seleciona primeiro preset quando muda contexto
   useEffect(() => {
