@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
@@ -7,10 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
@@ -18,6 +17,7 @@ const Clinica = () => {
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
 
@@ -134,7 +134,10 @@ const Clinica = () => {
       title: "ENVIAR PROTOCOLO OU EXAME",
       sub: "PDF (Recomendado)",
       dashed: true,
-      onClick: undefined
+      onClick: () => {
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        fileInputRef.current?.click();
+      }
     },
     {
       icon: Send,
@@ -146,6 +149,14 @@ const Clinica = () => {
 
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+        onChange={handleFileChange}
+      />
+
       <div className="relative h-[460px] min-h-[58vh] overflow-hidden bg-gradient-to-b from-background via-[hsl(0_0%_4%)] to-background">
         {/* Fundo travado: scan de anéis sólidos. Não usa hero do tenant para não trocar com a foto de perfil. */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(34,211,238,0.08)_0%,_transparent_60%)]" />
@@ -298,25 +309,15 @@ const Clinica = () => {
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
               a.dashed ? (
-                <div
+                <Button
                   key={a.title}
-                  className={cn(
-                    buttonVariants({ variant: "secondary" }),
-                    "w-full h-auto py-4 flex items-center gap-4 text-left justify-start cursor-pointer"
-                  )}
+                  variant="secondary"
+                  type="button"
+                  onClick={a.onClick}
+                  className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
                 >
-                  <input
-                    type="file"
-                    className="absolute inset-0 z-30 h-full w-full cursor-pointer opacity-0"
-                    accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
-                    aria-label="Enviar protocolo ou exame"
-                    onClick={(e) => { e.currentTarget.value = ""; }}
-                    onChange={handleFileChange}
-                  />
-                  <span className="pointer-events-none contents">
-                    {renderActionContent(a)}
-                  </span>
-                </div>
+                  {renderActionContent(a)}
+                </Button>
               ) : (
                 <Button
                   key={a.title}
