@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Dumbbell, Music, Loader2, Trophy, Clock, Flame, Sparkles, RefreshCw, Check } from "lucide-react";
+import { Dumbbell, Music, Loader2, Trophy, Clock, Flame, Sparkles, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
