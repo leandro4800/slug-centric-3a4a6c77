@@ -779,10 +779,10 @@ const AdminMontarTreino = () => {
 
             {/* === ESCOLHA DA DIVISÃO === */}
             <div className="bg-black/40 border border-primary/30 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <h2 className="font-display text-xl">DIVISÃO DO TREINO</h2>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-primary/20 text-primary uppercase font-bold tracking-widest border border-primary/30">
-                  {presetsDisponiveis.length} opções p/ {perfil.frequencia_semanal}x · {nivel}
+                  {Array.from(presetsPorFrequencia.values()).reduce((acc, l) => acc + l.length, 0)} opções p/ {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {nivel}
                 </span>
               </div>
 
@@ -812,31 +812,56 @@ const AdminMontarTreino = () => {
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Ou escolha uma divisão pronta abaixo ({presetsDisponiveis.length} opções específicas para {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {perfil.frequencia_semanal}x · {nivel}). Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
+                Escolha uma divisão pronta — separadas por <strong className="text-foreground">frequência semanal</strong> para o nível <strong className="text-foreground">{nivel}</strong>. Ao tocar em um card, a frequência do aluno é ajustada automaticamente e a IA gera o treino respeitando exatamente essa divisão.
               </p>
 
-              <div className="grid md:grid-cols-2 gap-2">
-                {presetsDisponiveis.map((p) => (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => prepararGeracaoDaDivisao(p)}
-                    disabled={generating || perfilLoading}
-                    className={`text-left p-3 rounded-xl border transition-all ${
-                      divisaoSelecionadaId === p.id
-                        ? "bg-primary/15 border-primary shadow-[0_0_15px_rgba(220,38,38,0.25)]"
-                        : "bg-secondary/40 border-border hover:border-primary/40"
-                    }`}
-                  >
-                    <div className="text-sm font-bold mb-1">{p.label}</div>
-                    <div className="text-[11px] text-muted-foreground leading-relaxed">
-                      {p.dias.map((d, i) => <div key={i}>• {d}</div>)}
+              <div className="space-y-5">
+                {Array.from(presetsPorFrequencia.entries()).map(([freq, presets]) => (
+                  <div key={freq} className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] px-2 py-0.5 rounded bg-primary text-primary-foreground uppercase font-bold tracking-widest">
+                        {freq}x / semana
+                      </span>
+                      <span className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                        {presets.length} {presets.length === 1 ? "divisão" : "divisões"}
+                      </span>
+                      <div className="flex-1 h-px bg-border/40" />
                     </div>
-                    <div className="text-[10px] text-primary uppercase font-bold tracking-widest mt-2">
-                      {generating && divisaoSelecionadaId === p.id ? "Gerando..." : "Tocar para gerar e revisar"}
+                    <div className="grid md:grid-cols-2 gap-2">
+                      {presets.map((p) => (
+                        <button
+                          key={p.id}
+                          type="button"
+                          onClick={() => {
+                            if (perfil.frequencia_semanal !== p.freq) {
+                              setPerfil({ ...perfil, frequencia_semanal: p.freq });
+                            }
+                            prepararGeracaoDaDivisao(p);
+                          }}
+                          disabled={generating || perfilLoading}
+                          className={`text-left p-3 rounded-xl border transition-all ${
+                            divisaoSelecionadaId === p.id
+                              ? "bg-primary/15 border-primary shadow-[0_0_15px_rgba(220,38,38,0.25)]"
+                              : "bg-secondary/40 border-border hover:border-primary/40"
+                          }`}
+                        >
+                          <div className="text-sm font-bold mb-1">{p.label}</div>
+                          <div className="text-[11px] text-muted-foreground leading-relaxed">
+                            {p.dias.map((d, i) => <div key={i}>• {d}</div>)}
+                          </div>
+                          <div className="text-[10px] text-primary uppercase font-bold tracking-widest mt-2">
+                            {generating && divisaoSelecionadaId === p.id ? "Gerando..." : "Tocar para gerar e revisar"}
+                          </div>
+                        </button>
+                      ))}
                     </div>
-                  </button>
+                  </div>
                 ))}
+                {presetsPorFrequencia.size === 0 && (
+                  <p className="text-xs text-muted-foreground italic">
+                    Nenhuma divisão pré-definida para este nível. Use "Começar do zero" acima.
+                  </p>
+                )}
               </div>
 
               {divisaoCustom.length > 0 && (
