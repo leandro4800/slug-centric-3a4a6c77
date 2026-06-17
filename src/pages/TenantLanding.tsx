@@ -17,6 +17,9 @@ import {
   Star,
   Quote,
   ChevronDown,
+  Target,
+  Trophy,
+  MessageCircle,
 } from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
 import { useToast } from "@/hooks/use-toast";
