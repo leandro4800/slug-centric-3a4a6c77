@@ -21,6 +21,7 @@ const Clinica = () => {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastFileSelectionRef = useRef<{ signature: string; time: number } | null>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
 
@@ -89,18 +90,26 @@ const Clinica = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // permitir reenviar mesmo arquivo
-    if (file) {
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      const ok = file.type === "application/pdf" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
-      if (!ok) {
-        toast.error("Envie um PDF ou foto do exame.");
-        return;
-      }
-      uploadAndAnalyze(file);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    input.value = ""; // permitir reenviar mesmo arquivo
+
+    if (!file) return;
+
+    const signature = `${file.name}-${file.size}-${file.lastModified}`;
+    const now = Date.now();
+    if (lastFileSelectionRef.current?.signature === signature && now - lastFileSelectionRef.current.time < 1000) return;
+    lastFileSelectionRef.current = { signature, time: now };
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const ok = file.type === "application/pdf" || file.type === "application/octet-stream" || file.type === "" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
+    if (!ok) {
+      toast.error("Envie um PDF ou foto do exame.");
+      return;
     }
+
+    uploadAndAnalyze(file);
   };
 
   const analyzeText = async (texto: string) => {
@@ -155,7 +164,8 @@ const Clinica = () => {
         ref={fileInputRef}
         type="file"
         className="sr-only"
-        accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
+        accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp"
+        onInput={handleFileChange}
         onChange={handleFileChange}
       />
 
