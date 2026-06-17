@@ -297,15 +297,33 @@ const Clinica = () => {
         ) : tab === "nova" && !currentAnalysis ? (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
-              <Button
-                key={a.title}
-                variant="secondary"
-                type="button"
-                onClick={a.onClick}
-                className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
-              >
-                {renderActionContent(a)}
-              </Button>
+              a.dashed ? (
+                <label
+                  key={a.title}
+                  className={cn(
+                    buttonVariants({ variant: "secondary" }),
+                    "w-full h-auto py-4 flex items-center gap-4 text-left justify-start cursor-pointer"
+                  )}
+                >
+                  <input
+                    type="file"
+                    className="sr-only"
+                    accept="application/pdf,image/jpeg,image/png,image/webp"
+                    onChange={handleFileChange}
+                  />
+                  {renderActionContent(a)}
+                </label>
+              ) : (
+                <Button
+                  key={a.title}
+                  variant="secondary"
+                  type="button"
+                  onClick={a.onClick}
+                  className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
+                >
+                  {renderActionContent(a)}
+                </Button>
+              )
             ))}
 
             <div className="bg-card/40 border border-border rounded-xl p-5 mt-5">
