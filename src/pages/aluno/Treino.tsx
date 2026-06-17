@@ -360,32 +360,37 @@ const Treino = () => {
   // Deriva nome do grupo muscular a partir dos exercícios do dia
   const grupoMuscularDoDia = (() => {
     const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const texto = treinosDoDia.map((t) => `${t.exercicio} ${t.observacao || ""}`).map(norm).join(" ");
-    const grupos: { key: string; label: string }[] = [
-      { key: "peito", label: "PEITO" },
-      { key: "costas", label: "COSTAS" },
-      { key: "dorsal", label: "COSTAS" },
-      { key: "ombro", label: "OMBRO" },
-      { key: "deltoide", label: "OMBRO" },
-      { key: "biceps", label: "BÍCEPS" },
-      { key: "triceps", label: "TRÍCEPS" },
-      { key: "quadriceps", label: "QUADRÍCEPS" },
-      { key: "posterior", label: "POSTERIOR DE COXA" },
-      { key: "isquio", label: "POSTERIOR DE COXA" },
-      { key: "stiff", label: "POSTERIOR DE COXA" },
-      { key: "gluteo", label: "GLÚTEO" },
-      { key: "panturrilha", label: "PANTURRILHA" },
-      { key: "gemeo", label: "PANTURRILHA" },
-      { key: "abdomen", label: "ABDÔMEN" },
-      { key: "abdominal", label: "ABDÔMEN" },
+    const grupos: { keys: string[]; label: string }[] = [
+      { keys: ["peito", "supino", "crucifixo", "peck"], label: "PEITO" },
+      { keys: ["costas", "dorsal", "remada", "puxada", "pulldown", "pull down"], label: "COSTAS" },
+      { keys: ["ombro", "deltoide", "desenvolvimento", "elevacao lateral", "elevacao frontal", "arnold"], label: "OMBRO" },
+      { keys: ["biceps", "rosca"], label: "BÍCEPS" },
+      { keys: ["triceps", "frances", "testa", "corda"], label: "TRÍCEPS" },
+      { keys: ["quadriceps", "agachamento", "leg press", "cadeira extensora", "afundo", "avanco", "hack", "bulgaro"], label: "QUADRÍCEPS" },
+      { keys: ["posterior", "isquio", "stiff", "mesa flexora", "cadeira flexora"], label: "POSTERIOR DE COXA" },
+      { keys: ["gluteo", "elevacao pelvica", "hip thrust", "coice", "abducao"], label: "GLÚTEO" },
+      { keys: ["panturrilha", "gemeo", "gastrocnemio", "soleo"], label: "PANTURRILHA" },
+      { keys: ["abdomen", "abdominal", "prancha", "core"], label: "ABDÔMEN" },
     ];
-    const encontrados: string[] = [];
-    for (const g of grupos) {
-      if (texto.includes(g.key) && !encontrados.includes(g.label)) encontrados.push(g.label);
+    const scores = new Map<string, number>();
+    for (const t of treinosDoDia) {
+      const texto = norm(`${t.exercicio} ${t.observacao || ""}`);
+      for (const g of grupos) {
+        if (g.keys.some((k) => texto.includes(k))) {
+          scores.set(g.label, (scores.get(g.label) || 0) + 1);
+          break;
+        }
+      }
     }
-    if (encontrados.length === 0) return null;
-    if (encontrados.length === 1) return encontrados[0];
-    return encontrados.slice(0, 2).join(" E ");
+    if (scores.size === 0) return null;
+    const sorted = [...scores.entries()].sort((a, b) => b[1] - a[1]);
+    const top = sorted[0][1];
+    const principais = sorted.filter(([, n]) => n === top).map(([l]) => l);
+    if (principais.length >= 2) return principais.slice(0, 2).join(" E ");
+    if (sorted.length >= 2 && sorted[1][1] >= Math.max(2, Math.ceil(top / 2))) {
+      return `${sorted[0][0]} E ${sorted[1][0]}`;
+    }
+    return sorted[0][0];
   })();
 
   const primeiroNome = (user?.user_metadata?.nome_completo || user?.email || "Atleta")
