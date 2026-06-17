@@ -97,10 +97,13 @@ const Treino = () => {
       .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
     supabase
       .from("perfis")
-      .select("avatar_url")
+      .select("avatar_url, sexo")
       .eq("id", user.id)
       .maybeSingle()
-      .then(({ data }) => setAvatarPerfil((data as any)?.avatar_url || null));
+      .then(({ data }) => {
+        setAvatarPerfil((data as any)?.avatar_url || null);
+        setSexo((data as any)?.sexo || null);
+      });
 
     // Stats: deriva treinos concluídos, minutos e sequência a partir de historico_cargas
     (async () => {
