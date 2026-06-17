@@ -138,7 +138,7 @@ const AdminDebugPush = () => {
 
       <Card className="p-4 mb-6 space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
+          <div className="space-y-1">
             <div className="text-sm">
               <strong>Host:</strong> {host}{" "}
               {isPreview && (
@@ -148,12 +148,19 @@ const AdminDebugPush = () => {
               )}
             </div>
             <div className="text-sm">
+              <strong>HTTPS (isSecureContext):</strong>{" "}
+              <Badge variant={isSecure ? "default" : "destructive"}>{isSecure ? "sim" : "NÃO — push bloqueado"}</Badge>
+            </div>
+            <div className="text-sm">
+              <strong>Service Worker FCM:</strong> <code className="text-xs">{swStatus}</code>
+            </div>
+            <div className="text-sm">
               <strong>Permissão:</strong>{" "}
               <Badge variant={permission === "granted" ? "default" : "destructive"}>{permission}</Badge>
             </div>
             <div className="text-sm break-all">
               <strong>Meu token FCM:</strong>{" "}
-              {myToken ? <code className="text-xs">{myToken.slice(0, 50)}…</code> : <span className="opacity-50">—</span>}
+              {myToken ? <code className="text-xs">{myToken.slice(0, 60)}…</code> : <span className="opacity-50">— (clique no botão)</span>}
             </div>
           </div>
           <Button onClick={handleRequestAndTest} disabled={sending} size="lg">
@@ -161,6 +168,19 @@ const AdminDebugPush = () => {
             Solicitar Permissão e Enviar Teste Agora
           </Button>
         </div>
+
+        {lastError && (
+          <div className="rounded-md border border-red-500/40 bg-red-500/10 p-3">
+            <div className="text-sm font-semibold text-red-400 mb-1">Último erro:</div>
+            <code className="text-xs text-red-300 break-all whitespace-pre-wrap">{lastError}</code>
+          </div>
+        )}
+        {lastResponse && (
+          <div className="rounded-md border border-border bg-muted/40 p-3">
+            <div className="text-sm font-semibold mb-1">Resposta completa do FCM (via edge function):</div>
+            <pre className="text-xs overflow-x-auto whitespace-pre-wrap">{JSON.stringify(lastResponse, null, 2)}</pre>
+          </div>
+        )}
       </Card>
 
       <div className="flex items-center justify-between mb-3">
