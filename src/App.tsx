@@ -47,6 +47,7 @@ import AtletaCarta from "./pages/admin/AtletaCarta";
 import Carta from "./pages/aluno/Carta";
 import Scheduling from "./pages/aluno/Scheduling";
 import AdminCoaches from "./pages/admin/AdminCoaches";
+import AdminDebugPush from "./pages/admin/AdminDebugPush";
 import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
@@ -172,6 +173,7 @@ const App = () => (
 
             {/* Admin AlphaCoach (super admin) */}
             <Route path="/admin/coaches" element={<RequireAuth requireRole="admin"><AdminCoaches /></RequireAuth>} />
+            <Route path="/admin/debug-push" element={<RequireAuth requireRole="admin"><AdminDebugPush /></RequireAuth>} />
 
             {/* Landing pública do coach (Vendas) */}
             <Route path="/:slug" element={<TenantLanding />} />
