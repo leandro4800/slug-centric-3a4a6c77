@@ -363,26 +363,23 @@ const AdminMontarTreino = () => {
     return filtrarPresets(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
   }, [perfil.frequencia_semanal, perfil.sexo, nivel]);
 
-  // TODAS as divisões disponíveis para o nível+sexo (todas as frequências),
-  // agrupadas por frequência semanal — assim o coach vê todas as opções
-  // (incluindo a clássica 5x) sem precisar mudar a frequência primeiro.
+  // Presets do nível + frequência atuais do aluno — evita poluir a tela
+  // com divisões de outras frequências. Se o coach quiser mudar, basta
+  // alterar a frequência no perfil que os cards atualizam automaticamente.
   const presetsPorFrequencia = useMemo(() => {
     const fem = !!perfil.sexo?.toLowerCase().startsWith("f");
     const publicoAlvo: ("feminino" | "unisex")[] = fem ? ["feminino", "unisex"] : ["unisex"];
+    const freqAlvo = perfil.frequencia_semanal || 4;
     const todos = DIVISOES_PRESETS.filter(
-      (p) => publicoAlvo.includes(p.publico) && p.nivel.includes(nivel as any),
+      (p) => publicoAlvo.includes(p.publico) && p.nivel.includes(nivel as any) && p.freq === freqAlvo,
     );
-    // Se for feminino e houver preset feminino para a freq, prioriza feminino
-    // (mesma regra do filtrarPresets) — mantém unisex quando não há específico.
     const porFreq = new Map<number, DivisaoPreset[]>();
-    [2, 3, 4, 5, 6].forEach((f) => {
-      const doFreq = todos.filter((p) => p.freq === f);
-      const femDoFreq = doFreq.filter((p) => p.publico === "feminino");
-      const lista = fem && femDoFreq.length > 0 ? femDoFreq : doFreq;
-      if (lista.length > 0) porFreq.set(f, lista);
-    });
+    const doFreq = todos.filter((p) => p.freq === freqAlvo);
+    const femDoFreq = doFreq.filter((p) => p.publico === "feminino");
+    const lista = fem && femDoFreq.length > 0 ? femDoFreq : doFreq;
+    if (lista.length > 0) porFreq.set(freqAlvo, lista);
     return porFreq;
-  }, [perfil.sexo, nivel]);
+  }, [perfil.sexo, nivel, perfil.frequencia_semanal]);
 
   // Auto-seleciona primeiro preset quando muda contexto
   useEffect(() => {
@@ -812,7 +809,7 @@ const AdminMontarTreino = () => {
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Escolha uma divisão pronta — separadas por <strong className="text-foreground">frequência semanal</strong> para o nível <strong className="text-foreground">{nivel}</strong>. Ao tocar em um card, a frequência do aluno é ajustada automaticamente e a IA gera o treino respeitando exatamente essa divisão.
+                Divisões prontas para <strong className="text-foreground">{nivel}</strong> · <strong className="text-foreground">{perfil.frequencia_semanal || 4}x / semana</strong>. Ao tocar em um card a IA gera o treino respeitando essa divisão. Mude a frequência no perfil acima para ver outras opções.
               </p>
 
               <div className="space-y-5">
