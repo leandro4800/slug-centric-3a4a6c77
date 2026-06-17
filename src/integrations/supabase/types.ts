@@ -2357,6 +2357,42 @@ export type Database = {
           },
         ]
       }
+      push_send_logs: {
+        Row: {
+          body: string | null
+          created_at: string
+          error_message: string | null
+          fcm_response: Json | null
+          has_token: boolean
+          id: string
+          status: string
+          title: string | null
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          error_message?: string | null
+          fcm_response?: Json | null
+          has_token?: boolean
+          id?: string
+          status: string
+          title?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          error_message?: string | null
+          fcm_response?: Json | null
+          has_token?: boolean
+          id?: string
+          status?: string
+          title?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       refeicoes: {
         Row: {
           descricao_ia: string | null

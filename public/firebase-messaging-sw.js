@@ -1,8 +1,7 @@
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js');
 
-// Garante que o novo SW assume controle imediatamente em novas versões
-self.addEventListener('install', (event) => {
+self.addEventListener('install', () => {
   self.skipWaiting();
 });
 
@@ -28,14 +27,50 @@ firebase.initializeApp({
 
 const messaging = firebase.messaging();
 
-messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Recebida mensagem em segundo plano ', payload);
-  const notificationTitle = payload.notification?.title || 'Alpha Coach';
-  const notificationOptions = {
-    body: payload.notification?.body || '',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png'
+function showNotificationFromPayload(payload) {
+  const title = payload?.notification?.title || payload?.data?.title || 'Alpha Coach';
+  const options = {
+    body: payload?.notification?.body || payload?.data?.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    data: payload?.data || {},
   };
+  return self.registration.showNotification(title, options);
+}
 
-  self.registration.showNotification(notificationTitle, notificationOptions);
+// Firebase Messaging background handler
+messaging.onBackgroundMessage((payload) => {
+  console.log('[firebase-messaging-sw.js] onBackgroundMessage:', payload);
+  showNotificationFromPayload(payload);
+});
+
+// Explicit raw `push` listener as safety net (some browsers bypass onBackgroundMessage
+// when the payload contains a `notification` key, others vice-versa).
+self.addEventListener('push', (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch (e) {
+    payload = { notification: { title: 'Alpha Coach', body: event.data ? event.data.text() : '' } };
+  }
+  console.log('[firebase-messaging-sw.js] push event:', payload);
+  event.waitUntil(showNotificationFromPayload(payload));
+});
+
+// Foreground-click handler: focus existing tab or open the app
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
+  event.waitUntil((async () => {
+    const allClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    for (const client of allClients) {
+      if ('focus' in client) {
+        try { await client.navigate(targetUrl); } catch (e) {}
+        return client.focus();
+      }
+    }
+    if (self.clients.openWindow) {
+      return self.clients.openWindow(targetUrl);
+    }
+  })());
 });
