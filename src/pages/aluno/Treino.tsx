@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Dumbbell, Music, Loader2, Trophy, Clock, Flame } from "lucide-react";
+import { Dumbbell, Music, Loader2, Trophy, Clock, Flame, Sparkles, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -9,6 +10,8 @@ import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 import { TreinoConclusaoCard } from "@/components/aluno/TreinoConclusaoCard";
+import { filtrarPresetsParaAluno, type DivisaoPreset, type Nivel } from "@/data/divisoesPresets";
+import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 interface Treino extends ExerciseCardData {
   dia_semana: string;
@@ -42,6 +45,9 @@ const Treino = () => {
   const [reloadKey, setReloadKey] = useState(0);
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
+  const [sexo, setSexo] = useState<string | null>(null);
+  const [generatingPresetId, setGeneratingPresetId] = useState<string | null>(null);
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const isoWeekKey = (() => {
@@ -91,10 +97,13 @@ const Treino = () => {
       .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
     supabase
       .from("perfis")
-      .select("avatar_url")
+      .select("avatar_url, sexo")
       .eq("id", user.id)
       .maybeSingle()
-      .then(({ data }) => setAvatarPerfil((data as any)?.avatar_url || null));
+      .then(({ data }) => {
+        setAvatarPerfil((data as any)?.avatar_url || null);
+        setSexo((data as any)?.sexo || null);
+      });
 
     // Stats: deriva treinos concluídos, minutos e sequência a partir de historico_cargas
     (async () => {
@@ -318,6 +327,23 @@ const Treino = () => {
         }
       }
 
+      // Fallback: carrega treino gerado pela IA pelos cards de divisão (persistido localmente)
+      try {
+        const raw = localStorage.getItem(`treino:ia-gerado:${user.id}`);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { presetId?: string; treinos: Treino[] };
+          if (parsed?.treinos?.length) {
+            const ord = parsed.treinos.slice().sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
+            setTreinos(ord);
+            setSelectedPresetId(parsed.presetId || null);
+            setDiaAtual((cur) => (cur && ord.some((t) => t.dia_semana === cur) ? cur : ord[0].dia_semana));
+            setIsMock(false);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {}
+
       setTreinos([]);
       setIsMock(false);
       setLoading(false);
@@ -409,6 +435,121 @@ const Treino = () => {
     }));
   };
 
+  // ====== CARDS DE DIVISÃO DE TREINO (gera com IA Pacholok) ======
+  const nivelCanon: Nivel = (toNivelCanonico(nivelExperiencia) || "Iniciante") as Nivel;
+  const presetsDisponiveis = useMemo(
+    () => filtrarPresetsParaAluno(sexo, nivelCanon),
+    [sexo, nivelCanon]
+  );
+  const frequenciasDisponiveis = useMemo(
+    () => Array.from(new Set(presetsDisponiveis.map((p) => p.freq))).sort((a, b) => a - b),
+    [presetsDisponiveis]
+  );
+
+  const gerarTreinoComPreset = async (preset: DivisaoPreset) => {
+    if (!user || !tenant) {
+      toast.error("Aguarde — perfil ainda carregando.");
+      return;
+    }
+    setGeneratingPresetId(preset.id);
+    try {
+      // Busca biblioteca para a IA respeitar nomes com vídeo cadastrado
+      const { data: bib } = await supabase
+        .from("biblioteca_exercicios")
+        .select("nome, grupo_muscular, video_url, video_coach_url")
+        .eq("tenant_id", tenant.id)
+        .limit(800);
+      const bibliotecaParaIA = (bib || []).map((b: any) => ({
+        nome: b.nome,
+        grupo_muscular: b.grupo_muscular,
+        tem_video: !!(b.video_coach_url || b.video_url),
+      }));
+
+      const perfilIA = {
+        aluno_id: user.id,
+        sexo: sexo || "",
+        nivel_experiencia: nivelCanon,
+      };
+
+      const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
+        body: {
+          perfil: perfilIA,
+          biblioteca: bibliotecaParaIA,
+          divisoes: preset.dias,
+          tenant_id: tenant.id,
+          prompt: `Divisão escolhida pelo aluno: ${preset.label}`,
+          estimulos_extras: [],
+        },
+      });
+      if (error) throw error;
+      const dias = ((data as any)?.dias || []) as Array<{ dia: string; exercicios: any[] }>;
+      if (!dias.length) throw new Error("A IA não retornou exercícios. Tente novamente.");
+
+      // Mapeia cada dia para a estrutura Treino[] usada pelo render
+      const norm = (s: string) =>
+        s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const usados = new Set<number>();
+      const novos: Treino[] = [];
+      preset.dias.forEach((diaEstrutura) => {
+        const esperados = norm(diaEstrutura).split(" ").filter((t) => t.length > 2);
+        let idx = dias.findIndex((d, i) => {
+          if (usados.has(i)) return false;
+          const g = norm(d.dia || "");
+          return esperados.some((t) => g.includes(t));
+        });
+        if (idx < 0) idx = dias.findIndex((_, i) => !usados.has(i));
+        if (idx < 0) return;
+        usados.add(idx);
+        (dias[idx].exercicios || []).forEach((e: any, i: number) => {
+          novos.push({
+            id: `ia-${preset.id}-${idx}-${i}`,
+            dia_semana: diaEstrutura,
+            exercicio: e.nome || "",
+            series: e.series || "",
+            repeticoes: e.repeticoes || "",
+            cadencia: e.cadencia || "",
+            detalhes_execucao: e.detalhes_execucao || "",
+            observacao: e.observacao || "",
+            video_url: null,
+            video_coach_url: null,
+          } as Treino);
+        });
+      });
+
+      if (!novos.length) throw new Error("Não foi possível mapear os exercícios gerados.");
+
+      try {
+        localStorage.setItem(
+          `treino:ia-gerado:${user.id}`,
+          JSON.stringify({ presetId: preset.id, treinos: novos })
+        );
+      } catch {}
+      setTreinos(novos);
+      setSelectedPresetId(preset.id);
+      setDiaAtual(novos[0].dia_semana);
+      setActiveIndex(null);
+      if ((data as any)?.fallback) {
+        toast.warning("Rascunho gerado — IA oscilou, revise os exercícios.");
+      } else {
+        toast.success(`Treino "${preset.label}" gerado pela IA.`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao gerar treino. Tente novamente.");
+    } finally {
+      setGeneratingPresetId(null);
+    }
+  };
+
+  const trocarDivisao = () => {
+    if (!user) return;
+    try { localStorage.removeItem(`treino:ia-gerado:${user.id}`); } catch {}
+    setTreinos([]);
+    setSelectedPresetId(null);
+    setActiveIndex(null);
+    setDiaAtual("");
+  };
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -477,15 +618,89 @@ const Treino = () => {
         </div>
 
 
+        {/* Cards de divisão de treino — IA Pacholok gera o treino a partir da divisão escolhida */}
         {treinos.length === 0 && (
-          <div className="bg-card border border-primary/20 rounded-2xl px-5 py-8 flex flex-col items-center justify-center gap-3 text-center mb-4">
-            <TenantSymbol size={32} />
-            <p className="font-display text-base">Aguardando seu treino</p>
-            <p className="text-xs text-muted-foreground max-w-xs">
-              Seu coach ainda não montou seu plano. Assim que ele liberar, seus exercícios aparecem aqui.
+          <div className="bg-card border border-primary/20 rounded-2xl p-5 mb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="h-5 w-5 text-primary" />
+              <h3 className="font-display text-base uppercase tracking-wide">Escolha sua divisão</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Nível detectado:{" "}
+              <span className="text-foreground font-semibold">{nivelCanon}</span>
+              {sexo ? <> · {sexo}</> : null}. Toque numa divisão e a IA monta seu treino na metodologia Pacholok.
+            </p>
+
+            {presetsDisponiveis.length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Nenhuma divisão sugerida para seu nível. Atualize sua anamnese para liberar opções.
+              </p>
+            ) : (
+              <div className="space-y-5">
+                {frequenciasDisponiveis.map((freq) => (
+                  <div key={freq}>
+                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-2">
+                      {freq}x na semana
+                    </p>
+                    <div className="grid gap-2">
+                      {presetsDisponiveis
+                        .filter((p) => p.freq === freq)
+                        .map((p) => {
+                          const isGen = generatingPresetId === p.id;
+                          const isAny = generatingPresetId !== null;
+                          return (
+                            <button
+                              key={p.id}
+                              disabled={isAny}
+                              onClick={() => gerarTreinoComPreset(p)}
+                              className={`text-left rounded-xl border p-4 transition active:scale-[0.99] ${
+                                isGen
+                                  ? "border-primary bg-primary/10"
+                                  : "border-border/60 bg-secondary/30 hover:border-primary/60 hover:bg-secondary/50"
+                              } disabled:opacity-60`}
+                            >
+                              <div className="flex items-center justify-between gap-2 mb-1">
+                                <p className="font-display text-sm leading-tight">{p.label}</p>
+                                {isGen ? (
+                                  <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
+                                ) : (
+                                  <Sparkles className="h-4 w-4 text-primary shrink-0" />
+                                )}
+                              </div>
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {p.dias.map((d, i) => (
+                                  <span
+                                    key={i}
+                                    className="text-[10px] px-2 py-0.5 rounded-full bg-background/60 border border-border/40 text-muted-foreground"
+                                  >
+                                    {d.length > 36 ? d.slice(0, 36) + "…" : d}
+                                  </span>
+                                ))}
+                              </div>
+                            </button>
+                          );
+                        })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <p className="text-[10px] text-muted-foreground mt-4 text-center">
+              Seu coach também pode prescrever um treino — quando ele liberar, esse plano substitui o gerado.
             </p>
           </div>
         )}
+
+        {treinos.length > 0 && selectedPresetId && (
+          <button
+            onClick={trocarDivisao}
+            className="w-full mb-3 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em] py-2 rounded-full border border-border/60 bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
+          >
+            <RefreshCw className="h-3.5 w-3.5" /> Trocar divisão de treino
+          </button>
+        )}
+
 
         {spotifyLink && (
           <a
