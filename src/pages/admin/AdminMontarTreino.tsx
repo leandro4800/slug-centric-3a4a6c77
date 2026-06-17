@@ -166,19 +166,22 @@ const DIVISOES_PRESETS: DivisaoPreset[] = [
 // avançadas caiam em Full Body genérico masculino.
 const filtrarPresets = (frequencia: number, sexo: string | null, nivel: string) => {
   const fem = !!sexo?.toLowerCase().startsWith("f");
-  if (fem) {
-    const femPresets = DIVISOES_PRESETS.filter(
-      (p) => p.freq === frequencia && p.publico === "feminino" && p.nivel.includes(nivel as any)
-    );
-    if (femPresets.length > 0) return femPresets;
-    // fallback: unisex compatível com o nível
-    return DIVISOES_PRESETS.filter(
-      (p) => p.freq === frequencia && p.publico === "unisex" && p.nivel.includes(nivel as any)
-    );
-  }
-  return DIVISOES_PRESETS.filter(
-    (p) => p.freq === frequencia && p.publico === "unisex" && p.nivel.includes(nivel as any)
+  // Mostra TODOS os presets compatíveis com o nível (sexo correto + unisex como
+  // alternativa), ordenando primeiro os que casam exatamente com a frequência
+  // escolhida. Assim o coach sempre vê 4-5+ opções clássicas (ABC, PPL, UL etc.)
+  // mesmo quando a frequência específica tem poucos presets exclusivos.
+  const publicosPermitidos = fem ? ["feminino", "unisex"] : ["unisex"];
+  const candidatos = DIVISOES_PRESETS.filter(
+    (p) => publicosPermitidos.includes(p.publico) && p.nivel.includes(nivel as any)
   );
+  return candidatos.sort((a, b) => {
+    const aExato = a.freq === frequencia ? 0 : 1;
+    const bExato = b.freq === frequencia ? 0 : 1;
+    if (aExato !== bExato) return aExato - bExato;
+    // feminino antes de unisex (quando aluna feminina)
+    if (fem && a.publico !== b.publico) return a.publico === "feminino" ? -1 : 1;
+    return Math.abs(a.freq - frequencia) - Math.abs(b.freq - frequencia);
+  });
 };
 
 const sugerirDivisoes = (frequencia: number, sexo: string | null, nivel: string): string[] => {
