@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Save, Trash2, Plus, ArrowUp, ArrowDown, Video, ChevronDown } from "lucide-react";
+import { Loader2, Sparkles, Save, Trash2, Plus, ArrowUp, ArrowDown, Video, ChevronDown, FileDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Aluno {
   id: string;
