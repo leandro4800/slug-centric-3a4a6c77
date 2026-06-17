@@ -100,24 +100,38 @@ Deno.serve(async (req) => {
       agendamento_token = agend.token;
     } else {
       if (!plano_id) throw new Error("plano_id required");
-      const { data: plano } = await supabase
+      const { data: plano, error: planoErr } = await supabase
         .from("planos")
-        .select("*, tenants!inner(id,slug,nome,stripe_account_id,stripe_onboarding_completed,status)")
+        .select("*, tenants!inner(id,slug,nome,status)")
         .eq("id", plano_id)
         .eq("ativo", true)
         .maybeSingle();
+      if (planoErr) throw new Error("plano query error: " + planoErr.message);
       if (!plano) throw new Error("plano not found");
       // @ts-ignore
-      tenant_to_use = plano.tenants;
+      const tenantBase = plano.tenants;
+      // Busca dados privados (Stripe Connect) separadamente
+      const { data: tpriv } = await supabase
+        .from("tenants_private")
+        .select("stripe_account_id, stripe_onboarding_completed")
+        .eq("tenant_id", tenantBase.id)
+        .maybeSingle();
+      tenant_to_use = {
+        ...tenantBase,
+        stripe_account_id: tpriv?.stripe_account_id ?? null,
+        stripe_onboarding_completed: tpriv?.stripe_onboarding_completed ?? false,
+      };
       if (!plano.stripe_price_id) throw new Error("plano has no stripe_price_id");
       baseUnitAmount = plano.preco_centavos;
       line_items = [{ price: plano.stripe_price_id, quantity: 1 }];
     }
 
     if (tenant_to_use.status !== "approved") throw new Error("tenant not approved");
-    if (!tenant_to_use.stripe_account_id || !tenant_to_use.stripe_onboarding_completed) {
+    const isPlatformOwned = !tenant_to_use.stripe_account_id;
+    if (!isPlatformOwned && !tenant_to_use.stripe_onboarding_completed) {
       throw new Error("Coach ainda não concluiu o cadastro Stripe Connect para receber pagamentos.");
     }
+
 
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const customerEmail = userEmail || email;
@@ -150,22 +164,27 @@ Deno.serve(async (req) => {
 
     // Charge fica na conta da PLATAFORMA (sem on_behalf_of).
     // Plataforma absorve a taxa Stripe; coach recebe valor cheio via transfer_data.
+    // Para tenants próprios da plataforma (ex: alphateam), não há transfer/fee — cobrança direta.
     if (mode === "subscription") {
       sessionParams.subscription_data = {
         trial_period_days: 30,
-        application_fee_percent: APPLICATION_FEE_PCT,
-        transfer_data: { destination: tenant_to_use.stripe_account_id },
       };
+      if (!isPlatformOwned) {
+        sessionParams.subscription_data.application_fee_percent = APPLICATION_FEE_PCT;
+        sessionParams.subscription_data.transfer_data = { destination: tenant_to_use.stripe_account_id };
+      }
     } else {
-      const totalAmount = line_items[0].price_data.unit_amount;
-      // application_fee_amount = total cobrado - quanto vai pro coach (92,01% do base)
-      const coachAmount = Math.round(baseUnitAmount * (1 - PLATFORM_FEE_PCT_OF_BASE / 100));
-      const applicationFee = totalAmount - coachAmount;
-      sessionParams.payment_intent_data = {
-        application_fee_amount: applicationFee,
-        transfer_data: { destination: tenant_to_use.stripe_account_id },
-      };
+      if (!isPlatformOwned) {
+        const totalAmount = line_items[0].price_data.unit_amount;
+        const coachAmount = Math.round(baseUnitAmount * (1 - PLATFORM_FEE_PCT_OF_BASE / 100));
+        const applicationFee = totalAmount - coachAmount;
+        sessionParams.payment_intent_data = {
+          application_fee_amount: applicationFee,
+          transfer_data: { destination: tenant_to_use.stripe_account_id },
+        };
+      }
     }
+
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
