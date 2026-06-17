@@ -13,6 +13,7 @@ import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
 import cardClinica from "@/assets/card-clinica.jpg";
 import { TenantSymbol } from "@/components/TenantSymbol";
+import EnablePushBanner from "@/components/EnablePushBanner";
 
 interface VlogPost {
   id: string;
@@ -263,6 +264,8 @@ const AlunoHome = () => {
       </section>
 
       <section className="relative z-20 px-5 pt-10 pb-1 mt-4 space-y-3 bg-background">
+        <EnablePushBanner />
+
         <Link 
           to={`/${tenantSlug}/app/parceiros`}
           className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 hover:border-primary/50 transition-all active:scale-[0.98] group"
