@@ -309,11 +309,11 @@ const Clinica = () => {
               <Button
                 key={a.title}
                 variant="secondary"
-                onClick={a.dashed ? undefined : a.onClick}
-                asChild={a.dashed}
+                type="button"
+                onClick={a.onClick}
                 className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
               >
-                {a.dashed ? <label htmlFor={fileInputId} className="cursor-pointer">{renderActionContent(a)}</label> : renderActionContent(a)}
+                {renderActionContent(a)}
               </Button>
             ))}
 
