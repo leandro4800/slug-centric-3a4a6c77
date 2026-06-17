@@ -327,6 +327,23 @@ const Treino = () => {
         }
       }
 
+      // Fallback: carrega treino gerado pela IA pelos cards de divisão (persistido localmente)
+      try {
+        const raw = localStorage.getItem(`treino:ia-gerado:${user.id}`);
+        if (raw) {
+          const parsed = JSON.parse(raw) as { presetId?: string; treinos: Treino[] };
+          if (parsed?.treinos?.length) {
+            const ord = parsed.treinos.slice().sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
+            setTreinos(ord);
+            setSelectedPresetId(parsed.presetId || null);
+            setDiaAtual((cur) => (cur && ord.some((t) => t.dia_semana === cur) ? cur : ord[0].dia_semana));
+            setIsMock(false);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {}
+
       setTreinos([]);
       setIsMock(false);
       setLoading(false);
