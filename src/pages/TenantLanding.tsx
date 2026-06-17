@@ -345,7 +345,7 @@ export default function TenantLanding() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={tenant.hero_url || landingHeroBg}
+            src={tenant.hero_url || alphaLandingHero.url}
             alt=""
             className="h-full w-full object-cover"
           />
