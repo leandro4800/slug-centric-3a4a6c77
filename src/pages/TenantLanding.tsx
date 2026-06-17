@@ -464,6 +464,74 @@ export default function TenantLanding() {
         </div>
       </section>
 
+      {/* ===== SOBRE O COACH (BIO EM CARDS) ===== */}
+      {tenant.bio && (() => {
+        const raw = tenant.bio.replace(/\s+/g, " ").trim();
+        const parts = raw.split("*").map((p) => p.trim()).filter(Boolean);
+        const bullets = parts.filter((p) => p.length > 0 && p.length < 80);
+        const longs = parts.filter((p) => p.length >= 80);
+        const intro = longs[0] || parts[0] || "";
+        const closing = longs.slice(1).join(" ").trim();
+        return (
+          <section className="border-y border-border bg-card/30">
+            <div className="mx-auto max-w-6xl px-4 py-20 md:px-8 md:py-28">
+              <div className="mx-auto max-w-3xl text-center">
+                <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
+                  <Trophy className="mr-1 h-3 w-3" /> Sobre o Coach
+                </Badge>
+                <h2 className="font-display text-4xl uppercase md:text-5xl">
+                  O método por trás dos{" "}
+                  <span className="text-primary">resultados</span>
+                </h2>
+              </div>
+
+              {intro && (
+                <div className="mx-auto mt-12 max-w-4xl rounded-2xl border border-border bg-card p-8 shadow-[0_0_60px_-20px_hsl(var(--primary)/0.3)] md:p-10">
+                  <Quote className="mb-4 h-8 w-8 text-primary/70" />
+                  <p className="text-base leading-relaxed text-foreground/90 md:text-lg">
+                    {intro}
+                  </p>
+                </div>
+              )}
+
+              {bullets.length > 0 && (
+                <div className="mt-10">
+                  <h3 className="text-center font-display text-sm uppercase tracking-widest text-muted-foreground">
+                    Focos do trabalho
+                  </h3>
+                  <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    {bullets.map((b, i) => (
+                      <div
+                        key={i}
+                        className="group flex items-start gap-3 rounded-xl border border-border bg-background/60 p-5 transition-all hover:border-primary/60 hover:bg-card"
+                      >
+                        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary transition-colors group-hover:bg-primary group-hover:text-primary-foreground">
+                          <Target className="h-4 w-4" />
+                        </div>
+                        <p className="text-sm font-medium text-foreground/90">{b}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {closing && (
+                <div className="mx-auto mt-10 max-w-4xl rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-8 md:p-10">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+                      <MessageCircle className="h-5 w-5" />
+                    </div>
+                    <p className="text-base leading-relaxed text-foreground/90 md:text-lg">
+                      {closing}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </section>
+        );
+      })()}
+
       {/* ===== FEATURES CAROUSEL ===== */}
       <section id="features" className="mx-auto max-w-6xl px-4 py-20 md:px-8 md:py-28">
         <div className="mx-auto max-w-3xl text-center">
