@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
@@ -7,10 +7,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
 
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
@@ -18,6 +17,7 @@ const Clinica = () => {
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
 
@@ -50,9 +50,8 @@ const Clinica = () => {
       if (!user) throw new Error("Usuário não autenticado");
 
       // 1. Upload to storage
-      const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
-      const uniqueSuffix = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      const fileName = `${user.id}/${uniqueSuffix}.${fileExt}`;
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from("exames_pdfs")
         .upload(fileName, file);
@@ -86,22 +85,17 @@ const Clinica = () => {
     }
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.currentTarget;
-    const file = input.files?.[0];
-
-    if (!file) return;
-
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    const ok = file.type === "application/pdf" || file.type === "application/octet-stream" || file.type === "" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
-    if (!ok) {
-      toast.error("Envie um PDF ou foto do exame.");
-      input.value = "";
-      return;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permitir reenviar mesmo arquivo
+    if (file) {
+      const ok = file.type === "application/pdf" || file.type.startsWith("image/");
+      if (!ok) {
+        toast.error("Envie um PDF ou foto do exame.");
+        return;
+      }
+      uploadAndAnalyze(file);
     }
-
-    await uploadAndAnalyze(file);
-    input.value = "";
   };
 
   const analyzeText = async (texto: string) => {
@@ -139,7 +133,7 @@ const Clinica = () => {
       title: "ENVIAR PROTOCOLO OU EXAME",
       sub: "PDF (Recomendado)",
       dashed: true,
-      onClick: undefined
+      onClick: () => fileInputRef.current?.click()
     },
     {
       icon: Send,
@@ -151,6 +145,14 @@ const Clinica = () => {
 
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
+      <input 
+        type="file" 
+        ref={fileInputRef} 
+        className="hidden" 
+        accept="application/pdf,image/*"
+        onChange={handleFileChange}
+      />
+
       <div className="relative h-[460px] min-h-[58vh] overflow-hidden bg-gradient-to-b from-background via-[hsl(0_0%_4%)] to-background">
         {/* Fundo travado: scan de anéis sólidos. Não usa hero do tenant para não trocar com a foto de perfil. */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(34,211,238,0.08)_0%,_transparent_60%)]" />
@@ -302,37 +304,21 @@ const Clinica = () => {
         ) : tab === "nova" && !currentAnalysis ? (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
-              a.dashed ? (
-                <label
-                  key={a.title}
-                  className={cn(
-                    buttonVariants({ variant: "secondary" }),
-                    "relative w-full h-auto py-4 flex items-center gap-4 text-left justify-start cursor-pointer overflow-hidden"
-                  )}
-                >
-                  <input
-                    type="file"
-                    accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp"
-                    onClick={(event) => {
-                      event.currentTarget.value = "";
-                    }}
-                    onChange={handleFileChange}
-                    className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0"
-                    aria-label="Enviar protocolo ou exame"
-                  />
-                  <span className="contents pointer-events-none">{renderActionContent(a)}</span>
-                </label>
-              ) : (
-                <Button
-                  key={a.title}
-                  variant="secondary"
-                  type="button"
-                  onClick={a.onClick}
-                  className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
-                >
-                  {renderActionContent(a)}
-                </Button>
-              )
+              <Button
+                key={a.title}
+                variant="secondary"
+                onClick={a.onClick}
+                className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
+              >
+                <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
+                  <a.icon className="h-5 w-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5 tracking-widest">{a.sub}</p>
+                </div>
+                <ChevronRight className="h-4 w-4 text-primary" />
+              </Button>
             ))}
 
             <div className="bg-card/40 border border-border rounded-xl p-5 mt-5">
@@ -366,7 +352,7 @@ const Clinica = () => {
               <ChevronRight className="h-3 w-3 rotate-180" /> Fazer nova análise
             </Button>
             <AnalysisResults 
-              score={currentAnalysis.score_performance ?? currentAnalysis.pontuacao_geral}
+              score={currentAnalysis.score_performance}
               parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
               marcadores={currentAnalysis.marcadores}
               conduta={currentAnalysis.conduta_sugerida}
@@ -456,22 +442,6 @@ const Clinica = () => {
         </DialogContent>
       </Dialog>
     </div>
-  );
-};
-
-const renderActionContent = (a: { icon: typeof Upload; title: string; sub: string }) => {
-  const Icon = a.icon;
-  return (
-    <>
-                <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
-        <Icon className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 tracking-widest">{a.sub}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-primary" />
-    </>
   );
 };
 
