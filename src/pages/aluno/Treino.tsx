@@ -435,6 +435,121 @@ const Treino = () => {
     }));
   };
 
+  // ====== CARDS DE DIVISÃO DE TREINO (gera com IA Pacholok) ======
+  const nivelCanon: Nivel = (toNivelCanonico(nivelExperiencia) || "Iniciante") as Nivel;
+  const presetsDisponiveis = useMemo(
+    () => filtrarPresetsParaAluno(sexo, nivelCanon),
+    [sexo, nivelCanon]
+  );
+  const frequenciasDisponiveis = useMemo(
+    () => Array.from(new Set(presetsDisponiveis.map((p) => p.freq))).sort((a, b) => a - b),
+    [presetsDisponiveis]
+  );
+
+  const gerarTreinoComPreset = async (preset: DivisaoPreset) => {
+    if (!user || !tenant) {
+      toast.error("Aguarde — perfil ainda carregando.");
+      return;
+    }
+    setGeneratingPresetId(preset.id);
+    try {
+      // Busca biblioteca para a IA respeitar nomes com vídeo cadastrado
+      const { data: bib } = await supabase
+        .from("biblioteca_exercicios")
+        .select("nome, grupo_muscular, video_url, video_coach_url")
+        .eq("tenant_id", tenant.id)
+        .limit(800);
+      const bibliotecaParaIA = (bib || []).map((b: any) => ({
+        nome: b.nome,
+        grupo_muscular: b.grupo_muscular,
+        tem_video: !!(b.video_coach_url || b.video_url),
+      }));
+
+      const perfilIA = {
+        aluno_id: user.id,
+        sexo: sexo || "",
+        nivel_experiencia: nivelCanon,
+      };
+
+      const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
+        body: {
+          perfil: perfilIA,
+          biblioteca: bibliotecaParaIA,
+          divisoes: preset.dias,
+          tenant_id: tenant.id,
+          prompt: `Divisão escolhida pelo aluno: ${preset.label}`,
+          estimulos_extras: [],
+        },
+      });
+      if (error) throw error;
+      const dias = ((data as any)?.dias || []) as Array<{ dia: string; exercicios: any[] }>;
+      if (!dias.length) throw new Error("A IA não retornou exercícios. Tente novamente.");
+
+      // Mapeia cada dia para a estrutura Treino[] usada pelo render
+      const norm = (s: string) =>
+        s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const usados = new Set<number>();
+      const novos: Treino[] = [];
+      preset.dias.forEach((diaEstrutura) => {
+        const esperados = norm(diaEstrutura).split(" ").filter((t) => t.length > 2);
+        let idx = dias.findIndex((d, i) => {
+          if (usados.has(i)) return false;
+          const g = norm(d.dia || "");
+          return esperados.some((t) => g.includes(t));
+        });
+        if (idx < 0) idx = dias.findIndex((_, i) => !usados.has(i));
+        if (idx < 0) return;
+        usados.add(idx);
+        (dias[idx].exercicios || []).forEach((e: any, i: number) => {
+          novos.push({
+            id: `ia-${preset.id}-${idx}-${i}`,
+            dia_semana: diaEstrutura,
+            exercicio: e.nome || "",
+            series: e.series || "",
+            repeticoes: e.repeticoes || "",
+            cadencia: e.cadencia || "",
+            detalhes_execucao: e.detalhes_execucao || "",
+            observacao: e.observacao || "",
+            video_url: null,
+            video_coach_url: null,
+          } as Treino);
+        });
+      });
+
+      if (!novos.length) throw new Error("Não foi possível mapear os exercícios gerados.");
+
+      try {
+        localStorage.setItem(
+          `treino:ia-gerado:${user.id}`,
+          JSON.stringify({ presetId: preset.id, treinos: novos })
+        );
+      } catch {}
+      setTreinos(novos);
+      setSelectedPresetId(preset.id);
+      setDiaAtual(novos[0].dia_semana);
+      setActiveIndex(null);
+      if ((data as any)?.fallback) {
+        toast.warning("Rascunho gerado — IA oscilou, revise os exercícios.");
+      } else {
+        toast.success(`Treino "${preset.label}" gerado pela IA.`);
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Falha ao gerar treino. Tente novamente.");
+    } finally {
+      setGeneratingPresetId(null);
+    }
+  };
+
+  const trocarDivisao = () => {
+    if (!user) return;
+    try { localStorage.removeItem(`treino:ia-gerado:${user.id}`); } catch {}
+    setTreinos([]);
+    setSelectedPresetId(null);
+    setActiveIndex(null);
+    setDiaAtual("");
+  };
+
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
