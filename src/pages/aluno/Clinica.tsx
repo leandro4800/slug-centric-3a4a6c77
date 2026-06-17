@@ -90,7 +90,8 @@ const Clinica = () => {
     const file = e.target.files?.[0];
     e.target.value = ""; // permitir reenviar mesmo arquivo
     if (file) {
-      const ok = file.type === "application/pdf" || file.type.startsWith("image/");
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      const ok = file.type === "application/pdf" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
       if (!ok) {
         toast.error("Envie um PDF ou foto do exame.");
         return;
