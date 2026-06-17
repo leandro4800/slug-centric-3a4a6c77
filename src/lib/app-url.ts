@@ -7,6 +7,9 @@ const isUnsafeAuthOrigin = (origin: string) => {
       url.hostname === "localhost" ||
       url.hostname === "127.0.0.1" ||
       url.hostname.endsWith(".local") ||
+      url.hostname.endsWith(".lovable.app") ||
+      url.hostname.endsWith(".lovable.dev") ||
+      url.hostname.endsWith(".lovableproject.com") ||
       url.protocol === "capacitor:" ||
       url.protocol === "ionic:"
     );
@@ -14,6 +17,8 @@ const isUnsafeAuthOrigin = (origin: string) => {
     return true;
   }
 };
+
+export const getPublicAppOriginForced = () => PRODUCTION_APP_ORIGIN;
 
 export const getPublicAppOrigin = () => {
   if (typeof window === "undefined") return PRODUCTION_APP_ORIGIN;
