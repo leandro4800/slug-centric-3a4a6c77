@@ -7,9 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
+
+const FILE_INPUT_ID = "clinica-exame-upload";
 
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
@@ -134,10 +137,7 @@ const Clinica = () => {
       title: "ENVIAR PROTOCOLO OU EXAME",
       sub: "PDF (Recomendado)",
       dashed: true,
-      onClick: () => {
-        if (fileInputRef.current) fileInputRef.current.value = "";
-        fileInputRef.current?.click();
-      }
+      onClick: undefined
     },
     {
       icon: Send,
@@ -150,9 +150,10 @@ const Clinica = () => {
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
       <input
+        id={FILE_INPUT_ID}
         ref={fileInputRef}
         type="file"
-        className="hidden"
+        className="sr-only"
         accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
         onChange={handleFileChange}
       />
@@ -309,15 +310,17 @@ const Clinica = () => {
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
               a.dashed ? (
-                <Button
+                <label
                   key={a.title}
-                  variant="secondary"
-                  type="button"
-                  onClick={a.onClick}
-                  className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
+                  htmlFor={FILE_INPUT_ID}
+                  onClick={() => { if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                  className={cn(
+                    buttonVariants({ variant: "secondary" }),
+                    "w-full h-auto py-4 flex items-center gap-4 text-left justify-start cursor-pointer"
+                  )}
                 >
                   {renderActionContent(a)}
-                </Button>
+                </label>
               ) : (
                 <Button
                   key={a.title}
