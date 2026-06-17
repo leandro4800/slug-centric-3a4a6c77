@@ -579,6 +579,89 @@ const AdminMontarTreino = () => {
 
   const dias = [...new Set(exercicios.map((e) => e.dia_semana))];
 
+  const baixarPlanilhaPdf = () => {
+    if (exercicios.length === 0) {
+      toast.error("Gere ou adicione exercícios antes de baixar a planilha.");
+      return;
+    }
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+
+    // Cabeçalho
+    doc.setFillColor(229, 9, 20);
+    doc.rect(0, 0, pageW, 22, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    doc.text("PLANILHA DE TREINO", pageW / 2, 14, { align: "center" });
+
+    doc.setTextColor(20, 20, 20);
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    let y = 30;
+    const meta: string[] = [];
+    if (perfil.objetivo) meta.push(`Objetivo: ${perfil.objetivo}`);
+    if (nivel) meta.push(`Nível: ${nivel}`);
+    if (perfil.frequencia_semanal) meta.push(`Frequência: ${perfil.frequencia_semanal}x/semana`);
+    if (meta.length) {
+      doc.text(meta.join("  •  "), 14, y);
+      y += 8;
+    }
+
+    dias.forEach((dia) => {
+      if (y > 250) { doc.addPage(); y = 20; }
+      const exsDia = exercicios.filter((e) => e.dia_semana === dia).sort((a, b) => a.ordem - b.ordem);
+      autoTable(doc, {
+        startY: y,
+        head: [[dia]],
+        body: [],
+        theme: "plain",
+        headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: 11, fontStyle: "bold" },
+        margin: { left: 14, right: 14 },
+      });
+      autoTable(doc, {
+        startY: (doc as any).lastAutoTable.finalY,
+        head: [["Exercício", "Séries", "Reps", "Cadência", "Obs."]],
+        body: exsDia.map((ex) => [
+          ex.exercicio,
+          ex.series,
+          ex.repeticoes,
+          ex.cadencia || "—",
+          ex.observacao || ex.detalhes_execucao || "—",
+        ]),
+        theme: "striped",
+        styles: { fontSize: 8.5, cellPadding: 2 },
+        headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold" },
+        columnStyles: {
+          0: { cellWidth: 60 },
+          1: { cellWidth: 22 },
+          2: { cellWidth: 22 },
+          3: { cellWidth: 26 },
+          4: { cellWidth: "auto" },
+        },
+        margin: { left: 14, right: 14 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 6;
+    });
+
+    if (cardio) {
+      if (y > 260) { doc.addPage(); y = 20; }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.text("Cardio sugerido", 14, y);
+      y += 5;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const lines = doc.splitTextToSize(cardio, pageW - 28);
+      doc.text(lines, 14, y);
+    }
+
+    doc.save(`planilha_treino_${Date.now()}.pdf`);
+    toast.success("Planilha baixada em PDF!");
+  };
+
+
+
   return (
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 px-3 sm:px-6 py-3 sm:py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
