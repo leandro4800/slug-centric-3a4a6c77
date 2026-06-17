@@ -47,7 +47,8 @@ import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
 import cardClinica from "@/assets/card-clinica.jpg";
 import macroHero from "@/assets/macro-hero.jpg";
-import landingHeroBg from "@/assets/landing-hero-bg.jpg";
+import alphaLandingHero from "@/assets/alpha-landing-hero.png.asset.json";
+
 
 interface Tenant {
   id: string;
@@ -344,7 +345,7 @@ export default function TenantLanding() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={tenant.hero_url || landingHeroBg}
+            src={tenant.hero_url || alphaLandingHero.url}
             alt=""
             className="h-full w-full object-cover"
           />
