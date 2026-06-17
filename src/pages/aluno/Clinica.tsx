@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
@@ -12,12 +12,16 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
+const FILE_INPUT_ID = "clinica-exame-upload";
+
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const lastFileSelectionRef = useRef<{ signature: string; time: number } | null>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
 
@@ -50,8 +54,9 @@ const Clinica = () => {
       if (!user) throw new Error("Usuário não autenticado");
 
       // 1. Upload to storage
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
+      const uniqueSuffix = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const fileName = `${user.id}/${uniqueSuffix}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from("exames_pdfs")
         .upload(fileName, file);
@@ -85,18 +90,26 @@ const Clinica = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // permitir reenviar mesmo arquivo
-    if (file) {
-      const ext = file.name.split(".").pop()?.toLowerCase();
-      const ok = file.type === "application/pdf" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
-      if (!ok) {
-        toast.error("Envie um PDF ou foto do exame.");
-        return;
-      }
-      uploadAndAnalyze(file);
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
+    input.value = ""; // permitir reenviar mesmo arquivo
+
+    if (!file) return;
+
+    const signature = `${file.name}-${file.size}-${file.lastModified}`;
+    const now = Date.now();
+    if (lastFileSelectionRef.current?.signature === signature && now - lastFileSelectionRef.current.time < 1000) return;
+    lastFileSelectionRef.current = { signature, time: now };
+
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const ok = file.type === "application/pdf" || file.type === "application/octet-stream" || file.type === "" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
+    if (!ok) {
+      toast.error("Envie um PDF ou foto do exame.");
+      return;
     }
+
+    uploadAndAnalyze(file);
   };
 
   const analyzeText = async (texto: string) => {
@@ -146,6 +159,16 @@ const Clinica = () => {
 
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
+      <input
+        id={FILE_INPUT_ID}
+        ref={fileInputRef}
+        type="file"
+        className="sr-only"
+        accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp"
+        onInput={handleFileChange}
+        onChange={handleFileChange}
+      />
+
       <div className="relative h-[460px] min-h-[58vh] overflow-hidden bg-gradient-to-b from-background via-[hsl(0_0%_4%)] to-background">
         {/* Fundo travado: scan de anéis sólidos. Não usa hero do tenant para não trocar com a foto de perfil. */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(34,211,238,0.08)_0%,_transparent_60%)]" />
@@ -298,25 +321,17 @@ const Clinica = () => {
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
               a.dashed ? (
-                <div
+                <label
                   key={a.title}
+                  htmlFor={FILE_INPUT_ID}
+                  onClick={() => { if (fileInputRef.current) fileInputRef.current.value = ""; }}
                   className={cn(
                     buttonVariants({ variant: "secondary" }),
                     "w-full h-auto py-4 flex items-center gap-4 text-left justify-start cursor-pointer"
                   )}
                 >
-                  <input
-                    type="file"
-                    className="absolute inset-0 z-30 h-full w-full cursor-pointer opacity-0"
-                    accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
-                    aria-label="Enviar protocolo ou exame"
-                    onClick={(e) => { e.currentTarget.value = ""; }}
-                    onChange={handleFileChange}
-                  />
-                  <span className="pointer-events-none contents">
-                    {renderActionContent(a)}
-                  </span>
-                </div>
+                  {renderActionContent(a)}
+                </label>
               ) : (
                 <Button
                   key={a.title}
