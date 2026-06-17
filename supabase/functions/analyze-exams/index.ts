@@ -203,6 +203,7 @@ ${intelligenceContext}`
             ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }\n\nDADOS DO EXAME:\n${texto_exame}`
           }
         ],
+        max_completion_tokens: 8192,
         response_format: { type: 'json_object' }
       })
     })
@@ -214,7 +215,34 @@ ${intelligenceContext}`
     }
 
     const aiResult = await response.json()
-    const analysisData: AIResponse = JSON.parse(aiResult.choices[0].message.content)
+    const rawContent: string = aiResult.choices?.[0]?.message?.content ?? ''
+    const finishReason = aiResult.choices?.[0]?.finish_reason
+    if (finishReason && finishReason !== 'stop') {
+      console.warn('AI finish_reason não-stop:', finishReason, 'len:', rawContent.length)
+    }
+
+    function parseAIJson(text: string): AIResponse {
+      let cleaned = text.replace(/```json\s*/gi, '').replace(/```\s*/g, '').trim()
+      const start = cleaned.search(/[{\[]/)
+      if (start === -1) throw new Error('Sem JSON na resposta da IA')
+      cleaned = cleaned.substring(start)
+      try { return JSON.parse(cleaned) as AIResponse } catch {}
+      // Recovery: close open string/arrays/braces caused por truncamento
+      let s = cleaned
+      const quotes = (s.match(/(?<!\\)"/g) || []).length
+      if (quotes % 2 === 1) s += '"'
+      s = s.replace(/,\s*$/, '')
+      const opens = (s.match(/\{/g) || []).length
+      const closes = (s.match(/\}/g) || []).length
+      const obrs = (s.match(/\[/g) || []).length
+      const cbrs = (s.match(/\]/g) || []).length
+      s += ']'.repeat(Math.max(0, obrs - cbrs))
+      s += '}'.repeat(Math.max(0, opens - closes))
+      s = s.replace(/,(\s*[}\]])/g, '$1')
+      return JSON.parse(s) as AIResponse
+    }
+
+    const analysisData: AIResponse = parseAIJson(rawContent)
 
     // Save to analises_clinicas
     const { data: analise, error: analiseError } = await supabase
