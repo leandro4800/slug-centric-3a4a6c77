@@ -241,11 +241,25 @@ ${intelligenceContext}`
     }
     let analysisData: AIResponse
     try {
+      if (finishReason === 'length' || finishReason === 'MAX_TOKENS') throw new Error(`Resposta truncada: ${finishReason}`)
       analysisData = parseAIJson(rawContent)
-    } catch (e) {
-      console.error('Failed to parse AI JSON:', e, 'raw:', rawContent?.slice(0, 500))
-      return new Response(JSON.stringify({ error: 'A IA retornou um formato inválido. Tente novamente.' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    } catch (firstError) {
+      console.error('Failed to parse AI JSON, retrying compact response:', firstError, 'finishReason:', finishReason, 'raw:', rawContent?.slice(0, 500))
+      try {
+        aiResult = await callAI(true)
+        rawContent = aiResult?.choices?.[0]?.message?.content ?? ''
+        finishReason = aiResult?.choices?.[0]?.finish_reason ?? aiResult?.choices?.[0]?.finishReason ?? ''
+        if (finishReason === 'length' || finishReason === 'MAX_TOKENS') throw new Error(`Resposta truncada: ${finishReason}`)
+        analysisData = parseAIJson(rawContent)
+      } catch (secondError) {
+        console.error('Failed to parse compact AI JSON:', secondError, 'finishReason:', finishReason, 'raw:', rawContent?.slice(0, 500))
+        return new Response(JSON.stringify({ error: 'A IA não conseguiu concluir a leitura do exame. Tente novamente com um arquivo mais nítido ou em PDF.' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+      }
     }
+
+    analysisData.marcadores = Array.isArray(analysisData.marcadores) ? analysisData.marcadores : []
+    analysisData.conduta_sugerida = Array.isArray(analysisData.conduta_sugerida) ? analysisData.conduta_sugerida : []
+    analysisData.sugestoes_medicamentos = Array.isArray(analysisData.sugestoes_medicamentos) ? analysisData.sugestoes_medicamentos : []
 
     // Save to analises_clinicas
     const { data: analise, error: analiseError } = await supabase
