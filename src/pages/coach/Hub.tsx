@@ -16,6 +16,7 @@ import { PushTester } from "@/components/coach/PushTester";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
+import EnablePushBanner from "@/components/EnablePushBanner";
 
 const Hub = () => {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ const Hub = () => {
       </div>
 
       <div className="max-w-4xl mx-auto p-4 space-y-6">
+        <EnablePushBanner />
         {/* Welcome Section */}
         <div className="bg-gradient-to-br from-card to-card/50 border border-border/40 rounded-2xl p-6 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
