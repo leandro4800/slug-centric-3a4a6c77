@@ -22,20 +22,45 @@ import {
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { WORKOUT_PLANS } from "@/data/workoutPlans";
+import {
+  FEMALE_REF_INTERMEDIARIO,
+  FEMALE_REF_AVANCADO,
+} from "@/data/femaleReferenceTemplate";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
-// Seleciona até 2 planos oficiais Metodologia Alpha como referência para a IA.
+// Seleciona referências para a IA.
+// Mulheres → SEMPRE usa o template feminino oficial (Intermediário/Avançado),
+// só altera o volume conforme o nível escolhido.
 function pickExamples(sexo: string, nivel: string, frequencia: number) {
+  if (sexo === "feminino") {
+    const principal =
+      nivel === "Avançado" || nivel === "Atleta"
+        ? FEMALE_REF_AVANCADO
+        : FEMALE_REF_INTERMEDIARIO;
+    const secundario =
+      principal.id === FEMALE_REF_AVANCADO.id
+        ? FEMALE_REF_INTERMEDIARIO
+        : FEMALE_REF_AVANCADO;
+    return [principal, secundario].map((p) => ({
+      title: p.title,
+      categoria: p.categoria,
+      divisao: p.divisao,
+      workouts: p.workouts.map((w) => ({
+        nome: w.nome,
+        exercicios: w.exercicios.map((e) => ({ nome: e.nome, detalhes: e.detalhes })),
+      })),
+    }));
+  }
+
   const nivelMap: Record<string, string[]> = {
     Iniciante: ["Iniciante"],
     Intermediário: ["Intermediário"],
     Avançado: ["Avançado", "Super Avançado"],
     Atleta: ["Super Avançado", "Avançado"],
   };
-  const alvo = sexo === "feminino" ? ["Feminino"] : nivelMap[nivel] || ["Intermediário"];
+  const alvo = nivelMap[nivel] || ["Intermediário"];
   const candidatos = WORKOUT_PLANS.filter((p) => alvo.includes(p.categoria));
-  // ordena pela proximidade de frequência baseada no título (procura "Nx")
   const score = (t: string) => {
     const m = t.match(/(\d)\s*X/i);
     return m ? Math.abs(Number(m[1]) - frequencia) : 9;
