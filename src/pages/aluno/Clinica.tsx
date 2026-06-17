@@ -90,7 +90,8 @@ const Clinica = () => {
     const file = e.target.files?.[0];
     e.target.value = ""; // permitir reenviar mesmo arquivo
     if (file) {
-      const ok = file.type === "application/pdf" || file.type.startsWith("image/");
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      const ok = file.type === "application/pdf" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
       if (!ok) {
         toast.error("Envie um PDF ou foto do exame.");
         return;
@@ -309,11 +310,11 @@ const Clinica = () => {
               <Button
                 key={a.title}
                 variant="secondary"
-                onClick={a.dashed ? undefined : a.onClick}
-                asChild={a.dashed}
+                type="button"
+                onClick={a.onClick}
                 className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
               >
-                {a.dashed ? <label htmlFor={fileInputId} className="cursor-pointer">{renderActionContent(a)}</label> : renderActionContent(a)}
+                {renderActionContent(a)}
               </Button>
             ))}
 
