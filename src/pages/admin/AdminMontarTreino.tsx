@@ -1072,10 +1072,22 @@ const AdminMontarTreino = () => {
             <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4 sm:space-y-5">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <h2 className="font-display text-lg sm:text-xl">PRESCRIÇÃO</h2>
-                <Button onClick={() => salvarPrescricao()} disabled={saving} size="sm" className="w-full sm:w-auto">
-                  {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                  {pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+                  <Button
+                    onClick={baixarPlanilhaPdf}
+                    disabled={exercicios.length === 0}
+                    size="sm"
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                  >
+                    <FileDown className="h-4 w-4 mr-2" />
+                    Baixar Planilha PDF
+                  </Button>
+                  <Button onClick={() => salvarPrescricao()} disabled={saving} size="sm" className="w-full sm:w-auto">
+                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                    {pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
+                  </Button>
+                </div>
               </div>
 
               {dias.length === 0 && (
