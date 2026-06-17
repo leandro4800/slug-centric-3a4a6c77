@@ -53,8 +53,9 @@ const Clinica = () => {
       if (!user) throw new Error("Usuário não autenticado");
 
       // 1. Upload to storage
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "pdf";
+      const uniqueSuffix = globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const fileName = `${user.id}/${uniqueSuffix}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from("exames_pdfs")
         .upload(fileName, file);
