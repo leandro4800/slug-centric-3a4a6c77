@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
@@ -12,15 +12,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
-const FILE_INPUT_ID = "clinica-exame-upload";
-
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
 
@@ -89,8 +86,8 @@ const Clinica = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
     const file = input.files?.[0];
 
     if (!file) return;
@@ -99,10 +96,11 @@ const Clinica = () => {
     const ok = file.type === "application/pdf" || file.type === "application/octet-stream" || file.type === "" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
     if (!ok) {
       toast.error("Envie um PDF ou foto do exame.");
+      input.value = "";
       return;
     }
 
-    uploadAndAnalyze(file);
+    await uploadAndAnalyze(file);
     input.value = "";
   };
 
@@ -153,15 +151,6 @@ const Clinica = () => {
 
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
-      <input
-        id={FILE_INPUT_ID}
-        ref={fileInputRef}
-        type="file"
-        className="hidden"
-        accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp"
-        onChange={handleFileChange}
-      />
-
       <div className="relative h-[460px] min-h-[58vh] overflow-hidden bg-gradient-to-b from-background via-[hsl(0_0%_4%)] to-background">
         {/* Fundo travado: scan de anéis sólidos. Não usa hero do tenant para não trocar com a foto de perfil. */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(34,211,238,0.08)_0%,_transparent_60%)]" />
@@ -314,22 +303,25 @@ const Clinica = () => {
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
               a.dashed ? (
-                <button
+                <label
                   key={a.title}
-                  type="button"
-                  onClick={() => {
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = "";
-                      fileInputRef.current.click();
-                    }
-                  }}
                   className={cn(
                     buttonVariants({ variant: "secondary" }),
-                    "w-full h-auto py-4 flex items-center gap-4 text-left justify-start cursor-pointer"
+                    "relative w-full h-auto py-4 flex items-center gap-4 text-left justify-start cursor-pointer overflow-hidden"
                   )}
                 >
-                  {renderActionContent(a)}
-                </button>
+                  <input
+                    type="file"
+                    accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp"
+                    onClick={(event) => {
+                      event.currentTarget.value = "";
+                    }}
+                    onChange={handleFileChange}
+                    className="absolute inset-0 z-20 h-full w-full cursor-pointer opacity-0"
+                    aria-label="Enviar protocolo ou exame"
+                  />
+                  <span className="contents pointer-events-none">{renderActionContent(a)}</span>
+                </label>
               ) : (
                 <Button
                   key={a.title}

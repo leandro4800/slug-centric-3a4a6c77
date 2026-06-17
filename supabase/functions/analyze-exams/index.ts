@@ -92,6 +92,7 @@ serve(async (req) => {
 
     let fileBase64: string | null = null
     let fileMime: string = 'application/pdf'
+    let fileNameForAI = 'exame.pdf'
 
     if (file_path) {
       if (typeof file_path !== 'string' || !file_path.startsWith(`${user.id}/`)) {
@@ -118,6 +119,7 @@ serve(async (req) => {
       else if (ext === 'png') fileMime = 'image/png'
       else if (ext === 'webp') fileMime = 'image/webp'
       else fileMime = 'application/pdf'
+      fileNameForAI = file_path.split('/').pop() || `exame.${ext || 'pdf'}`
 
       const arrayBuffer = await fileData.arrayBuffer()
       const bytes = new Uint8Array(arrayBuffer)
@@ -184,8 +186,9 @@ ${intelligenceContext}`
           fileMime === 'application/pdf' ? {
             type: 'file',
             file: {
-              filename: 'exame.pdf',
-              file_data: `data:application/pdf;base64,${fileBase64}`
+              data: fileBase64,
+              media_type: 'application/pdf',
+              filename: fileNameForAI
             }
           } : {
             type: 'image_url',
