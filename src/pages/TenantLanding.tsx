@@ -47,6 +47,7 @@ import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
 import cardClinica from "@/assets/card-clinica.jpg";
 import macroHero from "@/assets/macro-hero.jpg";
+import landingHeroBg from "@/assets/landing-hero-bg.jpg";
 
 interface Tenant {
   id: string;
@@ -342,12 +343,13 @@ export default function TenantLanding() {
       {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
-          {tenant.hero_url ? (
-            <img src={tenant.hero_url} alt="" className="h-full w-full object-cover" />
-          ) : (
-            <div className="h-full w-full bg-gradient-to-br from-primary/40 via-background to-background" />
-          )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-background" />
+          <img
+            src={tenant.hero_url || landingHeroBg}
+            alt=""
+            className="h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/70 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/30 to-transparent" />
         </div>
 
         {/* Top nav */}
