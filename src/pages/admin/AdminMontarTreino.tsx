@@ -160,27 +160,29 @@ const DIVISOES_PRESETS: DivisaoPreset[] = [
   { id: "fem-6x-av", label: "Mulher 6x Avançada — Glúteo 3x + Quad 2x", freq: 6, publico: "feminino", nivel: ["Avançado", "Atleta de Alto Nível"], dias: ["A — Glúteo (pesado)", "B — Quadríceps", "C — Costas/Ombro", "D — Glúteo/Posterior", "E — Peito/Braços", "F — Quadríceps + Panturrilha"] },
 ];
 
-// Para mulheres priorizamos SEMPRE presets femininos quando existirem para a
-// (freq × nível) — Full Body unisex só entra como fallback se nenhum preset
-// feminino daquele perfil existir. Isso evita que iniciantes/intermediárias/
-// avançadas caiam em Full Body genérico masculino.
+// Mostra TODOS os presets compatíveis com o NÍVEL do aluno (independente da
+// frequência semanal escolhida) — assim Iniciante/Intermediário/Avançado/Atleta
+// sempre vêem várias opções clássicas (ABC, PPL, UL, ABCDE, ABCDEF, Full Body…).
+// Os que casam exatamente com a frequência escolhida vêm primeiro.
+const normalize = (s: string) =>
+  s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 const filtrarPresets = (frequencia: number, sexo: string | null, nivel: string) => {
-  const fem = !!sexo?.toLowerCase().startsWith("f");
-  // Mostra TODOS os presets compatíveis com o nível (sexo correto + unisex como
-  // alternativa), ordenando primeiro os que casam exatamente com a frequência
-  // escolhida. Assim o coach sempre vê 4-5+ opções clássicas (ABC, PPL, UL etc.)
-  // mesmo quando a frequência específica tem poucos presets exclusivos.
+  const fem = !!sexo && normalize(sexo).startsWith("f");
   const publicosPermitidos = fem ? ["feminino", "unisex"] : ["unisex"];
-  const candidatos = DIVISOES_PRESETS.filter(
-    (p) => publicosPermitidos.includes(p.publico) && p.nivel.includes(nivel as any)
-  );
+  const nivelN = normalize(nivel);
+  const candidatos = DIVISOES_PRESETS.filter((p) => {
+    if (!publicosPermitidos.includes(p.publico)) return false;
+    return p.nivel.some((n) => normalize(n) === nivelN);
+  });
   return candidatos.sort((a, b) => {
     const aExato = a.freq === frequencia ? 0 : 1;
     const bExato = b.freq === frequencia ? 0 : 1;
     if (aExato !== bExato) return aExato - bExato;
-    // feminino antes de unisex (quando aluna feminina)
     if (fem && a.publico !== b.publico) return a.publico === "feminino" ? -1 : 1;
-    return Math.abs(a.freq - frequencia) - Math.abs(b.freq - frequencia);
+    const da = Math.abs(a.freq - frequencia);
+    const db = Math.abs(b.freq - frequencia);
+    if (da !== db) return da - db;
+    return a.freq - b.freq;
   });
 };
 
