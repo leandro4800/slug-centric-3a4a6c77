@@ -214,7 +214,30 @@ ${intelligenceContext}`
     }
 
     const aiResult = await response.json()
-    const analysisData: AIResponse = JSON.parse(aiResult.choices[0].message.content)
+    const rawContent: string = aiResult?.choices?.[0]?.message?.content ?? ''
+    const parseAIJson = (raw: string): AIResponse => {
+      let s = (raw || '').trim()
+      // strip code fences
+      s = s.replace(/^```(?:json)?\s*/i, '').replace(/```\s*$/i, '').trim()
+      // extract outermost JSON object if extra text around
+      const first = s.indexOf('{')
+      const last = s.lastIndexOf('}')
+      if (first !== -1 && last !== -1 && last > first) s = s.slice(first, last + 1)
+      try {
+        return JSON.parse(s)
+      } catch (_e) {
+        // remove trailing commas before } or ]
+        const cleaned = s.replace(/,(\s*[}\]])/g, '$1')
+        return JSON.parse(cleaned)
+      }
+    }
+    let analysisData: AIResponse
+    try {
+      analysisData = parseAIJson(rawContent)
+    } catch (e) {
+      console.error('Failed to parse AI JSON:', e, 'raw:', rawContent?.slice(0, 500))
+      return new Response(JSON.stringify({ error: 'A IA retornou um formato inválido. Tente novamente.' }), { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
 
     // Save to analises_clinicas
     const { data: analise, error: analiseError } = await supabase
