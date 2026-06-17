@@ -147,19 +147,10 @@ serve(async (req) => {
       conduta: i.sugestao_conduta
     })))
 
-    // Call Lovable AI Gateway
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          {
-            role: 'system',
-            content: `Você é o "Dr. IA", um especialista em medicina integrativa e performance humana. Sua missão é ler dados de OCR de exames de sangue e transformá-los em um relatório de biohacking e longevidade seguindo a Metodologia Pacholok (Anabolismo Total).
+    const buildMessages = (compact = false) => [
+      {
+        role: 'system',
+        content: `Você é o "Dr. IA", um especialista em medicina integrativa e performance humana. Sua missão é ler dados de OCR de exames de sangue e transformá-los em um relatório de biohacking e longevidade seguindo a Metodologia Pacholok (Anabolismo Total).
 Seja técnico, mas encorajador. Priorize a prevenção e a otimização, não apenas a ausência de doença.
 
 REGRAS DE ANÁLISE:
@@ -182,39 +173,56 @@ ${referenceContext}
 
 INTELIGÊNCIA CLÍNICA:
 ${intelligenceContext}`
-          },
+      },
+      {
+        role: 'user',
+        content: fileBase64 ? [
           {
-            role: 'user',
-            content: fileBase64 ? [
-              {
-                type: 'text',
-                text: 'Analise este exame laboratorial. Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }'
-              },
-              fileMime === 'application/pdf' ? {
-                type: 'file',
-                file: {
-                  filename: 'exame.pdf',
-                  file_data: `data:application/pdf;base64,${fileBase64}`
-                }
-              } : {
-                type: 'image_url',
-                image_url: { url: `data:${fileMime};base64,${fileBase64}` }
-              }
-            ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }\n\nDADOS DO EXAME:\n${texto_exame}`
+            type: 'text',
+            text: `Analise este exame laboratorial. Retorne APENAS um JSON válido e completo, sem markdown, neste formato: { "pontuacao_geral": 0-100, "resumo_executivo": "${compact ? 'até 900 caracteres' : '3 parágrafos: Estado Atual, Riscos e Prioridade #1'}", "marcadores": [{ "codigo": "", "nome": "", "valor": 0, "unidade": "", "status": "Otimizado|Alerta|Critico|Subotimizado", "insight_clinico": "", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }. ${compact ? 'Use frases curtas e limite cada insight a 180 caracteres.' : ''}`
+          },
+          fileMime === 'application/pdf' ? {
+            type: 'file',
+            file: {
+              filename: 'exame.pdf',
+              file_data: `data:application/pdf;base64,${fileBase64}`
+            }
+          } : {
+            type: 'image_url',
+            image_url: { url: `data:${fileMime};base64,${fileBase64}` }
           }
-        ],
-        response_format: { type: 'json_object' }
-      })
-    })
+        ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne APENAS um JSON válido e completo, sem markdown, neste formato: { "pontuacao_geral": 0-100, "resumo_executivo": "${compact ? 'até 900 caracteres' : '3 parágrafos: Estado Atual, Riscos e Prioridade #1'}", "marcadores": [{ "codigo": "", "nome": "", "valor": 0, "unidade": "", "status": "Otimizado|Alerta|Critico|Subotimizado", "insight_clinico": "", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }. ${compact ? 'Use frases curtas e limite cada insight a 180 caracteres.' : ''}\n\nDADOS DO EXAME:\n${texto_exame}`
+      }
+    ]
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      console.error('AI Gateway Error:', response.status, errorText)
-      return new Response(JSON.stringify({ error: 'Erro ao processar análise com IA', status: response.status, details: errorText }), { status: response.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    const callAI = async (compact = false) => {
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get('LOVABLE_API_KEY')}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: buildMessages(compact),
+          response_format: { type: 'json_object' },
+          temperature: 0.1,
+          max_tokens: 8192,
+        })
+      })
+
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error('AI Gateway Error:', response.status, errorText)
+        throw new Error(`Erro ao processar análise com IA (${response.status})`)
+      }
+
+      return await response.json()
     }
 
-    const aiResult = await response.json()
-    const rawContent: string = aiResult?.choices?.[0]?.message?.content ?? ''
+    let aiResult = await callAI(false)
+    let rawContent: string = aiResult?.choices?.[0]?.message?.content ?? ''
+    let finishReason: string = aiResult?.choices?.[0]?.finish_reason ?? aiResult?.choices?.[0]?.finishReason ?? ''
     const parseAIJson = (raw: string): AIResponse => {
       let s = (raw || '').trim()
       // strip code fences
