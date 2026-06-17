@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Textarea } from "@/components/ui/textarea";
 
 const Clinica = () => {
-  const fileInputId = "clinica-exame-upload";
+  const fileInputId = useRef(`clinica-exame-upload-${crypto.randomUUID()}`).current;
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentAnalysis, setCurrentAnalysis] = useState<any>(null);
