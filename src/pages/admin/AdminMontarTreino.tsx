@@ -810,7 +810,7 @@ const AdminMontarTreino = () => {
               </div>
 
               <p className="text-xs text-muted-foreground">
-                Divisões prontas para <strong className="text-foreground">{nivel}</strong> · <strong className="text-foreground">{perfil.frequencia_semanal || 4}x / semana</strong>. Ao tocar em um card a IA gera o treino respeitando essa divisão. Mude a frequência no perfil acima para ver outras opções.
+                Divisões prontas para <strong className="text-foreground">{nivel}</strong>. Ao tocar em um card a IA gera o treino respeitando essa divisão.
               </p>
 
               <div className="space-y-5">
