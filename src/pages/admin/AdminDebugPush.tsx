@@ -30,6 +30,10 @@ const AdminDebugPush = () => {
   );
   const [sending, setSending] = useState(false);
   const [host, setHost] = useState<string>("");
+  const [isSecure, setIsSecure] = useState<boolean>(false);
+  const [swStatus, setSwStatus] = useState<string>("desconhecido");
+  const [lastResponse, setLastResponse] = useState<any>(null);
+  const [lastError, setLastError] = useState<string | null>(null);
 
   const fetchLogs = async () => {
     setLoading(true);
@@ -46,20 +50,36 @@ const AdminDebugPush = () => {
   useEffect(() => {
     fetchLogs();
     setHost(window.location.hostname);
+    setIsSecure(window.isSecureContext);
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        const fcm = regs.find((r) => r.active?.scriptURL.includes("firebase-messaging-sw"));
+        setSwStatus(fcm ? `registrado (${fcm.active?.state})` : `nenhum SW FCM (${regs.length} outros)`);
+      });
+    } else {
+      setSwStatus("Service Worker não suportado");
+    }
   }, []);
 
   const handleRequestAndTest = async () => {
     setSending(true);
+    setLastResponse(null);
+    setLastError(null);
     try {
+      console.log("[debug-push] isSecureContext:", window.isSecureContext, "host:", window.location.hostname);
       const result = await requestForToken(FIREBASE_VAPID_KEY);
+      console.log("[debug-push] requestForToken result:", result);
       if (typeof window !== "undefined" && "Notification" in window) {
         setPermission(Notification.permission);
       }
       if (!result.token) {
+        const msg = `Token não obtido: ${result.reason || "desconhecido"}`;
+        setLastError(msg);
         toast.error("Falha ao obter token", { description: result.reason || "desconhecido" });
         return;
       }
       setMyToken(result.token);
+      console.log("[debug-push] FCM token completo:", result.token);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -73,11 +93,29 @@ const AdminDebugPush = () => {
           body: `Disparo manual em ${new Date().toLocaleTimeString("pt-BR")}`,
         },
       });
-      if (error) throw error;
-      toast.success("Requisição enviada ao FCM", { description: JSON.stringify(data).slice(0, 200) });
+      console.log("[debug-push] edge function response:", { data, error });
+      if (error) {
+        setLastError(error.message || String(error));
+        throw error;
+      }
+      setLastResponse(data);
+      if (data?.success === false) {
+        const fcmErr =
+          data?.error?.error?.message ||
+          data?.error?.error?.status ||
+          data?.error?.message ||
+          data?.reason ||
+          "FCM rejeitou";
+        setLastError(`FCM: ${fcmErr}`);
+        toast.error("FCM rejeitou", { description: fcmErr });
+      } else {
+        toast.success("Requisição aceita pelo FCM");
+      }
       setTimeout(fetchLogs, 1500);
     } catch (e: any) {
-      toast.error("Erro no disparo", { description: e?.message || String(e) });
+      const msg = e?.message || String(e);
+      setLastError(msg);
+      toast.error("Erro no disparo", { description: msg });
     } finally {
       setSending(false);
     }
@@ -100,7 +138,7 @@ const AdminDebugPush = () => {
 
       <Card className="p-4 mb-6 space-y-3">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
+          <div className="space-y-1">
             <div className="text-sm">
               <strong>Host:</strong> {host}{" "}
               {isPreview && (
@@ -110,12 +148,19 @@ const AdminDebugPush = () => {
               )}
             </div>
             <div className="text-sm">
+              <strong>HTTPS (isSecureContext):</strong>{" "}
+              <Badge variant={isSecure ? "default" : "destructive"}>{isSecure ? "sim" : "NÃO — push bloqueado"}</Badge>
+            </div>
+            <div className="text-sm">
+              <strong>Service Worker FCM:</strong> <code className="text-xs">{swStatus}</code>
+            </div>
+            <div className="text-sm">
               <strong>Permissão:</strong>{" "}
               <Badge variant={permission === "granted" ? "default" : "destructive"}>{permission}</Badge>
             </div>
             <div className="text-sm break-all">
               <strong>Meu token FCM:</strong>{" "}
-              {myToken ? <code className="text-xs">{myToken.slice(0, 50)}…</code> : <span className="opacity-50">—</span>}
+              {myToken ? <code className="text-xs">{myToken.slice(0, 60)}…</code> : <span className="opacity-50">— (clique no botão)</span>}
             </div>
           </div>
           <Button onClick={handleRequestAndTest} disabled={sending} size="lg">
@@ -123,6 +168,19 @@ const AdminDebugPush = () => {
             Solicitar Permissão e Enviar Teste Agora
           </Button>
         </div>
+
+        {lastError && (
+          <div className="rounded-md border border-red-500/40 bg-red-500/10 p-3">
+            <div className="text-sm font-semibold text-red-400 mb-1">Último erro:</div>
+            <code className="text-xs text-red-300 break-all whitespace-pre-wrap">{lastError}</code>
+          </div>
+        )}
+        {lastResponse && (
+          <div className="rounded-md border border-border bg-muted/40 p-3">
+            <div className="text-sm font-semibold mb-1">Resposta completa do FCM (via edge function):</div>
+            <pre className="text-xs overflow-x-auto whitespace-pre-wrap">{JSON.stringify(lastResponse, null, 2)}</pre>
+          </div>
+        )}
       </Card>
 
       <div className="flex items-center justify-between mb-3">
