@@ -298,7 +298,7 @@ const Clinica = () => {
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
               a.dashed ? (
-                <label
+                <div
                   key={a.title}
                   className={cn(
                     buttonVariants({ variant: "secondary" }),
@@ -307,12 +307,16 @@ const Clinica = () => {
                 >
                   <input
                     type="file"
-                    className="sr-only"
+                    className="absolute inset-0 z-30 h-full w-full cursor-pointer opacity-0"
                     accept="application/pdf,image/jpeg,image/png,image/webp"
+                    aria-label="Enviar protocolo ou exame"
+                    onClick={(e) => { e.currentTarget.value = ""; }}
                     onChange={handleFileChange}
                   />
-                  {renderActionContent(a)}
-                </label>
+                  <span className="pointer-events-none contents">
+                    {renderActionContent(a)}
+                  </span>
+                </div>
               ) : (
                 <Button
                   key={a.title}
