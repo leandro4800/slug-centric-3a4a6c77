@@ -311,6 +311,8 @@ ${intelligenceContext}`
 
     return new Response(JSON.stringify({
       analise_id: analise.id,
+      score_performance: analysisData.pontuacao_geral,
+      parecer_tecnico: analysisData.resumo_executivo,
       ...analysisData
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

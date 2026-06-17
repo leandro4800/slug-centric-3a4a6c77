@@ -21,7 +21,6 @@ const Clinica = () => {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const lastFileSelectionRef = useRef<{ signature: string; time: number } | null>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
 
@@ -90,17 +89,11 @@ const Clinica = () => {
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement> | React.FormEvent<HTMLInputElement>) => {
-    const input = e.currentTarget;
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
     const file = input.files?.[0];
-    input.value = ""; // permitir reenviar mesmo arquivo
 
     if (!file) return;
-
-    const signature = `${file.name}-${file.size}-${file.lastModified}`;
-    const now = Date.now();
-    if (lastFileSelectionRef.current?.signature === signature && now - lastFileSelectionRef.current.time < 1000) return;
-    lastFileSelectionRef.current = { signature, time: now };
 
     const ext = file.name.split(".").pop()?.toLowerCase();
     const ok = file.type === "application/pdf" || file.type === "application/octet-stream" || file.type === "" || file.type.startsWith("image/") || ext === "pdf" || ["jpg", "jpeg", "png", "webp"].includes(ext || "");
@@ -110,6 +103,7 @@ const Clinica = () => {
     }
 
     uploadAndAnalyze(file);
+    input.value = "";
   };
 
   const analyzeText = async (texto: string) => {
@@ -163,9 +157,8 @@ const Clinica = () => {
         id={FILE_INPUT_ID}
         ref={fileInputRef}
         type="file"
-        className="sr-only"
+        className="hidden"
         accept="application/pdf,image/*,.pdf,.jpg,.jpeg,.png,.webp"
-        onInput={handleFileChange}
         onChange={handleFileChange}
       />
 
@@ -321,17 +314,22 @@ const Clinica = () => {
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
             {actions.map((a) => (
               a.dashed ? (
-                <label
+                <button
                   key={a.title}
-                  htmlFor={FILE_INPUT_ID}
-                  onClick={() => { if (fileInputRef.current) fileInputRef.current.value = ""; }}
+                  type="button"
+                  onClick={() => {
+                    if (fileInputRef.current) {
+                      fileInputRef.current.value = "";
+                      fileInputRef.current.click();
+                    }
+                  }}
                   className={cn(
                     buttonVariants({ variant: "secondary" }),
                     "w-full h-auto py-4 flex items-center gap-4 text-left justify-start cursor-pointer"
                   )}
                 >
                   {renderActionContent(a)}
-                </label>
+                </button>
               ) : (
                 <Button
                   key={a.title}
@@ -376,7 +374,7 @@ const Clinica = () => {
               <ChevronRight className="h-3 w-3 rotate-180" /> Fazer nova análise
             </Button>
             <AnalysisResults 
-              score={currentAnalysis.score_performance}
+              score={currentAnalysis.score_performance ?? currentAnalysis.pontuacao_geral}
               parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
               marcadores={currentAnalysis.marcadores}
               conduta={currentAnalysis.conduta_sugerida}
