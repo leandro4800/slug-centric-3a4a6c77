@@ -184,9 +184,10 @@ ${intelligenceContext}`
             text: `Analise este exame laboratorial. Retorne APENAS um JSON válido e completo, sem markdown, neste formato: { "pontuacao_geral": 0-100, "resumo_executivo": "${compact ? 'até 900 caracteres' : '3 parágrafos: Estado Atual, Riscos e Prioridade #1'}", "marcadores": [{ "codigo": "", "nome": "", "valor": 0, "unidade": "", "status": "Otimizado|Alerta|Critico|Subotimizado", "insight_clinico": "", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }. ${compact ? 'Use frases curtas e limite cada insight a 180 caracteres.' : ''}`
           },
           fileMime === 'application/pdf' ? {
-            type: 'file_url',
-            file_url: {
-              url: `data:application/pdf;base64,${fileBase64}`,
+            type: 'file',
+            file: {
+              data: fileBase64,
+              media_type: 'application/pdf',
               filename: fileNameForAI
             }
           } : {
