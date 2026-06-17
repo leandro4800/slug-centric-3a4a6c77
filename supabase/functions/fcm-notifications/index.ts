@@ -15,31 +15,63 @@ interface NotificationPayload {
 }
 
 serve(async (req) => {
-  // Handle CORS
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+  const supabaseClient = createClient(
+    Deno.env.get('SUPABASE_URL') ?? '',
+    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  )
 
-    const { user_id, token, title, body, data }: NotificationPayload = await req.json()
+  const logSend = async (entry: {
+    user_id?: string | null
+    has_token: boolean
+    status: string
+    error_message?: string | null
+    fcm_response?: any
+    title?: string
+    body?: string
+  }) => {
+    try {
+      await supabaseClient.from('push_send_logs').insert({
+        user_id: entry.user_id ?? null,
+        has_token: entry.has_token,
+        status: entry.status,
+        error_message: entry.error_message ?? null,
+        fcm_response: entry.fcm_response ?? null,
+        title: entry.title ?? null,
+        body: entry.body ?? null,
+      })
+    } catch (e) {
+      console.error('Failed to write push_send_logs:', e)
+    }
+  }
+
+  let payload: NotificationPayload | null = null
+
+  try {
+    payload = await req.json()
+    const { user_id, token, title, body, data } = payload!
 
     let targetToken = token
 
-    // If user_id is provided, fetch the push_token from profiles
     if (user_id && !targetToken) {
-      const { data: profile, error } = await supabaseClient
+      const { data: profile } = await supabaseClient
         .from('perfis')
         .select('push_token')
         .eq('id', user_id)
         .single()
 
-      if (error || !profile?.push_token) {
-        console.warn(`Push token not found for user ${user_id} — skipping`)
+      if (!profile?.push_token) {
+        await logSend({
+          user_id,
+          has_token: false,
+          status: 'skipped',
+          error_message: 'push_token_not_found',
+          title,
+          body,
+        })
         return new Response(
           JSON.stringify({ success: false, skipped: true, reason: 'push_token_not_found', user_id }),
           { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 200 }
@@ -49,64 +81,42 @@ serve(async (req) => {
     }
 
     if (!targetToken) {
+      await logSend({ user_id, has_token: false, status: 'error', error_message: 'no_target_token', title, body })
       throw new Error('No target token provided')
     }
 
-    // Get Firebase Service Account from environment
     const serviceAccountJson = Deno.env.get('FIREBASE_SERVICE_ACCOUNT')
     if (!serviceAccountJson) {
+      await logSend({ user_id, has_token: true, status: 'error', error_message: 'FIREBASE_SERVICE_ACCOUNT not configured', title, body })
       throw new Error('FIREBASE_SERVICE_ACCOUNT not configured')
     }
 
     const serviceAccount = JSON.parse(serviceAccountJson)
     const { project_id, client_email, private_key } = serviceAccount
 
-    // Get OAuth2 Access Token for FCM V1
     const accessToken = await getAccessToken(client_email, private_key)
 
-    // Build Payload for iOS and Android
     const message = {
       token: targetToken,
-      notification: {
-        title,
-        body,
-      },
+      notification: { title, body },
       data: data || {},
       android: {
         priority: 'high',
-        notification: {
-          sound: 'default',
-          channel_id: 'default',
-          priority: 'high',
-        },
+        notification: { sound: 'default', channel_id: 'default', priority: 'high' },
       },
       apns: {
-        payload: {
-          aps: {
-            contentAvailable: true,
-            mutableContent: true,
-            sound: 'default',
-          },
-        },
+        payload: { aps: { contentAvailable: true, mutableContent: true, sound: 'default' } },
       },
       webpush: {
-        notification: {
-          icon: 'https://alpha-coach.app/icon-192x192.png',
-        },
+        notification: { icon: 'https://alpha-coach.app/icon-192x192.png' },
       },
     }
 
-    console.log('Sending message payload:', JSON.stringify(message))
-
-    // Send notification via FCM V1
     const fcmResponse = await fetch(
       `https://fcm.googleapis.com/v1/projects/${project_id}/messages:send`,
       {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
         body: JSON.stringify({ message }),
       }
     )
@@ -115,15 +125,44 @@ serve(async (req) => {
     console.log('FCM Response:', fcmResult)
 
     if (!fcmResponse.ok) {
-      throw new Error(`FCM error: ${JSON.stringify(fcmResult)}`)
+      await logSend({
+        user_id,
+        has_token: true,
+        status: 'error',
+        error_message: fcmResult?.error?.message || `HTTP ${fcmResponse.status}`,
+        fcm_response: fcmResult,
+        title,
+        body,
+      })
+      return new Response(JSON.stringify({ success: false, error: fcmResult }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      })
     }
+
+    await logSend({
+      user_id,
+      has_token: true,
+      status: 'success',
+      fcm_response: fcmResult,
+      title,
+      body,
+    })
 
     return new Response(JSON.stringify({ success: true, result: fcmResult }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 200,
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error sending notification:', error)
+    await logSend({
+      user_id: payload?.user_id,
+      has_token: !!payload?.token,
+      status: 'error',
+      error_message: error?.message || String(error),
+      title: payload?.title,
+      body: payload?.body,
+    })
     return new Response(JSON.stringify({ error: error.message }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       status: 400,
@@ -132,12 +171,7 @@ serve(async (req) => {
 })
 
 async function getAccessToken(clientEmail: string, privateKey: string): Promise<string> {
-  // Use crypto to sign JWT for Google OAuth2
-  const header = {
-    alg: 'RS256',
-    typ: 'JWT',
-  }
-
+  const header = { alg: 'RS256', typ: 'JWT' }
   const now = Math.floor(Date.now() / 1000)
   const payload = {
     iss: clientEmail,
@@ -181,20 +215,14 @@ async function getAccessToken(clientEmail: string, privateKey: string): Promise<
 function b64(data: string | ArrayBuffer): string {
   const bytes = typeof data === 'string' ? new TextEncoder().encode(data) : new Uint8Array(data)
   let binary = ''
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i])
-  }
+  for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i])
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 }
 
 function pemToBinary(pem: string): Uint8Array {
-  const base64 = pem
-    .replace(/-----(BEGIN|END) PRIVATE KEY-----/g, '')
-    .replace(/\s/g, '')
+  const base64 = pem.replace(/-----(BEGIN|END) PRIVATE KEY-----/g, '').replace(/\s/g, '')
   const binary = atob(base64)
   const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) {
-    bytes[i] = binary.charCodeAt(i)
-  }
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
   return bytes
 }
