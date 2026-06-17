@@ -3,13 +3,50 @@ import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom"
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, ArrowLeft, Sparkles } from "lucide-react";
+import {
+  Check,
+  ArrowLeft,
+  Sparkles,
+  Dumbbell,
+  Apple,
+  LineChart,
+  HeartPulse,
+  Brain,
+  ShieldCheck,
+  Smartphone,
+  Star,
+  Quote,
+  ChevronDown,
+} from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Loader2, KeyRound } from "lucide-react";
-// AulaAvulsaQuickForm removed
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import cardTreino from "@/assets/card-treino.jpg";
+import cardDieta from "@/assets/card-dieta.jpg";
+import cardEvolucao from "@/assets/card-evolucao.jpg";
+import cardClinica from "@/assets/card-clinica.jpg";
+import macroHero from "@/assets/macro-hero.jpg";
 
 interface Tenant {
   id: string;
@@ -37,10 +74,94 @@ interface Plano {
   stripe_price_id: string | null;
 }
 
-const intervaloLabel = { mensal: "/mês", trimestral: "/trimestre", semestral: "/semestre", anual: "/ano" };
+const intervaloLabel = {
+  mensal: "/mês",
+  trimestral: "/trimestre",
+  semestral: "/semestre",
+  anual: "/ano",
+};
 
 const TENANT_PUBLIC_COLUMNS =
   "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
+
+const FEATURES = [
+  {
+    img: cardTreino,
+    icon: Dumbbell,
+    title: "Treinos Inteligentes",
+    desc: "Periodização adaptativa: cargas, séries e técnicas ajustadas automaticamente ao seu nível e evolução.",
+  },
+  {
+    img: cardDieta,
+    icon: Apple,
+    title: "Dieta Personalizada",
+    desc: "Cardápio com macros calculados pelo seu objetivo. Substitua alimentos com 1 toque, sem perder a meta.",
+  },
+  {
+    img: cardEvolucao,
+    icon: LineChart,
+    title: "Evolução Visual",
+    desc: "Fotos, medidas e gráficos lado a lado. Acompanhe ganho de massa, perda de gordura e PRs em tempo real.",
+  },
+  {
+    img: cardClinica,
+    icon: HeartPulse,
+    title: "Painel Clínico",
+    desc: "Exames de sangue interpretados com referências por sexo e idade. Suplementação só quando faz sentido.",
+  },
+  {
+    img: macroHero,
+    icon: Brain,
+    title: "IA 24/7",
+    desc: "Tire dúvida de treino, troca de exercício ou ajuste de dieta a qualquer hora — direto no app.",
+  },
+];
+
+const TESTIMONIALS = [
+  {
+    nome: "Ricardo M.",
+    detail: "12kg em 5 meses",
+    text: "Nunca consegui manter dieta. O app simplifica tanto que vira hábito. Os treinos parecem feitos pra mim mesmo.",
+  },
+  {
+    nome: "Juliana S.",
+    detail: "Recomp em 4 meses",
+    text: "A evolução em fotos lado a lado me motiva todo dia. O painel clínico identificou ferro baixo que eu nem sabia.",
+  },
+  {
+    nome: "André T.",
+    detail: "+18kg supino em 3 meses",
+    text: "Os ajustes automáticos de carga são absurdos. A IA responde dúvida de execução na hora — parece coach pessoal.",
+  },
+  {
+    nome: "Camila R.",
+    detail: "BF 28% → 19%",
+    text: "Já testei 3 apps. Esse é outro nível. As substituições de refeição salvam quando estou na rua.",
+  },
+];
+
+const FAQ = [
+  {
+    q: "Como funcionam os 30 dias grátis?",
+    a: "Você cadastra o cartão, libera acesso total imediato e só é cobrado após 30 dias. Cancele antes disso a qualquer momento — sem multa, sem perguntas.",
+  },
+  {
+    q: "Posso cancelar quando quiser?",
+    a: "Sim. O cancelamento é feito direto no app, em 2 toques. Você mantém acesso até o fim do período pago.",
+  },
+  {
+    q: "Funciona em iPhone e Android?",
+    a: "Sim, o app está disponível nas lojas Apple e Google, além de funcionar no navegador.",
+  },
+  {
+    q: "Preciso já ter experiência com academia?",
+    a: "Não. Os treinos se adaptam do iniciante ao avançado, com vídeo demonstrativo e explicação de execução para cada exercício.",
+  },
+  {
+    q: "Os planos de dieta consideram alergias e restrições?",
+    a: "Sim. Você informa restrições no cadastro e a dieta exclui automaticamente. Pode substituir qualquer refeição também.",
+  },
+];
 
 export default function TenantLanding() {
   const { slug } = useParams<{ slug: string }>();
@@ -72,7 +193,6 @@ export default function TenantLanding() {
     }
   };
 
-
   const handleRedeemVoucher = async (codeOverride?: string) => {
     const code = (codeOverride || voucherCode).trim();
     if (!code) {
@@ -90,18 +210,22 @@ export default function TenantLanding() {
       if (error) throw error;
       const result = data as { ok: boolean; error?: string };
       if (!result?.ok) {
-        const msg = result?.error === "invalid_code" ? "Código inválido"
-          : result?.error === "already_used" ? "Código já utilizado"
-          : result?.error === "expired" ? "Código expirado"
-          : result?.error === "not_authenticated" ? "Faça login primeiro"
-          : "Não foi possível resgatar o código";
+        const msg =
+          result?.error === "invalid_code"
+            ? "Código inválido"
+            : result?.error === "already_used"
+              ? "Código já utilizado"
+              : result?.error === "expired"
+                ? "Código expirado"
+                : result?.error === "not_authenticated"
+                  ? "Faça login primeiro"
+                  : "Não foi possível resgatar o código";
         toast({ title: msg, variant: "destructive" });
         return;
       }
       toast({ title: "Acesso liberado!", description: "Redirecionando para o app..." });
       setVoucherOpen(false);
       sessionStorage.removeItem("pending_voucher");
-      // Limpa params da URL se houver
       if (searchParams.has("voucher") || searchParams.has("codigo")) {
         searchParams.delete("voucher");
         searchParams.delete("codigo");
@@ -115,7 +239,6 @@ export default function TenantLanding() {
     }
   };
 
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("confirmed") === "1") {
@@ -123,7 +246,6 @@ export default function TenantLanding() {
         title: "E-mail confirmado!",
         description: "Acesse o app para começar.",
       });
-      // Limpa a URL
       const url = new URL(window.location.href);
       url.searchParams.delete("confirmed");
       window.history.replaceState({}, "", url.toString());
@@ -134,12 +256,10 @@ export default function TenantLanding() {
     void load();
   }, [slug]);
 
-  // Auto-abre o modal de código quando voltar do login com ?voucher=1
   useEffect(() => {
     if (!loading && user && !hasSubscription) {
       const isVoucherRequested = searchParams.get("voucher") === "1";
       const pendingCode = sessionStorage.getItem("pending_voucher");
-      
       if (isVoucherRequested) {
         setVoucherOpen(true);
         const nextParams = new URLSearchParams(searchParams);
@@ -154,7 +274,7 @@ export default function TenantLanding() {
   const load = async () => {
     if (!slug) return;
     setLoading(true);
-    
+
     const { data: { user: currentUser } } = await supabase.auth.getUser();
     setUser(currentUser);
 
@@ -164,9 +284,13 @@ export default function TenantLanding() {
       return;
     }
 
-    const { data: t } = await supabase.from("tenants").select(TENANT_PUBLIC_COLUMNS).eq("slug", slug).maybeSingle();
+    const { data: t } = await supabase
+      .from("tenants")
+      .select(TENANT_PUBLIC_COLUMNS)
+      .eq("slug", slug)
+      .maybeSingle();
     setTenant(t as Tenant);
-    
+
     if (t) {
       if (currentUser) {
         const { data: sub } = await supabase
@@ -176,7 +300,7 @@ export default function TenantLanding() {
           .eq("tenant_id", t.id)
           .in("status", ["active", "trialing"])
           .maybeSingle();
-        
+
         setHasSubscription(!!sub);
         if (sub) {
           navigate(`/${slug}/app`, { replace: true });
@@ -196,124 +320,329 @@ export default function TenantLanding() {
   };
 
   if (loading) {
-    return <div className="flex h-screen items-center justify-center bg-background text-white font-display uppercase tracking-widest">Carregando...</div>;
+    return (
+      <div className="flex h-screen items-center justify-center bg-background text-foreground font-display uppercase tracking-widest">
+        Carregando...
+      </div>
+    );
   }
   if (!tenant || tenant.status !== "approved") {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-center">
         <h1 className="font-display text-4xl uppercase">Coach indisponível</h1>
-        <Link to="/"><Button>Ver marketplace</Button></Link>
+        <Link to="/">
+          <Button>Ver marketplace</Button>
+        </Link>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Hero */}
+      {/* ===== HERO ===== */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           {tenant.hero_url ? (
             <img src={tenant.hero_url} alt="" className="h-full w-full object-cover" />
           ) : (
-            <div className="h-full w-full bg-gradient-to-br from-primary/30 to-background" />
+            <div className="h-full w-full bg-gradient-to-br from-primary/40 via-background to-background" />
           )}
-          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/60 to-background" />
         </div>
 
-        <div className="relative mx-auto max-w-5xl px-4 pt-6 md:px-8 flex justify-between items-center">
-          <Link to="/site" className="inline-flex items-center gap-2 text-sm text-white/70 hover:text-white">
-            <ArrowLeft className="h-4 w-4" /> Voltar ao Início
+        {/* Top nav */}
+        <div className="relative mx-auto flex max-w-6xl items-center justify-between px-4 pt-6 md:px-8">
+          <Link
+            to="/site"
+            className="inline-flex items-center gap-2 text-sm text-white/70 transition-colors hover:text-white"
+          >
+            <ArrowLeft className="h-4 w-4" /> Início
           </Link>
           <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               onClick={() => setVoucherOpen(true)}
-              className="text-white hover:bg-white/10 font-bold uppercase tracking-wider"
+              className="hidden text-white hover:bg-white/10 font-bold uppercase tracking-wider sm:inline-flex"
             >
               <KeyRound className="mr-1 h-4 w-4" /> Tenho código
             </Button>
             <Link to={`/${slug}/login`}>
-              <Button variant="ghost" className="text-white hover:bg-white/10 font-bold uppercase tracking-wider">
+              <Button
+                variant="ghost"
+                className="text-white hover:bg-white/10 font-bold uppercase tracking-wider"
+              >
                 {user ? "Acessar App" : "Entrar"}
               </Button>
             </Link>
-
           </div>
         </div>
 
-        <div className="relative mx-auto max-w-5xl px-4 pb-16 pt-12 md:px-8 md:pb-24 md:pt-20">
-          {tenant.foto_url && (
-            <img
-              src={tenant.foto_url}
-              alt={tenant.nome}
-              className="mb-6 h-24 w-24 rounded-none border-2 border-primary/40 object-cover shadow-glow md:h-32 md:w-32"
-            />
-          )}
-          <Badge className="mb-4 bg-primary/20 text-primary border border-primary/40">
-            <Sparkles className="mr-1 h-3 w-3" /> Coach Verificado
-          </Badge>
-          <h1 className="font-display text-5xl uppercase tracking-tight md:text-7xl">{tenant.nome}</h1>
-          {tenant.tagline && <p className="mt-3 text-xl text-white/80 md:text-2xl">{tenant.tagline}</p>}
-          {tenant.especialidades && tenant.especialidades.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {tenant.especialidades.map((e) => (
-                <Badge key={e} variant="outline" className="border-white/30 bg-white/10 text-white">
-                  {e}
-                </Badge>
-              ))}
+        {/* Hero content */}
+        <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-16 md:px-8 md:pb-32 md:pt-24">
+          <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
+            {tenant.foto_url && (
+              <img
+                src={tenant.foto_url}
+                alt={tenant.nome}
+                className="h-28 w-28 rounded-full border-2 border-primary/60 object-cover shadow-[0_0_40px_-5px_hsl(var(--primary)/0.6)] md:h-36 md:w-36"
+              />
+            )}
+            <div>
+              <Badge className="mb-4 border border-primary/40 bg-primary/20 text-primary">
+                <Sparkles className="mr-1 h-3 w-3" /> Coach Verificado
+              </Badge>
+              <h1 className="font-display text-5xl uppercase leading-none tracking-tight text-white md:text-7xl">
+                {tenant.nome}
+              </h1>
+              {tenant.tagline && (
+                <p className="mt-4 max-w-2xl text-xl text-white/85 md:text-2xl">
+                  {tenant.tagline}
+                </p>
+              )}
+              {tenant.especialidades && tenant.especialidades.length > 0 && (
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {tenant.especialidades.map((e) => (
+                    <Badge
+                      key={e}
+                      variant="outline"
+                      className="border-white/30 bg-white/10 text-white backdrop-blur"
+                    >
+                      {e}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+              {tenant.bio && (
+                <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
+                  {tenant.bio}
+                </p>
+              )}
+
+              <div className="mt-8 flex flex-wrap gap-3">
+                <Button
+                  size="lg"
+                  className="font-bold uppercase tracking-widest shadow-[0_0_40px_-10px_hsl(var(--primary))]"
+                  onClick={() =>
+                    document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  Começar 30 dias grátis
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-white/30 bg-white/5 text-white backdrop-blur hover:bg-white/10 font-bold uppercase tracking-widest"
+                  onClick={() =>
+                    document.getElementById("features")?.scrollIntoView({ behavior: "smooth" })
+                  }
+                >
+                  Ver o app
+                </Button>
+              </div>
             </div>
-          )}
-          {tenant.bio && (
-            <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">{tenant.bio}</p>
-          )}
+          </div>
+        </div>
+
+        {/* Stats bar */}
+        <div className="relative border-y border-white/10 bg-black/40 backdrop-blur">
+          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-4 px-4 py-6 md:grid-cols-4 md:px-8">
+            {[
+              { v: "+10k", l: "Treinos gerados" },
+              { v: "24/7", l: "IA disponível" },
+              { v: "30 dias", l: "Grátis" },
+              { v: "iOS · Android", l: "Apps nativos" },
+            ].map((s) => (
+              <div key={s.l} className="text-center">
+                <div className="font-display text-2xl text-primary md:text-3xl">{s.v}</div>
+                <div className="text-xs uppercase tracking-wider text-white/60 md:text-sm">
+                  {s.l}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* Planos */}
-      <section className="mx-auto max-w-6xl px-4 py-16 md:px-8 md:py-24">
+      {/* ===== FEATURES CAROUSEL ===== */}
+      <section id="features" className="mx-auto max-w-6xl px-4 py-20 md:px-8 md:py-28">
+        <div className="mx-auto max-w-3xl text-center">
+          <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
+            <Smartphone className="mr-1 h-3 w-3" /> O que você recebe
+          </Badge>
+          <h2 className="font-display text-4xl uppercase md:text-5xl">
+            Tudo em <span className="text-primary">um único app</span>
+          </h2>
+          <p className="mt-4 text-muted-foreground">
+            Treino, dieta, evolução e acompanhamento clínico integrados — com IA pra ajustar
+            tudo conforme você evolui.
+          </p>
+        </div>
+
+        <Carousel
+          opts={{ align: "start", loop: true }}
+          className="mt-12"
+        >
+          <CarouselContent className="-ml-4">
+            {FEATURES.map((f) => {
+              const Icon = f.icon;
+              return (
+                <CarouselItem
+                  key={f.title}
+                  className="pl-4 md:basis-1/2 lg:basis-1/3"
+                >
+                  <div className="group relative h-full overflow-hidden rounded-2xl border border-border bg-card transition-all hover:border-primary/60 hover:shadow-[0_0_40px_-10px_hsl(var(--primary)/0.5)]">
+                    <div className="relative h-56 overflow-hidden">
+                      <img
+                        src={f.img}
+                        alt={f.title}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+                      <div className="absolute left-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-primary/90 text-primary-foreground shadow-lg">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <h3 className="font-display text-xl uppercase">{f.title}</h3>
+                      <p className="mt-2 text-sm text-muted-foreground">{f.desc}</p>
+                    </div>
+                  </div>
+                </CarouselItem>
+              );
+            })}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex" />
+          <CarouselNext className="hidden md:flex" />
+        </Carousel>
+      </section>
+
+      {/* ===== EXPLANATION / HOW IT WORKS ===== */}
+      <section className="border-y border-border bg-card/30">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-8 md:py-28">
+          <div className="grid gap-12 md:grid-cols-2 md:items-center">
+            <div className="order-2 md:order-1">
+              <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
+                Como funciona
+              </Badge>
+              <h2 className="font-display text-4xl uppercase md:text-5xl">
+                Do cadastro ao <span className="text-primary">primeiro treino</span> em 3 minutos
+              </h2>
+              <ol className="mt-8 space-y-6">
+                {[
+                  {
+                    n: "01",
+                    t: "Comece grátis",
+                    d: "Clique em 'Começar 30 dias grátis', cadastre seu cartão e libere acesso total. Só é cobrado depois de 30 dias.",
+                  },
+                  {
+                    n: "02",
+                    t: "Conte seu objetivo",
+                    d: "Anamnese rápida: objetivo, restrições, frequência. A IA monta treino e dieta sob medida.",
+                  },
+                  {
+                    n: "03",
+                    t: "Treine e evolua",
+                    d: "App te guia em cada série, cada refeição, cada check-in. Ajustes acontecem automaticamente.",
+                  },
+                ].map((s) => (
+                  <li key={s.n} className="flex gap-4">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-primary/50 bg-primary/10 font-display text-primary">
+                      {s.n}
+                    </div>
+                    <div>
+                      <h4 className="font-display text-lg uppercase">{s.t}</h4>
+                      <p className="mt-1 text-sm text-muted-foreground">{s.d}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="order-1 md:order-2">
+              <div className="relative mx-auto aspect-[9/16] w-full max-w-xs overflow-hidden rounded-[2.5rem] border-[10px] border-foreground/90 bg-card shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)]">
+                <img
+                  src={cardTreino}
+                  alt="App preview"
+                  className="h-full w-full object-cover"
+                />
+                <div className="absolute inset-x-0 top-0 h-6 bg-foreground/90" />
+                <div className="absolute left-1/2 top-1.5 h-3 w-20 -translate-x-1/2 rounded-full bg-background" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== PLANOS ===== */}
+      <section id="planos" className="mx-auto max-w-6xl px-4 py-20 md:px-8 md:py-28">
         <div className="text-center">
+          <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
+            <ShieldCheck className="mr-1 h-3 w-3" /> Sem fidelidade · Cancele quando quiser
+          </Badge>
           <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
-          <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-            Comece com <span className="text-primary font-bold">30 dias grátis</span>. Cancele quando quiser. Sem multa, sem letra miúda.
+          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+            Comece com <span className="font-bold text-primary">30 dias grátis</span>. Cancele
+            antes do fim do trial e não pague nada. Sem multa, sem letra miúda.
           </p>
         </div>
 
         {planos.length === 0 ? (
-          <p className="mt-10 text-center text-muted-foreground">Nenhum plano disponível no momento.</p>
+          <p className="mt-10 text-center text-muted-foreground">
+            Nenhum plano disponível no momento.
+          </p>
         ) : (
-          <div className="mt-12 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {planos.map((p, idx) => {
               const destacado = idx === 1 || planos.length === 1;
               return (
                 <div
                   key={p.id}
-                  className={`relative rounded-2xl border p-8 flex flex-col ${
-                    destacado ? "border-primary bg-primary/5 shadow-glow" : "border-border bg-card"
+                  className={`relative flex flex-col rounded-2xl border p-8 transition-all ${
+                    destacado
+                      ? "scale-[1.02] border-primary bg-gradient-to-b from-primary/10 to-card shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)]"
+                      : "border-border bg-card hover:border-primary/40"
                   }`}
                 >
                   {destacado && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground">
-                      Mais popular
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground shadow-lg">
+                      ⭐ Mais popular
                     </Badge>
                   )}
                   <h3 className="font-display text-2xl uppercase">{p.nome}</h3>
-                  {p.descricao && <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>}
-                  <div className="mt-6">
-                    <span className="text-5xl font-display">{formatBRL(p.preco_centavos)}</span>
+                  {p.descricao && (
+                    <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>
+                  )}
+                  <div className="mt-6 flex items-baseline gap-1">
+                    <span className="font-display text-5xl">{formatBRL(p.preco_centavos)}</span>
                     <span className="text-muted-foreground">{intervaloLabel[p.intervalo]}</span>
                   </div>
-                  <ul className="mt-6 space-y-2 text-sm flex-1">
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> 30 dias grátis</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Acesso completo ao app</li>
-                    <li className="flex items-center gap-2"><Check className="h-4 w-4 text-primary" /> Cancele quando quiser</li>
+                  <ul className="mt-6 flex-1 space-y-3 text-sm">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-primary" /> 30 dias grátis
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-primary" /> Treinos + dieta + IA 24/7
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-primary" /> Acompanhamento clínico
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 shrink-0 text-primary" /> Cancele quando quiser
+                    </li>
                   </ul>
                   <Button
                     size="lg"
-                    className="mt-8 w-full font-bold uppercase tracking-widest"
+                    className={`mt-8 w-full font-bold uppercase tracking-widest ${
+                      destacado ? "shadow-[0_0_30px_-5px_hsl(var(--primary))]" : ""
+                    }`}
                     disabled={!!checkoutLoading}
                     onClick={() => handleCheckout(p.id)}
                   >
-                    {checkoutLoading === p.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Começar 30 dias grátis"}
+                    {checkoutLoading === p.id ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      "Começar 30 dias grátis"
+                    )}
                   </Button>
                 </div>
               );
@@ -321,7 +650,7 @@ export default function TenantLanding() {
           </div>
         )}
 
-        <div className="mt-12 text-center border-t border-border pt-8">
+        <div className="mt-12 border-t border-border pt-8 text-center">
           <p className="text-sm text-muted-foreground">Tem um código de acesso do coach?</p>
           <Button
             variant="outline"
@@ -332,6 +661,96 @@ export default function TenantLanding() {
           </Button>
         </div>
       </section>
+
+      {/* ===== TESTIMONIALS ===== */}
+      <section className="border-y border-border bg-card/30">
+        <div className="mx-auto max-w-6xl px-4 py-20 md:px-8 md:py-28">
+          <div className="text-center">
+            <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
+              <Star className="mr-1 h-3 w-3 fill-primary" /> Resultados reais
+            </Badge>
+            <h2 className="font-display text-4xl uppercase md:text-5xl">
+              Quem treina, <span className="text-primary">transforma</span>
+            </h2>
+          </div>
+
+          <Carousel opts={{ align: "start", loop: true }} className="mt-12">
+            <CarouselContent className="-ml-4">
+              {TESTIMONIALS.map((t) => (
+                <CarouselItem
+                  key={t.nome}
+                  className="pl-4 md:basis-1/2 lg:basis-1/3"
+                >
+                  <div className="flex h-full flex-col rounded-2xl border border-border bg-card p-6">
+                    <Quote className="h-8 w-8 text-primary/40" />
+                    <p className="mt-4 flex-1 text-sm leading-relaxed text-foreground/90">
+                      "{t.text}"
+                    </p>
+                    <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20 font-display text-primary">
+                        {t.nome[0]}
+                      </div>
+                      <div>
+                        <div className="font-display text-sm uppercase">{t.nome}</div>
+                        <div className="text-xs text-primary">{t.detail}</div>
+                      </div>
+                    </div>
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden md:flex" />
+            <CarouselNext className="hidden md:flex" />
+          </Carousel>
+        </div>
+      </section>
+
+      {/* ===== FAQ ===== */}
+      <section className="mx-auto max-w-3xl px-4 py-20 md:px-8 md:py-28">
+        <div className="text-center">
+          <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
+            <ChevronDown className="mr-1 h-3 w-3" /> Perguntas frequentes
+          </Badge>
+          <h2 className="font-display text-4xl uppercase md:text-5xl">Dúvidas?</h2>
+        </div>
+
+        <Accordion type="single" collapsible className="mt-10">
+          {FAQ.map((item, i) => (
+            <AccordionItem key={i} value={`item-${i}`} className="border-border">
+              <AccordionTrigger className="text-left font-display uppercase tracking-wide hover:text-primary hover:no-underline">
+                {item.q}
+              </AccordionTrigger>
+              <AccordionContent className="text-muted-foreground">{item.a}</AccordionContent>
+            </AccordionItem>
+          ))}
+        </Accordion>
+      </section>
+
+      {/* ===== FINAL CTA ===== */}
+      <section className="relative overflow-hidden border-t border-border">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/20 via-background to-background" />
+        <div className="relative mx-auto max-w-4xl px-4 py-20 text-center md:px-8 md:py-28">
+          <h2 className="font-display text-4xl uppercase md:text-6xl">
+            Pronto para <span className="text-primary">começar?</span>
+          </h2>
+          <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+            30 dias grátis. Sem fidelidade. Cancele quando quiser.
+          </p>
+          <Button
+            size="lg"
+            className="mt-8 font-bold uppercase tracking-widest shadow-[0_0_40px_-10px_hsl(var(--primary))]"
+            onClick={() =>
+              document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" })
+            }
+          >
+            Começar agora →
+          </Button>
+        </div>
+      </section>
+
+      <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
+        © {new Date().getFullYear()} {tenant.nome}. Todos os direitos reservados.
+      </footer>
 
       <Dialog open={voucherOpen} onOpenChange={setVoucherOpen}>
         <DialogContent className="bg-card border border-border">
@@ -354,16 +773,22 @@ export default function TenantLanding() {
               disabled={!user || voucherLoading}
             />
             {user ? (
-              <Button 
-                onClick={() => handleRedeemVoucher()} 
-                disabled={voucherLoading || !voucherCode} 
+              <Button
+                onClick={() => handleRedeemVoucher()}
+                disabled={voucherLoading || !voucherCode}
                 className="w-full font-bold uppercase tracking-widest"
               >
-                {voucherLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Resgatar acesso"}
+                {voucherLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "Resgatar acesso"
+                )}
               </Button>
             ) : (
               <Link to={`/${slug}/login?voucher=1`} className="block">
-                <Button className="w-full font-bold uppercase tracking-widest">Entrar para resgatar</Button>
+                <Button className="w-full font-bold uppercase tracking-widest">
+                  Entrar para resgatar
+                </Button>
               </Link>
             )}
           </div>
