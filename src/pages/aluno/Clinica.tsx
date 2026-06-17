@@ -308,7 +308,7 @@ const Clinica = () => {
                   <input
                     type="file"
                     className="absolute inset-0 z-30 h-full w-full cursor-pointer opacity-0"
-                    accept="application/pdf,image/jpeg,image/png,image/webp"
+                    accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/jpeg,image/png,image/webp"
                     aria-label="Enviar protocolo ou exame"
                     onClick={(e) => { e.currentTarget.value = ""; }}
                     onChange={handleFileChange}
