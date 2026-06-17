@@ -363,6 +363,27 @@ const AdminMontarTreino = () => {
     return filtrarPresets(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
   }, [perfil.frequencia_semanal, perfil.sexo, nivel]);
 
+  // TODAS as divisões disponíveis para o nível+sexo (todas as frequências),
+  // agrupadas por frequência semanal — assim o coach vê todas as opções
+  // (incluindo a clássica 5x) sem precisar mudar a frequência primeiro.
+  const presetsPorFrequencia = useMemo(() => {
+    const fem = !!perfil.sexo?.toLowerCase().startsWith("f");
+    const publicoAlvo: ("feminino" | "unisex")[] = fem ? ["feminino", "unisex"] : ["unisex"];
+    const todos = DIVISOES_PRESETS.filter(
+      (p) => publicoAlvo.includes(p.publico) && p.nivel.includes(nivel as any),
+    );
+    // Se for feminino e houver preset feminino para a freq, prioriza feminino
+    // (mesma regra do filtrarPresets) — mantém unisex quando não há específico.
+    const porFreq = new Map<number, DivisaoPreset[]>();
+    [2, 3, 4, 5, 6].forEach((f) => {
+      const doFreq = todos.filter((p) => p.freq === f);
+      const femDoFreq = doFreq.filter((p) => p.publico === "feminino");
+      const lista = fem && femDoFreq.length > 0 ? femDoFreq : doFreq;
+      if (lista.length > 0) porFreq.set(f, lista);
+    });
+    return porFreq;
+  }, [perfil.sexo, nivel]);
+
   // Auto-seleciona primeiro preset quando muda contexto
   useEffect(() => {
     if (presetsDisponiveis.length > 0 && !presetsDisponiveis.find((p) => p.id === divisaoSelecionadaId)) {
