@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
 import { Logo } from "@/components/Logo";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
@@ -26,7 +26,7 @@ const Login = () => {
   const { user, sessionReady } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nome, setNome] = useState("");
+  
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -113,49 +113,6 @@ const Login = () => {
     }
   };
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    const cleanEmail = email.trim().toLowerCase();
-
-    // Verifica se já existe perfil para este e-mail
-    const { data: exists } = await supabase.rpc("email_is_registered", { _email: cleanEmail });
-    const isSpecialTestEmail = ["48mineiro@gmail.com", "executionmode48@gmail.com"].includes(cleanEmail);
-    if (exists && !isSpecialTestEmail) {
-      setLoading(false);
-      toast.error("Este e-mail já está cadastrado. Faça login.");
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email: cleanEmail,
-      password,
-      options: {
-            emailRedirectTo: buildAuthRedirectUrl(urlSlug ? `/${urlSlug}/login` : "/login", { confirmed: "1" }),
-        data: { 
-          nome_completo: nome,
-          tenant_id: tenant?.id || undefined,
-          tenant_slug: urlSlug || undefined,
-        },
-      },
-    });
-    setLoading(false);
-    if (error) {
-      const msg = error.message?.toLowerCase() || "";
-      if (msg.includes("already") || msg.includes("registered") || msg.includes("exists")) {
-        toast.error("Este e-mail já está cadastrado. Faça login.");
-      } else {
-        toast.error(error.message);
-      }
-      return;
-    }
-    const identities = (data?.user as any)?.identities;
-    if (data?.user && Array.isArray(identities) && identities.length === 0) {
-      toast.error("Este e-mail já está cadastrado. Faça login.");
-      return;
-    }
-    toast.success("Conta criada! Verifique seu e-mail e depois escolha um plano para começar.");
-  };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-background">
