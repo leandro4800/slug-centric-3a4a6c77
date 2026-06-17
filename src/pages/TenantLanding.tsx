@@ -47,7 +47,8 @@ import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
 import cardClinica from "@/assets/card-clinica.jpg";
 import macroHero from "@/assets/macro-hero.jpg";
-import landingHeroBg from "@/assets/landing-hero-bg.jpg";
+import alphaLandingHero from "@/assets/alpha-landing-hero.png.asset.json";
+
 
 interface Tenant {
   id: string;
