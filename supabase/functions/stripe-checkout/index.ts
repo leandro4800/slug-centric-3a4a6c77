@@ -164,22 +164,27 @@ Deno.serve(async (req) => {
 
     // Charge fica na conta da PLATAFORMA (sem on_behalf_of).
     // Plataforma absorve a taxa Stripe; coach recebe valor cheio via transfer_data.
+    // Para tenants próprios da plataforma (ex: alphateam), não há transfer/fee — cobrança direta.
     if (mode === "subscription") {
       sessionParams.subscription_data = {
         trial_period_days: 30,
-        application_fee_percent: APPLICATION_FEE_PCT,
-        transfer_data: { destination: tenant_to_use.stripe_account_id },
       };
+      if (!isPlatformOwned) {
+        sessionParams.subscription_data.application_fee_percent = APPLICATION_FEE_PCT;
+        sessionParams.subscription_data.transfer_data = { destination: tenant_to_use.stripe_account_id };
+      }
     } else {
-      const totalAmount = line_items[0].price_data.unit_amount;
-      // application_fee_amount = total cobrado - quanto vai pro coach (92,01% do base)
-      const coachAmount = Math.round(baseUnitAmount * (1 - PLATFORM_FEE_PCT_OF_BASE / 100));
-      const applicationFee = totalAmount - coachAmount;
-      sessionParams.payment_intent_data = {
-        application_fee_amount: applicationFee,
-        transfer_data: { destination: tenant_to_use.stripe_account_id },
-      };
+      if (!isPlatformOwned) {
+        const totalAmount = line_items[0].price_data.unit_amount;
+        const coachAmount = Math.round(baseUnitAmount * (1 - PLATFORM_FEE_PCT_OF_BASE / 100));
+        const applicationFee = totalAmount - coachAmount;
+        sessionParams.payment_intent_data = {
+          application_fee_amount: applicationFee,
+          transfer_data: { destination: tenant_to_use.stripe_account_id },
+        };
+      }
     }
+
 
     const session = await stripe.checkout.sessions.create(sessionParams);
 
