@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Dumbbell, Music, Loader2, Trophy, Clock, Flame } from "lucide-react";
+import { Dumbbell, Music, Loader2, Trophy, Clock, Flame, Sparkles, RefreshCw, Check } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -9,6 +10,8 @@ import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 import { TreinoConclusaoCard } from "@/components/aluno/TreinoConclusaoCard";
+import { filtrarPresetsParaAluno, type DivisaoPreset, type Nivel } from "@/data/divisoesPresets";
+import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 interface Treino extends ExerciseCardData {
   dia_semana: string;
