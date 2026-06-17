@@ -418,11 +418,6 @@ export default function TenantLanding() {
                   ))}
                 </div>
               )}
-              {tenant.bio && (
-                <p className="mt-6 max-w-2xl text-base leading-relaxed text-white/80 md:text-lg">
-                  {tenant.bio}
-                </p>
-              )}
 
               <div className="mt-8 flex flex-wrap gap-3">
                 <Button
