@@ -91,13 +91,10 @@ const Treino = () => {
     if (!user) return;
     supabase
       .from("anamnese_aluno")
-      .select("nivel_experiencia, sexo")
+      .select("nivel_experiencia")
       .eq("aluno_id", user.id)
       .maybeSingle()
-      .then(({ data }) => {
-        setNivelExperiencia(data?.nivel_experiencia || null);
-        setSexo((data as any)?.sexo || null);
-      });
+      .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
     supabase
       .from("perfis")
       .select("avatar_url")
