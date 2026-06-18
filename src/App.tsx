@@ -140,8 +140,9 @@ const App = () => (
             <Routes>
             {/* Redirecionamentos de Raiz */}
              <Route path="/" element={<IndexRedirect />} />
-             <Route path="/site" element={<Landing />} />
-             <Route path="/marketplace" element={<Landing />} />
+             <Route path="/site" element={<Navigate to="/" replace />} />
+             <Route path="/marketplace" element={<Navigate to="/" replace />} />
+
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
             <Route path="/site/login" element={<SiteLogin />} />
