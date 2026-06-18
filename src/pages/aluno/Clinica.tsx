@@ -145,28 +145,7 @@ const Clinica = () => {
 
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
-      {/* Input visualmente oculto, mas presente no layout — display:none impede
-          o file picker em alguns browsers mobile (iOS Safari, WebView Android). */}
-      <input 
-        id="clinica-file-input"
-        type="file" 
-        ref={fileInputRef} 
-        accept="application/pdf,image/*"
-        onChange={handleFileChange}
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clip: "rect(0,0,0,0)",
-          whiteSpace: "nowrap",
-          border: 0,
-          opacity: 0,
-          pointerEvents: "none",
-        }}
-      />
+
 
 
 
