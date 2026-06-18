@@ -13,6 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 
 const ANALYSIS_ANIMATION_MIN_MS = 2400;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const waitForPaint = () => new Promise<void>((resolve) => {
+  if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => resolve());
+  else setTimeout(resolve, 0);
+});
 
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
@@ -63,7 +67,7 @@ const Clinica = () => {
       setTab("nova");
       setCurrentAnalysis(null);
       setIsAnalyzing(true);
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await waitForPaint();
       await wait(120);
 
       const { data: { user } } = await supabase.auth.getUser();
@@ -127,7 +131,7 @@ const Clinica = () => {
       setTab("nova");
       setCurrentAnalysis(null);
       setIsAnalyzing(true);
-      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await waitForPaint();
       await wait(120);
 
       const { data, error: functionError } = await supabase.functions.invoke("analyze-exams", {
