@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
