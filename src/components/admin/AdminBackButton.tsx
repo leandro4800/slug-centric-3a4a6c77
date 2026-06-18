@@ -70,7 +70,7 @@ export const AdminBackButton = ({
   };
 
   const button = (
-    <Button type="button" variant={variant} size={size} className={cn("gap-2", className)} onClick={!confirmExit ? handleBack : undefined}>
+    <Button type="button" variant={variant} size={size} className={cn("gap-2 mt-3", className)} onClick={!confirmExit ? handleBack : undefined}>
       <ArrowLeft className="h-4 w-4" />
       {showLabel && <span>Voltar</span>}
     </Button>
