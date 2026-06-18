@@ -450,6 +450,40 @@ const Clinica = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Overlay de análise: fixo na tela inteira para garantir visibilidade no celular */}
+      {isAnalyzing && (
+        <div
+          ref={analyzingRef}
+          className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center text-center px-6 space-y-6 animate-in fade-in duration-300"
+        >
+          <div className="relative w-32 h-40">
+            <div className="absolute inset-0 bg-card border-2 border-primary/40 rounded-xl shadow-lg overflow-hidden">
+              <FileText className="absolute inset-0 m-auto h-16 w-16 text-primary/30" strokeWidth={1} />
+              <div className="absolute inset-x-3 top-3 space-y-1.5">
+                <div className="h-1 bg-primary/20 rounded w-3/4" />
+                <div className="h-1 bg-primary/20 rounded w-full" />
+                <div className="h-1 bg-primary/20 rounded w-2/3" />
+              </div>
+              <div className="absolute inset-x-3 bottom-3 space-y-1.5">
+                <div className="h-1 bg-primary/20 rounded w-full" />
+                <div className="h-1 bg-primary/20 rounded w-1/2" />
+              </div>
+              <div className="absolute inset-x-0 h-0.5 bg-primary shadow-[0_0_12px_2px_hsl(var(--primary))] animate-scan" />
+              <div className="absolute inset-x-0 h-8 bg-gradient-to-b from-primary/30 to-transparent animate-scan" />
+            </div>
+            <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground rounded-xl p-2 shadow-lg animate-pulse">
+              <ScanLine className="h-4 w-4" />
+            </div>
+          </div>
+          <div>
+            <h3 className="font-display text-xl">DR. IA ESTÁ ANALISANDO...</h3>
+            <p className="text-sm text-muted-foreground mt-2 max-w-[280px] mx-auto">
+              Escaneando o documento, extraindo biomarcadores e cruzando com dados de performance.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
