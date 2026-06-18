@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
@@ -18,8 +18,19 @@ const Clinica = () => {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const analyzingRef = useRef<HTMLDivElement>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
+
+  // Quando a análise começa, rola até a animação (no celular ela fica abaixo do hero).
+  useEffect(() => {
+    if (isAnalyzing) {
+      // pequeno delay para garantir que o nó já está montado
+      setTimeout(() => {
+        analyzingRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+    }
+  }, [isAnalyzing]);
 
   // Fetch past analyses
   const { data: analyses, isLoading: isLoadingAnalyses } = useQuery({
@@ -270,7 +281,7 @@ const Clinica = () => {
         </div>
 
         {isAnalyzing ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center space-y-6">
+          <div ref={analyzingRef} className="py-16 flex flex-col items-center justify-center text-center space-y-6 scroll-mt-20">
             <div className="relative w-32 h-40">
               <div className="absolute inset-0 bg-card border-2 border-primary/40 rounded-xl shadow-lg overflow-hidden">
                 <FileText className="absolute inset-0 m-auto h-16 w-16 text-primary/30" strokeWidth={1} />
