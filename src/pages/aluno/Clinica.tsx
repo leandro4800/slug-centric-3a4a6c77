@@ -146,12 +146,14 @@ const Clinica = () => {
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
       <input 
+        id="clinica-file-input"
         type="file" 
         ref={fileInputRef} 
         className="hidden" 
         accept="application/pdf,image/*"
         onChange={handleFileChange}
       />
+
 
       <div className="relative h-[460px] min-h-[58vh] overflow-hidden bg-gradient-to-b from-background via-[hsl(0_0%_4%)] to-background">
         {/* Fundo travado: scan de anéis sólidos. Não usa hero do tenant para não trocar com a foto de perfil. */}
