@@ -11,6 +11,9 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 
+const ANALYSIS_ANIMATION_MIN_MS = 2400;
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const Clinica = () => {
   const [tab, setTab] = useState<"nova" | "clinica">("nova");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -55,8 +58,14 @@ const Clinica = () => {
   });
 
   const uploadAndAnalyze = async (file: File) => {
+    const animationStartedAt = Date.now();
     try {
+      setTab("nova");
+      setCurrentAnalysis(null);
       setIsAnalyzing(true);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await wait(120);
+
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
@@ -92,6 +101,8 @@ const Clinica = () => {
       console.error("Erro na análise:", error);
       toast.error(error.message || "Erro ao processar análise. Tente novamente.");
     } finally {
+      const remaining = ANALYSIS_ANIMATION_MIN_MS - (Date.now() - animationStartedAt);
+      if (remaining > 0) await wait(remaining);
       setIsAnalyzing(false);
     }
   };
@@ -110,9 +121,15 @@ const Clinica = () => {
   };
 
   const analyzeText = async (texto: string) => {
+    const animationStartedAt = Date.now();
     try {
       setPasteOpen(false);
+      setTab("nova");
+      setCurrentAnalysis(null);
       setIsAnalyzing(true);
+      await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+      await wait(120);
+
       const { data, error: functionError } = await supabase.functions.invoke("analyze-exams", {
         body: { texto_exame: texto }
       });
@@ -134,6 +151,8 @@ const Clinica = () => {
       console.error("Erro na análise:", error);
       toast.error(error.message || "Erro ao processar análise. Tente novamente.");
     } finally {
+      const remaining = ANALYSIS_ANIMATION_MIN_MS - (Date.now() - animationStartedAt);
+      if (remaining > 0) await wait(remaining);
       setIsAnalyzing(false);
     }
   };
