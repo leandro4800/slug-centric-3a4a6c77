@@ -281,7 +281,7 @@ const Clinica = () => {
         </div>
 
         {isAnalyzing ? (
-          <div className="py-16 flex flex-col items-center justify-center text-center space-y-6">
+          <div ref={analyzingRef} className="py-16 flex flex-col items-center justify-center text-center space-y-6 scroll-mt-20">
             <div className="relative w-32 h-40">
               <div className="absolute inset-0 bg-card border-2 border-primary/40 rounded-xl shadow-lg overflow-hidden">
                 <FileText className="absolute inset-0 m-auto h-16 w-16 text-primary/30" strokeWidth={1} />
