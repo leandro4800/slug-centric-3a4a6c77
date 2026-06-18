@@ -49,8 +49,8 @@ const BackHandler = () => {
     <button
       onClick={() => (window.history.length > 1 ? navigate(-1) : navigate(homePath))}
       aria-label="Voltar"
-      className="fixed top-3 left-3 z-50 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-95 transition"
-      style={{ top: "max(0.75rem, env(safe-area-inset-top))" }}
+      className="fixed top-6 left-3 z-50 w-10 h-10 rounded-full bg-black/60 backdrop-blur-md border border-white/10 flex items-center justify-center text-white shadow-lg active:scale-95 transition"
+      style={{ top: "max(1.5rem, env(safe-area-inset-top) + 0.75rem)" }}
     >
       <ArrowLeft className="h-5 w-5" />
     </button>

@@ -19,7 +19,7 @@ export const PageHeader = ({ icon: Icon, title, subtitle, showTeam = true, back 
       {back && (
         <button
           onClick={() => navigate(`/${slug}/app`)}
-          className="w-10 h-10 rounded-none bg-primary flex items-center justify-center shrink-0 shadow-glow"
+          className="w-10 h-10 rounded-none bg-primary flex items-center justify-center shrink-0 shadow-glow mt-2"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
