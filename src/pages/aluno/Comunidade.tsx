@@ -84,10 +84,7 @@ const Comunidade = () => {
       setLoading(true);
 
       const { data: profilesData } = await supabase
-        .from("perfis")
-        .select("id, nome_completo, avatar_url")
-        .eq("tenant_id", tenant.id)
-        .limit(100);
+        .rpc("get_community_members", { _tenant_id: tenant.id });
       setStories((profilesData as any) || []);
 
       const { data: postsData, error: postsError } = await supabase
