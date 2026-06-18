@@ -155,8 +155,8 @@ const App = () => (
               <Route path="avaliacao-fisica" element={<SiteAdminAvaliacaoFisica />} />
               <Route path="agenda" element={<SiteAdminPlaceholder icon={CalendarIcon} title="Agenda" description="Em breve: agenda de aulas presenciais e online." />} />
               <Route path="ferramentas" element={<SiteAdminFerramentas />} />
-              <Route path="aparencia" element={<SiteAdminPlaceholder icon={Palette} title="Aparência" description="Em breve você poderá customizar cores, logo e branding do seu app direto daqui." />} />
-              <Route path="faturamento" element={<SiteAdminPlaceholder icon={Wallet} title="Financeiro" description="Em breve: relatórios financeiros e gestão de assinaturas." />} />
+              <Route path="aparencia" element={<SiteAdminAparencia />} />
+              <Route path="faturamento" element={<SiteAdminFinanceiro />} />
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="resumo" element={<Navigate to="/site/admin/dashboard" replace />} />
