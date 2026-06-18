@@ -145,28 +145,7 @@ const Clinica = () => {
 
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
-      {/* Input visualmente oculto, mas presente no layout — display:none impede
-          o file picker em alguns browsers mobile (iOS Safari, WebView Android). */}
-      <input 
-        id="clinica-file-input"
-        type="file" 
-        ref={fileInputRef} 
-        accept="application/pdf,image/*"
-        onChange={handleFileChange}
-        style={{
-          position: "absolute",
-          width: 1,
-          height: 1,
-          padding: 0,
-          margin: -1,
-          overflow: "hidden",
-          clip: "rect(0,0,0,0)",
-          whiteSpace: "nowrap",
-          border: 0,
-          opacity: 0,
-          pointerEvents: "none",
-        }}
-      />
+
 
 
 
@@ -336,19 +315,24 @@ const Clinica = () => {
               );
 
               if (isUpload) {
-                // Usar <label> nativo garante abertura do file picker em qualquer
-                // browser mobile / WebView (Capacitor), onde ref.click() programático
-                // muitas vezes é bloqueado por falta de gesto direto do usuário.
+                // Input DENTRO do <label> é o padrão mais confiável em mobile
+                // (iOS Safari + WebView Android). Sem ref.click(), sem htmlFor.
                 return (
                   <label
                     key={a.title}
-                    htmlFor="clinica-file-input"
                     className="cursor-pointer w-full h-auto py-4 px-4 flex items-center gap-4 text-left justify-start bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md transition-colors"
                   >
+                    <input
+                      type="file"
+                      accept="application/pdf,image/*"
+                      onChange={handleFileChange}
+                      className="sr-only"
+                    />
                     {content}
                   </label>
                 );
               }
+
 
               return (
                 <Button
