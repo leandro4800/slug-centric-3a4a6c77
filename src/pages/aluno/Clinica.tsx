@@ -18,8 +18,19 @@ const Clinica = () => {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const analyzingRef = useRef<HTMLDivElement>(null);
   const { tenant } = useBranding();
   const queryClient = useQueryClient();
+
+  // Quando a análise começa, rola até a animação (no celular ela fica abaixo do hero).
+  useEffect(() => {
+    if (isAnalyzing) {
+      // pequeno delay para garantir que o nó já está montado
+      setTimeout(() => {
+        analyzingRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+    }
+  }, [isAnalyzing]);
 
   // Fetch past analyses
   const { data: analyses, isLoading: isLoadingAnalyses } = useQuery({
