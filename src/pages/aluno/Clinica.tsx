@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import scanFigure from "@/assets/scan-figure.png";
@@ -14,7 +15,9 @@ import { Textarea } from "@/components/ui/textarea";
 const ANALYSIS_ANIMATION_MIN_MS = 2400;
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const waitForPaint = () => new Promise<void>((resolve) => {
-  if (typeof requestAnimationFrame === "function") requestAnimationFrame(() => resolve());
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  }
   else setTimeout(resolve, 0);
 });
 
@@ -68,7 +71,7 @@ const Clinica = () => {
       setCurrentAnalysis(null);
       setIsAnalyzing(true);
       await waitForPaint();
-      await wait(120);
+      await wait(450);
 
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
@@ -120,7 +123,12 @@ const Clinica = () => {
         toast.error("Envie um PDF ou foto do exame.");
         return;
       }
-      uploadAndAnalyze(file);
+      setTab("nova");
+      setCurrentAnalysis(null);
+      setIsAnalyzing(true);
+      window.setTimeout(() => {
+        uploadAndAnalyze(file);
+      }, 350);
     }
   };
 
@@ -132,7 +140,7 @@ const Clinica = () => {
       setCurrentAnalysis(null);
       setIsAnalyzing(true);
       await waitForPaint();
-      await wait(120);
+      await wait(450);
 
       const { data, error: functionError } = await supabase.functions.invoke("analyze-exams", {
         body: { texto_exame: texto }
@@ -474,14 +482,22 @@ const Clinica = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Overlay de análise: fixo na tela inteira para garantir visibilidade no celular */}
-      {isAnalyzing && (
+      {/* Overlay de análise: renderizado no body para ficar acima de tudo no Android */}
+      {isAnalyzing && createPortal(
         <div
           ref={analyzingRef}
-          className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center text-center px-6 space-y-6 animate-in fade-in duration-300"
+          className="bg-background flex flex-col items-center justify-center text-center px-6 space-y-6"
+          style={{
+            position: "fixed",
+            inset: 0,
+            zIndex: 2147483647,
+            minHeight: "100dvh",
+            width: "100vw",
+            pointerEvents: "auto",
+          }}
         >
-          <div className="relative w-32 h-40">
-            <div className="absolute inset-0 bg-card border-2 border-primary/40 rounded-xl shadow-lg overflow-hidden">
+          <div className="relative w-36 h-44 animate-pulse">
+            <div className="absolute inset-0 bg-card border-2 border-primary/50 rounded-xl shadow-[0_0_45px_-8px_hsl(var(--primary))] overflow-hidden">
               <FileText className="absolute inset-0 m-auto h-16 w-16 text-primary/30" strokeWidth={1} />
               <div className="absolute inset-x-3 top-3 space-y-1.5">
                 <div className="h-1 bg-primary/20 rounded w-3/4" />
@@ -505,7 +521,8 @@ const Clinica = () => {
               Escaneando o documento, extraindo biomarcadores e cruzando com dados de performance.
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
