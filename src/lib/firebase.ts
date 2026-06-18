@@ -11,7 +11,7 @@ const firebaseConfig = {
   measurementId: "G-Y33D91J3MQ"
 };
 
-export const FIREBASE_VAPID_KEY = "BL833evNURyCcRNoGtMB2A2R_lhPFVpQoKBODsbqtCkHnG-m2swqO6-EY6VJiYkMH3J6EvgRWrx5BtWpAzqeYUg";
+export const FIREBASE_VAPID_KEY = "BL833evNURyCcRNoGtMB2A2R_IhPFVpQoKBODsbqtCkHnG-m2swqO6-EY6VJiYkMH3J6EvgRWrx5BtWpAzqeYUg";
 
 const app = initializeApp(firebaseConfig);
 
