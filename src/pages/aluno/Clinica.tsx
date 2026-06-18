@@ -303,23 +303,48 @@ const Clinica = () => {
           </div>
         ) : tab === "nova" && !currentAnalysis ? (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
-            {actions.map((a) => (
-              <Button
-                key={a.title}
-                variant="secondary"
-                onClick={a.onClick}
-                className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
-              >
-                <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
-                  <a.icon className="h-5 w-5 text-primary" />
-                </div>
-                <div className="flex-1">
-                  <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
-                  <p className="text-[10px] text-muted-foreground mt-0.5 tracking-widest">{a.sub}</p>
-                </div>
-                <ChevronRight className="h-4 w-4 text-primary" />
-              </Button>
-            ))}
+            {actions.map((a, idx) => {
+              const isUpload = idx === 0;
+              const content = (
+                <>
+                  <div className="w-12 h-12 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center shrink-0 shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
+                    <a.icon className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-display text-base uppercase leading-tight tracking-wide">{a.title}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 tracking-widest">{a.sub}</p>
+                  </div>
+                  <ChevronRight className="h-4 w-4 text-primary" />
+                </>
+              );
+
+              if (isUpload) {
+                // Usar <label> nativo garante abertura do file picker em qualquer
+                // browser mobile / WebView (Capacitor), onde ref.click() programático
+                // muitas vezes é bloqueado por falta de gesto direto do usuário.
+                return (
+                  <label
+                    key={a.title}
+                    htmlFor="clinica-file-input"
+                    className="cursor-pointer w-full h-auto py-4 px-4 flex items-center gap-4 text-left justify-start bg-secondary text-secondary-foreground hover:bg-secondary/80 rounded-md transition-colors"
+                  >
+                    {content}
+                  </label>
+                );
+              }
+
+              return (
+                <Button
+                  key={a.title}
+                  variant="secondary"
+                  onClick={a.onClick}
+                  className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
+                >
+                  {content}
+                </Button>
+              );
+            })}
+
 
             <div className="bg-card/40 border border-border rounded-xl p-5 mt-5">
               <div className="flex items-center gap-2 mb-3">
