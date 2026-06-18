@@ -83,13 +83,16 @@ const Comunidade = () => {
     try {
       setLoading(true);
 
-      const { data: profilesData } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .rpc("get_community_members", { _tenant_id: tenant.id });
-      setStories((profilesData as any) || []);
+      if (profilesError) throw profilesError;
+      const communityProfiles = ((profilesData as Perfil[]) || []);
+      const profilesById = new Map(communityProfiles.map((profile) => [profile.id, profile]));
+      setStories(communityProfiles);
 
       const { data: postsData, error: postsError } = await supabase
         .from("comunidade_posts")
-        .select(`*, perfil:perfis!usuario_id(id, nome_completo, avatar_url)`)
+        .select("*")
         .eq("profissional_id", tenant.id)
         .order("criado_em", { ascending: false });
       if (postsError) throw postsError;
@@ -103,7 +106,7 @@ const Comunidade = () => {
         postIds.length
           ? supabase
               .from("comunidade_comentarios")
-              .select(`id, post_id, comentario, usuario_id, criado_em, perfil:perfis!usuario_id(id, nome_completo, avatar_url)`)
+              .select("id, post_id, comentario, usuario_id, criado_em")
               .in("post_id", postIds)
               .order("criado_em", { ascending: true })
           : Promise.resolve({ data: [] as any[] }),
@@ -114,9 +117,10 @@ const Comunidade = () => {
         const cms = (comentarios || []).filter((c: any) => c.post_id === p.id);
         return {
           ...p,
+          perfil: profilesById.get(p.usuario_id) || null,
           curtidas_count: cs.length,
           liked_by_me: cs.some((c: any) => c.usuario_id === user.id),
-          comentarios: cms,
+          comentarios: cms.map((c: any) => ({ ...c, perfil: profilesById.get(c.usuario_id) || null })),
           comentarios_count: cms.length,
         };
       });
