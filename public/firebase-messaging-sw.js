@@ -16,7 +16,7 @@ self.addEventListener('activate', (event) => {
 });
 
 firebase.initializeApp({
-  apiKey: "AIzaSyD1Wlvqsle1TGs0xOq9d1tCuUzMA0E72zs",
+  apiKey: "AIzaSyD1WLvqslE1TGs0xOq9d1tCuUzMA0E72zs",
   authDomain: "alpha-coach-a3811.firebaseapp.com",
   projectId: "alpha-coach-a3811",
   storageBucket: "alpha-coach-a3811.firebasestorage.app",
