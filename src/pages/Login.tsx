@@ -31,16 +31,27 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const resolveAppDestination = async (userId: string) => {
-    const candidateSlug = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
-    const targetSlug = getSafeAppSlug(candidateSlug);
-
     const { data: ownedTenant } = await supabase
       .from("tenants")
       .select("slug")
       .eq("owner_user_id", userId)
       .maybeSingle();
 
-    return ownedTenant?.slug ? `/${ownedTenant.slug}/app` : targetSlug ? `/${targetSlug}/app` : "/onboarding";
+    if (ownedTenant?.slug) return `/${ownedTenant.slug}/app`;
+
+    // Aluno: sempre usar o tenant do próprio aluno, nunca o slug da URL/branding
+    const { data: alunoRow } = await supabase
+      .from("alunos")
+      .select("tenants:tenant_id(slug)")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const alunoSlug = getSafeAppSlug((alunoRow as any)?.tenants?.slug);
+    if (alunoSlug) return `/${alunoSlug}/app`;
+
+    const candidateSlug = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
+    const targetSlug = getSafeAppSlug(candidateSlug);
+    return targetSlug ? `/${targetSlug}/app` : "/onboarding";
   };
 
   useEffect(() => {
