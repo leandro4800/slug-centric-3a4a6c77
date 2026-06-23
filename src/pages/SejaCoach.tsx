@@ -7,10 +7,11 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
-import { ArrowLeft, CheckCircle2, Loader2, ExternalLink } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Loader2, ExternalLink, ShieldAlert, Monitor } from "lucide-react";
 import { buildAuthRedirectUrl } from "@/lib/app-url";
 import { CoachQuiz, type QuizAnswers } from "@/components/coach/CoachQuiz";
 import { CoachPlanSelector, COACH_PLANS, type CoachPlanTier } from "@/components/coach/CoachPlanSelector";
+import { Capacitor } from "@capacitor/core";
 
 type Step = "welcome" | "quiz" | "plans" | "signup" | "verify-email" | "personal" | "tenant" | "checkout" | "pending";
 const STEPS: Step[] = ["welcome", "quiz", "plans", "personal", "tenant", "checkout", "pending"];
@@ -45,6 +46,9 @@ export default function SejaCoach() {
   const [especialidades, setEspecialidades] = useState("");
 
   const [tenantId, setTenantId] = useState<string | null>(null);
+
+  // Detect if running on native iOS
+  const isIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
 
   useEffect(() => {
     if (isLoading) return;
@@ -128,7 +132,6 @@ export default function SejaCoach() {
       setBusy(false);
     }
   };
-
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -218,7 +221,49 @@ export default function SejaCoach() {
     }
   };
 
-  if (isLoading) return <div className="flex h-screen items-center justify-center bg-background text-white font-display uppercase tracking-widest">Carregando...</div>;
+  if (isLoading) return <div className="min-h-screen bg-background text-white font-display uppercase tracking-widest">Carregando...</div>;
+
+  // Intercept iOS users on either signup, quiz, or pricing/plan steps to keep the native app purchase-free
+  if (isIOS) {
+    return (
+      <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
+        <header className="border-b border-border/50">
+          <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4 md:px-8">
+            <Link to="/" className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+              <ArrowLeft className="h-4 w-4" /> Voltar
+            </Link>
+            <Logo />
+          </div>
+        </header>
+
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto space-y-6">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mb-2">
+            <Monitor className="h-8 w-8" />
+          </div>
+          <h2 className="font-display text-3xl uppercase tracking-tighter italic">
+            Cadastro de Coach pelo <span className="text-primary">Computador</span>
+          </h2>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Para garantir segurança máxima, faturamento descomplicado e a correta configuração do seu painel de marca, o cadastro e gerenciamento de planos de Coach deve ser feito pelo seu computador.
+          </p>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-4 flex gap-3 text-left">
+            <ShieldAlert className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+            <p className="text-xs text-muted-foreground">
+              Acesse <strong>alpha-coach.app/seja-coach</strong> do seu desktop ou notebook para configurar seu ecossistema.
+            </p>
+          </div>
+          <Button onClick={() => navigate(-1)} className="w-full h-12 uppercase font-black tracking-widest text-xs">
+            Voltar
+          </Button>
+        </div>
+
+        <footer className="py-8 text-center text-[10px] text-zinc-600 uppercase tracking-widest">
+          © 2026 ALPHA COACH. TODOS OS DIREITOS RESERVADOS.
+        </footer>
+      </div>
+    );
+  }
+
   const stepIndex = STEPS.indexOf(step);
 
   return (
@@ -346,7 +391,6 @@ export default function SejaCoach() {
 
             </div>
           )}
-
 
           {step === "signup" && !user && (
             <form onSubmit={handleSignup} className="space-y-4">

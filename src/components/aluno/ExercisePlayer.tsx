@@ -16,7 +16,7 @@ const ExercisePlayer = ({ videoUrl, exerciseName, onPlayClick, showPlayButton = 
     return (
       <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-zinc-800 to-black flex items-center justify-center">
         <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-          Vídeo Técnico em Breve
+          Demonstração técnica não disponível
         </p>
       </div>
     );

@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Play, Volume2, VolumeX, Stethoscope, ChevronRight, User } from "lucide-react";
+import { Play, Volume2, VolumeX, Stethoscope, ChevronRight, User, Users, CalendarCheck, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -263,8 +263,37 @@ const AlunoHome = () => {
         </div>
       </section>
 
-      <section className="relative z-20 px-5 pt-10 pb-1 mt-4 space-y-3 bg-background">
+      {/* Seção de Atalhos Rápidos */}
+      <section className="relative z-20 px-5 pt-8 pb-1 space-y-3 bg-background">
         <EnablePushBanner />
+
+        <div className="grid grid-cols-2 gap-3">
+          <Link 
+            to={`/${tenantSlug}/app/comunidade`}
+            className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/50 transition-all active:scale-[0.98] group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-card/50 border border-border flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/30 transition-all">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm text-foreground/80 leading-tight uppercase group-hover:text-primary transition-colors truncate">Comunidade</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5 truncate">Feed de notícias</p>
+            </div>
+          </Link>
+
+          <Link 
+            to={`/${tenantSlug}/app/presencial`}
+            className="bg-card border border-border rounded-2xl p-4 flex items-center gap-3 hover:border-primary/50 transition-all active:scale-[0.98] group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-card/50 border border-border flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/30 transition-all">
+              <CalendarCheck className="h-5 w-5 text-primary" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-sm text-foreground/80 leading-tight uppercase group-hover:text-primary transition-colors truncate">Presencial</p>
+              <p className="text-[9px] text-muted-foreground mt-0.5 truncate">Marcar aulas</p>
+            </div>
+          </Link>
+        </div>
 
         <Link 
           to={`/${tenantSlug}/app/parceiros`}

@@ -1,9 +1,11 @@
+"use client";
+
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket, Users, CalendarCheck, Stethoscope } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, Link } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -41,6 +43,18 @@ type LastEvalData = {
   quadril_cm?: number | null;
   bf_pct_calculado?: number | null;
   imc?: number | null;
+};
+
+const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 };
 
 const Perfil = () => {
@@ -106,20 +120,6 @@ const Perfil = () => {
     cintura_cm: "",
     quadril_cm: "",
   });
-
-  const isUnsupportedProfileImage = (url?: string | null) => false; // Let browser handle it or trust our normalization
-
-  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error(message)), ms);
-    });
-    try {
-      return await Promise.race([promise, timeout]);
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
-  };
 
   const prepareAvatarImage = async (original: File) => {
     const isHeic =
@@ -254,11 +254,11 @@ const Perfil = () => {
         throw uploadError;
       }
 
-      const { data: { publicUrl } } = supabase.storage
+      const { data: pub } = supabase.storage
         .from("avatars")
         .getPublicUrl(filePath);
 
-      const finalUrl = `${publicUrl}?v=${Date.now()}`;
+      const finalUrl = `${pub.publicUrl}?v=${Date.now()}`;
       toast.loading("Salvando no perfil...", { id: toastId });
       const { error: updateError } = await supabase.from("perfis").update({
         avatar_url: finalUrl,
@@ -290,7 +290,6 @@ const Perfil = () => {
     }
   };
 
-  // Comprime/redimensiona imagem via canvas para reduzir tamanho antes do upload
   const compressImage = (blob: Blob, maxDim: number, quality: number): Promise<Blob | null> => {
     return new Promise((resolve) => {
       const url = URL.createObjectURL(blob);
@@ -318,7 +317,6 @@ const Perfil = () => {
     if (!user?.id) return toast.error("Usuário não identificado.");
     setSaving(true);
     
-    // Garantir que campos obrigatórios para os triggers (tabela alunos) não sejam nulos
     const fallbackName = user?.email?.split('@')[0] || "Atleta";
     const cleanData = {
       nome_completo: formProfile.nome_completo.trim() || profile?.nome_completo || fallbackName,
@@ -330,8 +328,6 @@ const Perfil = () => {
       avatar_pos_y: formProfile.avatar_pos_y ?? 50,
     };
     
-    console.log("[Perfil] Salvando dados limpos:", cleanData);
-
     const { error } = await supabase.from("perfis").upsert({
       id: user.id,
       email: user.email,
@@ -340,11 +336,9 @@ const Perfil = () => {
       updated_at: new Date().toISOString()
     }, { onConflict: 'id' });
 
-
     setSaving(false);
     if (error) {
       console.error("Erro ao salvar perfil:", error);
-      // Fallback: tentar update se upsert falhar
       const { error: updateError } = await supabase.from("perfis")
         .update({ ...cleanData, updated_at: new Date().toISOString() })
         .eq('id', user.id);
@@ -413,19 +407,11 @@ const Perfil = () => {
     ? formProfile.avatar_url
     : "";
 
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
     <>
       <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
       {/* Hero estilo Netflix */}
-      <section className="relative h-[100vh] min-h-[640px] -mt-0">
+      <section className="relative h-[95vh] min-h-[640px] -mt-0">
         <img
           src={profileHeroSrc}
           alt=""
@@ -438,7 +424,7 @@ const Perfil = () => {
 
         <div className="absolute inset-x-0 bottom-0 pb-1 px-5 space-y-2">
           <div className="flex items-center gap-2">
-            <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">FILME</span>
+            <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">ATLETA</span>
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
           </div>
           <h1 className="font-display text-4xl leading-none">{nomeDisplay.toUpperCase()}</h1>
@@ -507,7 +493,6 @@ const Perfil = () => {
             </div>
           )}
           
-          
           <div className="flex gap-2 pt-1">
             <Button
               onClick={() => setPwOpen(true)}
@@ -527,6 +512,51 @@ const Perfil = () => {
           </div>
 
           <NotificationToggle />
+        </div>
+      </section>
+
+      {/* Seção unificada de recursos secundários */}
+      <section className="px-5 mt-6">
+        <h2 className="font-display text-xl uppercase mb-3">Recursos Extras</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link
+            to={`/${slug}/app/comunidade`}
+            className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-display text-sm uppercase leading-tight group-hover:text-primary transition-colors">Comunidade</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Feed do time</p>
+            </div>
+          </Link>
+
+          <Link
+            to={`/${slug}/app/presencial`}
+            className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <CalendarCheck className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-display text-sm uppercase leading-tight group-hover:text-primary transition-colors">Presencial</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Sessões com coach</p>
+            </div>
+          </Link>
+
+          <Link
+            to={`/${slug}/app/clinica`}
+            className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all group"
+          >
+            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+              <Stethoscope className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="font-display text-sm uppercase leading-tight group-hover:text-primary transition-colors">Clínica</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Painel metabólico</p>
+            </div>
+          </Link>
         </div>
       </section>
 
@@ -752,7 +782,6 @@ const Perfil = () => {
             <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {/* Preview com a MESMA proporção da tela hero (largura da viewport x 85vh) */}
             <div
               className="relative w-full rounded-xl overflow-hidden border border-border bg-muted mx-auto"
               style={{
@@ -767,7 +796,6 @@ const Perfil = () => {
                 style={{ objectPosition: `center ${imgPosY}%` }}
                 onError={() => setProfileImageFailed(true)}
               />
-              {/* Marcador do centro visual da hero (onde o rosto deve ficar) */}
               <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-white/40 pointer-events-none" />
             </div>
             <div className="space-y-2">

@@ -240,21 +240,9 @@ const AtletaDetalhe = () => {
       toast.error(error.message);
     } else {
       setPerfil((p) => (p ? { ...p, tempo_treino: tempo } : p));
-      toast.success(`Nível salvo: ${value.replace("_", " ").toUpperCase()}`);
+      toast.success(`Nível saved: ${value.replace("_", " ").toUpperCase()}`);
     }
     setSavingNivel(false);
-  };
-
-  const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    const timeout = new Promise<never>((_, reject) => {
-      timer = setTimeout(() => reject(new Error(message)), ms);
-    });
-    try {
-      return await Promise.race([promise, timeout]);
-    } finally {
-      if (timer) clearTimeout(timer);
-    }
   };
 
   const compressImage = (blob: Blob, maxDim: number, quality: number): Promise<Blob | null> => {
@@ -441,40 +429,6 @@ const AtletaDetalhe = () => {
       toast.error(`Falha ao importar: ${e.message}`, { id: toastId });
     } finally {
       setImporting(false);
-    }
-  };
-
-  const handleGenerateProtocol = async () => {
-    if (!aluno) return;
-    
-    // Verifica se já existe um protocolo e pergunta se quer substituir
-    if (protocolResult) {
-      const confirmReplace = window.confirm("Já existe um protocolo gerado. Deseja analisar o atual e gerar uma nova sugestão com ajustes?");
-      if (!confirmReplace) return;
-    } else {
-      const confirmGen = window.confirm("Deseja que a IA analise os dados do aluno e gere uma sugestão de protocolo?");
-      if (!confirmGen) return;
-    }
-
-    setIsGeneratingProtocol(true);
-    try {
-      const { data, error } = await (supabase.functions as any).invoke("generate-hormone-protocol", {
-        body: { 
-          alunoId: aluno.id, 
-          tenantId: aluno.tenant_id,
-          currentProtocol: protocolResult // Envia o protocolo atual para análise
-        },
-      });
-
-      if (error) throw error;
-      setProtocolResult(data.protocol);
-      setShowProtocolDialog(true);
-      toast.success("Análise de protocolo concluída pelo DR. IA!");
-    } catch (e: any) {
-      console.error(e);
-      toast.error(e.message || "Falha ao gerar protocolo");
-    } finally {
-      setIsGeneratingProtocol(false);
     }
   };
 
@@ -844,16 +798,6 @@ const AtletaDetalhe = () => {
               </span>
             </span>
           </button>
-
-          <button
-            onClick={() => toast.info("Parecer clínico em breve")}
-            className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/40 hover:bg-secondary/60 transition-colors text-left"
-          >
-            <Stethoscope className="h-4 w-4 text-primary" />
-            <span className="flex-1 text-xs font-bold uppercase tracking-wider">
-              Ver último parecer clínico
-            </span>
-          </button>
         </div>
 
         <div className="rounded-2xl border border-border bg-secondary/40 p-5 space-y-4">
@@ -1066,7 +1010,7 @@ const AtletaDetalhe = () => {
               />
             ) : (
               <p className="text-center text-muted-foreground py-10">Dados não encontrados.</p>
-      )}
+            )}
 
       <Dialog open={evalOpen} onOpenChange={setEvalOpen}>
         <DialogContent className="max-w-md bg-card border-border shadow-2xl">

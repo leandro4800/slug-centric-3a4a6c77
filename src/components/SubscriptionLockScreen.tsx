@@ -1,13 +1,20 @@
+"use client";
+
 import { useState, useEffect } from "react";
-import { Lock, Rocket, ChevronRight, Link as LinkIcon, Smartphone, Zap } from "lucide-react";
+import { Lock, Rocket, ChevronRight, Smartphone, Zap, ShieldAlert, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 
 export const SubscriptionLockScreen = () => {
   const { slug } = useParams();
+  const navigate = useNavigate();
   const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Detect if running on native iOS
+  const isIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
 
   useEffect(() => {
     const fetchSalesLink = async () => {
@@ -46,6 +53,10 @@ export const SubscriptionLockScreen = () => {
     }
   };
 
+  const handleGoBack = () => {
+    navigate(-1);
+  };
+
   return (
     <div className="min-h-screen bg-[#0a0a0a] flex flex-col items-center justify-center p-6 text-white overflow-hidden relative">
       {/* Background Aesthetics */}
@@ -60,9 +71,9 @@ export const SubscriptionLockScreen = () => {
             <Lock className="h-10 w-10 text-primary" />
           </div>
           <h2 className="text-4xl font-['Anton'] uppercase italic tracking-tighter leading-none">
-            ÁREA <span className="text-primary">RESTRITA</span>
+            ÁREA <span className="text-primary">PROTEGIDA</span>
           </h2>
-          <p className="text-white/60 text-sm uppercase tracking-[0.2em] font-bold">Conteúdo Exclusivo Pro</p>
+          <p className="text-white/60 text-sm uppercase tracking-[0.2em] font-bold">Acesso Exclusivo Aluno</p>
         </div>
 
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 space-y-6 relative overflow-hidden">
@@ -71,9 +82,14 @@ export const SubscriptionLockScreen = () => {
           </div>
           
           <div className="space-y-2 relative z-10">
-            <h3 className="text-xl font-bold italic uppercase tracking-tight">Liberar Acesso Imediato</h3>
+            <h3 className="text-xl font-bold italic uppercase tracking-tight">
+              {isIOS ? "Acesso Pendente" : "Liberar Acesso Imediato"}
+            </h3>
             <p className="text-sm text-white/50 leading-relaxed">
-              Você está tentando acessar uma área exclusiva do seu coach. Para continuar, você precisa de um plano ativo.
+              {isIOS 
+                ? "Este aplicativo contém conteúdo restrito para alunos ativos. Se você já faz parte do time, entre em contato diretamente com o seu Coach para que ele ative seu acesso pelo painel."
+                : "Você está tentando acessar uma área exclusiva do seu coach. Para continuar, você precisa de um plano ativo."
+              }
             </p>
           </div>
 
@@ -88,17 +104,30 @@ export const SubscriptionLockScreen = () => {
             </div>
           </div>
 
-          <Button 
-            onClick={handleRedirect}
-            className="w-full h-16 rounded-2xl bg-primary text-black hover:bg-primary/90 font-['Anton'] text-2xl uppercase italic tracking-wider gap-3 shadow-[0_0_30px_rgba(229,9,20,0.3)] group transition-all hover:scale-[1.02]"
-          >
-            QUERO MEU ACESSO AGORA
-            <ChevronRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          {isIOS ? (
+            <div className="pt-2">
+              <Button 
+                onClick={handleGoBack}
+                className="w-full h-14 rounded-2xl bg-white/10 text-white hover:bg-white/20 font-['Anton'] text-xl uppercase italic tracking-wider gap-3"
+              >
+                Voltar à Tela Anterior
+              </Button>
+            </div>
+          ) : (
+            <Button 
+              onClick={handleRedirect}
+              className="w-full h-16 rounded-2xl bg-primary text-black hover:bg-primary/90 font-['Anton'] text-2xl uppercase italic tracking-wider gap-3 shadow-[0_0_30px_rgba(229,9,20,0.3)] group transition-all hover:scale-[1.02]"
+            >
+              QUERO MEU ACESSO AGORA
+              <ChevronRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          )}
 
-          <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
-            Pagamento Seguro via {checkoutUrl?.includes('kiwify') ? 'Kiwify' : checkoutUrl?.includes('hotmart') ? 'Hotmart' : 'Plataforma Alpha'}
-          </p>
+          {!isIOS && (
+            <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
+              Pagamento Seguro via {checkoutUrl?.includes('kiwify') ? 'Kiwify' : checkoutUrl?.includes('hotmart') ? 'Hotmart' : 'Plataforma Alpha'}
+            </p>
+          )}
         </div>
       </div>
     </div>
