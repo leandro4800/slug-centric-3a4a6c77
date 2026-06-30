@@ -377,7 +377,15 @@ const Treino = () => {
             const ord = parsed.treinos.slice().sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
             setTreinos(ord);
             setSelectedPresetId(parsed.presetId || null);
-            setDiaAtual((cur) => (cur && ord.some((t) => t.dia_semana === cur) ? cur : ord[0].dia_semana));
+            setDiaAtual((cur) => {
+              if (cur && ord.some((t) => t.dia_semana === cur)) return cur;
+              const todayWd = ["domingo","segunda","terca","quarta","quinta","sexta","sabado"][new Date().getDay()];
+              const todayMatch = ord.find((t) => {
+                const n = (t.dia_semana || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return n.includes(todayWd);
+              });
+              return todayMatch ? todayMatch.dia_semana : ord[0].dia_semana;
+            });
             setIsMock(false);
             setLoading(false);
             return;
