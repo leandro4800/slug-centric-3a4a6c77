@@ -355,7 +355,12 @@ const Treino = () => {
           setTreinos(filled);
           setDiaAtual((cur) => {
             if (cur && filled.some((t) => t.dia_semana === cur)) return cur;
-            return filled[0].dia_semana;
+            const todayWd = ["domingo","segunda","terca","quarta","quinta","sexta","sabado"][new Date().getDay()];
+            const todayMatch = filled.find((t) => {
+              const n = (t.dia_semana || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+              return n.includes(todayWd);
+            });
+            return todayMatch ? todayMatch.dia_semana : filled[0].dia_semana;
           });
           setIsMock(false);
           setLoading(false);
