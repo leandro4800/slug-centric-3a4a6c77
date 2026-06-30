@@ -46,6 +46,7 @@ const Treino = () => {
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
   const [sexo, setSexo] = useState<string | null>(null);
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
   const [generatingPresetId, setGeneratingPresetId] = useState<string | null>(null);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
