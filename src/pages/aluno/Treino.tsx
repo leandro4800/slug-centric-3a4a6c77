@@ -808,7 +808,10 @@ const Treino = () => {
             const wd = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"].find((d) => n.includes(d));
             const wdShort: Record<string, string> = { segunda: "SEG", terca: "TER", quarta: "QUA", quinta: "QUI", sexta: "SEX", sabado: "SAB", domingo: "DOM" };
             const letra = dia.match(/\b([A-E])\b/)?.[1];
-            const label = `${wd ? wdShort[wd] : dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
+            // Prioriza o dia da semana vindo da anamnese (mapeado pela letra A→1º dia disponível, B→2º, ...)
+            const wdFromAnamnese = weekdayLabelFor(dia);
+            const wdLabel = wdFromAnamnese || (wd ? wdShort[wd] : null);
+            const label = `${wdLabel || dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
             const done = completedDaysWeek.has(dia);
             return (
               <button
