@@ -128,10 +128,21 @@ const Treino = () => {
     if (!user) return;
     supabase
       .from("anamnese_aluno")
-      .select("nivel_experiencia")
+      .select("nivel_experiencia, disponibilidade_dias")
       .eq("aluno_id", user.id)
       .maybeSingle()
-      .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
+      .then(({ data }) => {
+        setNivelExperiencia(data?.nivel_experiencia || null);
+        const dd = ((data as any)?.disponibilidade_dias as string[]) || [];
+        const ORDER = ["seg", "ter", "qua", "qui", "sex", "sáb", "sab", "dom"];
+        const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3);
+        const sorted = [...dd].sort((a, b) => {
+          const ia = ORDER.findIndex((d) => norm(a).startsWith(d.slice(0, 3)));
+          const ib = ORDER.findIndex((d) => norm(b).startsWith(d.slice(0, 3)));
+          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+        });
+        setAvailableDays(sorted);
+      });
     supabase
       .from("perfis")
       .select("avatar_url, sexo")
