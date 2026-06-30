@@ -267,6 +267,12 @@ const AtletaDetalhe = () => {
     });
   };
 
+  const withTimeout = <T,>(p: Promise<T>, ms: number, msg: string): Promise<T> =>
+    Promise.race([
+      p,
+      new Promise<T>((_, reject) => setTimeout(() => reject(new Error(msg)), ms)),
+    ]);
+
   const handleUploadFoto = async (file: File) => {
     if (!aluno) return;
     const toastId = toast.loading("Preparando foto...");
