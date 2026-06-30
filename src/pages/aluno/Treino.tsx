@@ -769,6 +769,7 @@ const Treino = () => {
             const wdShort: Record<string, string> = { segunda: "SEG", terca: "TER", quarta: "QUA", quinta: "QUI", sexta: "SEX", sabado: "SAB", domingo: "DOM" };
             const letra = dia.match(/\b([A-E])\b/)?.[1];
             const label = `${wd ? wdShort[wd] : dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
+            const done = completedDaysWeek.has(dia);
             return (
               <button
                 key={dia}
@@ -776,10 +777,11 @@ const Treino = () => {
                   setDiaAtual(dia);
                   setActiveIndex(null);
                 }}
-                className={`px-4 py-2 rounded-full font-display text-xs uppercase tracking-[0.2em] whitespace-nowrap transition ${
-                  diaAtual === dia ? "bg-primary text-primary-foreground shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" : "bg-secondary text-muted-foreground"
+                className={`px-4 py-2 rounded-full font-display text-xs uppercase tracking-[0.2em] whitespace-nowrap transition flex items-center gap-1.5 ${
+                  diaAtual === dia ? "bg-primary text-primary-foreground shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" : done ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40" : "bg-secondary text-muted-foreground"
                 }`}
               >
+                {done && <span aria-hidden>✓</span>}
                 {label}
               </button>
             );
