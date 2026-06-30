@@ -61,6 +61,8 @@ const Treino = () => {
   })();
   const completedKey = `treino:completed:${user?.id || "anon"}:${isoWeekKey}:${diaAtual}`;
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  // Dias da semana ISO atual cujo treino já foi concluído (vem do banco)
+  const [completedDaysWeek, setCompletedDaysWeek] = useState<Set<string>>(new Set());
   // Recarrega completedIds quando muda dia/semana/usuário
   useEffect(() => {
     try {
@@ -75,6 +77,40 @@ const Treino = () => {
       return next;
     });
   };
+
+  // Helpers de semana (segunda 00:00 -> domingo 23:59) no horário local
+  const weekRange = (() => {
+    const d = new Date();
+    const day = d.getDay(); // 0=Dom..6=Sáb
+    const diffToMonday = (day === 0 ? -6 : 1 - day);
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const fmt = (x: Date) => x.toISOString().split("T")[0];
+    return { startDate: fmt(monday), endDate: fmt(sunday) };
+  })();
+
+  // Carrega dias da semana atual já concluídos a partir do banco (historico_cargas)
+  const loadCompletedDaysWeek = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("historico_cargas")
+      .select("exercicio_nome, data_treino")
+      .eq("user_id", user.id)
+      .gte("data_treino", weekRange.startDate)
+      .lte("data_treino", weekRange.endDate)
+      .like("exercicio_nome", "__treino_concluido__:%");
+    const dias = new Set<string>();
+    (data || []).forEach((r: any) => {
+      const dia = (r.exercicio_nome as string).split("__treino_concluido__:")[1];
+      if (dia) dias.add(dia);
+    });
+    setCompletedDaysWeek(dias);
+  };
+  useEffect(() => { void loadCompletedDaysWeek(); }, [user?.id, reloadKey]);
+
   const resetTreinoDoDia = () => {
     // Limpa estado dos cards do dia (carga/reps/done) e a marcação de concluído
     treinosDoDia.forEach((t) => {
