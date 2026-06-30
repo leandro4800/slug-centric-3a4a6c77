@@ -444,6 +444,34 @@ const Treino = () => {
   const dias = [...new Set(treinos.map((t) => t.dia_semana))];
   const treinosDoDia = treinos.filter((t) => t.dia_semana === diaAtual);
 
+  // Mapeia cada dia (que pode estar nomeado como "A — ...", "Treino B", etc.) ao dia da semana
+  // escolhido na anamnese (availableDays na ordem da semana).
+  const weekdayLabelFor = (dia: string): string | null => {
+    if (!availableDays.length) return null;
+    const letter = (dia.match(/\b([A-Z])\b/)?.[1] || "").toUpperCase();
+    if (!letter) return null;
+    const idx = letter.charCodeAt(0) - 65;
+    if (idx < 0 || idx >= availableDays.length) return null;
+    const wd = availableDays[idx];
+    return wd ? wd.toUpperCase() : null;
+  };
+
+  // Quando availableDays carrega, seleciona automaticamente o dia de HOJE (se hoje for treino).
+  useEffect(() => {
+    if (!availableDays.length || !dias.length) return;
+    const todayIdx = new Date().getDay(); // 0=Dom..6=Sáb
+    const todayShort = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"][todayIdx];
+    const matchIdx = availableDays.findIndex((d) => {
+      const n = d.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3);
+      return n === todayShort;
+    });
+    if (matchIdx < 0) return;
+    const targetLetter = String.fromCharCode(65 + matchIdx);
+    const targetDia = dias.find((d) => d.match(/\b([A-Z])\b/)?.[1] === targetLetter);
+    if (targetDia && targetDia !== diaAtual) setDiaAtual(targetDia);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableDays.join("|"), dias.join("|")]);
+
   // Deriva nome do grupo muscular a partir dos exercícios do dia
   const grupoMuscularDoDia = (() => {
     const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
