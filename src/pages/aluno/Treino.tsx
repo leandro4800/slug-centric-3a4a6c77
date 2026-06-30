@@ -46,6 +46,7 @@ const Treino = () => {
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
   const [sexo, setSexo] = useState<string | null>(null);
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
   const [generatingPresetId, setGeneratingPresetId] = useState<string | null>(null);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
@@ -127,10 +128,21 @@ const Treino = () => {
     if (!user) return;
     supabase
       .from("anamnese_aluno")
-      .select("nivel_experiencia")
+      .select("nivel_experiencia, disponibilidade_dias")
       .eq("aluno_id", user.id)
       .maybeSingle()
-      .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
+      .then(({ data }) => {
+        setNivelExperiencia(data?.nivel_experiencia || null);
+        const dd = ((data as any)?.disponibilidade_dias as string[]) || [];
+        const ORDER = ["seg", "ter", "qua", "qui", "sex", "sáb", "sab", "dom"];
+        const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3);
+        const sorted = [...dd].sort((a, b) => {
+          const ia = ORDER.findIndex((d) => norm(a).startsWith(d.slice(0, 3)));
+          const ib = ORDER.findIndex((d) => norm(b).startsWith(d.slice(0, 3)));
+          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+        });
+        setAvailableDays(sorted);
+      });
     supabase
       .from("perfis")
       .select("avatar_url, sexo")
@@ -431,6 +443,34 @@ const Treino = () => {
 
   const dias = [...new Set(treinos.map((t) => t.dia_semana))];
   const treinosDoDia = treinos.filter((t) => t.dia_semana === diaAtual);
+
+  // Mapeia cada dia (que pode estar nomeado como "A — ...", "Treino B", etc.) ao dia da semana
+  // escolhido na anamnese (availableDays na ordem da semana).
+  const weekdayLabelFor = (dia: string): string | null => {
+    if (!availableDays.length) return null;
+    const letter = (dia.match(/\b([A-Z])\b/)?.[1] || "").toUpperCase();
+    if (!letter) return null;
+    const idx = letter.charCodeAt(0) - 65;
+    if (idx < 0 || idx >= availableDays.length) return null;
+    const wd = availableDays[idx];
+    return wd ? wd.toUpperCase() : null;
+  };
+
+  // Quando availableDays carrega, seleciona automaticamente o dia de HOJE (se hoje for treino).
+  useEffect(() => {
+    if (!availableDays.length || !dias.length) return;
+    const todayIdx = new Date().getDay(); // 0=Dom..6=Sáb
+    const todayShort = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"][todayIdx];
+    const matchIdx = availableDays.findIndex((d) => {
+      const n = d.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3);
+      return n === todayShort;
+    });
+    if (matchIdx < 0) return;
+    const targetLetter = String.fromCharCode(65 + matchIdx);
+    const targetDia = dias.find((d) => d.match(/\b([A-Z])\b/)?.[1] === targetLetter);
+    if (targetDia && targetDia !== diaAtual) setDiaAtual(targetDia);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableDays.join("|"), dias.join("|")]);
 
   // Deriva nome do grupo muscular a partir dos exercícios do dia
   const grupoMuscularDoDia = (() => {
@@ -768,7 +808,10 @@ const Treino = () => {
             const wd = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"].find((d) => n.includes(d));
             const wdShort: Record<string, string> = { segunda: "SEG", terca: "TER", quarta: "QUA", quinta: "QUI", sexta: "SEX", sabado: "SAB", domingo: "DOM" };
             const letra = dia.match(/\b([A-E])\b/)?.[1];
-            const label = `${wd ? wdShort[wd] : dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
+            // Prioriza o dia da semana vindo da anamnese (mapeado pela letra A→1º dia disponível, B→2º, ...)
+            const wdFromAnamnese = weekdayLabelFor(dia);
+            const wdLabel = wdFromAnamnese || (wd ? wdShort[wd] : null);
+            const label = `${wdLabel || dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
             const done = completedDaysWeek.has(dia);
             return (
               <button
