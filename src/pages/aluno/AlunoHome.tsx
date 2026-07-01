@@ -172,7 +172,7 @@ const AlunoHome = () => {
   return (
     <>
       {/* Hero Content Section */}
-      <section className="relative h-[85vh] min-h-[500px] w-full overflow-hidden flex flex-col justify-end pb-[10%] px-5">
+      <section className="relative h-[70vh] min-h-[400px] w-full overflow-hidden flex flex-col justify-end pb-[10%] px-5">
         {/* Background Hero (contido na seção) */}
         <div className="hero-mask">
           {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
@@ -180,7 +180,7 @@ const AlunoHome = () => {
               <iframe
                 key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
                 src={ytAutoSrc || `https://www.youtube.com/embed/${tenantHeroVideoId}?autoplay=1&mute=1&loop=1&playlist=${tenantHeroVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
-                className="w-full h-full pointer-events-none scale-110"
+                className="w-full h-full pointer-events-none scale-135"
               />
             ) : (
               <video
@@ -198,44 +198,24 @@ const AlunoHome = () => {
         </div>
 
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent" />
 
+        <div className="absolute inset-x-0 top-0 h-6 bg-background/10" />
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5 z-10">
-          <Logo size={32} withText={false} />
-          <div className="flex items-center gap-2">
-            {ytAutoSrc && !expanded && (
-              <button
-                onClick={() => setMuted((m) => !m)}
-                className="w-10 h-10 rounded-full bg-background/70 border border-border flex items-center justify-center backdrop-blur"
-                title={muted ? "Ativar som" : "Silenciar"}
-                aria-label={muted ? "Ativar som" : "Silenciar"}
-              >
-                {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4 text-primary" />}
-              </button>
+          <div className="flex items-center gap-3">
+            {tenant?.logo_url ? (
+              <img src={tenant.logo_url} alt={tenant.nome} className="h-12 w-auto object-contain" />
+            ) : (
+              <Logo withText={false} />
             )}
-            
-            <Link to={`/${tenantSlug}/app/perfil`} className="w-10 h-10 rounded-full bg-card/70 border border-border flex items-center justify-center backdrop-blur">
-              <User className="h-4 w-4 text-foreground" />
-            </Link>
-
-            {isAdmin && (
-              <Link to={`/${tenantSlug}/app/controle`} className="w-10 h-10 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center backdrop-blur">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="lucide lucide-settings text-primary"
-                >
-                  <path d="M12.22 2h-.44a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2a2 2 0 0 1-2 2a2 2 0 0 0-2 2v.44a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2a2 2 0 0 1 2 2a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2a2 2 0 0 1 2-2a2 2 0 0 0 2-2v-.44a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2a2 2 0 0 1-2-2a2 2 0 0 0-2-2Z" />
-                  <circle cx="12" cy="12" r="3" />
-                </svg>
-              </Link>
+            {tenant ? (
+              <span className="font-display text-xl tracking-wider uppercase">
+                {tenant.nome}
+              </span>
+            ) : (
+              <span className="font-display text-xl tracking-wider">
+                ALPHA<span className="text-primary">COACH</span>
+              </span>
             )}
           </div>
         </div>
@@ -347,75 +327,33 @@ const AlunoHome = () => {
         <h2 className="font-display text-lg mb-4 flex items-center gap-2">
           <span className="text-primary">▶</span> VLOGS DO COACH
         </h2>
-        {vlogs.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Nenhum vlog publicado ainda.</p>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {vlogs.map((v) => {
-              const embed = buildEmbed(v);
-              const isReel = v.url.includes("instagram.com") || v.url.includes("tiktok.com");
-              return (
-                <div
-                  key={v.id}
-                  className={`rounded-xl bg-black border border-border relative overflow-hidden ${isReel ? "aspect-[9/16] max-h-[560px] mx-auto w-full" : "aspect-video"}`}
-                >
-                  {embed ? (
-                    <iframe
-                      src={embed}
-                      title={v.title || "Vlog"}
-                      allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-                      allowFullScreen
-                      scrolling="no"
-                      className="absolute inset-0 w-full h-full"
-                    />
-                  ) : isDirectVideo(v.url) ? (
-                    <button
-                      type="button"
-                      onClick={() => setPlaying(v)}
-                      className="absolute inset-0 w-full h-full group"
-                      aria-label={v.title ? `Reproduzir ${v.title}` : "Reproduzir vlog"}
-                    >
-                      <video
-                        src={`${v.url}#t=0.1`}
-                        autoPlay
-                        muted
-                        loop
-                        playsInline
-                        preload="auto"
-                        className="absolute inset-0 w-full h-full object-cover pointer-events-none"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/30 transition-colors pointer-events-none">
-                        <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-[0_8px_24px_-4px_hsl(var(--primary)/0.6)] group-hover:scale-110 transition-transform">
-                          <Play className="h-6 w-6 text-primary-foreground fill-current" />
-                        </div>
-                      </div>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => setPlaying(v)}
-                      className="absolute inset-0 w-full h-full"
-                    >
-                      <img
-                        src={v.thumbnail_url || tenant?.hero_url || heroDefault}
-                        alt={v.title || ""}
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                        <div className="w-12 h-12 rounded-full bg-primary/90 flex items-center justify-center">
-                          <Play className="h-5 w-5 text-primary-foreground fill-current" />
-                        </div>
-                      </div>
-                    </button>
-                  )}
-                  <div className="pointer-events-none absolute top-2 right-2 bg-background/70 backdrop-blur rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wider z-10">
-                    {v.platform}
+        <div className="grid grid-cols-2 gap-3">
+          {vlogs.slice(1).map((v) => (
+            <div
+              key={v.id}
+              onClick={() => setPlaying(v)}
+              className="bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 transition-all group"
+            >
+              <div className="relative aspect-video">
+                <img
+                  src={buildThumb(v)}
+                  alt={v.title || ""}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg">
+                    <Play className="h-4 w-4 fill-current" />
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        )}
+              </div>
+              <div className="p-3">
+                <p className="text-xs font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                  {v.title || "Vídeo do Coach"}
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
       </section>
 
       {/* In-app player modal */}

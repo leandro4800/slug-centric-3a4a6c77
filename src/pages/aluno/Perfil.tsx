@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket, Users, CalendarCheck, Stethoscope } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket, Users, CalendarCheck, Stethoscope, Trash2, X } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
@@ -72,6 +72,7 @@ const Perfil = () => {
 
   // Edit Modals
   const [pwOpen, setPwOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [evalOpen, setEvalOpen] = useState(false); // Navy form
   const [selectionOpen, setSelectionOpen] = useState(false);
@@ -83,6 +84,7 @@ const Perfil = () => {
   const [newPw, setNewPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
@@ -213,6 +215,36 @@ const Perfil = () => {
       navigate(`/${slug}/login`);
     } else {
       navigate("/login");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    setDeleting(true);
+    try {
+      // 1. Delete user profile and related data from public tables
+      const { error: profileError } = await supabase
+        .from("perfis")
+        .delete()
+        .eq("id", user.id);
+      
+      if (profileError) throw profileError;
+
+      // 2. Sign out the user
+      await signOut();
+      toast.success("Sua conta foi excluída permanentemente.");
+      
+      if (slug) {
+        navigate(`/${slug}/login`);
+      } else {
+        navigate("/login");
+      }
+    } catch (err: any) {
+      console.error("Erro ao excluir conta:", err);
+      toast.error("Erro ao excluir conta: " + err.message);
+    } finally {
+      setDeleting(false);
+      setDeleteOpen(false);
     }
   };
 
@@ -348,7 +380,7 @@ const Perfil = () => {
       }
     }
     
-    toast.success("Perfil atualizado!");
+    toast.success("Perfil updated!");
     setProfileOpen(false);
     loadData(true);
   };
@@ -502,6 +534,13 @@ const Perfil = () => {
               <KeyRound className="h-4 w-4" /> Trocar senha
             </Button>
             <Button
+              onClick={() => setDeleteOpen(true)}
+              variant="destructive"
+              className="flex-1 h-11 bg-red-600/20 border border-red-500/30 text-red-500 hover:bg-red-600/30"
+            >
+              <Trash2 className="h-4 w-4" /> Excluir Conta
+            </Button>
+            <Button
               onClick={handleLogout}
               variant="secondary"
               className="w-11 h-11 p-0"
@@ -567,9 +606,9 @@ const Perfil = () => {
             variant="ghost" 
             size="sm" 
             onClick={() => setHistoryOpen(true)}
-            className="text-[10px] font-bold uppercase tracking-widest text-primary h-7 px-2"
+            className="text-[10px] font-bold tracking-wider text-muted-foreground uppercase"
           >
-            Ver Histórico
+            <Ruler className="h-3.5 w-3.5 mr-1" /> Histórico
           </Button>
         </div>
         <div className="grid grid-cols-2 gap-3">
@@ -582,10 +621,12 @@ const Perfil = () => {
 
       {/* Profile Edit Dialog */}
       <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
-        <DialogContent>
+        <DialogContent className="max-w-md bg-card border-border shadow-2xl">
           <DialogHeader>
-            <DialogTitle>Editar Perfil</DialogTitle>
-            <DialogDescription>Atualize seus dados básicos.</DialogDescription>
+            <DialogTitle className="font-display text-2xl uppercase tracking-tight">Editar Perfil</DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs uppercase tracking-wider">
+              Atualize seus dados básicos de cadastro.
+            </DialogDescription>
           </DialogHeader>
           <form onSubmit={handleUpdateProfile} className="space-y-4">
             <div className="flex flex-col items-center gap-4">
@@ -743,7 +784,52 @@ const Perfil = () => {
           </form>
         </DialogContent>
       </Dialog>
-      
+
+      {/* Delete Account Confirmation Dialog */}
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="bg-card border-destructive/30 text-white rounded-2xl max-w-md">
+          <DialogHeader className="pb-4 border-b border-white/10">
+            <div className="flex items-center gap-3 text-red-500">
+              <Trash2 className="h-6 w-6" />
+              <DialogTitle className="font-display text-xl uppercase tracking-wider">Excluir Conta Permanentemente</DialogTitle>
+            </div>
+          </DialogHeader>
+          <div className="py-4 space-y-3">
+            <p className="text-sm text-white/80 leading-relaxed">
+              Tem certeza que deseja excluir sua conta? Esta ação é **irreversível** e apagará permanentemente:
+            </p>
+            <ul className="text-xs text-muted-foreground space-y-1.5 list-disc pl-5">
+              <li>Seu perfil de atleta e dados de contato</li>
+              <li>Seu histórico de treinos, cargas e evolução</li>
+              <li>Suas avaliações físicas e dados de bioimpedância</li>
+              <li>Seu acesso ao aplicativo do time</li>
+            </ul>
+            <p className="text-xs text-red-400 font-bold uppercase tracking-wider pt-2">
+              ⚠️ Atenção: Suas assinaturas ativas de pagamento não serão canceladas automaticamente. Cancele-as antes de prosseguir.
+            </p>
+          </div>
+          <DialogFooter className="flex flex-row gap-2 pt-4 border-t border-white/10">
+            <Button 
+              type="button" 
+              variant="ghost" 
+              onClick={() => setDeleteOpen(false)}
+              className="flex-1 uppercase text-[10px] tracking-widest"
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              className="flex-1 bg-red-600 hover:bg-red-700 text-white uppercase text-[10px] tracking-widest font-bold"
+            >
+              {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Sim, Excluir Conta"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Physical Evaluation Selection */}
       <PhysicalEvaluationSelection
         open={selectionOpen}
         onOpenChange={setSelectionOpen}

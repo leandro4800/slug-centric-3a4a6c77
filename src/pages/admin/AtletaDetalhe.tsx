@@ -118,6 +118,18 @@ const RESTRICOES = [
   { code: "2.4", label: "ABCD Reabilitação" },
 ];
 
+const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string): Promise<T> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error(message)), ms);
+  });
+  try {
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+};
+
 const AtletaDetalhe = () => {
   const { slug, atletaId } = useParams();
   const { tenant } = useBranding();
@@ -225,7 +237,7 @@ const AtletaDetalhe = () => {
   const handleSaveNivel = async (value: string) => {
     setNivel(value);
     if (!aluno?.tenant_id) {
-      toast.success("Nível atualizado (local)");
+      toast.success("Nível updated (local)");
       return;
     }
     setSavingNivel(true);
@@ -664,6 +676,7 @@ const AtletaDetalhe = () => {
               <AlertTriangle className="h-3 w-3" /> Alerta clínico
             </button>
             <button
+              type="button"
               onClick={() => navigate(`/${slug}/admin/atleta/${atletaId}/carta`)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black text-[10px] font-bold uppercase tracking-wider hover:brightness-110"
             >

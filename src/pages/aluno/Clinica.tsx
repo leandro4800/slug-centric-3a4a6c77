@@ -1,18 +1,33 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
+import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine, Pill, ShieldAlert, Volume2 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
-import scanFigure from "@/assets/scan-figure.png";
-// Fundo do Centro de Análise Metabólica é fixo (anéis de scan + boneco holográfico). Hero do tenant não é usado aqui.
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useDrIA } from "@/hooks/use-dr-ia";
+import { EvolutionChart } from "@/components/aluno/clinica/EvolutionChart";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { MarkerCard } from "@/components/aluno/clinica/MarkerCard";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import scanFigure from "@/assets/scan-figure.png";
 
-const ANALYSIS_ANIMATION_MIN_MS = 2400;
+// Safe UUID generator with fallback for Android WebViews
+const generateUUID = () => {
+  if (typeof window !== "undefined" && window.crypto && window.crypto.randomUUID) {
+    return window.crypto.randomUUID();
+  }
+  // Robust fallback using Math.random
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+};
+
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const waitForPaint = () => new Promise<void>((resolve) => {
   if (typeof requestAnimationFrame === "function") {
@@ -78,7 +93,7 @@ const Clinica = () => {
 
       // 1. Upload to storage
       const fileExt = file.name.split(".").pop();
-      const fileName = `${user.id}/${crypto.randomUUID()}.${fileExt}`;
+      const fileName = `${user.id}/${generateUUID()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage
         .from("exames_pdfs")
         .upload(fileName, file);
@@ -94,9 +109,16 @@ const Clinica = () => {
         let detail = functionError.message;
         try {
           const ctx: any = (functionError as any).context;
-          if (ctx?.json) detail = (await ctx.json()).message || (await ctx.json()).error || detail;
-          else if (ctx?.text) detail = await ctx.text();
-        } catch {}
+          if (ctx) {
+            const res = await ctx.json();
+            detail = res.message || res.error || detail;
+          }
+        } catch (_) {
+          try {
+            const ctx: any = (functionError as any).context;
+            if (ctx?.text) detail = await ctx.text();
+          } catch (_) {}
+        }
         throw new Error(detail);
       }
       if ((data as any)?.error) throw new Error((data as any).message || (data as any).error);
@@ -108,7 +130,7 @@ const Clinica = () => {
       console.error("Erro na análise:", error);
       toast.error(error.message || "Erro ao processar análise. Tente novamente.");
     } finally {
-      const remaining = ANALYSIS_ANIMATION_MIN_MS - (Date.now() - animationStartedAt);
+      const remaining = 2400 - (Date.now() - animationStartedAt);
       if (remaining > 0) await wait(remaining);
       setIsAnalyzing(false);
     }
@@ -149,9 +171,16 @@ const Clinica = () => {
         let detail = functionError.message;
         try {
           const ctx: any = (functionError as any).context;
-          if (ctx?.json) detail = (await ctx.json()).message || (await ctx.json()).error || detail;
-          else if (ctx?.text) detail = await ctx.text();
-        } catch {}
+          if (ctx) {
+            const res = await ctx.json();
+            detail = res.message || res.error || detail;
+          }
+        } catch (_) {
+          try {
+            const ctx: any = (functionError as any).context;
+            if (ctx?.text) detail = await ctx.text();
+          } catch (_) {}
+        }
         throw new Error(detail);
       }
       if ((data as any)?.error) throw new Error((data as any).message || (data as any).error);
@@ -163,7 +192,7 @@ const Clinica = () => {
       console.error("Erro na análise:", error);
       toast.error(error.message || "Erro ao processar análise. Tente novamente.");
     } finally {
-      const remaining = ANALYSIS_ANIMATION_MIN_MS - (Date.now() - animationStartedAt);
+      const remaining = 2400 - (Date.now() - animationStartedAt);
       if (remaining > 0) await wait(remaining);
       setIsAnalyzing(false);
     }
@@ -187,12 +216,8 @@ const Clinica = () => {
 
   return (
     <div className="border border-border rounded-3xl m-3 overflow-hidden min-h-[calc(100vh-120px)] bg-background">
-
-
-
-
       <div className="relative h-[460px] min-h-[58vh] overflow-hidden bg-gradient-to-b from-background via-[hsl(0_0%_4%)] to-background">
-        {/* Fundo travado: scan de anéis sólidos. Não usa hero do tenant para não trocar com a foto de perfil. */}
+        {/* Fundo scan de anéis sólidos. */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(34,211,238,0.08)_0%,_transparent_60%)]" />
 
         {/* Rotating tech rings overlay */}
@@ -273,12 +298,12 @@ const Clinica = () => {
               01001000 11010110 10110011 ▮ANALYZING
             </p>
             <p className="absolute bottom-[88px] left-1/2 -translate-x-1/2 text-cyan-400/40 tracking-widest text-[8px]">
-              ◢ DEEP_NEURAL_SCAN ▸ {Math.floor(Math.random() * 30) + 70}.{Math.floor(Math.random() * 99)}% ◣
+              @ DEEP_NEURAL_SCAN • {Math.floor(Math.random() * 30) + 70}.{Math.floor(Math.random() * 99)}%
             </p>
           </div>
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/60 via-transparent to-background/30" />
         <div className="absolute bottom-5 left-5 right-5">
           <p className="text-[11px] text-primary font-bold tracking-[0.25em] uppercase drop-shadow-lg">{(tenant?.nome || "TIME").toUpperCase()} ORIGINALS</p>
@@ -329,8 +354,6 @@ const Clinica = () => {
               );
 
               if (isUpload) {
-                // Input DENTRO do <label> é o padrão mais confiável em mobile
-                // (iOS Safari + WebView Android). Sem ref.click(), sem htmlFor.
                 return (
                   <label
                     key={a.title}
@@ -347,7 +370,6 @@ const Clinica = () => {
                 );
               }
 
-
               return (
                 <Button
                   key={a.title}
@@ -359,7 +381,6 @@ const Clinica = () => {
                 </Button>
               );
             })}
-
 
             <div className="bg-card/40 border border-border rounded-xl p-5 mt-5">
               <div className="flex items-center gap-2 mb-3">
@@ -410,13 +431,12 @@ const Clinica = () => {
               <div className="py-10 text-center text-muted-foreground">
                 <History className="h-10 w-10 mx-auto mb-3 opacity-20" />
                 <p>Nenhuma análise encontrada.</p>
-                <Button
-                  variant="link"
+                <button 
                   onClick={() => setTab("nova")}
-                  className="text-primary mt-2"
+                  className="text-primary text-sm font-bold mt-2 uppercase"
                 >
                   Começar agora
-                </Button>
+                </button>
               </div>
             ) : (
               analyses?.map((analise: any) => (
@@ -482,7 +502,7 @@ const Clinica = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Overlay de análise: renderizado no body para ficar acima de tudo no Android */}
+      {/* Overlay de análise */}
       {isAnalyzing && createPortal(
         <div
           ref={analyzingRef}

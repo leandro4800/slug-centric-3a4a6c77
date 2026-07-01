@@ -80,10 +80,10 @@ const EnablePushBanner = () => {
             size="sm"
             onClick={handleClick}
             disabled={loading}
-            className="mt-3 gap-2"
+            className="mt-3 gap-2 text-xs"
           >
-            <Bell className="h-4 w-4" />
-            {loading ? "Ativando..." : "🔔 Ativar Notificações no Celular"}
+            <Bell className="h-3.5 w-3.5" />
+            {loading ? "Ativando..." : "Ativar Notificações"}
           </Button>
         </div>
       </div>
