@@ -40,6 +40,21 @@ serve(async (req) => {
       });
     }
 
+    // AuthZ: caller precisa pertencer ao tenant solicitado
+    const userId = claims.claims.sub as string;
+    if (tenant_id) {
+      const adminCheck = createClient(SUPABASE_URL, SERVICE_KEY);
+      const [{ data: isAdmin }, { data: belongs }] = await Promise.all([
+        adminCheck.rpc("has_role", { _user_id: userId, _role: "admin" }),
+        adminCheck.rpc("user_belongs_to_tenant", { _user_id: userId, _tenant_id: tenant_id }),
+      ]);
+      if (!isAdmin && !belongs) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     // 1. Get Embeddings for the question
     const embResp = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
       method: "POST",

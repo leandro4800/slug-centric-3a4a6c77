@@ -46,6 +46,7 @@ const Treino = () => {
   const [showConclusao, setShowConclusao] = useState(false);
   const [nivelExperiencia, setNivelExperiencia] = useState<string | null>(null);
   const [sexo, setSexo] = useState<string | null>(null);
+  const [availableDays, setAvailableDays] = useState<string[]>([]);
   const [generatingPresetId, setGeneratingPresetId] = useState<string | null>(null);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
@@ -61,6 +62,8 @@ const Treino = () => {
   })();
   const completedKey = `treino:completed:${user?.id || "anon"}:${isoWeekKey}:${diaAtual}`;
   const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
+  // Dias da semana ISO atual cujo treino já foi concluído (vem do banco)
+  const [completedDaysWeek, setCompletedDaysWeek] = useState<Set<string>>(new Set());
   // Recarrega completedIds quando muda dia/semana/usuário
   useEffect(() => {
     try {
@@ -75,6 +78,40 @@ const Treino = () => {
       return next;
     });
   };
+
+  // Helpers de semana (segunda 00:00 -> domingo 23:59) no horário local
+  const weekRange = (() => {
+    const d = new Date();
+    const day = d.getDay(); // 0=Dom..6=Sáb
+    const diffToMonday = (day === 0 ? -6 : 1 - day);
+    const monday = new Date(d);
+    monday.setDate(d.getDate() + diffToMonday);
+    monday.setHours(0, 0, 0, 0);
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    const fmt = (x: Date) => x.toISOString().split("T")[0];
+    return { startDate: fmt(monday), endDate: fmt(sunday) };
+  })();
+
+  // Carrega dias da semana atual já concluídos a partir do banco (historico_cargas)
+  const loadCompletedDaysWeek = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("historico_cargas")
+      .select("exercicio_nome, data_treino")
+      .eq("user_id", user.id)
+      .gte("data_treino", weekRange.startDate)
+      .lte("data_treino", weekRange.endDate)
+      .like("exercicio_nome", "__treino_concluido__:%");
+    const dias = new Set<string>();
+    (data || []).forEach((r: any) => {
+      const dia = (r.exercicio_nome as string).split("__treino_concluido__:")[1];
+      if (dia) dias.add(dia);
+    });
+    setCompletedDaysWeek(dias);
+  };
+  useEffect(() => { void loadCompletedDaysWeek(); }, [user?.id, reloadKey]);
+
   const resetTreinoDoDia = () => {
     // Limpa estado dos cards do dia (carga/reps/done) e a marcação de concluído
     treinosDoDia.forEach((t) => {
@@ -91,10 +128,21 @@ const Treino = () => {
     if (!user) return;
     supabase
       .from("anamnese_aluno")
-      .select("nivel_experiencia")
+      .select("nivel_experiencia, disponibilidade_dias")
       .eq("aluno_id", user.id)
       .maybeSingle()
-      .then(({ data }) => setNivelExperiencia(data?.nivel_experiencia || null));
+      .then(({ data }) => {
+        setNivelExperiencia(data?.nivel_experiencia || null);
+        const dd = ((data as any)?.disponibilidade_dias as string[]) || [];
+        const ORDER = ["seg", "ter", "qua", "qui", "sex", "sáb", "sab", "dom"];
+        const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3);
+        const sorted = [...dd].sort((a, b) => {
+          const ia = ORDER.findIndex((d) => norm(a).startsWith(d.slice(0, 3)));
+          const ib = ORDER.findIndex((d) => norm(b).startsWith(d.slice(0, 3)));
+          return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+        });
+        setAvailableDays(sorted);
+      });
     supabase
       .from("perfis")
       .select("avatar_url, sexo")
@@ -319,7 +367,12 @@ const Treino = () => {
           setTreinos(filled);
           setDiaAtual((cur) => {
             if (cur && filled.some((t) => t.dia_semana === cur)) return cur;
-            return filled[0].dia_semana;
+            const todayWd = ["domingo","segunda","terca","quarta","quinta","sexta","sabado"][new Date().getDay()];
+            const todayMatch = filled.find((t) => {
+              const n = (t.dia_semana || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+              return n.includes(todayWd);
+            });
+            return todayMatch ? todayMatch.dia_semana : filled[0].dia_semana;
           });
           setIsMock(false);
           setLoading(false);
@@ -336,7 +389,15 @@ const Treino = () => {
             const ord = parsed.treinos.slice().sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
             setTreinos(ord);
             setSelectedPresetId(parsed.presetId || null);
-            setDiaAtual((cur) => (cur && ord.some((t) => t.dia_semana === cur) ? cur : ord[0].dia_semana));
+            setDiaAtual((cur) => {
+              if (cur && ord.some((t) => t.dia_semana === cur)) return cur;
+              const todayWd = ["domingo","segunda","terca","quarta","quinta","sexta","sabado"][new Date().getDay()];
+              const todayMatch = ord.find((t) => {
+                const n = (t.dia_semana || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                return n.includes(todayWd);
+              });
+              return todayMatch ? todayMatch.dia_semana : ord[0].dia_semana;
+            });
             setIsMock(false);
             setLoading(false);
             return;
@@ -382,6 +443,34 @@ const Treino = () => {
 
   const dias = [...new Set(treinos.map((t) => t.dia_semana))];
   const treinosDoDia = treinos.filter((t) => t.dia_semana === diaAtual);
+
+  // Mapeia cada dia (que pode estar nomeado como "A — ...", "Treino B", etc.) ao dia da semana
+  // escolhido na anamnese (availableDays na ordem da semana).
+  const weekdayLabelFor = (dia: string): string | null => {
+    if (!availableDays.length) return null;
+    const letter = (dia.match(/\b([A-Z])\b/)?.[1] || "").toUpperCase();
+    if (!letter) return null;
+    const idx = letter.charCodeAt(0) - 65;
+    if (idx < 0 || idx >= availableDays.length) return null;
+    const wd = availableDays[idx];
+    return wd ? wd.toUpperCase() : null;
+  };
+
+  // Quando availableDays carrega, seleciona automaticamente o dia de HOJE (se hoje for treino).
+  useEffect(() => {
+    if (!availableDays.length || !dias.length) return;
+    const todayIdx = new Date().getDay(); // 0=Dom..6=Sáb
+    const todayShort = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"][todayIdx];
+    const matchIdx = availableDays.findIndex((d) => {
+      const n = d.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3);
+      return n === todayShort;
+    });
+    if (matchIdx < 0) return;
+    const targetLetter = String.fromCharCode(65 + matchIdx);
+    const targetDia = dias.find((d) => d.match(/\b([A-Z])\b/)?.[1] === targetLetter);
+    if (targetDia && targetDia !== diaAtual) setDiaAtual(targetDia);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availableDays.join("|"), dias.join("|")]);
 
   // Deriva nome do grupo muscular a partir dos exercícios do dia
   const grupoMuscularDoDia = (() => {
@@ -719,7 +808,11 @@ const Treino = () => {
             const wd = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"].find((d) => n.includes(d));
             const wdShort: Record<string, string> = { segunda: "SEG", terca: "TER", quarta: "QUA", quinta: "QUI", sexta: "SEX", sabado: "SAB", domingo: "DOM" };
             const letra = dia.match(/\b([A-E])\b/)?.[1];
-            const label = `${wd ? wdShort[wd] : dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
+            // Prioriza o dia da semana vindo da anamnese (mapeado pela letra A→1º dia disponível, B→2º, ...)
+            const wdFromAnamnese = weekdayLabelFor(dia);
+            const wdLabel = wdFromAnamnese || (wd ? wdShort[wd] : null);
+            const label = `${wdLabel || dia.slice(0, 3).toUpperCase()}${letra ? " · " + letra : ""}`;
+            const done = completedDaysWeek.has(dia);
             return (
               <button
                 key={dia}
@@ -727,10 +820,11 @@ const Treino = () => {
                   setDiaAtual(dia);
                   setActiveIndex(null);
                 }}
-                className={`px-4 py-2 rounded-full font-display text-xs uppercase tracking-[0.2em] whitespace-nowrap transition ${
-                  diaAtual === dia ? "bg-primary text-primary-foreground shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" : "bg-secondary text-muted-foreground"
+                className={`px-4 py-2 rounded-full font-display text-xs uppercase tracking-[0.2em] whitespace-nowrap transition flex items-center gap-1.5 ${
+                  diaAtual === dia ? "bg-primary text-primary-foreground shadow-[0_0_20px_-4px_hsl(var(--primary)/0.6)]" : done ? "bg-emerald-600/20 text-emerald-300 border border-emerald-500/40" : "bg-secondary text-muted-foreground"
                 }`}
               >
+                {done && <span aria-hidden>✓</span>}
                 {label}
               </button>
             );
@@ -766,48 +860,57 @@ const Treino = () => {
         </div>
 
         {treinosDoDia.length > 0 && (
-          <button
-            onClick={async () => {
-              // Registra um marker do treino concluído (alimenta stats/evolução)
-              if (user && tenant) {
-                try {
-                  const hoje = new Date().toISOString().split("T")[0];
-                  const { data: existe } = await supabase
-                    .from("historico_cargas")
-                    .select("id")
-                    .eq("user_id", user.id)
-                    .eq("data_treino", hoje)
-                    .eq("exercicio_nome", `__treino_concluido__:${diaAtual}`)
-                    .maybeSingle();
-                  if (!existe) {
-                    await supabase.from("historico_cargas").insert({
-                      tenant_id: tenant.id,
-                      user_id: user.id,
-                      exercicio_nome: `__treino_concluido__:${diaAtual}`,
-                      carga_kg: 0,
-                      repeticoes_feitas: treinosDoDia.length,
-                      tipo_serie: "Conclusao",
-                      serie_index: 0,
-                    });
+          completedDaysWeek.has(diaAtual) ? (
+            <div className="mt-6 w-full py-4 rounded-2xl bg-emerald-600/15 border border-emerald-500/40 text-emerald-300 font-display tracking-[0.15em] flex items-center justify-center gap-3">
+              <Trophy className="h-5 w-5" />
+              TREINO CONCLUÍDO ✓
+            </div>
+          ) : (
+            <button
+              onClick={async () => {
+                // Registra um marker do treino concluído (alimenta stats/evolução)
+                if (user && tenant) {
+                  try {
+                    const hoje = new Date().toISOString().split("T")[0];
+                    const { data: existe } = await supabase
+                      .from("historico_cargas")
+                      .select("id")
+                      .eq("user_id", user.id)
+                      .eq("data_treino", hoje)
+                      .eq("exercicio_nome", `__treino_concluido__:${diaAtual}`)
+                      .maybeSingle();
+                    if (!existe) {
+                      await supabase.from("historico_cargas").insert({
+                        tenant_id: tenant.id,
+                        user_id: user.id,
+                        exercicio_nome: `__treino_concluido__:${diaAtual}`,
+                        carga_kg: 0,
+                        repeticoes_feitas: treinosDoDia.length,
+                        tipo_serie: "Conclusao",
+                        serie_index: 0,
+                      });
+                    }
+                    // marca todos como concluído na UI
+                    const next = new Set(completedIds);
+                    treinosDoDia.forEach((t) => next.add(t.id));
+                    setCompletedIds(next);
+                    try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
+                    // marca o dia como concluído na semana
+                    setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
+                    // recarrega stats
+                    setReloadKey((k) => k + 1);
+                  } catch (e) {
+                    console.warn("Não foi possível registrar conclusão", e);
                   }
-                  // marca todos como concluído na UI
-                  const next = new Set(completedIds);
-                  treinosDoDia.forEach((t) => next.add(t.id));
-                  setCompletedIds(next);
-                  try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
-                  // recarrega stats
-                  setReloadKey((k) => k + 1);
-                } catch (e) {
-                  console.warn("Não foi possível registrar conclusão", e);
                 }
-              }
-              setShowConclusao(true);
-            }}
-            className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition"
-          >
-            <Trophy className="h-5 w-5" />
-            CONCLUIR TREINO E COMPARTILHAR
-          </button>
+                setShowConclusao(true);
+              }}
+              className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition"
+            >
+              <Trophy className="h-5 w-5" />
+              CONCLUIR TREINO E COMPARTILHAR
+            </button>
+          )
         )}
 
         <TreinoConclusaoCard

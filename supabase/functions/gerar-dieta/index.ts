@@ -67,7 +67,34 @@ serve(async (req) => {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      // AuthZ: caller precisa ser admin global, coach do tenant do aluno, ou owner do tenant
+      const [{ data: isAdmin }, { data: isCoach }, { data: tenantRow }] = await Promise.all([
+        supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
+        alunoRow.tenant_id
+          ? supabase.rpc("has_role", { _user_id: user.id, _role: "coach", _tenant_id: alunoRow.tenant_id })
+          : Promise.resolve({ data: false } as any),
+        alunoRow.tenant_id
+          ? supabase.from("tenants").select("owner_user_id").eq("id", alunoRow.tenant_id).maybeSingle()
+          : Promise.resolve({ data: null } as any),
+      ]);
+      const isOwner = tenantRow?.owner_user_id === user.id;
+      if (!isAdmin && !isCoach && !isOwner) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       targetUserId = body.aluno_id;
+    }
+
+    // AuthZ: se dieta_id foi enviado, valida que pertence ao targetUserId
+    if (body.dieta_id) {
+      const { data: dietaRow } = await supabase
+        .from("dietas").select("id, user_id").eq("id", body.dieta_id).maybeSingle();
+      if (!dietaRow || dietaRow.user_id !== targetUserId) {
+        return new Response(JSON.stringify({ error: "Dieta não encontrada ou sem permissão" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     if (mode === "recalc") {
