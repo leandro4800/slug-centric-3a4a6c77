@@ -31,31 +31,29 @@ const PoliticaPrivacidade = () => {
 
         <section className="space-y-2">
           <h2 className="font-display text-base text-foreground tracking-wider">1. Informações que coletamos</h2>
-          <ul className="list-disc pl-5 space-y-1">
+<ul className="list-disc pl-5 space-y-1">
             <li><strong>Dados de cadastro:</strong> nome, e-mail, telefone, data de nascimento.</li>
             <li><strong>Dados de saúde e treino:</strong> anamnese, medidas corporais, avaliações físicas, treinos e dietas.</li>
             <li><strong>Dados de uso:</strong> páginas visitadas, ações realizadas no app e dispositivos utilizados.</li>
-            <li><strong>Dados de pagamento:</strong> processados por parceiros seguros (Stripe). Não armazenamos dados completos de cartão.</li>
             <li><strong>Fotos e mídias:</strong> quando enviadas voluntariamente por você para acompanhamento de evolução.</li>
           </ul>
         </section>
 
         <section className="space-y-2">
           <h2 className="font-display text-base text-foreground tracking-wider">2. Como usamos suas informações</h2>
-          <ul className="list-disc pl-5 space-y-1">
+<ul className="list-disc pl-5 space-y-1">
             <li>Personalizar treinos, dietas e acompanhamento com seu coach.</li>
-            <li>Processar pagamentos e assinaturas.</li>
             <li>Enviar notificações relevantes (lembretes, mensagens do coach).</li>
             <li>Melhorar continuamente a plataforma e a experiência do usuário.</li>
             <li>Cumprir obrigações legais e regulatórias.</li>
           </ul>
         </section>
 
-        <section className="space-y-2">
+<section className="space-y-2">
           <h2 className="font-display text-base text-foreground tracking-wider">3. Compartilhamento de dados</h2>
           <p>
             Seus dados são compartilhados apenas com o coach responsável pelo seu acompanhamento
-            e com prestadores de serviço essenciais (hospedagem, envio de e-mail, pagamentos).
+            e com prestadores de serviço essenciais (hospedagem, envio de e-mail).
             Não vendemos seus dados a terceiros.
           </p>
         </section>
