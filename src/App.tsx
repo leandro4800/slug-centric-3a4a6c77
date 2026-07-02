@@ -147,6 +147,8 @@ const App = () => (
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
             <Route path="/site/login" element={<SiteLogin />} />
+            <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+            <Route path="/privacy" element={<Navigate to="/politica-de-privacidade" replace />} />
 
             {/* Site admin (painel do coach, isolado do app) */}
             <Route path="/site/admin" element={<SiteAdminLayout />}>
