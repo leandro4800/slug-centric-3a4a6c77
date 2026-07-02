@@ -51,6 +51,7 @@ import AdminDebugPush from "./pages/admin/AdminDebugPush";
 import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import AdminAgendaPresencial from "./pages/admin/AdminAgendaPresencial";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import Hub from "./pages/coach/Hub";
