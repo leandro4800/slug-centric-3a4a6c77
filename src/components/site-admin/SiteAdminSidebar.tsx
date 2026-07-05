@@ -23,6 +23,7 @@ const items: Item[] = [
   { to: "/site/admin/avaliacao-fisica", label: "Avaliação física", icon: Ruler, section: "Programação" },
 
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench, section: "Negócio" },
+  { to: "/site/admin/integracao-ia", label: "Integração com IA", icon: Bot, section: "Negócio" },
   { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet, section: "Negócio" },
   { to: "/site/admin/aparencia", label: "Aparência", icon: Palette, section: "Negócio" },
 
