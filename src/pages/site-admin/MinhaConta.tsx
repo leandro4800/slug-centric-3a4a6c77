@@ -3,8 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/hooks/use-toast";
 import { UserCog, Loader2, ExternalLink, Calendar, Mail, Users, Crown, Bot } from "lucide-react";
 
 const MinhaConta = () => {
