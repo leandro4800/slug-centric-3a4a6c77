@@ -14,22 +14,44 @@ const MinhaConta = () => {
   const [createdAt, setCreatedAt] = useState<string | null>(null);
   const [alunosAtivos, setAlunosAtivos] = useState(0);
   const [plano, setPlano] = useState<{ tier: string; status: string; end?: string | null } | null>(null);
+  const [mcpToken, setMcpToken] = useState<string | null>(null);
+  const [showToken, setShowToken] = useState(false);
+  const [rotating, setRotating] = useState(false);
 
   useEffect(() => {
     if (!user?.id || !tenant?.id) return;
     (async () => {
       setLoading(true);
-      const [{ data: t }, { count }, { data: sub }] = await Promise.all([
+      const [{ data: t }, { count }, { data: sub }, { data: tk }] = await Promise.all([
         supabase.from("tenants").select("created_at").eq("id", tenant.id).maybeSingle(),
         supabase.from("assinaturas").select("id", { count: "exact", head: true }).eq("tenant_id", tenant.id).in("status", ["active", "trialing"]),
         supabase.from("coach_platform_subscriptions").select("plan_tier, status, current_period_end").eq("user_id", user.id).maybeSingle(),
+        supabase.rpc("get_my_mcp_token"),
       ]);
       setCreatedAt((t as any)?.created_at || null);
       setAlunosAtivos(count || 0);
       if (sub) setPlano({ tier: (sub as any).plan_tier, status: (sub as any).status, end: (sub as any).current_period_end });
+      setMcpToken((tk as string | null) || null);
       setLoading(false);
     })();
   }, [user?.id, tenant?.id]);
+
+  const copyToken = async () => {
+    if (!mcpToken) return;
+    await navigator.clipboard.writeText(mcpToken);
+    toast({ title: "Token copiado", description: "Cole em ChatGPT / Claude / Cursor." });
+  };
+
+  const rotateToken = async () => {
+    if (!confirm("Gerar um novo token? O token atual deixará de funcionar imediatamente.")) return;
+    setRotating(true);
+    const { data, error } = await supabase.rpc("rotate_my_mcp_token");
+    setRotating(false);
+    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    setMcpToken(data as string);
+    setShowToken(true);
+    toast({ title: "Novo token gerado", description: "Atualize seus assistentes de IA com o novo token." });
+  };
 
   if (tenantLoading || loading) {
     return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
