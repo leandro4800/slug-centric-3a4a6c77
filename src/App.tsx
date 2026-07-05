@@ -165,6 +165,7 @@ const App = () => (
               <Route path="aparencia" element={<SiteAdminAparencia />} />
               <Route path="faturamento" element={<SiteAdminFinanceiro />} />
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
+              <Route path="integracao-ia" element={<SiteAdminIntegracaoIA />} />
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="resumo" element={<Navigate to="/site/admin/dashboard" replace />} />
             </Route>
