@@ -17,13 +17,306 @@ var echo_default = defineTool({
   handler: ({ text }) => ({ content: [{ type: "text", text }] })
 });
 
+// src/lib/mcp/tools/list_athletes.ts
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z2 } from "npm:zod@^3.25.76";
+
+// src/lib/mcp/tools/_shared.ts
+import { createClient } from "npm:@supabase/supabase-js@^2.105.1";
+var cached = null;
+function getServiceClient() {
+  if (cached) return cached;
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!url || !key) {
+    throw new Error("SUPABASE_URL/SUPABASE_SERVICE_ROLE_KEY n\xE3o configurados no ambiente da fun\xE7\xE3o.");
+  }
+  cached = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return cached;
+}
+async function resolveTenant(mcpToken) {
+  const empty = { ok: false, tenantId: "", tenantSlug: "", tenantName: null, error: "" };
+  const token = (mcpToken ?? "").trim();
+  if (!token) return { ...empty, error: "mcp_token obrigat\xF3rio." };
+  const supa = getServiceClient();
+  const { data, error } = await supa.from("tenants_private").select("tenant_id, tenants:tenant_id(slug, nome)").eq("mcp_token", token).maybeSingle();
+  if (error) return { ...empty, error: `Falha ao validar token: ${error.message}` };
+  if (!data) return { ...empty, error: "mcp_token inv\xE1lido." };
+  const t = data.tenants;
+  return {
+    ok: true,
+    tenantId: data.tenant_id,
+    tenantSlug: t?.slug ?? "",
+    tenantName: t?.nome ?? null,
+    error: ""
+  };
+}
+function errorResult(message) {
+  return { content: [{ type: "text", text: message }], isError: true };
+}
+function jsonResult(payload) {
+  return {
+    content: [{ type: "text", text: JSON.stringify(payload, null, 2) }],
+    structuredContent: payload
+  };
+}
+async function findAthlete(tenantId, ref) {
+  const supa = getServiceClient();
+  let q = supa.from("perfis").select("id, nome_completo, email, telefone, sexo, data_nascimento").eq("tenant_id", tenantId).limit(1);
+  if (ref.athlete_id) q = q.eq("id", ref.athlete_id);
+  else if (ref.email) q = q.ilike("email", ref.email.trim());
+  else if (ref.nome) q = q.ilike("nome_completo", `%${ref.nome.trim()}%`);
+  else return { error: "Informe athlete_id, email ou nome do aluno." };
+  const { data, error } = await q.maybeSingle();
+  if (error) return { error: error.message };
+  if (!data) return { error: "Aluno n\xE3o encontrado neste tenant." };
+  return { athlete: data };
+}
+
+// src/lib/mcp/tools/list_athletes.ts
+var list_athletes_default = defineTool2({
+  name: "list_athletes",
+  title: "Listar alunos",
+  description: "Lista os alunos (perfis) vinculados ao tenant do coach. Retorna id, nome, email e telefone.",
+  inputSchema: {
+    mcp_token: z2.string().describe("Token MCP do coach (obtenha em Minha Conta)."),
+    search: z2.string().optional().describe("Filtro opcional por nome ou email."),
+    limit: z2.number().int().min(1).max(200).optional().describe("M\xE1ximo de resultados (padr\xE3o 50).")
+  },
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  handler: async ({ mcp_token, search, limit }) => {
+    const auth = await resolveTenant(mcp_token);
+    if (!auth.ok) return errorResult(auth.error);
+    const supa = getServiceClient();
+    let q = supa.from("perfis").select("id, nome_completo, email, telefone, sexo, data_nascimento, onboarding_completo").eq("tenant_id", auth.tenantId).order("nome_completo", { ascending: true }).limit(limit ?? 50);
+    if (search && search.trim()) {
+      const s = `%${search.trim()}%`;
+      q = q.or(`nome_completo.ilike.${s},email.ilike.${s}`);
+    }
+    const { data, error } = await q;
+    if (error) return errorResult(`Erro consultando alunos: ${error.message}`);
+    return jsonResult({ tenant: auth.tenantName, total: data?.length ?? 0, alunos: data ?? [] });
+  }
+});
+
+// src/lib/mcp/tools/get_athlete_workout.ts
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z3 } from "npm:zod@^3.25.76";
+var DIAS = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+var get_athlete_workout_default = defineTool3({
+  name: "get_athlete_workout",
+  title: "Consultar treino do aluno",
+  description: "Retorna os exerc\xEDcios prescritos para um aluno. Filtre por dia da semana (segunda, terca, ...) se quiser apenas o treino do dia.",
+  inputSchema: {
+    mcp_token: z3.string(),
+    athlete_id: z3.string().uuid().optional(),
+    email: z3.string().optional(),
+    nome: z3.string().optional(),
+    dia_semana: z3.enum(DIAS).optional()
+  },
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  handler: async ({ mcp_token, athlete_id, email, nome, dia_semana }) => {
+    const auth = await resolveTenant(mcp_token);
+    if (!auth.ok) return errorResult(auth.error);
+    const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
+    if ("error" in found) return errorResult(found.error);
+    const supa = getServiceClient();
+    let q = supa.from("treinos_prescritos").select("dia_semana, ordem, exercicio, series, repeticoes, cadencia, observacao, status, detalhes_execucao").eq("aluno_id", found.athlete.id).eq("tenant_id", auth.tenantId).order("dia_semana").order("ordem");
+    if (dia_semana) q = q.eq("dia_semana", dia_semana);
+    const { data, error } = await q;
+    if (error) return errorResult(`Erro consultando treino: ${error.message}`);
+    return jsonResult({ aluno: found.athlete, dia_semana: dia_semana ?? "todos", exercicios: data ?? [] });
+  }
+});
+
+// src/lib/mcp/tools/get_athlete_diet.ts
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z4 } from "npm:zod@^3.25.76";
+var get_athlete_diet_default = defineTool4({
+  name: "get_athlete_diet",
+  title: "Consultar dieta do aluno",
+  description: "Retorna a dieta publicada do aluno com objetivo, kcal alvo, macros, refei\xE7\xF5es, hor\xE1rios e alimentos de cada refei\xE7\xE3o.",
+  inputSchema: {
+    mcp_token: z4.string(),
+    athlete_id: z4.string().uuid().optional(),
+    email: z4.string().optional(),
+    nome: z4.string().optional()
+  },
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  handler: async ({ mcp_token, athlete_id, email, nome }) => {
+    const auth = await resolveTenant(mcp_token);
+    if (!auth.ok) return errorResult(auth.error);
+    const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
+    if ("error" in found) return errorResult(found.error);
+    const supa = getServiceClient();
+    const { data: dieta, error } = await supa.from("dietas").select("id, objetivo, tmb_estimada, kcal_alvo, macros_alvo, observacoes_clinicas, is_published, created_at").eq("user_id", found.athlete.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (error) return errorResult(`Erro consultando dieta: ${error.message}`);
+    if (!dieta) return jsonResult({ aluno: found.athlete, dieta: null, refeicoes: [] });
+    const { data: refeicoes } = await supa.from("refeicoes").select("id, nome, horario, ordem, descricao_ia").eq("dieta_id", dieta.id).order("ordem");
+    const ids = (refeicoes ?? []).map((r) => r.id);
+    let itens = [];
+    if (ids.length) {
+      const { data: it } = await supa.from("itens_refeicao").select("refeicao_id, quantidade_g, substituicoes, alimento_id, alimentos_taco:alimento_id(nome, kcal_100g, proteina_g, carbo_g, gordura_g)").in("refeicao_id", ids);
+      itens = it ?? [];
+    }
+    return jsonResult({ aluno: found.athlete, dieta, refeicoes: refeicoes ?? [], itens });
+  }
+});
+
+// src/lib/mcp/tools/get_athlete_progress.ts
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+var get_athlete_progress_default = defineTool5({
+  name: "get_athlete_progress",
+  title: "Consultar evolu\xE7\xE3o do aluno",
+  description: "Retorna as m\xE9tricas de evolu\xE7\xE3o do aluno: check-ins (peso, BF%, medidas) e avalia\xE7\xF5es f\xEDsicas recentes com composi\xE7\xE3o corporal. Ideal para acompanhar cutting/bulking.",
+  inputSchema: {
+    mcp_token: z5.string(),
+    athlete_id: z5.string().uuid().optional(),
+    email: z5.string().optional(),
+    nome: z5.string().optional(),
+    checkin_limit: z5.number().int().min(1).max(60).optional().describe("Quantidade de check-ins recentes (padr\xE3o 20).")
+  },
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  handler: async ({ mcp_token, athlete_id, email, nome, checkin_limit }) => {
+    const auth = await resolveTenant(mcp_token);
+    if (!auth.ok) return errorResult(auth.error);
+    const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
+    if ("error" in found) return errorResult(found.error);
+    const supa = getServiceClient();
+    const limit = checkin_limit ?? 20;
+    const [checkinsRes, avaliacoesRes, perfilTreinoRes] = await Promise.all([
+      supa.from("evolucao_checkins").select("data_checkin, peso_kg, bf_percentual, massa_magra_kg, massa_gorda_kg, observacoes").eq("user_id", found.athlete.id).order("data_checkin", { ascending: false }).limit(limit),
+      supa.from("avaliacoes_fisicas").select(
+        "data, peso_kg, altura_cm, bf_pct_calculado, imc, massa_magra_kg, massa_gorda_kg, cintura_cm, quadril_cm, pescoco_cm, perimetro_braco_contraido_dir, perimetro_coxa_media_dir, metodo"
+      ).eq("aluno_id", found.athlete.id).eq("tenant_id", auth.tenantId).order("data", { ascending: false }).limit(10),
+      supa.from("perfis_treino").select("objetivo, peso_kg, altura_cm, bf_pct, frequencia_semanal, tempo_treino").eq("aluno_id", found.athlete.id).maybeSingle()
+    ]);
+    const checkins = checkinsRes.data ?? [];
+    let delta = null;
+    if (checkins.length >= 2) {
+      const last = checkins[0];
+      const first = checkins[checkins.length - 1];
+      const dias = Math.max(
+        1,
+        Math.round(
+          (new Date(last.data_checkin).getTime() - new Date(first.data_checkin).getTime()) / 864e5
+        )
+      );
+      const dPeso = last.peso_kg != null && first.peso_kg != null ? Number(last.peso_kg) - Number(first.peso_kg) : null;
+      const dBf = last.bf_percentual != null && first.bf_percentual != null ? Number(last.bf_percentual) - Number(first.bf_percentual) : null;
+      delta = {
+        dias,
+        delta_peso_kg: dPeso,
+        delta_bf_pp: dBf,
+        ritmo_semanal_kg: dPeso != null ? dPeso / dias * 7 : null
+      };
+    }
+    return jsonResult({
+      aluno: found.athlete,
+      perfil_treino: perfilTreinoRes.data,
+      resumo: delta,
+      checkins,
+      avaliacoes_fisicas: avaliacoesRes.data ?? []
+    });
+  }
+});
+
+// src/lib/mcp/tools/get_athlete_anamnesis.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z6 } from "npm:zod@^3.25.76";
+var get_athlete_anamnesis_default = defineTool6({
+  name: "get_athlete_anamnesis",
+  title: "Consultar anamnese do aluno",
+  description: "Retorna a anamnese completa do aluno: hist\xF3rico de sa\xFAde, sono, estresse, alimenta\xE7\xE3o, suplementos, treino e ergog\xEAnicos.",
+  inputSchema: {
+    mcp_token: z6.string(),
+    athlete_id: z6.string().uuid().optional(),
+    email: z6.string().optional(),
+    nome: z6.string().optional()
+  },
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  handler: async ({ mcp_token, athlete_id, email, nome }) => {
+    const auth = await resolveTenant(mcp_token);
+    if (!auth.ok) return errorResult(auth.error);
+    const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
+    if ("error" in found) return errorResult(found.error);
+    const supa = getServiceClient();
+    const { data, error } = await supa.from("anamnese_aluno").select("*").eq("aluno_id", found.athlete.id).maybeSingle();
+    if (error) return errorResult(`Erro consultando anamnese: ${error.message}`);
+    return jsonResult({ aluno: found.athlete, anamnese: data });
+  }
+});
+
+// src/lib/mcp/tools/add_athlete.ts
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { z as z7 } from "npm:zod@^3.25.76";
+var add_athlete_default = defineTool7({
+  name: "add_athlete",
+  title: "Adicionar aluno",
+  description: "Cria um novo aluno no tenant do coach. Envia convite por e-mail com senha tempor\xE1ria para que o aluno complete o onboarding no app.",
+  inputSchema: {
+    mcp_token: z7.string(),
+    nome_completo: z7.string().min(2).describe("Nome completo do aluno."),
+    email: z7.string().describe("E-mail do aluno."),
+    telefone: z7.string().optional(),
+    sexo: z7.enum(["masculino", "feminino"]).optional()
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  handler: async ({ mcp_token, nome_completo, email, telefone, sexo }) => {
+    const auth = await resolveTenant(mcp_token);
+    if (!auth.ok) return errorResult(auth.error);
+    const supa = getServiceClient();
+    const normalizedEmail = email.trim().toLowerCase();
+    const { data: existing } = await supa.from("perfis").select("id, tenant_id").ilike("email", normalizedEmail).maybeSingle();
+    if (existing) {
+      if (existing.tenant_id === auth.tenantId) {
+        return errorResult(`Aluno ${normalizedEmail} j\xE1 est\xE1 cadastrado neste tenant (id=${existing.id}).`);
+      }
+      return errorResult(`E-mail j\xE1 cadastrado em outro tenant.`);
+    }
+    const tempPassword = crypto.randomUUID().replace(/-/g, "").slice(0, 12) + "A1!";
+    const { data: created, error: createErr } = await supa.auth.admin.createUser({
+      email: normalizedEmail,
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: {
+        nome_completo,
+        tenant_id: auth.tenantId,
+        sexo: sexo ?? null,
+        telefone: telefone ?? null
+      }
+    });
+    if (createErr || !created?.user) {
+      return errorResult(`Falha ao criar aluno: ${createErr?.message ?? "sem detalhes"}`);
+    }
+    const userId = created.user.id;
+    await supa.from("perfis").update({ telefone: telefone ?? null, sexo: sexo ?? null, nome_completo }).eq("id", userId);
+    await supa.from("user_roles").upsert({ user_id: userId, role: "aluno", tenant_id: auth.tenantId }, { onConflict: "user_id,role,tenant_id" });
+    return jsonResult({
+      ok: true,
+      aluno: { id: userId, nome_completo, email: normalizedEmail, tenant: auth.tenantName },
+      senha_temporaria: tempPassword,
+      instrucoes: "Compartilhe a senha tempor\xE1ria com o aluno. Ele deve fazer login no app, alterar a senha e concluir o onboarding."
+    });
+  }
+});
+
 // src/lib/mcp/index.ts
 var mcp_default = defineMcp({
   name: "alpha-coach-mcp",
   title: "Alpha Coach MCP",
-  version: "0.1.0",
-  instructions: "MCP server for the Alpha Coach app. Use `echo` to verify connectivity. More tools coming soon.",
-  tools: [echo_default]
+  version: "0.2.0",
+  instructions: "Servidor MCP do Alpha Coach. Cada coach tem um `mcp_token` (obtenha em Minha Conta) que deve ser passado em todas as chamadas. Ferramentas: list_athletes, get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis, add_athlete. Use echo para testar conectividade.",
+  tools: [
+    echo_default,
+    list_athletes_default,
+    get_athlete_workout_default,
+    get_athlete_diet_default,
+    get_athlete_progress_default,
+    get_athlete_anamnesis_default,
+    add_athlete_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts
