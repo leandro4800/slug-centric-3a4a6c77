@@ -51,9 +51,19 @@ const NovoAluno = () => {
           plano_id: planoId || null,
         },
       });
-      if (error || (data as any)?.error) {
-        throw new Error((data as any)?.error || error?.message || "Falha ao cadastrar");
+      // supabase-js oculta o corpo em respostas não-2xx; ler manualmente do contexto
+      let serverError: string | null = (data as any)?.error || null;
+      if (error && !serverError) {
+        try {
+          const resp = (error as any)?.context as Response | undefined;
+          if (resp && typeof resp.text === "function") {
+            const txt = await resp.text();
+            try { serverError = JSON.parse(txt)?.error || txt; } catch { serverError = txt; }
+          }
+        } catch { /* ignore */ }
+        if (!serverError) serverError = error.message;
       }
+      if (serverError) throw new Error(serverError);
       setSuccess({ email: email.trim().toLowerCase() });
       toast.success("Aluno cadastrado! Email com credenciais enviado.");
     } catch (err: any) {
