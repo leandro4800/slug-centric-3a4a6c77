@@ -2812,6 +2812,7 @@ export type Database = {
           instagram_access_token: string | null
           instagram_business_account_id: string | null
           instagram_token_expires_at: string | null
+          mcp_token: string
           stripe_account_id: string | null
           stripe_onboarding_completed: boolean | null
           tenant_id: string
@@ -2824,6 +2825,7 @@ export type Database = {
           instagram_access_token?: string | null
           instagram_business_account_id?: string | null
           instagram_token_expires_at?: string | null
+          mcp_token?: string
           stripe_account_id?: string | null
           stripe_onboarding_completed?: boolean | null
           tenant_id: string
@@ -2836,6 +2838,7 @@ export type Database = {
           instagram_access_token?: string | null
           instagram_business_account_id?: string | null
           instagram_token_expires_at?: string | null
+          mcp_token?: string
           stripe_account_id?: string | null
           stripe_onboarding_completed?: boolean | null
           tenant_id?: string
