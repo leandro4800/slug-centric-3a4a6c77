@@ -14,22 +14,27 @@ export function getServiceClient(): SupabaseClient {
   return cached;
 }
 
-export type AuthResult =
-  | { ok: true; tenantId: string; tenantSlug: string; tenantName: string | null }
-  | { ok: false; error: string };
+export interface AuthResult {
+  ok: boolean;
+  tenantId: string;
+  tenantSlug: string;
+  tenantName: string | null;
+  error: string;
+}
 
 /** Resolve the tenant that owns the given mcp_token. */
 export async function resolveTenant(mcpToken: string): Promise<AuthResult> {
+  const empty: AuthResult = { ok: false, tenantId: "", tenantSlug: "", tenantName: null, error: "" };
   const token = (mcpToken ?? "").trim();
-  if (!token) return { ok: false, error: "mcp_token obrigatório." };
+  if (!token) return { ...empty, error: "mcp_token obrigatório." };
   const supa = getServiceClient();
   const { data, error } = await supa
     .from("tenants_private")
     .select("tenant_id, tenants:tenant_id(slug, nome)")
     .eq("mcp_token", token)
     .maybeSingle();
-  if (error) return { ok: false, error: `Falha ao validar token: ${error.message}` };
-  if (!data) return { ok: false, error: "mcp_token inválido." };
+  if (error) return { ...empty, error: `Falha ao validar token: ${error.message}` };
+  if (!data) return { ...empty, error: "mcp_token inválido." };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const t = (data as any).tenants;
   return {
@@ -37,6 +42,7 @@ export async function resolveTenant(mcpToken: string): Promise<AuthResult> {
     tenantId: (data as { tenant_id: string }).tenant_id,
     tenantSlug: t?.slug ?? "",
     tenantName: t?.nome ?? null,
+    error: "",
   };
 }
 
