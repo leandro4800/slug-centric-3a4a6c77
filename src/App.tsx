@@ -70,6 +70,7 @@ import SiteAdminAvaliacaoFisica from "./pages/site-admin/AvaliacaoFisica";
 import SiteAdminFerramentas from "./pages/site-admin/Ferramentas";
 import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
 import SiteAdminSuporte from "./pages/site-admin/Suporte";
+import SiteAdminIntegracaoIA from "./pages/site-admin/IntegracaoIA";
 import { Calendar as CalendarIcon, Loader2, Palette, Wallet } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -164,6 +165,7 @@ const App = () => (
               <Route path="aparencia" element={<SiteAdminAparencia />} />
               <Route path="faturamento" element={<SiteAdminFinanceiro />} />
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
+              <Route path="integracao-ia" element={<SiteAdminIntegracaoIA />} />
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="resumo" element={<Navigate to="/site/admin/dashboard" replace />} />
             </Route>
