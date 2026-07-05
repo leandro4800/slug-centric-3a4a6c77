@@ -3180,6 +3180,7 @@ export type Database = {
           nome_completo: string
         }[]
       }
+      get_my_mcp_token: { Args: never; Returns: string }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_active_subscription_for_tenant: {
         Args: { _tenant_id: string; _user_id: string }
@@ -3208,6 +3209,7 @@ export type Database = {
         }[]
       }
       redeem_voucher: { Args: { _code: string }; Returns: Json }
+      rotate_my_mcp_token: { Args: never; Returns: string }
       send_push_notification: {
         Args: {
           p_body: string
