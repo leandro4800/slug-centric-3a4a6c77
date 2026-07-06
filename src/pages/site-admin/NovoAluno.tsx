@@ -105,13 +105,16 @@ const NovoAluno = () => {
     })();
   }, [tenant?.id]);
 
+  const VIP_EMAILS = ["48mineiro@gmail.com"];
+  const isVip = VIP_EMAILS.includes(email.trim().toLowerCase());
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome.trim() || !email.trim()) {
       toast.error("Preencha nome e email");
       return;
     }
-    if (!planoId) {
+    if (!isVip && !planoId) {
       toast.error("Selecione um plano para o aluno");
       return;
     }
@@ -217,7 +220,16 @@ const NovoAluno = () => {
           <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" />
         </div>
 
-        {planos.length === 0 ? (
+        {isVip ? (
+          <div className="rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm">
+            <p className="font-medium text-primary flex items-center gap-2">
+              <CheckCircle2 className="h-4 w-4" /> Acesso VIP liberado
+            </p>
+            <p className="text-muted-foreground mt-1">
+              Este e-mail tem acesso livre ao app — nenhum plano é necessário.
+            </p>
+          </div>
+        ) : planos.length === 0 ? (
           <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
             <p className="font-medium text-destructive">Você ainda não criou nenhum plano.</p>
             <p className="text-muted-foreground mt-1">
@@ -251,7 +263,7 @@ const NovoAluno = () => {
           <Button type="button" variant="outline" onClick={() => navigate("/site/admin/alunos")} disabled={submitting}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={submitting || planos.length === 0 || !planoId} className="flex-1 gap-2">
+          <Button type="submit" disabled={submitting || (!isVip && (planos.length === 0 || !planoId))} className="flex-1 gap-2">
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
             {submitting ? "Cadastrando..." : "Cadastrar e enviar email"}
           </Button>
