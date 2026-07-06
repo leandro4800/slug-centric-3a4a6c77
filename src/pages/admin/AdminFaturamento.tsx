@@ -43,9 +43,9 @@ const AdminFaturamento = () => {
   const refreshStripeStatus = async () => {
     if (!tenant?.id) return;
     const { data: t } = await supabase
-      .from("tenants")
+      .from("tenants_private")
       .select("stripe_account_id, stripe_onboarding_completed")
-      .eq("id", tenant.id)
+      .eq("tenant_id", tenant.id)
       .maybeSingle();
     setStripeAccountId((t as any)?.stripe_account_id || null);
     setOnboardingCompleted(!!(t as any)?.stripe_onboarding_completed);
@@ -56,9 +56,9 @@ const AdminFaturamento = () => {
           body: { tenant_id: tenant.id },
         });
         const { data: t2 } = await supabase
-          .from("tenants")
+          .from("tenants_private")
           .select("stripe_onboarding_completed")
-          .eq("id", tenant.id)
+          .eq("tenant_id", tenant.id)
           .maybeSingle();
         setOnboardingCompleted(!!(t2 as any)?.stripe_onboarding_completed);
       } catch (e) {
