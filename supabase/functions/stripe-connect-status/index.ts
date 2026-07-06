@@ -27,20 +27,29 @@ Deno.serve(async (req) => {
     const { tenant_id } = await req.json();
     const { data: tenant } = await supabase
       .from("tenants")
-      .select("id, owner_user_id, stripe_account_id")
+      .select("id, owner_user_id")
       .eq("id", tenant_id)
       .maybeSingle();
     if (!tenant || tenant.owner_user_id !== userId) throw new Error("not owner");
-    if (!tenant.stripe_account_id) {
+
+    const { data: tpriv } = await supabase
+      .from("tenants_private")
+      .select("stripe_account_id")
+      .eq("tenant_id", tenant_id)
+      .maybeSingle();
+    if (!tpriv?.stripe_account_id) {
       return new Response(JSON.stringify({ completed: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const acc = await stripe.accounts.retrieve(tenant.stripe_account_id);
+    const acc = await stripe.accounts.retrieve(tpriv.stripe_account_id);
     const completed = !!acc.charges_enabled && !!acc.payouts_enabled && !!acc.details_submitted;
 
-    await supabase.from("tenants").update({ stripe_onboarding_completed: completed }).eq("id", tenant_id);
+    await supabase
+      .from("tenants_private")
+      .update({ stripe_onboarding_completed: completed })
+      .eq("tenant_id", tenant_id);
 
     return new Response(
       JSON.stringify({

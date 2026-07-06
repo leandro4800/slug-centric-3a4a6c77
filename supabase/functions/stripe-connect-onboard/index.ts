@@ -36,13 +36,19 @@ Deno.serve(async (req) => {
     // Verifica posse
     const { data: tenant, error: tErr } = await supabase
       .from("tenants")
-      .select("id, owner_user_id, stripe_account_id, slug, nome")
+      .select("id, owner_user_id, slug, nome")
       .eq("id", tenant_id)
       .maybeSingle();
     if (tErr || !tenant) throw new Error("tenant not found");
     if (tenant.owner_user_id !== userId) throw new Error("not owner");
 
-    let accountId = tenant.stripe_account_id;
+    const { data: tpriv } = await supabase
+      .from("tenants_private")
+      .select("stripe_account_id")
+      .eq("tenant_id", tenant_id)
+      .maybeSingle();
+
+    let accountId = tpriv?.stripe_account_id ?? null;
     if (!accountId) {
       log("creating express account", { tenant_id });
       const acc = await stripe.accounts.create({
@@ -58,7 +64,9 @@ Deno.serve(async (req) => {
         metadata: { tenant_id, user_id: userId },
       });
       accountId = acc.id;
-      await supabase.from("tenants").update({ stripe_account_id: accountId }).eq("id", tenant_id);
+      await supabase
+        .from("tenants_private")
+        .upsert({ tenant_id, stripe_account_id: accountId }, { onConflict: "tenant_id" });
     }
 
     const origin = req.headers.get("origin") || "http://localhost:3000";

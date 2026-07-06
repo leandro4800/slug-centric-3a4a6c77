@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
         const acc = event.data.object as Stripe.Account;
         const completed = !!acc.charges_enabled && !!acc.payouts_enabled && !!acc.details_submitted;
         await supabase
-          .from("tenants")
+          .from("tenants_private")
           .update({ stripe_onboarding_completed: completed })
           .eq("stripe_account_id", acc.id);
         break;
