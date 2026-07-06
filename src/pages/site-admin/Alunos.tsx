@@ -116,6 +116,26 @@ const Alunos = () => {
         </Link>
       </div>
 
+      {publicLink && (
+        <div className="rounded-2xl border border-primary/40 bg-primary/5 p-4 flex items-start gap-3 flex-wrap">
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-primary flex items-center gap-1.5">
+              <LinkIcon className="h-3.5 w-3.5" /> Link para captar novos alunos
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Envie este link para seus alunos assinarem um plano e acessarem o app automaticamente.
+            </p>
+            <code className="mt-2 block text-xs font-mono text-foreground bg-background/60 rounded px-2 py-1.5 break-all">
+              {publicLink}
+            </code>
+          </div>
+          <Button size="sm" onClick={handleCopyLink} className="gap-2 shrink-0">
+            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+            {copied ? "Copiado" : "Copiar link"}
+          </Button>
+        </div>
+      )}
+
       <div className="relative max-w-md">
         <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="Buscar por nome ou email..." value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
