@@ -60,8 +60,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate password
-    const password = randomPassword(10);
+    // Password pattern: primeironome (minusculo, sem acento) + 2026 (ex.: samila2026)
+    const firstName = nome
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().trim().split(/\s+/)[0].replace(/[^a-z0-9]/g, "");
+    const password = `${firstName || "aluno"}2026`;
 
     // Check if a user with this email already exists (may already be aluno/coach elsewhere)
     let newUserId: string | null = null;
