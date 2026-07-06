@@ -650,8 +650,7 @@ export default function TenantLanding() {
           </Badge>
           <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Comece com <span className="font-bold text-primary">30 dias grátis</span>. Cancele
-            antes do fim do trial e não pague nada. Sem multa, sem letra miúda.
+            Acesso total ao app do coach com pagamento seguro. <span className="font-bold text-primary">Sem fidelidade</span>. Cancele quando quiser.
           </p>
         </div>
 
