@@ -380,30 +380,8 @@ const Treino = () => {
         }
       }
 
-      // Fallback: carrega treino gerado pela IA pelos cards de divisão (persistido localmente)
-      try {
-        const raw = localStorage.getItem(`treino:ia-gerado:${user.id}`);
-        if (raw) {
-          const parsed = JSON.parse(raw) as { presetId?: string; treinos: Treino[] };
-          if (parsed?.treinos?.length) {
-            const ord = parsed.treinos.slice().sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
-            setTreinos(ord);
-            setSelectedPresetId(parsed.presetId || null);
-            setDiaAtual((cur) => {
-              if (cur && ord.some((t) => t.dia_semana === cur)) return cur;
-              const todayWd = ["domingo","segunda","terca","quarta","quinta","sexta","sabado"][new Date().getDay()];
-              const todayMatch = ord.find((t) => {
-                const n = (t.dia_semana || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                return n.includes(todayWd);
-              });
-              return todayMatch ? todayMatch.dia_semana : ord[0].dia_semana;
-            });
-            setIsMock(false);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch {}
+      // Sem fallback de IA no app do aluno — o treino só aparece quando o coach prescreve.
+
 
       setTreinos([]);
       setIsMock(false);
