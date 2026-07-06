@@ -5,7 +5,18 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
-import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple } from "lucide-react";
+import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "@/hooks/use-toast";
 
 interface Aluno {
   id: string;
@@ -20,19 +31,24 @@ const Alunos = () => {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
+  const [toDelete, setToDelete] = useState<Aluno | null>(null);
+  const [deleting, setDeleting] = useState(false);
+
+  const load = async () => {
+    if (!tenant?.id) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from("perfis")
+      .select("id, nome_completo, email, telefone, avatar_url")
+      .eq("tenant_id", tenant.id)
+      .order("nome_completo", { ascending: true });
+    setAlunos((data as Aluno[]) || []);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    if (!tenant?.id) return;
-    (async () => {
-      setLoading(true);
-      const { data } = await supabase
-        .from("perfis")
-        .select("id, nome_completo, email, telefone, avatar_url")
-        .eq("tenant_id", tenant.id)
-        .order("nome_completo", { ascending: true });
-      setAlunos((data as Aluno[]) || []);
-      setLoading(false);
-    })();
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant?.id]);
 
   const filtered = useMemo(() => {
@@ -40,6 +56,34 @@ const Alunos = () => {
     if (!t) return alunos;
     return alunos.filter((a) => (a.nome_completo || "").toLowerCase().includes(t) || (a.email || "").toLowerCase().includes(t));
   }, [alunos, q]);
+
+  const handleDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("site-delete-aluno", {
+        body: { aluno_id: toDelete.id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({
+        title: "Aluno removido",
+        description: (data as any)?.unlinked_only
+          ? "O aluno foi desvinculado do seu tenant (a conta dele foi preservada porque também é coach em outro lugar)."
+          : "A conta do aluno foi excluída com sucesso.",
+      });
+      setAlunos((prev) => prev.filter((a) => a.id !== toDelete.id));
+      setToDelete(null);
+    } catch (e) {
+      toast({
+        title: "Erro ao excluir",
+        description: String((e as Error).message || e),
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="p-4 md:p-8 space-y-6">
@@ -114,6 +158,16 @@ const Alunos = () => {
                           <span className="hidden sm:inline text-xs">Ver/Editar dieta</span>
                         </Button>
                       </Link>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 h-8 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                        title="Excluir conta do aluno"
+                        onClick={() => setToDelete(a)}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                        <span className="hidden sm:inline text-xs">Excluir</span>
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -122,6 +176,31 @@ const Alunos = () => {
           </table>
         </div>
       )}
+
+      <AlertDialog open={!!toDelete} onOpenChange={(open) => !open && setToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir conta do aluno?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação removerá <strong>{toDelete?.nome_completo || toDelete?.email}</strong> do seu painel, cancelará a assinatura no seu tenant e apagará a conta de acesso do aluno.
+              <br /><br />
+              Se este e-mail também for coach em outro tenant, apenas o vínculo com você será removido (a conta de coach dele é preservada).
+              <br /><br />
+              Essa operação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Excluindo...</> : "Excluir conta"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
