@@ -1,21 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
-import * as React from "npm:react@18.3.1";
-import { renderAsync } from "npm:@react-email/components@0.0.22";
-import { template as alunoCredenciaisTpl } from "../_shared/transactional-email-templates/aluno-credenciais.tsx";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
-
-function randomPassword(len = 12) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
-  const bytes = new Uint8Array(len);
-  crypto.getRandomValues(bytes);
-  let out = "";
-  for (const b of bytes) out += chars[b % chars.length];
-  return out;
-}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -142,36 +130,21 @@ Deno.serve(async (req) => {
       console.log(`[site-create-aluno] linked existing user ${newUserId} as aluno of tenant ${tenant.id} (ownsTenant=${existingOwnsTenant})`);
     }
 
-    // Send email with credentials directly via Resend API
+    // Send email with credentials through the verified project email domain
     try {
-      const resendKey = Deno.env.get("RESEND_API_KEY");
-      if (!resendKey) throw new Error("Missing RESEND_API_KEY");
-      const props = { nome, email, password, coachNome: tenant.nome, slug: tenant.slug };
-      const html = await renderAsync(React.createElement(alunoCredenciaisTpl.component, props));
-      const text = await renderAsync(React.createElement(alunoCredenciaisTpl.component, props), { plainText: true });
-      const subject = typeof alunoCredenciaisTpl.subject === "function"
-        ? alunoCredenciaisTpl.subject(props) : alunoCredenciaisTpl.subject;
-      const resp = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${resendKey}`,
+      const { data: emailResult, error: emailErr } = await admin.functions.invoke("send-transactional-email", {
+        body: {
+          templateName: "aluno-credenciais",
+          recipientEmail: email,
+          templateData: { nome, email, password, coachNome: tenant.nome, slug: tenant.slug },
+          idempotencyKey: `aluno-credenciais:${tenant.id}:${newUserId}`,
         },
-        body: JSON.stringify({
-          from: "Alpha Coach <noreply@notify.alpha-coach.app>",
-          to: [email],
-          subject,
-          html,
-          text,
-        }),
       });
-      if (!resp.ok) {
-        const body = await resp.text();
-        console.error("[site-create-aluno] resend error", resp.status, body);
-        throw new Error(`Falha ao enviar email (${resp.status})`);
-      } else {
-        console.log("[site-create-aluno] email enviado para", email);
+      if (emailErr || !emailResult?.success) {
+        console.error("[site-create-aluno] transactional email error", emailErr, emailResult);
+        throw new Error("Falha ao enviar email");
       }
+      console.log("[site-create-aluno] email enfileirado para", email);
     } catch (e) {
       console.error("[site-create-aluno] email error", e);
       throw new Error(String((e as Error).message || e));
