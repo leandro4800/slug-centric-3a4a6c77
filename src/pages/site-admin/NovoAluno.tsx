@@ -180,6 +180,20 @@ const NovoAluno = () => {
         </p>
       </div>
 
+      <div className="mb-4 rounded-2xl border border-primary/40 bg-primary/5 p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+            <Sparkles className="h-3.5 w-3.5" /> Cadastro com IA
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Envie um print (WhatsApp, ficha, cartão) ou cole o texto que a IA preenche o formulário.
+          </p>
+        </div>
+        <Button type="button" size="sm" onClick={() => setIaOpen(true)} className="gap-2 shrink-0">
+          <Sparkles className="h-4 w-4" /> Usar IA
+        </Button>
+      </div>
+
       <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border/50 bg-card p-6">
         <div>
           <Label htmlFor="nome">Nome completo *</Label>
