@@ -251,7 +251,7 @@ const NovoAluno = () => {
           <Button type="button" variant="outline" onClick={() => navigate("/site/admin/alunos")} disabled={submitting}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={submitting} className="flex-1 gap-2">
+          <Button type="submit" disabled={submitting || planos.length === 0 || !planoId} className="flex-1 gap-2">
             {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
             {submitting ? "Cadastrando..." : "Cadastrar e enviar email"}
           </Button>
