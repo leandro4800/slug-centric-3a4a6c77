@@ -168,11 +168,13 @@ Deno.serve(async (req) => {
       if (!resp.ok) {
         const body = await resp.text();
         console.error("[site-create-aluno] resend error", resp.status, body);
+        throw new Error(`Falha ao enviar email (${resp.status})`);
       } else {
         console.log("[site-create-aluno] email enviado para", email);
       }
     } catch (e) {
       console.error("[site-create-aluno] email error", e);
+      throw new Error(String((e as Error).message || e));
     }
 
     return new Response(JSON.stringify({ ok: true, user_id: newUserId }), {
