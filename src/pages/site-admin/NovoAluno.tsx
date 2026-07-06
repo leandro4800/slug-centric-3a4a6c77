@@ -217,22 +217,33 @@ const NovoAluno = () => {
           <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" />
         </div>
 
-        {planos.length > 0 && (
+        {planos.length === 0 ? (
+          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+            <p className="font-medium text-destructive">Você ainda não criou nenhum plano.</p>
+            <p className="text-muted-foreground mt-1">
+              Crie um plano em <strong>Faturamento</strong> antes de cadastrar alunos.
+            </p>
+          </div>
+        ) : (
           <div>
-            <Label htmlFor="plano">Plano (opcional)</Label>
+            <Label htmlFor="plano">Plano *</Label>
             <select
               id="plano"
+              required
               value={planoId}
               onChange={(e) => setPlanoId(e.target.value)}
               className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
             >
-              <option value="">Sem plano atribuído</option>
+              <option value="">Selecione um plano...</option>
               {planos.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nome} — R$ {(p.preco_centavos / 100).toFixed(2)}
                 </option>
               ))}
             </select>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              O aluno já entrará no app com este plano ativo.
+            </p>
           </div>
         )}
 
