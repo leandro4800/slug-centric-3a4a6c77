@@ -77,9 +77,10 @@ Deno.serve(async (req) => {
         .from("tenants").select("id").eq("owner_user_id", newUserId).maybeSingle();
       existingOwnsTenant = !!ownedTenant;
 
-      // Reset password so the coach can deliver new credentials
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (admin.auth as any).admin.updateUserById(newUserId, { password, email_confirm: true });
+      // NÃO reseta a senha de um usuário que já existe — isso é uma conta global
+      // no Supabase Auth e resetar aqui quebraria o acesso do usuário em outros
+      // tenants onde ele já usa outra senha. O coach deve orientar o aluno a usar
+      // "Esqueci minha senha" caso não lembre.
     } else {
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
