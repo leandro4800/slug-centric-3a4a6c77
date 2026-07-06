@@ -2740,8 +2740,6 @@ export type Database = {
           slug: string
           splash_video_url: string | null
           status: Database["public"]["Enums"]["tenant_status"]
-          stripe_account_id: string | null
-          stripe_onboarding_completed: boolean
           symbol_url: string | null
           tagline: string | null
           theme_overrides: Json
@@ -2768,8 +2766,6 @@ export type Database = {
           slug: string
           splash_video_url?: string | null
           status?: Database["public"]["Enums"]["tenant_status"]
-          stripe_account_id?: string | null
-          stripe_onboarding_completed?: boolean
           symbol_url?: string | null
           tagline?: string | null
           theme_overrides?: Json
@@ -2796,8 +2792,6 @@ export type Database = {
           slug?: string
           splash_video_url?: string | null
           status?: Database["public"]["Enums"]["tenant_status"]
-          stripe_account_id?: string | null
-          stripe_onboarding_completed?: boolean
           symbol_url?: string | null
           tagline?: string | null
           theme_overrides?: Json
