@@ -502,7 +502,7 @@ const Treino = () => {
     }));
   };
 
-  // ====== CARDS DE DIVISÃO DE TREINO (gera com IA Pacholok) ======
+  // ====== CARDS DE DIVISÃO DE TREINO (gera com IA metodologia AlphaCoach) ======
   const nivelCanon: Nivel = (toNivelCanonico(nivelExperiencia) || "Iniciante") as Nivel;
   const presetsDisponiveis = useMemo(
     () => filtrarPresetsParaAluno(sexo, nivelCanon),
