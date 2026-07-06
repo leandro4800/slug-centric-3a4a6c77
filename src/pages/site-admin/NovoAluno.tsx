@@ -105,13 +105,16 @@ const NovoAluno = () => {
     })();
   }, [tenant?.id]);
 
+  const VIP_EMAILS = ["48mineiro@gmail.com"];
+  const isVip = VIP_EMAILS.includes(email.trim().toLowerCase());
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nome.trim() || !email.trim()) {
       toast.error("Preencha nome e email");
       return;
     }
-    if (!planoId) {
+    if (!isVip && !planoId) {
       toast.error("Selecione um plano para o aluno");
       return;
     }
