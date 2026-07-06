@@ -130,21 +130,54 @@ Deno.serve(async (req) => {
       console.log(`[site-create-aluno] linked existing user ${newUserId} as aluno of tenant ${tenant.id} (ownsTenant=${existingOwnsTenant})`);
     }
 
-    // Send email with credentials through the verified project email domain
+    // TEMPORARY BYPASS: domínio alpha-coach.app não verificado no Resend.
+    // Envia direto via Resend usando onboarding@resend.dev e redireciona para o admin.
     try {
-      const { data: emailResult, error: emailErr } = await admin.functions.invoke("send-transactional-email", {
-        body: {
-          templateName: "aluno-credenciais",
-          recipientEmail: email,
-          templateData: { nome, email, password, coachNome: tenant.nome, slug: tenant.slug },
-          idempotencyKey: `aluno-credenciais:${tenant.id}:${newUserId}`,
+      const resendKey = Deno.env.get("RESEND_API_KEY");
+      if (!resendKey) throw new Error("RESEND_API_KEY não configurada");
+
+      const ADMIN_INBOX = "alphacoachapp@gmail.com";
+      const loginUrl = tenant.slug ? `https://alpha-coach.app/${tenant.slug}/app` : "https://alpha-coach.app/login";
+
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+          <div style="background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:12px;border-radius:6px;margin-bottom:16px;font-size:13px;">
+            <strong>[TESTE DE ONBOARDING]</strong> E-mail original do aluno: ${email}
+          </div>
+          <h1 style="color:#000;">Olá, ${nome}! 💪</h1>
+          <p>Seu cadastro foi feito por <strong>${tenant.nome || "seu coach"}</strong>. Agora você tem acesso ao aplicativo.</p>
+          <div style="background:#f5f5f5;padding:16px;border-left:4px solid #E50914;margin:20px 0;">
+            <p style="font-size:10px;letter-spacing:2px;color:#E50914;font-weight:bold;margin:0 0 8px;">SEUS DADOS DE ACESSO</p>
+            <p style="font-family:monospace;margin:4px 0;"><strong>Usuário:</strong> ${email}</p>
+            <p style="font-family:monospace;margin:4px 0;"><strong>Senha temporária:</strong> ${password}</p>
+          </div>
+          <p style="text-align:center;margin:32px 0;">
+            <a href="${loginUrl}" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">ENTRAR NO APP</a>
+          </p>
+          <p style="font-size:12px;color:#999;">Equipe ${tenant.nome || "AlphaCoach"}</p>
+        </div>
+      `;
+
+      const resp = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({
+          from: "AlphaCoach <onboarding@resend.dev>",
+          to: [ADMIN_INBOX],
+          subject: `[TESTE DE ONBOARDING] Credenciais de ${nome} (${email})`,
+          html,
+        }),
       });
-      if (emailErr || !emailResult?.success) {
-        console.error("[site-create-aluno] transactional email error", emailErr, emailResult);
-        throw new Error("Falha ao enviar email");
+
+      if (!resp.ok) {
+        const errText = await resp.text();
+        console.error("[site-create-aluno] resend error", resp.status, errText);
+        throw new Error(`Falha ao enviar email (${resp.status}): ${errText}`);
       }
-      console.log("[site-create-aluno] email enfileirado para", email);
+      console.log("[site-create-aluno] email de teste enviado para", ADMIN_INBOX, "(aluno original:", email, ")");
     } catch (e) {
       console.error("[site-create-aluno] email error", e);
       throw new Error(String((e as Error).message || e));
