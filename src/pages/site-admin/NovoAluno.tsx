@@ -91,6 +91,8 @@ const NovoAluno = () => {
     setIaPreview(`data:${mime};base64,${base64}`);
     await runIA({ image_base64: base64, image_mime: mime });
   };
+
+  useEffect(() => {
     if (!tenant?.id) return;
     (async () => {
       const { data } = await supabase
