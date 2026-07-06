@@ -427,7 +427,7 @@ export default function TenantLanding() {
                     document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" })
                   }
                 >
-                  Começar 30 dias grátis
+                  Assinar plano
                 </Button>
                 <Button
                   size="lg"
