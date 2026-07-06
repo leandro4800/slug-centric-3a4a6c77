@@ -5,7 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
-import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2 } from "lucide-react";
+import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2, Link as LinkIcon, Copy, Check } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
