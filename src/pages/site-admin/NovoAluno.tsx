@@ -111,6 +111,10 @@ const NovoAluno = () => {
       toast.error("Preencha nome e email");
       return;
     }
+    if (!planoId) {
+      toast.error("Selecione um plano para o aluno");
+      return;
+    }
     setSubmitting(true);
     try {
       const { data, error } = await supabase.functions.invoke("site-create-aluno", {
@@ -118,7 +122,7 @@ const NovoAluno = () => {
           nome: nome.trim(),
           email: email.trim().toLowerCase(),
           telefone: telefone.trim() || null,
-          plano_id: planoId || null,
+          plano_id: planoId,
         },
       });
       // supabase-js oculta o corpo em respostas não-2xx; ler manualmente do contexto
