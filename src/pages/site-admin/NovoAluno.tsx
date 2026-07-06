@@ -242,6 +242,98 @@ const NovoAluno = () => {
           </Button>
         </div>
       </form>
+
+      <Dialog open={iaOpen} onOpenChange={(o) => { if (!iaLoading) setIaOpen(o); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Sparkles className="h-5 w-5 text-primary" /> Cadastro com IA
+            </DialogTitle>
+            <DialogDescription>
+              Escolha uma das opções — a IA extrai nome, e-mail e telefone e preenche o formulário.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="flex gap-2 mb-3">
+            <Button
+              type="button"
+              variant={iaMode === "image" ? "default" : "outline"}
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setIaMode("image")}
+              disabled={iaLoading}
+            >
+              <ImageIcon className="h-4 w-4" /> Print / foto
+            </Button>
+            <Button
+              type="button"
+              variant={iaMode === "text" ? "default" : "outline"}
+              size="sm"
+              className="flex-1 gap-2"
+              onClick={() => setIaMode("text")}
+              disabled={iaLoading}
+            >
+              <ClipboardPaste className="h-4 w-4" /> Colar texto
+            </Button>
+          </div>
+
+          {iaMode === "image" ? (
+            <div className="space-y-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) handleImageChosen(f); }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={iaLoading}
+                className="w-full rounded-xl border-2 border-dashed border-border hover:border-primary/60 hover:bg-primary/5 transition-colors p-6 text-center disabled:opacity-50"
+              >
+                {iaPreview ? (
+                  <img src={iaPreview} alt="preview" className="max-h-40 mx-auto rounded" />
+                ) : (
+                  <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                    <ImageIcon className="h-8 w-8" />
+                    <p className="text-sm font-medium">Clique para enviar um print</p>
+                    <p className="text-[11px]">JPG, PNG · máx 8MB</p>
+                  </div>
+                )}
+              </button>
+              <p className="text-[11px] text-muted-foreground">
+                Funciona com prints de WhatsApp, ficha física fotografada, cartão de visita, etc.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <Textarea
+                placeholder={"Cole aqui o texto. Ex.:\n\nNome: João Silva\nEmail: joao@email.com\nCel: (11) 98888-7777"}
+                rows={7}
+                value={iaText}
+                onChange={(e) => setIaText(e.target.value)}
+                disabled={iaLoading}
+              />
+              <Button
+                type="button"
+                onClick={() => iaText.trim() && runIA({ text: iaText })}
+                disabled={iaLoading || !iaText.trim()}
+                className="w-full gap-2"
+              >
+                {iaLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {iaLoading ? "Analisando..." : "Extrair dados"}
+              </Button>
+            </div>
+          )}
+
+          {iaLoading && iaMode === "image" && (
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground pt-2">
+              <Loader2 className="h-4 w-4 animate-spin" /> Analisando imagem...
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
