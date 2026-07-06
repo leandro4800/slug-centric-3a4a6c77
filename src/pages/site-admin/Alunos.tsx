@@ -33,6 +33,21 @@ const Alunos = () => {
   const [q, setQ] = useState("");
   const [toDelete, setToDelete] = useState<Aluno | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const publicLink = tenant?.slug ? `https://alpha-coach.app/${tenant.slug}` : "";
+
+  const handleCopyLink = async () => {
+    if (!publicLink) return;
+    try {
+      await navigator.clipboard.writeText(publicLink);
+      setCopied(true);
+      toast({ title: "Link copiado!", description: "Compartilhe com seus alunos para assinarem um plano." });
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      toast({ title: "Não foi possível copiar", description: publicLink, variant: "destructive" });
+    }
+  };
 
   const load = async () => {
     if (!tenant?.id) return;
