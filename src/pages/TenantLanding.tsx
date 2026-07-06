@@ -600,8 +600,8 @@ export default function TenantLanding() {
                 {[
                   {
                     n: "01",
-                    t: "Comece grátis",
-                    d: "Clique em 'Começar 30 dias grátis', cadastre seu cartão e libere acesso total. Só é cobrado depois de 30 dias.",
+                    t: "Assine um plano",
+                    d: "Escolha o plano que combina com você, faça o checkout seguro e libere acesso total ao app imediatamente.",
                   },
                   {
                     n: "02",
