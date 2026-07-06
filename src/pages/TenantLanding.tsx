@@ -802,7 +802,7 @@ export default function TenantLanding() {
             Pronto para <span className="text-primary">começar?</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            30 dias grátis. Sem fidelidade. Cancele quando quiser.
+            Acesso imediato. Sem fidelidade. Cancele quando quiser.
           </p>
           <Button
             size="lg"
