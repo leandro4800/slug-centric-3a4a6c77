@@ -380,30 +380,8 @@ const Treino = () => {
         }
       }
 
-      // Fallback: carrega treino gerado pela IA pelos cards de divisão (persistido localmente)
-      try {
-        const raw = localStorage.getItem(`treino:ia-gerado:${user.id}`);
-        if (raw) {
-          const parsed = JSON.parse(raw) as { presetId?: string; treinos: Treino[] };
-          if (parsed?.treinos?.length) {
-            const ord = parsed.treinos.slice().sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
-            setTreinos(ord);
-            setSelectedPresetId(parsed.presetId || null);
-            setDiaAtual((cur) => {
-              if (cur && ord.some((t) => t.dia_semana === cur)) return cur;
-              const todayWd = ["domingo","segunda","terca","quarta","quinta","sexta","sabado"][new Date().getDay()];
-              const todayMatch = ord.find((t) => {
-                const n = (t.dia_semana || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                return n.includes(todayWd);
-              });
-              return todayMatch ? todayMatch.dia_semana : ord[0].dia_semana;
-            });
-            setIsMock(false);
-            setLoading(false);
-            return;
-          }
-        }
-      } catch {}
+      // Sem fallback de IA no app do aluno — o treino só aparece quando o coach prescreve.
+
 
       setTreinos([]);
       setIsMock(false);
@@ -707,88 +685,14 @@ const Treino = () => {
         </div>
 
 
-        {/* Cards de divisão de treino — IA Pacholok gera o treino a partir da divisão escolhida */}
+        {/* Empty state — o treino só aparece quando o coach prescreve */}
         {treinos.length === 0 && (
-          <div className="bg-card border border-primary/20 rounded-2xl p-5 mb-4">
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-5 w-5 text-primary" />
-              <h3 className="font-display text-base uppercase tracking-wide">Escolha sua divisão</h3>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">
-              Nível detectado:{" "}
-              <span className="text-foreground font-semibold">{nivelCanon}</span>
-              {sexo ? <> · {sexo}</> : null}. Toque numa divisão e a IA monta seu treino na metodologia Pacholok.
-            </p>
-
-            {presetsDisponiveis.length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                Nenhuma divisão sugerida para seu nível. Atualize sua anamnese para liberar opções.
-              </p>
-            ) : (
-              <div className="space-y-5">
-                {frequenciasDisponiveis.map((freq) => (
-                  <div key={freq}>
-                    <p className="text-[10px] uppercase tracking-[0.25em] text-muted-foreground mb-2">
-                      {freq}x na semana
-                    </p>
-                    <div className="grid gap-2">
-                      {presetsDisponiveis
-                        .filter((p) => p.freq === freq)
-                        .map((p) => {
-                          const isGen = generatingPresetId === p.id;
-                          const isAny = generatingPresetId !== null;
-                          return (
-                            <button
-                              key={p.id}
-                              disabled={isAny}
-                              onClick={() => gerarTreinoComPreset(p)}
-                              className={`text-left rounded-xl border p-4 transition active:scale-[0.99] ${
-                                isGen
-                                  ? "border-primary bg-primary/10"
-                                  : "border-border/60 bg-secondary/30 hover:border-primary/60 hover:bg-secondary/50"
-                              } disabled:opacity-60`}
-                            >
-                              <div className="flex items-center justify-between gap-2 mb-1">
-                                <p className="font-display text-sm leading-tight">{p.label}</p>
-                                {isGen ? (
-                                  <Loader2 className="h-4 w-4 animate-spin text-primary shrink-0" />
-                                ) : (
-                                  <Sparkles className="h-4 w-4 text-primary shrink-0" />
-                                )}
-                              </div>
-                              <div className="flex flex-wrap gap-1.5 mt-2">
-                                {p.dias.map((d, i) => (
-                                  <span
-                                    key={i}
-                                    className="text-[10px] px-2 py-0.5 rounded-full bg-background/60 border border-border/40 text-muted-foreground"
-                                  >
-                                    {d.length > 36 ? d.slice(0, 36) + "…" : d}
-                                  </span>
-                                ))}
-                              </div>
-                            </button>
-                          );
-                        })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <p className="text-[10px] text-muted-foreground mt-4 text-center">
-              Seu coach também pode prescrever um treino — quando ele liberar, esse plano substitui o gerado.
-            </p>
+          <div className="bg-card border border-border rounded-2xl p-8 text-center mb-4">
+            <Dumbbell className="h-10 w-10 mx-auto text-muted-foreground mb-2" />
+            <p className="text-sm text-muted-foreground">Seu treino personalizado será montado pelo seu coach.</p>
           </div>
         )}
 
-        {treinos.length > 0 && selectedPresetId && (
-          <button
-            onClick={trocarDivisao}
-            className="w-full mb-3 flex items-center justify-center gap-2 text-xs uppercase tracking-[0.2em] py-2 rounded-full border border-border/60 bg-secondary/40 text-muted-foreground hover:text-foreground hover:border-primary/40 transition"
-          >
-            <RefreshCw className="h-3.5 w-3.5" /> Trocar divisão de treino
-          </button>
-        )}
 
 
         {spotifyLink && (
