@@ -166,9 +166,9 @@ Deno.serve(async (req) => {
     // Plataforma absorve a taxa Stripe; coach recebe valor cheio via transfer_data.
     // Para tenants próprios da plataforma (ex: alphateam), não há transfer/fee — cobrança direta.
     if (mode === "subscription") {
-      sessionParams.subscription_data = {
-        trial_period_days: 30,
-      };
+      // Sem trial: aluno paga na hora e coach recebe imediatamente via split.
+      // (Os 30 dias grátis são exclusivos do coach ao aderir à plataforma, fluxo separado.)
+      sessionParams.subscription_data = {};
       if (!isPlatformOwned) {
         sessionParams.subscription_data.application_fee_percent = APPLICATION_FEE_PCT;
         sessionParams.subscription_data.transfer_data = { destination: tenant_to_use.stripe_account_id };
