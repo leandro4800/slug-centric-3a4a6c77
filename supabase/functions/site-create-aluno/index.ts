@@ -1,4 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import * as React from "npm:react@18.3.1";
+import { renderAsync } from "npm:@react-email/components@0.0.22";
+import { template as alunoCredenciaisTpl } from "../_shared/transactional-email-templates/aluno-credenciais.tsx";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
