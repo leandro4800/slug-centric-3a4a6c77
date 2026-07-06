@@ -24,7 +24,73 @@ const NovoAluno = () => {
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState<{ email: string } | null>(null);
 
-  useEffect(() => {
+  // IA
+  const [iaOpen, setIaOpen] = useState(false);
+  const [iaMode, setIaMode] = useState<"image" | "text">("image");
+  const [iaText, setIaText] = useState("");
+  const [iaLoading, setIaLoading] = useState(false);
+  const [iaPreview, setIaPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fileToBase64 = (file: File) =>
+    new Promise<{ base64: string; mime: string }>((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const s = String(r.result || "");
+        const [meta, b64] = s.split(",");
+        const mime = /data:(.*?);base64/.exec(meta || "")?.[1] || file.type || "image/png";
+        resolve({ base64: b64 || "", mime });
+      };
+      r.onerror = reject;
+      r.readAsDataURL(file);
+    });
+
+  const applyParsed = (d: any) => {
+    if (d?.nome) setNome(d.nome);
+    if (d?.email) setEmail(String(d.email).toLowerCase());
+    if (d?.telefone) setTelefone(d.telefone);
+    setIaOpen(false);
+    setIaText("");
+    setIaPreview(null);
+    toast.success("Dados preenchidos! Confira antes de cadastrar.");
+  };
+
+  const runIA = async (payload: { image_base64?: string; image_mime?: string; text?: string }) => {
+    setIaLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("parse-aluno-ia", { body: payload });
+      let serverError: string | null = (data as any)?.error || null;
+      if (error && !serverError) {
+        try {
+          const resp = (error as any)?.context as Response | undefined;
+          if (resp?.text) {
+            const txt = await resp.text();
+            try { serverError = JSON.parse(txt)?.error || txt; } catch { serverError = txt; }
+          }
+        } catch { /* ignore */ }
+        if (!serverError) serverError = error.message;
+      }
+      if (serverError) throw new Error(serverError);
+      const parsed = (data as any)?.data;
+      if (!parsed || (!parsed.nome && !parsed.email && !parsed.telefone)) {
+        toast.warning("A IA não conseguiu identificar dados. Tente uma imagem mais nítida ou ajuste o texto.");
+        return;
+      }
+      applyParsed(parsed);
+    } catch (err: any) {
+      toast.error(err.message || "Falha ao processar com IA");
+    } finally {
+      setIaLoading(false);
+    }
+  };
+
+  const handleImageChosen = async (file: File) => {
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { toast.error("Imagem muito grande (máx 8MB)"); return; }
+    const { base64, mime } = await fileToBase64(file);
+    setIaPreview(`data:${mime};base64,${base64}`);
+    await runIA({ image_base64: base64, image_mime: mime });
+  };
     if (!tenant?.id) return;
     (async () => {
       const { data } = await supabase
