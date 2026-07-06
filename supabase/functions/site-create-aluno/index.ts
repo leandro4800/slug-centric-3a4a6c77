@@ -77,9 +77,10 @@ Deno.serve(async (req) => {
         .from("tenants").select("id").eq("owner_user_id", newUserId).maybeSingle();
       existingOwnsTenant = !!ownedTenant;
 
-      // Reset password so the coach can deliver new credentials
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (admin.auth as any).admin.updateUserById(newUserId, { password, email_confirm: true });
+      // NÃO reseta a senha de um usuário que já existe — isso é uma conta global
+      // no Supabase Auth e resetar aqui quebraria o acesso do usuário em outros
+      // tenants onde ele já usa outra senha. O coach deve orientar o aluno a usar
+      // "Esqueci minha senha" caso não lembre.
     } else {
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
@@ -138,15 +139,25 @@ Deno.serve(async (req) => {
 
       const loginUrl = tenant.slug ? `https://alpha-coach.app/${tenant.slug}/app` : "https://alpha-coach.app/login";
 
-      const html = `
-        <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
-          <h1 style="color:#000;">Olá, ${nome}! 💪</h1>
-          <p>Seu cadastro foi feito por <strong>${tenant.nome || "seu coach"}</strong>. Agora você tem acesso ao aplicativo.</p>
+      const credenciaisBlock = isExisting
+        ? `
+          <div style="background:#f5f5f5;padding:16px;border-left:4px solid #E50914;margin:20px 0;">
+            <p style="font-size:10px;letter-spacing:2px;color:#E50914;font-weight:bold;margin:0 0 8px;">SEU ACESSO</p>
+            <p style="margin:4px 0;">Você já tem conta no Alpha Coach com o e-mail <strong>${email}</strong>.</p>
+            <p style="margin:8px 0 0;">Use a <strong>mesma senha</strong> que você já utiliza. Caso não lembre, clique em <em>"Esqueci minha senha"</em> na tela de login.</p>
+          </div>`
+        : `
           <div style="background:#f5f5f5;padding:16px;border-left:4px solid #E50914;margin:20px 0;">
             <p style="font-size:10px;letter-spacing:2px;color:#E50914;font-weight:bold;margin:0 0 8px;">SEUS DADOS DE ACESSO</p>
             <p style="font-family:monospace;margin:4px 0;"><strong>Usuário:</strong> ${email}</p>
             <p style="font-family:monospace;margin:4px 0;"><strong>Senha temporária:</strong> ${password}</p>
-          </div>
+          </div>`;
+
+      const html = `
+        <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+          <h1 style="color:#000;">Olá, ${nome}! 💪</h1>
+          <p>Seu cadastro foi feito por <strong>${tenant.nome || "seu coach"}</strong>. Agora você tem acesso ao aplicativo.</p>
+          ${credenciaisBlock}
           <p style="text-align:center;margin:32px 0;">
             <a href="${loginUrl}" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">ENTRAR NO APP</a>
           </p>
@@ -163,7 +174,9 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: "Alpha Coach Pro <suporte@alpha-coach.app>",
           to: [email],
-          subject: `Bem-vindo(a) à ${tenant.nome || "Alpha Coach Pro"} — seus dados de acesso`,
+          subject: isExisting
+            ? `Você foi adicionado à ${tenant.nome || "Alpha Coach Pro"}`
+            : `Bem-vindo(a) à ${tenant.nome || "Alpha Coach Pro"} — seus dados de acesso`,
           html,
         }),
       });
