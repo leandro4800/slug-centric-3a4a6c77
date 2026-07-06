@@ -686,7 +686,7 @@ export default function TenantLanding() {
                   </div>
                   <ul className="mt-6 flex-1 space-y-3 text-sm">
                     <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-primary" /> 30 dias grátis
+                      <Check className="h-4 w-4 shrink-0 text-primary" /> Acesso imediato ao app
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 shrink-0 text-primary" /> Treinos + dieta + IA 24/7
@@ -709,7 +709,7 @@ export default function TenantLanding() {
                     {checkoutLoading === p.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      "Começar 30 dias grátis"
+                      "Assinar plano"
                     )}
                   </Button>
                 </div>
