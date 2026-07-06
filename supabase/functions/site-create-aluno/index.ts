@@ -63,21 +63,53 @@ Deno.serve(async (req) => {
     // Generate password
     const password = randomPassword(10);
 
-    // Create user (admin)
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { nome_completo: nome, tenant_id: tenant.id },
-    });
+    // Check if a user with this email already exists (may be aluno of another coach)
+    let newUserId: string | null = null;
+    let isMigration = false;
 
-    if (createErr || !created.user) {
-      return new Response(JSON.stringify({ error: createErr?.message || "Falha ao criar usuário" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    const { data: existingProfile } = await admin
+      .from("perfis")
+      .select("id, tenant_id")
+      .ilike("email", email)
+      .maybeSingle();
+
+    if (existingProfile) {
+      // Verify there is no ACTIVE subscription in another tenant — student must "encerrar" first
+      const { data: activeSubs } = await admin
+        .from("assinaturas")
+        .select("id, tenant_id, status")
+        .eq("aluno_id", existingProfile.id)
+        .in("status", ["active", "trialing", "past_due"]);
+
+      const activeElsewhere = (activeSubs || []).filter((s) => s.tenant_id !== tenant.id);
+      if (activeElsewhere.length > 0) {
+        return new Response(JSON.stringify({
+          error: "Este aluno possui uma assinatura ativa com outro coach. Ele precisa encerrar antes de migrar.",
+        }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      newUserId = existingProfile.id;
+      isMigration = true;
+
+      // Reset password so the coach can deliver new credentials
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (admin.auth as any).admin.updateUserById(newUserId, { password, email_confirm: true });
+    } else {
+      // Create user (admin)
+      const { data: created, error: createErr } = await admin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { nome_completo: nome, tenant_id: tenant.id },
       });
-    }
 
-    const newUserId = created.user.id;
+      if (createErr || !created.user) {
+        return new Response(JSON.stringify({ error: createErr?.message || "Falha ao criar usuário" }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      newUserId = created.user.id;
+    }
 
     // Upsert profile with tenant + phone (handle_new_user trigger created basics)
     await admin.from("perfis").upsert({
@@ -86,6 +118,7 @@ Deno.serve(async (req) => {
       nome_completo: nome,
       telefone,
       tenant_id: tenant.id,
+      onboarding_completo: true,
     }, { onConflict: "id" });
 
     // Aluno role
@@ -103,6 +136,11 @@ Deno.serve(async (req) => {
         status: "active",
         current_period_end: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
       }, { onConflict: "aluno_id,tenant_id" });
+    }
+
+    // Log migration for audit
+    if (isMigration) {
+      console.log(`[site-create-aluno] migration: user ${newUserId} -> tenant ${tenant.id}`);
     }
 
     // Send email with credentials via transactional email
