@@ -450,7 +450,7 @@ export default function TenantLanding() {
             {[
               { v: "+10k", l: "Treinos gerados" },
               { v: "24/7", l: "IA disponível" },
-              { v: "30 dias", l: "Grátis" },
+              { v: "Sem", l: "Fidelidade" },
               { v: "iOS · Android", l: "Apps nativos" },
             ].map((s) => (
               <div key={s.l} className="text-center">
