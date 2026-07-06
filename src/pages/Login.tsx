@@ -39,7 +39,29 @@ const Login = () => {
 
     if (ownedTenant?.slug) return `/${ownedTenant.slug}/app`;
 
-    // Aluno: sempre usar o tenant do próprio aluno, nunca o slug da URL/branding
+    // Multi-tenant: um mesmo aluno pode estar em vários tenants.
+    // Prioriza o tenant do slug da URL (link enviado pelo coach) para não vazar dados
+    // de outro tenant onde o usuário também é aluno.
+    const { data: alunoRoles } = await supabase
+      .from("user_roles")
+      .select("tenant_id, tenants:tenant_id(slug)")
+      .eq("user_id", userId)
+      .eq("role", "aluno");
+
+    const rolesList = (alunoRoles as any[] | null) ?? [];
+    const contextSlug = getSafeAppSlug(urlSlug || tenant?.slug);
+    if (contextSlug) {
+      const match = rolesList.find((r) => r?.tenants?.slug === contextSlug);
+      if (match) return `/${contextSlug}/app`;
+    }
+
+    // Se só é aluno em 1 tenant, vai direto pra ele.
+    if (rolesList.length === 1) {
+      const onlySlug = getSafeAppSlug(rolesList[0]?.tenants?.slug);
+      if (onlySlug) return `/${onlySlug}/app`;
+    }
+
+    // Fallback: tabela alunos (legado) ou último slug conhecido.
     const { data: alunoRow } = await supabase
       .from("alunos")
       .select("tenants:tenant_id(slug)")
