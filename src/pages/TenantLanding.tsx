@@ -147,8 +147,8 @@ const TESTIMONIALS = [
 
 const FAQ = [
   {
-    q: "Como funcionam os 30 dias grátis?",
-    a: "Você cadastra o cartão, libera acesso total imediato e só é cobrado após 30 dias. Cancele antes disso a qualquer momento — sem multa, sem perguntas.",
+    q: "Como funciona a assinatura?",
+    a: "Você escolhe um plano, faz o pagamento pelo checkout seguro e libera acesso total ao app do coach imediatamente. Sem letra miúda.",
   },
   {
     q: "Posso cancelar quando quiser?",
@@ -427,7 +427,7 @@ export default function TenantLanding() {
                     document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" })
                   }
                 >
-                  Começar 30 dias grátis
+                  Assinar plano
                 </Button>
                 <Button
                   size="lg"
@@ -450,7 +450,7 @@ export default function TenantLanding() {
             {[
               { v: "+10k", l: "Treinos gerados" },
               { v: "24/7", l: "IA disponível" },
-              { v: "30 dias", l: "Grátis" },
+              { v: "Sem", l: "Fidelidade" },
               { v: "iOS · Android", l: "Apps nativos" },
             ].map((s) => (
               <div key={s.l} className="text-center">
@@ -600,8 +600,8 @@ export default function TenantLanding() {
                 {[
                   {
                     n: "01",
-                    t: "Comece grátis",
-                    d: "Clique em 'Começar 30 dias grátis', cadastre seu cartão e libere acesso total. Só é cobrado depois de 30 dias.",
+                    t: "Assine um plano",
+                    d: "Escolha o plano que combina com você, faça o checkout seguro e libere acesso total ao app imediatamente.",
                   },
                   {
                     n: "02",
@@ -650,8 +650,7 @@ export default function TenantLanding() {
           </Badge>
           <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Comece com <span className="font-bold text-primary">30 dias grátis</span>. Cancele
-            antes do fim do trial e não pague nada. Sem multa, sem letra miúda.
+            Acesso total ao app do coach com pagamento seguro. <span className="font-bold text-primary">Sem fidelidade</span>. Cancele quando quiser.
           </p>
         </div>
 
@@ -687,7 +686,7 @@ export default function TenantLanding() {
                   </div>
                   <ul className="mt-6 flex-1 space-y-3 text-sm">
                     <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-primary" /> 30 dias grátis
+                      <Check className="h-4 w-4 shrink-0 text-primary" /> Acesso imediato ao app
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 shrink-0 text-primary" /> Treinos + dieta + IA 24/7
@@ -710,7 +709,7 @@ export default function TenantLanding() {
                     {checkoutLoading === p.id ? (
                       <Loader2 className="h-4 w-4 animate-spin" />
                     ) : (
-                      "Começar 30 dias grátis"
+                      "Assinar plano"
                     )}
                   </Button>
                 </div>
@@ -803,7 +802,7 @@ export default function TenantLanding() {
             Pronto para <span className="text-primary">começar?</span>
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            30 dias grátis. Sem fidelidade. Cancele quando quiser.
+            Acesso imediato. Sem fidelidade. Cancele quando quiser.
           </p>
           <Button
             size="lg"
