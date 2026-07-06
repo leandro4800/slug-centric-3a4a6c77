@@ -142,22 +142,20 @@ Deno.serve(async (req) => {
       console.log(`[site-create-aluno] linked existing user ${newUserId} as aluno of tenant ${tenant.id} (ownsTenant=${existingOwnsTenant})`);
     }
 
-    // Send email with credentials directly via Resend (fila interna indisponível)
+    // Send email with credentials directly via Resend API
     try {
       const resendKey = Deno.env.get("RESEND_API_KEY");
-      const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-      if (!resendKey || !lovableKey) throw new Error("Missing RESEND_API_KEY/LOVABLE_API_KEY");
+      if (!resendKey) throw new Error("Missing RESEND_API_KEY");
       const props = { nome, email, password, coachNome: tenant.nome, slug: tenant.slug };
       const html = await renderAsync(React.createElement(alunoCredenciaisTpl.component, props));
       const text = await renderAsync(React.createElement(alunoCredenciaisTpl.component, props), { plainText: true });
       const subject = typeof alunoCredenciaisTpl.subject === "function"
         ? alunoCredenciaisTpl.subject(props) : alunoCredenciaisTpl.subject;
-      const resp = await fetch("https://connector-gateway.lovable.dev/resend/emails", {
+      const resp = await fetch("https://api.resend.com/emails", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${lovableKey}`,
-          "X-Connection-Api-Key": resendKey,
+          "Authorization": `Bearer ${resendKey}`,
         },
         body: JSON.stringify({
           from: "Alpha Coach <noreply@notify.alpha-coach.app>",
@@ -170,11 +168,13 @@ Deno.serve(async (req) => {
       if (!resp.ok) {
         const body = await resp.text();
         console.error("[site-create-aluno] resend error", resp.status, body);
+        throw new Error(`Falha ao enviar email (${resp.status})`);
       } else {
         console.log("[site-create-aluno] email enviado para", email);
       }
     } catch (e) {
       console.error("[site-create-aluno] email error", e);
+      throw new Error(String((e as Error).message || e));
     }
 
     return new Response(JSON.stringify({ ok: true, user_id: newUserId }), {
