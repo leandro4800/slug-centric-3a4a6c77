@@ -63,9 +63,10 @@ Deno.serve(async (req) => {
     // Generate password
     const password = randomPassword(10);
 
-    // Check if a user with this email already exists (may be aluno of another coach)
+    // Check if a user with this email already exists (may already be aluno/coach elsewhere)
     let newUserId: string | null = null;
-    let isMigration = false;
+    let isExisting = false;
+    let existingOwnsTenant = false;
 
     const { data: existingProfile } = await admin
       .from("perfis")
@@ -74,28 +75,18 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (existingProfile) {
-      // Verify there is no ACTIVE subscription in another tenant — student must "encerrar" first
-      const { data: activeSubs } = await admin
-        .from("assinaturas")
-        .select("id, tenant_id, status")
-        .eq("aluno_id", existingProfile.id)
-        .in("status", ["active", "trialing", "past_due"]);
-
-      const activeElsewhere = (activeSubs || []).filter((s) => s.tenant_id !== tenant.id);
-      if (activeElsewhere.length > 0) {
-        return new Response(JSON.stringify({
-          error: "Este aluno possui uma assinatura ativa com outro coach. Ele precisa encerrar antes de migrar.",
-        }), { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
-
       newUserId = existingProfile.id;
-      isMigration = true;
+      isExisting = true;
+
+      // If the user owns another tenant, preserve perfis.tenant_id (they stay coach there)
+      const { data: ownedTenant } = await admin
+        .from("tenants").select("id").eq("owner_user_id", newUserId).maybeSingle();
+      existingOwnsTenant = !!ownedTenant;
 
       // Reset password so the coach can deliver new credentials
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (admin.auth as any).admin.updateUserById(newUserId, { password, email_confirm: true });
     } else {
-      // Create user (admin)
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
         password,
@@ -111,17 +102,20 @@ Deno.serve(async (req) => {
       newUserId = created.user.id;
     }
 
-    // Upsert profile with tenant + phone (handle_new_user trigger created basics)
-    await admin.from("perfis").upsert({
+    // Upsert profile: keep tenant_id if user already owns another tenant, otherwise set to caller's tenant
+    const profileUpsert: Record<string, unknown> = {
       id: newUserId,
       email,
       nome_completo: nome,
       telefone,
-      tenant_id: tenant.id,
       onboarding_completo: true,
-    }, { onConflict: "id" });
+    };
+    if (!existingOwnsTenant) {
+      profileUpsert.tenant_id = tenant.id;
+    }
+    await admin.from("perfis").upsert(profileUpsert, { onConflict: "id" });
 
-    // Aluno role
+    // Aluno role for the caller's tenant (multi-tenant safe)
     await admin.from("user_roles").upsert(
       { user_id: newUserId, role: "aluno", tenant_id: tenant.id },
       { onConflict: "user_id,role,tenant_id" }
@@ -138,9 +132,8 @@ Deno.serve(async (req) => {
       }, { onConflict: "aluno_id,tenant_id" });
     }
 
-    // Log migration for audit
-    if (isMigration) {
-      console.log(`[site-create-aluno] migration: user ${newUserId} -> tenant ${tenant.id}`);
+    if (isExisting) {
+      console.log(`[site-create-aluno] linked existing user ${newUserId} as aluno of tenant ${tenant.id} (ownsTenant=${existingOwnsTenant})`);
     }
 
     // Send email with credentials via transactional email
