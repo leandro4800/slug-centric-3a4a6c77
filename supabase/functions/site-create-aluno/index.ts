@@ -130,20 +130,16 @@ Deno.serve(async (req) => {
       console.log(`[site-create-aluno] linked existing user ${newUserId} as aluno of tenant ${tenant.id} (ownsTenant=${existingOwnsTenant})`);
     }
 
-    // TEMPORARY BYPASS: domínio alpha-coach.app não verificado no Resend.
-    // Envia direto via Resend usando onboarding@resend.dev e redireciona para o admin.
+    // Fluxo de produção: domínio alpha-coach.app verificado no Resend.
+    // Envia direto via Resend para o e-mail real do aluno.
     try {
       const resendKey = Deno.env.get("RESEND_API_KEY");
       if (!resendKey) throw new Error("RESEND_API_KEY não configurada");
 
-      const ADMIN_INBOX = "alphacoachapp@gmail.com";
       const loginUrl = tenant.slug ? `https://alpha-coach.app/${tenant.slug}/app` : "https://alpha-coach.app/login";
 
       const html = `
         <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
-          <div style="background:#fff3cd;border:1px solid #ffeeba;color:#856404;padding:12px;border-radius:6px;margin-bottom:16px;font-size:13px;">
-            <strong>[TESTE DE ONBOARDING]</strong> E-mail original do aluno: ${email}
-          </div>
           <h1 style="color:#000;">Olá, ${nome}! 💪</h1>
           <p>Seu cadastro foi feito por <strong>${tenant.nome || "seu coach"}</strong>. Agora você tem acesso ao aplicativo.</p>
           <div style="background:#f5f5f5;padding:16px;border-left:4px solid #E50914;margin:20px 0;">
@@ -154,7 +150,7 @@ Deno.serve(async (req) => {
           <p style="text-align:center;margin:32px 0;">
             <a href="${loginUrl}" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">ENTRAR NO APP</a>
           </p>
-          <p style="font-size:12px;color:#999;">Equipe ${tenant.nome || "AlphaCoach"}</p>
+          <p style="font-size:12px;color:#999;">Equipe ${tenant.nome || "Alpha Coach Pro"}</p>
         </div>
       `;
 
@@ -165,9 +161,9 @@ Deno.serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "AlphaCoach <onboarding@resend.dev>",
-          to: [ADMIN_INBOX],
-          subject: `[TESTE DE ONBOARDING] Credenciais de ${nome} (${email})`,
+          from: "Alpha Coach Pro <suporte@alpha-coach.app>",
+          to: [email],
+          subject: `Bem-vindo(a) à ${tenant.nome || "Alpha Coach Pro"} — seus dados de acesso`,
           html,
         }),
       });
@@ -177,7 +173,7 @@ Deno.serve(async (req) => {
         console.error("[site-create-aluno] resend error", resp.status, errText);
         throw new Error(`Falha ao enviar email (${resp.status}): ${errText}`);
       }
-      console.log("[site-create-aluno] email de teste enviado para", ADMIN_INBOX, "(aluno original:", email, ")");
+      console.log("[site-create-aluno] email enviado para", email);
     } catch (e) {
       console.error("[site-create-aluno] email error", e);
       throw new Error(String((e as Error).message || e));
