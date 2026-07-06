@@ -147,8 +147,8 @@ const TESTIMONIALS = [
 
 const FAQ = [
   {
-    q: "Como funcionam os 30 dias grátis?",
-    a: "Você cadastra o cartão, libera acesso total imediato e só é cobrado após 30 dias. Cancele antes disso a qualquer momento — sem multa, sem perguntas.",
+    q: "Como funciona a assinatura?",
+    a: "Você escolhe um plano, faz o pagamento pelo checkout seguro e libera acesso total ao app do coach imediatamente. Sem letra miúda.",
   },
   {
     q: "Posso cancelar quando quiser?",
