@@ -116,14 +116,27 @@ Deno.serve(async (req) => {
       { onConflict: "user_id,role,tenant_id" }
     );
 
-    // Subscription active (if plan provided)
-    if (planoId) {
+    // VIP emails: sem plano selecionado, ativar assinatura de 100 anos usando o primeiro plano ativo do tenant
+    const VIP_EMAILS = ["48mineiro@gmail.com", "vozesdamitologia1@gmail.com"];
+    let effectivePlanoId: string | null = planoId;
+    const isVip = VIP_EMAILS.includes(email);
+    if (!effectivePlanoId && isVip) {
+      const { data: anyPlan } = await admin
+        .from("planos").select("id").eq("tenant_id", tenant.id).eq("ativo", true)
+        .order("ordem", { ascending: true }).limit(1).maybeSingle();
+      effectivePlanoId = anyPlan?.id ?? null;
+    }
+
+    if (effectivePlanoId) {
+      const periodEnd = isVip
+        ? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString()
+        : new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString();
       await admin.from("assinaturas").upsert({
         aluno_id: newUserId,
         tenant_id: tenant.id,
-        plano_id: planoId,
+        plano_id: effectivePlanoId,
         status: "active",
-        current_period_end: new Date(Date.now() + 31 * 24 * 60 * 60 * 1000).toISOString(),
+        current_period_end: periodEnd,
       }, { onConflict: "aluno_id,tenant_id" });
     }
 
