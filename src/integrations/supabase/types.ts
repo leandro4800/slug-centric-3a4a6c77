@@ -802,6 +802,51 @@ export type Database = {
           },
         ]
       }
+      benchmarks: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          id: string
+          is_global: boolean
+          nome: string
+          tenant_id: string | null
+          tipo: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_global?: boolean
+          nome: string
+          tenant_id?: string | null
+          tipo?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          is_global?: boolean
+          nome?: string
+          tenant_id?: string | null
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "benchmarks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "benchmarks_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       biblioteca_abdominais_pacho: {
         Row: {
           foco: string
@@ -1070,6 +1115,57 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "profissionais"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      camps_luta: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_inicio: string
+          data_luta: string
+          id: string
+          modalidade: string | null
+          nome: string
+          peso_meta: number | null
+          tenant_id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_inicio: string
+          data_luta: string
+          id?: string
+          modalidade?: string | null
+          nome: string
+          peso_meta?: number | null
+          tenant_id: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_inicio?: string
+          data_luta?: string
+          id?: string
+          modalidade?: string | null
+          nome?: string
+          peso_meta?: number | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "camps_luta_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "camps_luta_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
           },
         ]
       }
@@ -2243,6 +2339,51 @@ export type Database = {
           },
         ]
       }
+      peso_diario: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data: string
+          id: string
+          observacoes: string | null
+          peso: number
+          tenant_id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data?: string
+          id?: string
+          observacoes?: string | null
+          peso: number
+          tenant_id: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data?: string
+          id?: string
+          observacoes?: string | null
+          peso?: number
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "peso_diario_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "peso_diario_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       planos: {
         Row: {
           asaas_id: string | null
@@ -2258,6 +2399,7 @@ export type Database = {
           stripe_product_id: string | null
           tenant_id: string
           updated_at: string
+          vertical: Database["public"]["Enums"]["tenant_vertical"]
         }
         Insert: {
           asaas_id?: string | null
@@ -2273,6 +2415,7 @@ export type Database = {
           stripe_product_id?: string | null
           tenant_id: string
           updated_at?: string
+          vertical?: Database["public"]["Enums"]["tenant_vertical"]
         }
         Update: {
           asaas_id?: string | null
@@ -2288,6 +2431,7 @@ export type Database = {
           stripe_product_id?: string | null
           tenant_id?: string
           updated_at?: string
+          vertical?: Database["public"]["Enums"]["tenant_vertical"]
         }
         Relationships: [
           {
@@ -2350,6 +2494,54 @@ export type Database = {
           },
           {
             foreignKeyName: "profissionais_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
+      prs: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data: string
+          exercicio: string
+          id: string
+          tenant_id: string
+          unidade: string | null
+          valor: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data?: string
+          exercicio: string
+          id?: string
+          tenant_id: string
+          unidade?: string | null
+          valor: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data?: string
+          exercicio?: string
+          id?: string
+          tenant_id?: string
+          unidade?: string | null
+          valor?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "prs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "v_coach_dashboard_kpis"
@@ -2655,6 +2847,67 @@ export type Database = {
           },
         ]
       }
+      sessoes_luta: {
+        Row: {
+          aluno_id: string
+          camp_id: string | null
+          created_at: string
+          data: string
+          descricao: string | null
+          duracao_min: number | null
+          id: string
+          intensidade: string | null
+          tenant_id: string
+          tipo: string | null
+        }
+        Insert: {
+          aluno_id: string
+          camp_id?: string | null
+          created_at?: string
+          data: string
+          descricao?: string | null
+          duracao_min?: number | null
+          id?: string
+          intensidade?: string | null
+          tenant_id: string
+          tipo?: string | null
+        }
+        Update: {
+          aluno_id?: string
+          camp_id?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          duracao_min?: number | null
+          id?: string
+          intensidade?: string | null
+          tenant_id?: string
+          tipo?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessoes_luta_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps_luta"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessoes_luta_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessoes_luta_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       templates_treino: {
         Row: {
           ativo: boolean
@@ -2744,6 +2997,7 @@ export type Database = {
           tagline: string | null
           theme_overrides: Json
           updated_at: string
+          vertical: Database["public"]["Enums"]["tenant_vertical"]
         }
         Insert: {
           accent_hsl?: string
@@ -2770,6 +3024,7 @@ export type Database = {
           tagline?: string | null
           theme_overrides?: Json
           updated_at?: string
+          vertical?: Database["public"]["Enums"]["tenant_vertical"]
         }
         Update: {
           accent_hsl?: string
@@ -2796,6 +3051,7 @@ export type Database = {
           tagline?: string | null
           theme_overrides?: Json
           updated_at?: string
+          vertical?: Database["public"]["Enums"]["tenant_vertical"]
         }
         Relationships: []
       }
@@ -3091,6 +3347,115 @@ export type Database = {
         }
         Relationships: []
       }
+      wod_resultados: {
+        Row: {
+          aluno_id: string
+          categoria: string | null
+          created_at: string
+          id: string
+          observacoes: string | null
+          resultado: string | null
+          tenant_id: string
+          wod_id: string
+        }
+        Insert: {
+          aluno_id: string
+          categoria?: string | null
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          resultado?: string | null
+          tenant_id: string
+          wod_id: string
+        }
+        Update: {
+          aluno_id?: string
+          categoria?: string | null
+          created_at?: string
+          id?: string
+          observacoes?: string | null
+          resultado?: string | null
+          tenant_id?: string
+          wod_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wod_resultados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wod_resultados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+          {
+            foreignKeyName: "wod_resultados_wod_id_fkey"
+            columns: ["wod_id"]
+            isOneToOne: false
+            referencedRelation: "wods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wods: {
+        Row: {
+          categoria: string | null
+          created_at: string
+          data: string
+          descricao: string | null
+          duracao_min: number | null
+          id: string
+          nome: string | null
+          tenant_id: string
+          tipo: string | null
+          updated_at: string
+        }
+        Insert: {
+          categoria?: string | null
+          created_at?: string
+          data: string
+          descricao?: string | null
+          duracao_min?: number | null
+          id?: string
+          nome?: string | null
+          tenant_id: string
+          tipo?: string | null
+          updated_at?: string
+        }
+        Update: {
+          categoria?: string | null
+          created_at?: string
+          data?: string
+          descricao?: string | null
+          duracao_min?: number | null
+          id?: string
+          nome?: string | null
+          tenant_id?: string
+          tipo?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "wods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
     }
     Views: {
       v_coach_dashboard_kpis: {
@@ -3236,6 +3601,7 @@ export type Database = {
         | "canceled"
       plano_intervalo: "mensal" | "trimestral" | "anual" | "semestral"
       tenant_status: "pending" | "approved" | "rejected" | "suspended"
+      tenant_vertical: "personal" | "crossfit" | "fight"
       vlog_platform: "youtube" | "instagram" | "tiktok" | "other"
     }
     CompositeTypes: {
@@ -3383,6 +3749,7 @@ export const Constants = {
       ],
       plano_intervalo: ["mensal", "trimestral", "anual", "semestral"],
       tenant_status: ["pending", "approved", "rejected", "suspended"],
+      tenant_vertical: ["personal", "crossfit", "fight"],
       vlog_platform: ["youtube", "instagram", "tiktok", "other"],
     },
   },
