@@ -68,11 +68,12 @@ const Suporte = () => {
             </div>
 
             <div className="rounded-xl border border-border/60 p-4">
-              <h3 className="font-semibold text-foreground mb-1">Como cancelar minha assinatura?</h3>
+              <h3 className="font-semibold text-foreground mb-1">Problemas com a conta</h3>
               <p>
-                Assinaturas contratadas pela App Store podem ser canceladas em Ajustes {'>'} Apple ID {'>'}
-                Assinaturas no seu iPhone/iPad. Para outros pagamentos, envie um e-mail para
-                {" "}<a href={`mailto:${EMAIL}`} className="text-primary underline">{EMAIL}</a>.
+                Não consegue entrar, e-mail não confirmado, dados desatualizados ou conta duplicada?
+                Envie um e-mail para{" "}
+                <a href={`mailto:${EMAIL}?subject=Problema%20com%20a%20conta`} className="text-primary underline">{EMAIL}</a>{" "}
+                a partir do endereço cadastrado e nossa equipe resolve para você.
               </p>
             </div>
 
