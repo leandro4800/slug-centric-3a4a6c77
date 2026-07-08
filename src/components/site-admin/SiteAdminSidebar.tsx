@@ -38,6 +38,20 @@ export const SiteAdminSidebar = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { tenant } = useSiteTenant();
+  const [vertical, setVertical] = useState<string>("personal");
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    (async () => {
+      const { data } = await supabase.from("tenants").select("vertical").eq("id", tenant.id).maybeSingle();
+      if ((data as any)?.vertical) setVertical((data as any).vertical);
+    })();
+  }, [tenant?.id]);
+
+  const items: Item[] = [
+    ...baseItems,
+    ...(vertical === "fight" ? [{ to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" }] : []),
+  ];
 
   const signOut = async () => {
     await supabase.auth.signOut();
