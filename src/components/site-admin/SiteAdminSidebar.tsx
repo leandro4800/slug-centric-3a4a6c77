@@ -1,17 +1,18 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet,
-  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot
+  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { Logo } from "@/components/Logo";
 import { cn } from "@/lib/utils";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
+import { useEffect, useState } from "react";
 
 type Item = { to: string; label: string; icon: any; section?: string };
 
-const items: Item[] = [
+const baseItems: Item[] = [
   { to: "/site/admin/dashboard", label: "Resumo", icon: Home, section: "Painel" },
   { to: "/site/admin/agenda", label: "Agenda", icon: Calendar, section: "Painel" },
 
@@ -31,12 +32,26 @@ const items: Item[] = [
   { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy, section: "Conta" },
 ];
 
-const SECTIONS = ["Painel", "Alunos", "Programação", "Negócio", "Conta"] as const;
+const SECTIONS = ["Painel", "Alunos", "Programação", "Luta", "Negócio", "Conta"] as const;
 
 export const SiteAdminSidebar = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { tenant } = useSiteTenant();
+  const [vertical, setVertical] = useState<string>("personal");
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    (async () => {
+      const { data } = await supabase.from("tenants").select("vertical").eq("id", tenant.id).maybeSingle();
+      if ((data as any)?.vertical) setVertical((data as any).vertical);
+    })();
+  }, [tenant?.id]);
+
+  const items: Item[] = [
+    ...baseItems,
+    ...(vertical === "fight" ? [{ to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" }] : []),
+  ];
 
   const signOut = async () => {
     await supabase.auth.signOut();

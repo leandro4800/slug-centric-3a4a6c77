@@ -72,6 +72,8 @@ import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
 import SiteAdminSuporte from "./pages/site-admin/Suporte";
 import SiteAdminIntegracaoIA from "./pages/site-admin/IntegracaoIA";
 import { Calendar as CalendarIcon, Loader2, Palette, Wallet } from "lucide-react";
+import SiteAdminCtCamps from "./pages/site-admin/ct/Camps";
+import AlunoCtHome from "./pages/aluno/ct/CtHome";
 
 const queryClient = new QueryClient();
 
@@ -167,6 +169,7 @@ const App = () => (
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
               <Route path="integracao-ia" element={<SiteAdminIntegracaoIA />} />
               <Route path="suporte" element={<SiteAdminSuporte />} />
+              <Route path="ct/camps" element={<SiteAdminCtCamps />} />
               <Route path="resumo" element={<Navigate to="/site/admin/dashboard" replace />} />
             </Route>
             <Route path="/:slug/login" element={<Login />} />
@@ -217,6 +220,7 @@ const App = () => (
               <Route path="parceiros" element={<Parceiros />} />
               <Route path="carta" element={<Carta />} />
               <Route path="presencial" element={<Scheduling />} />
+              <Route path="ct" element={<AlunoCtHome />} />
             </Route>
 
 
