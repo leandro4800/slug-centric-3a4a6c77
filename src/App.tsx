@@ -220,6 +220,7 @@ const App = () => (
               <Route path="parceiros" element={<Parceiros />} />
               <Route path="carta" element={<Carta />} />
               <Route path="presencial" element={<Scheduling />} />
+              <Route path="ct" element={<AlunoCtHome />} />
             </Route>
 
 
