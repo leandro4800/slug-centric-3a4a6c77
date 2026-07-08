@@ -72,6 +72,8 @@ import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
 import SiteAdminSuporte from "./pages/site-admin/Suporte";
 import SiteAdminIntegracaoIA from "./pages/site-admin/IntegracaoIA";
 import { Calendar as CalendarIcon, Loader2, Palette, Wallet } from "lucide-react";
+import SiteAdminCtCamps from "./pages/site-admin/ct/Camps";
+import AlunoCtHome from "./pages/aluno/ct/CtHome";
 
 const queryClient = new QueryClient();
 
