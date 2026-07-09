@@ -5,10 +5,13 @@ import { PageHeader } from "@/components/aluno/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Swords, Loader2, Flame, Zap, ChevronRight } from "lucide-react";
+import { Swords, Loader2, Flame, Zap, ChevronRight, ChevronDown, Video, Play } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import FightCampView from "./FightCampView";
+import { getFightBlock } from "@/data/fightPerformanceCatalog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import ExercisePlayer from "@/components/aluno/ExercisePlayer";
 
 type Sessao = {
   id: string;
