@@ -59,7 +59,7 @@ const NutricaoCombate = () => {
     const { error } = await supabase.from("fight_nutrition_fases").insert({
       tenant_id: tenant.id,
       aluno_id: selected,
-      fase: form.fase,
+      fase: form.fase as "off_season" | "pre_camp" | "weight_cut",
       data_inicio: form.data_inicio,
       data_fim: form.data_fim,
       camp_id: form.camp_id || null,
