@@ -50,7 +50,10 @@ export const SiteAdminSidebar = () => {
 
   const items: Item[] = [
     ...baseItems,
-    ...(vertical === "fight" ? [{ to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" }] : []),
+    ...(vertical === "fight" ? [
+      { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
+      { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
+    ] : []),
   ];
 
   const signOut = async () => {
