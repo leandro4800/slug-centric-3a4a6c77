@@ -587,8 +587,13 @@ Não escreva justificativas longas; o resumo deve ser direto para o aluno objeti
       .insert({
         user_id: targetUserId,
         objetivo,
-        kcal_alvo: kcalAlvo,
-        macros_alvo: { proteina_g: proteinaG, carboidrato_g: carboG, lipideos_g: gorduraG },
+        kcal_alvo: kcalFinal,
+        macros_alvo: {
+          proteina_g: protFinal,
+          carboidrato_g: carboFinal,
+          lipideos_g: gordFinal,
+          ...(fightBadge ? { badge: fightBadge, fase: faseAtiva?.fase || null } : {}),
+        },
         is_published: false,
       })
       .select()
