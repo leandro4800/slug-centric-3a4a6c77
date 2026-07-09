@@ -47,9 +47,9 @@ const FightTrainingView = () => {
   const [sessoes, setSessoes] = useState<Sessao[]>([]);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [modalidade, setModalidade] = useState<string>("BJJ");
+  const [openExercise, setOpenExercise] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<{ url: string; nome: string } | null>(null);
 
-  useEffect(() => {
-    if (!user) return;
     (async () => {
       setLoading(true);
       const [s, c] = await Promise.all([
