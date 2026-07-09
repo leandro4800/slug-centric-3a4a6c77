@@ -1892,6 +1892,82 @@ export type Database = {
           },
         ]
       }
+      fight_nutrition_fases: {
+        Row: {
+          aluno_id: string
+          camp_id: string | null
+          carboidrato_g: number | null
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          fase: Database["public"]["Enums"]["fight_nutrition_fase"]
+          id: string
+          kcal_meta: number | null
+          lipideos_g: number | null
+          observacoes: string | null
+          peso_meta_kg: number | null
+          proteina_g: number | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          camp_id?: string | null
+          carboidrato_g?: number | null
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          fase: Database["public"]["Enums"]["fight_nutrition_fase"]
+          id?: string
+          kcal_meta?: number | null
+          lipideos_g?: number | null
+          observacoes?: string | null
+          peso_meta_kg?: number | null
+          proteina_g?: number | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          camp_id?: string | null
+          carboidrato_g?: number | null
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          fase?: Database["public"]["Enums"]["fight_nutrition_fase"]
+          id?: string
+          kcal_meta?: number | null
+          lipideos_g?: number | null
+          observacoes?: string | null
+          peso_meta_kg?: number | null
+          proteina_g?: number | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fight_nutrition_fases_camp_id_fkey"
+            columns: ["camp_id"]
+            isOneToOne: false
+            referencedRelation: "camps_luta"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fight_nutrition_fases_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fight_nutrition_fases_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       historico_cargas: {
         Row: {
           carga_kg: number
@@ -2857,6 +2933,7 @@ export type Database = {
           duracao_min: number | null
           id: string
           intensidade: string | null
+          rpe: number | null
           tenant_id: string
           tipo: string | null
         }
@@ -2869,6 +2946,7 @@ export type Database = {
           duracao_min?: number | null
           id?: string
           intensidade?: string | null
+          rpe?: number | null
           tenant_id: string
           tipo?: string | null
         }
@@ -2881,6 +2959,7 @@ export type Database = {
           duracao_min?: number | null
           id?: string
           intensidade?: string | null
+          rpe?: number | null
           tenant_id?: string
           tipo?: string | null
         }
@@ -3599,6 +3678,7 @@ export type Database = {
         | "active"
         | "past_due"
         | "canceled"
+      fight_nutrition_fase: "off_season" | "pre_camp" | "weight_cut"
       plano_intervalo: "mensal" | "trimestral" | "anual" | "semestral"
       tenant_status: "pending" | "approved" | "rejected" | "suspended"
       tenant_vertical: "personal" | "crossfit" | "fight"
@@ -3747,6 +3827,7 @@ export const Constants = {
         "past_due",
         "canceled",
       ],
+      fight_nutrition_fase: ["off_season", "pre_camp", "weight_cut"],
       plano_intervalo: ["mensal", "trimestral", "anual", "semestral"],
       tenant_status: ["pending", "approved", "rejected", "suspended"],
       tenant_vertical: ["personal", "crossfit", "fight"],

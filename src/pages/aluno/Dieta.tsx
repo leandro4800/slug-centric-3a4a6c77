@@ -12,6 +12,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
+import { useBranding } from "@/contexts/BrandingProvider";
+import FightNutritionView from "@/pages/aluno/fight/FightNutritionView";
 import imgBreakfast from "@/assets/meal-breakfast.jpg";
 import imgLunch from "@/assets/meal-lunch.jpg";
 import imgSnack from "@/assets/meal-snack.jpg";
@@ -78,6 +80,12 @@ const imgFor = (nome: string) => {
 };
 
 const Dieta = () => {
+  const { tenant } = useBranding();
+  if (tenant?.vertical === "fight") return <FightNutritionView />;
+  return <PersonalDieta />;
+};
+
+const PersonalDieta = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [dieta, setDieta] = useState<Dieta | null>(null);

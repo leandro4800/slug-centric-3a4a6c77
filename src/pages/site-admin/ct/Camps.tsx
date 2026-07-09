@@ -15,7 +15,7 @@ import { ptBR } from "date-fns/locale";
 
 type Aluno = { id: string; nome: string };
 type Camp = { id: string; aluno_id: string; nome: string; data_inicio: string; data_luta: string; peso_meta: number | null; modalidade: string | null };
-type Sessao = { id: string; camp_id: string | null; aluno_id: string; data: string; tipo: string | null; descricao: string | null; duracao_min: number | null; intensidade: string | null };
+type Sessao = { id: string; camp_id: string | null; aluno_id: string; data: string; tipo: string | null; descricao: string | null; duracao_min: number | null; intensidade: string | null; rpe: number | null };
 type Peso = { id: string; aluno_id: string; data: string; peso: number };
 
 const TIPOS = ["sparring", "tecnica", "fisico", "cardio", "mobilidade", "estrategia"];
@@ -33,7 +33,7 @@ const Camps = () => {
   const [showCampForm, setShowCampForm] = useState(false);
   const [campForm, setCampForm] = useState({ nome: "", data_inicio: "", data_luta: "", peso_meta: "", modalidade: "" });
 
-  const [sessaoForm, setSessaoForm] = useState({ camp_id: "", data: format(new Date(), "yyyy-MM-dd"), tipo: "tecnica", descricao: "", duracao_min: "", intensidade: "moderado" });
+  const [sessaoForm, setSessaoForm] = useState({ camp_id: "", data: format(new Date(), "yyyy-MM-dd"), tipo: "tecnica", descricao: "", duracao_min: "", intensidade: "moderado", rpe: "" });
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -99,10 +99,11 @@ const Camps = () => {
       descricao: sessaoForm.descricao || null,
       duracao_min: sessaoForm.duracao_min ? Number(sessaoForm.duracao_min) : null,
       intensidade: sessaoForm.intensidade || null,
+      rpe: sessaoForm.rpe ? Math.max(1, Math.min(10, Number(sessaoForm.rpe))) : null,
     });
     if (error) { toast.error(error.message); return; }
     toast.success("Sessão adicionada");
-    setSessaoForm({ ...sessaoForm, descricao: "", duracao_min: "" });
+    setSessaoForm({ ...sessaoForm, descricao: "", duracao_min: "", rpe: "" });
     loadAlunoData(selectedAluno);
   };
 
@@ -199,6 +200,7 @@ const Camps = () => {
                   <SelectContent>{INTENSIDADES.map((t) => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
+              <div><Label>RPE (1-10)</Label><Input type="number" min={1} max={10} value={sessaoForm.rpe} onChange={(e) => setSessaoForm({ ...sessaoForm, rpe: e.target.value })} placeholder="Percepção de esforço" /></div>
               <div className="md:col-span-4"><Label>Descrição / drills</Label><Textarea rows={3} value={sessaoForm.descricao} onChange={(e) => setSessaoForm({ ...sessaoForm, descricao: e.target.value })} placeholder="5x3min sparring, drill de clinch, condicionamento..." /></div>
               <div className="md:col-span-4"><Button onClick={salvarSessao}><Plus className="h-4 w-4 mr-1" />Adicionar</Button></div>
             </div>
@@ -216,6 +218,7 @@ const Camps = () => {
                         {format(parseISO(s.data), "dd/MM", { locale: ptBR })} · <span className="uppercase text-primary text-xs">{s.tipo}</span>
                         {s.intensidade ? ` · ${s.intensidade}` : ""}
                         {s.duracao_min ? ` · ${s.duracao_min}min` : ""}
+                        {s.rpe ? ` · RPE ${s.rpe}` : ""}
                       </p>
                       {s.descricao && <p className="text-xs text-muted-foreground mt-0.5">{s.descricao}</p>}
                     </div>

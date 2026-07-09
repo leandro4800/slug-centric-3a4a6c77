@@ -27,7 +27,15 @@ const VOLUME_GROUPS = ["peito", "costas", "quadríceps", "quadriceps", "glúteo"
 const MIN_EXERCISES_PER_DAY = 4;
 
 
+import FightCampView from "@/pages/aluno/fight/FightCampView";
+
 const Treino = () => {
+  const { tenant } = useBranding();
+  if (tenant?.vertical === "fight") return <FightCampView />;
+  return <PersonalTreino />;
+};
+
+const PersonalTreino = () => {
   const { user } = useAuth();
   const { tenant } = useBranding();
   const { slug } = useParams();

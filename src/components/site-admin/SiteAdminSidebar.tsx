@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet,
-  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords
+  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -50,7 +50,10 @@ export const SiteAdminSidebar = () => {
 
   const items: Item[] = [
     ...baseItems,
-    ...(vertical === "fight" ? [{ to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" }] : []),
+    ...(vertical === "fight" ? [
+      { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
+      { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
+    ] : []),
   ];
 
   const signOut = async () => {
