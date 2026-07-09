@@ -174,6 +174,7 @@ const App = () => (
               <Route path="integracao-ia" element={<SiteAdminIntegracaoIA />} />
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="ct/camps" element={<SiteAdminCtCamps />} />
+              <Route path="ct/nutricao" element={<SiteAdminCtNutricao />} />
               <Route path="resumo" element={<Navigate to="/site/admin/dashboard" replace />} />
             </Route>
             <Route path="/:slug/login" element={<Login />} />
