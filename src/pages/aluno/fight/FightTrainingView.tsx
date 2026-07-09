@@ -274,6 +274,16 @@ const FightTrainingView = () => {
           </div>
         )}
       </Card>
+
+      <Dialog open={!!videoUrl} onOpenChange={(o) => !o && setVideoUrl(null)}>
+        <DialogContent className="max-w-2xl p-0 bg-black border-white/10">
+          <div className="relative w-full aspect-video">
+            {videoUrl && (
+              <ExercisePlayer videoUrl={videoUrl.url} exerciseName={videoUrl.nome} showPlayButton={false} />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
