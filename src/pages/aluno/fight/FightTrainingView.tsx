@@ -158,8 +158,70 @@ const FightTrainingView = () => {
         </div>
       </button>
 
+      {/* Preparação física de alta performance por modalidade */}
+      {(() => {
+        const block = getFightBlock(modalidade);
+        if (!block) return null;
+        return (
+          <div className="space-y-3">
+            <div className="px-1">
+              <h2 className="font-display text-lg uppercase italic tracking-tight flex items-center gap-2">
+                <Play className="h-4 w-4 text-orange-500 fill-orange-500" />
+                Preparação · {modalidade}
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">{block.subtitulo}</p>
+            </div>
+
+            {block.valencias.map((val) => (
+              <Card key={val.titulo} className="p-4 bg-card/60 backdrop-blur border-white/5">
+                <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 mb-3">
+                  <Play className="h-3.5 w-3.5 text-orange-500 fill-orange-500" />
+                  {val.titulo}
+                </h3>
+                <div className="space-y-2">
+                  {val.exercicios.map((ex) => {
+                    const key = `${val.titulo}-${ex.nome}`;
+                    const isOpen = openExercise === key;
+                    return (
+                      <div key={key} className="rounded-xl border border-white/5 bg-black/40 overflow-hidden">
+                        <div className="flex items-stretch">
+                          <button
+                            onClick={() => setOpenExercise(isOpen ? null : key)}
+                            className="flex-1 min-w-0 p-3 flex items-center gap-3 text-left hover:bg-white/[0.02]"
+                          >
+                            <ChevronDown
+                              className={`h-4 w-4 text-primary shrink-0 transition-transform ${isOpen ? "rotate-180" : "-rotate-90"}`}
+                            />
+                            <span className="text-sm font-bold uppercase tracking-wider truncate">{ex.nome}</span>
+                          </button>
+                          {ex.video_url && (
+                            <button
+                              onClick={() => setVideoUrl({ url: ex.video_url!, nome: ex.nome })}
+                              className="px-3 flex items-center gap-1.5 border-l border-white/5 hover:bg-primary/10 text-primary"
+                            >
+                              <Video className="h-3.5 w-3.5" />
+                              <span className="text-[10px] uppercase tracking-widest font-bold">Ver vídeo</span>
+                            </button>
+                          )}
+                        </div>
+                        {isOpen && (
+                          <div className="px-3 pb-3 pt-1 text-xs text-muted-foreground leading-relaxed border-t border-white/5">
+                            {ex.descricao}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </Card>
+            ))}
+          </div>
+        );
+      })()}
+
       {/* Sessões da modalidade */}
       <Card className="p-4 bg-card/60 backdrop-blur border-white/5">
+
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2">
             <Zap className="h-4 w-4 text-primary" />Próximas sessões · {modalidade}
