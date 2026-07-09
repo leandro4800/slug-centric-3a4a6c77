@@ -50,6 +50,8 @@ const FightTrainingView = () => {
   const [openExercise, setOpenExercise] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<{ url: string; nome: string } | null>(null);
 
+  useEffect(() => {
+    if (!user) return;
     (async () => {
       setLoading(true);
       const [s, c] = await Promise.all([
