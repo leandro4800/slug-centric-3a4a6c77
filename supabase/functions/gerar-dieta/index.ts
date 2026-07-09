@@ -507,8 +507,9 @@ PERFIL DO ALUNO:
 - Nível: ${nivelTemplate}
 - Objetivo: ${objetivo}
 
-META DE MACROS (calculada a partir do perfil acima):
-${kcalAlvo} kcal | Proteína: ${proteinaG}g | Carboidrato: ${carboG}g | Gordura: ${gorduraG}g
+META DE MACROS (calculada a partir do perfil acima${fightVertical ? " + fase de combate ativa" : ""}):
+${kcalFinal} kcal | Proteína: ${protFinal}g | Carboidrato: ${carboFinal}g | Gordura: ${gordFinal}g
+${fightBlock}
 
 ==== PRIORIDADE 1 — ANAMNESE DO ALUNO (REGRA SUPREMA) ====
 A escolha dos alimentos DEVE respeitar a anamnese antes de qualquer outra regra.
