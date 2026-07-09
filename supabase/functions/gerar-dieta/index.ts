@@ -375,6 +375,90 @@ na MESMA ORDEM recebida.`;
 
     const refDia = body.refeicoes_dia || 4;
 
+    // === FIGHT VERTICAL: detecta tenant e fase ativa ===
+    const { data: perfilFight } = await supabase
+      .from("perfis").select("tenant_id").eq("id", targetUserId).maybeSingle();
+    let fightVertical = false;
+    let faseAtiva: any = null;
+    if (perfilFight?.tenant_id) {
+      const { data: tenantRow } = await supabase
+        .from("tenants").select("vertical").eq("id", perfilFight.tenant_id).maybeSingle();
+      fightVertical = tenantRow?.vertical === "fight";
+      if (fightVertical) {
+        const hoje = new Date().toISOString().slice(0, 10);
+        const { data: fase } = await supabase
+          .from("fight_nutrition_fases")
+          .select("fase, kcal_meta, proteina_g, carboidrato_g, lipideos_g, peso_meta_kg, data_inicio, data_fim, observacoes")
+          .eq("aluno_id", targetUserId)
+          .lte("data_inicio", hoje).gte("data_fim", hoje)
+          .order("data_inicio", { ascending: false }).limit(1).maybeSingle();
+        faseAtiva = fase || null;
+      }
+    }
+
+    // Override de macros pela fase ativa (mantém regra de proteção)
+    let kcalFinal = kcalAlvo;
+    let protFinal = proteinaG;
+    let carboFinal = carboG;
+    let gordFinal = gorduraG;
+    let fightBadge: string | null = null;
+    let fightBlock = "";
+
+    if (fightVertical) {
+      const faseNome = faseAtiva?.fase || "off_season";
+      const faseLabel: Record<string, string> = {
+        off_season: "Off-Season / Foco em Força e Hipertrofia Limpa",
+        pre_camp: "Pré-Camp / Foco em Performance Energética",
+        weight_cut: "Weight Cut / Corte de Peso Guiado",
+        fight_day: "Fight Day / Combustível de Alta Digestibilidade",
+      };
+      fightBadge = `Fase: ${faseLabel[faseNome] || faseNome}`;
+
+      // Override de cálculo por fase (usa valores do coach quando existirem)
+      let fatorFase = 1.0;
+      if (faseNome === "off_season") fatorFase = 1.08;
+      else if (faseNome === "pre_camp") fatorFase = 0.93;
+      else if (faseNome === "weight_cut") fatorFase = 0.83;
+      else if (faseNome === "fight_day") fatorFase = 0.95;
+
+      const kcalManutencao = Math.round(tmb * fa);
+      kcalFinal = faseAtiva?.kcal_meta ?? Math.round(kcalManutencao * fatorFase);
+
+      // Travas de macros para lutadores
+      const protMinKg = 2.2, protMaxKg = 2.6, gordMinKg = 0.8;
+      protFinal = faseAtiva?.proteina_g ?? Math.min(Math.max(Math.round(peso * 2.4), Math.round(peso * protMinKg)), Math.round(peso * protMaxKg));
+      gordFinal = faseAtiva?.lipideos_g ?? Math.max(Math.round(peso * gordMinKg), 50);
+      carboFinal = faseAtiva?.carboidrato_g ?? Math.max(Math.round((kcalFinal - protFinal * 4 - gordFinal * 9) / 4), 80);
+
+      fightBlock = `
+
+==== CONTEXTO DE COMBATE E ALTA PERFORMANCE DE LUTAS (PRIORIDADE ABSOLUTA) ====
+Atleta de esportes de combate. Fase ATIVA: ${faseNome.toUpperCase()} (${faseAtiva?.data_inicio || "?"} → ${faseAtiva?.data_fim || "?"}).
+${faseAtiva?.peso_meta_kg ? `Meta de peso: ${faseAtiva.peso_meta_kg}kg.` : ""}
+${faseAtiva?.observacoes ? `Observações do técnico: ${faseAtiva.observacoes}` : ""}
+
+1. DIRETRIZES DA FASE (OVERRIDE):
+- off_season: superávit leve (+8%). Força/hipertrofia limpa. Creatina 5g/dia.
+- pre_camp: manutenção/déficit leve (-5% a -10%). 60% do carbo total do dia CONCENTRADO na janela peri-treino (pré + pós).
+- weight_cut: déficit controlado (-15% a -18%). ZERE lactose e fibras insolúveis (feijão, aveia em excesso, cascas, crucíferos como brócolis/couve-flor/repolho). Reduza sódio nos últimos 3 dias. Remova creatina se <2 semanas da pesagem.
+- fight_day: alimentos de altíssimo IG e digestão fácil (creme de arroz, mel, banana madura, frutas sem casca), baixíssima fibra, whey isolado.
+
+2. TRAVAS DE MACROS PARA LUTADORES:
+- Proteína: 2.2 a 2.6 g/kg (preservação de massa magra em déficit).
+- Gordura: nunca abaixo de 0.8 g/kg (saúde hormonal e SNC).
+- Carboidrato: preenche o restante, priorizando performance energética.
+
+3. TIMING DE REFEIÇÃO (CRÍTICO — luta tem pancada/queda/compressão):
+- Refeição PRÉ-treino/sparring: agende SEMPRE entre 90 e 120 minutos ANTES da atividade principal. Carbo de rápida absorção + proteína leve. ZERO fibras densas. Se a refeição contém sólidos, respeite os 90–120min rigorosamente.
+- Refeição PÓS-treino/sparring (janela de recuperação): carbo simples + whey isolado/concentrado em até 30 minutos após o término.
+- Distribua os "horario" das refeições coerentemente com essa janela (assuma treino principal 17:00–19:00 se não houver info).
+
+4. ALIMENTOS BANIDOS na fase weight_cut (NÃO INCLUIR): feijão, lentilha, grão-de-bico, aveia >30g, brócolis, couve-flor, repolho, cascas, farelos, leite/queijo/iogurte (lactose), refrigerante, ultraprocessados. Sódio reduzido.
+
+5. TAG CLÍNICA (obrigatório retornar):
+No JSON, inclua o campo "tag_clinica" no nível raiz com EXATAMENTE: "${fightBadge}"`;
+    }
+
     // 1. Anamnese do aluno (PRIORIDADE MÁXIMA na escolha de alimentos)
     const { data: anamnese } = await supabase
       .from("anamnese_aluno")
