@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY não configurada.");
     if (stripeKey.startsWith("pk_")) {
-      throw new Error("STRIPE_SECRET_KEY precisa ser uma chave secreta (sk_live_/sk_test_) ou restricted key com permissões Connect, não uma chave pública (pk_).);
+      throw new Error("STRIPE_SECRET_KEY precisa ser uma chave secreta (sk_live_/sk_test_) ou restricted key com permissões Connect, não uma chave pública (pk_).");
     }
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
