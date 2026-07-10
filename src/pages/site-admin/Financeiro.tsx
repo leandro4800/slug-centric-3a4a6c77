@@ -80,7 +80,20 @@ const Financeiro = () => {
       const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", {
         body: { tenant_id: tenant.id },
       });
-      if (error) throw error;
+      if (error) {
+        const response = (error as any)?.context;
+        if (response && typeof response.clone === "function") {
+          let message = error.message;
+          try {
+            const body = await response.clone().json();
+            message = body?.error || message;
+          } catch {
+            // mantém a mensagem original se o corpo não for JSON
+          }
+          throw new Error(message);
+        }
+        throw error;
+      }
       if (!data?.url) throw new Error("URL de onboarding não retornada");
       window.location.href = data.url;
     } catch (e: any) {

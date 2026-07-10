@@ -10,11 +10,42 @@ const corsHeaders = {
 const log = (s: string, d?: unknown) =>
   console.log(`[connect-onboard] ${s}${d ? " " + JSON.stringify(d) : ""}`);
 
+const json = (status: number, body: Record<string, unknown>) =>
+  new Response(JSON.stringify(body), {
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+    status,
+  });
+
+const stripeConnectPermissionMessage =
+  "A chave Stripe configurada não tem permissão para criar/conectar contas Connect. Use uma Secret Key completa (sk_live_) ou libere na Restricted Key as permissões: Accounts Write, Basic Business Contact Information Read e Full Bank Account Information Read.";
+
+const getPublicStripeError = (e: unknown) => {
+  const msg = e instanceof Error ? e.message : String(e);
+  const code = (e as { code?: string })?.code;
+  const lower = msg.toLowerCase();
+
+  if (code === "permission_error" || (lower.includes("permission denied") && lower.includes("required permissions"))) {
+    return stripeConnectPermissionMessage;
+  }
+
+  if (lower.includes("invalid api key") || lower.includes("api key provided")) {
+    return "A chave Stripe configurada é inválida. Atualize o STRIPE_SECRET_KEY com uma chave secreta válida da conta principal.";
+  }
+
+  return msg;
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY")!, { apiVersion: "2025-08-27.basil" });
+    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY não configurada.");
+    if (stripeKey.startsWith("pk_")) {
+      throw new Error("STRIPE_SECRET_KEY precisa ser uma chave secreta (sk_live_/sk_test_) ou restricted key com permissões Connect, não uma chave pública (pk_).");
+    }
+
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -77,16 +108,10 @@ Deno.serve(async (req) => {
       type: "account_onboarding",
     });
 
-    return new Response(JSON.stringify({ url: link.url, account_id: accountId }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    return json(200, { url: link.url, account_id: accountId });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = getPublicStripeError(e);
     log("ERROR", { msg });
-    return new Response(JSON.stringify({ error: msg }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 400,
-    });
+    return json(400, { error: msg });
   }
 });
