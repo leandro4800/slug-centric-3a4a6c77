@@ -19,6 +19,9 @@ const json = (status: number, body: Record<string, unknown>) =>
 const stripeConnectPermissionMessage =
   "A chave Stripe configurada não tem permissão para criar/conectar contas Connect. Use uma Secret Key completa (sk_live_) ou libere na Restricted Key as permissões: Accounts Write, Basic Business Contact Information Read e Full Bank Account Information Read.";
 
+const stripeConnectNotActivatedMessage =
+  "A conta Stripe da Alpha Coach ainda não ativou o Stripe Connect. Não precisa criar outra conta: entre no painel Stripe principal, acesse Connect e complete a ativação para permitir contas Express de coaches.";
+
 const getPublicStripeError = (e: unknown) => {
   const msg = e instanceof Error ? e.message : String(e);
   const code = (e as { code?: string })?.code;
@@ -26,6 +29,10 @@ const getPublicStripeError = (e: unknown) => {
 
   if (code === "permission_error" || (lower.includes("permission denied") && lower.includes("required permissions"))) {
     return stripeConnectPermissionMessage;
+  }
+
+  if (lower.includes("signed up for connect") || lower.includes("dashboard.stripe.com/connect")) {
+    return stripeConnectNotActivatedMessage;
   }
 
   if (lower.includes("invalid api key") || lower.includes("api key provided")) {
