@@ -87,12 +87,14 @@ const AdminFaturamento = () => {
       if (error) {
         const response = (error as any)?.context;
         if (response && typeof response.clone === "function") {
+          let message = error.message;
           try {
             const body = await response.clone().json();
-            throw new Error(body?.error || error.message);
+            message = body?.error || message;
           } catch {
-            throw error;
+            // mantém a mensagem original se o corpo não for JSON
           }
+          throw new Error(message);
         }
         throw error;
       }
