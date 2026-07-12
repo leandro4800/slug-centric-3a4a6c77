@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
       if (!plano_id) throw new Error("plano_id required");
       const { data: plano, error: planoErr } = await supabase
         .from("planos")
-        .select("*, tenants!inner(id,slug,nome,status)")
+        .select("*, tenants!inner(id,slug,nome,status,is_partner)")
         .eq("id", plano_id)
         .eq("ativo", true)
         .maybeSingle();
@@ -125,6 +125,10 @@ Deno.serve(async (req) => {
       baseUnitAmount = plano.preco_centavos;
       line_items = [{ price: plano.stripe_price_id, quantity: 1 }];
     }
+
+    // Coaches parceiros: plataforma não cobra fee. Preço do plano já inclui as taxas do Stripe,
+    // que serão descontadas da conta do coach (on_behalf_of + transfer_data, sem application_fee).
+    const isPartner = !!tenant_to_use.is_partner;
 
     if (tenant_to_use.status !== "approved") throw new Error("tenant not approved");
     const isPlatformOwned = !tenant_to_use.stripe_account_id;
@@ -166,22 +170,32 @@ Deno.serve(async (req) => {
     // Plataforma absorve a taxa Stripe; coach recebe valor cheio via transfer_data.
     // Para tenants próprios da plataforma (ex: alphateam), não há transfer/fee — cobrança direta.
     if (mode === "subscription") {
-      // Sem trial: aluno paga na hora e coach recebe imediatamente via split.
-      // (Os 30 dias grátis são exclusivos do coach ao aderir à plataforma, fluxo separado.)
       sessionParams.subscription_data = {};
       if (!isPlatformOwned) {
-        sessionParams.subscription_data.application_fee_percent = APPLICATION_FEE_PCT;
-        sessionParams.subscription_data.transfer_data = { destination: tenant_to_use.stripe_account_id };
+        if (isPartner) {
+          sessionParams.subscription_data.transfer_data = { destination: tenant_to_use.stripe_account_id };
+          sessionParams.subscription_data.on_behalf_of = tenant_to_use.stripe_account_id;
+        } else {
+          sessionParams.subscription_data.application_fee_percent = APPLICATION_FEE_PCT;
+          sessionParams.subscription_data.transfer_data = { destination: tenant_to_use.stripe_account_id };
+        }
       }
     } else {
       if (!isPlatformOwned) {
-        const totalAmount = line_items[0].price_data.unit_amount;
-        const coachAmount = Math.round(baseUnitAmount * (1 - PLATFORM_FEE_PCT_OF_BASE / 100));
-        const applicationFee = totalAmount - coachAmount;
-        sessionParams.payment_intent_data = {
-          application_fee_amount: applicationFee,
-          transfer_data: { destination: tenant_to_use.stripe_account_id },
-        };
+        if (isPartner) {
+          sessionParams.payment_intent_data = {
+            transfer_data: { destination: tenant_to_use.stripe_account_id },
+            on_behalf_of: tenant_to_use.stripe_account_id,
+          };
+        } else {
+          const totalAmount = line_items[0].price_data.unit_amount;
+          const coachAmount = Math.round(baseUnitAmount * (1 - PLATFORM_FEE_PCT_OF_BASE / 100));
+          const applicationFee = totalAmount - coachAmount;
+          sessionParams.payment_intent_data = {
+            application_fee_amount: applicationFee,
+            transfer_data: { destination: tenant_to_use.stripe_account_id },
+          };
+        }
       }
     }
 
