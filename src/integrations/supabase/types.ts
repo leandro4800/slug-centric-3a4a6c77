@@ -3061,6 +3061,7 @@ export type Database = {
           foto_url: string | null
           hero_url: string | null
           id: string
+          is_partner: boolean
           login_video_url: string | null
           logo_url: string | null
           music_url: string | null
@@ -3088,6 +3089,7 @@ export type Database = {
           foto_url?: string | null
           hero_url?: string | null
           id?: string
+          is_partner?: boolean
           login_video_url?: string | null
           logo_url?: string | null
           music_url?: string | null
@@ -3115,6 +3117,7 @@ export type Database = {
           foto_url?: string | null
           hero_url?: string | null
           id?: string
+          is_partner?: boolean
           login_video_url?: string | null
           logo_url?: string | null
           music_url?: string | null
