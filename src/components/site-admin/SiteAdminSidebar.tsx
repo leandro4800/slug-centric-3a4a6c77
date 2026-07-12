@@ -1,7 +1,8 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet,
-  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag
+  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag,
+  ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -62,25 +63,51 @@ export const SiteAdminSidebar = () => {
     navigate("/site/login", { replace: true });
   };
 
+  const [collapsed, setCollapsed] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("site-admin-sidebar-collapsed") === "1";
+  });
+  const toggleCollapsed = () => {
+    setCollapsed((v) => {
+      const next = !v;
+      try { localStorage.setItem("site-admin-sidebar-collapsed", next ? "1" : "0"); } catch {}
+      return next;
+    });
+  };
+
   return (
-    <aside className="hidden md:flex w-60 flex-col border-r border-white/10 bg-black/40 backdrop-blur-sm h-screen sticky top-0">
-      <div className="px-5 py-6 border-b border-white/10">
-        <div className="flex items-center gap-2">
+    <aside className={cn(
+      "hidden md:flex flex-col border-r border-white/10 bg-black/40 backdrop-blur-sm h-screen sticky top-0 transition-[width] duration-200",
+      collapsed ? "w-14" : "w-60"
+    )}>
+      <div className={cn("border-b border-white/10 relative", collapsed ? "px-2 py-4" : "px-5 py-6")}>
+        <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
           <Logo withText={false} />
-          <div className="leading-tight">
-            <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span></p>
-            <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Painel do site</p>
-          </div>
+          {!collapsed && (
+            <div className="leading-tight">
+              <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span></p>
+              <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Painel do site</p>
+            </div>
+          )}
         </div>
-        {tenant && (
+        {!collapsed && tenant && (
           <p className="mt-3 text-[10px] uppercase tracking-widest text-primary truncate">{tenant.nome}</p>
         )}
+        <button
+          onClick={toggleCollapsed}
+          aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+          className="absolute -right-3 top-6 h-6 w-6 rounded-full border border-white/10 bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/10 z-10"
+        >
+          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
+        </button>
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
         {SECTIONS.map((section) => (
           <div key={section}>
-            <p className="px-3 mb-1 text-[9px] uppercase tracking-widest text-muted-foreground/60">{section}</p>
+            {!collapsed && (
+              <p className="px-3 mb-1 text-[9px] uppercase tracking-widest text-muted-foreground/60">{section}</p>
+            )}
             <div className="space-y-0.5">
               {items.filter((i) => i.section === section).map((item) => {
                 const exact = item.to === "/site/admin/alunos" || item.to === "/site/admin/alunos/novo";
@@ -93,15 +120,17 @@ export const SiteAdminSidebar = () => {
                     key={item.to}
                     to={item.to}
                     end={exact}
+                    title={collapsed ? item.label : undefined}
                     className={cn(
-                      "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                      "flex items-center gap-3 rounded-md text-sm transition-colors",
+                      collapsed ? "justify-center px-2 py-2" : "px-3 py-2",
                       active
                         ? "bg-primary/15 text-primary border-l-2 border-primary"
                         : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                     )}
                   >
                     <Icon className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{item.label}</span>
+                    {!collapsed && <span className="truncate">{item.label}</span>}
                   </NavLink>
                 );
               })}
@@ -113,10 +142,14 @@ export const SiteAdminSidebar = () => {
       <div className="border-t border-white/10 p-3">
         <button
           onClick={signOut}
-          className="flex w-full items-center gap-3 px-3 py-2.5 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-white/5"
+          title={collapsed ? "Sair" : undefined}
+          className={cn(
+            "flex w-full items-center gap-3 rounded-md text-sm text-muted-foreground hover:text-foreground hover:bg-white/5",
+            collapsed ? "justify-center px-2 py-2.5" : "px-3 py-2.5"
+          )}
         >
           <LogOut className="h-4 w-4" />
-          Sair
+          {!collapsed && "Sair"}
         </button>
       </div>
     </aside>
