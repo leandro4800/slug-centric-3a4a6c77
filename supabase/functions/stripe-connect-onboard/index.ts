@@ -68,8 +68,12 @@ Deno.serve(async (req) => {
     const userId = claimsRes.claims.sub as string;
     const email = claimsRes.claims.email as string;
 
-    const { tenant_id } = await req.json();
+    const { tenant_id, return_path } = await req.json();
     if (!tenant_id) throw new Error("tenant_id required");
+    const safeReturnPath =
+      typeof return_path === "string" && return_path.startsWith("/") && !return_path.startsWith("//")
+        ? return_path
+        : "/site/admin/faturamento";
 
     // Verifica posse
     const { data: tenant, error: tErr } = await supabase
@@ -110,8 +114,8 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") || "http://localhost:3000";
     const link = await stripe.accountLinks.create({
       account: accountId,
-      refresh_url: `${origin}/seja-coach?refresh=1`,
-      return_url: `${origin}/seja-coach?completed=1`,
+      refresh_url: `${origin}${safeReturnPath}?stripe=refresh`,
+      return_url: `${origin}${safeReturnPath}?stripe=completed`,
       type: "account_onboarding",
     });
 

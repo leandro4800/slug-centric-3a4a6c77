@@ -45,6 +45,25 @@ Deno.serve(async (req) => {
 
     const acc = await stripe.accounts.retrieve(tpriv.stripe_account_id);
     const completed = !!acc.charges_enabled && !!acc.payouts_enabled && !!acc.details_submitted;
+    const pendingVerification = [
+      ...(acc.requirements?.pending_verification ?? []),
+      ...(acc.future_requirements?.pending_verification ?? []),
+    ];
+    const currentlyDue = [
+      ...(acc.requirements?.currently_due ?? []),
+      ...(acc.future_requirements?.currently_due ?? []),
+    ];
+    const pastDue = [
+      ...(acc.requirements?.past_due ?? []),
+      ...(acc.future_requirements?.past_due ?? []),
+    ];
+    const status = completed
+      ? "verified"
+      : acc.details_submitted && pendingVerification.length > 0
+        ? "pending_verification"
+        : acc.details_submitted
+          ? "submitted"
+          : "incomplete";
 
     await supabase
       .from("tenants_private")
@@ -54,9 +73,14 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         completed,
+        status,
         charges_enabled: acc.charges_enabled,
         payouts_enabled: acc.payouts_enabled,
         details_submitted: acc.details_submitted,
+        pending_verification: pendingVerification,
+        currently_due: currentlyDue,
+        past_due: pastDue,
+        disabled_reason: acc.requirements?.disabled_reason ?? acc.future_requirements?.disabled_reason ?? null,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
