@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
       if (!plano_id) throw new Error("plano_id required");
       const { data: plano, error: planoErr } = await supabase
         .from("planos")
-        .select("*, tenants!inner(id,slug,nome,status)")
+        .select("*, tenants!inner(id,slug,nome,status,is_partner)")
         .eq("id", plano_id)
         .eq("ativo", true)
         .maybeSingle();
@@ -125,6 +125,10 @@ Deno.serve(async (req) => {
       baseUnitAmount = plano.preco_centavos;
       line_items = [{ price: plano.stripe_price_id, quantity: 1 }];
     }
+
+    // Coaches parceiros: plataforma não cobra fee. Preço do plano já inclui as taxas do Stripe,
+    // que serão descontadas da conta do coach (on_behalf_of + transfer_data, sem application_fee).
+    const isPartner = !!tenant_to_use.is_partner;
 
     if (tenant_to_use.status !== "approved") throw new Error("tenant not approved");
     const isPlatformOwned = !tenant_to_use.stripe_account_id;
