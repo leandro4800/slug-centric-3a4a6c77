@@ -180,28 +180,25 @@ const Alunos = () => {
                   </td>
                   <td className="px-4 py-3 hidden lg:table-cell text-muted-foreground">{a.telefone || "—"}</td>
                   <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex items-center justify-end gap-1.5 flex-nowrap">
                       <Link to={`/site/admin/treinos?aluno=${a.id}`}>
-                        <Button size="sm" variant="outline" className="gap-1.5 h-8" title="Ver e editar o treino gerado pela IA">
+                        <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" title="Ver/Editar treino">
                           <Dumbbell className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline text-xs">Ver/Editar treino</span>
                         </Button>
                       </Link>
                       <Link to={`/site/admin/dieta?aluno=${a.id}`}>
-                        <Button size="sm" variant="outline" className="gap-1.5 h-8" title="Ver e editar a dieta gerada pela IA">
+                        <Button size="icon" variant="outline" className="h-8 w-8 shrink-0" title="Ver/Editar dieta">
                           <Apple className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline text-xs">Ver/Editar dieta</span>
                         </Button>
                       </Link>
                       <Button
-                        size="sm"
+                        size="icon"
                         variant="outline"
-                        className="gap-1.5 h-8 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                        className="h-8 w-8 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
                         title="Excluir conta do aluno"
                         onClick={() => setToDelete(a)}
                       >
                         <Trash2 className="h-3.5 w-3.5" />
-                        <span className="hidden sm:inline text-xs">Excluir</span>
                       </Button>
                     </div>
                   </td>
