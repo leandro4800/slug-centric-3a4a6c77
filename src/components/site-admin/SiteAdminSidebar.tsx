@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet,
-  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils
+  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -26,6 +26,7 @@ const baseItems: Item[] = [
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench, section: "Negócio" },
   { to: "/site/admin/integracao-ia", label: "Integração com IA", icon: Bot, section: "Negócio" },
   { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet, section: "Negócio" },
+  { to: "/site/admin/planos", label: "Meus Planos", icon: Tag, section: "Negócio" },
   { to: "/site/admin/aparencia", label: "Aparência", icon: Palette, section: "Negócio" },
 
   { to: "/site/admin/minha-conta", label: "Minha conta", icon: UserCog, section: "Conta" },

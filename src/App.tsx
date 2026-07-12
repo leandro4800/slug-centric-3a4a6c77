@@ -71,6 +71,7 @@ import SiteAdminAvaliacaoFisica from "./pages/site-admin/AvaliacaoFisica";
 import SiteAdminFerramentas from "./pages/site-admin/Ferramentas";
 import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
 import SiteAdminSuporte from "./pages/site-admin/Suporte";
+import SiteAdminPlanos from "./pages/site-admin/Planos";
 import SiteAdminIntegracaoIA from "./pages/site-admin/IntegracaoIA";
 import { Calendar as CalendarIcon, Loader2, Palette, Wallet } from "lucide-react";
 import SiteAdminCtCamps from "./pages/site-admin/ct/Camps";
@@ -170,6 +171,7 @@ const App = () => (
               <Route path="ferramentas" element={<SiteAdminFerramentas />} />
               <Route path="aparencia" element={<SiteAdminAparencia />} />
               <Route path="faturamento" element={<SiteAdminFinanceiro />} />
+              <Route path="planos" element={<SiteAdminPlanos />} />
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
               <Route path="integracao-ia" element={<SiteAdminIntegracaoIA />} />
               <Route path="suporte" element={<SiteAdminSuporte />} />
