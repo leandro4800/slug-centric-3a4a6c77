@@ -5,6 +5,8 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
+type StripeConnectStatus = "not_connected" | "incomplete" | "submitted" | "pending_verification" | "verified";
+
 const Financeiro = () => {
   const { tenant } = useSiteTenant();
   const [loading, setLoading] = useState(true);
@@ -13,6 +15,7 @@ const Financeiro = () => {
   const [receitaMes, setReceitaMes] = useState(0);
   const [stripeAccountId, setStripeAccountId] = useState<string | null>(null);
   const [onboardingCompleted, setOnboardingCompleted] = useState(false);
+  const [stripeStatus, setStripeStatus] = useState<StripeConnectStatus>("not_connected");
 
   const loadMetrics = async () => {
     if (!tenant?.id) return;
@@ -45,12 +48,15 @@ const Financeiro = () => {
       .maybeSingle();
     setStripeAccountId((t as any)?.stripe_account_id || null);
     setOnboardingCompleted(!!(t as any)?.stripe_onboarding_completed);
+    setStripeStatus((t as any)?.stripe_account_id ? "incomplete" : "not_connected");
 
     if ((t as any)?.stripe_account_id) {
       try {
-        await supabase.functions.invoke("stripe-connect-status", {
+        const { data, error } = await supabase.functions.invoke("stripe-connect-status", {
           body: { tenant_id: tenant.id },
         });
+        if (error) throw error;
+        setStripeStatus(((data as any)?.status as StripeConnectStatus) || "incomplete");
         const { data: t2 } = await supabase
           .from("tenants_private")
           .select("stripe_onboarding_completed")
@@ -78,7 +84,7 @@ const Financeiro = () => {
     setBusy(true);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", {
-        body: { tenant_id: tenant.id },
+        body: { tenant_id: tenant.id, return_path: window.location.pathname },
       });
       if (error) {
         const response = (error as any)?.context;
@@ -147,6 +153,20 @@ const Financeiro = () => {
                 </p>
                 <Button onClick={handleConnectStripe} disabled={busy} variant="outline" className="w-full">
                   {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Atualizar dados bancários / Stripe"}
+                </Button>
+              </>
+            ) : stripeStatus === "pending_verification" || stripeStatus === "submitted" ? (
+              <>
+                <div className="flex items-center gap-2 text-amber-400 text-[10px] uppercase font-bold tracking-widest">
+                  <AlertCircle className="h-3 w-3" /> Cadastro enviado — em análise pela Stripe
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  A conta bancária foi cadastrada. A Stripe ainda está verificando dados/documentos; assim que liberar pagamentos e repasses, esta tela muda para conta verificada.
+                </p>
+                <Button onClick={handleConnectStripe} disabled={busy} variant="outline" className="w-full">
+                  {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                    <><ExternalLink className="h-4 w-4 mr-2" /> Acompanhar / completar pendências</>
+                  )}
                 </Button>
               </>
             ) : (
