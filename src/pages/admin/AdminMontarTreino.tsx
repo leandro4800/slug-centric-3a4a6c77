@@ -15,6 +15,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
 import { extractYouTubeId } from "@/lib/utils";
+import platformLogo from "@/assets/alphacoach-logo.jpeg";
 
 interface Aluno {
   id: string;
@@ -598,26 +599,83 @@ const AdminMontarTreino = () => {
 
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || null;
     const logo = await loadImageDataUrl(tenant?.logo_url);
-    let y = renderPdfHeader({
-      doc,
-      title: "PLANILHA DE TREINO",
-      subtitle: "Metodologia Alpha Coach",
-      coachName: tenant?.nome,
-      studentName: alunoNome,
-      logo,
-    });
+    const platLogo = await loadImageDataUrl(platformLogo);
 
-    doc.setTextColor(20, 20, 20);
-    doc.setFontSize(13);
-    doc.setFont("helvetica", "bold");
-    const meta: string[] = [];
-    if (perfil.objetivo) meta.push(`Objetivo: ${perfil.objetivo}`);
-    if (nivel) meta.push(`Nível: ${nivel}`);
-    if (perfil.frequencia_semanal) meta.push(`Frequência: ${perfil.frequencia_semanal}x/semana`);
-    if (meta.length) {
-      doc.text(meta.join("  •  "), 14, y);
-      y += 10;
+    // ==== HERO CINEMATOGRÁFICO NETFLIX ====
+    const heroH = 44;
+    doc.setFillColor(10, 10, 10);
+    doc.rect(0, 0, pageW, heroH, "F");
+    // Faixa vermelha vertical
+    doc.setFillColor(229, 9, 20);
+    doc.rect(0, 0, 4, heroH, "F");
+
+    let heroX = 12;
+    if (logo) {
+      const targetH = 14;
+      const ratio = logo.w / logo.h || 1;
+      const targetW = Math.min(targetH * ratio, 30);
+      try {
+        const fmt = logo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+        doc.addImage(logo.dataUrl, fmt, heroX, 8, targetW, targetH);
+        heroX += targetW + 6;
+      } catch {}
     }
+    // Tag "UM ORIGINAL ALPHA COACH"
+    doc.setFillColor(229, 9, 20);
+    doc.rect(heroX, 8, 34, 5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text("UM ORIGINAL ALPHA COACH", heroX + 17, 11.5, { align: "center" });
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text("PLANILHA DE TREINO", heroX, 24);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 30);
+
+    // Linha divisor + atleta / coach
+    doc.setDrawColor(229, 9, 20);
+    doc.setLineWidth(0.4);
+    doc.line(heroX, 33, pageW - 12, 33);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text((alunoNome || "ATLETA").toUpperCase(), heroX, 39);
+    if (tenant?.nome) {
+      doc.setTextColor(180, 180, 180);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(`COACH ${tenant.nome.toUpperCase()}`, pageW - 12, 39, { align: "right" });
+    }
+
+    let y = heroH + 6;
+
+    // ==== METADATA PILLS ====
+    const pills: string[] = [];
+    if (perfil.objetivo) pills.push(String(perfil.objetivo).toUpperCase());
+    if (nivel) pills.push(String(nivel).toUpperCase());
+    if (perfil.frequencia_semanal) pills.push(`${perfil.frequencia_semanal}X/SEMANA`);
+    if (pills.length) {
+      let px = 14;
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "bold");
+      pills.forEach((p) => {
+        const w = doc.getTextWidth(p) + 8;
+        doc.setFillColor(20, 20, 20);
+        doc.setDrawColor(229, 9, 20);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(px, y, w, 6.5, 1.5, 1.5, "FD");
+        doc.setTextColor(255, 255, 255);
+        doc.text(p, px + w / 2, y + 4.4, { align: "center" });
+        px += w + 3;
+      });
+      y += 12;
+    }
+    doc.setTextColor(20, 20, 20);
 
     // Compacta "2x Série de Aquecimento + 1x Série de Ajuste + 2x Série de Trabalho" → "2 AQ · 1 AJ · 2 TR"
     const compactSeries = (raw: string) => {
@@ -804,23 +862,34 @@ const AdminMontarTreino = () => {
       y += lines.length * 5 + 4;
     }
 
-    // Rodapé Alpha Coach Pro em todas as páginas
+    // Rodapé Netflix Alpha Coach Pro em todas as páginas
     const pageH = doc.internal.pageSize.getHeight();
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
-      doc.setDrawColor(229, 9, 20);
-      doc.setLineWidth(0.4);
-      doc.line(14, pageH - 18, pageW - 14, pageH - 18);
+      // Faixa vermelha
+      doc.setFillColor(229, 9, 20);
+      doc.rect(0, pageH - 12, pageW, 12, "F");
+      // Logo plataforma à esquerda
+      if (platLogo) {
+        try {
+          const targetH = 8;
+          const ratio = platLogo.w / platLogo.h || 1;
+          const targetW = Math.min(targetH * ratio, 22);
+          const fmt = platLogo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+          doc.addImage(platLogo.dataUrl, fmt, 5, pageH - 10, targetW, targetH);
+        } catch {}
+      }
+      doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.setTextColor(229, 9, 20);
-      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 12, { align: "center" });
+      doc.setFontSize(12);
+      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 6.5, { align: "center" });
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(90, 90, 90);
-      doc.text("Metodologia premium de treino, dieta e performance  •  alpha-coach.app", pageW / 2, pageH - 7.5, { align: "center" });
-      doc.text(`Página ${p} de ${totalPages}`, pageW - 14, pageH - 7.5, { align: "right" });
+      doc.setFontSize(7);
+      doc.text("METODOLOGIA PREMIUM • TREINO • DIETA • EVOLUÇÃO", pageW / 2, pageH - 2.5, { align: "center" });
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${p}/${totalPages}`, pageW - 5, pageH - 4.5, { align: "right" });
     }
 
     doc.save(`planilha_treino_${Date.now()}.pdf`);
