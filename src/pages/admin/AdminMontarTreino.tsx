@@ -633,12 +633,35 @@ const AdminMontarTreino = () => {
       return abbr.join(" · ");
     };
 
+    // Limpa siglas (PSE, NA, N/A) e ruído das observações
+    const limparObs = (raw: string) => {
+      if (!raw) return "";
+      return raw
+        .replace(/\bPSE\b\s*:?\s*\d*/gi, "")
+        .replace(/\bN\s*\/?\s*A\b\s*:?/gi, "")
+        .replace(/\s{2,}/g, " ")
+        .replace(/^[\s,;·•\-]+|[\s,;·•\-]+$/g, "")
+        .trim();
+    };
+
     dias.forEach((dia) => {
       if (y > 250) { doc.addPage(); y = 20; }
       const exsDia = exercicios.filter((e) => e.dia_semana === dia).sort((a, b) => a.ordem - b.ordem);
+
+      // Junta observações do grupo (dedup) — só aparece na barra preta do dia se houver
+      const obsGrupo = Array.from(
+        new Set(
+          exsDia
+            .map((ex) => limparObs(ex.observacao || ""))
+            .filter((o) => o.length > 0)
+            .map((o) => o.toUpperCase())
+        )
+      ).join(" • ");
+      const tituloDia = obsGrupo ? `${dia}  (OBS: ${obsGrupo})` : dia;
+
       autoTable(doc, {
         startY: y,
-        head: [[dia]],
+        head: [[tituloDia]],
         body: [],
         theme: "plain",
         headStyles: { fillColor: [15, 15, 15], textColor: 255, fontSize: 13, fontStyle: "bold", cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
@@ -648,24 +671,12 @@ const AdminMontarTreino = () => {
         const match = biblioteca.find((b) => b.nome.toLowerCase() === ex.exercicio.toLowerCase());
         return match?.video_coach_url || match?.video_url || null;
       });
-      // Remove siglas PSE / NA da observação; só usa a observação manual do coach
-      const limparObs = (raw: string) => {
-        if (!raw) return "";
-        return raw
-          .replace(/\bPSE\b\s*:?\s*\d*/gi, "")
-          .replace(/\bNA\b\s*:?/gi, "")
-          .replace(/\s{2,}/g, " ")
-          .replace(/^[\s,;·•\-]+|[\s,;·•\-]+$/g, "")
-          .trim();
-      };
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY,
         head: [["Exercício", "Séries", "Reps", "Vídeo"]],
         body: exsDia.map((ex, i) => {
-          const obs = limparObs(ex.observacao || "");
-          const nome = obs ? `${ex.exercicio} (OBS: ${obs.toUpperCase()})` : ex.exercicio;
           return [
-            nome,
+            ex.exercicio,
             compactSeries(ex.series),
             ex.repeticoes,
             rowLinks[i] ? "VÍDEO" : "—",
