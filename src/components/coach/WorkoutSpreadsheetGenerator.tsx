@@ -28,6 +28,7 @@ import {
 } from "@/data/femaleReferenceTemplate";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { loadImageDataUrl, renderPdfHeader, fetchTenantBranding } from "@/lib/pdf-branding";
 
 // Seleciona referências para a IA.
 // Mulheres → SEMPRE usa o template feminino oficial (Intermediário/Avançado),
