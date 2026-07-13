@@ -249,12 +249,20 @@ const AdminMontarDieta = () => {
       if (data?.dieta_id) {
         setDietaId(data.dieta_id);
         setIsPublished(false); // Sempre gera como rascunho
-        const { data: refs } = await supabase
-          .from("refeicoes")
-          .select("*")
-          .eq("dieta_id", data.dieta_id)
-          .order("ordem");
+        const [{ data: refs }, { data: dRow }] = await Promise.all([
+          supabase.from("refeicoes").select("*").eq("dieta_id", data.dieta_id).order("ordem"),
+          supabase.from("dietas").select("kcal_alvo, macros_alvo").eq("id", data.dieta_id).maybeSingle(),
+        ]);
         if (refs) setRefeicoes(refs as any[]);
+        const ma: any = (dRow as any)?.macros_alvo || {};
+        if (dRow) {
+          setMacrosCalculados({
+            kcal: Math.round((dRow as any).kcal_alvo || 0),
+            proteina_g: Math.round(ma.proteina_g || 0),
+            carboidrato_g: Math.round(ma.carboidrato_g || 0),
+            lipideos_g: Math.round(ma.lipideos_g || 0),
+          });
+        }
       }
     } catch (e: any) {
       toast.error(e.message || "Falha ao gerar.", { id: toastId });
