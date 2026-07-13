@@ -14,6 +14,7 @@ import { toNivelCanonico } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
+import { extractYouTubeId } from "@/lib/utils";
 
 interface Aluno {
   id: string;
@@ -667,6 +668,39 @@ const AdminMontarTreino = () => {
       return `PONTO FRACO: ${detalhe.toUpperCase()}`;
     };
 
+    const normalizarVideoPdfUrl = (raw: string | null | undefined) => {
+      const value = raw?.trim();
+      if (!value) return null;
+
+      const ytId = extractYouTubeId(value);
+      if (ytId) return `https://www.youtube.com/watch?v=${encodeURIComponent(ytId)}`;
+
+      const withProtocol = value.startsWith("//")
+        ? `https:${value}`
+        : /^[a-z][a-z0-9+.-]*:\/\//i.test(value)
+          ? value
+          : `https://${value.replace(/^\/+/, "")}`;
+
+      try {
+        const parsed = new URL(withProtocol);
+        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+        return parsed.toString();
+      } catch {
+        return null;
+      }
+    };
+
+    const videoUrlDoExercicio = (nomeExercicio: string) => {
+      const alvo = normalizarTexto(nomeExercicio);
+      if (!alvo) return null;
+      const match = biblioteca.find((b) => normalizarTexto(b.nome || "") === alvo)
+        || biblioteca.find((b) => {
+          const nome = normalizarTexto(b.nome || "");
+          return nome && (alvo.includes(nome) || nome.includes(alvo));
+        });
+      return normalizarVideoPdfUrl(match?.video_coach_url || match?.video_url || null);
+    };
+
     dias.forEach((dia) => {
       if (y > 250) { doc.addPage(); y = 20; }
       const exsDia = exercicios.filter((e) => e.dia_semana === dia).sort((a, b) => a.ordem - b.ordem);
@@ -690,10 +724,7 @@ const AdminMontarTreino = () => {
         headStyles: { fillColor: [15, 15, 15], textColor: 255, fontSize: 13, fontStyle: "bold", cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
         margin: { left: 14, right: 14 },
       });
-      const rowLinks: (string | null)[] = exsDia.map((ex) => {
-        const match = biblioteca.find((b) => b.nome.toLowerCase() === ex.exercicio.toLowerCase());
-        return match?.video_coach_url || match?.video_url || null;
-      });
+      const rowLinks: (string | null)[] = exsDia.map((ex) => videoUrlDoExercicio(ex.exercicio));
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY,
         head: [["Exercício", "Séries", "Reps", "Vídeo"]],
@@ -702,7 +733,7 @@ const AdminMontarTreino = () => {
             ex.exercicio,
             compactSeries(ex.series),
             ex.repeticoes,
-            rowLinks[i] ? "VÍDEO" : "—",
+            rowLinks[i] ? "VIDEO" : "—",
           ];
         }),
         theme: "striped",
@@ -720,17 +751,19 @@ const AdminMontarTreino = () => {
           if (data.section === "body" && data.column.index === 3) {
             const url = rowLinks[data.row.index];
             if (url) {
-              // Fundo vermelho tipo "botão"
+              // Fundo vermelho tipo "botão". O link usa URL absoluta normalizada
+              // (https://www.youtube.com/watch?v=...) porque leitores de PDF no celular
+              // costumam falhar com links sem protocolo, /embed ou URLs encurtadas.
               doc.setFillColor(229, 9, 20);
-              doc.rect(data.cell.x + 1, data.cell.y + 1, data.cell.width - 2, data.cell.height - 2, "F");
+              doc.roundedRect(data.cell.x + 1, data.cell.y + 1.2, data.cell.width - 2, data.cell.height - 2.4, 1.4, 1.4, "F");
               doc.setTextColor(255, 255, 255);
               doc.setFont("helvetica", "bold");
               doc.setFontSize(10);
               const cx = data.cell.x + data.cell.width / 2;
               const cy = data.cell.y + data.cell.height / 2 + 1.4;
-              (doc as any).textWithLink("VÍDEO", cx, cy, { url, align: "center" });
-              // Reforça link cobrindo célula inteira (mobile-friendly)
-              (doc as any).link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
+              doc.text("VIDEO", cx, cy, { align: "center" });
+              // Reforça link cobrindo a célula inteira (alvo de toque maior no celular)
+              (doc as any).link(data.cell.x - 0.5, data.cell.y - 0.5, data.cell.width + 1, data.cell.height + 1, { url });
               doc.setTextColor(30, 30, 30);
               doc.setFont("helvetica", "normal");
               doc.setFontSize(11);
