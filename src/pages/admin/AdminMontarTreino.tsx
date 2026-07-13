@@ -648,32 +648,47 @@ const AdminMontarTreino = () => {
         const match = biblioteca.find((b) => b.nome.toLowerCase() === ex.exercicio.toLowerCase());
         return match?.video_coach_url || match?.video_url || null;
       });
+      // Limpa siglas técnicas comuns para linguagem clara ao aluno
+      const limparObs = (raw: string) => {
+        if (!raw) return "";
+        return raw
+          .replace(/\bRP\b/gi, "descanso curto e continua")
+          .replace(/\bDS\b/gi, "reduz a carga e continua")
+          .replace(/\bBS\b/gi, "dois exercícios seguidos")
+          .replace(/\bFST[- ]?7\b/gi, "7 séries com pouco descanso")
+          .replace(/\bAMRAP\b/gi, "máximo de repetições possíveis")
+          .replace(/\bROM\b/gi, "amplitude do movimento")
+          .replace(/\bTUT\b/gi, "tempo sob tensão")
+          .replace(/\bPR\b/gi, "recorde pessoal")
+          .replace(/\s+/g, " ")
+          .trim();
+      };
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY,
-        head: [["Exercício", "Séries", "Reps", "Cad.", "Observação", "Vídeo"]],
-        body: exsDia.map((ex, i) => [
-          ex.exercicio,
-          compactSeries(ex.series),
-          ex.repeticoes,
-          ex.cadencia || "—",
-          ex.observacao || ex.detalhes_execucao || "—",
-          rowLinks[i] ? "Assistir" : "—",
-        ]),
+        head: [["Exercício", "Séries", "Reps", "Vídeo"]],
+        body: exsDia.map((ex, i) => {
+          const obs = limparObs(ex.observacao || ex.detalhes_execucao || "");
+          const nome = obs ? `${ex.exercicio} (${obs})` : ex.exercicio;
+          return [
+            nome,
+            compactSeries(ex.series),
+            ex.repeticoes,
+            rowLinks[i] ? "Assistir" : "—",
+          ];
+        }),
         theme: "striped",
         styles: { fontSize: 11, cellPadding: 3, font: "helvetica", lineColor: [230, 230, 230], lineWidth: 0.1, textColor: [30, 30, 30] },
         alternateRowStyles: { fillColor: [250, 246, 246] },
         headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold", fontSize: 11, halign: "left", cellPadding: { top: 3, bottom: 3, left: 3, right: 3 } },
         columnStyles: {
-          0: { cellWidth: 46, fontStyle: "bold", textColor: [15, 15, 15] },
-          1: { cellWidth: 30, halign: "center", fontStyle: "bold" },
-          2: { cellWidth: 20, halign: "center" },
-          3: { cellWidth: 18, halign: "center" },
-          4: { cellWidth: "auto" },
-          5: { cellWidth: 20, halign: "center" },
+          0: { cellWidth: "auto", fontStyle: "bold", textColor: [15, 15, 15] },
+          1: { cellWidth: 32, halign: "center", fontStyle: "bold" },
+          2: { cellWidth: 22, halign: "center" },
+          3: { cellWidth: 22, halign: "center" },
         },
         margin: { left: 14, right: 14 },
         didDrawCell: (data) => {
-          if (data.section === "body" && data.column.index === 5) {
+          if (data.section === "body" && data.column.index === 3) {
             const url = rowLinks[data.row.index];
             if (url) {
               doc.setTextColor(229, 9, 20);
@@ -687,7 +702,7 @@ const AdminMontarTreino = () => {
           }
         },
         willDrawCell: (data) => {
-          if (data.section === "body" && data.column.index === 5 && rowLinks[data.row.index]) {
+          if (data.section === "body" && data.column.index === 3 && rowLinks[data.row.index]) {
             data.cell.text = [""];
           }
         },
