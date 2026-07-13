@@ -193,6 +193,79 @@ export default function JacksonPollockCalculator({
     }
   };
 
+  const baixarPdf = () => {
+    if (!calc) {
+      toast.error("Preencha todas as dobras, idade e peso.");
+      return;
+    }
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+
+    // Cabeçalho
+    doc.setFillColor(229, 9, 20);
+    doc.rect(0, 0, pageW, 26, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(19);
+    doc.setFont("helvetica", "bold");
+    doc.text("PROTOCOLO 7 DOBRAS", pageW / 2, 12, { align: "center" });
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "normal");
+    doc.text("Jackson & Pollock — Bioestatística de Competição", pageW / 2, 20, { align: "center" });
+
+    doc.setTextColor(20, 20, 20);
+    let y = 38;
+
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(13);
+    doc.text("Dados do atleta", 14, y);
+    y += 7;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(12);
+    doc.text(
+      `Sexo: ${sexo === "M" ? "Masculino" : "Feminino"}   •   Idade: ${idade} anos   •   Peso: ${peso} kg`,
+      14,
+      y,
+    );
+    y += 10;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Dobra cutânea", "Medida (mm)"]],
+      body: DOBRAS.map((d) => [d.label, dobras[d.key] || "—"]),
+      theme: "striped",
+      styles: { fontSize: 12, cellPadding: 3.5 },
+      headStyles: { fillColor: [20, 20, 20], textColor: 255, fontStyle: "bold", fontSize: 12.5 },
+      columnStyles: {
+        0: { cellWidth: 90 },
+        1: { cellWidth: "auto", halign: "right" },
+      },
+      margin: { left: 14, right: 14 },
+    });
+    y = (doc as any).lastAutoTable.finalY + 8;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["Resultado", "Valor"]],
+      body: [
+        ["Soma das 7 dobras", `${calc.soma.toFixed(1)} mm`],
+        ["Percentual de gordura (BF%)", `${calc.bf.toFixed(2)} %`],
+        ["Massa gorda", `${calc.massaGorda.toFixed(2)} kg`],
+        ["Massa magra", `${calc.massaMagra.toFixed(2)} kg`],
+      ],
+      theme: "striped",
+      styles: { fontSize: 12.5, cellPadding: 4 },
+      headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold", fontSize: 13 },
+      columnStyles: {
+        0: { cellWidth: 90, fontStyle: "bold" },
+        1: { cellWidth: "auto", halign: "right" },
+      },
+      margin: { left: 14, right: 14 },
+    });
+
+    doc.save(`protocolo_7_dobras_${Date.now()}.pdf`);
+    toast.success("Protocolo baixado em PDF!");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[95vh] overflow-y-auto bg-[#0a0a0a] border-none text-white p-0 shadow-2xl">
