@@ -139,24 +139,25 @@ function downloadCsv(plan: PlanoIA) {
   URL.revokeObjectURL(url);
 }
 
-function downloadPdf(plan: PlanoIA) {
+async function downloadPdf(plan: PlanoIA) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
 
-  // Cabeçalho
-  doc.setFillColor(229, 9, 20); // Netflix red
-  doc.rect(0, 0, pageW, 26, "F");
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(19);
-  doc.setFont("helvetica", "bold");
-  doc.text("METODOLOGIA ALPHA — PLANILHA PREMIUM", pageW / 2, 16, { align: "center" });
+  const branding = await fetchTenantBranding();
+  const logo = await loadImageDataUrl(branding?.logo_url);
+  let y = renderPdfHeader({
+    doc,
+    title: "PLANILHA PREMIUM",
+    subtitle: "Metodologia Alpha Coach",
+    coachName: branding?.nome,
+    logo,
+  });
 
   doc.setTextColor(20, 20, 20);
   doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(plan.title, 14, 38, { maxWidth: pageW - 28 });
-
-  let y = 48;
+  doc.text(plan.title, 14, y, { maxWidth: pageW - 28 });
+  y += 10;
   if (plan.recomendacoes) {
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
