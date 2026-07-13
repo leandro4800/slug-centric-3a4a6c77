@@ -629,6 +629,29 @@ const AdminMontarDieta = () => {
     doc.line(12, y, pageW - 12, y);
     y += 4;
 
+    // ==== PRELOAD IMAGENS REFEIÇÕES + LOGO PLATAFORMA ====
+    const mealDataUrls = await Promise.all(
+      refeicoes.map((r) => loadImageDataUrl(mealImgFor(r.nome || ""))),
+    );
+    const platLogo = await loadImageDataUrl(platformLogo);
+
+    // ==== MACROS POR REFEIÇÃO (distribuição heurística) ====
+    const weights = refeicoes.map((r) => mealWeightFor(r.nome || ""));
+    const wSum = weights.reduce((s, w) => s + w, 0) || 1;
+    const perMealMacros = refeicoes.map((_, i) => {
+      const w = weights[i] / wSum;
+      const kcal = macrosCalculados?.kcal || 0;
+      const p = macrosCalculados?.proteina_g || 0;
+      const c = macrosCalculados?.carboidrato_g || 0;
+      const g = macrosCalculados?.lipideos_g || 0;
+      return {
+        kcal: Math.round(kcal * w),
+        p: Math.round(p * w),
+        c: Math.round(c * w),
+        g: Math.round(g * w),
+      };
+    });
+
     // ==== CARDS REFEIÇÕES (grid 2 colunas) ====
     const footerH = 14;
     const available = pageH - y - footerH;
@@ -639,19 +662,21 @@ const AdminMontarDieta = () => {
     const cardW = (pageW - 24 - gap * (cols - 1)) / cols;
     const cardH = (available - gap * (rows - 1)) / rows;
 
+    const bannerH = Math.min(18, cardH * 0.32); // banner com imagem
+    const macrosH = 7;
+    const padX = 4;
+    const bodyTop = bannerH + macrosH + 2;
+
     // dynamic font size for descrição
     const maxLines = Math.max(
       1,
       ...refeicoes.map((r) => (r.descricao_ia || "—").split(/\n/).length),
     );
-    let bodyFs = 10;
-    const headerH = 10;
-    const padX = 4;
-    // reduce until lines fit
-    while (bodyFs > 6.5) {
+    let bodyFs = 9.5;
+    while (bodyFs > 6) {
       const lineH = bodyFs * 0.42;
       const est = lineH * (maxLines + 1) + 3;
-      if (est <= cardH - headerH - 3) break;
+      if (est <= cardH - bodyTop - 3) break;
       bodyFs -= 0.5;
     }
 
@@ -666,54 +691,112 @@ const AdminMontarDieta = () => {
       doc.setDrawColor(45, 45, 45);
       doc.roundedRect(cx, cy, cardW, cardH, 1.5, 1.5, "FD");
 
-      // Header vermelho
-      doc.setFillColor(229, 9, 20);
-      doc.rect(cx, cy, cardW, headerH, "F");
+      // ==== BANNER com imagem da refeição ====
+      const mealImg = mealDataUrls[i];
+      if (mealImg) {
+        try {
+          const fmt = mealImg.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+          doc.addImage(mealImg.dataUrl, fmt, cx, cy, cardW, bannerH);
+        } catch {}
+      } else {
+        doc.setFillColor(30, 30, 30);
+        doc.rect(cx, cy, cardW, bannerH, "F");
+      }
+      // overlay escuro para legibilidade
+      try {
+        const gs = (doc as any).GState ? new (doc as any).GState({ opacity: 0.55 }) : null;
+        if (gs) (doc as any).setGState(gs);
+      } catch {}
+      doc.setFillColor(0, 0, 0);
+      doc.rect(cx, cy, cardW, bannerH, "F");
+      try {
+        const gsOn = (doc as any).GState ? new (doc as any).GState({ opacity: 1 }) : null;
+        if (gsOn) (doc as any).setGState(gsOn);
+      } catch {}
 
-      // Episódio nº
+      // Faixa vermelha lateral (marca Netflix)
+      doc.setFillColor(229, 9, 20);
+      doc.rect(cx, cy, 2, bannerH, "F");
+
+      // EP nº e horário
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
       doc.setFontSize(6.5);
-      const ep = `EP ${String(i + 1).padStart(2, "0")}`;
-      doc.text(ep, cx + padX, cy + 4);
-
-      // Horário à direita
+      doc.text(`EP ${String(i + 1).padStart(2, "0")}`, cx + padX, cy + 4);
       if (r.horario) {
-        const h = r.horario.slice(0, 5);
         doc.setFontSize(7);
-        doc.text(h, cx + cardW - padX, cy + 4, { align: "right" });
+        doc.text(r.horario.slice(0, 5), cx + cardW - padX, cy + 4, { align: "right" });
       }
 
-      // Nome refeição
-      doc.setFontSize(11);
+      // Nome
+      doc.setFontSize(11.5);
       const nome = (r.nome || "REFEIÇÃO").toUpperCase();
-      doc.text(nome, cx + padX, cy + 8.5);
+      const nomeLines = doc.splitTextToSize(nome, cardW - padX * 2);
+      doc.text(nomeLines[0], cx + padX, cy + bannerH - 3);
 
-      // Descrição
+      // ==== BARRA DE MACROS ====
+      const my = cy + bannerH + 1;
+      doc.setFillColor(12, 12, 12);
+      doc.rect(cx, my, cardW, macrosH, "F");
+      const macros = perMealMacros[i];
+      const cells = [
+        { l: "KCAL", v: `${macros.kcal}` },
+        { l: "P", v: `${macros.p}g` },
+        { l: "C", v: `${macros.c}g` },
+        { l: "G", v: `${macros.g}g` },
+      ];
+      const cellW = cardW / cells.length;
+      cells.forEach((cell, ci) => {
+        const bx = cx + ci * cellW;
+        if (ci > 0) {
+          doc.setDrawColor(40, 40, 40);
+          doc.setLineWidth(0.15);
+          doc.line(bx, my + 1, bx, my + macrosH - 1);
+        }
+        doc.setTextColor(229, 9, 20);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(5.5);
+        doc.text(cell.l, bx + cellW / 2, my + 2.6, { align: "center" });
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(8.5);
+        doc.text(cell.v, bx + cellW / 2, my + 5.8, { align: "center" });
+      });
+
+      // ==== DESCRIÇÃO ====
       doc.setTextColor(230, 230, 230);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(bodyFs);
       const text = r.descricao_ia || "—";
       const lines = doc.splitTextToSize(text, cardW - padX * 2);
-      const maxTextH = cardH - headerH - 4;
+      const maxTextH = cardH - bodyTop - 2;
       const lineH = bodyFs * 0.42;
       const maxLinesFit = Math.floor(maxTextH / lineH);
       const shownLines = lines.slice(0, Math.max(1, maxLinesFit));
-      doc.text(shownLines, cx + padX, cy + headerH + 4);
+      doc.text(shownLines, cx + padX, cy + bodyTop + 2);
     });
 
-    // ==== RODAPÉ NETFLIX ====
+    // ==== RODAPÉ NETFLIX com logo plataforma ====
     doc.setFillColor(229, 9, 20);
-    doc.rect(0, pageH - 8, pageW, 8, "F");
+    doc.rect(0, pageH - 10, pageW, 10, "F");
+    // Logo plataforma à esquerda
+    if (platLogo) {
+      try {
+        const targetH = 7;
+        const ratio = platLogo.w / platLogo.h || 1;
+        const targetW = Math.min(targetH * ratio, 20);
+        const fmt = platLogo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+        doc.addImage(platLogo.dataUrl, fmt, 4, pageH - 8.5, targetW, targetH);
+      } catch {}
+    }
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.text("ALPHA COACH PRO", pageW / 2, pageH - 3, { align: "center" });
+    doc.setFontSize(10);
+    doc.text("ALPHA COACH PRO", pageW / 2, pageH - 5, { align: "center" });
     doc.setFont("helvetica", "normal");
     doc.setFontSize(6.5);
-    doc.setTextColor(255, 255, 255);
-    doc.text("METODOLOGIA PREMIUM  •  TREINO • DIETA • EVOLUÇÃO", 12, pageH - 3);
-    doc.text("alpha-coach.app", pageW - 12, pageH - 3, { align: "right" });
+    doc.text("METODOLOGIA PREMIUM • TREINO • DIETA • EVOLUÇÃO", pageW / 2, pageH - 1.5, { align: "center" });
+    doc.setFontSize(7);
+    doc.text("alpha-coach.app", pageW - 4, pageH - 3.5, { align: "right" });
 
     // Garante uma página
     const total = (doc as any).getNumberOfPages?.() ?? doc.internal.pages.length - 1;
