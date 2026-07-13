@@ -609,7 +609,7 @@ const AdminMontarTreino = () => {
 
     doc.setTextColor(20, 20, 20);
     doc.setFontSize(13);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     const meta: string[] = [];
     if (perfil.objetivo) meta.push(`Objetivo: ${perfil.objetivo}`);
     if (nivel) meta.push(`Nível: ${nivel}`);
