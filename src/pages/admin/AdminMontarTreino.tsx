@@ -92,7 +92,9 @@ const mapearDiasParaEstrutura = (diasIA: DiaGeradoIA[], divisoes: string[]): Exe
       repeticoes: e.repeticoes || "",
       cadencia: e.cadencia || "",
       detalhes_execucao: e.detalhes_execucao || "",
-      observacao: e.observacao || "",
+      // A observação do treino deve ser preenchida manualmente pelo coach.
+      // Não reaproveitamos observações da IA para não gerar "Ponto fraco", N/A, PSE ou numerações indevidas na planilha.
+      observacao: "",
     }));
   });
 };
@@ -633,26 +635,35 @@ const AdminMontarTreino = () => {
       return abbr.join(" · ");
     };
 
-    // Limpa siglas (PSE, NA, N/A) e ruído das observações
+    // Limpa siglas (PSE, NA, N/A), numerações soltas e ruído das observações
     const limparObs = (raw: string) => {
       if (!raw) return "";
       return raw
-        .replace(/\bPSE\b\s*:?\s*\d*/gi, "")
+        .replace(/\bPSE\b\s*:?\s*\d+(?:\s*[-–—aà]\s*\d+)?\.?/gi, "")
+        .replace(/\bPSE\b\s*:?/gi, "")
         .replace(/\bN\s*\/?\s*A\b\s*:?/gi, "")
+        .replace(/(?:^|[\s,;·•-])\d+[\.)](?=\s|$)/g, " ")
+        .replace(/^\s*(?:[-–—aà]\s*)?\d+\.?\s*/i, "")
         .replace(/\s{2,}/g, " ")
-        .replace(/^[\s,;·•\-]+|[\s,;·•\-]+$/g, "")
+        .replace(/^[\s,;·•\-.]+|[\s,;·•\-.]+$/g, "")
         .trim();
+    };
+
+    const limparObsPontoFraco = (raw: string) => {
+      const obs = limparObs(raw).replace(/^\(?\s*obs\s*:?\s*/i, "").trim();
+      if (!/^ponto\s+fraco\b/i.test(obs)) return "";
+      return obs;
     };
 
     dias.forEach((dia) => {
       if (y > 250) { doc.addPage(); y = 20; }
       const exsDia = exercicios.filter((e) => e.dia_semana === dia).sort((a, b) => a.ordem - b.ordem);
 
-      // Junta observações do grupo (dedup) — só aparece na barra preta do dia se houver
+      // Junta observações do grupo (dedup) — só aparece na barra preta se o coach escreveu "ponto fraco"
       const obsGrupo = Array.from(
         new Set(
           exsDia
-            .map((ex) => limparObs(ex.observacao || ""))
+            .map((ex) => limparObsPontoFraco(ex.observacao || ""))
             .filter((o) => o.length > 0)
             .map((o) => o.toUpperCase())
         )
