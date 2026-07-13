@@ -468,93 +468,224 @@ const AdminMontarDieta = () => {
     }
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || "";
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-
-    const logo = await loadImageDataUrl(tenant?.logo_url);
-    let y = renderPdfHeader({
-      doc,
-      title: "PLANO ALIMENTAR",
-      subtitle: "Metodologia Alpha Coach",
-      coachName: tenant?.nome,
-      studentName: alunoNome || null,
-      logo,
-    });
-
-    doc.setTextColor(20, 20, 20);
-    doc.setFont("helvetica", "normal");
-    const meta: string[] = [];
-    if (perfil.objetivo) meta.push(`Objetivo: ${perfil.objetivo}`);
-    if (perfil.peso_kg) meta.push(`Peso: ${perfil.peso_kg}kg`);
-    if (perfil.altura_cm) meta.push(`Altura: ${perfil.altura_cm}cm`);
-    if (meta.length) {
-      doc.setFontSize(11);
-      doc.text(meta.join("  •  "), 14, y);
-      y += 6;
-    }
-
-    if (macrosCalculados) {
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text(
-        `Meta diária: ${macrosCalculados.kcal} kcal  •  P ${macrosCalculados.proteina_g}g  •  C ${macrosCalculados.carboidrato_g}g  •  G ${macrosCalculados.lipideos_g}g`,
-        14,
-        y,
-      );
-      y += 6;
-    }
-
-    // Ajuste dinâmico para caber em UMA página A4 (297mm).
-    // Área disponível para as refeições:
+    const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
-    const footerH = 12; // reservado para rodapé ALPHA COACH PRO
+
+    // ==== FUNDO PRETO CINEMATOGRÁFICO ====
+    doc.setFillColor(10, 10, 10);
+    doc.rect(0, 0, pageW, pageH, "F");
+
+    // Vinheta radial simulada (faixa superior mais escura)
+    doc.setFillColor(20, 20, 20);
+    doc.rect(0, 0, pageW, 70, "F");
+
+    // ==== HERO NETFLIX ====
+    const logo = await loadImageDataUrl(tenant?.logo_url);
+    // Faixa vermelha vertical à esquerda (marca Netflix-style)
+    doc.setFillColor(229, 9, 20);
+    doc.rect(0, 0, 4, pageH, "F");
+
+    // Logo
+    let heroX = 12;
+    if (logo) {
+      const targetH = 14;
+      const ratio = logo.w / logo.h || 1;
+      const targetW = Math.min(targetH * ratio, 32);
+      try {
+        const fmt = logo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+        doc.addImage(logo.dataUrl, fmt, heroX, 10, targetW, targetH);
+        heroX += targetW + 6;
+      } catch {}
+    }
+
+    // Tag "ORIGINAL SERIES" style
+    doc.setFillColor(229, 9, 20);
+    doc.rect(heroX, 10, 34, 5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text("UM ORIGINAL ALPHA COACH", heroX + 17, 13.5, { align: "center" });
+
+    // Título hero
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(28);
+    doc.text("PLANO ALIMENTAR", heroX, 26);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(180, 180, 180);
+    doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 32);
+
+    // Barra atleta/coach
+    doc.setDrawColor(229, 9, 20);
+    doc.setLineWidth(0.4);
+    doc.line(heroX, 36, pageW - 12, 36);
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    const atletaLabel = alunoNome ? alunoNome.toUpperCase() : "ATLETA";
+    doc.text(atletaLabel, heroX, 42);
+    if (tenant?.nome) {
+      doc.setTextColor(180, 180, 180);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(`COACH ${tenant.nome.toUpperCase()}`, pageW - 12, 42, { align: "right" });
+    }
+
+    let y = 52;
+
+    // ==== METADATA PILLS (objetivo / peso / altura) ====
+    const pills: string[] = [];
+    if (perfil.objetivo) pills.push(String(perfil.objetivo).toUpperCase());
+    if (perfil.peso_kg) pills.push(`${perfil.peso_kg} KG`);
+    if (perfil.altura_cm) pills.push(`${perfil.altura_cm} CM`);
+    if (perfil.tempo_treino) pills.push(String(perfil.tempo_treino).toUpperCase());
+
+    if (pills.length) {
+      let px = 12;
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      pills.forEach((p) => {
+        const w = doc.getTextWidth(p) + 6;
+        doc.setFillColor(30, 30, 30);
+        doc.setDrawColor(80, 80, 80);
+        doc.roundedRect(px, y, w, 5.5, 1, 1, "FD");
+        doc.setTextColor(255, 255, 255);
+        doc.text(p, px + w / 2, y + 3.8, { align: "center" });
+        px += w + 2;
+      });
+      y += 9;
+    }
+
+    // ==== MACROS BAR ====
+    if (macrosCalculados) {
+      const macros = [
+        { l: "KCAL", v: `${macrosCalculados.kcal}` },
+        { l: "PROTEÍNA", v: `${macrosCalculados.proteina_g}g` },
+        { l: "CARBO", v: `${macrosCalculados.carboidrato_g}g` },
+        { l: "GORDURA", v: `${macrosCalculados.lipideos_g}g` },
+      ];
+      const boxW = (pageW - 24 - 6) / 4;
+      macros.forEach((m, i) => {
+        const bx = 12 + i * (boxW + 2);
+        doc.setFillColor(20, 20, 20);
+        doc.setDrawColor(60, 60, 60);
+        doc.roundedRect(bx, y, boxW, 14, 1.5, 1.5, "FD");
+        doc.setFillColor(229, 9, 20);
+        doc.rect(bx, y, 1.5, 14, "F");
+        doc.setTextColor(160, 160, 160);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.5);
+        doc.text(m.l, bx + 4, y + 4);
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(13);
+        doc.text(m.v, bx + 4, y + 11);
+      });
+      y += 18;
+    }
+
+    // Seção label
+    doc.setTextColor(229, 9, 20);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(8);
+    doc.text("REFEIÇÕES DO DIA", 12, y);
+    y += 4;
+    doc.setDrawColor(60, 60, 60);
+    doc.setLineWidth(0.2);
+    doc.line(12, y, pageW - 12, y);
+    y += 4;
+
+    // ==== CARDS REFEIÇÕES (grid 2 colunas) ====
+    const footerH = 14;
     const available = pageH - y - footerH;
     const n = refeicoes.length;
-    // Estimativa de altura por refeição em função da fonte/padding
-    const gap = 4;
-    // Resolver fonte que caiba: cabeçalho ~ fs+3, corpo ~ linhas*fs*0.42 + padding
+    const cols = n <= 3 ? 1 : 2;
+    const rows = Math.ceil(n / cols);
+    const gap = 3;
+    const cardW = (pageW - 24 - gap * (cols - 1)) / cols;
+    const cardH = (available - gap * (rows - 1)) / rows;
+
+    // dynamic font size for descrição
     const maxLines = Math.max(
       1,
-      ...refeicoes.map((r) => Math.max(1, (r.descricao_ia || "—").split(/\n/).length)),
+      ...refeicoes.map((r) => (r.descricao_ia || "—").split(/\n/).length),
     );
-    const estimateHeight = (fs: number, pad: number) => {
-      const headerH = fs + 3 + pad * 2;
-      const bodyLineH = fs * 0.42;
-      const bodyH = bodyLineH * (maxLines + 1) + pad * 2;
-      return (headerH + bodyH) * n + gap * Math.max(0, n - 1);
-    };
-    let fontSize = 12;
-    let cellPad = 4;
-    while (fontSize > 6 && estimateHeight(fontSize, cellPad) > available) {
-      if (cellPad > 1.5) cellPad -= 0.5;
-      else fontSize -= 0.5;
+    let bodyFs = 10;
+    const headerH = 10;
+    const padX = 4;
+    // reduce until lines fit
+    while (bodyFs > 6.5) {
+      const lineH = bodyFs * 0.42;
+      const est = lineH * (maxLines + 1) + 3;
+      if (est <= cardH - headerH - 3) break;
+      bodyFs -= 0.5;
     }
 
-    refeicoes.forEach((r) => {
-      const titulo = `${r.nome}${r.horario ? "  •  " + r.horario.slice(0, 5) : ""}`;
-      autoTable(doc, {
-        startY: y,
-        head: [[titulo]],
-        body: [[r.descricao_ia || "—"]],
-        theme: "striped",
-        styles: { fontSize, cellPadding: cellPad, valign: "top", overflow: "linebreak" },
-        headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: fontSize + 1, fontStyle: "bold" },
-        margin: { left: 14, right: 14 },
-        pageBreak: "avoid",
-      });
-      y = (doc as any).lastAutoTable.finalY + gap;
+    refeicoes.forEach((r, i) => {
+      const col = i % cols;
+      const row = Math.floor(i / cols);
+      const cx = 12 + col * (cardW + gap);
+      const cy = y + row * (cardH + gap);
+
+      // Card bg
+      doc.setFillColor(18, 18, 18);
+      doc.setDrawColor(45, 45, 45);
+      doc.roundedRect(cx, cy, cardW, cardH, 1.5, 1.5, "FD");
+
+      // Header vermelho
+      doc.setFillColor(229, 9, 20);
+      doc.rect(cx, cy, cardW, headerH, "F");
+
+      // Episódio nº
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6.5);
+      const ep = `EP ${String(i + 1).padStart(2, "0")}`;
+      doc.text(ep, cx + padX, cy + 4);
+
+      // Horário à direita
+      if (r.horario) {
+        const h = r.horario.slice(0, 5);
+        doc.setFontSize(7);
+        doc.text(h, cx + cardW - padX, cy + 4, { align: "right" });
+      }
+
+      // Nome refeição
+      doc.setFontSize(11);
+      const nome = (r.nome || "REFEIÇÃO").toUpperCase();
+      doc.text(nome, cx + padX, cy + 8.5);
+
+      // Descrição
+      doc.setTextColor(230, 230, 230);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(bodyFs);
+      const text = r.descricao_ia || "—";
+      const lines = doc.splitTextToSize(text, cardW - padX * 2);
+      const maxTextH = cardH - headerH - 4;
+      const lineH = bodyFs * 0.42;
+      const maxLinesFit = Math.floor(maxTextH / lineH);
+      const shownLines = lines.slice(0, Math.max(1, maxLinesFit));
+      doc.text(shownLines, cx + padX, cy + headerH + 4);
     });
 
-    // Rodapé ALPHA COACH PRO (apenas primeira página)
-    const pageW = doc.internal.pageSize.getWidth();
+    // ==== RODAPÉ NETFLIX ====
+    doc.setFillColor(229, 9, 20);
+    doc.rect(0, pageH - 8, pageW, 8, "F");
+    doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9);
-    doc.setTextColor(120, 120, 120);
-    doc.text("ALPHA COACH PRO", pageW / 2, pageH - 6, { align: "center" });
+    doc.text("ALPHA COACH PRO", pageW / 2, pageH - 3, { align: "center" });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(6.5);
+    doc.setTextColor(255, 255, 255);
+    doc.text("METODOLOGIA PREMIUM  •  TREINO • DIETA • EVOLUÇÃO", 12, pageH - 3);
+    doc.text("alpha-coach.app", pageW - 12, pageH - 3, { align: "right" });
 
-    // Garante uma página apenas: remove páginas extras se autoTable tiver quebrado
+    // Garante uma página
     const total = (doc as any).getNumberOfPages?.() ?? doc.internal.pages.length - 1;
-    for (let p = total; p > 1; p--) {
-      doc.deletePage(p);
-    }
+    for (let p = total; p > 1; p--) doc.deletePage(p);
 
     doc.save(`dieta_${(alunoNome || "aluno").replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.pdf`);
     toast.success("Dieta baixada em PDF!");
