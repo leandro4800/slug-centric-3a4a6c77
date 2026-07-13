@@ -768,11 +768,11 @@ const AdminMontarTreino = () => {
       return normalizarVideoPdfUrl(match?.video_coach_url || match?.video_url || null);
     };
 
-    dias.forEach((dia) => {
-      if (y > 250) { doc.addPage(); y = 20; }
+    dias.forEach((dia, diaIdx) => {
+      if (y > 245) { doc.addPage(); paintDarkBackground(); y = 20; }
       const exsDia = exercicios.filter((e) => e.dia_semana === dia).sort((a, b) => a.ordem - b.ordem);
 
-      // Junta observações do grupo (dedup) — só aparece na barra preta se o coach escreveu "ponto fraco"
+      // Junta observações do grupo (dedup) — só aparece se o coach escreveu "ponto fraco"
       const obsGrupo = Array.from(
         new Set(
           exsDia
@@ -781,46 +781,80 @@ const AdminMontarTreino = () => {
             .map((o) => o.toUpperCase())
         )
       ).join(" • ");
-      const tituloDia = obsGrupo ? `${dia}  (OBS: ${obsGrupo})` : dia;
 
-      autoTable(doc, {
-        startY: y,
-        head: [[tituloDia]],
-        body: [],
-        theme: "plain",
-        headStyles: { fillColor: [15, 15, 15], textColor: 255, fontSize: 13, fontStyle: "bold", cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
-        margin: { left: 14, right: 14 },
-      });
+      // ==== BANNER EPISÓDIO ESTILO NETFLIX ====
+      const bannerH = 14;
+      // Fundo do banner
+      doc.setFillColor(18, 18, 18);
+      doc.rect(14, y, pageW - 28, bannerH, "F");
+      // Faixa vermelha lateral
+      doc.setFillColor(229, 9, 20);
+      doc.rect(14, y, 2.5, bannerH, "F");
+      // EP tag
+      doc.setFillColor(229, 9, 20);
+      doc.roundedRect(19, y + 3, 14, 5.5, 1, 1, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text(`EP ${String(diaIdx + 1).padStart(2, "0")}`, 26, y + 6.8, { align: "center" });
+      // Título do dia
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text(dia.toUpperCase(), 36, y + 8.2);
+      // Observação (ponto fraco) à direita
+      if (obsGrupo) {
+        doc.setTextColor(229, 9, 20);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.text(`OBS: ${obsGrupo}`, pageW - 16, y + 8.2, { align: "right" });
+      }
+      y += bannerH + 1;
+
       const rowLinks: (string | null)[] = exsDia.map((ex) => videoUrlDoExercicio(ex.exercicio));
       autoTable(doc, {
-        startY: (doc as any).lastAutoTable.finalY,
-        head: [["Exercício", "Séries", "Reps", "Vídeo"]],
-        body: exsDia.map((ex, i) => {
-          return [
-            ex.exercicio,
-            compactSeries(ex.series),
-            ex.repeticoes,
-            rowLinks[i] ? "VIDEO" : "—",
-          ];
-        }),
-        theme: "striped",
-        styles: { fontSize: 11, cellPadding: 3, font: "helvetica", lineColor: [230, 230, 230], lineWidth: 0.1, textColor: [30, 30, 30] },
-        alternateRowStyles: { fillColor: [250, 246, 246] },
-        headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold", fontSize: 11, halign: "left", cellPadding: { top: 3, bottom: 3, left: 3, right: 3 } },
+        startY: y,
+        head: [["EXERCÍCIO", "SÉRIES", "REPS", "VÍDEO"]],
+        body: exsDia.map((ex, i) => [
+          ex.exercicio,
+          compactSeries(ex.series),
+          ex.repeticoes,
+          rowLinks[i] ? "VIDEO" : "—",
+        ]),
+        theme: "plain",
+        styles: {
+          fontSize: 10.5,
+          cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+          font: "helvetica",
+          lineColor: [40, 40, 40],
+          lineWidth: 0.15,
+          textColor: [230, 230, 230],
+          fillColor: [22, 22, 22],
+        },
+        alternateRowStyles: { fillColor: [30, 30, 30] },
+        headStyles: {
+          fillColor: [229, 9, 20],
+          textColor: 255,
+          fontStyle: "bold",
+          fontSize: 10,
+          halign: "left",
+          cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+        },
         columnStyles: {
-          0: { cellWidth: "auto", fontStyle: "bold", textColor: [15, 15, 15] },
-          1: { cellWidth: 32, halign: "center", fontStyle: "bold" },
-          2: { cellWidth: 22, halign: "center" },
+          0: { cellWidth: "auto", fontStyle: "bold", textColor: [255, 255, 255] },
+          1: { cellWidth: 32, halign: "center", fontStyle: "bold", textColor: [229, 9, 20] },
+          2: { cellWidth: 22, halign: "center", textColor: [230, 230, 230] },
           3: { cellWidth: 26, halign: "center" },
         },
         margin: { left: 14, right: 14 },
+        didDrawPage: () => {
+          // Pinta o fundo escuro se autoTable quebrar para nova página
+          paintDarkBackground();
+        },
         didDrawCell: (data) => {
           if (data.section === "body" && data.column.index === 3) {
             const url = rowLinks[data.row.index];
             if (url) {
-              // Fundo vermelho tipo "botão". O link usa URL absoluta normalizada
-              // (https://www.youtube.com/watch?v=...) porque leitores de PDF no celular
-              // costumam falhar com links sem protocolo, /embed ou URLs encurtadas.
               doc.setFillColor(229, 9, 20);
               doc.roundedRect(data.cell.x + 1, data.cell.y + 1.2, data.cell.width - 2, data.cell.height - 2.4, 1.4, 1.4, "F");
               doc.setTextColor(255, 255, 255);
@@ -829,11 +863,7 @@ const AdminMontarTreino = () => {
               const cx = data.cell.x + data.cell.width / 2;
               const cy = data.cell.y + data.cell.height / 2 + 1.4;
               doc.text("VIDEO", cx, cy, { align: "center" });
-              // Reforça link cobrindo a célula inteira (alvo de toque maior no celular)
               (doc as any).link(data.cell.x - 0.5, data.cell.y - 0.5, data.cell.width + 1, data.cell.height + 1, { url });
-              doc.setTextColor(30, 30, 30);
-              doc.setFont("helvetica", "normal");
-              doc.setFontSize(11);
             }
           }
         },
@@ -846,29 +876,41 @@ const AdminMontarTreino = () => {
       y = (doc as any).lastAutoTable.finalY + 8;
     });
 
-    // Legenda das abreviações
-    if (y > 260) { doc.addPage(); y = 20; }
+    // Legenda das abreviações — estilo dark
+    if (y > 258) { doc.addPage(); paintDarkBackground(); y = 20; }
+    doc.setFillColor(18, 18, 18);
+    doc.setDrawColor(60, 60, 60);
+    doc.setLineWidth(0.2);
+    doc.roundedRect(14, y - 4, pageW - 28, 12, 1.5, 1.5, "FD");
+    doc.setFillColor(229, 9, 20);
+    doc.rect(14, y - 4, 2, 12, "F");
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
+    doc.setFontSize(11);
     doc.setTextColor(229, 9, 20);
-    doc.text("LEGENDA:", 14, y);
+    doc.text("LEGENDA", 19, y + 1);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 40, 40);
-    doc.setFontSize(12);
-    doc.text("AQ = Aquecimento  ·  AJ = Ajuste  ·  TR = Trabalho (até a falha técnica)", 40, y);
-    y += 9;
+    doc.setTextColor(230, 230, 230);
+    doc.setFontSize(11);
+    doc.text("AQ = Aquecimento   ·   AJ = Ajuste   ·   TR = Trabalho (até a falha técnica)", 45, y + 1);
+    y += 12;
 
     if (cardio) {
-      if (y > 260) { doc.addPage(); y = 20; }
+      if (y > 258) { doc.addPage(); paintDarkBackground(); y = 20; }
+      doc.setFillColor(18, 18, 18);
+      doc.setDrawColor(60, 60, 60);
+      doc.roundedRect(14, y, pageW - 28, 18, 1.5, 1.5, "FD");
+      doc.setFillColor(229, 9, 20);
+      doc.rect(14, y, 2, 18, "F");
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text("Cardio sugerido", 14, y);
-      y += 7;
+      doc.setFontSize(9);
+      doc.setTextColor(229, 9, 20);
+      doc.text("CARDIO SUGERIDO", 19, y + 5);
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(12);
-      const lines = doc.splitTextToSize(cardio, pageW - 28);
-      doc.text(lines, 14, y);
-      y += lines.length * 5 + 4;
+      doc.setFontSize(10.5);
+      doc.setTextColor(230, 230, 230);
+      const lines = doc.splitTextToSize(cardio, pageW - 40);
+      doc.text(lines, 19, y + 11);
+      y += 22;
     }
 
     // Rodapé Netflix Alpha Coach Pro em todas as páginas
