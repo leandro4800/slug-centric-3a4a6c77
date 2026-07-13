@@ -1127,8 +1127,8 @@ const AdminMontarTreino = () => {
         )
       ).join(" • ");
 
-      // Banner episódio Netflix (grafite)
-      const bannerH = 14;
+      // Banner episódio Netflix (grafite) — OBS em linha 2 para não sobrepor o título
+      const bannerH = obsGrupo ? 20 : 14;
       doc.setFillColor(22, 22, 26);
       doc.rect(14, y, pageW - 28, bannerH, "F");
       doc.setFillColor(229, 9, 20);
@@ -1147,7 +1147,9 @@ const AdminMontarTreino = () => {
         doc.setTextColor(255, 90, 90);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7.5);
-        doc.text(`OBS: ${obsGrupo}`, pageW - 16, y + 8.2, { align: "right" });
+        const obsMaxW = pageW - 28 - 8;
+        const obsLinhas = doc.splitTextToSize(`OBS: ${obsGrupo}`, obsMaxW) as string[];
+        doc.text(obsLinhas[0], 19, y + 15.5);
       }
       y += bannerH + 1;
 
