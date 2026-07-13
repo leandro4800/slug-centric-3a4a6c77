@@ -141,7 +141,7 @@ const AdminMontarDieta = () => {
 
       const { data: d } = await supabase
         .from("dietas")
-        .select("id, is_published")
+        .select("id, is_published, kcal_alvo, macros_alvo")
         .eq("user_id", alunoId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -150,6 +150,17 @@ const AdminMontarDieta = () => {
       if (d) {
         setDietaId(d.id);
         setIsPublished(!!d.is_published);
+        const ma: any = (d as any).macros_alvo || {};
+        if ((d as any).kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g) {
+          setMacrosCalculados({
+            kcal: Math.round((d as any).kcal_alvo || 0),
+            proteina_g: Math.round(ma.proteina_g || 0),
+            carboidrato_g: Math.round(ma.carboidrato_g || 0),
+            lipideos_g: Math.round(ma.lipideos_g || 0),
+          });
+        } else {
+          setMacrosCalculados(null);
+        }
         const { data: refs } = await supabase
           .from("refeicoes")
           .select("*")
@@ -160,6 +171,7 @@ const AdminMontarDieta = () => {
         setDietaId(null);
         setIsPublished(false);
         setRefeicoes([]);
+        setMacrosCalculados(null);
       }
     })();
   }, [alunoId]);
@@ -237,12 +249,20 @@ const AdminMontarDieta = () => {
       if (data?.dieta_id) {
         setDietaId(data.dieta_id);
         setIsPublished(false); // Sempre gera como rascunho
-        const { data: refs } = await supabase
-          .from("refeicoes")
-          .select("*")
-          .eq("dieta_id", data.dieta_id)
-          .order("ordem");
+        const [{ data: refs }, { data: dRow }] = await Promise.all([
+          supabase.from("refeicoes").select("*").eq("dieta_id", data.dieta_id).order("ordem"),
+          supabase.from("dietas").select("kcal_alvo, macros_alvo").eq("id", data.dieta_id).maybeSingle(),
+        ]);
         if (refs) setRefeicoes(refs as any[]);
+        const ma: any = (dRow as any)?.macros_alvo || {};
+        if (dRow) {
+          setMacrosCalculados({
+            kcal: Math.round((dRow as any).kcal_alvo || 0),
+            proteina_g: Math.round(ma.proteina_g || 0),
+            carboidrato_g: Math.round(ma.carboidrato_g || 0),
+            lipideos_g: Math.round(ma.lipideos_g || 0),
+          });
+        }
       }
     } catch (e: any) {
       toast.error(e.message || "Falha ao gerar.", { id: toastId });
@@ -498,6 +518,35 @@ const AdminMontarDieta = () => {
       toast.error("Adicione refeições antes de baixar.");
       return;
     }
+
+    // Garante macros calculados antes de gerar PDF
+    let macrosPdf = macrosCalculados;
+    if ((!macrosPdf || !macrosPdf.kcal) && dietaId) {
+      const t = toast.loading("Calculando macros da dieta...");
+      try {
+        const { data } = await supabase.functions.invoke("gerar-dieta", {
+          body: {
+            mode: "recalc",
+            aluno_id: alunoId,
+            dieta_id: dietaId,
+            refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
+          },
+        });
+        if (data?.totais) {
+          macrosPdf = {
+            kcal: Math.round(data.totais.kcal || 0),
+            proteina_g: Math.round(data.totais.proteina_g || 0),
+            carboidrato_g: Math.round(data.totais.carboidrato_g || 0),
+            lipideos_g: Math.round(data.totais.lipideos_g || 0),
+          };
+          setMacrosCalculados(macrosPdf);
+        }
+        toast.dismiss(t);
+      } catch {
+        toast.dismiss(t);
+      }
+    }
+
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || "";
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
@@ -592,12 +641,12 @@ const AdminMontarDieta = () => {
     }
 
     // ==== MACROS BAR ====
-    if (macrosCalculados) {
+    if (macrosPdf) {
       const macros = [
-        { l: "KCAL", v: `${macrosCalculados.kcal}` },
-        { l: "PROTEÍNA", v: `${macrosCalculados.proteina_g}g` },
-        { l: "CARBO", v: `${macrosCalculados.carboidrato_g}g` },
-        { l: "GORDURA", v: `${macrosCalculados.lipideos_g}g` },
+        { l: "KCAL", v: `${macrosPdf.kcal}` },
+        { l: "PROTEÍNA", v: `${macrosPdf.proteina_g}g` },
+        { l: "CARBO", v: `${macrosPdf.carboidrato_g}g` },
+        { l: "GORDURA", v: `${macrosPdf.lipideos_g}g` },
       ];
       const boxW = (pageW - 24 - 6) / 4;
       macros.forEach((m, i) => {
@@ -640,10 +689,10 @@ const AdminMontarDieta = () => {
     const wSum = weights.reduce((s, w) => s + w, 0) || 1;
     const perMealMacros = refeicoes.map((_, i) => {
       const w = weights[i] / wSum;
-      const kcal = macrosCalculados?.kcal || 0;
-      const p = macrosCalculados?.proteina_g || 0;
-      const c = macrosCalculados?.carboidrato_g || 0;
-      const g = macrosCalculados?.lipideos_g || 0;
+      const kcal = macrosPdf?.kcal || 0;
+      const p = macrosPdf?.proteina_g || 0;
+      const c = macrosPdf?.carboidrato_g || 0;
+      const g = macrosPdf?.lipideos_g || 0;
       return {
         kcal: Math.round(kcal * w),
         p: Math.round(p * w),
