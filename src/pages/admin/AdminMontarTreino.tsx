@@ -609,7 +609,7 @@ const AdminMontarTreino = () => {
 
     doc.setTextColor(20, 20, 20);
     doc.setFontSize(13);
-    doc.setFont("helvetica", "normal");
+    doc.setFont("helvetica", "bold");
     const meta: string[] = [];
     if (perfil.objetivo) meta.push(`Objetivo: ${perfil.objetivo}`);
     if (nivel) meta.push(`Nível: ${nivel}`);
@@ -782,13 +782,14 @@ const AdminMontarTreino = () => {
     // Legenda das abreviações
     if (y > 260) { doc.addPage(); y = 20; }
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(12);
     doc.setTextColor(229, 9, 20);
     doc.text("LEGENDA:", 14, y);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(60, 60, 60);
-    doc.text("AQ = Aquecimento  ·  AJ = Ajuste  ·  TR = Trabalho (até a falha técnica)", 32, y);
-    y += 7;
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.setFontSize(12);
+    doc.text("AQ = Aquecimento  ·  AJ = Ajuste  ·  TR = Trabalho (até a falha técnica)", 40, y);
+    y += 9;
 
     if (cardio) {
       if (y > 260) { doc.addPage(); y = 20; }
@@ -812,7 +813,7 @@ const AdminMontarTreino = () => {
       doc.setLineWidth(0.4);
       doc.line(14, pageH - 18, pageW - 14, pageH - 18);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
+      doc.setFontSize(14);
       doc.setTextColor(229, 9, 20);
       doc.text("ALPHA COACH PRO", pageW / 2, pageH - 12, { align: "center" });
       doc.setFont("helvetica", "normal");
