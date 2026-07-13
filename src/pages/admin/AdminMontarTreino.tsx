@@ -585,7 +585,7 @@ const AdminMontarTreino = () => {
 
   const dias = [...new Set(exercicios.map((e) => e.dia_semana))];
 
-  const baixarPlanilhaPdf = () => {
+  const baixarPlanilhaPdf = async () => {
     if (exercicios.length === 0) {
       toast.error("Gere ou adicione exercícios antes de baixar a planilha.");
       return;
@@ -593,18 +593,20 @@ const AdminMontarTreino = () => {
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
 
-    // Cabeçalho
-    doc.setFillColor(229, 9, 20);
-    doc.rect(0, 0, pageW, 26, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("PLANILHA DE TREINO", pageW / 2, 16, { align: "center" });
+    const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || null;
+    const logo = await loadImageDataUrl(tenant?.logo_url);
+    let y = renderPdfHeader({
+      doc,
+      title: "PLANILHA DE TREINO",
+      subtitle: "Metodologia Alpha Coach",
+      coachName: tenant?.nome,
+      studentName: alunoNome,
+      logo,
+    });
 
     doc.setTextColor(20, 20, 20);
     doc.setFontSize(13);
     doc.setFont("helvetica", "normal");
-    let y = 36;
     const meta: string[] = [];
     if (perfil.objetivo) meta.push(`Objetivo: ${perfil.objetivo}`);
     if (nivel) meta.push(`Nível: ${nivel}`);
