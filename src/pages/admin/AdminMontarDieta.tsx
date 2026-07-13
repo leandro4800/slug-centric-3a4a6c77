@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
 
 interface Aluno {
   id: string;
@@ -460,33 +461,25 @@ const AdminMontarDieta = () => {
     }
   }, [searchParams, alunoId, generating, loading, perfil.peso_kg, perfil.altura_cm, gerarComIA]);
 
-  const baixarDietaPdf = () => {
+  const baixarDietaPdf = async () => {
     if (refeicoes.length === 0) {
       toast.error("Adicione refeições antes de baixar.");
       return;
     }
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || "";
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
 
-    // Cabeçalho
-    doc.setFillColor(229, 9, 20);
-    doc.rect(0, 0, pageW, 26, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(20);
-    doc.setFont("helvetica", "bold");
-    doc.text("PLANO ALIMENTAR", pageW / 2, 16, { align: "center" });
+    const logo = await loadImageDataUrl(tenant?.logo_url);
+    let y = renderPdfHeader({
+      doc,
+      title: "PLANO ALIMENTAR",
+      subtitle: "Metodologia Alpha Coach",
+      coachName: tenant?.nome,
+      studentName: alunoNome || null,
+      logo,
+    });
 
     doc.setTextColor(20, 20, 20);
-    let y = 36;
-
-    if (alunoNome) {
-      doc.setFontSize(15);
-      doc.setFont("helvetica", "bold");
-      doc.text(alunoNome, 14, y);
-      y += 8;
-    }
-
     doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     const meta: string[] = [];
