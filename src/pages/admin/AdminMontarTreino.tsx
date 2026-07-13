@@ -596,18 +596,27 @@ const AdminMontarTreino = () => {
     }
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
+    const pageHTotal = doc.internal.pageSize.getHeight();
 
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || null;
     const logo = await loadImageDataUrl(tenant?.logo_url);
     const platLogo = await loadImageDataUrl(platformLogo);
 
+    // Fundo preto cinematográfico em toda a página inicial
+    const paintDarkBackground = () => {
+      doc.setFillColor(10, 10, 10);
+      doc.rect(0, 0, pageW, pageHTotal, "F");
+      // Faixa vermelha vertical (marca)
+      doc.setFillColor(229, 9, 20);
+      doc.rect(0, 0, 4, pageHTotal, "F");
+    };
+    paintDarkBackground();
+
     // ==== HERO CINEMATOGRÁFICO NETFLIX ====
     const heroH = 44;
-    doc.setFillColor(10, 10, 10);
-    doc.rect(0, 0, pageW, heroH, "F");
-    // Faixa vermelha vertical
-    doc.setFillColor(229, 9, 20);
-    doc.rect(0, 0, 4, heroH, "F");
+    // (fundo já preto — apenas escurece um pouco a área do hero)
+    doc.setFillColor(18, 18, 18);
+    doc.rect(4, 0, pageW - 4, heroH, "F");
 
     let heroX = 12;
     if (logo) {
