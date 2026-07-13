@@ -40,7 +40,7 @@ const AvaliacaoFisica = () => {
       setLoading(true);
       const { data } = await supabase
         .from("perfis")
-        .select("id, nome_completo, email, sexo, data_nascimento")
+        .select("id, nome_completo, email, sexo, data_nascimento, avatar_url")
         .eq("tenant_id", tenant.id)
         .order("nome_completo");
       setAlunos((data as Aluno[]) || []);
