@@ -460,6 +460,15 @@ export default function JacksonPollockCalculator({
                   )}
                 </Button>
                 <Button
+                  variant="outline"
+                  onClick={baixarPdf}
+                  disabled={!calc}
+                  className="w-full h-12 border-white/20 text-white hover:bg-white/10 font-bold uppercase tracking-widest text-xs rounded-none gap-2"
+                >
+                  <FileDown className="h-4 w-4" />
+                  Baixar PDF
+                </Button>
+                <Button
                   variant="ghost"
                   onClick={() => onOpenChange(false)}
                   className="w-full h-10 text-white/40 hover:text-white hover:bg-white/5 font-bold uppercase tracking-widest text-[10px] rounded-none"
