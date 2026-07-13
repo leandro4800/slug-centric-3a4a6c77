@@ -947,6 +947,343 @@ const AdminMontarTreino = () => {
     toast.success("Planilha baixada em PDF!");
   };
 
+  // ============================================================
+  // VERSÃO NETFLIX DARK — planilha em fundo preto, extensão do app
+  // ============================================================
+  const baixarPlanilhaPdfDark = async () => {
+    if (exercicios.length === 0) {
+      toast.error("Gere ou adicione exercícios antes de baixar a planilha.");
+      return;
+    }
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageHTotal = doc.internal.pageSize.getHeight();
+
+    const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || null;
+    const logo = await loadImageDataUrl(tenant?.logo_url);
+    const platLogo = await loadImageDataUrl(platformLogo);
+
+    // Pinta fundo preto + faixa vermelha lateral (chamado ANTES de qualquer conteúdo em cada página)
+    const paintDarkBg = () => {
+      doc.setFillColor(8, 8, 10);
+      doc.rect(0, 0, pageW, pageHTotal, "F");
+      doc.setFillColor(229, 9, 20);
+      doc.rect(0, 0, 4, pageHTotal, "F");
+    };
+    paintDarkBg();
+
+    // ==== HERO CINEMATOGRÁFICO ====
+    const heroH = 46;
+    // Sombreamento sutil no topo
+    doc.setFillColor(20, 20, 24);
+    doc.rect(4, 0, pageW - 4, heroH, "F");
+    // Linha vermelha embaixo do hero
+    doc.setFillColor(229, 9, 20);
+    doc.rect(4, heroH, pageW - 4, 0.6, "F");
+
+    let heroX = 12;
+    if (logo) {
+      const targetH = 14;
+      const ratio = logo.w / logo.h || 1;
+      const targetW = Math.min(targetH * ratio, 30);
+      try {
+        const fmt = logo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+        doc.addImage(logo.dataUrl, fmt, heroX, 8, targetW, targetH);
+        heroX += targetW + 6;
+      } catch {}
+    }
+    // Tag ORIGINAL
+    doc.setFillColor(229, 9, 20);
+    doc.rect(heroX, 8, 34, 5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    doc.text("UM ORIGINAL ALPHA COACH", heroX + 17, 11.5, { align: "center" });
+
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(24);
+    doc.text("PLANILHA DE TREINO", heroX, 24);
+
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(200, 200, 200);
+    doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 30);
+
+    doc.setDrawColor(229, 9, 20);
+    doc.setLineWidth(0.4);
+    doc.line(heroX, 33, pageW - 12, 33);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text((alunoNome || "ATLETA").toUpperCase(), heroX, 39);
+    if (tenant?.nome) {
+      doc.setTextColor(200, 200, 200);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.text(`COACH ${tenant.nome.toUpperCase()}`, pageW - 12, 39, { align: "right" });
+    }
+
+    let y = heroH + 8;
+
+    // Pills de metadata
+    const pills: string[] = [];
+    if (perfil.objetivo) pills.push(String(perfil.objetivo).toUpperCase());
+    if (nivel) pills.push(String(nivel).toUpperCase());
+    if (perfil.frequencia_semanal) pills.push(`${perfil.frequencia_semanal}X/SEMANA`);
+    if (pills.length) {
+      let px = 14;
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      pills.forEach((p) => {
+        const w = doc.getTextWidth(p) + 8;
+        doc.setFillColor(24, 24, 28);
+        doc.setDrawColor(229, 9, 20);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(px, y, w, 6.5, 1.5, 1.5, "FD");
+        doc.setTextColor(255, 255, 255);
+        doc.text(p, px + w / 2, y + 4.4, { align: "center" });
+        px += w + 3;
+      });
+      y += 12;
+    }
+
+    const compactSeries = (raw: string) => {
+      if (!raw) return "—";
+      const parts = raw.split(/\s*\+\s*/);
+      const abbr = parts.map((p) => {
+        const m = p.match(/(\d+)\s*x?\s*S[ée]rie[s]?\s*(?:de\s*)?(\w+)/i);
+        if (!m) return p.trim();
+        const n = m[1];
+        const tipo = m[2].toLowerCase();
+        if (tipo.startsWith("aque")) return `${n} AQ`;
+        if (tipo.startsWith("ajus")) return `${n} AJ`;
+        if (tipo.startsWith("trab")) return `${n} TR`;
+        return `${n} ${tipo.slice(0, 2).toUpperCase()}`;
+      });
+      return abbr.join(" · ");
+    };
+
+    const limparObs = (raw: string) => {
+      if (!raw) return "";
+      return raw
+        .replace(/\bPSE\b\s*:?\s*\d+(?:\s*[-–—aà]\s*\d+)?\.?/gi, "")
+        .replace(/\bPSE\b\s*:?/gi, "")
+        .replace(/\bN\s*\/?\s*A\b\s*:?/gi, "")
+        .replace(/(?:^|[\s,;·•-])\d+[\.)](?=\s|$)/g, " ")
+        .replace(/^\s*(?:[-–—aà]\s*)?\d+\.?\s*/i, "")
+        .replace(/\s{2,}/g, " ")
+        .replace(/^[\s,;·•\-.]+|[\s,;·•\-.]+$/g, "")
+        .trim();
+    };
+    const limparObsPontoFraco = (raw: string) => {
+      const obs = limparObs(raw)
+        .replace(/^\(?\s*obs\s*:?\s*/i, "")
+        .replace(/[()]/g, "")
+        .trim();
+      const match = obs.match(/^ponto\s+fraco\s*[:\-–—]\s*(.+)$/i);
+      if (!match) return "";
+      const detalhe = limparObs(match[1])
+        .replace(/^(?:ponto\s+fraco\s*)+/i, "")
+        .replace(/^[\s:;,.\-–—]+|[\s:;,.\-–—]+$/g, "")
+        .trim();
+      if (!detalhe || detalhe.length < 3) return "";
+      return `PONTO FRACO: ${detalhe.toUpperCase()}`;
+    };
+    const normalizarVideoPdfUrl = (raw: string | null | undefined) => {
+      const value = raw?.trim();
+      if (!value) return null;
+      const ytId = extractYouTubeId(value);
+      if (ytId) return `https://www.youtube.com/watch?v=${encodeURIComponent(ytId)}`;
+      const withProtocol = value.startsWith("//")
+        ? `https:${value}`
+        : /^[a-z][a-z0-9+.-]*:\/\//i.test(value) ? value : `https://${value.replace(/^\/+/, "")}`;
+      try {
+        const parsed = new URL(withProtocol);
+        if (parsed.protocol !== "https:" && parsed.protocol !== "http:") return null;
+        return parsed.toString();
+      } catch { return null; }
+    };
+    const videoUrlDoExercicio = (nomeExercicio: string) => {
+      const alvo = normalizarTexto(nomeExercicio);
+      if (!alvo) return null;
+      const match = biblioteca.find((b) => normalizarTexto(b.nome || "") === alvo)
+        || biblioteca.find((b) => {
+          const nome = normalizarTexto(b.nome || "");
+          return nome && (alvo.includes(nome) || nome.includes(alvo));
+        });
+      return normalizarVideoPdfUrl(match?.video_coach_url || match?.video_url || null);
+    };
+
+    dias.forEach((dia, diaIdx) => {
+      if (y > 245) { doc.addPage(); paintDarkBg(); y = 20; }
+      const exsDia = exercicios.filter((e) => e.dia_semana === dia).sort((a, b) => a.ordem - b.ordem);
+
+      const obsGrupo = Array.from(
+        new Set(
+          exsDia.map((ex) => limparObsPontoFraco(ex.observacao || "")).filter((o) => o.length > 0).map((o) => o.toUpperCase())
+        )
+      ).join(" • ");
+
+      // Banner episódio Netflix (grafite)
+      const bannerH = 14;
+      doc.setFillColor(22, 22, 26);
+      doc.rect(14, y, pageW - 28, bannerH, "F");
+      doc.setFillColor(229, 9, 20);
+      doc.rect(14, y, 2.5, bannerH, "F");
+      doc.setFillColor(229, 9, 20);
+      doc.roundedRect(19, y + 3, 14, 5.5, 1, 1, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7);
+      doc.text(`EP ${String(diaIdx + 1).padStart(2, "0")}`, 26, y + 6.8, { align: "center" });
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(13);
+      doc.text(dia.toUpperCase(), 36, y + 8.2);
+      if (obsGrupo) {
+        doc.setTextColor(255, 90, 90);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(7.5);
+        doc.text(`OBS: ${obsGrupo}`, pageW - 16, y + 8.2, { align: "right" });
+      }
+      y += bannerH + 1;
+
+      const rowLinks: (string | null)[] = exsDia.map((ex) => videoUrlDoExercicio(ex.exercicio));
+      autoTable(doc, {
+        startY: y,
+        head: [["EXERCÍCIO", "SÉRIES", "REPS", "VÍDEO"]],
+        body: exsDia.map((ex, i) => [
+          ex.exercicio,
+          compactSeries(ex.series),
+          ex.repeticoes,
+          rowLinks[i] ? "VIDEO" : "—",
+        ]),
+        theme: "grid",
+        styles: {
+          fontSize: 11,
+          cellPadding: { top: 3.2, bottom: 3.2, left: 4, right: 4 },
+          font: "helvetica",
+          lineColor: [40, 40, 44],
+          lineWidth: 0.15,
+          textColor: [235, 235, 235],
+          fillColor: [22, 22, 26],
+        },
+        alternateRowStyles: { fillColor: [30, 30, 34] },
+        headStyles: {
+          fillColor: [229, 9, 20],
+          textColor: 255,
+          fontStyle: "bold",
+          fontSize: 10.5,
+          halign: "left",
+          cellPadding: { top: 3.2, bottom: 3.2, left: 4, right: 4 },
+        },
+        columnStyles: {
+          0: { cellWidth: "auto", fontStyle: "bold", textColor: [255, 255, 255] },
+          1: { cellWidth: 32, halign: "center", fontStyle: "bold", textColor: [229, 9, 20] },
+          2: { cellWidth: 22, halign: "center", textColor: [230, 230, 230] },
+          3: { cellWidth: 26, halign: "center" },
+        },
+        margin: { left: 14, right: 14 },
+        // willDrawPage roda ANTES do conteúdo — garante fundo preto em novas páginas sem cobrir células
+        willDrawPage: (data) => {
+          if (data.pageNumber > 1) paintDarkBg();
+        },
+        didDrawCell: (data) => {
+          if (data.section === "body" && data.column.index === 3) {
+            const url = rowLinks[data.row.index];
+            if (url) {
+              doc.setFillColor(229, 9, 20);
+              doc.roundedRect(data.cell.x + 1, data.cell.y + 1.2, data.cell.width - 2, data.cell.height - 2.4, 1.4, 1.4, "F");
+              doc.setTextColor(255, 255, 255);
+              doc.setFont("helvetica", "bold");
+              doc.setFontSize(10);
+              const cx = data.cell.x + data.cell.width / 2;
+              const cy = data.cell.y + data.cell.height / 2 + 1.4;
+              doc.text("VIDEO", cx, cy, { align: "center" });
+              (doc as any).link(data.cell.x - 0.5, data.cell.y - 0.5, data.cell.width + 1, data.cell.height + 1, { url });
+            }
+          }
+        },
+        willDrawCell: (data) => {
+          if (data.section === "body" && data.column.index === 3 && rowLinks[data.row.index]) {
+            data.cell.text = [""];
+          }
+        },
+      });
+      y = (doc as any).lastAutoTable.finalY + 8;
+    });
+
+    // Legenda dark
+    if (y > 258) { doc.addPage(); paintDarkBg(); y = 20; }
+    doc.setFillColor(22, 22, 26);
+    doc.setDrawColor(50, 50, 54);
+    doc.setLineWidth(0.2);
+    doc.roundedRect(14, y - 4, pageW - 28, 12, 1.5, 1.5, "FD");
+    doc.setFillColor(229, 9, 20);
+    doc.rect(14, y - 4, 2, 12, "F");
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(229, 9, 20);
+    doc.text("LEGENDA", 19, y + 1);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(240, 240, 240);
+    doc.setFontSize(11);
+    doc.text("AQ = Aquecimento   ·   AJ = Ajuste   ·   TR = Trabalho (até a falha técnica)", 45, y + 1);
+    y += 12;
+
+    if (cardio) {
+      if (y > 258) { doc.addPage(); paintDarkBg(); y = 20; }
+      doc.setFillColor(22, 22, 26);
+      doc.setDrawColor(50, 50, 54);
+      doc.roundedRect(14, y, pageW - 28, 18, 1.5, 1.5, "FD");
+      doc.setFillColor(229, 9, 20);
+      doc.rect(14, y, 2, 18, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(229, 9, 20);
+      doc.text("CARDIO SUGERIDO", 19, y + 5);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(10.5);
+      doc.setTextColor(240, 240, 240);
+      const lines = doc.splitTextToSize(cardio, pageW - 40);
+      doc.text(lines, 19, y + 11);
+      y += 22;
+    }
+
+    // Rodapé em todas as páginas
+    const pageH = doc.internal.pageSize.getHeight();
+    const totalPages = (doc as any).internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setFillColor(229, 9, 20);
+      doc.rect(0, pageH - 12, pageW, 12, "F");
+      if (platLogo) {
+        try {
+          const targetH = 8;
+          const ratio = platLogo.w / platLogo.h || 1;
+          const targetW = Math.min(targetH * ratio, 22);
+          const fmt = platLogo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+          doc.addImage(platLogo.dataUrl, fmt, 5, pageH - 10, targetW, targetH);
+        } catch {}
+      }
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 6.5, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(7);
+      doc.text("METODOLOGIA PREMIUM • TREINO • DIETA • EVOLUÇÃO", pageW / 2, pageH - 2.5, { align: "center" });
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${p}/${totalPages}`, pageW - 5, pageH - 4.5, { align: "right" });
+    }
+
+    doc.save(`planilha_treino_netflix_${Date.now()}.pdf`);
+    toast.success("Planilha Netflix baixada em PDF!");
+  };
+
+
+
 
 
   return (
