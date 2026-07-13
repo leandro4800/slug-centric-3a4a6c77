@@ -518,6 +518,35 @@ const AdminMontarDieta = () => {
       toast.error("Adicione refeições antes de baixar.");
       return;
     }
+
+    // Garante macros calculados antes de gerar PDF
+    let macrosPdf = macrosCalculados;
+    if ((!macrosPdf || !macrosPdf.kcal) && dietaId) {
+      const t = toast.loading("Calculando macros da dieta...");
+      try {
+        const { data } = await supabase.functions.invoke("gerar-dieta", {
+          body: {
+            mode: "recalc",
+            aluno_id: alunoId,
+            dieta_id: dietaId,
+            refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
+          },
+        });
+        if (data?.totais) {
+          macrosPdf = {
+            kcal: Math.round(data.totais.kcal || 0),
+            proteina_g: Math.round(data.totais.proteina_g || 0),
+            carboidrato_g: Math.round(data.totais.carboidrato_g || 0),
+            lipideos_g: Math.round(data.totais.lipideos_g || 0),
+          };
+          setMacrosCalculados(macrosPdf);
+        }
+        toast.dismiss(t);
+      } catch {
+        toast.dismiss(t);
+      }
+    }
+
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || "";
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
