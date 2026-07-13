@@ -641,12 +641,12 @@ const AdminMontarDieta = () => {
     }
 
     // ==== MACROS BAR ====
-    if (macrosCalculados) {
+    if (macrosPdf) {
       const macros = [
-        { l: "KCAL", v: `${macrosCalculados.kcal}` },
-        { l: "PROTEÍNA", v: `${macrosCalculados.proteina_g}g` },
-        { l: "CARBO", v: `${macrosCalculados.carboidrato_g}g` },
-        { l: "GORDURA", v: `${macrosCalculados.lipideos_g}g` },
+        { l: "KCAL", v: `${macrosPdf.kcal}` },
+        { l: "PROTEÍNA", v: `${macrosPdf.proteina_g}g` },
+        { l: "CARBO", v: `${macrosPdf.carboidrato_g}g` },
+        { l: "GORDURA", v: `${macrosPdf.lipideos_g}g` },
       ];
       const boxW = (pageW - 24 - 6) / 4;
       macros.forEach((m, i) => {
@@ -689,10 +689,10 @@ const AdminMontarDieta = () => {
     const wSum = weights.reduce((s, w) => s + w, 0) || 1;
     const perMealMacros = refeicoes.map((_, i) => {
       const w = weights[i] / wSum;
-      const kcal = macrosCalculados?.kcal || 0;
-      const p = macrosCalculados?.proteina_g || 0;
-      const c = macrosCalculados?.carboidrato_g || 0;
-      const g = macrosCalculados?.lipideos_g || 0;
+      const kcal = macrosPdf?.kcal || 0;
+      const p = macrosPdf?.proteina_g || 0;
+      const c = macrosPdf?.carboidrato_g || 0;
+      const g = macrosPdf?.lipideos_g || 0;
       return {
         kcal: Math.round(kcal * w),
         p: Math.round(p * w),
