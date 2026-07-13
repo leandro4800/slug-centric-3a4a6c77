@@ -13,6 +13,38 @@ import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
+import imgBreakfast from "@/assets/meal-breakfast.jpg";
+import imgLunch from "@/assets/meal-lunch.jpg";
+import imgSnack from "@/assets/meal-snack.jpg";
+import imgDinner from "@/assets/meal-dinner.jpg";
+import imgPre from "@/assets/meal-pre.jpg";
+import imgPost from "@/assets/meal-post.jpg";
+import imgSupper from "@/assets/meal-supper.jpg";
+import platformLogo from "@/assets/alphacoach-logo.jpeg";
+
+const mealImgFor = (nome: string): string => {
+  const n = (nome || "").toLowerCase();
+  if (n.includes("pós") || n.includes("pos-treino") || n.includes("pos treino")) return imgPost;
+  if (n.includes("pré") || n.includes("pre-treino") || n.includes("pre treino")) return imgPre;
+  if (n.includes("ceia") || n.includes("noite")) return imgSupper;
+  if (n.includes("jantar")) return imgDinner;
+  if (n.includes("almoço") || n.includes("almoco")) return imgLunch;
+  if (n.includes("café") || n.includes("cafe") || n.includes("manhã") || n.includes("manha")) return imgBreakfast;
+  if (n.includes("lanche")) return imgSnack;
+  return imgBreakfast;
+};
+
+const mealWeightFor = (nome: string): number => {
+  const n = (nome || "").toLowerCase();
+  if (n.includes("almoço") || n.includes("almoco")) return 30;
+  if (n.includes("jantar")) return 25;
+  if (n.includes("café") || n.includes("cafe") || n.includes("manhã") || n.includes("manha")) return 20;
+  if (n.includes("pré") || n.includes("pre")) return 12;
+  if (n.includes("pós") || n.includes("pos")) return 15;
+  if (n.includes("lanche")) return 10;
+  if (n.includes("ceia") || n.includes("noite")) return 8;
+  return 15;
+};
 
 interface Aluno {
   id: string;
