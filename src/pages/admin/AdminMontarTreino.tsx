@@ -782,13 +782,14 @@ const AdminMontarTreino = () => {
     // Legenda das abreviações
     if (y > 260) { doc.addPage(); y = 20; }
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
+    doc.setFontSize(12);
     doc.setTextColor(229, 9, 20);
     doc.text("LEGENDA:", 14, y);
-    doc.setFont("helvetica", "normal");
-    doc.setTextColor(60, 60, 60);
-    doc.text("AQ = Aquecimento  ·  AJ = Ajuste  ·  TR = Trabalho (até a falha técnica)", 32, y);
-    y += 7;
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.setFontSize(12);
+    doc.text("AQ = Aquecimento  ·  AJ = Ajuste  ·  TR = Trabalho (até a falha técnica)", 40, y);
+    y += 9;
 
     if (cardio) {
       if (y > 260) { doc.addPage(); y = 20; }
