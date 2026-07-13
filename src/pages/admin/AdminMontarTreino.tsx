@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
 
 interface Aluno {
   id: string;
