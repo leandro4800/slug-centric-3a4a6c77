@@ -813,7 +813,7 @@ const AdminMontarTreino = () => {
       doc.setLineWidth(0.4);
       doc.line(14, pageH - 18, pageW - 14, pageH - 18);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(10);
+      doc.setFontSize(14);
       doc.setTextColor(229, 9, 20);
       doc.text("ALPHA COACH PRO", pageW / 2, pageH - 12, { align: "center" });
       doc.setFont("helvetica", "normal");
