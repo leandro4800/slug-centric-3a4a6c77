@@ -691,10 +691,14 @@ const AdminMontarTreino = () => {
           if (data.section === "body" && data.column.index === 3) {
             const url = rowLinks[data.row.index];
             if (url) {
+              const cx = data.cell.x + data.cell.width / 2;
+              const cy = data.cell.y + data.cell.height / 2;
               doc.setTextColor(229, 9, 20);
               doc.setFont("helvetica", "bold");
-              doc.setFontSize(10.5);
-              doc.textWithLink("▶ Assistir", data.cell.x + data.cell.width / 2 - 8, data.cell.y + data.cell.height / 2 + 1.5, { url });
+              doc.setFontSize(14);
+              doc.text("\u25B6", cx, cy + 1.8, { align: "center", baseline: "middle" });
+              // área clicável cobrindo a célula toda
+              (doc as any).link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
               doc.setTextColor(30, 30, 30);
               doc.setFont("helvetica", "normal");
               doc.setFontSize(11);
