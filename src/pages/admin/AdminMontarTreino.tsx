@@ -627,27 +627,51 @@ const AdminMontarTreino = () => {
         headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: 14, fontStyle: "bold" },
         margin: { left: 14, right: 14 },
       });
+      const rowLinks: (string | null)[] = exsDia.map((ex) => {
+        const match = biblioteca.find((b) => b.nome.toLowerCase() === ex.exercicio.toLowerCase());
+        return match?.video_coach_url || match?.video_url || null;
+      });
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY,
-        head: [["Exercício", "Séries", "Reps", "Cadência", "Obs."]],
-        body: exsDia.map((ex) => [
+        head: [["Exercício", "Séries", "Reps", "Cadência", "Obs.", "Vídeo"]],
+        body: exsDia.map((ex, i) => [
           ex.exercicio,
           ex.series,
           ex.repeticoes,
           ex.cadencia || "—",
           ex.observacao || ex.detalhes_execucao || "—",
+          rowLinks[i] ? "Assistir" : "—",
         ]),
         theme: "striped",
         styles: { fontSize: 11.5, cellPadding: 3.2 },
         headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold", fontSize: 12 },
         columnStyles: {
-          0: { cellWidth: 60 },
-          1: { cellWidth: 22 },
-          2: { cellWidth: 22 },
-          3: { cellWidth: 26 },
+          0: { cellWidth: 52 },
+          1: { cellWidth: 18 },
+          2: { cellWidth: 18 },
+          3: { cellWidth: 22 },
           4: { cellWidth: "auto" },
+          5: { cellWidth: 20, halign: "center" },
         },
         margin: { left: 14, right: 14 },
+        didDrawCell: (data) => {
+          if (data.section === "body" && data.column.index === 5) {
+            const url = rowLinks[data.row.index];
+            if (url) {
+              doc.setTextColor(30, 90, 220);
+              doc.setFont("helvetica", "bold");
+              doc.textWithLink("Assistir", data.cell.x + data.cell.width / 2 - 7, data.cell.y + data.cell.height / 2 + 1.5, { url });
+              doc.setTextColor(20, 20, 20);
+              doc.setFont("helvetica", "normal");
+            }
+          }
+        },
+        willDrawCell: (data) => {
+          if (data.section === "body" && data.column.index === 5 && rowLinks[data.row.index]) {
+            // clear default cell text so we render the link manually
+            data.cell.text = [""];
+          }
+        },
       });
       y = (doc as any).lastAutoTable.finalY + 8;
     });
@@ -662,6 +686,26 @@ const AdminMontarTreino = () => {
       doc.setFontSize(12);
       const lines = doc.splitTextToSize(cardio, pageW - 28);
       doc.text(lines, 14, y);
+      y += lines.length * 5 + 4;
+    }
+
+    // Rodapé Alpha Coach Pro em todas as páginas
+    const pageH = doc.internal.pageSize.getHeight();
+    const totalPages = (doc as any).internal.getNumberOfPages();
+    for (let p = 1; p <= totalPages; p++) {
+      doc.setPage(p);
+      doc.setDrawColor(229, 9, 20);
+      doc.setLineWidth(0.4);
+      doc.line(14, pageH - 18, pageW - 14, pageH - 18);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.setTextColor(229, 9, 20);
+      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 12, { align: "center" });
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(90, 90, 90);
+      doc.text("Metodologia premium de treino, dieta e performance  •  alpha-coach.app", pageW / 2, pageH - 7.5, { align: "center" });
+      doc.text(`Página ${p} de ${totalPages}`, pageW - 14, pageH - 7.5, { align: "right" });
     }
 
     doc.save(`planilha_treino_${Date.now()}.pdf`);
