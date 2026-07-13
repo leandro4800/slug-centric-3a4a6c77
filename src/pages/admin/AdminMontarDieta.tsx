@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Sparkles, Save, Apple, Trash2, Plus, Mic, MicOff, Send, Calculator } from "lucide-react";
+import { Loader2, Sparkles, Save, Apple, Trash2, Plus, Mic, MicOff, Send, Calculator, FileDown } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 
 interface Aluno {
   id: string;
@@ -458,6 +460,75 @@ const AdminMontarDieta = () => {
     }
   }, [searchParams, alunoId, generating, loading, perfil.peso_kg, perfil.altura_cm, gerarComIA]);
 
+  const baixarDietaPdf = () => {
+    if (refeicoes.length === 0) {
+      toast.error("Adicione refeições antes de baixar.");
+      return;
+    }
+    const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || "";
+    const doc = new jsPDF({ unit: "mm", format: "a4" });
+    const pageW = doc.internal.pageSize.getWidth();
+
+    // Cabeçalho
+    doc.setFillColor(229, 9, 20);
+    doc.rect(0, 0, pageW, 26, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    doc.text("PLANO ALIMENTAR", pageW / 2, 16, { align: "center" });
+
+    doc.setTextColor(20, 20, 20);
+    let y = 36;
+
+    if (alunoNome) {
+      doc.setFontSize(15);
+      doc.setFont("helvetica", "bold");
+      doc.text(alunoNome, 14, y);
+      y += 8;
+    }
+
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    const meta: string[] = [];
+    if (perfil.objetivo) meta.push(`Objetivo: ${perfil.objetivo}`);
+    if (perfil.peso_kg) meta.push(`Peso: ${perfil.peso_kg}kg`);
+    if (perfil.altura_cm) meta.push(`Altura: ${perfil.altura_cm}cm`);
+    if (meta.length) {
+      doc.text(meta.join("  •  "), 14, y);
+      y += 8;
+    }
+
+    if (macrosCalculados) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text(
+        `Meta diária: ${macrosCalculados.kcal} kcal  •  P ${macrosCalculados.proteina_g}g  •  C ${macrosCalculados.carboidrato_g}g  •  G ${macrosCalculados.lipideos_g}g`,
+        14,
+        y,
+      );
+      y += 8;
+    }
+
+    refeicoes.forEach((r) => {
+      if (y > 250) { doc.addPage(); y = 20; }
+      const titulo = `${r.nome}${r.horario ? "  •  " + r.horario.slice(0, 5) : ""}`;
+      autoTable(doc, {
+        startY: y,
+        head: [[titulo]],
+        body: [[r.descricao_ia || "—"]],
+        theme: "striped",
+        styles: { fontSize: 12, cellPadding: 4, valign: "top" },
+        headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: 13, fontStyle: "bold" },
+        margin: { left: 14, right: 14 },
+      });
+      y = (doc as any).lastAutoTable.finalY + 6;
+    });
+
+    doc.save(`dieta_${(alunoNome || "aluno").replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.pdf`);
+    toast.success("Dieta baixada em PDF!");
+  };
+
+
   return (
     <div className="min-h-screen bg-black text-white">
       <header className="border-b border-white/10 px-6 py-4 flex items-center justify-between sticky top-0 bg-black/95 backdrop-blur z-10">
@@ -602,6 +673,10 @@ const AdminMontarDieta = () => {
                   <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId} className="bg-primary hover:bg-primary/90">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
                     Enviar para Aluno
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={baixarDietaPdf} disabled={refeicoes.length === 0} className="border-white/20 text-white hover:bg-white/10">
+                    <FileDown className="h-4 w-4 mr-1" />
+                    Baixar PDF
                   </Button>
                 </div>
               </div>

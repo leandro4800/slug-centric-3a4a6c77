@@ -144,38 +144,38 @@ function downloadPdf(plan: PlanoIA) {
 
   // Cabeçalho
   doc.setFillColor(229, 9, 20); // Netflix red
-  doc.rect(0, 0, pageW, 22, "F");
+  doc.rect(0, 0, pageW, 26, "F");
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16);
+  doc.setFontSize(19);
   doc.setFont("helvetica", "bold");
-  doc.text("METODOLOGIA ALPHA — PLANILHA PREMIUM", pageW / 2, 14, { align: "center" });
+  doc.text("METODOLOGIA ALPHA — PLANILHA PREMIUM", pageW / 2, 16, { align: "center" });
 
   doc.setTextColor(20, 20, 20);
-  doc.setFontSize(13);
+  doc.setFontSize(16);
   doc.setFont("helvetica", "bold");
-  doc.text(plan.title, 14, 32, { maxWidth: pageW - 28 });
+  doc.text(plan.title, 14, 38, { maxWidth: pageW - 28 });
 
-  let y = 40;
+  let y = 48;
   if (plan.recomendacoes) {
-    doc.setFontSize(9);
+    doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     const lines = doc.splitTextToSize(plan.recomendacoes, pageW - 28);
     doc.text(lines, 14, y);
-    y += lines.length * 4 + 4;
+    y += lines.length * 5.5 + 6;
   }
 
   if (plan.divisao?.length) {
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
+    doc.setFontSize(14);
     doc.text("Divisão Semanal", 14, y);
-    y += 5;
+    y += 7;
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
+    doc.setFontSize(12);
     plan.divisao.forEach((d) => {
       doc.text(`• ${d}`, 16, y);
-      y += 4.5;
+      y += 6;
     });
-    y += 4;
+    y += 5;
   }
 
   plan.workouts.forEach((w) => {
@@ -188,7 +188,7 @@ function downloadPdf(plan: PlanoIA) {
       head: [[w.nome]],
       body: [],
       theme: "plain",
-      headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: 11, fontStyle: "bold" },
+      headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: 14, fontStyle: "bold" },
       margin: { left: 14, right: 14 },
     });
     autoTable(doc, {
@@ -202,8 +202,8 @@ function downloadPdf(plan: PlanoIA) {
         ex.tecnica || "—",
       ]),
       theme: "striped",
-      styles: { fontSize: 8.5, cellPadding: 2 },
-      headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold" },
+      styles: { fontSize: 11.5, cellPadding: 3.2 },
+      headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold", fontSize: 12 },
       columnStyles: {
         0: { cellWidth: 55 },
         1: { cellWidth: 38 },
@@ -213,7 +213,7 @@ function downloadPdf(plan: PlanoIA) {
       },
       margin: { left: 14, right: 14 },
     });
-    y = (doc as any).lastAutoTable.finalY + 6;
+    y = (doc as any).lastAutoTable.finalY + 8;
   });
 
   doc.save(`planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.pdf`);
