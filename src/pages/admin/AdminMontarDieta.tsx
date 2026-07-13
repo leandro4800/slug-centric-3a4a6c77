@@ -480,42 +480,81 @@ const AdminMontarDieta = () => {
     });
 
     doc.setTextColor(20, 20, 20);
-    doc.setFontSize(12);
     doc.setFont("helvetica", "normal");
     const meta: string[] = [];
     if (perfil.objetivo) meta.push(`Objetivo: ${perfil.objetivo}`);
     if (perfil.peso_kg) meta.push(`Peso: ${perfil.peso_kg}kg`);
     if (perfil.altura_cm) meta.push(`Altura: ${perfil.altura_cm}cm`);
     if (meta.length) {
+      doc.setFontSize(11);
       doc.text(meta.join("  •  "), 14, y);
-      y += 8;
+      y += 6;
     }
 
     if (macrosCalculados) {
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
+      doc.setFontSize(11);
       doc.text(
         `Meta diária: ${macrosCalculados.kcal} kcal  •  P ${macrosCalculados.proteina_g}g  •  C ${macrosCalculados.carboidrato_g}g  •  G ${macrosCalculados.lipideos_g}g`,
         14,
         y,
       );
-      y += 8;
+      y += 6;
+    }
+
+    // Ajuste dinâmico para caber em UMA página A4 (297mm).
+    // Área disponível para as refeições:
+    const pageH = doc.internal.pageSize.getHeight();
+    const footerH = 12; // reservado para rodapé ALPHA COACH PRO
+    const available = pageH - y - footerH;
+    const n = refeicoes.length;
+    // Estimativa de altura por refeição em função da fonte/padding
+    const gap = 4;
+    // Resolver fonte que caiba: cabeçalho ~ fs+3, corpo ~ linhas*fs*0.42 + padding
+    const maxLines = Math.max(
+      1,
+      ...refeicoes.map((r) => Math.max(1, (r.descricao_ia || "—").split(/\n/).length)),
+    );
+    const estimateHeight = (fs: number, pad: number) => {
+      const headerH = fs + 3 + pad * 2;
+      const bodyLineH = fs * 0.42;
+      const bodyH = bodyLineH * (maxLines + 1) + pad * 2;
+      return (headerH + bodyH) * n + gap * Math.max(0, n - 1);
+    };
+    let fontSize = 12;
+    let cellPad = 4;
+    while (fontSize > 6 && estimateHeight(fontSize, cellPad) > available) {
+      if (cellPad > 1.5) cellPad -= 0.5;
+      else fontSize -= 0.5;
     }
 
     refeicoes.forEach((r) => {
-      if (y > 250) { doc.addPage(); y = 20; }
       const titulo = `${r.nome}${r.horario ? "  •  " + r.horario.slice(0, 5) : ""}`;
       autoTable(doc, {
         startY: y,
         head: [[titulo]],
         body: [[r.descricao_ia || "—"]],
         theme: "striped",
-        styles: { fontSize: 12, cellPadding: 4, valign: "top" },
-        headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: 13, fontStyle: "bold" },
+        styles: { fontSize, cellPadding: cellPad, valign: "top", overflow: "linebreak" },
+        headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: fontSize + 1, fontStyle: "bold" },
         margin: { left: 14, right: 14 },
+        pageBreak: "avoid",
       });
-      y = (doc as any).lastAutoTable.finalY + 6;
+      y = (doc as any).lastAutoTable.finalY + gap;
     });
+
+    // Rodapé ALPHA COACH PRO (apenas primeira página)
+    const pageW = doc.internal.pageSize.getWidth();
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(120, 120, 120);
+    doc.text("ALPHA COACH PRO", pageW / 2, pageH - 6, { align: "center" });
+
+    // Garante uma página apenas: remove páginas extras se autoTable tiver quebrado
+    const total = (doc as any).getNumberOfPages?.() ?? doc.internal.pages.length - 1;
+    for (let p = total; p > 1; p--) {
+      doc.deletePage(p);
+    }
 
     doc.save(`dieta_${(alunoNome || "aluno").replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.pdf`);
     toast.success("Dieta baixada em PDF!");
