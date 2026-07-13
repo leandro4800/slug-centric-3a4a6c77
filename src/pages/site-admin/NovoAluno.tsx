@@ -152,16 +152,18 @@ const NovoAluno = () => {
 
   if (success) {
     return (
-      <div className="p-4 md:p-8 max-w-2xl mx-auto">
-        <div className="rounded-2xl border border-primary/40 bg-primary/5 p-8 text-center space-y-4">
-          <CheckCircle2 className="h-12 w-12 text-primary mx-auto" />
-          <h1 className="font-display text-2xl uppercase tracking-wider">Aluno cadastrado!</h1>
-          <p className="text-sm text-muted-foreground">
-            Enviamos um email para <strong className="text-foreground">{success.email}</strong> com
+      <div className="min-h-screen bg-black text-white flex items-center justify-center p-4">
+        <div className="relative max-w-xl w-full rounded-3xl border border-primary/40 bg-gradient-to-br from-primary/20 via-black to-black p-10 text-center space-y-4 shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)]">
+          <div className="absolute inset-0 rounded-3xl opacity-30 pointer-events-none" style={{ background: "radial-gradient(ellipse at top, hsl(var(--primary) / 0.4), transparent 60%)" }} />
+          <CheckCircle2 className="h-14 w-14 text-primary mx-auto relative" />
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary relative">Sucesso</p>
+          <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter text-white relative">Aluno cadastrado!</h1>
+          <p className="text-sm text-white/70 relative">
+            Enviamos um email para <strong className="text-white">{success.email}</strong> com
             o usuário, senha temporária e instruções de acesso ao app.
           </p>
-          <div className="flex gap-3 justify-center pt-2">
-            <Button variant="outline" onClick={() => { setSuccess(null); setNome(""); setEmail(""); setTelefone(""); setPlanoId(""); }}>
+          <div className="flex gap-3 justify-center pt-2 relative">
+            <Button variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => { setSuccess(null); setNome(""); setEmail(""); setTelefone(""); setPlanoId(""); }}>
               Cadastrar outro
             </Button>
             <Button onClick={() => navigate("/site/admin/alunos")}>Ver alunos</Button>
