@@ -141,7 +141,7 @@ const AdminMontarDieta = () => {
 
       const { data: d } = await supabase
         .from("dietas")
-        .select("id, is_published")
+        .select("id, is_published, kcal_alvo, macros_alvo")
         .eq("user_id", alunoId)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -150,6 +150,17 @@ const AdminMontarDieta = () => {
       if (d) {
         setDietaId(d.id);
         setIsPublished(!!d.is_published);
+        const ma: any = (d as any).macros_alvo || {};
+        if ((d as any).kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g) {
+          setMacrosCalculados({
+            kcal: Math.round((d as any).kcal_alvo || 0),
+            proteina_g: Math.round(ma.proteina_g || 0),
+            carboidrato_g: Math.round(ma.carboidrato_g || 0),
+            lipideos_g: Math.round(ma.lipideos_g || 0),
+          });
+        } else {
+          setMacrosCalculados(null);
+        }
         const { data: refs } = await supabase
           .from("refeicoes")
           .select("*")
@@ -160,6 +171,7 @@ const AdminMontarDieta = () => {
         setDietaId(null);
         setIsPublished(false);
         setRefeicoes([]);
+        setMacrosCalculados(null);
       }
     })();
   }, [alunoId]);
