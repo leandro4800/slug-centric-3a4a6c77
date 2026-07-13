@@ -639,18 +639,20 @@ const AdminMontarTreino = () => {
     const limparObs = (raw: string) => {
       if (!raw) return "";
       return raw
-        .replace(/\bPSE\b\s*:?\s*\d*\.?/gi, "")
+        .replace(/\bPSE\b\s*:?\s*\d+(?:\s*[-–—aà]\s*\d+)?\.?/gi, "")
+        .replace(/\bPSE\b\s*:?/gi, "")
         .replace(/\bN\s*\/?\s*A\b\s*:?/gi, "")
         .replace(/(?:^|[\s,;·•-])\d+[\.)](?=\s|$)/g, " ")
+        .replace(/^\s*(?:[-–—aà]\s*)?\d+\.?\s*/i, "")
         .replace(/\s{2,}/g, " ")
         .replace(/^[\s,;·•\-.]+|[\s,;·•\-.]+$/g, "")
         .trim();
     };
 
     const limparObsPontoFraco = (raw: string) => {
-      const obs = limparObs(raw);
-      if (!/\bponto\s+fraco\b/i.test(obs)) return "";
-      return obs.replace(/^obs\s*:?\s*/i, "").trim();
+      const obs = limparObs(raw).replace(/^\(?\s*obs\s*:?\s*/i, "").trim();
+      if (!/^ponto\s+fraco\b/i.test(obs)) return "";
+      return obs;
     };
 
     dias.forEach((dia) => {
