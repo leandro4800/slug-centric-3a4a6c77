@@ -616,6 +616,23 @@ const AdminMontarTreino = () => {
       y += 10;
     }
 
+    // Compacta "2x Série de Aquecimento + 1x Série de Ajuste + 2x Série de Trabalho" → "2 AQ · 1 AJ · 2 TR"
+    const compactSeries = (raw: string) => {
+      if (!raw) return "—";
+      const parts = raw.split(/\s*\+\s*/);
+      const abbr = parts.map((p) => {
+        const m = p.match(/(\d+)\s*x?\s*S[ée]rie[s]?\s*(?:de\s*)?(\w+)/i);
+        if (!m) return p.trim();
+        const n = m[1];
+        const tipo = m[2].toLowerCase();
+        if (tipo.startsWith("aque")) return `${n} AQ`;
+        if (tipo.startsWith("ajus")) return `${n} AJ`;
+        if (tipo.startsWith("trab")) return `${n} TR`;
+        return `${n} ${tipo.slice(0, 2).toUpperCase()}`;
+      });
+      return abbr.join(" · ");
+    };
+
     dias.forEach((dia) => {
       if (y > 250) { doc.addPage(); y = 20; }
       const exsDia = exercicios.filter((e) => e.dia_semana === dia).sort((a, b) => a.ordem - b.ordem);
@@ -624,7 +641,7 @@ const AdminMontarTreino = () => {
         head: [[dia]],
         body: [],
         theme: "plain",
-        headStyles: { fillColor: [20, 20, 20], textColor: 255, fontSize: 14, fontStyle: "bold" },
+        headStyles: { fillColor: [15, 15, 15], textColor: 255, fontSize: 13, fontStyle: "bold", cellPadding: { top: 3, bottom: 3, left: 4, right: 4 } },
         margin: { left: 14, right: 14 },
       });
       const rowLinks: (string | null)[] = exsDia.map((ex) => {
@@ -633,23 +650,24 @@ const AdminMontarTreino = () => {
       });
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY,
-        head: [["Exercício", "Séries", "Reps", "Cadência", "Obs.", "Vídeo"]],
+        head: [["Exercício", "Séries", "Reps", "Cad.", "Observação", "Vídeo"]],
         body: exsDia.map((ex, i) => [
           ex.exercicio,
-          ex.series,
+          compactSeries(ex.series),
           ex.repeticoes,
           ex.cadencia || "—",
           ex.observacao || ex.detalhes_execucao || "—",
           rowLinks[i] ? "Assistir" : "—",
         ]),
         theme: "striped",
-        styles: { fontSize: 11.5, cellPadding: 3.2 },
-        headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold", fontSize: 12 },
+        styles: { fontSize: 11, cellPadding: 3, font: "helvetica", lineColor: [230, 230, 230], lineWidth: 0.1, textColor: [30, 30, 30] },
+        alternateRowStyles: { fillColor: [250, 246, 246] },
+        headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold", fontSize: 11, halign: "left", cellPadding: { top: 3, bottom: 3, left: 3, right: 3 } },
         columnStyles: {
-          0: { cellWidth: 52 },
-          1: { cellWidth: 18 },
-          2: { cellWidth: 18 },
-          3: { cellWidth: 22 },
+          0: { cellWidth: 46, fontStyle: "bold", textColor: [15, 15, 15] },
+          1: { cellWidth: 30, halign: "center", fontStyle: "bold" },
+          2: { cellWidth: 20, halign: "center" },
+          3: { cellWidth: 18, halign: "center" },
           4: { cellWidth: "auto" },
           5: { cellWidth: 20, halign: "center" },
         },
@@ -658,23 +676,35 @@ const AdminMontarTreino = () => {
           if (data.section === "body" && data.column.index === 5) {
             const url = rowLinks[data.row.index];
             if (url) {
-              doc.setTextColor(30, 90, 220);
+              doc.setTextColor(229, 9, 20);
               doc.setFont("helvetica", "bold");
-              doc.textWithLink("Assistir", data.cell.x + data.cell.width / 2 - 7, data.cell.y + data.cell.height / 2 + 1.5, { url });
-              doc.setTextColor(20, 20, 20);
+              doc.setFontSize(10.5);
+              doc.textWithLink("▶ Assistir", data.cell.x + data.cell.width / 2 - 8, data.cell.y + data.cell.height / 2 + 1.5, { url });
+              doc.setTextColor(30, 30, 30);
               doc.setFont("helvetica", "normal");
+              doc.setFontSize(11);
             }
           }
         },
         willDrawCell: (data) => {
           if (data.section === "body" && data.column.index === 5 && rowLinks[data.row.index]) {
-            // clear default cell text so we render the link manually
             data.cell.text = [""];
           }
         },
       });
       y = (doc as any).lastAutoTable.finalY + 8;
     });
+
+    // Legenda das abreviações
+    if (y > 260) { doc.addPage(); y = 20; }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(229, 9, 20);
+    doc.text("LEGENDA:", 14, y);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(60, 60, 60);
+    doc.text("AQ = Aquecimento  ·  AJ = Ajuste  ·  TR = Trabalho (até a falha técnica)", 32, y);
+    y += 7;
 
     if (cardio) {
       if (y > 260) { doc.addPage(); y = 20; }
