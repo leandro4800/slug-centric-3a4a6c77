@@ -862,23 +862,34 @@ const AdminMontarTreino = () => {
       y += lines.length * 5 + 4;
     }
 
-    // Rodapé Alpha Coach Pro em todas as páginas
+    // Rodapé Netflix Alpha Coach Pro em todas as páginas
     const pageH = doc.internal.pageSize.getHeight();
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
-      doc.setDrawColor(229, 9, 20);
-      doc.setLineWidth(0.4);
-      doc.line(14, pageH - 18, pageW - 14, pageH - 18);
+      // Faixa vermelha
+      doc.setFillColor(229, 9, 20);
+      doc.rect(0, pageH - 12, pageW, 12, "F");
+      // Logo plataforma à esquerda
+      if (platLogo) {
+        try {
+          const targetH = 8;
+          const ratio = platLogo.w / platLogo.h || 1;
+          const targetW = Math.min(targetH * ratio, 22);
+          const fmt = platLogo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
+          doc.addImage(platLogo.dataUrl, fmt, 5, pageH - 10, targetW, targetH);
+        } catch {}
+      }
+      doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.setTextColor(229, 9, 20);
-      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 12, { align: "center" });
+      doc.setFontSize(12);
+      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 6.5, { align: "center" });
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(8.5);
-      doc.setTextColor(90, 90, 90);
-      doc.text("Metodologia premium de treino, dieta e performance  •  alpha-coach.app", pageW / 2, pageH - 7.5, { align: "center" });
-      doc.text(`Página ${p} de ${totalPages}`, pageW - 14, pageH - 7.5, { align: "right" });
+      doc.setFontSize(7);
+      doc.text("METODOLOGIA PREMIUM • TREINO • DIETA • EVOLUÇÃO", pageW / 2, pageH - 2.5, { align: "center" });
+      doc.setFontSize(7.5);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${p}/${totalPages}`, pageW - 5, pageH - 4.5, { align: "right" });
     }
 
     doc.save(`planilha_treino_${Date.now()}.pdf`);
