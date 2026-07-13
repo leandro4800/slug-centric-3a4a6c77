@@ -194,28 +194,50 @@ export default function JacksonPollockCalculator({
     }
   };
 
-  const baixarPdf = () => {
+  const baixarPdf = async () => {
     if (!calc) {
       toast.error("Preencha todas as dobras, idade e peso.");
       return;
     }
     const doc = new jsPDF({ unit: "mm", format: "a4" });
-    const pageW = doc.internal.pageSize.getWidth();
 
-    // Cabeçalho
-    doc.setFillColor(229, 9, 20);
-    doc.rect(0, 0, pageW, 26, "F");
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(19);
-    doc.setFont("helvetica", "bold");
-    doc.text("PROTOCOLO 7 DOBRAS", pageW / 2, 12, { align: "center" });
-    doc.setFontSize(11);
-    doc.setFont("helvetica", "normal");
-    doc.text("Jackson & Pollock — Bioestatística de Competição", pageW / 2, 20, { align: "center" });
+    // Busca coach + aluno para cabeçalho premium
+    let coachNome: string | null = null;
+    let coachLogo: string | null = null;
+    let alunoNome: string | null = null;
+    try {
+      if (tenantId) {
+        const { data } = await supabase
+          .from("tenants")
+          .select("nome, logo_url")
+          .eq("id", tenantId)
+          .maybeSingle();
+        coachNome = (data as any)?.nome || null;
+        coachLogo = (data as any)?.logo_url || null;
+      }
+      if (alunoId) {
+        const { data } = await supabase
+          .from("perfis")
+          .select("nome_completo")
+          .eq("id", alunoId)
+          .maybeSingle();
+        alunoNome = (data as any)?.nome_completo || null;
+      }
+    } catch {
+      /* segue sem branding */
+    }
+
+    const logo = await loadImageDataUrl(coachLogo);
+    let y = renderPdfHeader({
+      doc,
+      title: "PROTOCOLO 7 DOBRAS",
+      subtitle: "Jackson & Pollock — Bioestatística de Competição",
+      coachName: coachNome,
+      studentName: alunoNome,
+      logo,
+    });
 
     doc.setTextColor(20, 20, 20);
-    let y = 38;
-
     doc.setFont("helvetica", "bold");
     doc.setFontSize(13);
     doc.text("Dados do atleta", 14, y);
