@@ -650,9 +650,21 @@ const AdminMontarTreino = () => {
     };
 
     const limparObsPontoFraco = (raw: string) => {
-      const obs = limparObs(raw).replace(/^\(?\s*obs\s*:?\s*/i, "").trim();
-      if (!/^ponto\s+fraco\b/i.test(obs)) return "";
-      return obs;
+      const obs = limparObs(raw)
+        .replace(/^\(?\s*obs\s*:?\s*/i, "")
+        .replace(/[()]/g, "")
+        .trim();
+
+      const match = obs.match(/^ponto\s+fraco\s*[:\-–—]\s*(.+)$/i);
+      if (!match) return "";
+
+      const detalhe = limparObs(match[1])
+        .replace(/^(?:ponto\s+fraco\s*)+/i, "")
+        .replace(/^[\s:;,.\-–—]+|[\s:;,.\-–—]+$/g, "")
+        .trim();
+
+      if (!detalhe || detalhe.length < 3) return "";
+      return `PONTO FRACO: ${detalhe.toUpperCase()}`;
     };
 
     dias.forEach((dia) => {
