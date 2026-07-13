@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
 
 interface Props {
   open: boolean;
