@@ -768,7 +768,7 @@ const AdminMontarTreino = () => {
     };
 
     dias.forEach((dia, diaIdx) => {
-      if (y > 245) { doc.addPage(); paintDarkBackground(); y = 20; }
+      if (y > 245) { doc.addPage(); paintPageBackground(); y = 20; }
       const exsDia = exercicios.filter((e) => e.dia_semana === dia).sort((a, b) => a.ordem - b.ordem);
 
       // Junta observações do grupo (dedup) — só aparece se o coach escreveu "ponto fraco"
@@ -781,10 +781,9 @@ const AdminMontarTreino = () => {
         )
       ).join(" • ");
 
-      // ==== BANNER EPISÓDIO ESTILO NETFLIX ====
+      // ==== BANNER EPISÓDIO (preto sobre fundo claro) ====
       const bannerH = 14;
-      // Fundo do banner
-      doc.setFillColor(18, 18, 18);
+      doc.setFillColor(15, 15, 15);
       doc.rect(14, y, pageW - 28, bannerH, "F");
       // Faixa vermelha lateral
       doc.setFillColor(229, 9, 20);
@@ -801,9 +800,9 @@ const AdminMontarTreino = () => {
       doc.setFont("helvetica", "bold");
       doc.setFontSize(13);
       doc.text(dia.toUpperCase(), 36, y + 8.2);
-      // Observação (ponto fraco) à direita
+      // Observação (ponto fraco) à direita — em vermelho vibrante sobre banner preto
       if (obsGrupo) {
-        doc.setTextColor(229, 9, 20);
+        doc.setTextColor(255, 90, 90);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(7.5);
         doc.text(`OBS: ${obsGrupo}`, pageW - 16, y + 8.2, { align: "right" });
@@ -820,35 +819,37 @@ const AdminMontarTreino = () => {
           ex.repeticoes,
           rowLinks[i] ? "VIDEO" : "—",
         ]),
-        theme: "plain",
+        theme: "grid",
         styles: {
-          fontSize: 10.5,
-          cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+          fontSize: 11,
+          cellPadding: { top: 3.2, bottom: 3.2, left: 4, right: 4 },
           font: "helvetica",
-          lineColor: [40, 40, 40],
+          lineColor: [220, 220, 220],
           lineWidth: 0.15,
-          textColor: [230, 230, 230],
-          fillColor: [22, 22, 22],
+          textColor: [25, 25, 25],
+          fillColor: [255, 255, 255],
         },
-        alternateRowStyles: { fillColor: [30, 30, 30] },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
         headStyles: {
           fillColor: [229, 9, 20],
           textColor: 255,
           fontStyle: "bold",
-          fontSize: 10,
+          fontSize: 10.5,
           halign: "left",
-          cellPadding: { top: 3, bottom: 3, left: 4, right: 4 },
+          cellPadding: { top: 3.2, bottom: 3.2, left: 4, right: 4 },
         },
         columnStyles: {
-          0: { cellWidth: "auto", fontStyle: "bold", textColor: [255, 255, 255] },
+          0: { cellWidth: "auto", fontStyle: "bold", textColor: [15, 15, 15] },
           1: { cellWidth: 32, halign: "center", fontStyle: "bold", textColor: [229, 9, 20] },
-          2: { cellWidth: 22, halign: "center", textColor: [230, 230, 230] },
+          2: { cellWidth: 22, halign: "center", textColor: [40, 40, 40] },
           3: { cellWidth: 26, halign: "center" },
         },
         margin: { left: 14, right: 14 },
-        didDrawPage: () => {
-          // Pinta o fundo escuro se autoTable quebrar para nova página
-          paintDarkBackground();
+        didDrawPage: (data) => {
+          // Só pinta fundo se for uma nova página gerada pelo autoTable
+          if (data.pageNumber > 1 && data.cursor?.y != null && data.cursor.y < 20) {
+            paintPageBackground();
+          }
         },
         didDrawCell: (data) => {
           if (data.section === "body" && data.column.index === 3) {
@@ -875,10 +876,10 @@ const AdminMontarTreino = () => {
       y = (doc as any).lastAutoTable.finalY + 8;
     });
 
-    // Legenda das abreviações — estilo dark
-    if (y > 258) { doc.addPage(); paintDarkBackground(); y = 20; }
-    doc.setFillColor(18, 18, 18);
-    doc.setDrawColor(60, 60, 60);
+    // Legenda das abreviações — card claro com faixa vermelha
+    if (y > 258) { doc.addPage(); paintPageBackground(); y = 20; }
+    doc.setFillColor(250, 250, 250);
+    doc.setDrawColor(220, 220, 220);
     doc.setLineWidth(0.2);
     doc.roundedRect(14, y - 4, pageW - 28, 12, 1.5, 1.5, "FD");
     doc.setFillColor(229, 9, 20);
@@ -888,15 +889,15 @@ const AdminMontarTreino = () => {
     doc.setTextColor(229, 9, 20);
     doc.text("LEGENDA", 19, y + 1);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(230, 230, 230);
+    doc.setTextColor(25, 25, 25);
     doc.setFontSize(11);
     doc.text("AQ = Aquecimento   ·   AJ = Ajuste   ·   TR = Trabalho (até a falha técnica)", 45, y + 1);
     y += 12;
 
     if (cardio) {
-      if (y > 258) { doc.addPage(); paintDarkBackground(); y = 20; }
-      doc.setFillColor(18, 18, 18);
-      doc.setDrawColor(60, 60, 60);
+      if (y > 258) { doc.addPage(); paintPageBackground(); y = 20; }
+      doc.setFillColor(250, 250, 250);
+      doc.setDrawColor(220, 220, 220);
       doc.roundedRect(14, y, pageW - 28, 18, 1.5, 1.5, "FD");
       doc.setFillColor(229, 9, 20);
       doc.rect(14, y, 2, 18, "F");
@@ -906,7 +907,7 @@ const AdminMontarTreino = () => {
       doc.text("CARDIO SUGERIDO", 19, y + 5);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10.5);
-      doc.setTextColor(230, 230, 230);
+      doc.setTextColor(25, 25, 25);
       const lines = doc.splitTextToSize(cardio, pageW - 40);
       doc.text(lines, 19, y + 11);
       y += 22;
