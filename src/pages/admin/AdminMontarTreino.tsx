@@ -602,20 +602,19 @@ const AdminMontarTreino = () => {
     const logo = await loadImageDataUrl(tenant?.logo_url);
     const platLogo = await loadImageDataUrl(platformLogo);
 
-    // Fundo preto cinematográfico em toda a página inicial
-    const paintDarkBackground = () => {
-      doc.setFillColor(10, 10, 10);
+    // Fundo claro (legível) com faixa vermelha lateral em todas as páginas
+    const paintPageBackground = () => {
+      doc.setFillColor(255, 255, 255);
       doc.rect(0, 0, pageW, pageHTotal, "F");
       // Faixa vermelha vertical (marca)
       doc.setFillColor(229, 9, 20);
       doc.rect(0, 0, 4, pageHTotal, "F");
     };
-    paintDarkBackground();
+    paintPageBackground();
 
-    // ==== HERO CINEMATOGRÁFICO NETFLIX ====
+    // ==== HERO CINEMATOGRÁFICO (faixa preta topo) ====
     const heroH = 44;
-    // (fundo já preto — apenas escurece um pouco a área do hero)
-    doc.setFillColor(18, 18, 18);
+    doc.setFillColor(15, 15, 15);
     doc.rect(4, 0, pageW - 4, heroH, "F");
 
     let heroX = 12;
@@ -643,7 +642,7 @@ const AdminMontarTreino = () => {
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.setTextColor(180, 180, 180);
+    doc.setTextColor(200, 200, 200);
     doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 30);
 
     // Linha divisor + atleta / coach
@@ -655,7 +654,7 @@ const AdminMontarTreino = () => {
     doc.setFontSize(10);
     doc.text((alunoNome || "ATLETA").toUpperCase(), heroX, 39);
     if (tenant?.nome) {
-      doc.setTextColor(180, 180, 180);
+      doc.setTextColor(200, 200, 200);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.text(`COACH ${tenant.nome.toUpperCase()}`, pageW - 12, 39, { align: "right" });
@@ -670,7 +669,7 @@ const AdminMontarTreino = () => {
     if (perfil.frequencia_semanal) pills.push(`${perfil.frequencia_semanal}X/SEMANA`);
     if (pills.length) {
       let px = 14;
-      doc.setFontSize(8);
+      doc.setFontSize(9);
       doc.setFont("helvetica", "bold");
       pills.forEach((p) => {
         const w = doc.getTextWidth(p) + 8;
