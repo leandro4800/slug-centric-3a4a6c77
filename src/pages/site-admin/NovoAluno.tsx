@@ -172,103 +172,116 @@ const NovoAluno = () => {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-2xl mx-auto">
-      <div className="flex items-center gap-3 mb-4">
-        <AdminBackButton to="/site/admin/alunos" />
-      </div>
-      <div className="mb-6">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Gestão</p>
-        <h1 className="font-display text-3xl uppercase italic tracking-tighter flex items-center gap-3">
-          <UserPlus className="h-7 w-7 text-primary" /> Cadastrar aluno
-        </h1>
-        <p className="text-sm text-muted-foreground mt-2">
-          Ao cadastrar, enviaremos um email para o aluno com o usuário, senha temporária e
-          instruções para entrar no app.
-        </p>
-      </div>
-
-      <div className="mb-4 rounded-2xl border border-primary/40 bg-primary/5 p-4 flex items-center justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5" /> Cadastro com IA
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">
-            Envie um print (WhatsApp, ficha, cartão) ou cole o texto que a IA preenche o formulário.
-          </p>
-        </div>
-        <Button type="button" size="sm" onClick={() => setIaOpen(true)} className="gap-2 shrink-0">
-          <Sparkles className="h-4 w-4" /> Usar IA
-        </Button>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-border/50 bg-card p-6">
-        <div>
-          <Label htmlFor="nome">Nome completo *</Label>
-          <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} placeholder="João Silva" />
-        </div>
-
-        <div>
-          <Label htmlFor="email">E-mail *</Label>
-          <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="joao@email.com" />
-          <p className="text-[11px] text-muted-foreground mt-1 flex items-center gap-1">
-            <Mail className="h-3 w-3" /> Para este email enviaremos os dados de acesso.
+    <div className="min-h-screen bg-black text-white">
+      {/* Hero cinematográfico */}
+      <div className="relative overflow-hidden border-b border-white/5">
+        <div
+          className="absolute inset-0 opacity-70"
+          style={{
+            background:
+              "radial-gradient(ellipse at 20% 0%, hsl(var(--primary) / 0.35), transparent 55%), radial-gradient(ellipse at 90% 100%, hsl(var(--primary) / 0.2), transparent 60%)",
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black" />
+        <div className="relative p-4 md:p-8 max-w-3xl mx-auto">
+          <div className="flex items-center gap-3 mb-6">
+            <AdminBackButton to="/site/admin/alunos" />
+          </div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Gestão de atletas</p>
+          <h1 className="font-display text-4xl md:text-6xl uppercase italic tracking-tighter flex items-center gap-3 mt-2 text-white">
+            <UserPlus className="h-8 w-8 md:h-10 md:w-10 text-primary" /> Cadastrar aluno
+          </h1>
+          <p className="text-sm text-white/60 mt-3 max-w-xl">
+            Ao cadastrar, enviaremos um email para o aluno com o usuário, senha temporária e
+            instruções para entrar no app.
           </p>
         </div>
+      </div>
 
-        <div>
-          <Label htmlFor="telefone">Telefone (opcional)</Label>
-          <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" />
-        </div>
-
-        {isVip ? (
-          <div className="rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm">
-            <p className="font-medium text-primary flex items-center gap-2">
-              <CheckCircle2 className="h-4 w-4" /> Acesso VIP liberado
+      <div className="p-4 md:p-8 max-w-3xl mx-auto -mt-6 relative">
+        <div className="mb-4 rounded-2xl border border-primary/40 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent backdrop-blur p-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-xs font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5" /> Cadastro com IA
             </p>
-            <p className="text-muted-foreground mt-1">
-              Este e-mail tem acesso livre ao app — nenhum plano é necessário.
+            <p className="text-xs text-white/60 mt-1">
+              Envie um print (WhatsApp, ficha, cartão) ou cole o texto que a IA preenche o formulário.
             </p>
           </div>
-        ) : planos.length === 0 ? (
-          <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
-            <p className="font-medium text-destructive">Você ainda não criou nenhum plano.</p>
-            <p className="text-muted-foreground mt-1">
-              Crie um plano em <strong>Faturamento</strong> antes de cadastrar alunos.
-            </p>
-          </div>
-        ) : (
+          <Button type="button" size="sm" onClick={() => setIaOpen(true)} className="gap-2 shrink-0">
+            <Sparkles className="h-4 w-4" /> Usar IA
+          </Button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-5 rounded-2xl border border-white/10 bg-zinc-950/80 backdrop-blur p-6 shadow-[0_20px_60px_-20px_hsl(var(--primary)/0.4)]">
           <div>
-            <Label htmlFor="plano">Plano *</Label>
-            <select
-              id="plano"
-              required
-              value={planoId}
-              onChange={(e) => setPlanoId(e.target.value)}
-              className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm"
-            >
-              <option value="">Selecione um plano...</option>
-              {planos.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.nome} — R$ {(p.preco_centavos / 100).toFixed(2)}
-                </option>
-              ))}
-            </select>
-            <p className="text-[11px] text-muted-foreground mt-1">
-              O aluno já entrará no app com este plano ativo.
+            <Label htmlFor="nome" className="text-white/80">Nome completo *</Label>
+            <Input id="nome" required value={nome} onChange={(e) => setNome(e.target.value)} placeholder="João Silva" className="bg-black/60 border-white/10 text-white placeholder:text-white/30" />
+          </div>
+
+          <div>
+            <Label htmlFor="email" className="text-white/80">E-mail *</Label>
+            <Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="joao@email.com" className="bg-black/60 border-white/10 text-white placeholder:text-white/30" />
+            <p className="text-[11px] text-white/50 mt-1 flex items-center gap-1">
+              <Mail className="h-3 w-3" /> Para este email enviaremos os dados de acesso.
             </p>
           </div>
-        )}
 
-        <div className="pt-2 flex gap-3">
-          <Button type="button" variant="outline" onClick={() => navigate("/site/admin/alunos")} disabled={submitting}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={submitting || (!isVip && (planos.length === 0 || !planoId))} className="flex-1 gap-2">
-            {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
-            {submitting ? "Cadastrando..." : "Cadastrar e enviar email"}
-          </Button>
-        </div>
-      </form>
+          <div>
+            <Label htmlFor="telefone" className="text-white/80">Telefone (opcional)</Label>
+            <Input id="telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} placeholder="(11) 99999-9999" className="bg-black/60 border-white/10 text-white placeholder:text-white/30" />
+          </div>
+
+          {isVip ? (
+            <div className="rounded-lg border border-primary/40 bg-primary/10 p-4 text-sm">
+              <p className="font-medium text-primary flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4" /> Acesso VIP liberado
+              </p>
+              <p className="text-white/60 mt-1">
+                Este e-mail tem acesso livre ao app — nenhum plano é necessário.
+              </p>
+            </div>
+          ) : planos.length === 0 ? (
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
+              <p className="font-medium text-destructive">Você ainda não criou nenhum plano.</p>
+              <p className="text-white/60 mt-1">
+                Crie um plano em <strong>Faturamento</strong> antes de cadastrar alunos.
+              </p>
+            </div>
+          ) : (
+            <div>
+              <Label htmlFor="plano" className="text-white/80">Plano *</Label>
+              <select
+                id="plano"
+                required
+                value={planoId}
+                onChange={(e) => setPlanoId(e.target.value)}
+                className="w-full h-10 rounded-md border border-white/10 bg-black/60 text-white px-3 text-sm"
+              >
+                <option value="">Selecione um plano...</option>
+                {planos.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.nome} — R$ {(p.preco_centavos / 100).toFixed(2)}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-white/50 mt-1">
+                O aluno já entrará no app com este plano ativo.
+              </p>
+            </div>
+          )}
+
+          <div className="pt-2 flex gap-3">
+            <Button type="button" variant="outline" onClick={() => navigate("/site/admin/alunos")} disabled={submitting} className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white">
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={submitting || (!isVip && (planos.length === 0 || !planoId))} className="flex-1 gap-2">
+              {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <UserPlus className="h-4 w-4" />}
+              {submitting ? "Cadastrando..." : "Cadastrar e enviar email"}
+            </Button>
+          </div>
+        </form>
+      </div>
 
       <Dialog open={iaOpen} onOpenChange={(o) => { if (!iaLoading) setIaOpen(o); }}>
         <DialogContent className="max-w-lg">
