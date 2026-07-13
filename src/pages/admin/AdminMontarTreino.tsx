@@ -648,32 +648,27 @@ const AdminMontarTreino = () => {
         const match = biblioteca.find((b) => b.nome.toLowerCase() === ex.exercicio.toLowerCase());
         return match?.video_coach_url || match?.video_url || null;
       });
-      // Limpa siglas técnicas comuns para linguagem clara ao aluno
+      // Remove siglas PSE / NA da observação; só usa a observação manual do coach
       const limparObs = (raw: string) => {
         if (!raw) return "";
         return raw
-          .replace(/\bRP\b/gi, "descanso curto e continua")
-          .replace(/\bDS\b/gi, "reduz a carga e continua")
-          .replace(/\bBS\b/gi, "dois exercícios seguidos")
-          .replace(/\bFST[- ]?7\b/gi, "7 séries com pouco descanso")
-          .replace(/\bAMRAP\b/gi, "máximo de repetições possíveis")
-          .replace(/\bROM\b/gi, "amplitude do movimento")
-          .replace(/\bTUT\b/gi, "tempo sob tensão")
-          .replace(/\bPR\b/gi, "recorde pessoal")
-          .replace(/\s+/g, " ")
+          .replace(/\bPSE\b\s*:?\s*\d*/gi, "")
+          .replace(/\bNA\b\s*:?/gi, "")
+          .replace(/\s{2,}/g, " ")
+          .replace(/^[\s,;·•\-]+|[\s,;·•\-]+$/g, "")
           .trim();
       };
       autoTable(doc, {
         startY: (doc as any).lastAutoTable.finalY,
         head: [["Exercício", "Séries", "Reps", "Vídeo"]],
         body: exsDia.map((ex, i) => {
-          const obs = limparObs(ex.observacao || ex.detalhes_execucao || "");
-          const nome = obs ? `${ex.exercicio} (${obs})` : ex.exercicio;
+          const obs = limparObs(ex.observacao || "");
+          const nome = obs ? `${ex.exercicio} (OBS: ${obs.toUpperCase()})` : ex.exercicio;
           return [
             nome,
             compactSeries(ex.series),
             ex.repeticoes,
-            rowLinks[i] ? "Assistir" : "—",
+            rowLinks[i] ? "VÍDEO" : "—",
           ];
         }),
         theme: "striped",
@@ -684,20 +679,23 @@ const AdminMontarTreino = () => {
           0: { cellWidth: "auto", fontStyle: "bold", textColor: [15, 15, 15] },
           1: { cellWidth: 32, halign: "center", fontStyle: "bold" },
           2: { cellWidth: 22, halign: "center" },
-          3: { cellWidth: 22, halign: "center" },
+          3: { cellWidth: 26, halign: "center" },
         },
         margin: { left: 14, right: 14 },
         didDrawCell: (data) => {
           if (data.section === "body" && data.column.index === 3) {
             const url = rowLinks[data.row.index];
             if (url) {
-              const cx = data.cell.x + data.cell.width / 2;
-              const cy = data.cell.y + data.cell.height / 2;
-              doc.setTextColor(229, 9, 20);
+              // Fundo vermelho tipo "botão"
+              doc.setFillColor(229, 9, 20);
+              doc.rect(data.cell.x + 1, data.cell.y + 1, data.cell.width - 2, data.cell.height - 2, "F");
+              doc.setTextColor(255, 255, 255);
               doc.setFont("helvetica", "bold");
-              doc.setFontSize(14);
-              doc.text("\u25B6", cx, cy + 1.8, { align: "center", baseline: "middle" });
-              // área clicável cobrindo a célula toda
+              doc.setFontSize(10);
+              const cx = data.cell.x + data.cell.width / 2;
+              const cy = data.cell.y + data.cell.height / 2 + 1.4;
+              (doc as any).textWithLink("VÍDEO", cx, cy, { url, align: "center" });
+              // Reforça link cobrindo célula inteira (mobile-friendly)
               (doc as any).link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
               doc.setTextColor(30, 30, 30);
               doc.setFont("helvetica", "normal");
