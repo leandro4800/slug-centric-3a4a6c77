@@ -4,9 +4,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import AdminMontarDieta from "@/pages/admin/AdminMontarDieta";
-import { Apple, Loader2, ChevronRight, User } from "lucide-react";
+import { Apple, Loader2 } from "lucide-react";
+import { AtletaCard } from "./MontarTreino";
 
-interface Aluno { id: string; nome_completo: string | null; email: string | null; }
+interface Aluno {
+  id: string;
+  nome_completo: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
 
 const MontarDieta = () => {
   const { tenant, loading: tenantLoading } = useSiteTenant();
@@ -17,12 +23,15 @@ const MontarDieta = () => {
   const alunoId = params.get("aluno");
 
   useEffect(() => {
-    if (!tenant?.id || alunoId) { setLoading(false); return; }
+    if (!tenant?.id || alunoId) {
+      setLoading(false);
+      return;
+    }
     (async () => {
       setLoading(true);
       const { data } = await supabase
         .from("perfis")
-        .select("id, nome_completo, email")
+        .select("id, nome_completo, email, avatar_url")
         .eq("tenant_id", tenant.id)
         .order("nome_completo");
       setAlunos((data as Aluno[]) || []);
@@ -31,14 +40,21 @@ const MontarDieta = () => {
   }, [tenant?.id, alunoId]);
 
   if (tenantLoading) {
-    return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   if (alunoId) {
     return (
       <div className="p-2 md:p-4">
         <div className="mb-3">
-          <button onClick={() => setParams({})} className="text-xs uppercase tracking-widest text-muted-foreground hover:text-primary">
+          <button
+            onClick={() => setParams({})}
+            className="text-xs uppercase tracking-widest text-muted-foreground hover:text-primary"
+          >
             ← Trocar aluno
           </button>
         </div>
@@ -53,41 +69,41 @@ const MontarDieta = () => {
         <AdminBackButton to="/site/admin/dashboard" />
       </div>
       <div className="mb-6">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Programação</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          Programação
+        </p>
         <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter flex items-center gap-3">
           <Apple className="h-7 w-7 text-primary" /> Montar dieta
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">Selecione um aluno para criar o plano alimentar.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Selecione um atleta para criar o plano alimentar.
+        </p>
       </div>
 
       {loading ? (
-        <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
       ) : alunos.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center">
-          <p className="text-sm text-muted-foreground mb-3">Nenhum aluno cadastrado ainda.</p>
-          <Link to="/site/admin/alunos/novo" className="text-primary text-sm font-bold uppercase tracking-wider">
+          <p className="text-sm text-muted-foreground mb-3">
+            Nenhum aluno cadastrado ainda.
+          </p>
+          <Link
+            to="/site/admin/alunos/novo"
+            className="text-primary text-sm font-bold uppercase tracking-wider"
+          >
             Cadastrar primeiro aluno →
           </Link>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
           {alunos.map((a) => (
-            <button
+            <AtletaCard
               key={a.id}
-              onClick={() => setParams({ aluno: a.id })}
-              className="group flex items-center justify-between rounded-xl border border-border/50 bg-card p-4 hover:border-primary transition-colors text-left"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold truncate">{a.nome_completo || "Sem nome"}</p>
-                  {a.email && <p className="text-[11px] text-muted-foreground truncate">{a.email}</p>}
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition shrink-0" />
-            </button>
+              aluno={a}
+              onSelect={() => setParams({ aluno: a.id })}
+            />
           ))}
         </div>
       )}

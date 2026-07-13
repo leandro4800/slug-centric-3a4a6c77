@@ -4,9 +4,14 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import AdminMontarTreino from "@/pages/admin/AdminMontarTreino";
-import { Dumbbell, Loader2, ChevronRight, User } from "lucide-react";
+import { Dumbbell, Loader2, User, Play } from "lucide-react";
 
-interface Aluno { id: string; nome_completo: string | null; email: string | null; }
+interface Aluno {
+  id: string;
+  nome_completo: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
 
 const MontarTreino = () => {
   const { tenant, loading: tenantLoading } = useSiteTenant();
@@ -17,12 +22,15 @@ const MontarTreino = () => {
   const alunoId = params.get("aluno");
 
   useEffect(() => {
-    if (!tenant?.id || alunoId) { setLoading(false); return; }
+    if (!tenant?.id || alunoId) {
+      setLoading(false);
+      return;
+    }
     (async () => {
       setLoading(true);
       const { data } = await supabase
         .from("perfis")
-        .select("id, nome_completo, email")
+        .select("id, nome_completo, email, avatar_url")
         .eq("tenant_id", tenant.id)
         .order("nome_completo");
       setAlunos((data as Aluno[]) || []);
@@ -31,10 +39,13 @@ const MontarTreino = () => {
   }, [tenant?.id, alunoId]);
 
   if (tenantLoading) {
-    return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
-  // Quando há aluno selecionado, delega para o builder original
   if (alunoId) {
     return (
       <div className="p-2 md:p-4">
@@ -57,45 +68,100 @@ const MontarTreino = () => {
         <AdminBackButton to="/site/admin/dashboard" />
       </div>
       <div className="mb-6">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Programação</p>
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+          Programação
+        </p>
         <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter flex items-center gap-3">
           <Dumbbell className="h-7 w-7 text-primary" /> Montar treino
         </h1>
-        <p className="text-sm text-muted-foreground mt-2">Selecione um aluno para começar a montar o treino.</p>
+        <p className="text-sm text-muted-foreground mt-2">
+          Selecione um atleta para começar a montar o treino.
+        </p>
       </div>
 
       {loading ? (
-        <div className="flex min-h-[40vh] items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+        <div className="flex min-h-[40vh] items-center justify-center">
+          <Loader2 className="h-6 w-6 animate-spin text-primary" />
+        </div>
       ) : alunos.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center">
-          <p className="text-sm text-muted-foreground mb-3">Nenhum aluno cadastrado ainda.</p>
-          <Link to="/site/admin/alunos/novo" className="text-primary text-sm font-bold uppercase tracking-wider">
+          <p className="text-sm text-muted-foreground mb-3">
+            Nenhum aluno cadastrado ainda.
+          </p>
+          <Link
+            to="/site/admin/alunos/novo"
+            className="text-primary text-sm font-bold uppercase tracking-wider"
+          >
             Cadastrar primeiro aluno →
           </Link>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4">
           {alunos.map((a) => (
-            <button
+            <AtletaCard
               key={a.id}
-              onClick={() => setParams({ aluno: a.id })}
-              className="group flex items-center justify-between rounded-xl border border-border/50 bg-card p-4 hover:border-primary transition-colors text-left"
-            >
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <User className="h-4 w-4 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold truncate">{a.nome_completo || "Sem nome"}</p>
-                  {a.email && <p className="text-[11px] text-muted-foreground truncate">{a.email}</p>}
-                </div>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary group-hover:translate-x-1 transition shrink-0" />
-            </button>
+              aluno={a}
+              onSelect={() => setParams({ aluno: a.id })}
+            />
           ))}
         </div>
       )}
     </div>
+  );
+};
+
+export const AtletaCard = ({
+  aluno,
+  onSelect,
+}: {
+  aluno: Aluno;
+  onSelect: () => void;
+}) => {
+  const nome = aluno.nome_completo || "Sem nome";
+  const primeiroNome = nome.split(" ")[0];
+  return (
+    <button
+      onClick={onSelect}
+      className="group relative overflow-hidden rounded-lg bg-zinc-900 border border-white/5 hover:border-primary/60 transition-all hover:scale-[1.03] hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] text-left"
+      style={{ aspectRatio: "2/3" }}
+    >
+      {aluno.avatar_url ? (
+        <img
+          src={aluno.avatar_url}
+          alt={nome}
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-zinc-800 to-zinc-950">
+          <User className="h-16 w-16 text-zinc-700" />
+        </div>
+      )}
+
+      {/* Gradiente cinematográfico */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+
+      {/* Play button on hover */}
+      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="h-12 w-12 rounded-full bg-primary flex items-center justify-center shadow-lg">
+          <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+        </div>
+      </div>
+
+      {/* Info */}
+      <div className="absolute bottom-0 left-0 right-0 p-3">
+        <p className="text-[9px] font-bold uppercase tracking-widest text-primary mb-1">
+          Atleta
+        </p>
+        <h3 className="font-display text-sm md:text-base uppercase italic tracking-tight text-white leading-tight line-clamp-2">
+          {primeiroNome}
+        </h3>
+        {aluno.email && (
+          <p className="text-[10px] text-white/50 truncate mt-0.5">
+            {aluno.email}
+          </p>
+        )}
+      </div>
+    </button>
   );
 };
 
