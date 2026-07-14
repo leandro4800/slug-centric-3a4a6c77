@@ -85,7 +85,7 @@ export const SiteAdminSidebar = () => {
           <Logo withText={false} />
           {!collapsed && (
             <div className="leading-tight">
-              <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span></p>
+              <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span> PRO</p>
               <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Painel do site</p>
             </div>
           )}

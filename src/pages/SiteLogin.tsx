@@ -81,7 +81,7 @@ const SiteLogin = () => {
           <Link to="/site" className="flex items-center gap-3">
             <Logo withText={false} />
             <span className="font-display text-xl tracking-wider">
-              ALPHA<span className="text-primary">COACH</span>
+              ALPHA<span className="text-primary">COACH</span> PRO
             </span>
           </Link>
         </div>
