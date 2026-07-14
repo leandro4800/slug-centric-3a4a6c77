@@ -1719,7 +1719,7 @@ const AdminMontarTreino = () => {
                     className="w-full sm:w-auto bg-black hover:bg-black/80 text-white border border-primary/60"
                   >
                     <FileDown className="h-4 w-4 mr-2" />
-                    PDF Netflix
+                    PDF Premium
                   </Button>
                   <Button onClick={() => salvarPrescricao()} disabled={saving} size="sm" className="w-full sm:w-auto">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
