@@ -190,7 +190,7 @@ const Login = () => {
               </span>
             ) : (
               <span className="font-display text-xl tracking-wider">
-                ALPHA<span className="text-primary">COACH</span>
+                ALPHA<span className="text-primary">COACH</span> PRO
               </span>
             )}
           </div>

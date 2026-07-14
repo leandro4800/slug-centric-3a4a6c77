@@ -214,7 +214,7 @@ const AlunoHome = () => {
               </span>
             ) : (
               <span className="font-display text-xl tracking-wider">
-                ALPHA<span className="text-primary">COACH</span>
+                ALPHA<span className="text-primary">COACH</span> PRO
               </span>
             )}
           </div>
@@ -223,7 +223,7 @@ const AlunoHome = () => {
         <div className="relative z-10 space-y-2">
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">ORIGINAL</span>
-            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{tenant?.nome || "ALPHA COACH"}</span>
+            <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{tenant?.nome || "ALPHACOACH PRO"}</span>
           </div>
           <h1 className="font-display text-4xl leading-none drop-shadow-lg">
             {(featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO").toUpperCase()}

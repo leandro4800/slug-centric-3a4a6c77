@@ -60,7 +60,7 @@ const Inner = () => {
           <button onClick={() => setMobileOpen((v) => !v)} aria-label="Abrir menu" className="p-2">
             <Menu className="h-5 w-5" />
           </button>
-          <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span></p>
+          <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span> PRO</p>
           <div className="w-9" />
         </header>
 
