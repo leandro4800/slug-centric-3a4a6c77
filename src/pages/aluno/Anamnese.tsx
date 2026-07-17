@@ -610,10 +610,11 @@ export default function Anamnese() {
                 <Label htmlFor="ergogenicos" className="cursor-pointer leading-tight">
                   Faz uso de recursos ergogênicos ou terapia hormonal prescrita por um profissional de saúde?
                 </Label>
-                <p className="text-xs text-muted-foreground mt-1">
+                
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
   Esta informação é utilizada apenas para personalizar os cálculos do aplicativo e não representa recomendação de uso de qualquer substância.
 </p>
-              </div>
               {form.faz_uso_ergogenicos && (
                 <div className="pt-2">
                   <Label className="text-[10px] text-muted-foreground uppercase mb-1">Detalhes (O que, doses, tempo)</Label>
