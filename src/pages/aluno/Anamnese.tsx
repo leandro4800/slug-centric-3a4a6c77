@@ -608,8 +608,11 @@ export default function Anamnese() {
                   onCheckedChange={v => setForm({ ...form, faz_uso_ergogenicos: !!v })}
                 />
                 <Label htmlFor="ergogenicos" className="cursor-pointer leading-tight">
-                  Usa ou pretende usar recursos ergogênicos / hormônios?
+                  Faz uso de recursos ergogênicos ou terapia hormonal prescrita por um profissional de saúde?
                 </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+  Esta informação é utilizada apenas para personalizar os cálculos do aplicativo e não representa recomendação de uso de qualquer substância.
+</p>
               </div>
               {form.faz_uso_ergogenicos && (
                 <div className="pt-2">
