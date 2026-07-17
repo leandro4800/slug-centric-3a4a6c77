@@ -10,7 +10,6 @@ import {
   Dumbbell,
   Apple,
   LineChart,
-  HeartPulse,
   Brain,
   ShieldCheck,
   Smartphone,
@@ -22,6 +21,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
+import { blocksExternalPayments } from "@/lib/native-platform";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -48,7 +48,6 @@ import {
 import cardTreino from "@/assets/card-treino.jpg";
 import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
-import cardClinica from "@/assets/card-clinica.jpg";
 import macroHero from "@/assets/macro-hero.jpg";
 import alphaLandingHero from "@/assets/alpha-landing-hero.png.asset.json";
 
@@ -109,12 +108,6 @@ const FEATURES = [
     desc: "Fotos, medidas e gráficos lado a lado. Acompanhe ganho de massa, perda de gordura e PRs em tempo real.",
   },
   {
-    img: cardClinica,
-    icon: HeartPulse,
-    title: "Painel Clínico",
-    desc: "Exames de sangue interpretados com referências por sexo e idade. Suplementação só quando faz sentido.",
-  },
-  {
     img: macroHero,
     icon: Brain,
     title: "IA 24/7",
@@ -131,7 +124,7 @@ const TESTIMONIALS = [
   {
     nome: "Juliana S.",
     detail: "Recomp em 4 meses",
-    text: "A evolução em fotos lado a lado me motiva todo dia. O painel clínico identificou ferro baixo que eu nem sabia.",
+    text: "A evolução em fotos lado a lado me motiva todo dia. Os ajustes de treino e dieta parecem feitos sob medida.",
   },
   {
     nome: "André T.",
@@ -145,11 +138,7 @@ const TESTIMONIALS = [
   },
 ];
 
-const FAQ = [
-  {
-    q: "Como funciona a assinatura?",
-    a: "Você escolhe um plano, faz o pagamento pelo checkout seguro e libera acesso total ao app do coach imediatamente. Sem letra miúda.",
-  },
+const FAQ_BASE = [
   {
     q: "Posso cancelar quando quiser?",
     a: "Sim. O cancelamento é feito direto no app, em 2 toques. Você mantém acesso até o fim do período pago.",
@@ -182,8 +171,27 @@ export default function TenantLanding() {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const iosBlocksPayments = blocksExternalPayments();
+
+  const faqItems = [
+    {
+      q: "Como funciona a assinatura?",
+      a: iosBlocksPayments
+        ? "No app iOS, solicite um código de acesso ao seu coach. A assinatura com pagamento online está disponível em alpha-coach.app pelo navegador."
+        : "Você escolhe um plano, faz o pagamento pelo checkout seguro e libera acesso total ao app do coach imediatamente. Sem letra miúda.",
+    },
+    ...FAQ_BASE,
+  ];
 
   const handleCheckout = async (plano_id: string) => {
+    if (blocksExternalPayments()) {
+      toast({
+        title: "Assinatura pelo site",
+        description: "No app iOS, peça ao seu coach um código de acesso ou assine pelo navegador em alpha-coach.app.",
+      });
+      setVoucherOpen(true);
+      return;
+    }
     setCheckoutLoading(plano_id);
     try {
       const { data, error } = await supabase.functions.invoke("stripe-checkout", {
@@ -420,15 +428,25 @@ export default function TenantLanding() {
               )}
 
               <div className="mt-8 flex flex-wrap gap-3">
-                <Button
-                  size="lg"
-                  className="font-bold uppercase tracking-widest shadow-[0_0_40px_-10px_hsl(var(--primary))]"
-                  onClick={() =>
-                    document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" })
-                  }
-                >
-                  Assinar plano
-                </Button>
+                {iosBlocksPayments ? (
+                  <Button
+                    size="lg"
+                    className="font-bold uppercase tracking-widest shadow-[0_0_40px_-10px_hsl(var(--primary))]"
+                    onClick={() => setVoucherOpen(true)}
+                  >
+                    <KeyRound className="mr-2 h-4 w-4" /> Tenho código de acesso
+                  </Button>
+                ) : (
+                  <Button
+                    size="lg"
+                    className="font-bold uppercase tracking-widest shadow-[0_0_40px_-10px_hsl(var(--primary))]"
+                    onClick={() =>
+                      document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" })
+                    }
+                  >
+                    Assinar plano
+                  </Button>
+                )}
                 <Button
                   size="lg"
                   variant="outline"
@@ -542,7 +560,7 @@ export default function TenantLanding() {
             Tudo em <span className="text-primary">um único app</span>
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Treino, dieta, evolução e acompanhamento clínico integrados — com IA pra ajustar
+            Treino, dieta e evolução integrados — com IA pra ajustar
             tudo conforme você evolui.
           </p>
         </div>
@@ -600,8 +618,10 @@ export default function TenantLanding() {
                 {[
                   {
                     n: "01",
-                    t: "Assine um plano",
-                    d: "Escolha o plano que combina com você, faça o checkout seguro e libere acesso total ao app imediatamente.",
+                    t: iosBlocksPayments ? "Resgate seu código" : "Assine um plano",
+                    d: iosBlocksPayments
+                      ? "Solicite ao seu coach um código de acesso ou assine pelo navegador em alpha-coach.app."
+                      : "Escolha o plano que combina com você, faça o checkout seguro e libere acesso total ao app imediatamente.",
                   },
                   {
                     n: "02",
@@ -650,7 +670,9 @@ export default function TenantLanding() {
           </Badge>
           <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
           <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            Acesso total ao app do coach com pagamento seguro. <span className="font-bold text-primary">Sem fidelidade</span>. Cancele quando quiser.
+            {iosBlocksPayments
+              ? "No app iOS, use o código de acesso fornecido pelo seu coach. Pagamentos online estão disponíveis em alpha-coach.app pelo navegador."
+              : <>Acesso total ao app do coach com pagamento seguro. <span className="font-bold text-primary">Sem fidelidade</span>. Cancele quando quiser.</>}
           </p>
         </div>
 
@@ -692,26 +714,39 @@ export default function TenantLanding() {
                       <Check className="h-4 w-4 shrink-0 text-primary" /> Treinos + dieta + IA 24/7
                     </li>
                     <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-primary" /> Acompanhamento clínico
+                      <Check className="h-4 w-4 shrink-0 text-primary" /> Evolução visual e métricas
                     </li>
                     <li className="flex items-center gap-2">
                       <Check className="h-4 w-4 shrink-0 text-primary" /> Cancele quando quiser
                     </li>
                   </ul>
-                  <Button
-                    size="lg"
-                    className={`mt-8 w-full font-bold uppercase tracking-widest ${
-                      destacado ? "shadow-[0_0_30px_-5px_hsl(var(--primary))]" : ""
-                    }`}
-                    disabled={!!checkoutLoading}
-                    onClick={() => handleCheckout(p.id)}
-                  >
-                    {checkoutLoading === p.id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      "Assinar plano"
-                    )}
-                  </Button>
+                  {iosBlocksPayments ? (
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className={`mt-8 w-full font-bold uppercase tracking-widest ${
+                        destacado ? "border-primary" : ""
+                      }`}
+                      onClick={() => setVoucherOpen(true)}
+                    >
+                      <KeyRound className="mr-2 h-4 w-4" /> Resgatar código
+                    </Button>
+                  ) : (
+                    <Button
+                      size="lg"
+                      className={`mt-8 w-full font-bold uppercase tracking-widest ${
+                        destacado ? "shadow-[0_0_30px_-5px_hsl(var(--primary))]" : ""
+                      }`}
+                      disabled={!!checkoutLoading}
+                      onClick={() => handleCheckout(p.id)}
+                    >
+                      {checkoutLoading === p.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        "Assinar plano"
+                      )}
+                    </Button>
+                  )}
                 </div>
               );
             })}
@@ -783,7 +818,7 @@ export default function TenantLanding() {
         </div>
 
         <Accordion type="single" collapsible className="mt-10">
-          {FAQ.map((item, i) => (
+          {faqItems.map((item, i) => (
             <AccordionItem key={i} value={`item-${i}`} className="border-border">
               <AccordionTrigger className="text-left font-display uppercase tracking-wide hover:text-primary hover:no-underline">
                 {item.q}
@@ -808,10 +843,16 @@ export default function TenantLanding() {
             size="lg"
             className="mt-8 font-bold uppercase tracking-widest shadow-[0_0_40px_-10px_hsl(var(--primary))]"
             onClick={() =>
-              document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" })
+              iosBlocksPayments ? setVoucherOpen(true) : document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" })
             }
           >
-            Começar agora →
+            {iosBlocksPayments ? (
+              <>
+                <KeyRound className="mr-2 h-4 w-4" /> Resgatar código
+              </>
+            ) : (
+              "Começar agora →"
+            )}
           </Button>
         </div>
       </section>

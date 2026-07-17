@@ -24,6 +24,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
+import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 
 interface Props {
   open: boolean;
@@ -471,6 +472,7 @@ export default function JacksonPollockCalculator({
               </AnimatePresence>
 
               <div className="space-y-3 pt-6">
+                <PhysicalEvaluationScienceFooter variant="jackson" className="pb-2" />
                 <Button
                   onClick={handleSave}
                   disabled={saving || !calc}

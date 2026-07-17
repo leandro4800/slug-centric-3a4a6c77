@@ -5,7 +5,7 @@ import { Lock, Rocket, ChevronRight, Smartphone, Zap, ShieldAlert, ArrowLeft } f
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
-import { Capacitor } from "@capacitor/core";
+import { isIOSNativeApp } from "@/lib/native-platform";
 
 export const SubscriptionLockScreen = () => {
   const { slug } = useParams();
@@ -14,8 +14,6 @@ export const SubscriptionLockScreen = () => {
   const [loading, setLoading] = useState(true);
 
   // Detect if running on native iOS
-  const isIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
-
   useEffect(() => {
     const fetchSalesLink = async () => {
       try {
@@ -83,10 +81,10 @@ export const SubscriptionLockScreen = () => {
           
           <div className="space-y-2 relative z-10">
             <h3 className="text-xl font-bold italic uppercase tracking-tight">
-              {isIOS ? "Acesso Pendente" : "Liberar Acesso Imediato"}
+              {isIOSNativeApp() ? "Acesso Pendente" : "Liberar Acesso Imediato"}
             </h3>
             <p className="text-sm text-white/50 leading-relaxed">
-              {isIOS 
+              {isIOSNativeApp()
                 ? "Este aplicativo contém conteúdo restrito para alunos ativos. Se você já faz parte do time, entre em contato diretamente com o seu Coach para que ele ative seu acesso pelo painel."
                 : "Você está tentando acessar uma área exclusiva do seu coach. Para continuar, você precisa de um plano ativo."
               }
@@ -104,7 +102,7 @@ export const SubscriptionLockScreen = () => {
             </div>
           </div>
 
-          {isIOS ? (
+          {isIOSNativeApp() ? (
             <div className="pt-2">
               <Button 
                 onClick={handleGoBack}
@@ -123,7 +121,7 @@ export const SubscriptionLockScreen = () => {
             </Button>
           )}
 
-          {!isIOS && (
+          {!isIOSNativeApp() && (
             <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
               Pagamento Seguro via {checkoutUrl?.includes('kiwify') ? 'Kiwify' : checkoutUrl?.includes('hotmart') ? 'Hotmart' : 'Plataforma Alpha'}
             </p>

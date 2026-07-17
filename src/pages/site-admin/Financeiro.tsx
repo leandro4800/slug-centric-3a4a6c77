@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { IOSDesktopOnlyGate } from "@/components/IOSDesktopOnlyGate";
+import { blocksExternalPayments } from "@/lib/native-platform";
 
 type StripeConnectStatus = "not_connected" | "incomplete" | "submitted" | "pending_verification" | "verified";
 
@@ -80,6 +82,7 @@ const Financeiro = () => {
   }, [tenant?.id]);
 
   const handleConnectStripe = async () => {
+    if (blocksExternalPayments()) return;
     if (!tenant?.id) return;
     setBusy(true);
     try {
@@ -109,6 +112,11 @@ const Financeiro = () => {
   };
 
   return (
+    <IOSDesktopOnlyGate
+      title="Financeiro pelo computador"
+      description="Stripe Connect e configuração de recebimentos ficam disponíveis apenas no painel web, acessado pelo seu computador."
+      desktopHint="alpha-coach.app/site/admin/faturamento"
+    >
     <div className="min-h-screen bg-black px-5 md:px-8 pt-6 pb-32">
       <div className="flex items-center gap-2 text-primary/80">
         <Wallet className="h-4 w-4" />
@@ -205,6 +213,7 @@ const Financeiro = () => {
         </ul>
       </div>
     </div>
+    </IOSDesktopOnlyGate>
   );
 };
 

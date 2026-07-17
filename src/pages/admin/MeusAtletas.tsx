@@ -5,7 +5,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Home, Loader2, Search, Users, Mail, AlertTriangle, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign, User, Copy, Share2, Dumbbell, Apple, Ruler } from "lucide-react";
+import { Home, Loader2, Search, Users, Mail, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign, User, Copy, Share2, Dumbbell, Apple, Ruler } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -52,7 +52,6 @@ const MeusAtletas = () => {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
-  const [alertas, setAlertas] = useState<any[]>([]);
   const [qaOpen, setQaOpen] = useState(false);
   const [pregunta, setPregunta] = useState("");
   const [resposta, setResposta] = useState("");
@@ -74,22 +73,6 @@ const MeusAtletas = () => {
       setIsSuperAdmin((data?.length ?? 0) > 0);
     })();
   }, []);
-
-  useEffect(() => {
-    if (tenant) {
-      void loadAlertas(tenant.id);
-    }
-  }, [tenant]);
-
-  const loadAlertas = async (tenantId: string) => {
-    const { data } = await supabase
-      .from('analises_clinicas')
-      .select('id, motivo_alerta, created_at, perfis(nome_completo)')
-      .eq('alerta_critico', true)
-      .order('created_at', { ascending: false })
-      .limit(5);
-    setAlertas(data || []);
-  };
 
   const handleAskIA = async () => {
     if (!pregunta.trim()) return;
@@ -278,26 +261,6 @@ const MeusAtletas = () => {
             <Apple className="h-6 w-6 text-primary mb-2 group-hover:scale-110 transition-transform" />
             <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Gerar Minha Dieta</span>
           </Link>
-        </div>
-      )}
-
-      {/* Alertas Críticos */}
-      {alertas.length > 0 && (
-        <div className="px-5 mb-4">
-          <div className="bg-red-500/10 border border-red-500/50 rounded-2xl p-4 animate-pulse">
-            <div className="flex items-center gap-2 text-red-500 mb-2">
-              <AlertTriangle className="h-5 w-5" />
-              <h2 className="font-display text-sm uppercase font-bold tracking-wider">RISCO CRÍTICO DETECTADO</h2>
-            </div>
-            <div className="space-y-2">
-              {alertas.map((alerta) => (
-                <div key={alerta.id} className="text-[11px] text-red-200/80 flex justify-between items-center border-b border-red-500/10 pb-1 last:border-0">
-                  <span>{alerta.perfis?.nome_completo}: {alerta.motivo_alerta}</span>
-                  <span className="text-[9px] opacity-60">{new Date(alerta.created_at).toLocaleDateString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       )}
 

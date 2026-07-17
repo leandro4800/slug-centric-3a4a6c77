@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Play, Volume2, VolumeX, Stethoscope, ChevronRight, User, Users, CalendarCheck, HelpCircle } from "lucide-react";
+import { Play, Volume2, VolumeX, ChevronRight, User, Users, CalendarCheck, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -11,7 +11,6 @@ import heroDefault from "@/assets/hero-default.jpg";
 import cardTreino from "@/assets/card-treino.jpg";
 import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
-import cardClinica from "@/assets/card-clinica.jpg";
 import { TenantSymbol } from "@/components/TenantSymbol";
 import EnablePushBanner from "@/components/EnablePushBanner";
 
@@ -27,7 +26,6 @@ const sections = [
   { title: "Meu Treino", to: "treino", img: cardTreino },
   { title: "Minha Dieta", to: "dieta", img: cardDieta },
   { title: "Minha Evolução", to: "evolucao", img: cardEvolucao },
-  { title: "Clínica", to: "clinica", img: cardClinica },
 ];
 
 const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) => {
@@ -289,10 +287,10 @@ const AlunoHome = () => {
         </Link>
       </section>
 
-      {/* Minha prescrição */}
+      {/* Meu planejamento */}
       <section className="px-5 mt-8">
         <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-          <span className="text-primary">▶</span> MINHA PRESCRIÇÃO
+          <span className="text-primary">▶</span> MEU PLANEJAMENTO
         </h2>
         <div className="flex gap-4 overflow-x-auto scrollbar-hide -mx-5 px-5 pb-4 pt-2">
           {sections.map((s) => (

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { ArrowLeft, Mail, MessageCircle, Shield, HelpCircle, Clock } from "lucide-react";
+import { PRIVACY_POLICY_URL } from "@/lib/app-url";
 
 const Suporte = () => {
   const EMAIL = "alphacoachapp@gmail.com";
@@ -102,9 +103,9 @@ const Suporte = () => {
           </h2>
           <p>
             Consulte nossa{" "}
-            <Link to="/politica-de-privacidade" className="text-primary underline">
+            <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer" className="text-primary underline">
               Política de Privacidade
-            </Link>{" "}
+            </a>{" "}
             para saber como tratamos seus dados. Para solicitações relacionadas à LGPD (acesso,
             correção, portabilidade ou exclusão), utilize o mesmo e-mail de suporte.
           </p>

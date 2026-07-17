@@ -14,6 +14,7 @@ import { Loader2, Ruler, Upload, Sparkles, ChevronRight, ChevronLeft, FileText }
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
+import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 
 interface Props {
   open: boolean;
@@ -377,6 +378,8 @@ export const ComprehensiveEvaluationForm = ({
             {step === 1 ? renderStep1() : renderStep2()}
           </motion.div>
         </AnimatePresence>
+
+        <PhysicalEvaluationScienceFooter variant="full" className="pt-4 border-t border-border/50" />
 
         <DialogFooter className="flex flex-row justify-between items-center gap-2 pt-6 mt-6 border-t border-border/50">
           <div className="flex gap-2">

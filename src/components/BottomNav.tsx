@@ -6,7 +6,6 @@ import {
   Utensils, 
   TrendingUp, 
   Users, 
-  Stethoscope, 
   User, 
   CalendarCheck, 
   MoreHorizontal,
@@ -43,7 +42,6 @@ const AlunoBottomNav = () => {
   const moreItems = [
     { label: "Meu Perfil", icon: User, to: "perfil" },
     { label: "Comunidade", icon: Users, to: "comunidade" },
-    { label: "Clínica", icon: Stethoscope, to: "clinica" },
     { label: "Presencial", icon: CalendarCheck, to: "presencial" },
     { label: "Minha Carta", icon: Sparkles, to: "carta" },
     { label: "Anamnese", icon: ClipboardCheck, to: "anamnese" },

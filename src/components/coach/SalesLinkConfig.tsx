@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
 import { 
   Link as LinkIcon, 
-  ExternalLink, 
   Save, 
   Loader2,
   Lock,
-  Globe
+  Globe,
+  Monitor,
+  ShieldAlert,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { blocksExternalPayments } from "@/lib/native-platform";
 
 export const SalesLinkConfig = () => {
   const { user } = useAuth();
@@ -22,6 +24,7 @@ export const SalesLinkConfig = () => {
     checkout_url: "",
     landing_page_url: "",
   });
+  const iosBlocksPayments = blocksExternalPayments();
 
   useEffect(() => {
     loadConfig();
@@ -51,6 +54,7 @@ export const SalesLinkConfig = () => {
   };
 
   const handleSave = async () => {
+    if (iosBlocksPayments) return;
     if (!user) return;
     setSaving(true);
     try {
@@ -69,6 +73,27 @@ export const SalesLinkConfig = () => {
   };
 
   if (loading) return <div className="flex justify-center p-12"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+
+  if (iosBlocksPayments) {
+    return (
+      <div className="bg-card border border-border/40 rounded-2xl p-6 space-y-4 text-center">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary mx-auto">
+          <Monitor className="h-7 w-7" />
+        </div>
+        <h4 className="font-display text-lg uppercase italic">Links de venda no computador</h4>
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          Links de checkout (Kiwify, Hotmart ou Stripe) não podem ser configurados dentro do app iOS.
+          Acesse <strong>alpha-coach.app/site/admin/ferramentas</strong> pelo navegador do seu computador.
+        </p>
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex gap-3 text-left">
+          <ShieldAlert className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+          <p className="text-xs text-muted-foreground">
+            No app iOS, alunos sem assinatura veem apenas a opção de contatar o coach ou usar código de acesso — sem redirecionamento para pagamento externo.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -93,7 +118,7 @@ export const SalesLinkConfig = () => {
             <LinkIcon className="h-4 w-4 text-primary" /> Link de Checkout Direto
           </Label>
           <p className="text-xs text-muted-foreground">
-            Link da Kiwify, Hotmart ou Stripe para pagamento imediato.
+            Link da Kiwify, Hotmart ou Stripe para pagamento imediato (somente fora do app iOS).
           </p>
           <Input 
             value={config.checkout_url}
@@ -115,12 +140,9 @@ export const SalesLinkConfig = () => {
           <h4 className="font-bold">Como funciona o bloqueio de vendas?</h4>
         </div>
         <p className="text-sm text-muted-foreground leading-relaxed">
-          Sempre que um usuário tentar acessar conteúdos restritos sem uma assinatura ativa, o app mostrará uma tela de bloqueio premium. O botão dessa tela redirecionará automaticamente para o <strong>Link de Checkout</strong> que você cadastrou acima.
+          Em Android e web, usuários sem assinatura podem ser direcionados ao link de checkout configurado acima.
+          No app iOS, o bloqueio mostra apenas contato com o coach ou código de acesso — sem checkout externo.
         </p>
-        <div className="bg-black/40 rounded-lg p-3 border border-white/5 flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-[10px] uppercase font-bold tracking-widest text-white/70">Otimização de Conversão Ativa</span>
-        </div>
       </div>
     </div>
   );

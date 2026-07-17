@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket, Users, CalendarCheck, Stethoscope, Trash2, X } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket, Users, CalendarCheck, Trash2, X } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
@@ -21,6 +21,7 @@ import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluati
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import heic2any from "heic2any";
 import { AthleteEvaluationsViewer } from "@/components/aluno/AthleteEvaluationsViewer";
+import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 
 type ProfileData = {
   id?: string;
@@ -584,18 +585,6 @@ const Perfil = () => {
             </div>
           </Link>
 
-          <Link
-            to={`/${slug}/app/clinica`}
-            className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all group"
-          >
-            <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
-              <Stethoscope className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="font-display text-sm uppercase leading-tight group-hover:text-primary transition-colors">Clínica</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Painel metabólico</p>
-            </div>
-          </Link>
         </div>
       </section>
 
@@ -749,6 +738,7 @@ const Perfil = () => {
                 <Input id="quadril" type="number" step="0.1" value={formEval.quadril_cm} onChange={(e) => setFormEval({...formEval, quadril_cm: e.target.value})} required={formProfile.sexo === "F"} />
               </div>
             )}
+            <PhysicalEvaluationScienceFooter variant="navy" className="pt-2" />
             <DialogFooter>
               <Button type="button" variant="ghost" onClick={() => setEvalOpen(false)}>Cancelar</Button>
               <Button type="submit" disabled={saving} variant="default">

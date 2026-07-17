@@ -67,7 +67,7 @@ if [ -f "$AAB_PATH" ]; then
     echo ""
     echo -e "${YELLOW}📋 Como publicar na Play Store:${NC}"
     echo "   1. Acesse https://play.google.com/console"
-    echo "   2. Selecione o app (ou crie um novo com applicationId 'app.lovable.alphacoach')"
+    echo "   2. Selecione o app (ou crie um novo com applicationId 'app.leandro.alphacoach')"
     echo "   3. Vá em Release → Production → Create new release"
     echo "   4. Faça upload do .aab acima"
     echo "   5. Aceite o Play App Signing na primeira vez"

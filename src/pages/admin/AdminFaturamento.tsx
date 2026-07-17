@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { IOSDesktopOnlyGate } from "@/components/IOSDesktopOnlyGate";
+import { blocksExternalPayments } from "@/lib/native-platform";
 
 type StripeConnectStatus = "not_connected" | "incomplete" | "submitted" | "pending_verification" | "verified";
 
@@ -84,6 +86,7 @@ const AdminFaturamento = () => {
   }, [tenant?.id]);
 
   const handleConnectStripe = async () => {
+    if (blocksExternalPayments()) return;
     if (!tenant?.id) return;
     setBusy(true);
     try {
@@ -113,6 +116,11 @@ const AdminFaturamento = () => {
   };
 
   return (
+    <IOSDesktopOnlyGate
+      title="Faturamento pelo computador"
+      description="A conexão com Stripe e a gestão de pagamentos devem ser feitas pelo navegador no seu computador, fora do app iOS."
+      desktopHint="alpha-coach.app"
+    >
     <div className="min-h-screen bg-black px-5 pt-6 pb-32">
       <button
         onClick={() => navigate(`/${slug}/app/controle`)}
@@ -221,6 +229,7 @@ const AdminFaturamento = () => {
         </ul>
       </div>
     </div>
+    </IOSDesktopOnlyGate>
   );
 };
 

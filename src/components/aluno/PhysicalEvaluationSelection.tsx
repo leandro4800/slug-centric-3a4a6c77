@@ -7,6 +7,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Ruler, Anchor, Upload, FileDown, Sparkles } from "lucide-react";
+import { MedicalDisclaimer } from "@/components/HealthScienceFootnotes";
 
 interface Props {
   open: boolean;
@@ -69,6 +70,8 @@ export const PhysicalEvaluationSelection = ({ open, onOpenChange, onSelect }: Pr
             </div>
           </Button>
         </div>
+
+        <MedicalDisclaimer className="pt-2 border-t border-border/50" />
       </DialogContent>
     </Dialog>
   );

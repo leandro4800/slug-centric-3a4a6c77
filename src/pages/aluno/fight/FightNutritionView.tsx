@@ -8,6 +8,7 @@ import { Utensils, Loader2, Droplet, TrendingDown, Flame } from "lucide-react";
 import { format, parseISO, differenceInCalendarDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip, ReferenceLine } from "recharts";
+import { DietScienceFooter } from "@/components/HealthScienceFootnotes";
 
 type Fase = { id: string; fase: "off_season" | "pre_camp" | "weight_cut"; data_inicio: string; data_fim: string; kcal_meta: number | null; proteina_g: number | null; carboidrato_g: number | null; lipideos_g: number | null; peso_meta_kg: number | null; observacoes: string | null; camp_id: string | null };
 type Peso = { data: string; peso: number };
@@ -61,6 +62,7 @@ const FightNutritionView = () => {
           <Utensils className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">Sua nutrição de combate será estruturada pelo seu técnico assim que o camp for definido.</p>
         </Card>
+        <DietScienceFooter />
       </div>
     );
   }
@@ -168,6 +170,8 @@ const FightNutritionView = () => {
           </div>
         </div>
       </Card>
+
+      <DietScienceFooter />
     </div>
   );
 };

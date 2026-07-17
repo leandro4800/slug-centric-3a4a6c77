@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
+import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 
 type PhotoType = 'frente' | 'costas' | 'lado';
 
@@ -243,6 +244,7 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
                   <span className="text-primary font-bold ml-2">{bf || "--"} %</span>
                 </div>
               </div>
+              <PhysicalEvaluationScienceFooter variant="jackson" className="pt-2" />
             </div>
           )}
 

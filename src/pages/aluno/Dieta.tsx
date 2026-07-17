@@ -25,6 +25,7 @@ import imgMacroProtein from "@/assets/macro-protein.jpg";
 import imgMacroCarbs from "@/assets/macro-carbs.jpg";
 import imgMacroFats from "@/assets/macro-fats.jpg";
 import imgMacroHero from "@/assets/macro-hero.jpg";
+import { DietScienceFooter } from "@/components/HealthScienceFootnotes";
 
 type Alimento = { id: string; nome: string; energia_kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number };
 type Item = { id: string; quantidade_g: number; substituicoes: string | null; alimento: Alimento | null };
@@ -373,6 +374,8 @@ const PersonalDieta = () => {
             </div>
           </>
         )}
+
+        <DietScienceFooter />
       </div>
 
       {/* Modal de detalhes da refeição */}

@@ -8,10 +8,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, CheckCircle2, Loader2, ExternalLink, ShieldAlert, Monitor } from "lucide-react";
-import { buildAuthRedirectUrl } from "@/lib/app-url";
+import { buildAuthRedirectUrl, PRIVACY_POLICY_URL } from "@/lib/app-url";
+import { isIOSNativeApp, blocksExternalPayments } from "@/lib/native-platform";
 import { CoachQuiz, type QuizAnswers } from "@/components/coach/CoachQuiz";
 import { CoachPlanSelector, COACH_PLANS, type CoachPlanTier } from "@/components/coach/CoachPlanSelector";
-import { Capacitor } from "@capacitor/core";
 
 type Step = "welcome" | "quiz" | "plans" | "signup" | "verify-email" | "personal" | "tenant" | "checkout" | "pending";
 const STEPS: Step[] = ["welcome", "quiz", "plans", "personal", "tenant", "checkout", "pending"];
@@ -48,7 +48,6 @@ export default function SejaCoach() {
   const [tenantId, setTenantId] = useState<string | null>(null);
 
   // Detect if running on native iOS
-  const isIOS = Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
 
   useEffect(() => {
     if (isLoading) return;
@@ -111,6 +110,7 @@ export default function SejaCoach() {
   };
 
   const handleStartCheckout = async () => {
+    if (blocksExternalPayments()) return;
     if (!user || !selectedPlan) return;
     setBusy(true);
     try {
@@ -224,7 +224,7 @@ export default function SejaCoach() {
   if (isLoading) return <div className="min-h-screen bg-background text-white font-display uppercase tracking-widest">Carregando...</div>;
 
   // Intercept iOS users on either signup, quiz, or pricing/plan steps to keep the native app purchase-free
-  if (isIOS) {
+  if (isIOSNativeApp()) {
     return (
       <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
         <header className="border-b border-border/50">
@@ -333,7 +333,10 @@ export default function SejaCoach() {
                 </Link>
               </p>
               <p className="text-center text-[10px] text-muted-foreground/70">
-                Ao criar uma conta, você concorda com nossos Termos de Serviço e Política de Privacidade.
+                Ao criar uma conta, você concorda com nossos Termos de Serviço e{" "}
+                <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer" className="underline hover:text-primary">
+                  Política de Privacidade
+                </a>.
               </p>
             </form>
           )}

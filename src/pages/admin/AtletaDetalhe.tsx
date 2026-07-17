@@ -54,6 +54,7 @@ import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
 import heroDefault from "@/assets/hero-default.jpg";
 import heic2any from "heic2any";
+import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 
 interface Aluno {
   id: string;
@@ -1060,6 +1061,7 @@ const AtletaDetalhe = () => {
                 <Input id="quadril" type="number" step="0.1" value={formEval.quadril_cm} onChange={(e) => setFormEval({...formEval, quadril_cm: e.target.value})} required={perfil?.sexo === "F"} className="bg-background border-primary/20" />
               </div>
             )}
+            <PhysicalEvaluationScienceFooter variant="navy" className="pt-2" />
             <DialogFooter className="pt-4">
               <Button type="button" variant="ghost" onClick={() => setEvalOpen(false)} className="uppercase tracking-widest text-[10px] font-bold">Cancelar</Button>
               <Button type="submit" disabled={savingEval} className="bg-primary hover:bg-primary/90 uppercase tracking-widest text-[10px] font-bold px-8">

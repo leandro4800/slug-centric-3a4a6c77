@@ -1,5 +1,7 @@
 export const PRODUCTION_APP_ORIGIN = "https://alpha-coach.app";
 
+export const PRIVACY_POLICY_URL = `${PRODUCTION_APP_ORIGIN}/politica-de-privacidade`;
+
 const isUnsafeAuthOrigin = (origin: string) => {
   try {
     const url = new URL(origin);

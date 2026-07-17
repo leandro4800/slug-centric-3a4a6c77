@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2, Users, UserMinus, Wallet, Calendar, ArrowRight, Dumbbell, MessageSquare, Palette, BarChart3, CreditCard } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { isIOSNativeApp } from "@/lib/native-platform";
 import { LineChart, Line, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
 
 interface KPIs {
@@ -179,7 +180,9 @@ export default function CoachDashboard() {
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
           <QuickLink to={`/${slug}/admin/atletas`} icon={<Users className="h-4 w-4" />} label="Meus Atletas" />
           <QuickLink to={`/${slug}/admin/montar-treino`} icon={<Dumbbell className="h-4 w-4" />} label="Montar Treino" />
-          <QuickLink to={`/${slug}/admin/faturamento`} icon={<Wallet className="h-4 w-4" />} label="Faturamento" />
+          {!isIOSNativeApp() && (
+            <QuickLink to={`/${slug}/admin/faturamento`} icon={<Wallet className="h-4 w-4" />} label="Faturamento" />
+          )}
           <QuickLink to={`/${slug}/admin/aparencia`} icon={<Palette className="h-4 w-4" />} label="Aparência" />
         </div>
       </div>

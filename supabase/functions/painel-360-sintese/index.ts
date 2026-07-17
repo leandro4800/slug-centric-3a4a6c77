@@ -71,8 +71,7 @@ serve(async (req) => {
 
     // Coleta TUDO em paralelo
     const [
-      checkins, avaliacoes, cargas, anamnese, analises, biomarcadores,
-      dieta, treinos, perfilTreino, carta,
+      checkins, avaliacoes, cargas, anamnese, dieta, treinos, perfilTreino, carta,
     ] = await Promise.all([
       sb.from("evolucao_checkins").select("data_checkin,peso_kg,bf_percentual,massa_magra_kg,massa_gorda_kg,observacoes")
         .eq("user_id", aluno_id).order("data_checkin", { ascending: false }).limit(20),
@@ -81,10 +80,6 @@ serve(async (req) => {
       sb.from("historico_cargas").select("exercicio_nome,carga_kg,repeticoes_feitas,data_treino")
         .eq("user_id", aluno_id).order("data_treino", { ascending: false }).limit(300),
       sb.from("anamnese_aluno").select("*").eq("aluno_id", aluno_id).maybeSingle(),
-      sb.from("analises_clinicas").select("titulo,created_at,score_performance,alerta_critico,parecer_ia,resumo_clinico")
-        .eq("user_id", aluno_id).order("created_at", { ascending: false }).limit(5),
-      sb.from("exames_biomarcadores").select("nome,valor,unidade,classificacao,data_exame")
-        .eq("user_id", aluno_id).order("data_exame", { ascending: false }).limit(60),
       sb.from("dietas").select("objetivo,kcal_alvo,macros_alvo,observacoes_clinicas,created_at")
         .eq("user_id", aluno_id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       sb.from("treinos_prescritos").select("dia_semana,exercicio,series,repeticoes,observacao")
@@ -104,8 +99,6 @@ serve(async (req) => {
       historico_cargas: cargas.data,
       dieta_atual: dieta.data,
       treino_prescrito: treinos.data,
-      analises_clinicas: analises.data,
-      biomarcadores: biomarcadores.data,
     };
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -119,19 +112,23 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Você é um analista 360° de performance de atletas (musculação, hipertrofia, saúde clínica e composição corporal). Recebe TODO o histórico do atleta no app: anamnese, check-ins, avaliações, cargas, dieta, treino prescrito, exames clínicos. Gere uma síntese precisa, objetiva e profissional, em PT-BR. Responda APENAS JSON válido com a estrutura:
+            content: `Você é um analista 360° de performance de atletas (musculação, hipertrofia e composição corporal). Recebe TODO o histórico do atleta no app: anamnese, check-ins, avaliações, cargas, dieta e treino prescrito. Gere uma síntese precisa, objetiva e profissional, em PT-BR.
+
+REGRAS:
+- NÃO forneça recomendações de saúde, condutas médicas, sugestões de medicamentos ou suplementos.
+- Em "pontos_atencao", liste observações descritivas — sem orientar ações terapêuticas.
+
+Responda APENAS JSON válido com a estrutura:
 {
   "score_geral": number (0-100),
   "resumo": string (2-3 frases),
   "evolucao_corporal": string,
   "performance_treino": string,
-  "saude_clinica": string,
   "aderencia": string,
   "pontos_fortes": string[],
-  "pontos_atencao": string[],
-  "recomendacoes": string[]
+  "pontos_atencao": string[]
 }
-Seja específico citando números reais (kg, %, exercícios, biomarcadores). Sem emojis. Sem markdown.`
+Seja específico citando números reais (kg, %, exercícios). Sem emojis. Sem markdown.`
           },
           {
             role: "user",
@@ -155,8 +152,8 @@ Seja específico citando números reais (kg, %, exercícios, biomarcadores). Sem
       avaliacoes: avaliacoes.data?.length ?? 0,
       cargas: cargas.data?.length ?? 0,
       treinos: treinos.data?.length ?? 0,
-      biomarcadores: biomarcadores.data?.length ?? 0,
-      analises: analises.data?.length ?? 0,
+      biomarcadores: 0,
+      analises: 0,
     }}), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

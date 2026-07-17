@@ -6,7 +6,6 @@ import heroDefault from "@/assets/hero-default.jpg";
 import cardTreino from "@/assets/card-treino.jpg";
 import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
-import cardClinica from "@/assets/card-clinica.jpg";
 import macroProtein from "@/assets/macro-protein.jpg";
 import macroCarbs from "@/assets/macro-carbs.jpg";
 import macroFats from "@/assets/macro-fats.jpg";
@@ -156,17 +155,16 @@ export const PhonePreview = ({ onPick, pickedTarget, initialScreen = "home" }: P
                   </HotZone>
                 </div>
 
-                {/* Minha Prescrição */}
+                {/* Meu Planejamento */}
                 <div className="px-3 mt-4">
                   <p className="font-display text-[10px] mb-2 flex items-center gap-1" style={{ color: "hsl(var(--foreground))" }}>
-                    <span style={{ color: "hsl(var(--primary))" }}>▶</span> MINHA PRESCRIÇÃO
+                    <span style={{ color: "hsl(var(--primary))" }}>▶</span> MEU PLANEJAMENTO
                   </p>
                   <div className="flex gap-1.5 overflow-hidden">
                     {[
                       { t: "TREINO", img: cardTreino },
                       { t: "DIETA", img: cardDieta },
                       { t: "EVOLUÇÃO", img: cardEvolucao },
-                      { t: "CLÍNICA", img: cardClinica },
                     ].map((s) => (
                       <HotZone key={s.t} label="Cartões" active={isActive("card")} onClick={pick("card")} className="rounded-md flex-1 block">
                         <div className="relative w-full h-20 rounded-md overflow-hidden" style={{ border: "1px solid hsl(var(--border))" }}>

@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/use-auth";
+import { PRIVACY_POLICY_URL } from "@/lib/app-url";
 import { motion, AnimatePresence } from "framer-motion";
 import useEmblaCarousel from 'embla-carousel-react';
 
@@ -613,7 +614,7 @@ const Landing = () => {
           <Logo />
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-gray-500">
             <a href="#" className="hover:text-primary transition-colors">Termos</a>
-            <a href="#" className="hover:text-primary transition-colors">Privacidade</a>
+            <a href={PRIVACY_POLICY_URL} target="_blank" rel="noopener noreferrer" className="hover:text-primary transition-colors">Privacidade</a>
             <a href="#" className="hover:text-primary transition-colors">Suporte</a>
           </div>
           <p className="text-[10px] font-bold text-gray-600 uppercase tracking-widest">

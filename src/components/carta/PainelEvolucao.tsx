@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
-  Loader2, TrendingUp, TrendingDown, Activity, Calendar, FileText, AlertTriangle,
-  Dumbbell, Heart, Moon, Pill, Sparkles, Apple, Ruler, FlaskConical, ListChecks,
+  Loader2, TrendingUp, TrendingDown, Activity, Calendar,
+  Dumbbell, Heart, Moon, Pill, Sparkles, Apple, Ruler, ListChecks,
 } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -27,16 +27,11 @@ type Avaliacao = {
   dobra_axilar_media: number | null; massa_magra_kg: number | null; massa_gorda_kg: number | null;
 };
 type Carga = { exercicio_nome: string; carga_kg: number; data_treino: string };
-type Analise = {
-  id: string; titulo: string | null; created_at: string;
-  score_performance: number | null; alerta_critico: boolean | null;
-};
 type Anamnese = {
   doencas: string[] | null; medicamentos: string | null; lesoes_atuais: string | null;
   qualidade_sono: number | null; horas_sono: number | null; nivel_estresse: number | null;
   suplementos: string[] | null;
 };
-type Bio = { nome: string; valor: number | null; unidade: string | null; classificacao: string | null; data_exame: string | null };
 type DietaT = { objetivo: string | null; kcal_alvo: number | null; macros_alvo: any; created_at: string };
 type Treino = { dia_semana: string; exercicio: string; series: string | null; repeticoes: string | null };
 
@@ -45,11 +40,9 @@ type Sintese = {
   resumo: string;
   evolucao_corporal: string;
   performance_treino: string;
-  saude_clinica: string;
   aderencia: string;
   pontos_fortes: string[];
   pontos_atencao: string[];
-  recomendacoes: string[];
 };
 
 const fmtDate = (iso: string) =>
@@ -76,22 +69,12 @@ const Stat = ({
   </div>
 );
 
-const classCor = (c: string | null) => {
-  const v = (c ?? "").toLowerCase();
-  if (v.includes("alto") || v.includes("crít") || v.includes("alterad")) return "text-[hsl(0_70%_60%)]";
-  if (v.includes("baixo") || v.includes("limítrof") || v.includes("aten")) return "text-[hsl(42_70%_62%)]";
-  if (v.includes("normal") || v.includes("ótim") || v.includes("ideal")) return "text-[hsl(140_50%_60%)]";
-  return "text-muted-foreground";
-};
-
 export const PainelEvolucao = ({ alunoId }: Props) => {
   const [loading, setLoading] = useState(true);
   const [checkins, setCheckins] = useState<Checkin[]>([]);
   const [avaliacoes, setAvaliacoes] = useState<Avaliacao[]>([]);
   const [cargas, setCargas] = useState<Carga[]>([]);
-  const [analises, setAnalises] = useState<Analise[]>([]);
   const [anamnese, setAnamnese] = useState<Anamnese | null>(null);
-  const [bios, setBios] = useState<Bio[]>([]);
   const [dieta, setDieta] = useState<DietaT | null>(null);
   const [refeicoesCount, setRefeicoesCount] = useState(0);
   const [treinos, setTreinos] = useState<Treino[]>([]);
@@ -103,19 +86,15 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [c, a, h, an, am, bio, d, t, f] = await Promise.all([
+      const [c, a, h, am, d, t, f] = await Promise.all([
         supabase.from("evolucao_checkins").select("data_checkin,peso_kg,bf_percentual,massa_magra_kg")
           .eq("user_id", alunoId).order("data_checkin", { ascending: true }).limit(60),
         supabase.from("avaliacoes_fisicas").select("*")
           .eq("aluno_id", alunoId).order("data", { ascending: true }).limit(60),
         supabase.from("historico_cargas").select("exercicio_nome,carga_kg,data_treino")
           .eq("user_id", alunoId).order("data_treino", { ascending: false }).limit(300),
-        supabase.from("analises_clinicas").select("id,titulo,created_at,score_performance,alerta_critico")
-          .eq("user_id", alunoId).order("created_at", { ascending: false }).limit(5),
         supabase.from("anamnese_aluno").select("doencas,medicamentos,lesoes_atuais,qualidade_sono,horas_sono,nivel_estresse,suplementos")
           .eq("aluno_id", alunoId).maybeSingle(),
-        supabase.from("exames_biomarcadores").select("nome,valor,unidade,classificacao,data_exame")
-          .eq("user_id", alunoId).order("data_exame", { ascending: false }).limit(40),
         supabase.from("dietas").select("objetivo,kcal_alvo,macros_alvo,created_at,id")
           .eq("user_id", alunoId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
         supabase.from("treinos_prescritos").select("dia_semana,exercicio,series,repeticoes")
@@ -125,9 +104,7 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
       setCheckins((c.data ?? []) as Checkin[]);
       setAvaliacoes((a.data ?? []) as Avaliacao[]);
       setCargas((h.data ?? []) as Carga[]);
-      setAnalises((an.data ?? []) as Analise[]);
       setAnamnese((am.data ?? null) as Anamnese | null);
-      setBios((bio.data ?? []) as Bio[]);
       setDieta((d.data ?? null) as DietaT | null);
       setTreinos((t.data ?? []) as Treino[]);
       setFotosCount(f.count ?? 0);
@@ -249,7 +226,7 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
         </div>
         {!sintese && !gerandoSintese && (
           <p className="text-sm text-muted-foreground">
-            A IA varre TODO o histórico do atleta no app — anamnese, check-ins, avaliações físicas, cargas, dieta, treino prescrito, exames clínicos e biomarcadores — e gera uma análise 360° precisa.
+            A IA varre TODO o histórico do atleta no app — anamnese, check-ins, avaliações físicas, cargas, dieta e treino prescrito — e gera uma análise 360° precisa.
           </p>
         )}
         {gerandoSintese && (
@@ -270,7 +247,6 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
               {[
                 ["Evolução corporal", sintese.evolucao_corporal],
                 ["Performance no treino", sintese.performance_treino],
-                ["Saúde clínica", sintese.saude_clinica],
                 ["Aderência", sintese.aderencia],
               ].map(([l, v]) => (
                 <div key={l} className="border border-white/5 rounded p-3 bg-black/20">
@@ -279,7 +255,7 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
                 </div>
               ))}
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <div className="font-gaming text-[10px] uppercase tracking-widest text-[hsl(140_50%_60%)] mb-1">Pontos fortes</div>
                 <ul className="text-sm space-y-1 list-disc pl-4">
@@ -290,12 +266,6 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
                 <div className="font-gaming text-[10px] uppercase tracking-widest text-[hsl(42_70%_62%)] mb-1">Pontos de atenção</div>
                 <ul className="text-sm space-y-1 list-disc pl-4">
                   {sintese.pontos_atencao.map((p, i) => <li key={i}>{p}</li>)}
-                </ul>
-              </div>
-              <div>
-                <div className="font-gaming text-[10px] uppercase tracking-widest text-[hsl(357_92%_60%)] mb-1">Recomendações</div>
-                <ul className="text-sm space-y-1 list-disc pl-4">
-                  {sintese.recomendacoes.map((p, i) => <li key={i}>{p}</li>)}
                 </ul>
               </div>
             </div>
@@ -310,9 +280,6 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
           <Stat label="Peso atual" value={pesoAtual ? pesoAtual.toFixed(1) : "—"} suffix={pesoAtual ? " kg" : ""} delta={isNaN(deltaPeso) ? undefined : deltaPeso} icon={Activity} />
           <Stat label="BF% atual" value={bfAtual ? bfAtual.toFixed(1) : "—"} suffix={bfAtual ? "%" : ""} delta={isNaN(deltaBf) ? undefined : deltaBf} icon={Activity} />
           <Stat label="Último registro" value={diasDesde === null ? "—" : diasDesde === 0 ? "Hoje" : `${diasDesde}d`} icon={Calendar} />
-          <Stat label="Exames" value={analises.length} icon={FileText} />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
           <Stat label="Check-ins" value={checkins.length} icon={Calendar} />
           <Stat label="Avaliações" value={avaliacoes.length} icon={Ruler} />
           <Stat label="Registros de carga" value={cargas.length} icon={Dumbbell} />
@@ -483,54 +450,6 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
                     </ResponsiveContainer>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
-      {/* Biomarcadores */}
-      {bios.length > 0 && (
-        <div className="fut-glass p-5">
-          <h3 className="font-gaming text-xs tracking-widest uppercase text-muted-foreground mb-4 flex items-center gap-2">
-            <FlaskConical className="w-4 h-4" /> Biomarcadores
-            <span className="ml-auto text-[10px] normal-case tracking-normal text-muted-foreground/70">{bios.length} marcadores</span>
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-[360px] overflow-y-auto pr-1">
-            {bios.map((b, i) => (
-              <div key={i} className="flex items-center justify-between gap-2 border-b border-white/5 py-1 text-sm">
-                <span className="truncate">{b.nome}</span>
-                <div className="flex items-center gap-2 shrink-0">
-                  <span className="font-display-fut">{b.valor ?? "—"}<span className="text-[10px] text-muted-foreground ml-0.5">{b.unidade}</span></span>
-                  {b.classificacao && <span className={`text-[10px] font-gaming uppercase ${classCor(b.classificacao)}`}>{b.classificacao}</span>}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Exames recentes */}
-      <div className="fut-glass p-5">
-        <h3 className="font-gaming text-xs tracking-widest uppercase text-muted-foreground mb-4 flex items-center gap-2">
-          <FileText className="w-4 h-4" /> Exames recentes
-        </h3>
-        {analises.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-6">Nenhum exame importado.</p>
-        ) : (
-          <div className="space-y-2">
-            {analises.map((a) => (
-              <div key={a.id} className="flex items-center justify-between border-b border-white/5 pb-2 last:border-0">
-                <div className="flex items-center gap-2">
-                  {a.alerta_critico && <AlertTriangle className="w-4 h-4 text-[hsl(0_70%_60%)]" />}
-                  <div>
-                    <p className="font-body-fut text-sm">{a.titulo || "Análise clínica"}</p>
-                    <p className="text-[10px] text-muted-foreground">{fmtDate(a.created_at)}</p>
-                  </div>
-                </div>
-                {a.score_performance != null && (
-                  <span className="font-display-fut text-lg fut-cyan">{Math.round(Number(a.score_performance))}</span>
-                )}
               </div>
             ))}
           </div>

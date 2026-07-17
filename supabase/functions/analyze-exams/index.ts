@@ -9,16 +9,12 @@ interface Marker {
   unidade: string
   status: "Otimizado" | "Alerta" | "Critico" | "Subotimizado"
   insight_clinico: string
-  sugestao_medicamento?: string
 }
 
 interface AIResponse {
   pontuacao_geral: number
   resumo_executivo: string
   marcadores: Marker[]
-  conduta_sugerida: string[]
-  sugestoes_medicamentos?: string[]
-  aviso_medico?: string
 }
 
 serve(async (req) => {
@@ -144,7 +140,6 @@ serve(async (req) => {
       biomarcador: i.biomarcador_codigo,
       condicao: i.condicao,
       interpretacao: i.interpretacao,
-      conduta: i.sugestao_conduta
     })))
 
     // Call Lovable AI Gateway
@@ -159,23 +154,21 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Você é o "Dr. IA", um especialista em medicina integrativa e performance humana. Sua missão é ler dados de OCR de exames de sangue e transformá-los em um relatório de biohacking e longevidade seguindo a Metodologia Pacholok (Anabolismo Total).
-Seja técnico, mas encorajador. Priorize a prevenção e a otimização, não apenas a ausência de doença.
+            content: `Você é um assistente de interpretação educacional de exames laboratoriais para atletas. Sua missão é ler dados de OCR de exames de sangue e apresentar uma análise INFORMATIVA dos biomarcadores em relação às faixas de referência.
+
+REGRAS OBRIGATÓRIAS:
+- NÃO forneça condutas, recomendações de saúde, sugestões de medicamentos, suplementos ou tratamentos.
+- NÃO prescreva, não oriente ações terapêuticas e não indique prioridades de intervenção.
+- Use linguagem descritiva e educacional: explique o que o valor significa em relação às faixas de referência.
+- O resumo executivo deve ter 3 parágrafos informativos: (1) panorama geral dos resultados, (2) marcadores fora das faixas de referência, (3) contexto educacional sobre a interpretação laboratorial.
+- Em "insight_clinico" de cada marcador, descreva apenas o significado educacional do valor em relação às faixas — sem sugerir o que fazer.
 
 REGRAS DE ANÁLISE:
-1. PERFORMANCE (GOLD STANDARD): Use os ranges de PERFORMANCE (Performance Min/Max) como alvo. Se o valor estiver no range clínico mas fora do range de performance, status é "Subotimizado".
+1. PERFORMANCE (GOLD STANDARD): Use os ranges de PERFORMANCE (Performance Min/Max) como referência comparativa. Se o valor estiver no range clínico mas fora do range de performance, status é "Subotimizado".
 2. STATUS: Otimizado (dentro do range performance), Alerta (range clínico mas fora performance), Critico (fora range clínico), Subotimizado (próximo da borda da performance mas ainda 'normal').
-3. RISCO CRÍTICO (ALÉM DA GENÉTICA):
-   - Se Hematócrito > 52%, o status DEVE ser "Critico" e você deve adicionar um aviso de "RISCO CRÍTICO CARDIOVASCULAR" citando a base do Anabolismo Total.
-   - Se TGP > 3x o limite superior clínico (valor_maximo), o status DEVE ser "Critico" com aviso de "ESTRESSE HEPÁTICO SEVERO".
-4. LÓGICA SISTÊMICA: Use o contexto de inteligência clínica para correlações.
+3. VALORES CRÍTICOS: Se Hematócrito > 52%, status "Critico" com insight descritivo sobre o valor em relação à referência. Se TGP > 3x o limite superior clínico (valor_maximo), status "Critico" com insight descritivo.
+4. LÓGICA SISTÊMICA: Use o contexto de inteligência clínica apenas para interpretação educacional.
 5. CÁLCULOS: Se encontrar Testosterona Total, SHBG e Albumina, calcule a Testosterona Livre estimada.
-
-REGRAS DE SUGESTÃO DE MEDICAMENTOS / SUPLEMENTAÇÃO:
-- Quando um marcador estiver "Alerta", "Critico" ou "Subotimizado", inclua em "sugestao_medicamento" do marcador uma sugestão GENÉRICA de classe terapêutica ou suplemento.
-- NUNCA prescreva. Sempre escreva no tom de "sugestão para discussão com seu médico".
-- Em "sugestoes_medicamentos" (array no nível raiz) liste de forma consolidada as principais sugestões priorizadas.
-- SEMPRE preencha "aviso_medico" com um disclaimer claro orientando o usuário a procurar um médico antes de iniciar qualquer medicamento ou suplemento.
 
 DADOS DE REFERÊNCIA:
 ${referenceContext}
@@ -188,7 +181,7 @@ ${intelligenceContext}`
             content: fileBase64 ? [
               {
                 type: 'text',
-                text: 'Analise este exame laboratorial. Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }'
+                text: 'Analise este exame laboratorial. Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos informativos e educacionais", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico" }] }'
               },
               fileMime === 'application/pdf' ? {
                 type: 'file',
@@ -200,7 +193,7 @@ ${intelligenceContext}`
                 type: 'image_url',
                 image_url: { url: `data:${fileMime};base64,${fileBase64}` }
               }
-            ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos: Estado Atual, Riscos e Prioridade #1", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico", "sugestao_medicamento": "" }], "conduta_sugerida": ["..."], "sugestoes_medicamentos": ["..."], "aviso_medico": "..." }\n\nDADOS DO EXAME:\n${texto_exame}`
+            ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos informativos e educacionais", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico" }] }\n\nDADOS DO EXAME:\n${texto_exame}`
           }
         ],
         max_completion_tokens: 8192,
@@ -254,7 +247,7 @@ ${intelligenceContext}`
         url_arquivo: file_path ?? null,
         status: 'concluido',
         dados_extraidos: analysisData,
-        resumo_clinico: analysisData.conduta_sugerida.join('\n')
+        resumo_clinico: null
       })
       .select()
       .single()

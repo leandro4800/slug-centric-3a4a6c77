@@ -21,6 +21,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { blocksExternalPayments } from "@/lib/native-platform";
 
 interface Plan {
   id: string;
@@ -80,6 +81,7 @@ export const PlanConfig = () => {
   }, [tenant?.id]);
 
   const syncPlanWithStripe = async (planoId: string) => {
+    if (blocksExternalPayments()) return null;
     try {
       const { data, error } = await supabase.functions.invoke("stripe-create-plan", {
         body: { plano_id: planoId },
