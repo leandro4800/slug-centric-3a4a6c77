@@ -3,7 +3,9 @@
   "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
   "compilerOptions": {
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@shared/schema": ["./src/shared/schema.ts"]
     },
     "noImplicitAny": false,
     "noUnusedParameters": false,

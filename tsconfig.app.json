@@ -23,7 +23,9 @@
     "noFallthroughCasesInSwitch": false,
 
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["./src/shared/*"],
+      "@shared/schema": ["./src/shared/schema.ts"]
     }
   },
   "include": ["src"]
