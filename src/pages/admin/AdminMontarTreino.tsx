@@ -267,6 +267,12 @@ const AdminMontarTreino = () => {
     })();
   }, [tenant]);
 
+  // Sincroniza alunoId com o parâmetro da URL (?aluno=...) sempre que muda.
+  useEffect(() => {
+    const urlAluno = searchParams.get("aluno") || "";
+    setAlunoId((prev) => (prev === urlAluno ? prev : urlAluno));
+  }, [searchParams]);
+
   useEffect(() => {
     if (!tenant) return;
     void (async () => {
@@ -274,9 +280,20 @@ const AdminMontarTreino = () => {
         .from("perfis")
         .select("id, nome_completo, email")
         .eq("tenant_id", tenant.id);
-      setAlunos(((data as Aluno[]) || []).filter((a) => a.id !== tenant.owner_user_id));
+      const lista = ((data as Aluno[]) || []).filter((a) => a.id !== tenant.owner_user_id);
+      // Se o aluno selecionado (via URL) não está na lista, busca-o à parte e inclui.
+      if (alunoId && !lista.some((a) => a.id === alunoId)) {
+        const { data: extra } = await supabase
+          .from("perfis")
+          .select("id, nome_completo, email")
+          .eq("id", alunoId)
+          .maybeSingle();
+        if (extra) lista.unshift(extra as Aluno);
+      }
+      lista.sort((a, b) => (a.nome_completo || "").localeCompare(b.nome_completo || ""));
+      setAlunos(lista);
     })();
-  }, [tenant]);
+  }, [tenant, alunoId]);
 
   useEffect(() => {
     if (!alunoId || !tenant) {
@@ -1321,8 +1338,13 @@ const AdminMontarTreino = () => {
           <>
             {/* Perfil */}
             <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl">PERFIL DO ALUNO</h2>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Atleta selecionado</p>
+                  <h2 className="font-display text-xl truncate">
+                    {alunos.find((a) => a.id === alunoId)?.nome_completo || alunos.find((a) => a.id === alunoId)?.email || "Perfil do aluno"}
+                  </h2>
+                </div>
                 <span className="text-xs px-3 py-1 rounded-full bg-primary/15 text-primary uppercase">Nível: {nivel}</span>
               </div>
               <div className="grid md:grid-cols-3 gap-3">
