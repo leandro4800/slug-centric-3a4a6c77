@@ -1338,8 +1338,13 @@ const AdminMontarTreino = () => {
           <>
             {/* Perfil */}
             <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xl">PERFIL DO ALUNO</h2>
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-primary">Atleta selecionado</p>
+                  <h2 className="font-display text-xl truncate">
+                    {alunos.find((a) => a.id === alunoId)?.nome_completo || alunos.find((a) => a.id === alunoId)?.email || "Perfil do aluno"}
+                  </h2>
+                </div>
                 <span className="text-xs px-3 py-1 rounded-full bg-primary/15 text-primary uppercase">Nível: {nivel}</span>
               </div>
               <div className="grid md:grid-cols-3 gap-3">
