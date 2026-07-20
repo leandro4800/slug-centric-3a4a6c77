@@ -1168,9 +1168,13 @@ const AdminMontarDieta = () => {
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
                     Enviar para Aluno
                   </Button>
-                  <Button size="sm" variant="outline" onClick={baixarDietaPdf} disabled={refeicoes.length === 0} className="border-white/20 text-white hover:bg-white/10">
+                  <Button size="sm" variant="outline" onClick={() => baixarDietaPdf("dark")} disabled={refeicoes.length === 0} className="border-white/20 text-white hover:bg-white/10">
                     <FileDown className="h-4 w-4 mr-1" />
-                    Baixar PDF
+                    PDF Escuro
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => baixarDietaPdf("light")} disabled={refeicoes.length === 0} className="border-white/40 bg-white text-black hover:bg-white/90">
+                    <FileDown className="h-4 w-4 mr-1" />
+                    PDF Claro
                   </Button>
                 </div>
               </div>
