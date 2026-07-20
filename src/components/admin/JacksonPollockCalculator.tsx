@@ -166,7 +166,8 @@ export default function JacksonPollockCalculator({
           fileType: file.type,
           importType: "7dobras",
           alunoId: alunoId,
-          tenantId: tenantId
+          tenantId: tenantId,
+          dryRun: true,
         },
       });
 
