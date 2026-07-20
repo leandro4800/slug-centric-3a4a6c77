@@ -12,6 +12,7 @@ interface Aluno {
   nome_completo: string | null;
   email: string | null;
   avatar_url: string | null;
+  avulso?: boolean;
 }
 
 const MontarDieta = () => {
@@ -29,12 +30,26 @@ const MontarDieta = () => {
     }
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("perfis")
-        .select("id, nome_completo, email, avatar_url")
-        .eq("tenant_id", tenant.id)
-        .order("nome_completo");
-      setAlunos((data as Aluno[]) || []);
+      const [{ data }, { data: avulsoData }] = await Promise.all([
+        supabase
+          .from("perfis")
+          .select("id, nome_completo, email, avatar_url")
+          .eq("tenant_id", tenant.id)
+          .order("nome_completo"),
+        (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .select("id, nome, email")
+          .eq("tenant_id", tenant.id)
+          .order("created_at", { ascending: false }),
+      ]);
+      const avulsos: Aluno[] = ((avulsoData as any[]) || []).map((a) => ({
+        id: a.id,
+        nome_completo: `${a.nome} (avulso)`,
+        email: a.email,
+        avatar_url: null,
+        avulso: true,
+      }));
+      setAlunos([...((data as Aluno[]) || []), ...avulsos]);
       setLoading(false);
     })();
   }, [tenant?.id, alunoId]);
