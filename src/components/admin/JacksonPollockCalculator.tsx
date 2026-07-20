@@ -53,6 +53,25 @@ const DOBRAS = [
 
 type DobraKey = (typeof DOBRAS)[number]["key"];
 
+type AiAnalysis = {
+  dobras: Record<DobraKey, string>;
+  peso: string;
+  idade: string;
+  sexo: Sexo | "";
+  foundCount: number;
+  textoLido?: string;
+};
+
+const createEmptyDobras = (): Record<DobraKey, string> => ({
+  peitoral: "",
+  axilarMedia: "",
+  triceps: "",
+  subescapular: "",
+  abdominal: "",
+  suprailiaca: "",
+  coxa: "",
+});
+
 const num = (v: string) => {
   const n = parseFloat(v.replace(",", "."));
   return Number.isFinite(n) ? n : 0;
@@ -80,6 +99,8 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
   const values: Partial<Record<DobraKey, string>> = {};
   let peso = "";
   let idade = "";
+  let sexo: Sexo | "" = "";
+  let textoLido = "";
 
   const expectedOrder: DobraKey[] = ["peitoral", "axilarMedia", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"];
   const foldAliases: Record<DobraKey, string[]> = {
@@ -202,7 +223,15 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
       const key = normalizeKey(rawKey);
       if (key === "peso" || key === "pesokg" || key === "weight") peso ||= normalizeNumberText(value);
       if (key === "idade" || key === "age") idade ||= normalizeNumberText(value);
-      if (["textolido", "texto", "ocr", "transcricao", "transcription", "rawtext", "conteudo", "content", "observacoes"].includes(key)) walk(String(value || ""));
+      if (key === "sexo" || key === "gender") {
+        const normalizedSex = String(value ?? "").trim().toUpperCase();
+        if (!sexo && normalizedSex.startsWith("F")) sexo = "F";
+        if (!sexo && normalizedSex.startsWith("M")) sexo = "M";
+      }
+      if (["textolido", "texto", "ocr", "transcricao", "transcription", "rawtext", "conteudo", "content", "observacoes"].includes(key)) {
+        textoLido ||= String(value || "").slice(0, 1200);
+        walk(String(value || ""));
+      }
       setFold(findFoldByLabel(rawKey), value);
       walk(value);
     }
@@ -220,7 +249,7 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
     coxa: values.coxa || current.coxa,
   };
 
-  return { next, peso, idade, foundCount: Object.keys(values).length };
+  return { next, peso, idade, sexo, foundCount: Object.keys(values).length, textoLido };
 };
 
 export default function JacksonPollockCalculator({
@@ -235,20 +264,13 @@ export default function JacksonPollockCalculator({
   alunoNomeInicial,
   onSaved,
 }: Props) {
-  const [dobras, setDobras] = useState<Record<DobraKey, string>>({
-    peitoral: "",
-    axilarMedia: "",
-    triceps: "",
-    subescapular: "",
-    abdominal: "",
-    suprailiaca: "",
-    coxa: "",
-  });
+  const [dobras, setDobras] = useState<Record<DobraKey, string>>(createEmptyDobras);
   const [idade, setIdade] = useState<string>(idadeInicial ? String(idadeInicial) : "");
   const [peso, setPeso] = useState<string>(pesoInicial ? String(pesoInicial) : "");
   const [sexo, setSexo] = useState<Sexo>(
     (sexoInicial?.toUpperCase().startsWith("F") ? "F" : "M") as Sexo,
   );
+  const [aiAnalysis, setAiAnalysis] = useState<AiAnalysis | null>(null);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -340,15 +362,12 @@ export default function JacksonPollockCalculator({
       
       const ext = data?.extractedData || data?.data || data;
       if (ext && typeof ext === "object") {
-        const { next, peso: p, idade: i, foundCount } = extractSevenFolds(ext, dobras);
-        setDobras(next);
-        if (p) setPeso(p);
-        if (i) setIdade(i);
+        const { next, peso: p, idade: i, sexo: s, foundCount, textoLido } = extractSevenFolds(ext, createEmptyDobras());
+        setAiAnalysis({ dobras: next, peso: p, idade: i, sexo: s, foundCount, textoLido });
         if (foundCount === 0) {
-          toast.error("A IA não conseguiu ler valores em mm para: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca e Coxa.", { id: toastId });
+          toast.warning("Dr. IA analisou a foto, mas não identificou valores em mm suficientes.", { id: toastId });
         } else {
-          const labels = DOBRAS.filter((d) => next[d.key] && next[d.key] !== dobras[d.key]).map((d) => d.label).join(", ");
-          toast.success(`Campos preenchidos: ${labels || `${foundCount} dobra(s)`}.`, { id: toastId });
+          toast.success(`Dr. IA criou a análise com ${foundCount} dobra(s).`, { id: toastId });
         }
       } else {
         throw new Error("Não foi possível extrair dados do arquivo.");
@@ -359,6 +378,21 @@ export default function JacksonPollockCalculator({
     } finally {
       setImporting(false);
     }
+  };
+
+  const aplicarAnaliseIa = () => {
+    if (!aiAnalysis) return;
+    setDobras((prev) => {
+      const next = { ...prev };
+      DOBRAS.forEach((d) => {
+        if (aiAnalysis.dobras[d.key]) next[d.key] = aiAnalysis.dobras[d.key];
+      });
+      return next;
+    });
+    if (aiAnalysis.peso) setPeso(aiAnalysis.peso);
+    if (aiAnalysis.idade) setIdade(aiAnalysis.idade);
+    if (aiAnalysis.sexo) setSexo(aiAnalysis.sexo);
+    toast.success("Dados da IA aplicados nos campos manuais.");
   };
 
   const baixarPdf = async () => {
