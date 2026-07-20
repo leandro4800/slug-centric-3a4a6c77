@@ -117,7 +117,9 @@ const MontarDieta = () => {
             <AtletaCard
               key={a.id}
               aluno={a}
-              onSelect={() => setParams({ aluno: a.id })}
+              onSelect={() =>
+                setParams(a.avulso ? { aluno: a.id, avulso: "1" } : { aluno: a.id })
+              }
             />
           ))}
         </div>
