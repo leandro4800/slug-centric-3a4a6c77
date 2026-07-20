@@ -23,7 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
+import { getTenantPrimaryRgb, loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
 import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 
 interface Props {
@@ -526,14 +526,16 @@ export default function JacksonPollockCalculator({
     // Busca coach + aluno para cabeçalho premium
     let coachNome: string | null = null;
     let coachLogo: string | null = null;
+    let tenantBranding: any = null;
     let alunoNome: string | null = null;
     try {
       if (tenantId) {
         const { data } = await supabase
           .from("tenants")
-          .select("nome, logo_url")
+          .select("nome, logo_url, primary_hsl, theme_overrides")
           .eq("id", tenantId)
           .maybeSingle();
+        tenantBranding = data;
         coachNome = (data as any)?.nome || null;
         coachLogo = (data as any)?.logo_url || null;
       }
@@ -552,6 +554,7 @@ export default function JacksonPollockCalculator({
     }
 
     const logo = await loadImageDataUrl(coachLogo);
+    const PRIMARY = getTenantPrimaryRgb(tenantBranding);
     let y = renderPdfHeader({
       doc,
       title: "PROTOCOLO 7 DOBRAS",
@@ -559,6 +562,7 @@ export default function JacksonPollockCalculator({
       coachName: coachNome,
       studentName: alunoNome,
       logo,
+      primary: PRIMARY,
     });
 
     doc.setTextColor(20, 20, 20);
@@ -581,7 +585,7 @@ export default function JacksonPollockCalculator({
       body: DOBRAS.map((d) => [d.label, dobras[d.key] || "—"]),
       theme: "striped",
       styles: { fontSize: 12, cellPadding: 3.5 },
-      headStyles: { fillColor: [20, 20, 20], textColor: 255, fontStyle: "bold", fontSize: 12.5 },
+      headStyles: { fillColor: PRIMARY, textColor: 255, fontStyle: "bold", fontSize: 12.5 },
       columnStyles: {
         0: { cellWidth: 90 },
         1: { cellWidth: "auto", halign: "right" },
@@ -601,7 +605,7 @@ export default function JacksonPollockCalculator({
       ],
       theme: "striped",
       styles: { fontSize: 12.5, cellPadding: 4 },
-      headStyles: { fillColor: [229, 9, 20], textColor: 255, fontStyle: "bold", fontSize: 13 },
+      headStyles: { fillColor: PRIMARY, textColor: 255, fontStyle: "bold", fontSize: 13 },
       columnStyles: {
         0: { cellWidth: 90, fontStyle: "bold" },
         1: { cellWidth: "auto", halign: "right" },
