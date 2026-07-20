@@ -1035,7 +1035,7 @@ const AdminMontarDieta = () => {
                       tenantId={tenant?.id}
                       alunoId={alunoId}
                       disabled={generating}
-                      onExtracted={(data) => {
+                      onExtracted={async (data) => {
                         const refs = Array.isArray(data?.refeicoes) ? data.refeicoes : [];
                         if (refs.length === 0) {
                           toast.error("Nenhuma refeição encontrada no arquivo.");
@@ -1043,7 +1043,7 @@ const AdminMontarDieta = () => {
                         }
                         setDietaId(null);
                         setIsPublished(false);
-                        setRefeicoes(refs.map((r: any, i: number) => {
+                        const novasRefeicoes = refs.map((r: any, i: number) => {
                           const itens = Array.isArray(r?.itens) ? r.itens : [];
                           const descricao = itens
                             .map((it: any) => {
@@ -1057,15 +1057,43 @@ const AdminMontarDieta = () => {
                             horario: r?.horario || "08:00:00",
                             descricao_ia: descricao,
                           };
-                        }));
+                        });
+                        setRefeicoes(novasRefeicoes);
                         const ma: any = data?.macros_alvo || {};
-                        if (data?.kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g) {
+                        const temMacros = data?.kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g;
+                        if (temMacros) {
                           setMacrosCalculados({
                             kcal: Math.round(data.kcal_alvo || 0),
                             proteina_g: Math.round(ma.proteina_g || 0),
                             carboidrato_g: Math.round(ma.carboidrato_g || 0),
                             lipideos_g: Math.round(ma.lipideos_g || 0),
                           });
+                        } else {
+                          // IA não devolveu macros — calcula a partir dos alimentos usando a tabela TACO
+                          const t = toast.loading("Calculando macros dos alimentos importados...");
+                          try {
+                            const { data: rec, error } = await supabase.functions.invoke("gerar-dieta", {
+                              body: {
+                                mode: "recalc",
+                                aluno_id: alunoId,
+                                refeicoes: novasRefeicoes.map((r) => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
+                              },
+                            });
+                            if (error) throw error;
+                            if (rec?.totais) {
+                              setMacrosCalculados({
+                                kcal: Math.round(rec.totais.kcal || 0),
+                                proteina_g: Math.round(rec.totais.proteina_g || 0),
+                                carboidrato_g: Math.round(rec.totais.carboidrato_g || 0),
+                                lipideos_g: Math.round(rec.totais.lipideos_g || 0),
+                              });
+                              toast.success("Macros calculados a partir dos alimentos.", { id: t });
+                            } else {
+                              toast.dismiss(t);
+                            }
+                          } catch (e: any) {
+                            toast.error("Não foi possível calcular macros: " + (e?.message || ""), { id: t });
+                          }
                         }
                         if (data?.objetivo) setPerfil((p) => ({ ...p, objetivo: data.objetivo }));
                       }}
