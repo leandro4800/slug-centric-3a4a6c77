@@ -53,6 +53,25 @@ const DOBRAS = [
 
 type DobraKey = (typeof DOBRAS)[number]["key"];
 
+type AiAnalysis = {
+  dobras: Record<DobraKey, string>;
+  peso: string;
+  idade: string;
+  sexo: Sexo | "";
+  foundCount: number;
+  textoLido?: string;
+};
+
+const createEmptyDobras = (): Record<DobraKey, string> => ({
+  peitoral: "",
+  axilarMedia: "",
+  triceps: "",
+  subescapular: "",
+  abdominal: "",
+  suprailiaca: "",
+  coxa: "",
+});
+
 const num = (v: string) => {
   const n = parseFloat(v.replace(",", "."));
   return Number.isFinite(n) ? n : 0;
@@ -80,6 +99,8 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
   const values: Partial<Record<DobraKey, string>> = {};
   let peso = "";
   let idade = "";
+  let sexo: Sexo | "" = "";
+  let textoLido = "";
 
   const expectedOrder: DobraKey[] = ["peitoral", "axilarMedia", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"];
   const foldAliases: Record<DobraKey, string[]> = {
@@ -138,6 +159,7 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
   const walk = (obj: unknown) => {
     if (!obj) return;
     if (typeof obj === "string") {
+      textoLido ||= obj.slice(0, 1200);
       const normalizedText = normalizeKey(obj);
       for (const [fold, aliases] of Object.entries(foldAliases) as [DobraKey, string[]][]) {
         if (values[fold]) continue;
@@ -202,7 +224,15 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
       const key = normalizeKey(rawKey);
       if (key === "peso" || key === "pesokg" || key === "weight") peso ||= normalizeNumberText(value);
       if (key === "idade" || key === "age") idade ||= normalizeNumberText(value);
-      if (["textolido", "texto", "ocr", "transcricao", "transcription", "rawtext", "conteudo", "content", "observacoes"].includes(key)) walk(String(value || ""));
+      if (key === "sexo" || key === "gender") {
+        const normalizedSex = String(value ?? "").trim().toUpperCase();
+        if (!sexo && normalizedSex.startsWith("F")) sexo = "F";
+        if (!sexo && normalizedSex.startsWith("M")) sexo = "M";
+      }
+      if (["textolido", "texto", "ocr", "transcricao", "transcription", "rawtext", "conteudo", "content", "observacoes"].includes(key)) {
+        textoLido ||= String(value || "").slice(0, 1200);
+        walk(String(value || ""));
+      }
       setFold(findFoldByLabel(rawKey), value);
       walk(value);
     }
@@ -220,7 +250,7 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
     coxa: values.coxa || current.coxa,
   };
 
-  return { next, peso, idade, foundCount: Object.keys(values).length };
+  return { next, peso, idade, sexo, foundCount: Object.keys(values).length, textoLido };
 };
 
 export default function JacksonPollockCalculator({
@@ -235,20 +265,13 @@ export default function JacksonPollockCalculator({
   alunoNomeInicial,
   onSaved,
 }: Props) {
-  const [dobras, setDobras] = useState<Record<DobraKey, string>>({
-    peitoral: "",
-    axilarMedia: "",
-    triceps: "",
-    subescapular: "",
-    abdominal: "",
-    suprailiaca: "",
-    coxa: "",
-  });
+  const [dobras, setDobras] = useState<Record<DobraKey, string>>(createEmptyDobras);
   const [idade, setIdade] = useState<string>(idadeInicial ? String(idadeInicial) : "");
   const [peso, setPeso] = useState<string>(pesoInicial ? String(pesoInicial) : "");
   const [sexo, setSexo] = useState<Sexo>(
     (sexoInicial?.toUpperCase().startsWith("F") ? "F" : "M") as Sexo,
   );
+  const [aiAnalysis, setAiAnalysis] = useState<AiAnalysis | null>(null);
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -257,6 +280,7 @@ export default function JacksonPollockCalculator({
     setIdade(idadeInicial ? String(idadeInicial) : "");
     setPeso(pesoInicial ? String(pesoInicial) : "");
     setSexo((sexoInicial?.toUpperCase().startsWith("F") ? "F" : "M") as Sexo);
+    setAiAnalysis(null);
   }, [alunoId, idadeInicial, pesoInicial, sexoInicial]);
 
   const calc = useMemo(() => {
@@ -340,15 +364,12 @@ export default function JacksonPollockCalculator({
       
       const ext = data?.extractedData || data?.data || data;
       if (ext && typeof ext === "object") {
-        const { next, peso: p, idade: i, foundCount } = extractSevenFolds(ext, dobras);
-        setDobras(next);
-        if (p) setPeso(p);
-        if (i) setIdade(i);
+        const { next, peso: p, idade: i, sexo: s, foundCount, textoLido } = extractSevenFolds(ext, createEmptyDobras());
+        setAiAnalysis({ dobras: next, peso: p, idade: i, sexo: s, foundCount, textoLido });
         if (foundCount === 0) {
-          toast.error("A IA não conseguiu ler valores em mm para: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca e Coxa.", { id: toastId });
+          toast.warning("Dr. IA analisou a foto, mas não identificou valores em mm suficientes.", { id: toastId });
         } else {
-          const labels = DOBRAS.filter((d) => next[d.key] && next[d.key] !== dobras[d.key]).map((d) => d.label).join(", ");
-          toast.success(`Campos preenchidos: ${labels || `${foundCount} dobra(s)`}.`, { id: toastId });
+          toast.success(`Dr. IA criou a análise com ${foundCount} dobra(s).`, { id: toastId });
         }
       } else {
         throw new Error("Não foi possível extrair dados do arquivo.");
@@ -359,6 +380,21 @@ export default function JacksonPollockCalculator({
     } finally {
       setImporting(false);
     }
+  };
+
+  const aplicarAnaliseIa = () => {
+    if (!aiAnalysis) return;
+    setDobras((prev) => {
+      const next = { ...prev };
+      DOBRAS.forEach((d) => {
+        if (aiAnalysis.dobras[d.key]) next[d.key] = aiAnalysis.dobras[d.key];
+      });
+      return next;
+    });
+    if (aiAnalysis.peso) setPeso(aiAnalysis.peso);
+    if (aiAnalysis.idade) setIdade(aiAnalysis.idade);
+    if (aiAnalysis.sexo) setSexo(aiAnalysis.sexo);
+    toast.success("Dados da IA aplicados nos campos manuais.");
   };
 
   const baixarPdf = async () => {
@@ -583,6 +619,76 @@ export default function JacksonPollockCalculator({
                 ))}
               </div>
             </section>
+
+            {aiAnalysis && (
+              <section className="space-y-4 border border-primary/30 bg-primary/5 p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                    <span className="w-1 h-4 bg-primary rounded-full" />
+                    DADOS DO ATLETA POR IA
+                  </h2>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={aplicarAnaliseIa}
+                    disabled={aiAnalysis.foundCount === 0}
+                    className="h-8 border-primary/40 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10"
+                  >
+                    Usar dados da IA
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Idade por IA</Label>
+                    <Input
+                      readOnly
+                      value={aiAnalysis.idade || "—"}
+                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Peso por IA</Label>
+                    <Input
+                      readOnly
+                      value={aiAnalysis.peso || "—"}
+                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Sexo por IA</Label>
+                    <Input
+                      readOnly
+                      value={aiAnalysis.sexo ? (aiAnalysis.sexo === "F" ? "Feminino" : "Masculino") : "—"}
+                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {DOBRAS.map((d) => (
+                    <div key={`ia-${d.key}`} className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-widest text-white/40 leading-none">{d.label}</Label>
+                      <Input
+                        readOnly
+                        value={aiAnalysis.dobras[d.key] || "—"}
+                        className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-primary"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {aiAnalysis.textoLido && (
+                  <div className="border-t border-white/10 pt-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Leitura da foto</p>
+                    <p className="max-h-24 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-white/50">
+                      {aiAnalysis.textoLido}
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
           </div>
 
           {/* Lateral: Resultados (Style Sidebar) */}
