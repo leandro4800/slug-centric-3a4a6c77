@@ -662,7 +662,7 @@ export default function JacksonPollockCalculator({
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <h2 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
                     <span className="w-1 h-4 bg-primary rounded-full" />
-                    DADOS DO ATLETA POR IA
+                    DADOS DAS 7 DOBRAS POR IA
                   </h2>
                   <Button
                     type="button"
@@ -672,35 +672,8 @@ export default function JacksonPollockCalculator({
                     disabled={aiAnalysis.foundCount === 0}
                     className="h-8 border-primary/40 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10"
                   >
-                    Usar dados da IA
+                    Usar dobras da IA
                   </Button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Idade por IA</Label>
-                    <Input
-                      readOnly
-                      value={aiAnalysis.idade || "—"}
-                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Peso por IA</Label>
-                    <Input
-                      readOnly
-                      value={aiAnalysis.peso || "—"}
-                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Sexo por IA</Label>
-                    <Input
-                      readOnly
-                      value={aiAnalysis.sexo ? (aiAnalysis.sexo === "F" ? "Feminino" : "Masculino") : "—"}
-                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
-                    />
-                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -715,6 +688,34 @@ export default function JacksonPollockCalculator({
                     </div>
                   ))}
                 </div>
+
+                <div className="grid grid-cols-2 gap-4 border-t border-white/10 pt-4">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Soma estimada</p>
+                    <p className="text-2xl font-display font-bold text-white tabular-nums">
+                      {aiProjection?.soma ? `${aiProjection.soma.toFixed(1)} mm` : "—"}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40">Gordura estimada</p>
+                    <p className="text-2xl font-display font-bold text-primary tabular-nums">
+                      {aiProjection?.bf ? `${aiProjection.bf.toFixed(1)}%` : "—"}
+                    </p>
+                  </div>
+                </div>
+
+                <p className="border-l-2 border-primary/50 pl-3 text-[11px] leading-relaxed text-white/55">
+                  <span className="font-bold text-white/70">Aviso: </span>
+                  {aiAnalysis.aviso || AI_ESTIMATE_WARNING}{" "}
+                  <a
+                    href={aiAnalysis.fonteUrl || JACKSON_POLLOCK_SOURCE_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary underline underline-offset-2 hover:text-primary/80"
+                  >
+                    Ver referência científica
+                  </a>
+                </p>
 
                 {aiAnalysis.textoLido && (
                   <div className="border-t border-white/10 pt-3">
