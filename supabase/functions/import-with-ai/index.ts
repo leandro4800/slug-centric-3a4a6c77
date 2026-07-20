@@ -50,6 +50,11 @@ const numberFromUnknown = (value: unknown) => {
   return Number.isFinite(n) && n >= 2 && n <= 80 ? n : null;
 };
 
+const numberListFromText = (text: string) =>
+  [...String(text || "").replace(/,/g, ".").matchAll(/\b\d{1,3}(?:\.\d+)?\b/g)]
+    .map((m) => Number(m[0]))
+    .filter((n) => Number.isFinite(n) && n >= 2 && n <= 80);
+
 const FOLD_ALIASES: Record<SevenFoldKey, string[]> = {
   peitoral: ["peitoral", "dobra peitoral", "chest", "pectoral", "pectoralis", "torax", "tórax", "pt", "peit"],
   axilar_media: ["axilar media", "axilar média", "axilar medial", "axilarmedia", "midaxillary", "axilar", "ax", "am"],
@@ -89,35 +94,49 @@ export const normalizeSevenFoldResult = (...sources: any[]) => {
   let idade: number | null = null;
   let sexo: string | null = null;
 
-  const setFold = (key: SevenFoldKey | null, value: unknown, label?: unknown) => {
-    if (!key || dobras[key] !== null) return;
+  const setFold = (key: SevenFoldKey | null, value: unknown, label?: unknown, force = false) => {
+    if (!key || (dobras[key] !== null && !force)) return;
     const n = numberFromUnknown(value);
     if (n === null) return;
     dobras[key] = n;
     if (label) campos.add(String(label));
   };
 
-  const fillByOrder = (values: unknown[]) => {
+  const fillByOrder = (values: unknown[], force = false) => {
     const nums = values.map(numberFromUnknown).filter((n): n is number => n !== null);
-    if (nums.length >= 7) SEVEN_FOLD_KEYS.forEach((key, index) => setFold(key, nums[index], "ordem Jackson & Pollock"));
+    if (nums.length >= 7) SEVEN_FOLD_KEYS.forEach((key, index) => setFold(key, nums[index], "ordem Jackson & Pollock", force));
   };
 
   const parseText = (text: string) => {
     if (!text.trim()) return;
     textParts.push(text.slice(0, 1500));
     const lines = text.split(/\n|;|\|/).map((line) => line.trim()).filter(Boolean);
+    const normalizedWholeText = normalizeToken(text);
+    const mentionedInText = SEVEN_FOLD_KEYS.filter((key) => FOLD_ALIASES[key].some((alias) => normalizedWholeText.includes(normalizeToken(alias)))).length;
+
+    if (mentionedInText >= 6) {
+      const allNumbers = numberListFromText(text);
+      if (allNumbers.length >= 7) fillByOrder(allNumbers, true);
+    }
+
     for (const line of lines) {
+      const normalizedLine = normalizeToken(line);
+      const mentionedInLine = SEVEN_FOLD_KEYS.filter((key) => FOLD_ALIASES[key].some((alias) => normalizedLine.includes(normalizeToken(alias)))).length;
+      const lineNumbers = numberListFromText(line);
+      if (mentionedInLine >= 6 && lineNumbers.length >= 7) fillByOrder(lineNumbers, true);
+
       for (const key of SEVEN_FOLD_KEYS) {
         if (dobras[key] !== null) continue;
         for (const alias of FOLD_ALIASES[key]) {
-          const rx = new RegExp(`${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*")}[^0-9]{0,80}(\\d{1,3}(?:[,.]\\d+)?)`, "i");
-          const match = line.match(rx);
+          const escapedAlias = alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*");
+          const rx = new RegExp(`${escapedAlias}[^0-9]{0,80}(\\d{1,3}(?:[,.]\\d+)?)`, "i");
+          const reverseRx = new RegExp(`(\\d{1,3}(?:[,.]\\d+)?)[^a-zA-ZÀ-ÿ0-9]{0,20}${escapedAlias}`, "i");
+          const match = line.match(rx) || line.match(reverseRx);
           if (match?.[1]) setFold(key, match[1], alias);
         }
       }
     }
-    const mentioned = SEVEN_FOLD_KEYS.filter((key) => FOLD_ALIASES[key].some((alias) => normalizeToken(text).includes(normalizeToken(alias)))).length;
-    if (mentioned >= 4) fillByOrder([...text.matchAll(/\b\d{1,3}(?:[,.]\d+)?\b/g)].map((m) => m[0]));
+    if (mentionedInText >= 4) fillByOrder(numberListFromText(text));
   };
 
   const walk = (obj: unknown) => {
