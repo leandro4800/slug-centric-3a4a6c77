@@ -607,6 +607,7 @@ const AdminMontarDieta = () => {
     }
 
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo?.replace(/\s*\(avulso\)$/i, "") || "";
+    const PRIMARY = getTenantPrimaryRgb(tenant);
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
