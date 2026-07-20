@@ -72,7 +72,7 @@ const findSevenFoldKey = (label: unknown): SevenFoldKey | null => {
   return null;
 };
 
-const normalizeSevenFoldResult = (...sources: any[]) => {
+export const normalizeSevenFoldResult = (...sources: any[]) => {
   const dobras: Record<SevenFoldKey, number | null> = {
     peitoral: null,
     axilar_media: null,
@@ -155,9 +155,9 @@ const normalizeSevenFoldResult = (...sources: any[]) => {
   return { peso, altura, idade, sexo, dobras, campos_encontrados: [...campos], texto_lido: textParts.join("\n").slice(0, 3000) };
 };
 
-const hasSevenFoldValues = (result: any) => Object.values(normalizeSevenFoldResult(result).dobras).some((value) => value !== null);
+export const hasSevenFoldValues = (result: any) => Object.values(normalizeSevenFoldResult(result).dobras).some((value) => value !== null);
 
-const mergeSevenFoldResult = (...sources: any[]) => {
+export const mergeSevenFoldResult = (...sources: any[]) => {
   const normalized = normalizeSevenFoldResult(...sources);
   const first = sources.find(Boolean) || {};
   return {
