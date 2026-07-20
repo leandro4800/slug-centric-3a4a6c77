@@ -1726,12 +1726,49 @@ const AdminMontarTreino = () => {
               <div className="text-xs text-muted-foreground mb-3">
                 {perfilLoading ? "Carregando dados reais do aluno..." : <>Divisão final: <strong className="text-foreground">{divisoes.join(" · ")}</strong></>}
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <Button onClick={() => salvarPerfil()} variant="outline">Salvar perfil</Button>
                 <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating || perfilLoading} variant="outline">
                   {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
                   {perfilLoading ? "Aguardando perfil" : "Gerar e revisar"}
                 </Button>
+                <ImportPlanoIA
+                  tipo="treino"
+                  tenantId={tenant?.id}
+                  alunoId={alunoId}
+                  disabled={generating || perfilLoading}
+                  onExtracted={(data) => {
+                    const dias = Array.isArray(data?.dias) ? data.dias : [];
+                    if (dias.length === 0) {
+                      toast.error("Nenhum treino encontrado no arquivo.");
+                      return;
+                    }
+                    const novos: ExercicioPrescrito[] = [];
+                    const labels: string[] = [];
+                    dias.forEach((d: any) => {
+                      const label = (d?.dia || "").toString().trim() || `Dia ${labels.length + 1}`;
+                      if (!labels.includes(label)) labels.push(label);
+                      const exs = Array.isArray(d?.exercicios) ? d.exercicios : [];
+                      exs.forEach((ex: any, idx: number) => {
+                        novos.push({
+                          dia_semana: label,
+                          ordem: idx,
+                          exercicio: ex?.nome || "",
+                          series: (ex?.series ?? "3").toString(),
+                          repeticoes: (ex?.repeticoes ?? "10-12").toString(),
+                          cadencia: ex?.cadencia || "",
+                          detalhes_execucao: ex?.detalhes_execucao || "",
+                          observacao: ex?.observacao || "",
+                        });
+                      });
+                    });
+                    setDivisaoCustom(labels);
+                    setDivisaoSelecionadaId("custom-editar");
+                    setExercicios(novos);
+                    setPendingReview(true);
+                    if (data?.cardio) setCardio(String(data.cardio));
+                  }}
+                />
               </div>
             </div>
 
