@@ -58,6 +58,108 @@ const num = (v: string) => {
   return Number.isFinite(n) ? n : 0;
 };
 
+const normalizeKey = (value: string) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+const normalizeNumberText = (value: unknown) => {
+  if (value === undefined || value === null) return "";
+  if (typeof value === "number") return Number.isFinite(value) && value > 0 ? String(value) : "";
+  const text = String(value).trim();
+  if (!text) return "";
+  const match = text.match(/\d+(?:[,.]\d+)?/);
+  return match ? match[0].replace(",", ".") : "";
+};
+
+const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) => {
+  const values: Partial<Record<DobraKey, string>> = {};
+  let peso = "";
+  let idade = "";
+
+  const foldAliases: Record<DobraKey, string[]> = {
+    peitoral: ["peitoral", "dobra peitoral", "chest", "pectoralis"],
+    axilarMedia: ["axilar media", "axilar média", "axilar medial", "axilarmedia", "midaxillary"],
+    triceps: ["triceps", "tríceps", "tricep"],
+    subescapular: ["subescapular", "sub scapular", "subscapular"],
+    abdominal: ["abdominal", "abdomen", "abdômen", "dobra abdominal"],
+    suprailiaca: ["suprailiaca", "suprailíaca", "supra iliaca", "supra-ilíaca", "suprailiac"],
+    coxa: ["coxa", "thigh", "coxa medial", "coxa media"],
+  };
+
+  const aliasToFold = new Map<string, DobraKey>();
+  for (const [fold, aliases] of Object.entries(foldAliases) as [DobraKey, string[]][]) {
+    aliases.forEach((alias) => aliasToFold.set(normalizeKey(alias), fold));
+  }
+
+  const findFoldByLabel = (label: unknown) => {
+    const normalized = normalizeKey(String(label ?? ""));
+    if (!normalized) return null;
+    for (const [alias, fold] of aliasToFold.entries()) {
+      if (normalized === alias || normalized.includes(alias) || alias.includes(normalized)) return fold;
+    }
+    return null;
+  };
+
+  const setFold = (key: DobraKey | null, value: unknown) => {
+    if (!key || values[key]) return;
+    const parsed = normalizeNumberText(value);
+    if (parsed && num(parsed) > 0) values[key] = parsed;
+  };
+
+  const walk = (obj: unknown) => {
+    if (!obj) return;
+    if (typeof obj === "string") {
+      for (const [fold, aliases] of Object.entries(foldAliases) as [DobraKey, string[]][]) {
+        if (values[fold]) continue;
+        for (const alias of aliases) {
+          const rx = new RegExp(`${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*")}\\D{0,24}(\\d+(?:[,.]\\d+)?)`, "i");
+          const match = obj.match(rx);
+          if (match?.[1]) {
+            setFold(fold, match[1]);
+            break;
+          }
+        }
+      }
+      return;
+    }
+    if (Array.isArray(obj)) {
+      obj.forEach(walk);
+      return;
+    }
+    if (typeof obj !== "object") return;
+
+    const entries = Object.entries(obj as Record<string, unknown>);
+    const labelEntry = entries.find(([k]) => ["nome", "name", "label", "dobra", "medida", "campo", "tipo"].includes(normalizeKey(k)));
+    const valueEntry = entries.find(([k]) => ["valor", "value", "mm", "valor mm", "valor_mm", "medicao", "medição", "resultado"].includes(normalizeKey(k)));
+    if (labelEntry && valueEntry) setFold(findFoldByLabel(labelEntry[1]), valueEntry[1]);
+
+    for (const [rawKey, value] of entries) {
+      const key = normalizeKey(rawKey);
+      if (key === "peso" || key === "pesokg" || key === "weight") peso ||= normalizeNumberText(value);
+      if (key === "idade" || key === "age") idade ||= normalizeNumberText(value);
+      setFold(findFoldByLabel(rawKey), value);
+      walk(value);
+    }
+  };
+
+  walk(payload);
+
+  const next: Record<DobraKey, string> = {
+    peitoral: values.peitoral || current.peitoral,
+    axilarMedia: values.axilarMedia || current.axilarMedia,
+    triceps: values.triceps || current.triceps,
+    subescapular: values.subescapular || current.subescapular,
+    abdominal: values.abdominal || current.abdominal,
+    suprailiaca: values.suprailiaca || current.suprailiaca,
+    coxa: values.coxa || current.coxa,
+  };
+
+  return { next, peso, idade, foundCount: Object.keys(values).length };
+};
+
 export default function JacksonPollockCalculator({
   open,
   onOpenChange,
@@ -176,42 +278,14 @@ export default function JacksonPollockCalculator({
       const ext = data?.extractedData || data?.data || data;
       console.log("[7dobras] extracted:", ext);
       if (ext && typeof ext === "object") {
-        // Coleta todos os valores numéricos em qualquer nível do objeto por nome de chave
-        const flat: Record<string, any> = {};
-        const walk = (obj: any) => {
-          if (!obj || typeof obj !== "object") return;
-          for (const [k, v] of Object.entries(obj)) {
-            if (v && typeof v === "object" && !Array.isArray(v)) walk(v);
-            else if (flat[k] === undefined) flat[k] = v;
-          }
-        };
-        walk(ext);
-        const pickKey = (...keys: string[]) => {
-          for (const k of keys) {
-            const v = flat[k];
-            if (v !== undefined && v !== null && v !== "") return String(v);
-          }
-          return "";
-        };
-        const next = {
-          peitoral: pickKey("peitoral", "peitoral_mm", "chest") || dobras.peitoral,
-          axilarMedia: pickKey("axilar_media", "axilarMedia", "axilar", "midaxillary") || dobras.axilarMedia,
-          triceps: pickKey("triceps", "tríceps", "tricep") || dobras.triceps,
-          subescapular: pickKey("subescapular", "subscapular") || dobras.subescapular,
-          abdominal: pickKey("abdominal", "abdomen", "abdômen") || dobras.abdominal,
-          suprailiaca: pickKey("suprailiaca", "supra_iliaca", "suprailíaca", "suprailiac") || dobras.suprailiaca,
-          coxa: pickKey("coxa", "thigh") || dobras.coxa,
-        };
+        const { next, peso: p, idade: i, foundCount } = extractSevenFolds(ext, dobras);
         setDobras(next);
-        const p = pickKey("peso", "peso_kg", "weight");
         if (p) setPeso(p);
-        const i = pickKey("idade", "age");
         if (i) setIdade(i);
-        const preenchidas = Object.values(next).filter((v) => v && v !== "").length;
-        if (preenchidas === 0) {
+        if (foundCount === 0) {
           toast.error("A IA não conseguiu identificar valores das dobras nesta imagem/arquivo.", { id: toastId });
         } else {
-          toast.success(`${preenchidas} dobra(s) preenchida(s) pela IA.`, { id: toastId });
+          toast.success(`${foundCount} dobra(s) preenchida(s) pela IA.`, { id: toastId });
         }
       } else {
         throw new Error("Não foi possível extrair dados do arquivo.");
