@@ -116,14 +116,19 @@ export const normalizeSevenFoldResult = (...sources: any[]) => {
 
     if (mentionedInText >= 6) {
       const allNumbers = numberListFromText(text);
-      if (allNumbers.length >= 7) fillByOrder(allNumbers, true);
+      if (allNumbers.length === 7) fillByOrder(allNumbers, true);
     }
 
-    for (const line of lines) {
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+      const line = lines[lineIndex];
       const normalizedLine = normalizeToken(line);
       const mentionedInLine = SEVEN_FOLD_KEYS.filter((key) => FOLD_ALIASES[key].some((alias) => normalizedLine.includes(normalizeToken(alias)))).length;
       const lineNumbers = numberListFromText(line);
       if (mentionedInLine >= 6 && lineNumbers.length >= 7) fillByOrder(lineNumbers, true);
+      if (mentionedInLine >= 6 && lineNumbers.length === 0) {
+        const followingNumbers = numberListFromText([lines[lineIndex + 1], lines[lineIndex + 2]].filter(Boolean).join(" "));
+        if (followingNumbers.length >= 7) fillByOrder(followingNumbers, true);
+      }
 
       for (const key of SEVEN_FOLD_KEYS) {
         if (dobras[key] !== null) continue;
