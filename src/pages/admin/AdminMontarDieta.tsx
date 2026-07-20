@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
+import { loadImageDataUrl, renderPdfHeader, getTenantPrimaryRgb } from "@/lib/pdf-branding";
 import imgBreakfast from "@/assets/meal-breakfast.jpg";
 import imgLunch from "@/assets/meal-lunch.jpg";
 import imgSnack from "@/assets/meal-snack.jpg";

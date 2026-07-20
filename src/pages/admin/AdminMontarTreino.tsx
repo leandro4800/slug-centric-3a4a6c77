@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
+import { loadImageDataUrl, renderPdfHeader, getTenantPrimaryRgb } from "@/lib/pdf-branding";
 import { extractYouTubeId } from "@/lib/utils";
 import platformLogo from "@/assets/alphacoach-logo.jpeg";
 
