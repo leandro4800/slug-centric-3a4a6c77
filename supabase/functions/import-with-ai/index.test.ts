@@ -49,3 +49,36 @@ Deno.test("normaliza 7 dobras quando a IA retorna linhas de tabela", () => {
     coxa: 20,
   });
 });
+
+Deno.test("normaliza 7 dobras quando OCR separa cabeçalho e valores", () => {
+  const normalized = normalizeSevenFoldResult({
+    texto_lido: `PEITORAL AXILAR MÉDIA TRÍCEPS SUBESCAPULAR ABDOMINAL SUPRAILÍACA COXA
+8 10 14 12 18 11 20`,
+  });
+
+  assertEquals(normalized.dobras, {
+    peitoral: 8,
+    axilar_media: 10,
+    triceps: 14,
+    subescapular: 12,
+    abdominal: 18,
+    suprailiaca: 11,
+    coxa: 20,
+  });
+});
+
+Deno.test("normaliza 7 dobras quando valor vem antes do rótulo", () => {
+  const normalized = normalizeSevenFoldResult({
+    texto_lido: "8 Peitoral; 10 Axilar Média; 14 Tríceps; 12 Subescapular; 18 Abdominal; 11 Suprailíaca; 20 Coxa",
+  });
+
+  assertEquals(normalized.dobras, {
+    peitoral: 8,
+    axilar_media: 10,
+    triceps: 14,
+    subescapular: 12,
+    abdominal: 18,
+    suprailiaca: 11,
+    coxa: 20,
+  });
+});
