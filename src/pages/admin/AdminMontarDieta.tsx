@@ -13,7 +13,7 @@ import { toast } from "sonner";
 import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
+import { loadImageDataUrl, renderPdfHeader, getTenantPrimaryRgb } from "@/lib/pdf-branding";
 import imgBreakfast from "@/assets/meal-breakfast.jpg";
 import imgLunch from "@/assets/meal-lunch.jpg";
 import imgSnack from "@/assets/meal-snack.jpg";
@@ -607,6 +607,7 @@ const AdminMontarDieta = () => {
     }
 
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo?.replace(/\s*\(avulso\)$/i, "") || "";
+    const PRIMARY = getTenantPrimaryRgb(tenant);
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
@@ -622,7 +623,7 @@ const AdminMontarDieta = () => {
     // ==== HERO NETFLIX ====
     const logo = await loadImageDataUrl(tenant?.logo_url);
     // Faixa vermelha vertical à esquerda (marca Netflix-style)
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(0, 0, 4, pageH, "F");
 
     // Logo
@@ -639,7 +640,7 @@ const AdminMontarDieta = () => {
     }
 
     // Tag "ORIGINAL SERIES" style
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(heroX, 10, 34, 5, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
@@ -658,7 +659,7 @@ const AdminMontarDieta = () => {
     doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 32);
 
     // Barra atleta/coach
-    doc.setDrawColor(229, 9, 20);
+    doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.setLineWidth(0.4);
     doc.line(heroX, 36, pageW - 12, 36);
 
@@ -713,7 +714,7 @@ const AdminMontarDieta = () => {
         doc.setFillColor(20, 20, 20);
         doc.setDrawColor(60, 60, 60);
         doc.roundedRect(bx, y, boxW, 14, 1.5, 1.5, "FD");
-        doc.setFillColor(229, 9, 20);
+        doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
         doc.rect(bx, y, 1.5, 14, "F");
         doc.setTextColor(160, 160, 160);
         doc.setFont("helvetica", "bold");
@@ -727,7 +728,7 @@ const AdminMontarDieta = () => {
     }
 
     // Seção label
-    doc.setTextColor(229, 9, 20);
+    doc.setTextColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.text("REFEIÇÕES DO DIA", 12, y);
@@ -823,7 +824,7 @@ const AdminMontarDieta = () => {
       } catch {}
 
       // Faixa vermelha lateral (marca Netflix)
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(cx, cy, 2, bannerH, "F");
 
       // EP nº e horário
@@ -861,7 +862,7 @@ const AdminMontarDieta = () => {
           doc.setLineWidth(0.15);
           doc.line(bx, my + 1, bx, my + macrosH - 1);
         }
-        doc.setTextColor(229, 9, 20);
+        doc.setTextColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(5.5);
         doc.text(cell.l, bx + cellW / 2, my + 2.6, { align: "center" });
@@ -884,7 +885,7 @@ const AdminMontarDieta = () => {
     });
 
     // ==== RODAPÉ NETFLIX com logo plataforma ====
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(0, pageH - 10, pageW, 10, "F");
     // Logo plataforma à esquerda
     if (platLogo) {
@@ -1034,7 +1035,7 @@ const AdminMontarDieta = () => {
                       tenantId={tenant?.id}
                       alunoId={alunoId}
                       disabled={generating}
-                      onExtracted={(data) => {
+                      onExtracted={async (data) => {
                         const refs = Array.isArray(data?.refeicoes) ? data.refeicoes : [];
                         if (refs.length === 0) {
                           toast.error("Nenhuma refeição encontrada no arquivo.");
@@ -1042,7 +1043,7 @@ const AdminMontarDieta = () => {
                         }
                         setDietaId(null);
                         setIsPublished(false);
-                        setRefeicoes(refs.map((r: any, i: number) => {
+                        const novasRefeicoes = refs.map((r: any, i: number) => {
                           const itens = Array.isArray(r?.itens) ? r.itens : [];
                           const descricao = itens
                             .map((it: any) => {
@@ -1056,15 +1057,43 @@ const AdminMontarDieta = () => {
                             horario: r?.horario || "08:00:00",
                             descricao_ia: descricao,
                           };
-                        }));
+                        });
+                        setRefeicoes(novasRefeicoes);
                         const ma: any = data?.macros_alvo || {};
-                        if (data?.kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g) {
+                        const temMacros = data?.kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g;
+                        if (temMacros) {
                           setMacrosCalculados({
                             kcal: Math.round(data.kcal_alvo || 0),
                             proteina_g: Math.round(ma.proteina_g || 0),
                             carboidrato_g: Math.round(ma.carboidrato_g || 0),
                             lipideos_g: Math.round(ma.lipideos_g || 0),
                           });
+                        } else {
+                          // IA não devolveu macros — calcula a partir dos alimentos usando a tabela TACO
+                          const t = toast.loading("Calculando macros dos alimentos importados...");
+                          try {
+                            const { data: rec, error } = await supabase.functions.invoke("gerar-dieta", {
+                              body: {
+                                mode: "recalc",
+                                aluno_id: alunoId,
+                                refeicoes: novasRefeicoes.map((r) => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
+                              },
+                            });
+                            if (error) throw error;
+                            if (rec?.totais) {
+                              setMacrosCalculados({
+                                kcal: Math.round(rec.totais.kcal || 0),
+                                proteina_g: Math.round(rec.totais.proteina_g || 0),
+                                carboidrato_g: Math.round(rec.totais.carboidrato_g || 0),
+                                lipideos_g: Math.round(rec.totais.lipideos_g || 0),
+                              });
+                              toast.success("Macros calculados a partir dos alimentos.", { id: t });
+                            } else {
+                              toast.dismiss(t);
+                            }
+                          } catch (e: any) {
+                            toast.error("Não foi possível calcular macros: " + (e?.message || ""), { id: t });
+                          }
                         }
                         if (data?.objetivo) setPerfil((p) => ({ ...p, objetivo: data.objetivo }));
                       }}

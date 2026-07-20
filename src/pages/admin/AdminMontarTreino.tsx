@@ -14,7 +14,7 @@ import { toast } from "sonner";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { loadImageDataUrl, renderPdfHeader } from "@/lib/pdf-branding";
+import { loadImageDataUrl, renderPdfHeader, getTenantPrimaryRgb } from "@/lib/pdf-branding";
 import { extractYouTubeId } from "@/lib/utils";
 import platformLogo from "@/assets/alphacoach-logo.jpeg";
 
@@ -650,6 +650,7 @@ const AdminMontarTreino = () => {
       toast.error("Gere ou adicione exercícios antes de baixar a planilha.");
       return;
     }
+    const PRIMARY = getTenantPrimaryRgb(tenant);
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageHTotal = doc.internal.pageSize.getHeight();
@@ -663,7 +664,7 @@ const AdminMontarTreino = () => {
       doc.setFillColor(255, 255, 255);
       doc.rect(0, 0, pageW, pageHTotal, "F");
       // Faixa vermelha vertical (marca)
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(0, 0, 4, pageHTotal, "F");
     };
     paintPageBackground();
@@ -685,7 +686,7 @@ const AdminMontarTreino = () => {
       } catch {}
     }
     // Tag "UM ORIGINAL ALPHA COACH"
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(heroX, 8, 34, 5, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
@@ -702,7 +703,7 @@ const AdminMontarTreino = () => {
     doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 30);
 
     // Linha divisor + atleta / coach
-    doc.setDrawColor(229, 9, 20);
+    doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.setLineWidth(0.4);
     doc.line(heroX, 33, pageW - 12, 33);
     doc.setTextColor(255, 255, 255);
@@ -730,7 +731,7 @@ const AdminMontarTreino = () => {
       pills.forEach((p) => {
         const w = doc.getTextWidth(p) + 8;
         doc.setFillColor(20, 20, 20);
-        doc.setDrawColor(229, 9, 20);
+        doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
         doc.setLineWidth(0.3);
         doc.roundedRect(px, y, w, 6.5, 1.5, 1.5, "FD");
         doc.setTextColor(255, 255, 255);
@@ -843,10 +844,10 @@ const AdminMontarTreino = () => {
       doc.setFillColor(15, 15, 15);
       doc.rect(14, y, pageW - 28, bannerH, "F");
       // Faixa vermelha lateral
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(14, y, 2.5, bannerH, "F");
       // EP tag
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.roundedRect(19, y + 3, 14, 5.5, 1, 1, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
@@ -890,7 +891,7 @@ const AdminMontarTreino = () => {
         },
         alternateRowStyles: { fillColor: [245, 245, 245] },
         headStyles: {
-          fillColor: [229, 9, 20],
+          fillColor: [PRIMARY[0], PRIMARY[1], PRIMARY[2]],
           textColor: 255,
           fontStyle: "bold",
           fontSize: 10.5,
@@ -899,7 +900,7 @@ const AdminMontarTreino = () => {
         },
         columnStyles: {
           0: { cellWidth: "auto", fontStyle: "bold", textColor: [15, 15, 15] },
-          1: { cellWidth: 32, halign: "center", fontStyle: "bold", textColor: [229, 9, 20] },
+          1: { cellWidth: 32, halign: "center", fontStyle: "bold", textColor: [PRIMARY[0], PRIMARY[1], PRIMARY[2]] },
           2: { cellWidth: 22, halign: "center", textColor: [40, 40, 40] },
           3: { cellWidth: 26, halign: "center" },
         },
@@ -914,7 +915,7 @@ const AdminMontarTreino = () => {
           if (data.section === "body" && data.column.index === 3) {
             const url = rowLinks[data.row.index];
             if (url) {
-              doc.setFillColor(229, 9, 20);
+              doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
               doc.roundedRect(data.cell.x + 1, data.cell.y + 1.2, data.cell.width - 2, data.cell.height - 2.4, 1.4, 1.4, "F");
               doc.setTextColor(255, 255, 255);
               doc.setFont("helvetica", "bold");
@@ -941,11 +942,11 @@ const AdminMontarTreino = () => {
     doc.setDrawColor(220, 220, 220);
     doc.setLineWidth(0.2);
     doc.roundedRect(14, y - 4, pageW - 28, 12, 1.5, 1.5, "FD");
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(14, y - 4, 2, 12, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.setTextColor(229, 9, 20);
+    doc.setTextColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.text("LEGENDA", 19, y + 1);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(25, 25, 25);
@@ -958,11 +959,11 @@ const AdminMontarTreino = () => {
       doc.setFillColor(250, 250, 250);
       doc.setDrawColor(220, 220, 220);
       doc.roundedRect(14, y, pageW - 28, 18, 1.5, 1.5, "FD");
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(14, y, 2, 18, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
-      doc.setTextColor(229, 9, 20);
+      doc.setTextColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.text("CARDIO SUGERIDO", 19, y + 5);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10.5);
@@ -978,7 +979,7 @@ const AdminMontarTreino = () => {
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       // Faixa vermelha
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(0, pageH - 12, pageW, 12, "F");
       // Logo plataforma à esquerda
       if (platLogo) {
@@ -1014,6 +1015,7 @@ const AdminMontarTreino = () => {
       toast.error("Gere ou adicione exercícios antes de baixar a planilha.");
       return;
     }
+    const PRIMARY = getTenantPrimaryRgb(tenant);
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageHTotal = doc.internal.pageSize.getHeight();
@@ -1026,7 +1028,7 @@ const AdminMontarTreino = () => {
     const paintDarkBg = () => {
       doc.setFillColor(8, 8, 10);
       doc.rect(0, 0, pageW, pageHTotal, "F");
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(0, 0, 4, pageHTotal, "F");
     };
     paintDarkBg();
@@ -1037,7 +1039,7 @@ const AdminMontarTreino = () => {
     doc.setFillColor(20, 20, 24);
     doc.rect(4, 0, pageW - 4, heroH, "F");
     // Linha vermelha embaixo do hero
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(4, heroH, pageW - 4, 0.6, "F");
 
     let heroX = 12;
@@ -1052,7 +1054,7 @@ const AdminMontarTreino = () => {
       } catch {}
     }
     // Tag ORIGINAL
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(heroX, 8, 34, 5, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
@@ -1068,7 +1070,7 @@ const AdminMontarTreino = () => {
     doc.setTextColor(200, 200, 200);
     doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 30);
 
-    doc.setDrawColor(229, 9, 20);
+    doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.setLineWidth(0.4);
     doc.line(heroX, 33, pageW - 12, 33);
     doc.setTextColor(255, 255, 255);
@@ -1096,7 +1098,7 @@ const AdminMontarTreino = () => {
       pills.forEach((p) => {
         const w = doc.getTextWidth(p) + 8;
         doc.setFillColor(24, 24, 28);
-        doc.setDrawColor(229, 9, 20);
+        doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
         doc.setLineWidth(0.3);
         doc.roundedRect(px, y, w, 6.5, 1.5, 1.5, "FD");
         doc.setTextColor(255, 255, 255);
@@ -1187,9 +1189,9 @@ const AdminMontarTreino = () => {
       const bannerH = obsGrupo ? 20 : 14;
       doc.setFillColor(22, 22, 26);
       doc.rect(14, y, pageW - 28, bannerH, "F");
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(14, y, 2.5, bannerH, "F");
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.roundedRect(19, y + 3, 14, 5.5, 1, 1, "F");
       doc.setTextColor(255, 255, 255);
       doc.setFont("helvetica", "bold");
@@ -1231,7 +1233,7 @@ const AdminMontarTreino = () => {
         },
         alternateRowStyles: { fillColor: [30, 30, 34] },
         headStyles: {
-          fillColor: [229, 9, 20],
+          fillColor: [PRIMARY[0], PRIMARY[1], PRIMARY[2]],
           textColor: 255,
           fontStyle: "bold",
           fontSize: 10.5,
@@ -1240,7 +1242,7 @@ const AdminMontarTreino = () => {
         },
         columnStyles: {
           0: { cellWidth: "auto", fontStyle: "bold", textColor: [255, 255, 255] },
-          1: { cellWidth: 32, halign: "center", fontStyle: "bold", textColor: [229, 9, 20] },
+          1: { cellWidth: 32, halign: "center", fontStyle: "bold", textColor: [PRIMARY[0], PRIMARY[1], PRIMARY[2]] },
           2: { cellWidth: 22, halign: "center", textColor: [230, 230, 230] },
           3: { cellWidth: 26, halign: "center" },
         },
@@ -1253,7 +1255,7 @@ const AdminMontarTreino = () => {
           if (data.section === "body" && data.column.index === 3) {
             const url = rowLinks[data.row.index];
             if (url) {
-              doc.setFillColor(229, 9, 20);
+              doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
               doc.roundedRect(data.cell.x + 1, data.cell.y + 1.2, data.cell.width - 2, data.cell.height - 2.4, 1.4, 1.4, "F");
               doc.setTextColor(255, 255, 255);
               doc.setFont("helvetica", "bold");
@@ -1280,11 +1282,11 @@ const AdminMontarTreino = () => {
     doc.setDrawColor(50, 50, 54);
     doc.setLineWidth(0.2);
     doc.roundedRect(14, y - 4, pageW - 28, 12, 1.5, 1.5, "FD");
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(14, y - 4, 2, 12, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.setTextColor(229, 9, 20);
+    doc.setTextColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.text("LEGENDA", 19, y + 1);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(240, 240, 240);
@@ -1297,11 +1299,11 @@ const AdminMontarTreino = () => {
       doc.setFillColor(22, 22, 26);
       doc.setDrawColor(50, 50, 54);
       doc.roundedRect(14, y, pageW - 28, 18, 1.5, 1.5, "FD");
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(14, y, 2, 18, "F");
       doc.setFont("helvetica", "bold");
       doc.setFontSize(9);
-      doc.setTextColor(229, 9, 20);
+      doc.setTextColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.text("CARDIO SUGERIDO", 19, y + 5);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10.5);
@@ -1316,7 +1318,7 @@ const AdminMontarTreino = () => {
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(0, pageH - 12, pageW, 12, "F");
       if (platLogo) {
         try {
