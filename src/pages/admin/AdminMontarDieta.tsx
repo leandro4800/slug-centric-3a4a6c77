@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Sparkles, Save, Apple, Trash2, Plus, Mic, MicOff, Send, Calculator, FileDown } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
+import { ImportPlanoIA } from "@/components/admin/ImportPlanoIA";
 import { toast } from "sonner";
 import { toNivelCanonico, toNivelEdgeKey } from "@/lib/nivel-experiencia";
 import jsPDF from "jspdf";
@@ -1019,7 +1020,7 @@ const AdminMontarDieta = () => {
                     </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button 
                       className="flex-1 h-12 bg-red-600 hover:bg-red-700 text-white font-bold uppercase tracking-widest transition-all duration-300 rounded-xl shadow-[0_0_20px_rgba(220,38,38,0.2)]"
                       onClick={() => gerarComIA()}
@@ -1028,6 +1029,46 @@ const AdminMontarDieta = () => {
                       {generating ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : <Sparkles className="h-5 w-5 mr-2" />}
                       {refeicoes.length > 0 ? "Refazer com IA" : "Gerar com IA"}
                     </Button>
+                    <ImportPlanoIA
+                      tipo="dieta"
+                      tenantId={tenant?.id}
+                      alunoId={alunoId}
+                      disabled={generating}
+                      onExtracted={(data) => {
+                        const refs = Array.isArray(data?.refeicoes) ? data.refeicoes : [];
+                        if (refs.length === 0) {
+                          toast.error("Nenhuma refeição encontrada no arquivo.");
+                          return;
+                        }
+                        setDietaId(null);
+                        setIsPublished(false);
+                        setRefeicoes(refs.map((r: any, i: number) => {
+                          const itens = Array.isArray(r?.itens) ? r.itens : [];
+                          const descricao = itens
+                            .map((it: any) => {
+                              const q = it?.quantidade_g;
+                              return q ? `${it?.nome || ""} — ${q} g` : `${it?.nome || ""}`;
+                            })
+                            .filter(Boolean)
+                            .join("\n");
+                          return {
+                            nome: r?.nome || `Refeição ${i + 1}`,
+                            horario: r?.horario || "08:00:00",
+                            descricao_ia: descricao,
+                          };
+                        }));
+                        const ma: any = data?.macros_alvo || {};
+                        if (data?.kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g) {
+                          setMacrosCalculados({
+                            kcal: Math.round(data.kcal_alvo || 0),
+                            proteina_g: Math.round(ma.proteina_g || 0),
+                            carboidrato_g: Math.round(ma.carboidrato_g || 0),
+                            lipideos_g: Math.round(ma.lipideos_g || 0),
+                          });
+                        }
+                        if (data?.objetivo) setPerfil((p) => ({ ...p, objetivo: data.objetivo }));
+                      }}
+                    />
                   </div>
                 </div>
               </div>

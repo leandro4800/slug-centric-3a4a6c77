@@ -63,7 +63,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { file, fileType, importType, alunoId, tenantId } = await req.json();
+    const { file, fileType, importType, alunoId, tenantId, dryRun } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -92,13 +92,13 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    if (!alunoId || !tenantId) {
-      return new Response(JSON.stringify({ error: "alunoId e tenantId são obrigatórios" }), {
+    if (!tenantId || (!dryRun && !alunoId)) {
+      return new Response(JSON.stringify({ error: "tenantId (e alunoId quando não for dryRun) são obrigatórios" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    let allowed = callerId === alunoId;
+    let allowed = !!alunoId && callerId === alunoId;
     if (!allowed) {
       const { data: isCoach } = await supabase.rpc("has_role", {
         _user_id: callerId, _role: "coach", _tenant_id: tenantId,
@@ -214,7 +214,7 @@ serve(async (req) => {
       result = m ? JSON.parse(m[0]) : {};
     }
 
-    if (importType === "treino" && result?.dias) {
+    if (!dryRun && importType === "treino" && result?.dias) {
       await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenantId);
       const rows: any[] = [];
       result.dias.forEach((dia: any) => {
@@ -230,7 +230,7 @@ serve(async (req) => {
         const { error } = await supabase.from("treinos_prescritos").insert(rows);
         if (error) throw error;
       }
-    } else if (importType === "dieta" && result?.refeicoes) {
+    } else if (!dryRun && importType === "dieta" && result?.refeicoes) {
       await supabase.from("dietas").delete().eq("user_id", alunoId);
       const { data: dieta, error: dError } = await supabase
         .from("dietas")
