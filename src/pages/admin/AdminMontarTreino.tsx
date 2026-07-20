@@ -1362,7 +1362,11 @@ const AdminMontarTreino = () => {
           <Label>Aluno</Label>
           <select
             value={alunoId}
-            onChange={(e) => setAlunoId(e.target.value)}
+            onChange={(e) => {
+              const selected = alunos.find((a) => a.id === e.target.value);
+              setIsAvulso(!!selected?.avulso);
+              setAlunoId(e.target.value);
+            }}
             className="w-full mt-2 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
           >
             <option value="">— selecione —</option>
@@ -1745,9 +1749,9 @@ const AdminMontarTreino = () => {
                 <h3 className="font-display text-base sm:text-lg leading-tight">A IA gerou {exercicios.length} exercícios. Confira tudo antes de enviar ao aluno.</h3>
                 <p className="text-xs text-muted-foreground mt-2">Edite o que precisar abaixo. O treino só vai para o aluno quando você clicar em <strong className="text-foreground">Confirmar e enviar</strong>.</p>
                 <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                  <Button onClick={() => salvarPrescricao()} disabled={saving} className="flex-1">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving || isAvulso} className="flex-1">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    Confirmar e enviar ao aluno
+                    {isAvulso ? "Baixe o PDF para enviar" : "Confirmar e enviar ao aluno"}
                   </Button>
                   <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating} variant="outline" className="flex-1">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
@@ -1781,9 +1785,9 @@ const AdminMontarTreino = () => {
                     <FileDown className="h-4 w-4 mr-2" />
                     PDF Premium
                   </Button>
-                  <Button onClick={() => salvarPrescricao()} disabled={saving} size="sm" className="w-full sm:w-auto">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving || isAvulso} size="sm" className="w-full sm:w-auto">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    {pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
+                    {isAvulso ? "Somente PDF" : pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
                   </Button>
                 </div>
               </div>

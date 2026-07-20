@@ -323,7 +323,7 @@ const AdminMontarDieta = () => {
     } finally {
       setGenerating(false);
     }
-  }, [alunoId, perfil, tenant, searchParams, refeicoesDia]);
+  }, [alunoId, perfil, tenant, searchParams, refeicoesDia, isAvulso, iaCommand]);
 
   const addRefeicao = () => {
     setRefeicoes(prev => [

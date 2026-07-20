@@ -106,7 +106,7 @@ const AvaliacaoFisica = () => {
 
   const criarAvulsoEAbrir = async () => {
     if (!avulsoNome.trim()) { toast.error("Informe o nome"); return; }
-    if (!avulsoIdade || !avulsoPeso) { toast.error("Informe idade e peso"); return; }
+    if (!avulsoIdade || !avulsoPeso || !avulsoAltura) { toast.error("Informe idade, peso e altura para gerar avaliação, treino e dieta."); return; }
     setCriandoAvulso(true);
     try {
       const dataNasc = new Date();
@@ -117,7 +117,7 @@ const AvaliacaoFisica = () => {
           sexo: avulsoSexo,
           data_nascimento: dataNasc.toISOString().slice(0, 10),
           peso_inicial_kg: Number(avulsoPeso),
-          altura_cm: avulsoAltura ? Number(avulsoAltura) : null,
+          altura_cm: Number(avulsoAltura),
         },
       });
       if (error || (data as any)?.error) {
@@ -130,7 +130,7 @@ const AvaliacaoFisica = () => {
         sexo: avulsoSexo,
         idade: Number(avulsoIdade),
         peso: Number(avulsoPeso),
-        altura: avulsoAltura ? Number(avulsoAltura) : undefined,
+        altura: Number(avulsoAltura),
       });
       setSelectedAlunoId(alunoId);
       setSelectedIsAvulso(true);
@@ -262,7 +262,7 @@ const AvaliacaoFisica = () => {
           </div>
 
           <div>
-            <Label htmlFor="aaltura">Altura (cm) — opcional</Label>
+            <Label htmlFor="aaltura">Altura (cm) *</Label>
             <Input id="aaltura" type="number" value={avulsoAltura} onChange={(e) => setAvulsoAltura(e.target.value)} placeholder="175" />
           </div>
 
