@@ -113,7 +113,7 @@ const AdminMontarDieta = () => {
         email: a.email,
         avulso: true,
       }));
-      setAlunos([...(data as Aluno[]) || [], ...avulsos]);
+      setAlunos([...((data as Aluno[]) || []), ...avulsos]);
     })();
   }, [tenant]);
 
