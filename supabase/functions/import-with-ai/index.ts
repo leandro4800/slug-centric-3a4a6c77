@@ -329,7 +329,7 @@ Retorne este JSON exato:
         method: "POST",
         headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
         body: JSON.stringify({
-          model: "google/gemini-3.5-flash",
+          model: "openai/gpt-5.5",
           messages: fallbackMessages,
           response_format: { type: "json_object" },
           temperature: 0,
