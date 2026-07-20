@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -35,6 +35,7 @@ interface Props {
   idadeInicial?: number | null;
   sexoInicial?: string | null;
   alturaInicial?: number | null;
+  alunoNomeInicial?: string | null;
   onSaved?: () => void;
 }
 
@@ -66,6 +67,7 @@ export default function JacksonPollockCalculator({
   idadeInicial,
   sexoInicial,
   alturaInicial,
+  alunoNomeInicial,
   onSaved,
 }: Props) {
   const [dobras, setDobras] = useState<Record<DobraKey, string>>({
@@ -85,6 +87,12 @@ export default function JacksonPollockCalculator({
   const [saving, setSaving] = useState(false);
   const [importing, setImporting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    setIdade(idadeInicial ? String(idadeInicial) : "");
+    setPeso(pesoInicial ? String(pesoInicial) : "");
+    setSexo((sexoInicial?.toUpperCase().startsWith("F") ? "F" : "M") as Sexo);
+  }, [alunoId, idadeInicial, pesoInicial, sexoInicial]);
 
   const calc = useMemo(() => {
     const soma = DOBRAS.reduce((acc, d) => acc + num(dobras[d.key]), 0);
@@ -216,7 +224,9 @@ export default function JacksonPollockCalculator({
         coachNome = (data as any)?.nome || null;
         coachLogo = (data as any)?.logo_url || null;
       }
-      if (alunoId) {
+      if (alunoNomeInicial) {
+        alunoNome = alunoNomeInicial;
+      } else if (alunoId) {
         const { data } = await supabase
           .from("perfis")
           .select("nome_completo")

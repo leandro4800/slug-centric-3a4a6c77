@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { Link } from "react-router-dom";
 
 interface Aluno { id: string; nome_completo: string | null; email: string | null; sexo: string | null; data_nascimento: string | null; avatar_url: string | null; }
+interface Avulso { id: string; nome: string; email: string | null; sexo: string | null; data_nascimento: string | null; peso_inicial_kg: number | null; altura_cm: number | null; }
 interface Avaliacao {
   id: string; data: string; peso_kg: number | null; bf_pct_calculado: number | null;
   massa_magra_kg: number | null; aluno_id: string;
@@ -19,10 +20,12 @@ interface Avaliacao {
 const AvaliacaoFisica = () => {
   const { tenant, loading: tenantLoading } = useSiteTenant();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [avulsos, setAvulsos] = useState<Avulso[]>([]);
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<"existing" | "avulso">("existing");
 
   const [selectedAlunoId, setSelectedAlunoId] = useState<string>("");
+  const [selectedIsAvulso, setSelectedIsAvulso] = useState(false);
   const [calcOpen, setCalcOpen] = useState(false);
   const [calcContext, setCalcContext] = useState<{ alunoId: string; nome: string; peso?: number; idade?: number; sexo?: string; altura?: number } | null>(null);
   const [historico, setHistorico] = useState<Avaliacao[]>([]);
@@ -39,12 +42,18 @@ const AvaliacaoFisica = () => {
     if (!tenant?.id) return;
     (async () => {
       setLoading(true);
-      const { data } = await supabase
-        .from("perfis")
+      const [{ data }, { data: avulsoData }] = await Promise.all([
+        supabase.from("perfis")
         .select("id, nome_completo, email, sexo, data_nascimento, avatar_url")
         .eq("tenant_id", tenant.id)
-        .order("nome_completo");
+          .order("nome_completo"),
+        (supabase as any).from("avaliacao_avulsa_alunos")
+          .select("id, nome, email, sexo, data_nascimento, peso_inicial_kg, altura_cm")
+          .eq("tenant_id", tenant.id)
+          .order("created_at", { ascending: false }),
+      ]);
       setAlunos((data as Aluno[]) || []);
+      setAvulsos((avulsoData as Avulso[]) || []);
       setLoading(false);
     })();
   }, [tenant?.id]);
@@ -74,6 +83,24 @@ const AvaliacaoFisica = () => {
       idade,
     });
     setSelectedAlunoId(aluno.id);
+    setSelectedIsAvulso(false);
+    setCalcOpen(true);
+  };
+
+  const abrirCalculadoraAvulso = (aluno: Avulso) => {
+    const idade = aluno.data_nascimento
+      ? Math.floor((Date.now() - new Date(aluno.data_nascimento).getTime()) / (365.25 * 24 * 60 * 60 * 1000))
+      : undefined;
+    setCalcContext({
+      alunoId: aluno.id,
+      nome: aluno.nome || "Avaliado avulso",
+      sexo: aluno.sexo || undefined,
+      idade,
+      peso: aluno.peso_inicial_kg ?? undefined,
+      altura: aluno.altura_cm ?? undefined,
+    });
+    setSelectedAlunoId(aluno.id);
+    setSelectedIsAvulso(true);
     setCalcOpen(true);
   };
 
@@ -89,6 +116,8 @@ const AvaliacaoFisica = () => {
           nome: avulsoNome.trim(),
           sexo: avulsoSexo,
           data_nascimento: dataNasc.toISOString().slice(0, 10),
+          peso_inicial_kg: Number(avulsoPeso),
+          altura_cm: avulsoAltura ? Number(avulsoAltura) : null,
         },
       });
       if (error || (data as any)?.error) {
@@ -104,15 +133,17 @@ const AvaliacaoFisica = () => {
         altura: avulsoAltura ? Number(avulsoAltura) : undefined,
       });
       setSelectedAlunoId(alunoId);
+      setSelectedIsAvulso(true);
       setCalcOpen(true);
-      toast.success("Aluno avulso criado — preencha as dobras");
+      toast.success("Avaliação avulsa criada — sem cadastro no app");
       // Reset
       setAvulsoNome(""); setAvulsoIdade(""); setAvulsoPeso(""); setAvulsoAltura("");
-      // refresh lista
-      const { data: refreshed } = await supabase
-        .from("perfis").select("id, nome_completo, email, sexo, data_nascimento, avatar_url")
-        .eq("tenant_id", tenant!.id).order("nome_completo");
-      setAlunos((refreshed as Aluno[]) || []);
+      const { data: refreshed } = await (supabase as any)
+        .from("avaliacao_avulsa_alunos")
+        .select("id, nome, email, sexo, data_nascimento, peso_inicial_kg, altura_cm")
+        .eq("tenant_id", tenant!.id)
+        .order("created_at", { ascending: false });
+      setAvulsos((refreshed as Avulso[]) || []);
     } catch (err: any) {
       toast.error(err.message || "Erro ao criar aluno");
     } finally {
@@ -197,13 +228,14 @@ const AvaliacaoFisica = () => {
           </div>
         )
       ) : (
-        <div className="rounded-2xl border border-border/50 bg-card p-6 max-w-xl space-y-4">
+          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)] gap-5">
+          <div className="rounded-2xl border border-border/50 bg-card p-6 space-y-4">
           <div className="flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" />
             <h2 className="font-display text-lg uppercase tracking-wider">Nova avaliação avulsa</h2>
           </div>
           <p className="text-xs text-muted-foreground">
-            O aluno será salvo no seu painel sem acesso ao app. Você poderá enviar credenciais depois pela tela "Cadastrar aluno" usando o mesmo email.
+            Esta pessoa fica apenas em avaliação avulsa. Não cria login, senha, perfil no app ou acesso à plataforma do aluno.
           </p>
 
           <div>
@@ -239,6 +271,32 @@ const AvaliacaoFisica = () => {
             Iniciar avaliação
           </Button>
         </div>
+
+          <div className="rounded-2xl border border-border/50 bg-card p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <History className="h-5 w-5 text-primary" />
+              <h2 className="font-display text-lg uppercase tracking-wider">Avulsos salvos</h2>
+            </div>
+            {avulsos.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhuma avaliação avulsa criada ainda.</p>
+            ) : (
+              <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
+                {avulsos.map((a) => (
+                  <button
+                    key={a.id}
+                    onClick={() => abrirCalculadoraAvulso(a)}
+                    className="w-full rounded-xl border border-border/50 bg-background/60 p-3 text-left hover:border-primary/60 transition-colors"
+                  >
+                    <p className="font-display text-sm uppercase tracking-wide">{a.nome}</p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {a.sexo || "Sexo —"} • {a.peso_inicial_kg ? `${a.peso_inicial_kg}kg` : "Peso —"} • Sem acesso ao app
+                    </p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          </div>
       )}
 
       {/* Ações pós-avaliação: montar treino/dieta e baixar PDFs */}
@@ -250,10 +308,10 @@ const AvaliacaoFisica = () => {
             A dieta usará automaticamente os dados salvos na avaliação (peso, altura, BF%, sexo, idade). Depois baixe o PDF e envie ao aluno.
           </p>
           <div className="flex flex-wrap gap-3">
-            <Link to={`/site/admin/montar-treino?aluno=${selectedAlunoId}`}>
+            <Link to={`/site/admin/montar-treino?aluno=${selectedAlunoId}${selectedIsAvulso ? "&avulso=1" : ""}`}>
               <Button className="gap-2"><Dumbbell className="h-4 w-4" /> Montar treino</Button>
             </Link>
-            <Link to={`/site/admin/montar-dieta?aluno=${selectedAlunoId}`}>
+            <Link to={`/site/admin/montar-dieta?aluno=${selectedAlunoId}${selectedIsAvulso ? "&avulso=1" : ""}`}>
               <Button variant="secondary" className="gap-2"><Apple className="h-4 w-4" /> Montar dieta</Button>
             </Link>
           </div>
@@ -292,6 +350,7 @@ const AvaliacaoFisica = () => {
           idadeInicial={calcContext.idade ?? null}
           sexoInicial={calcContext.sexo ?? null}
           alturaInicial={calcContext.altura ?? null}
+          alunoNomeInicial={calcContext.nome}
           onSaved={() => {
             toast.success(`Avaliação salva para ${calcContext.nome}`);
             setCalcOpen(false);
