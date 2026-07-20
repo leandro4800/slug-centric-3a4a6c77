@@ -1,11 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.38.4";
 import { extractText, getDocumentProxy } from "https://esm.sh/unpdf@0.12.1";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 
 function base64ToBytes(b64: string): Uint8Array {
   const bin = atob(b64);
@@ -138,11 +134,37 @@ serve(async (req) => {
         : importType === "anamnese"
         ? ANAMNESE_SCHEMA
         : (importType === "7dobras" || importType === "avaliacao")
-        ? `Estrutura esperada (valores em mm para dobras e cm para perímetros/peso/altura): {
-            "peso": number, "altura": number, "idade": number, "sexo": "M" | "F",
-            "dobras": { "peitoral": number, "axilar_media": number, "triceps": number, "subescapular": number, "abdominal": number, "suprailiaca": number, "coxa": number, "panturrilha": number },
-            "perimetros": { "pescoco": number, "ombro": number, "torax": number, "cintura": number, "abdomen": number, "quadril": number, "braco_relaxado_dir": number, "braco_relaxado_esq": number, "braco_contraido_dir": number, "braco_contraido_esq": number, "antebraco_dir": number, "antebraco_esq": number, "coxa_proximal_dir": number, "coxa_proximal_esq": number, "coxa_media_dir": number, "coxa_media_esq": number, "coxa_distal_dir": number, "coxa_distal_esq": number, "panturrilha_dir": number, "panturrilha_esq": number }
-          }`
+        ? `Leia a imagem/arquivo como uma ficha de avaliação física e extraia EXATAMENTE estes campos do app AlphaCoach Pro.
+
+Campos que existem na tela e devem ser preenchidos:
+1. peitoral — rótulos possíveis: Peitoral, Dobra Peitoral, Chest, Pectoral
+2. axilar_media — rótulos possíveis: Axilar Média, Axilar Medial, Axilar Media, Midaxillary
+3. triceps — rótulos possíveis: Tríceps, Triceps, Tricipital
+4. subescapular — rótulos possíveis: Subescapular, Subescapularis
+5. abdominal — rótulos possíveis: Abdominal, Abdômen, Abdomen
+6. suprailiaca — rótulos possíveis: Suprailíaca, Supra-ilíaca, Supra Iliaca, Suprailiac
+7. coxa — rótulos possíveis: Coxa, Coxa medial, Thigh
+
+Retorne sempre JSON puro neste formato, usando números em milímetros:
+{
+  "peso": number | null,
+  "altura": number | null,
+  "idade": number | null,
+  "sexo": "M" | "F" | null,
+  "dobras": {
+    "peitoral": number | null,
+    "axilar_media": number | null,
+    "triceps": number | null,
+    "subescapular": number | null,
+    "abdominal": number | null,
+    "suprailiaca": number | null,
+    "coxa": number | null
+  },
+  "campos_encontrados": ["nomes dos campos lidos na imagem"],
+  "texto_lido": "transcrição curta dos trechos onde aparecem as dobras"
+}
+
+Se a imagem tiver uma tabela com linhas e colunas, leia linha por linha. Se a ordem aparecer sem rótulos claros, use a ordem padrão Jackson & Pollock 7 dobras: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa. Não extraia perímetros como cintura/quadril/braço para dentro das dobras.`
         : "";
 
     const userContent: any[] = [
@@ -153,6 +175,12 @@ serve(async (req) => {
     ];
 
     if (isImage) {
+      if (importType === "7dobras" || importType === "avaliacao") {
+        userContent.push({
+          type: "text",
+          text: "A imagem enviada é uma ficha/foto de avaliação física. Foque apenas nos campos de DOBRAS CUTÂNEAS em mm: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca e Coxa. Preencha o JSON mesmo se os rótulos estiverem em tabela, abreviados ou com acentos diferentes.",
+        });
+      }
       userContent.push({ type: "image_url", image_url: { url: `data:${fileType};base64,${file}` } });
     } else if (isPDF) {
       userContent.push({ type: "text", text: `Conteúdo do PDF:\n\n${pdfText.slice(0, 60000)}` });
@@ -165,10 +193,12 @@ serve(async (req) => {
 
     const extraInstr = (importType === "7dobras" || importType === "avaliacao")
       ? `\n\nINSTRUÇÕES IMPORTANTES PARA AVALIAÇÃO FÍSICA / 7 DOBRAS:
-- Procure variações em PT-BR com ou sem acento: "Peitoral", "Tríceps/Triceps", "Subescapular", "Axilar Média/Axilar Medial/Axilar média", "Suprailíaca/Supra-ilíaca/Suprailiaca", "Abdominal/Abdômen (dobra)", "Coxa", "Panturrilha".
+- Os campos da tela são: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca e coxa.
+- Procure variações em PT-BR com ou sem acento: "Peitoral", "Tríceps/Triceps/Tricipital", "Subescapular", "Axilar Média/Axilar Medial/Axilar media", "Suprailíaca/Supra-ilíaca/Supra iliaca/Suprailiaca", "Abdominal/Abdômen (dobra)", "Coxa/Coxa medial".
 - Valores de DOBRAS são em milímetros (mm), normalmente entre 3 e 60.
-- SEMPRE preencha TODAS as 7 dobras do protocolo Jackson & Pollock se aparecerem no relatório: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa (panturrilha é opcional/8ª).
-- Coloque os valores numéricos dentro de "dobras" (snake_case), conforme o schema. NÃO invente valores; se não encontrar, omita.
+- SEMPRE preencha TODAS as 7 dobras do protocolo Jackson & Pollock se aparecerem no relatório: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa.
+- Coloque os valores numéricos dentro de "dobras" (snake_case), conforme o schema. Se não encontrar um campo, use null. NÃO invente valores.
+- Se a tabela mostrar os nomes das dobras em uma coluna e os valores em outra coluna, associe cada linha ao seu valor.
 - Perímetros são em centímetros (cm). Peso em kg, altura em cm.`
       : "";
 
@@ -184,7 +214,7 @@ serve(async (req) => {
       method: "POST",
       headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: (importType === "7dobras" || importType === "avaliacao") ? "openai/gpt-5.5" : "google/gemini-2.5-flash",
         messages,
         response_format: { type: "json_object" },
       }),
@@ -212,6 +242,14 @@ serve(async (req) => {
     try { result = JSON.parse(content); } catch {
       const m = content.match(/\{[\s\S]*\}/);
       result = m ? JSON.parse(m[0]) : {};
+    }
+
+    if (importType === "7dobras" || importType === "avaliacao") {
+      console.log("[import-with-ai] 7dobras extracted keys", JSON.stringify({
+        hasDobras: !!result?.dobras,
+        campos: result?.campos_encontrados || null,
+        dobras: result?.dobras || null,
+      }));
     }
 
     if (!dryRun && importType === "treino" && result?.dias) {
