@@ -22,6 +22,42 @@ async function extractPdfText(b64: string): Promise<string> {
   }
 }
 
+const parseJsonContent = (content: string) => {
+  try {
+    return JSON.parse(content || "{}");
+  } catch {
+    const m = content.match(/\{[\s\S]*\}/);
+    return m ? JSON.parse(m[0]) : {};
+  }
+};
+
+const hasSevenFoldValues = (result: any) => {
+  const dobras = result?.dobras || result?.skinfolds || result?.seven_folds || {};
+  const keys = ["peitoral", "axilar_media", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"];
+  return keys.some((key) => {
+    const value = dobras?.[key] ?? dobras?.[key.replace("_", "")] ?? result?.[key] ?? result?.[key.replace("_", "")];
+    if (value === null || value === undefined || value === "") return false;
+    const n = Number(String(value).replace(",", ".").match(/\d{1,3}(?:\.\d+)?/)?.[0]);
+    return Number.isFinite(n) && n >= 2 && n <= 80;
+  });
+};
+
+const mergeSevenFoldResult = (primary: any, fallback: any) => {
+  const keys = ["peitoral", "axilar_media", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"];
+  const merged = {
+    ...(primary || {}),
+    peso: primary?.peso ?? fallback?.peso ?? null,
+    altura: primary?.altura ?? fallback?.altura ?? null,
+    idade: primary?.idade ?? fallback?.idade ?? null,
+    sexo: primary?.sexo ?? fallback?.sexo ?? null,
+    dobras: { ...(primary?.dobras || {}) },
+    campos_encontrados: primary?.campos_encontrados?.length ? primary.campos_encontrados : (fallback?.campos_encontrados || []),
+    texto_lido: primary?.texto_lido || fallback?.texto_lido || "",
+  };
+  for (const key of keys) merged.dobras[key] = merged.dobras[key] ?? fallback?.dobras?.[key] ?? fallback?.[key] ?? null;
+  return merged;
+};
+
 const ANAMNESE_SCHEMA = `Estrutura esperada: {
   "doencas": string[],
   "medicamentos": string,
@@ -255,10 +291,65 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
 
     const aiData = await response.json();
     const content = aiData?.choices?.[0]?.message?.content || "{}";
-    let result: any;
-    try { result = JSON.parse(content); } catch {
-      const m = content.match(/\{[\s\S]*\}/);
-      result = m ? JSON.parse(m[0]) : {};
+    let result: any = parseJsonContent(content);
+
+    if ((importType === "7dobras" || importType === "avaliacao") && isImage && !hasSevenFoldValues(result)) {
+      const fallbackMessages = [
+        {
+          role: "system",
+          content: `Você é um OCR especializado em avaliações físicas. Retorne APENAS JSON válido. Não explique nada. Sua tarefa é localizar medidas de DOBRAS CUTÂNEAS em mm e mapear para os campos exatos do AlphaCoach Pro.`,
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analise esta imagem com foco máximo em OCR. Os campos que precisam ser preenchidos são exatamente:
+- peitoral: rótulos Peitoral, Dobra Peitoral, PT, PEIT, Chest, Pectoral
+- axilar_media: rótulos Axilar Média, Axilar Media, Axilar Medial, AX, AM, Midaxillary
+- triceps: rótulos Tríceps, Triceps, Tricipital, TRI, TRIC
+- subescapular: rótulos Subescapular, Sub Escapular, SUB, SUBESC
+- abdominal: rótulos Abdominal, Abdômen, Abdomen, ABD
+- suprailiaca: rótulos Suprailíaca, Supra-ilíaca, Supra Iliaca, SI, SUPRA
+- coxa: rótulos Coxa, Coxa medial, CX, Thigh
+
+Leia tabelas linha por linha. Se os nomes estiverem abreviados, use o mapeamento acima. Se aparecerem 7 valores de dobras sem rótulo claro, use a ordem Jackson & Pollock: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa.
+
+Não use idade, peso, altura, cintura, quadril, braço, perímetros ou porcentual de gordura como dobras.
+
+Retorne este JSON exato:
+{"peso":null,"altura":null,"idade":null,"sexo":null,"dobras":{"peitoral":null,"axilar_media":null,"triceps":null,"subescapular":null,"abdominal":null,"suprailiaca":null,"coxa":null},"campos_encontrados":[],"texto_lido":""}`,
+            },
+            { type: "image_url", image_url: { url: `data:${imageMimeType};base64,${file}` } },
+          ],
+        },
+      ];
+
+      const fallbackResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-3.5-flash",
+          messages: fallbackMessages,
+          response_format: { type: "json_object" },
+          temperature: 0,
+        }),
+      });
+
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        const fallbackContent = fallbackData?.choices?.[0]?.message?.content || "{}";
+        const fallbackResult = parseJsonContent(fallbackContent);
+        result = mergeSevenFoldResult(result, fallbackResult);
+        console.log("[import-with-ai] 7dobras fallback", JSON.stringify({
+          usedFallback: true,
+          hasDobras: hasSevenFoldValues(result),
+          campos: result?.campos_encontrados || null,
+          dobras: result?.dobras || null,
+        }));
+      } else {
+        console.error("[import-with-ai] 7dobras fallback error", fallbackResponse.status, await fallbackResponse.text().catch(() => ""));
+      }
     }
 
     if (importType === "7dobras" || importType === "avaliacao") {
