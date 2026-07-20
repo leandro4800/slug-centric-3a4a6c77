@@ -622,7 +622,7 @@ const AdminMontarDieta = () => {
     // ==== HERO NETFLIX ====
     const logo = await loadImageDataUrl(tenant?.logo_url);
     // Faixa vermelha vertical à esquerda (marca Netflix-style)
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(0, 0, 4, pageH, "F");
 
     // Logo
@@ -639,7 +639,7 @@ const AdminMontarDieta = () => {
     }
 
     // Tag "ORIGINAL SERIES" style
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(heroX, 10, 34, 5, "F");
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
@@ -658,7 +658,7 @@ const AdminMontarDieta = () => {
     doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 32);
 
     // Barra atleta/coach
-    doc.setDrawColor(229, 9, 20);
+    doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.setLineWidth(0.4);
     doc.line(heroX, 36, pageW - 12, 36);
 
@@ -713,7 +713,7 @@ const AdminMontarDieta = () => {
         doc.setFillColor(20, 20, 20);
         doc.setDrawColor(60, 60, 60);
         doc.roundedRect(bx, y, boxW, 14, 1.5, 1.5, "FD");
-        doc.setFillColor(229, 9, 20);
+        doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
         doc.rect(bx, y, 1.5, 14, "F");
         doc.setTextColor(160, 160, 160);
         doc.setFont("helvetica", "bold");
@@ -727,7 +727,7 @@ const AdminMontarDieta = () => {
     }
 
     // Seção label
-    doc.setTextColor(229, 9, 20);
+    doc.setTextColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(8);
     doc.text("REFEIÇÕES DO DIA", 12, y);
@@ -823,7 +823,7 @@ const AdminMontarDieta = () => {
       } catch {}
 
       // Faixa vermelha lateral (marca Netflix)
-      doc.setFillColor(229, 9, 20);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(cx, cy, 2, bannerH, "F");
 
       // EP nº e horário
@@ -861,7 +861,7 @@ const AdminMontarDieta = () => {
           doc.setLineWidth(0.15);
           doc.line(bx, my + 1, bx, my + macrosH - 1);
         }
-        doc.setTextColor(229, 9, 20);
+        doc.setTextColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(5.5);
         doc.text(cell.l, bx + cellW / 2, my + 2.6, { align: "center" });
@@ -884,7 +884,7 @@ const AdminMontarDieta = () => {
     });
 
     // ==== RODAPÉ NETFLIX com logo plataforma ====
-    doc.setFillColor(229, 9, 20);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.rect(0, pageH - 10, pageW, 10, "F");
     // Logo plataforma à esquerda
     if (platLogo) {
