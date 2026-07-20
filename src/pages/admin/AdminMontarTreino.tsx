@@ -21,6 +21,7 @@ interface Aluno {
   id: string;
   nome_completo: string | null;
   email: string | null;
+  avulso?: boolean;
 }
 
 interface PerfilTreino {
@@ -206,6 +207,7 @@ const AdminMontarTreino = () => {
   const { tenant } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
+  const [isAvulso, setIsAvulso] = useState(searchParams.get("avulso") === "1");
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
     objetivo: "hipertrofia", frequencia_semanal: 4, tempo_treino: "Iniciante",
@@ -270,19 +272,33 @@ const AdminMontarTreino = () => {
   // Sincroniza alunoId com o parâmetro da URL (?aluno=...) sempre que muda.
   useEffect(() => {
     const urlAluno = searchParams.get("aluno") || "";
+    setIsAvulso(searchParams.get("avulso") === "1");
     setAlunoId((prev) => (prev === urlAluno ? prev : urlAluno));
   }, [searchParams]);
 
   useEffect(() => {
     if (!tenant) return;
     void (async () => {
-      const { data } = await supabase
+      const [{ data }, { data: avulsoData }] = await Promise.all([
+        supabase
         .from("perfis")
         .select("id, nome_completo, email")
-        .eq("tenant_id", tenant.id);
+          .eq("tenant_id", tenant.id),
+        (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .select("id, nome, email")
+          .eq("tenant_id", tenant.id)
+          .order("created_at", { ascending: false }),
+      ]);
       const lista = ((data as Aluno[]) || []).filter((a) => a.id !== tenant.owner_user_id);
+      const avulsos = ((avulsoData as any[]) || []).map((a) => ({
+        id: a.id,
+        nome_completo: `${a.nome} (avulso)`,
+        email: a.email,
+        avulso: true,
+      }));
       // Se o aluno selecionado (via URL) não está na lista, busca-o à parte e inclui.
-      if (alunoId && !lista.some((a) => a.id === alunoId)) {
+      if (alunoId && !isAvulso && !lista.some((a) => a.id === alunoId)) {
         const { data: extra } = await supabase
           .from("perfis")
           .select("id, nome_completo, email")
@@ -291,9 +307,9 @@ const AdminMontarTreino = () => {
         if (extra) lista.unshift(extra as Aluno);
       }
       lista.sort((a, b) => (a.nome_completo || "").localeCompare(b.nome_completo || ""));
-      setAlunos(lista);
+      setAlunos([...lista, ...avulsos]);
     })();
-  }, [tenant, alunoId]);
+  }, [tenant, alunoId, isAvulso]);
 
   useEffect(() => {
     if (!alunoId || !tenant) {
@@ -305,8 +321,22 @@ const AdminMontarTreino = () => {
       setExercicios([]);
       setCardio("");
       setPendingReview(false);
+      const avulsoRes = isAvulso
+        ? await (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .select("nome, sexo, data_nascimento, peso_inicial_kg, altura_cm")
+          .eq("id", alunoId)
+          .eq("tenant_id", tenant.id)
+          .maybeSingle()
+        : { data: null };
+      const avulso = avulsoRes.data as any;
       // Buscar em paralelo todas as fontes do perfil real do aluno
-      const [perfilTreinoRes, perfilRes, avaliacaoRes, anamneseRes] = await Promise.all([
+      const [perfilTreinoRes, perfilRes, avaliacaoRes, anamneseRes] = isAvulso ? [
+        { data: null },
+        { data: avulso ? { sexo: avulso.sexo, data_nascimento: avulso.data_nascimento } : null },
+        await supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
+        { data: null },
+      ] : await Promise.all([
         supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
         supabase.from("perfis").select("sexo, data_nascimento").eq("id", alunoId).maybeSingle(),
         supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
@@ -332,8 +362,8 @@ const AdminMontarTreino = () => {
       setPerfil({
         sexo: sexoMesclado,
         idade: pt?.idade ?? av?.idade ?? idadeCalc,
-        peso_kg: pt?.peso_kg ?? av?.peso_kg ?? null,
-        altura_cm: pt?.altura_cm ?? av?.altura_cm ?? null,
+        peso_kg: pt?.peso_kg ?? av?.peso_kg ?? avulso?.peso_inicial_kg ?? null,
+        altura_cm: pt?.altura_cm ?? av?.altura_cm ?? avulso?.altura_cm ?? null,
         bf_pct: pt?.bf_pct ?? av?.bf_pct_calculado ?? null,
         pescoco_cm: pt?.pescoco_cm ?? av?.pescoco_cm ?? null,
         cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
@@ -345,7 +375,7 @@ const AdminMontarTreino = () => {
         limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
       });
 
-      const { data: tp } = await supabase
+      const { data: tp } = isAvulso ? { data: null } : await supabase
         .from("treinos_prescritos")
         .select("dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
         .eq("aluno_id", alunoId)
@@ -381,7 +411,7 @@ const AdminMontarTreino = () => {
       }
       setPerfilLoading(false);
     })();
-  }, [alunoId, tenant]);
+  }, [alunoId, tenant, isAvulso]);
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
 
@@ -404,6 +434,10 @@ const AdminMontarTreino = () => {
 
   const salvarPerfil = async (silent = false) => {
     if (!alunoId || !tenant) return;
+    if (isAvulso) {
+      if (!silent) toast.info("Avaliação avulsa não altera perfil do app. Gere o PDF após revisar.");
+      return;
+    }
     const { error } = await supabase
       .from("perfis_treino")
       .upsert({ aluno_id: alunoId, tenant_id: tenant.id, ...perfil } as any, { onConflict: "aluno_id" });
@@ -446,7 +480,7 @@ const AdminMontarTreino = () => {
     }
     setGenerating(true);
     try {
-      await salvarPerfil(true);
+      if (!isAvulso) await salvarPerfil(true);
       // Usa a biblioteca já mesclada (biblioteca_exercicios + referencia_exercicios/vídeos técnicos)
       // para garantir que a IA gere com os MESMOS nomes que têm vídeo cadastrado.
       const bibliotecaParaIA = biblioteca.map((b) => ({
@@ -459,7 +493,7 @@ const AdminMontarTreino = () => {
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil: { ...perfil, aluno_id: alunoId }, biblioteca: bibliotecaParaIA, divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
+        body: { perfil: { ...perfil, aluno_id: alunoId, avulso: isAvulso }, biblioteca: bibliotecaParaIA, divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
       if (error) throw error;
       if ((data as any)?.error && !(data as any)?.fallback) throw new Error((data as any).error);
@@ -494,6 +528,10 @@ const AdminMontarTreino = () => {
     }
     setSaving(true);
     try {
+      if (isAvulso) {
+        toast.info("Avaliação avulsa não é enviada para o app. Use o botão PDF Premium para baixar e enviar ao aluno.");
+        return;
+      }
       const { data: alunoTenant, error: alunoError } = await supabase
         .from("perfis")
         .select("tenant_id")
@@ -1324,7 +1362,11 @@ const AdminMontarTreino = () => {
           <Label>Aluno</Label>
           <select
             value={alunoId}
-            onChange={(e) => setAlunoId(e.target.value)}
+            onChange={(e) => {
+              const selected = alunos.find((a) => a.id === e.target.value);
+              setIsAvulso(!!selected?.avulso);
+              setAlunoId(e.target.value);
+            }}
             className="w-full mt-2 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
           >
             <option value="">— selecione —</option>
@@ -1707,9 +1749,9 @@ const AdminMontarTreino = () => {
                 <h3 className="font-display text-base sm:text-lg leading-tight">A IA gerou {exercicios.length} exercícios. Confira tudo antes de enviar ao aluno.</h3>
                 <p className="text-xs text-muted-foreground mt-2">Edite o que precisar abaixo. O treino só vai para o aluno quando você clicar em <strong className="text-foreground">Confirmar e enviar</strong>.</p>
                 <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                  <Button onClick={() => salvarPrescricao()} disabled={saving} className="flex-1">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving || isAvulso} className="flex-1">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    Confirmar e enviar ao aluno
+                    {isAvulso ? "Baixe o PDF para enviar" : "Confirmar e enviar ao aluno"}
                   </Button>
                   <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating} variant="outline" className="flex-1">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
@@ -1743,9 +1785,9 @@ const AdminMontarTreino = () => {
                     <FileDown className="h-4 w-4 mr-2" />
                     PDF Premium
                   </Button>
-                  <Button onClick={() => salvarPrescricao()} disabled={saving} size="sm" className="w-full sm:w-auto">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving || isAvulso} size="sm" className="w-full sm:w-auto">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    {pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
+                    {isAvulso ? "Somente PDF" : pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
                   </Button>
                 </div>
               </div>

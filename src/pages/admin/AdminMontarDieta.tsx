@@ -50,6 +50,7 @@ interface Aluno {
   id: string;
   nome_completo: string | null;
   email: string | null;
+  avulso?: boolean;
 }
 
 interface PerfilTreino {
@@ -72,6 +73,7 @@ const AdminMontarDieta = () => {
   const { tenant } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
+  const [isAvulso, setIsAvulso] = useState(searchParams.get("avulso") === "1");
   const [refeicoesDia, setRefeicoesDia] = useState<number>(4);
   const [perfil, setPerfil] = useState<PerfilTreino>({
     sexo: "", idade: null, peso_kg: null, altura_cm: null, bf_pct: null,
@@ -94,19 +96,51 @@ const AdminMontarDieta = () => {
   useEffect(() => {
     if (!tenant) return;
     void (async () => {
-      const { data } = await supabase
+      const [{ data }, { data: avulsoData }] = await Promise.all([
+        supabase
         .from("perfis")
         .select("id, nome_completo, email")
-        .eq("tenant_id", tenant.id);
-      setAlunos((data as Aluno[]) || []);
+          .eq("tenant_id", tenant.id),
+        (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .select("id, nome, email")
+          .eq("tenant_id", tenant.id)
+          .order("created_at", { ascending: false }),
+      ]);
+      const avulsos = ((avulsoData as any[]) || []).map((a) => ({
+        id: a.id,
+        nome_completo: `${a.nome} (avulso)`,
+        email: a.email,
+        avulso: true,
+      }));
+      setAlunos([...((data as Aluno[]) || []), ...avulsos]);
     })();
   }, [tenant]);
+
+  useEffect(() => {
+    setIsAvulso(searchParams.get("avulso") === "1");
+    setAlunoId(searchParams.get("aluno") || "");
+  }, [searchParams]);
 
   useEffect(() => {
     if (!alunoId) return;
     void (async () => {
       setLoading(true);
-      const [perfilTreinoRes, perfilRes, avaliacaoRes, anamneseRes] = await Promise.all([
+      const avulsoRes = isAvulso
+        ? await (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .select("nome, sexo, data_nascimento, peso_inicial_kg, altura_cm")
+          .eq("id", alunoId)
+          .eq("tenant_id", tenant?.id)
+          .maybeSingle()
+        : { data: null };
+      const avulso = avulsoRes.data as any;
+      const [perfilTreinoRes, perfilRes, avaliacaoRes, anamneseRes] = isAvulso ? [
+        { data: null },
+        { data: avulso ? { sexo: avulso.sexo, data_nascimento: avulso.data_nascimento } : null },
+        await supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, pescoco_cm, cintura_cm, quadril_cm, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
+        { data: null },
+      ] : await Promise.all([
         supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
         supabase.from("perfis").select("sexo, data_nascimento").eq("id", alunoId).maybeSingle(),
         supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, pescoco_cm, cintura_cm, quadril_cm, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
@@ -127,8 +161,8 @@ const AdminMontarDieta = () => {
       setPerfil({
         sexo: pt?.sexo || pr?.sexo || av?.sexo || "",
         idade: pt?.idade ?? av?.idade ?? idadeCalc,
-        peso_kg: pt?.peso_kg ?? av?.peso_kg ?? null,
-        altura_cm: pt?.altura_cm ?? av?.altura_cm ?? null,
+        peso_kg: pt?.peso_kg ?? av?.peso_kg ?? avulso?.peso_inicial_kg ?? null,
+        altura_cm: pt?.altura_cm ?? av?.altura_cm ?? avulso?.altura_cm ?? null,
         bf_pct: pt?.bf_pct ?? av?.bf_pct_calculado ?? null,
         pescoco_cm: pt?.pescoco_cm ?? av?.pescoco_cm ?? null,
         cintura_cm: pt?.cintura_cm ?? av?.cintura_cm ?? null,
@@ -139,7 +173,7 @@ const AdminMontarDieta = () => {
       setRefeicoesDia(an?.refeicoes_dia || 4);
       setLoading(false);
 
-      const { data: d } = await supabase
+      const { data: d } = isAvulso ? { data: null } : await supabase
         .from("dietas")
         .select("id, is_published, kcal_alvo, macros_alvo")
         .eq("user_id", alunoId)
@@ -174,10 +208,14 @@ const AdminMontarDieta = () => {
         setMacrosCalculados(null);
       }
     })();
-  }, [alunoId]);
+  }, [alunoId, isAvulso, tenant?.id]);
 
   const salvarPerfil = async (silent = false) => {
     if (!alunoId || !tenant) return;
+    if (isAvulso) {
+      if (!silent) toast.info("Avaliação avulsa não altera perfil do app. Revise e baixe o PDF.");
+      return;
+    }
     const { error } = await supabase
       .from("perfis_treino")
       .upsert({ 
@@ -221,7 +259,7 @@ const AdminMontarDieta = () => {
     const toastId = toast.loading("Gerando dieta...");
     
     try {
-      await salvarPerfil(true);
+      if (!isAvulso) await salvarPerfil(true);
       const activePrompt = customPrompt || iaCommand || "";
       const sexoNorm = (perfil.sexo || "").toLowerCase();
       const sexoEnvio = sexoNorm.startsWith("f") ? "F" : "M";
@@ -229,6 +267,7 @@ const AdminMontarDieta = () => {
       const { data, error } = await supabase.functions.invoke("gerar-dieta", {
         body: { 
           aluno_id: alunoId,
+          avulso: isAvulso,
           objetivo: perfil.objetivo,
           peso_kg: perfil.peso_kg,
           altura_cm: perfil.altura_cm,
@@ -246,7 +285,22 @@ const AdminMontarDieta = () => {
       if (error) throw error;
       toast.success("Dieta gerada com sucesso!", { id: toastId });
       
-      if (data?.dieta_id) {
+      if (isAvulso && data?.refeicoes) {
+        setDietaId(null);
+        setIsPublished(false);
+        setRefeicoes((data.refeicoes || []).map((r: any, i: number) => ({
+          nome: r.nome || `Refeição ${i + 1}`,
+          horario: r.horario || "08:00:00",
+          descricao_ia: r.descricao_ia || "",
+        })));
+        const ma: any = data.macros_alvo || {};
+        setMacrosCalculados({
+          kcal: Math.round(data.kcal_alvo || 0),
+          proteina_g: Math.round(ma.proteina_g || 0),
+          carboidrato_g: Math.round(ma.carboidrato_g || 0),
+          lipideos_g: Math.round(ma.lipideos_g || 0),
+        });
+      } else if (data?.dieta_id) {
         setDietaId(data.dieta_id);
         setIsPublished(false); // Sempre gera como rascunho
         const [{ data: refs }, { data: dRow }] = await Promise.all([
@@ -269,7 +323,7 @@ const AdminMontarDieta = () => {
     } finally {
       setGenerating(false);
     }
-  }, [alunoId, perfil, tenant, searchParams, refeicoesDia]);
+  }, [alunoId, perfil, tenant, searchParams, refeicoesDia, isAvulso, iaCommand]);
 
   const addRefeicao = () => {
     setRefeicoes(prev => [
@@ -288,6 +342,10 @@ const AdminMontarDieta = () => {
 
   const salvarPrescricaoDieta = async (publish = false) => {
     if (!alunoId || !tenant) return;
+    if (isAvulso) {
+      toast.info("Avaliação avulsa não é enviada para o app. Baixe o PDF e envie ao aluno.");
+      return;
+    }
     setSaving(true);
     const toastId = toast.loading(publish ? "Publicando dieta..." : "Salvando rascunho...");
 
@@ -521,7 +579,7 @@ const AdminMontarDieta = () => {
 
     // Garante macros calculados antes de gerar PDF
     let macrosPdf = macrosCalculados;
-    if ((!macrosPdf || !macrosPdf.kcal) && dietaId) {
+    if ((!macrosPdf || !macrosPdf.kcal) && dietaId && !isAvulso) {
       const t = toast.loading("Calculando macros da dieta...");
       try {
         const { data } = await supabase.functions.invoke("gerar-dieta", {
@@ -547,7 +605,7 @@ const AdminMontarDieta = () => {
       }
     }
 
-    const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || "";
+    const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo?.replace(/\s*\(avulso\)$/i, "") || "";
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
@@ -871,7 +929,11 @@ const AdminMontarDieta = () => {
           <Label>Aluno</Label>
           <select
             value={alunoId}
-            onChange={(e) => setAlunoId(e.target.value)}
+            onChange={(e) => {
+              const selected = alunos.find((a) => a.id === e.target.value);
+              setIsAvulso(!!selected?.avulso);
+              setAlunoId(e.target.value);
+            }}
             className="w-full mt-2 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
           >
             <option value="">— selecione —</option>
@@ -993,11 +1055,11 @@ const AdminMontarDieta = () => {
                     {adjusting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     Equilibrar Macros
                   </Button>
-                  <Button size="sm" onClick={() => salvarPrescricaoDieta(false)} disabled={saving || !alunoId} className="bg-secondary hover:bg-secondary/80">
+                  <Button size="sm" onClick={() => salvarPrescricaoDieta(false)} disabled={saving || !alunoId || isAvulso} className="bg-secondary hover:bg-secondary/80">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
                     Salvar Rascunho
                   </Button>
-                  <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId} className="bg-primary hover:bg-primary/90">
+                  <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId || isAvulso} className="bg-primary hover:bg-primary/90">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
                     Enviar para Aluno
                   </Button>

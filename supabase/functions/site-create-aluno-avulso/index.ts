@@ -30,13 +30,34 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const { data: tenant, error: tenantErr } = await admin
+    let { data: tenant, error: tenantErr } = await admin
       .from("tenants")
       .select("id, slug, nome")
       .eq("owner_user_id", callerId)
       .maybeSingle();
+
+    if (!tenant) {
+      const { data: roleRow } = await admin
+        .from("user_roles")
+        .select("tenant_id")
+        .eq("user_id", callerId)
+        .eq("role", "coach")
+        .not("tenant_id", "is", null)
+        .limit(1)
+        .maybeSingle();
+      if (roleRow?.tenant_id) {
+        const tenantRes = await admin
+          .from("tenants")
+          .select("id, slug, nome")
+          .eq("id", roleRow.tenant_id)
+          .maybeSingle();
+        tenant = tenantRes.data;
+        tenantErr = tenantRes.error;
+      }
+    }
+
     if (tenantErr || !tenant) {
-      return new Response(JSON.stringify({ error: "Você não é dono de nenhum tenant" }), {
+      return new Response(JSON.stringify({ error: "Você não tem permissão de coach neste tenant" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -55,50 +76,35 @@ Deno.serve(async (req) => {
     const data_nascimento = body.data_nascimento ? String(body.data_nascimento) : null;
     const telefone = body.telefone ? String(body.telefone) : null;
     const email = body.email ? String(body.email).trim().toLowerCase() : null;
+    const peso_inicial_kg = body.peso_inicial_kg ? Number(body.peso_inicial_kg) : null;
+    const altura_cm = body.altura_cm ? Number(body.altura_cm) : null;
 
-    // Cria um auth user (necessário para satisfazer FK alunos.id -> auth.users.id).
-    // Email sintético quando não fornecido — o aluno avulso NÃO recebe credenciais.
-    const syntheticEmail = email || `avulso-${crypto.randomUUID()}@avulso.alpha-coach.app`;
-    const randomPassword = crypto.randomUUID() + "!Aa1";
-
-    const { data: created, error: createErr } = await admin.auth.admin.createUser({
-      email: syntheticEmail,
-      password: randomPassword,
-      email_confirm: true,
-      user_metadata: { nome_completo: nome, avulso: true, tenant_id: tenant.id },
-    });
-
-    if (createErr || !created?.user) {
-      console.error("[avulso] createUser error", createErr);
-      return new Response(JSON.stringify({ error: createErr?.message || "Falha ao criar usuário" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    const newId = created.user.id;
-
-    // Upsert perfil (o trigger handle_new_user pode já ter criado uma linha)
-    const { error: insertErr } = await admin.from("perfis").upsert({
-      id: newId,
-      nome_completo: nome,
-      sexo,
-      data_nascimento,
-      telefone,
-      email: syntheticEmail,
-      tenant_id: tenant.id,
-      onboarding_completo: true,
-    }, { onConflict: "id" });
+    // Avaliação avulsa é separada do app: NÃO cria auth user, NÃO cria perfil e NÃO gera senha.
+    const { data: avulso, error: insertErr } = await admin
+      .from("avaliacao_avulsa_alunos")
+      .insert({
+        tenant_id: tenant.id,
+        coach_user_id: callerId,
+        nome,
+        sexo,
+        data_nascimento,
+        telefone,
+        email,
+        peso_inicial_kg,
+        altura_cm,
+      })
+      .select("id")
+      .single();
 
     if (insertErr) {
-      console.error("[avulso] perfis upsert error", insertErr);
+      console.error("[avulso] insert error", insertErr);
       return new Response(JSON.stringify({ error: insertErr.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    return new Response(JSON.stringify({ ok: true, aluno_id: newId }), {
+    return new Response(JSON.stringify({ ok: true, aluno_id: avulso.id, avulso: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
