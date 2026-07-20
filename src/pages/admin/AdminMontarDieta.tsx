@@ -586,7 +586,7 @@ const AdminMontarDieta = () => {
     }
   }, [searchParams, alunoId, generating, loading, perfil.peso_kg, perfil.altura_cm, gerarComIA]);
 
-  const baixarDietaPdf = async () => {
+  const baixarDietaPdf = async (theme: "dark" | "light" = "dark") => {
     if (refeicoes.length === 0) {
       toast.error("Adicione refeições antes de baixar.");
       return;
@@ -627,12 +627,31 @@ const AdminMontarDieta = () => {
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
 
-    // ==== FUNDO PRETO CINEMATOGRÁFICO ====
-    doc.setFillColor(10, 10, 10);
+    // ==== PALETA por tema ====
+    const isLight = theme === "light";
+    const C = {
+      bg: isLight ? [255, 255, 255] : [10, 10, 10],
+      bgSoft: isLight ? [248, 248, 248] : [20, 20, 20],
+      card: isLight ? [252, 252, 252] : [18, 18, 18],
+      cardStroke: isLight ? [220, 220, 220] : [45, 45, 45],
+      cellBg: isLight ? [245, 245, 245] : [12, 12, 12],
+      cellBorder: isLight ? [225, 225, 225] : [40, 40, 40],
+      pillBg: isLight ? [240, 240, 240] : [30, 30, 30],
+      pillStroke: isLight ? [200, 200, 200] : [80, 80, 80],
+      divider: isLight ? [200, 200, 200] : [60, 60, 60],
+      text: isLight ? [15, 15, 15] : [255, 255, 255],
+      textMute: isLight ? [95, 95, 95] : [180, 180, 180],
+      textBody: isLight ? [40, 40, 40] : [230, 230, 230],
+      metaLabel: isLight ? [110, 110, 110] : [160, 160, 160],
+      fallbackBanner: isLight ? [235, 235, 235] : [30, 30, 30],
+    } as const;
+
+    // ==== FUNDO CINEMATOGRÁFICO ====
+    doc.setFillColor(C.bg[0], C.bg[1], C.bg[2]);
     doc.rect(0, 0, pageW, pageH, "F");
 
-    // Vinheta radial simulada (faixa superior mais escura)
-    doc.setFillColor(20, 20, 20);
+    // Vinheta / faixa superior
+    doc.setFillColor(C.bgSoft[0], C.bgSoft[1], C.bgSoft[2]);
     doc.rect(0, 0, pageW, 70, "F");
 
     // ==== HERO NETFLIX ====
