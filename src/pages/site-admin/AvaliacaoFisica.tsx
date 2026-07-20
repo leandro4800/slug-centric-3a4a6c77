@@ -6,8 +6,9 @@ import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculato
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Ruler, Loader2, User, UserPlus, History, Play } from "lucide-react";
+import { Ruler, Loader2, User, UserPlus, History, Play, Dumbbell, Apple } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface Aluno { id: string; nome_completo: string | null; email: string | null; sexo: string | null; data_nascimento: string | null; avatar_url: string | null; }
 interface Avaliacao {
