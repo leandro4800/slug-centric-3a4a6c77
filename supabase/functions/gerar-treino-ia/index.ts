@@ -118,6 +118,14 @@ serve(async (req) => {
           .from("alunos").select("tenant_id").eq("id", requestedTarget).maybeSingle();
         alunoRow = alunoLegacy;
       }
+      if (!alunoRow?.tenant_id && perfil?.avulso) {
+        const { data: alunoAvulso } = await adminE
+          .from("avaliacao_avulsa_alunos")
+          .select("tenant_id")
+          .eq("id", requestedTarget)
+          .maybeSingle();
+        alunoRow = alunoAvulso;
+      }
       if (!alunoRow) {
         return new Response(JSON.stringify({ error: "Aluno não encontrado" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },

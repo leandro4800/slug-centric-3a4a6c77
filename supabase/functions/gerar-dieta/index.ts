@@ -26,6 +26,7 @@ interface DietRequest {
   refeicoes_dia?: number;
   prompt?: string;
   aluno_id?: string;
+  avulso?: boolean;
   dieta_id?: string;
   kcal_alvo?: number;
   macros_alvo?: any;
@@ -58,15 +59,29 @@ serve(async (req) => {
     const body: DietRequest = await req.json().catch(() => ({}));
     const mode = body.mode || "generate";
     let targetUserId = user.id;
+    let targetIsAvulso = false;
+    let targetTenantId: string | null = null;
 
     if (body.aluno_id && body.aluno_id !== user.id) {
-      const { data: alunoRow } = await supabase
+      let { data: alunoRow } = await supabase
         .from("perfis").select("id, tenant_id").eq("id", body.aluno_id).maybeSingle();
+      if (!alunoRow && body.avulso) {
+        const { data: avulsoRow } = await supabase
+          .from("avaliacao_avulsa_alunos")
+          .select("id, tenant_id")
+          .eq("id", body.aluno_id)
+          .maybeSingle();
+        if (avulsoRow) {
+          alunoRow = avulsoRow;
+          targetIsAvulso = true;
+        }
+      }
       if (!alunoRow) {
         return new Response(JSON.stringify({ error: "Aluno não encontrado" }), {
           status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
+      targetTenantId = alunoRow.tenant_id;
       // AuthZ: caller precisa ser admin global, coach do tenant do aluno, ou owner do tenant
       const [{ data: isAdmin }, { data: isCoach }, { data: tenantRow }] = await Promise.all([
         supabase.rpc("has_role", { _user_id: user.id, _role: "admin" }),
@@ -376,15 +391,16 @@ na MESMA ORDEM recebida.`;
     const refDia = body.refeicoes_dia || 4;
 
     // === FIGHT VERTICAL: detecta tenant e fase ativa ===
-    const { data: perfilFight } = await supabase
-      .from("perfis").select("tenant_id").eq("id", targetUserId).maybeSingle();
+    const perfilFight = targetTenantId
+      ? { tenant_id: targetTenantId }
+      : (await supabase.from("perfis").select("tenant_id").eq("id", targetUserId).maybeSingle()).data;
     let fightVertical = false;
     let faseAtiva: any = null;
     if (perfilFight?.tenant_id) {
       const { data: tenantRow } = await supabase
         .from("tenants").select("vertical").eq("id", perfilFight.tenant_id).maybeSingle();
       fightVertical = tenantRow?.vertical === "fight";
-      if (fightVertical) {
+      if (fightVertical && !targetIsAvulso) {
         const hoje = new Date().toISOString().slice(0, 10);
         const { data: fase } = await supabase
           .from("fight_nutrition_fases")
@@ -460,11 +476,13 @@ No JSON, inclua o campo "tag_clinica" no nível raiz com EXATAMENTE: "${fightBad
     }
 
     // 1. Anamnese do aluno (PRIORIDADE MÁXIMA na escolha de alimentos)
-    const { data: anamnese } = await supabase
-      .from("anamnese_aluno")
-      .select("alimentos_ama, alimentos_evita, restricoes_alimentares, suplementos, refeicoes_dia")
-      .eq("aluno_id", targetUserId)
-      .maybeSingle();
+    const { data: anamnese } = targetIsAvulso
+      ? ({ data: null } as any)
+      : await supabase
+        .from("anamnese_aluno")
+        .select("alimentos_ama, alimentos_evita, restricoes_alimentares, suplementos, refeicoes_dia")
+        .eq("aluno_id", targetUserId)
+        .maybeSingle();
 
     const alimentosAma = anamnese?.alimentos_ama?.trim() || "";
     const alimentosEvita = anamnese?.alimentos_evita?.trim() || "";
@@ -581,6 +599,23 @@ Não escreva justificativas longas; o resumo deve ser direto para o aluno objeti
     }
     const aiData = await aiResp.json();
     const plano = JSON.parse(aiData.choices[0].message.content);
+
+    if (targetIsAvulso) {
+      return new Response(JSON.stringify({
+        success: true,
+        avulso: true,
+        refeicoes: plano.refeicoes || [],
+        kcal_alvo: kcalFinal,
+        macros_alvo: {
+          proteina_g: protFinal,
+          carboidrato_g: carboFinal,
+          lipideos_g: gordFinal,
+          ...(fightBadge ? { badge: fightBadge, fase: faseAtiva?.fase || null } : {}),
+        },
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: dieta, error: dietaErr } = await supabase
       .from("dietas")
