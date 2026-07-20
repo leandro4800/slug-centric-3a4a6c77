@@ -56,21 +56,42 @@ Deno.serve(async (req) => {
     const telefone = body.telefone ? String(body.telefone) : null;
     const email = body.email ? String(body.email).trim().toLowerCase() : null;
 
-    // Gera UUID novo (sem auth user) — perfis.id é livre
-    const newId = crypto.randomUUID();
+    // Cria um auth user (necessário para satisfazer FK alunos.id -> auth.users.id).
+    // Email sintético quando não fornecido — o aluno avulso NÃO recebe credenciais.
+    const syntheticEmail = email || `avulso-${crypto.randomUUID()}@avulso.alpha-coach.app`;
+    const randomPassword = crypto.randomUUID() + "!Aa1";
 
-    const { error: insertErr } = await admin.from("perfis").insert({
+    const { data: created, error: createErr } = await admin.auth.admin.createUser({
+      email: syntheticEmail,
+      password: randomPassword,
+      email_confirm: true,
+      user_metadata: { nome_completo: nome, avulso: true, tenant_id: tenant.id },
+    });
+
+    if (createErr || !created?.user) {
+      console.error("[avulso] createUser error", createErr);
+      return new Response(JSON.stringify({ error: createErr?.message || "Falha ao criar usuário" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const newId = created.user.id;
+
+    // Upsert perfil (o trigger handle_new_user pode já ter criado uma linha)
+    const { error: insertErr } = await admin.from("perfis").upsert({
       id: newId,
       nome_completo: nome,
       sexo,
       data_nascimento,
       telefone,
-      email,
+      email: syntheticEmail,
       tenant_id: tenant.id,
       onboarding_completo: true,
-    });
+    }, { onConflict: "id" });
 
     if (insertErr) {
+      console.error("[avulso] perfis upsert error", insertErr);
       return new Response(JSON.stringify({ error: insertErr.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
