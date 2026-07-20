@@ -325,16 +325,16 @@ export default function JacksonPollockCalculator({
       if (error) throw error;
       
       const ext = data?.extractedData || data?.data || data;
-      console.log("[7dobras] extracted:", ext);
       if (ext && typeof ext === "object") {
         const { next, peso: p, idade: i, foundCount } = extractSevenFolds(ext, dobras);
         setDobras(next);
         if (p) setPeso(p);
         if (i) setIdade(i);
         if (foundCount === 0) {
-          toast.error("A IA não conseguiu identificar valores das dobras nesta imagem/arquivo.", { id: toastId });
+          toast.error("A IA não encontrou os campos: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca e Coxa.", { id: toastId });
         } else {
-          toast.success(`${foundCount} dobra(s) preenchida(s) pela IA.`, { id: toastId });
+          const labels = DOBRAS.filter((d) => next[d.key] && next[d.key] !== dobras[d.key]).map((d) => d.label).join(", ");
+          toast.success(`Campos preenchidos: ${labels || `${foundCount} dobra(s)`}.`, { id: toastId });
         }
       } else {
         throw new Error("Não foi possível extrair dados do arquivo.");
