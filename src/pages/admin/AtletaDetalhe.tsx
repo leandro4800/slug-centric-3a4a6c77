@@ -364,10 +364,11 @@ const AtletaDetalhe = () => {
       const { data, error } = await supabase.functions.invoke("import-with-ai", {
         body: { 
           file: base64, 
-          fileType: file.type,
+          fileType: file.type || "image/jpeg",
           importType,
           alunoId: aluno.id,
-          tenantId: aluno.tenant_id
+          tenantId: aluno.tenant_id,
+          dryRun: importType === "avaliacao",
         },
       });
 
@@ -380,7 +381,7 @@ const AtletaDetalhe = () => {
         toast.success("Dieta importada com sucesso!", { id: toastId });
         void load();
       } else {
-        const ext = data.data; // Dados extraídos pela IA
+        const ext = data.extractedData || data.data; // Dados extraídos pela IA
         if (ext) {
           toast.loading("Salvando dados da avaliação...", { id: toastId });
           
