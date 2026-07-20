@@ -687,26 +687,41 @@ const AdminMontarDieta = () => {
     doc.setFontSize(28);
     doc.text("PLANO ALIMENTAR", heroX, 26);
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(C.textMute[0], C.textMute[1], C.textMute[2]);
-    doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 32);
+    // Badge "METODOLOGIA ALPHA COACH · TEMPORADA 2026"
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7);
+    const methTxt = "METODOLOGIA ALPHA COACH  •  TEMPORADA 2026";
+    const methW = doc.getTextWidth(methTxt) + 6;
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
+    doc.roundedRect(heroX, 29, methW, 5.5, 1, 1, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.text(methTxt, heroX + methW / 2, 32.8, { align: "center" });
 
     // Barra atleta/coach
     doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
-    doc.setLineWidth(0.4);
-    doc.line(heroX, 36, pageW - 12, 36);
+    doc.setLineWidth(0.6);
+    doc.line(heroX, 37.5, pageW - 12, 37.5);
 
+    // Atleta em destaque
     doc.setTextColor(C.text[0], C.text[1], C.text[2]);
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(10);
+    doc.setFontSize(11);
     const atletaLabel = alunoNome ? alunoNome.toUpperCase() : "ATLETA";
-    doc.text(atletaLabel, heroX, 42);
+    doc.text(atletaLabel, heroX, 43.5);
+
+    // Coach como badge outline com cor do tenant
     if (tenant?.nome) {
-      doc.setTextColor(C.textMute[0], C.textMute[1], C.textMute[2]);
-      doc.setFont("helvetica", "normal");
+      const coachTxt = `COACH ${tenant.nome.toUpperCase()}`;
+      doc.setFont("helvetica", "bold");
       doc.setFontSize(8);
-      doc.text(`COACH ${tenant.nome.toUpperCase()}`, pageW - 12, 42, { align: "right" });
+      const cw = doc.getTextWidth(coachTxt) + 6;
+      const cxb = pageW - 12 - cw;
+      doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
+      doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
+      doc.setLineWidth(0.4);
+      doc.roundedRect(cxb, 39.5, cw, 5.5, 1, 1, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.text(coachTxt, cxb + cw / 2, 43.3, { align: "center" });
     }
 
     let y = 52;
