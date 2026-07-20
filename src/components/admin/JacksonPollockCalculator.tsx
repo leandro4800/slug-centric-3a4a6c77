@@ -109,6 +109,11 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
     if (parsed && num(parsed) > 0) values[key] = parsed;
   };
 
+  const isOneOf = (key: string, options: string[]) => {
+    const normalized = normalizeKey(key);
+    return options.some((option) => normalized === normalizeKey(option));
+  };
+
   const walk = (obj: unknown) => {
     if (!obj) return;
     if (typeof obj === "string") {
@@ -132,8 +137,12 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
     if (typeof obj !== "object") return;
 
     const entries = Object.entries(obj as Record<string, unknown>);
-    const labelEntry = entries.find(([k]) => ["nome", "name", "label", "dobra", "medida", "campo", "tipo"].includes(normalizeKey(k)));
-    const valueEntry = entries.find(([k]) => ["valor", "value", "mm", "valor mm", "valor_mm", "medicao", "medição", "resultado"].includes(normalizeKey(k)));
+    const labelEntry = entries.find(([k]) =>
+      isOneOf(k, ["nome", "name", "label", "dobra", "medida", "campo", "tipo", "local", "regiao", "região", "ponto", "site"]),
+    );
+    const valueEntry = entries.find(([k]) =>
+      isOneOf(k, ["valor", "value", "mm", "valor mm", "valor_mm", "medicao", "medição", "resultado", "medida_mm", "dobra_mm"]),
+    );
     if (labelEntry && valueEntry) setFold(findFoldByLabel(labelEntry[1]), valueEntry[1]);
 
     for (const [rawKey, value] of entries) {
