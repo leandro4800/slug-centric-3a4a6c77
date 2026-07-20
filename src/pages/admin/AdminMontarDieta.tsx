@@ -652,7 +652,7 @@ const AdminMontarDieta = () => {
 
     // Vinheta / faixa superior
     doc.setFillColor(C.bgSoft[0], C.bgSoft[1], C.bgSoft[2]);
-    doc.rect(0, 0, pageW, 70, "F");
+    doc.rect(0, 0, pageW, 54, "F");
 
     // ==== HERO NETFLIX ====
     const logo = await loadImageDataUrl(tenant?.logo_url);
