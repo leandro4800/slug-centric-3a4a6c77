@@ -166,32 +166,53 @@ export default function JacksonPollockCalculator({
           fileType: file.type,
           importType: "7dobras",
           alunoId: alunoId,
-          tenantId: tenantId
+          tenantId: tenantId,
+          dryRun: true,
         },
       });
 
       if (error) throw error;
       
-      const ext = data?.extractedData || data?.data;
-      if (ext) {
-        // A IA retorna dobras aninhadas em ext.dobras (snake_case). Aceitamos também valores no nível raiz como fallback.
-        const d = ext.dobras || {};
-        const pick = (a: any, b: any, c: any) => {
-          const v = a ?? b ?? c;
-          return v !== undefined && v !== null && v !== "" ? String(v) : "";
+      const ext = data?.extractedData || data?.data || data;
+      console.log("[7dobras] extracted:", ext);
+      if (ext && typeof ext === "object") {
+        // Coleta todos os valores numéricos em qualquer nível do objeto por nome de chave
+        const flat: Record<string, any> = {};
+        const walk = (obj: any) => {
+          if (!obj || typeof obj !== "object") return;
+          for (const [k, v] of Object.entries(obj)) {
+            if (v && typeof v === "object" && !Array.isArray(v)) walk(v);
+            else if (flat[k] === undefined) flat[k] = v;
+          }
         };
-        setDobras({
-          peitoral: pick(d.peitoral, ext.peitoral, dobras.peitoral) || dobras.peitoral,
-          axilarMedia: pick(d.axilar_media, ext.axilar_media ?? ext.axilarMedia, dobras.axilarMedia) || dobras.axilarMedia,
-          triceps: pick(d.triceps, ext.triceps, dobras.triceps) || dobras.triceps,
-          subescapular: pick(d.subescapular, ext.subescapular, dobras.subescapular) || dobras.subescapular,
-          abdominal: pick(d.abdominal, ext.abdominal, dobras.abdominal) || dobras.abdominal,
-          suprailiaca: pick(d.suprailiaca, ext.suprailiaca, dobras.suprailiaca) || dobras.suprailiaca,
-          coxa: pick(d.coxa, ext.coxa, dobras.coxa) || dobras.coxa,
-        });
-        if (ext.peso) setPeso(String(ext.peso));
-        if (ext.idade) setIdade(String(ext.idade));
-        toast.success("Dobras extraídas com sucesso!", { id: toastId });
+        walk(ext);
+        const pickKey = (...keys: string[]) => {
+          for (const k of keys) {
+            const v = flat[k];
+            if (v !== undefined && v !== null && v !== "") return String(v);
+          }
+          return "";
+        };
+        const next = {
+          peitoral: pickKey("peitoral", "peitoral_mm", "chest") || dobras.peitoral,
+          axilarMedia: pickKey("axilar_media", "axilarMedia", "axilar", "midaxillary") || dobras.axilarMedia,
+          triceps: pickKey("triceps", "tríceps", "tricep") || dobras.triceps,
+          subescapular: pickKey("subescapular", "subscapular") || dobras.subescapular,
+          abdominal: pickKey("abdominal", "abdomen", "abdômen") || dobras.abdominal,
+          suprailiaca: pickKey("suprailiaca", "supra_iliaca", "suprailíaca", "suprailiac") || dobras.suprailiaca,
+          coxa: pickKey("coxa", "thigh") || dobras.coxa,
+        };
+        setDobras(next);
+        const p = pickKey("peso", "peso_kg", "weight");
+        if (p) setPeso(p);
+        const i = pickKey("idade", "age");
+        if (i) setIdade(i);
+        const preenchidas = Object.values(next).filter((v) => v && v !== "").length;
+        if (preenchidas === 0) {
+          toast.error("A IA não conseguiu identificar valores das dobras nesta imagem/arquivo.", { id: toastId });
+        } else {
+          toast.success(`${preenchidas} dobra(s) preenchida(s) pela IA.`, { id: toastId });
+        }
       } else {
         throw new Error("Não foi possível extrair dados do arquivo.");
       }
