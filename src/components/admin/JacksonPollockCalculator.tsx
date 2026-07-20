@@ -159,6 +159,7 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
   const walk = (obj: unknown) => {
     if (!obj) return;
     if (typeof obj === "string") {
+      textoLido ||= obj.slice(0, 1200);
       const normalizedText = normalizeKey(obj);
       for (const [fold, aliases] of Object.entries(foldAliases) as [DobraKey, string[]][]) {
         if (values[fold]) continue;
@@ -279,6 +280,7 @@ export default function JacksonPollockCalculator({
     setIdade(idadeInicial ? String(idadeInicial) : "");
     setPeso(pesoInicial ? String(pesoInicial) : "");
     setSexo((sexoInicial?.toUpperCase().startsWith("F") ? "F" : "M") as Sexo);
+    setAiAnalysis(null);
   }, [alunoId, idadeInicial, pesoInicial, sexoInicial]);
 
   const calc = useMemo(() => {
