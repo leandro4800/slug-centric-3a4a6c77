@@ -466,6 +466,7 @@ Retorne este JSON exato:
     }
 
     if (importType === "7dobras" || importType === "avaliacao") {
+      result = mergeSevenFoldResult(result);
       console.log("[import-with-ai] 7dobras extracted keys", JSON.stringify({
         hasDobras: !!result?.dobras,
         campos: result?.campos_encontrados || null,
