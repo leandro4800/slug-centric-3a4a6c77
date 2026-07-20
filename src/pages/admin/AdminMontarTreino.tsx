@@ -650,6 +650,7 @@ const AdminMontarTreino = () => {
       toast.error("Gere ou adicione exercícios antes de baixar a planilha.");
       return;
     }
+    const PRIMARY = getTenantPrimaryRgb(tenant);
     const doc = new jsPDF({ unit: "mm", format: "a4" });
     const pageW = doc.internal.pageSize.getWidth();
     const pageHTotal = doc.internal.pageSize.getHeight();
