@@ -31,31 +31,145 @@ const parseJsonContent = (content: string) => {
   }
 };
 
-const hasSevenFoldValues = (result: any) => {
-  const dobras = result?.dobras || result?.skinfolds || result?.seven_folds || {};
-  const keys = ["peitoral", "axilar_media", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"];
-  return keys.some((key) => {
-    const value = dobras?.[key] ?? dobras?.[key.replace("_", "")] ?? result?.[key] ?? result?.[key.replace("_", "")];
-    if (value === null || value === undefined || value === "") return false;
-    const n = Number(String(value).replace(",", ".").match(/\d{1,3}(?:\.\d+)?/)?.[0]);
-    return Number.isFinite(n) && n >= 2 && n <= 80;
-  });
+const SEVEN_FOLD_KEYS = ["peitoral", "axilar_media", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"] as const;
+type SevenFoldKey = typeof SEVEN_FOLD_KEYS[number];
+
+const normalizeToken = (value: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+
+const numberFromUnknown = (value: unknown) => {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  const text = String(value ?? "").replace(",", ".");
+  const match = text.match(/\b\d{1,3}(?:\.\d+)?\b/);
+  if (!match) return null;
+  const n = Number(match[0]);
+  return Number.isFinite(n) && n >= 2 && n <= 80 ? n : null;
 };
 
-const mergeSevenFoldResult = (primary: any, fallback: any) => {
-  const keys = ["peitoral", "axilar_media", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"];
-  const merged = {
-    ...(primary || {}),
-    peso: primary?.peso ?? fallback?.peso ?? null,
-    altura: primary?.altura ?? fallback?.altura ?? null,
-    idade: primary?.idade ?? fallback?.idade ?? null,
-    sexo: primary?.sexo ?? fallback?.sexo ?? null,
-    dobras: { ...(primary?.dobras || {}) },
-    campos_encontrados: primary?.campos_encontrados?.length ? primary.campos_encontrados : (fallback?.campos_encontrados || []),
-    texto_lido: primary?.texto_lido || fallback?.texto_lido || "",
+const FOLD_ALIASES: Record<SevenFoldKey, string[]> = {
+  peitoral: ["peitoral", "dobra peitoral", "chest", "pectoral", "pectoralis", "torax", "tórax", "pt", "peit"],
+  axilar_media: ["axilar media", "axilar média", "axilar medial", "axilarmedia", "midaxillary", "axilar", "ax", "am"],
+  triceps: ["triceps", "tríceps", "tricep", "tricipital", "tri", "tric"],
+  subescapular: ["subescapular", "sub escapular", "subescapularis", "sub scapular", "subscapular", "sub", "subesc", "se"],
+  abdominal: ["abdominal", "abdomen", "abdômen", "dobra abdominal", "abdominal vertical", "abd"],
+  suprailiaca: ["suprailiaca", "suprailíaca", "supra iliaca", "supra-ilíaca", "suprailiac", "supra", "si"],
+  coxa: ["coxa", "coxa medial", "coxa media", "coxa média", "thigh", "cx"],
+};
+
+const findSevenFoldKey = (label: unknown): SevenFoldKey | null => {
+  const normalized = normalizeToken(label);
+  if (!normalized) return null;
+  for (const key of SEVEN_FOLD_KEYS) {
+    for (const alias of FOLD_ALIASES[key]) {
+      const normalizedAlias = normalizeToken(alias);
+      if (normalized === normalizedAlias || normalized.includes(normalizedAlias) || normalizedAlias.includes(normalized)) return key;
+    }
+  }
+  return null;
+};
+
+const normalizeSevenFoldResult = (...sources: any[]) => {
+  const dobras: Record<SevenFoldKey, number | null> = {
+    peitoral: null,
+    axilar_media: null,
+    triceps: null,
+    subescapular: null,
+    abdominal: null,
+    suprailiaca: null,
+    coxa: null,
   };
-  for (const key of keys) merged.dobras[key] = merged.dobras[key] ?? fallback?.dobras?.[key] ?? fallback?.[key] ?? null;
-  return merged;
+  const campos = new Set<string>();
+  const textParts: string[] = [];
+  let peso: number | null = null;
+  let altura: number | null = null;
+  let idade: number | null = null;
+  let sexo: string | null = null;
+
+  const setFold = (key: SevenFoldKey | null, value: unknown, label?: unknown) => {
+    if (!key || dobras[key] !== null) return;
+    const n = numberFromUnknown(value);
+    if (n === null) return;
+    dobras[key] = n;
+    if (label) campos.add(String(label));
+  };
+
+  const fillByOrder = (values: unknown[]) => {
+    const nums = values.map(numberFromUnknown).filter((n): n is number => n !== null);
+    if (nums.length >= 7) SEVEN_FOLD_KEYS.forEach((key, index) => setFold(key, nums[index], "ordem Jackson & Pollock"));
+  };
+
+  const parseText = (text: string) => {
+    if (!text.trim()) return;
+    textParts.push(text.slice(0, 1500));
+    const lines = text.split(/\n|;|\|/).map((line) => line.trim()).filter(Boolean);
+    for (const line of lines) {
+      for (const key of SEVEN_FOLD_KEYS) {
+        if (dobras[key] !== null) continue;
+        for (const alias of FOLD_ALIASES[key]) {
+          const rx = new RegExp(`${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*")}[^0-9]{0,80}(\\d{1,3}(?:[,.]\\d+)?)`, "i");
+          const match = line.match(rx);
+          if (match?.[1]) setFold(key, match[1], alias);
+        }
+      }
+    }
+    const mentioned = SEVEN_FOLD_KEYS.filter((key) => FOLD_ALIASES[key].some((alias) => normalizeToken(text).includes(normalizeToken(alias)))).length;
+    if (mentioned >= 4) fillByOrder([...text.matchAll(/\b\d{1,3}(?:[,.]\d+)?\b/g)].map((m) => m[0]));
+  };
+
+  const walk = (obj: unknown) => {
+    if (obj === null || obj === undefined) return;
+    if (typeof obj === "string") { parseText(obj); return; }
+    if (typeof obj === "number") return;
+    if (Array.isArray(obj)) {
+      if (obj.length >= 7 && obj.every((item) => typeof item === "string" || typeof item === "number")) fillByOrder(obj);
+      obj.forEach(walk);
+      return;
+    }
+    if (typeof obj !== "object") return;
+
+    const entries = Object.entries(obj as Record<string, unknown>);
+    const labelEntry = entries.find(([k]) => ["nome", "name", "label", "dobra", "campo", "tipo", "local", "regiao", "região", "ponto", "site", "campo_lido"].includes(normalizeToken(k)));
+    const valueEntry = entries.find(([k]) => ["valor", "value", "mm", "valormm", "valor_mm", "medicao", "medição", "resultado", "medidamm", "medida_mm", "dobramm", "dobra_mm", "milimetros", "milímetros"].includes(normalizeToken(k)));
+    if (labelEntry && valueEntry) setFold(findSevenFoldKey(labelEntry[1]), valueEntry[1], labelEntry[1]);
+
+    const orderedEntry = entries.find(([k, value]) => ["valores", "values", "medidas", "dobras", "lista", "ordem", "ordemjacksonpollock", "ordem_jackson_pollock"].includes(normalizeToken(k)) && Array.isArray(value));
+    if (orderedEntry && Array.isArray(orderedEntry[1])) fillByOrder(orderedEntry[1]);
+
+    for (const [rawKey, value] of entries) {
+      const key = normalizeToken(rawKey);
+      if (["peso", "pesokg", "peso_kg", "weight"].includes(key)) peso ??= numberFromUnknown(value);
+      if (["altura", "alturacm", "altura_cm", "height"].includes(key)) altura ??= numberFromUnknown(value);
+      if (["idade", "age"].includes(key)) idade ??= numberFromUnknown(value);
+      if (["sexo", "gender"].includes(key) && value) sexo ??= String(value).toUpperCase().startsWith("F") ? "F" : String(value).toUpperCase().startsWith("M") ? "M" : null;
+      setFold(findSevenFoldKey(rawKey), value, rawKey);
+      if (["textolido", "texto_lido", "texto", "ocr", "transcricao", "transcrição", "rawtext", "content", "conteudo", "conteúdo"].includes(key)) parseText(String(value ?? ""));
+      walk(value);
+    }
+  };
+
+  sources.forEach(walk);
+  return { peso, altura, idade, sexo, dobras, campos_encontrados: [...campos], texto_lido: textParts.join("\n").slice(0, 3000) };
+};
+
+const hasSevenFoldValues = (result: any) => Object.values(normalizeSevenFoldResult(result).dobras).some((value) => value !== null);
+
+const mergeSevenFoldResult = (...sources: any[]) => {
+  const normalized = normalizeSevenFoldResult(...sources);
+  const first = sources.find(Boolean) || {};
+  return {
+    ...first,
+    peso: first?.peso ?? normalized.peso,
+    altura: first?.altura ?? normalized.altura,
+    idade: first?.idade ?? normalized.idade,
+    sexo: first?.sexo ?? normalized.sexo,
+    dobras: normalized.dobras,
+    campos_encontrados: normalized.campos_encontrados,
+    texto_lido: first?.texto_lido || normalized.texto_lido,
+  };
 };
 
 const ANAMNESE_SCHEMA = `Estrutura esperada: {
