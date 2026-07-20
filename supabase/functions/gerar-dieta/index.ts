@@ -10,6 +10,15 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+const parseJsonContent = (content: string) => {
+  try {
+    return JSON.parse(content || "{}");
+  } catch {
+    const m = String(content || "").match(/\{[\s\S]*\}/);
+    return m ? JSON.parse(m[0]) : {};
+  }
+};
+
 interface DietRequest {
   mode?: "generate" | "refine" | "recalc";
   objetivo?: string;
