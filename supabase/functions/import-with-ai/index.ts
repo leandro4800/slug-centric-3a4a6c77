@@ -379,7 +379,7 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
       body: JSON.stringify({
         model: (importType === "7dobras" || importType === "avaliacao") ? "openai/gpt-5.5" : "google/gemini-2.5-flash",
         messages,
@@ -441,7 +441,7 @@ Retorne este JSON exato:
 
       const fallbackResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "openai/gpt-5.5",
           messages: fallbackMessages,
@@ -462,6 +462,62 @@ Retorne este JSON exato:
         }));
       } else {
         console.error("[import-with-ai] 7dobras fallback error", fallbackResponse.status, await fallbackResponse.text().catch(() => ""));
+      }
+    }
+
+    if ((importType === "7dobras" || importType === "avaliacao") && isImage && !hasSevenFoldValues(result)) {
+      const geminiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "google/gemini-3.5-flash",
+          messages: [
+            {
+              role: "system",
+              content: "Você é um OCR de alta precisão para fichas de avaliação física. Responda somente JSON válido, sem markdown.",
+            },
+            {
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `Leia esta imagem e transcreva qualquer tabela de dobras cutâneas. Extraia somente estes campos em milímetros: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa.
+
+Mapeamento visual obrigatório:
+PEITORAL -> dobras.peitoral
+AXILAR MÉDIA / AXILAR MEDIA / AXILAR MEDIAL -> dobras.axilar_media
+TRÍCEPS / TRICEPS -> dobras.triceps
+SUBESCAPULAR / SUB ESCAPULAR -> dobras.subescapular
+ABDOMINAL / ABDÔMEN -> dobras.abdominal
+SUPRAILÍACA / SUPRA ILIACA / SUPRA-ILÍACA -> dobras.suprailiaca
+COXA / COXA MEDIAL -> dobras.coxa
+
+Se vir apenas 7 valores de dobras na ficha, use esta ordem: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca, Coxa.
+
+Retorne exatamente:
+{"peso":null,"altura":null,"idade":null,"sexo":null,"dobras":{"peitoral":null,"axilar_media":null,"triceps":null,"subescapular":null,"abdominal":null,"suprailiaca":null,"coxa":null},"campos_encontrados":[],"texto_lido":""}`,
+                },
+                { type: "image_url", image_url: { url: `data:${imageMimeType};base64,${file}` } },
+              ],
+            },
+          ],
+          response_format: { type: "json_object" },
+        }),
+      });
+
+      if (geminiResponse.ok) {
+        const geminiData = await geminiResponse.json();
+        const geminiContent = geminiData?.choices?.[0]?.message?.content || "{}";
+        const geminiResult = parseJsonContent(geminiContent);
+        result = mergeSevenFoldResult(result, geminiResult);
+        console.log("[import-with-ai] 7dobras gemini fallback", JSON.stringify({
+          usedGeminiFallback: true,
+          hasDobras: hasSevenFoldValues(result),
+          campos: result?.campos_encontrados || null,
+          dobras: result?.dobras || null,
+        }));
+      } else {
+        console.error("[import-with-ai] 7dobras gemini fallback error", geminiResponse.status, await geminiResponse.text().catch(() => ""));
       }
     }
 
