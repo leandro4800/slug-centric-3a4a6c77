@@ -241,6 +241,25 @@ const AvaliacaoFisica = () => {
         </div>
       )}
 
+      {/* Ações pós-avaliação: montar treino/dieta e baixar PDFs */}
+      {selectedAlunoId && (
+        <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Próximos passos</p>
+          <h2 className="font-display text-lg uppercase tracking-wider mb-3">Prescrever para este aluno</h2>
+          <p className="text-xs text-muted-foreground mb-4">
+            A dieta usará automaticamente os dados salvos na avaliação (peso, altura, BF%, sexo, idade). Depois baixe o PDF e envie ao aluno.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link to={`/site/admin/montar-treino?aluno=${selectedAlunoId}`}>
+              <Button className="gap-2"><Dumbbell className="h-4 w-4" /> Montar treino</Button>
+            </Link>
+            <Link to={`/site/admin/montar-dieta?aluno=${selectedAlunoId}`}>
+              <Button variant="secondary" className="gap-2"><Apple className="h-4 w-4" /> Montar dieta</Button>
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Histórico do aluno selecionado */}
       {selectedAlunoId && historico.length > 0 && (
         <div className="rounded-2xl border border-border/50 bg-card p-5">
