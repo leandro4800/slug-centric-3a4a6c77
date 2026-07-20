@@ -74,6 +74,8 @@ const normalizeNumberText = (value: unknown) => {
   return match ? match[0].replace(",", ".") : "";
 };
 
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) => {
   const values: Partial<Record<DobraKey, string>> = {};
   let peso = "";
@@ -117,7 +119,7 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
   };
 
   const extractNumbersFromText = (text: string) =>
-    [...text.matchAll(/\b\d{1,2}(?:[,.]\d)?\b/g)]
+    [...text.matchAll(/\b\d{1,3}(?:[,.]\d+)?\b/g)]
       .map((m) => m[0].replace(",", "."))
       .filter((value) => {
         const n = num(value);
@@ -140,10 +142,22 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
       for (const [fold, aliases] of Object.entries(foldAliases) as [DobraKey, string[]][]) {
         if (values[fold]) continue;
         for (const alias of aliases) {
-          const rx = new RegExp(`${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s*")}[^0-9]{0,40}(\d{1,2}(?:[,.]\d)?)`, "i");
+          const rx = new RegExp(`${escapeRegex(alias).replace(/\s+/g, "\\s*")}[^0-9]{0,80}(\\d{1,3}(?:[,.]\\d+)?)`, "i");
           const match = obj.match(rx);
           if (match?.[1]) {
             setFold(fold, match[1]);
+            break;
+          }
+        }
+      }
+      const compactText = normalizedText;
+      for (const [fold, aliases] of Object.entries(foldAliases) as [DobraKey, string[]][]) {
+        if (values[fold]) continue;
+        for (const alias of aliases) {
+          const compactAlias = normalizeKey(alias);
+          const compactMatch = compactText.match(new RegExp(`${compactAlias}.{0,50}?(\\d{1,3}(?:[,.]\\d+)?)`));
+          if (compactMatch?.[1]) {
+            setFold(fold, compactMatch[1]);
             break;
           }
         }
@@ -188,7 +202,7 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
       const key = normalizeKey(rawKey);
       if (key === "peso" || key === "pesokg" || key === "weight") peso ||= normalizeNumberText(value);
       if (key === "idade" || key === "age") idade ||= normalizeNumberText(value);
-      if (key === "textolido" || key === "ocr" || key === "transcricao" || key === "rawtext") walk(String(value || ""));
+      if (["textolido", "texto", "ocr", "transcricao", "transcription", "rawtext", "conteudo", "content", "observacoes"].includes(key)) walk(String(value || ""));
       setFold(findFoldByLabel(rawKey), value);
       walk(value);
     }
