@@ -328,7 +328,7 @@ export default function JacksonPollockCalculator({
       const { data, error } = await supabase.functions.invoke("import-with-ai", {
         body: { 
           file: base64, 
-          fileType: file.type,
+          fileType: file.type || "image/jpeg",
           importType: "7dobras",
           alunoId: alunoId,
           tenantId: tenantId,
