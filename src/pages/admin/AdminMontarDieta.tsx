@@ -921,16 +921,38 @@ const AdminMontarDieta = () => {
       });
 
       // ==== DESCRIÇÃO ====
-      doc.setTextColor(C.textBody[0], C.textBody[1], C.textBody[2]);
-      doc.setFont("helvetica", "normal");
       doc.setFontSize(bodyFs);
       const text = r.descricao_ia || "—";
-      const lines = doc.splitTextToSize(text, cardW - padX * 2);
+      const rawLines = text.split(/\n/).flatMap((ln) =>
+        doc.splitTextToSize(ln, cardW - padX * 2 - 3) as string[],
+      );
+      const lineH = bodyFs * 0.45;
       const maxTextH = cardH - bodyTop - 2;
-      const lineH = bodyFs * 0.42;
       const maxLinesFit = Math.floor(maxTextH / lineH);
-      const shownLines = lines.slice(0, Math.max(1, maxLinesFit));
-      doc.text(shownLines, cx + padX, cy + bodyTop + 2);
+      const shownLines = rawLines.slice(0, Math.max(1, maxLinesFit));
+      let ty = cy + bodyTop + 2;
+      shownLines.forEach((ln) => {
+        // bullet primário
+        doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
+        doc.circle(cx + padX + 0.8, ty - 1.2, 0.7, "F");
+        // separa "Alimento - quantidade" para destacar
+        const m = ln.match(/^(.*?)([\s]*[-–—:][\s]*)(.+)$/);
+        const startX = cx + padX + 3;
+        if (m) {
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(C.text[0], C.text[1], C.text[2]);
+          doc.text(m[1], startX, ty);
+          const w1 = doc.getTextWidth(m[1]);
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(C.textBody[0], C.textBody[1], C.textBody[2]);
+          doc.text(m[2] + m[3], startX + w1, ty);
+        } else {
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(C.textBody[0], C.textBody[1], C.textBody[2]);
+          doc.text(ln, startX, ty);
+        }
+        ty += lineH;
+      });
     });
 
     // ==== RODAPÉ NETFLIX com logo plataforma ====
