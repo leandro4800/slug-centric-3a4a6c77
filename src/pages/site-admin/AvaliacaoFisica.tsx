@@ -6,8 +6,9 @@ import JacksonPollockCalculator from "@/components/admin/JacksonPollockCalculato
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Ruler, Loader2, User, UserPlus, History, Play } from "lucide-react";
+import { Ruler, Loader2, User, UserPlus, History, Play, Dumbbell, Apple } from "lucide-react";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 interface Aluno { id: string; nome_completo: string | null; email: string | null; sexo: string | null; data_nascimento: string | null; avatar_url: string | null; }
 interface Avaliacao {
@@ -237,6 +238,25 @@ const AvaliacaoFisica = () => {
             {criandoAvulso ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ruler className="h-4 w-4" />}
             Iniciar avaliação
           </Button>
+        </div>
+      )}
+
+      {/* Ações pós-avaliação: montar treino/dieta e baixar PDFs */}
+      {selectedAlunoId && (
+        <div className="rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card p-5">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-2">Próximos passos</p>
+          <h2 className="font-display text-lg uppercase tracking-wider mb-3">Prescrever para este aluno</h2>
+          <p className="text-xs text-muted-foreground mb-4">
+            A dieta usará automaticamente os dados salvos na avaliação (peso, altura, BF%, sexo, idade). Depois baixe o PDF e envie ao aluno.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <Link to={`/site/admin/montar-treino?aluno=${selectedAlunoId}`}>
+              <Button className="gap-2"><Dumbbell className="h-4 w-4" /> Montar treino</Button>
+            </Link>
+            <Link to={`/site/admin/montar-dieta?aluno=${selectedAlunoId}`}>
+              <Button variant="secondary" className="gap-2"><Apple className="h-4 w-4" /> Montar dieta</Button>
+            </Link>
+          </div>
         </div>
       )}
 
