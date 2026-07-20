@@ -30,13 +30,34 @@ Deno.serve(async (req) => {
 
     const admin = createClient(supabaseUrl, serviceKey);
 
-    const { data: tenant, error: tenantErr } = await admin
+    let { data: tenant, error: tenantErr } = await admin
       .from("tenants")
       .select("id, slug, nome")
       .eq("owner_user_id", callerId)
       .maybeSingle();
+
+    if (!tenant) {
+      const { data: roleRow } = await admin
+        .from("user_roles")
+        .select("tenant_id")
+        .eq("user_id", callerId)
+        .eq("role", "coach")
+        .not("tenant_id", "is", null)
+        .limit(1)
+        .maybeSingle();
+      if (roleRow?.tenant_id) {
+        const tenantRes = await admin
+          .from("tenants")
+          .select("id, slug, nome")
+          .eq("id", roleRow.tenant_id)
+          .maybeSingle();
+        tenant = tenantRes.data;
+        tenantErr = tenantRes.error;
+      }
+    }
+
     if (tenantErr || !tenant) {
-      return new Response(JSON.stringify({ error: "Você não é dono de nenhum tenant" }), {
+      return new Response(JSON.stringify({ error: "Você não tem permissão de coach neste tenant" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
