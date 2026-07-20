@@ -719,6 +719,12 @@ export type Database = {
           foto_costas_url: string | null
           foto_frente_url: string | null
           foto_lado_url: string | null
+          ia_estimativa_aviso: string | null
+          ia_estimativa_bf_pct: number | null
+          ia_estimativa_dobras: Json | null
+          ia_estimativa_fonte_url: string | null
+          ia_estimativa_prompt: string | null
+          ia_estimativa_soma_mm: number | null
           id: string
           idade: number | null
           imc: number | null
@@ -767,6 +773,12 @@ export type Database = {
           foto_costas_url?: string | null
           foto_frente_url?: string | null
           foto_lado_url?: string | null
+          ia_estimativa_aviso?: string | null
+          ia_estimativa_bf_pct?: number | null
+          ia_estimativa_dobras?: Json | null
+          ia_estimativa_fonte_url?: string | null
+          ia_estimativa_prompt?: string | null
+          ia_estimativa_soma_mm?: number | null
           id?: string
           idade?: number | null
           imc?: number | null
@@ -815,6 +827,12 @@ export type Database = {
           foto_costas_url?: string | null
           foto_frente_url?: string | null
           foto_lado_url?: string | null
+          ia_estimativa_aviso?: string | null
+          ia_estimativa_bf_pct?: number | null
+          ia_estimativa_dobras?: Json | null
+          ia_estimativa_fonte_url?: string | null
+          ia_estimativa_prompt?: string | null
+          ia_estimativa_soma_mm?: number | null
           id?: string
           idade?: number | null
           imc?: number | null

@@ -231,6 +231,14 @@ const ANAMNESE_SCHEMA = `Estrutura esperada: {
   "nivel_atividade_diaria": string
 }`;
 
+const DEFAULT_SEVEN_FOLD_VISUAL_PROMPT =
+  "Analise a imagem como se fosse um avaliador físico experiente. Faça apenas uma estimativa visual, deixando claro que não se trata de uma medição real com adipômetro. Estime os valores das 7 dobras cutâneas em milímetros (protocolo Jackson & Pollock para mulheres): peitoral, axilar média, tríceps, subescapular, abdominal, supra-ilíaca e coxa. Em seguida, informe a soma das 7 dobras e, se possível, apresente uma estimativa do percentual de gordura corporal baseada nesses valores, destacando que se trata apenas de uma aproximação visual e que a avaliação precisa exige medição com adipômetro realizada por um profissional";
+
+const AI_VISUAL_ESTIMATE_WARNING =
+  "Estimativa visual feita por IA. Não é uma medição real com adipômetro e não substitui avaliação presencial realizada por profissional.";
+
+const JACKSON_POLLOCK_SOURCE_URL = "https://pubmed.ncbi.nlm.nih.gov/702330/";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -308,6 +316,17 @@ serve(async (req) => {
       }
     }
 
+    let sevenFoldVisualPrompt = DEFAULT_SEVEN_FOLD_VISUAL_PROMPT;
+    if (isSevenFoldsImport) {
+      const { data: promptConfig } = await supabase
+        .from("configuracoes_tenant")
+        .select("valor")
+        .eq("tenant_id", tenantId)
+        .eq("chave", "prompt_ia_7_dobras_visual")
+        .maybeSingle();
+      if (promptConfig?.valor) sevenFoldVisualPrompt = promptConfig.valor;
+    }
+
     const schemaForType =
       importType === "treino"
         ? `Estrutura esperada: { "dias": [ { "dia": "string", "exercicios": [ { "nome": "string", "series": "string", "repeticoes": "string", "cadencia": "string", "detalhes_execucao": "string", "observacao": "string" } ] } ], "cardio": "string" }`
@@ -316,9 +335,9 @@ serve(async (req) => {
         : importType === "anamnese"
         ? ANAMNESE_SCHEMA
         : (importType === "7dobras" || importType === "avaliacao")
-        ? `Leia a imagem/arquivo como uma ficha de avaliação física e extraia EXATAMENTE estes campos do app AlphaCoach Pro.
+        ? `${sevenFoldVisualPrompt}
 
-Campos que existem na tela e devem ser preenchidos:
+Campos que devem ser estimados e exibidos na seção "Dados das 7 dobras por IA":
 1. peitoral — rótulos possíveis: Peitoral, Dobra Peitoral, Chest, Pectoral
 2. axilar_media — rótulos possíveis: Axilar Média, Axilar Medial, Axilar Media, Midaxillary
 3. triceps — rótulos possíveis: Tríceps, Triceps, Tricipital
@@ -327,12 +346,8 @@ Campos que existem na tela e devem ser preenchidos:
 6. suprailiaca — rótulos possíveis: Suprailíaca, Supra-ilíaca, Supra Iliaca, Suprailiac
 7. coxa — rótulos possíveis: Coxa, Coxa medial, Thigh
 
-Retorne sempre JSON puro neste formato, usando números em milímetros:
+Retorne sempre JSON puro neste formato, usando números em milímetros. Não retorne idade, peso, altura ou sexo:
 {
-  "peso": number | null,
-  "altura": number | null,
-  "idade": number | null,
-  "sexo": "M" | "F" | null,
   "dobras": {
     "peitoral": number | null,
     "axilar_media": number | null,
@@ -342,11 +357,16 @@ Retorne sempre JSON puro neste formato, usando números em milímetros:
     "suprailiaca": number | null,
     "coxa": number | null
   },
+  "soma_7_dobras": number | null,
+  "bf_pct_estimado": number | null,
+  "aviso_estimativa": "${AI_VISUAL_ESTIMATE_WARNING}",
+  "fonte_url": "${JACKSON_POLLOCK_SOURCE_URL}",
+  "prompt_utilizado": ${JSON.stringify(sevenFoldVisualPrompt)},
   "campos_encontrados": ["nomes dos campos lidos na imagem"],
-  "texto_lido": "transcrição curta dos trechos onde aparecem as dobras"
+  "texto_lido": "descrição curta do que foi analisado"
 }
 
-Se a imagem tiver uma tabela com linhas e colunas, leia linha por linha. Se a ordem aparecer sem rótulos claros, use a ordem padrão Jackson & Pollock 7 dobras: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa. Não extraia perímetros como cintura/quadril/braço para dentro das dobras.`
+Se for uma foto corporal sem tabela, faça uma estimativa visual das 7 dobras em mm. Se a imagem tiver uma tabela com linhas e colunas, leia linha por linha. Se a ordem aparecer sem rótulos claros, use a ordem padrão Jackson & Pollock 7 dobras: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa. Não extraia perímetros como cintura/quadril/braço para dentro das dobras.`
         : "";
 
     const userContent: any[] = [
@@ -360,9 +380,10 @@ Se a imagem tiver uma tabela com linhas e colunas, leia linha por linha. Se a or
       if (importType === "7dobras" || importType === "avaliacao") {
         userContent.push({
           type: "text",
-          text: `A imagem enviada é uma ficha/foto de avaliação física. Leia a imagem por OCR e foque apenas nos campos de DOBRAS CUTÂNEAS em mm.
+          text: `A imagem enviada será usada para estimativa visual das 7 dobras cutâneas. Use este prompt principal:
+${sevenFoldVisualPrompt}
 
-Os campos da tela do app são exatamente estes e precisam voltar dentro de "dobras":
+Os campos que precisam voltar dentro de "dobras" são exatamente:
 - peitoral = campo visual "PEITORAL"
 - axilar_media = campo visual "AXILAR MÉDIA"
 - triceps = campo visual "TRÍCEPS"
@@ -371,7 +392,7 @@ Os campos da tela do app são exatamente estes e precisam voltar dentro de "dobr
 - suprailiaca = campo visual "SUPRAILÍACA"
 - coxa = campo visual "COXA"
 
-Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB/SUBESC, ABD, SUPRA/SI e CX/COXA. Se houver uma tabela com esses nomes e uma coluna de valor em mm, associe linha por linha. Se houver 7 números de dobras sem rótulo claro, use a ordem Jackson & Pollock: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa. Não use idade, peso, altura ou perímetros como dobras.`,
+Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB/SUBESC, ABD, SUPRA/SI e CX/COXA. Se houver uma tabela com esses nomes e uma coluna de valor em mm, associe linha por linha. Se for foto corporal sem tabela, estime visualmente. Não retorne idade, peso, altura, sexo ou perímetros.`,
         });
       }
       userContent.push({ type: "image_url", image_url: { url: `data:${imageMimeType};base64,${file}` } });
@@ -386,19 +407,21 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
 
     const extraInstr = (importType === "7dobras" || importType === "avaliacao")
       ? `\n\nINSTRUÇÕES IMPORTANTES PARA AVALIAÇÃO FÍSICA / 7 DOBRAS:
-- Os campos da tela são: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca e coxa.
+- Use o prompt principal de estimativa visual quando a imagem não tiver uma ficha/tabela legível: ${sevenFoldVisualPrompt}
+- Os únicos campos corporais a retornar são: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca e coxa.
 - Procure variações em PT-BR com ou sem acento: "Peitoral", "Tríceps/Triceps/Tricipital", "Subescapular", "Axilar Média/Axilar Medial/Axilar media", "Suprailíaca/Supra-ilíaca/Supra iliaca/Suprailiaca", "Abdominal/Abdômen (dobra)", "Coxa/Coxa medial".
 - Valores de DOBRAS são em milímetros (mm), normalmente entre 3 e 60.
 - SEMPRE preencha TODAS as 7 dobras do protocolo Jackson & Pollock se aparecerem no relatório: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa.
-- Coloque os valores numéricos dentro de "dobras" (snake_case), conforme o schema. Se não encontrar um campo, use null. NÃO invente valores.
+- Coloque os valores numéricos dentro de "dobras" (snake_case), conforme o schema. Se for estimativa visual, estimar valores é esperado; deixe o aviso claro.
 - Se a tabela mostrar os nomes das dobras em uma coluna e os valores em outra coluna, associe cada linha ao seu valor.
-- Perímetros são em centímetros (cm). Peso em kg, altura em cm.`
+- Retorne soma_7_dobras, bf_pct_estimado quando possível, aviso_estimativa, fonte_url e prompt_utilizado.
+- Não retorne idade, peso, altura ou sexo. Perímetros são em centímetros (cm) e não devem virar dobras.`
       : "";
 
     const messages = [
       {
         role: "system",
-        content: `Você é um especialista em fitness e nutrição. Extraia dados estruturados a partir do documento. Retorne APENAS um JSON válido conforme a estrutura solicitada. Se um campo não estiver presente, omita-o.${extraInstr}`,
+          content: `Você é um avaliador físico experiente. Extraia dados estruturados a partir do documento ou faça estimativa visual quando solicitado. Retorne APENAS um JSON válido conforme a estrutura solicitada. Se um campo não estiver presente, omita-o.${extraInstr}`,
       },
       { role: "user", content: userContent },
     ];
@@ -437,14 +460,16 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
       const fallbackMessages = [
         {
           role: "system",
-          content: `Você é um OCR especializado em avaliações físicas. Retorne APENAS JSON válido. Não explique nada. Sua tarefa é localizar medidas de DOBRAS CUTÂNEAS em mm e mapear para os campos exatos do AlphaCoach Pro.`,
+          content: `Você é um avaliador físico experiente. Retorne APENAS JSON válido. Não explique nada. Sua tarefa é estimar visualmente DOBRAS CUTÂNEAS em mm e mapear para os campos exatos do AlphaCoach Pro.`,
         },
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: `Analise esta imagem com foco máximo em OCR. Os campos que precisam ser preenchidos são exatamente:
+              text: `${sevenFoldVisualPrompt}
+
+Os campos que precisam ser estimados são exatamente:
 - peitoral: rótulos Peitoral, Dobra Peitoral, PT, PEIT, Chest, Pectoral
 - axilar_media: rótulos Axilar Média, Axilar Media, Axilar Medial, AX, AM, Midaxillary
 - triceps: rótulos Tríceps, Triceps, Tricipital, TRI, TRIC
@@ -455,10 +480,10 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
 
 Leia tabelas linha por linha. Se os nomes estiverem abreviados, use o mapeamento acima. Se aparecerem 7 valores de dobras sem rótulo claro, use a ordem Jackson & Pollock: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa.
 
-Não use idade, peso, altura, cintura, quadril, braço, perímetros ou porcentual de gordura como dobras.
+Não use idade, peso, altura, cintura, quadril, braço ou perímetros como dobras. Não retorne idade, peso, altura ou sexo.
 
 Retorne este JSON exato:
-{"peso":null,"altura":null,"idade":null,"sexo":null,"dobras":{"peitoral":null,"axilar_media":null,"triceps":null,"subescapular":null,"abdominal":null,"suprailiaca":null,"coxa":null},"campos_encontrados":[],"texto_lido":""}`,
+{"dobras":{"peitoral":null,"axilar_media":null,"triceps":null,"subescapular":null,"abdominal":null,"suprailiaca":null,"coxa":null},"soma_7_dobras":null,"bf_pct_estimado":null,"aviso_estimativa":"${AI_VISUAL_ESTIMATE_WARNING}","fonte_url":"${JACKSON_POLLOCK_SOURCE_URL}","prompt_utilizado":${JSON.stringify(sevenFoldVisualPrompt)},"campos_encontrados":[],"texto_lido":""}`,
             },
             { type: "image_url", image_url: { url: `data:${imageMimeType};base64,${file}` } },
           ],
@@ -500,14 +525,16 @@ Retorne este JSON exato:
           messages: [
             {
               role: "system",
-              content: "Você é um OCR de alta precisão para fichas de avaliação física. Responda somente JSON válido, sem markdown.",
+              content: "Você é um avaliador físico experiente para estimativas visuais de avaliação física. Responda somente JSON válido, sem markdown.",
             },
             {
               role: "user",
               content: [
                 {
                   type: "text",
-                  text: `Leia esta imagem e transcreva qualquer tabela de dobras cutâneas. Extraia somente estes campos em milímetros: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa.
+                  text: `${sevenFoldVisualPrompt}
+
+Leia esta imagem e estime ou transcreva as 7 dobras cutâneas. Extraia somente estes campos em milímetros: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa.
 
 Mapeamento visual obrigatório:
 PEITORAL -> dobras.peitoral
@@ -521,7 +548,7 @@ COXA / COXA MEDIAL -> dobras.coxa
 Se vir apenas 7 valores de dobras na ficha, use esta ordem: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca, Coxa.
 
 Retorne exatamente:
-{"peso":null,"altura":null,"idade":null,"sexo":null,"dobras":{"peitoral":null,"axilar_media":null,"triceps":null,"subescapular":null,"abdominal":null,"suprailiaca":null,"coxa":null},"campos_encontrados":[],"texto_lido":""}`,
+{"dobras":{"peitoral":null,"axilar_media":null,"triceps":null,"subescapular":null,"abdominal":null,"suprailiaca":null,"coxa":null},"soma_7_dobras":null,"bf_pct_estimado":null,"aviso_estimativa":"${AI_VISUAL_ESTIMATE_WARNING}","fonte_url":"${JACKSON_POLLOCK_SOURCE_URL}","prompt_utilizado":${JSON.stringify(sevenFoldVisualPrompt)},"campos_encontrados":[],"texto_lido":""}`,
                 },
                 { type: "image_url", image_url: { url: `data:${imageMimeType};base64,${file}` } },
               ],
