@@ -55,12 +55,20 @@ type DobraKey = (typeof DOBRAS)[number]["key"];
 
 type AiAnalysis = {
   dobras: Record<DobraKey, string>;
-  peso: string;
-  idade: string;
-  sexo: Sexo | "";
   foundCount: number;
+  somaDobras?: number | null;
+  bfEstimado?: number | null;
+  aviso?: string;
+  fonteUrl?: string;
+  promptUtilizado?: string;
   textoLido?: string;
 };
+
+const JACKSON_POLLOCK_SOURCE_URL = "https://pubmed.ncbi.nlm.nih.gov/702330/";
+const AI_ESTIMATE_WARNING =
+  "Estimativa visual feita por IA. Não é medição real com adipômetro e não substitui avaliação presencial feita por profissional.";
+const SEVEN_FOLD_VISUAL_PROMPT =
+  "Analise a imagem como se fosse um avaliador físico experiente. Faça apenas uma estimativa visual, deixando claro que não se trata de uma medição real com adipômetro. Estime os valores das 7 dobras cutâneas em milímetros (protocolo Jackson & Pollock para mulheres): peitoral, axilar média, tríceps, subescapular, abdominal, supra-ilíaca e coxa. Em seguida, informe a soma das 7 dobras e, se possível, apresente uma estimativa do percentual de gordura corporal baseada nesses valores, destacando que se trata apenas de uma aproximação visual e que a avaliação precisa exige medição com adipômetro realizada por um profissional.";
 
 const createEmptyDobras = (): Record<DobraKey, string> => ({
   peitoral: "",
@@ -97,10 +105,12 @@ const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$
 
 const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) => {
   const values: Partial<Record<DobraKey, string>> = {};
-  let peso = "";
-  let idade = "";
-  let sexo: Sexo | "" = "";
   let textoLido = "";
+  let somaDobras: number | null = null;
+  let bfEstimado: number | null = null;
+  let aviso = "";
+  let fonteUrl = "";
+  let promptUtilizado = "";
 
   const expectedOrder: DobraKey[] = ["peitoral", "axilarMedia", "triceps", "subescapular", "abdominal", "suprailiaca", "coxa"];
   const foldAliases: Record<DobraKey, string[]> = {
@@ -222,13 +232,17 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
 
     for (const [rawKey, value] of entries) {
       const key = normalizeKey(rawKey);
-      if (key === "peso" || key === "pesokg" || key === "weight") peso ||= normalizeNumberText(value);
-      if (key === "idade" || key === "age") idade ||= normalizeNumberText(value);
-      if (key === "sexo" || key === "gender") {
-        const normalizedSex = String(value ?? "").trim().toUpperCase();
-        if (!sexo && normalizedSex.startsWith("F")) sexo = "F";
-        if (!sexo && normalizedSex.startsWith("M")) sexo = "M";
+      if (["soma7dobras", "soma_7_dobras", "somadobras", "soma", "totaldobras", "totalmm"].includes(key)) {
+        const parsed = Number(normalizeNumberText(value));
+        if (Number.isFinite(parsed) && parsed > 0) somaDobras ??= parsed;
       }
+      if (["bfpctestimado", "bf_pct_estimado", "percentualgordura", "percentual_gordura", "gorduracorporal", "bodyfat"].includes(key)) {
+        const parsed = Number(normalizeNumberText(value));
+        if (Number.isFinite(parsed) && parsed > 0) bfEstimado ??= parsed;
+      }
+      if (["avisoestimativa", "aviso", "disclaimer", "observacao", "observacoes"].includes(key) && typeof value === "string") aviso ||= value;
+      if (["fonteurl", "fonte_url", "source", "sourceurl", "referencia"].includes(key) && typeof value === "string") fonteUrl ||= value;
+      if (["promptutilizado", "prompt_utilizado", "prompt"].includes(key) && typeof value === "string") promptUtilizado ||= value;
       if (["textolido", "texto", "ocr", "transcricao", "transcription", "rawtext", "conteudo", "content", "observacoes"].includes(key)) {
         textoLido ||= String(value || "").slice(0, 1200);
         walk(String(value || ""));
@@ -250,7 +264,7 @@ const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) 
     coxa: values.coxa || current.coxa,
   };
 
-  return { next, peso, idade, sexo, foundCount: Object.keys(values).length, textoLido };
+  return { next, foundCount: Object.keys(values).length, somaDobras, bfEstimado, aviso, fonteUrl, promptUtilizado, textoLido };
 };
 
 export default function JacksonPollockCalculator({
@@ -299,6 +313,21 @@ export default function JacksonPollockCalculator({
     return { soma, bf, massaGorda, massaMagra };
   }, [dobras, idade, peso, sexo]);
 
+  const aiProjection = useMemo(() => {
+    if (!aiAnalysis) return null;
+    const soma = DOBRAS.reduce((acc, d) => acc + num(aiAnalysis.dobras[d.key]), 0);
+    const idadeN = num(idade);
+    let bf = aiAnalysis.bfEstimado ?? null;
+    if (soma > 0 && idadeN > 0) {
+      const BD =
+        sexo === "M"
+          ? 1.112 - 0.00043499 * soma + 0.00000055 * soma * soma - 0.00028826 * idadeN
+          : 1.097 - 0.00046971 * soma + 0.00000056 * soma * soma - 0.00012828 * idadeN;
+      bf = 495 / BD - 450;
+    }
+    return { soma: soma || aiAnalysis.somaDobras || null, bf: bf && Number.isFinite(bf) ? bf : null };
+  }, [aiAnalysis, idade, sexo]);
+
   const handleSave = async () => {
     if (!calc) {
       toast.error("Preencha todas as dobras, idade e peso.");
@@ -306,7 +335,7 @@ export default function JacksonPollockCalculator({
     }
     setSaving(true);
     try {
-      const { error } = await supabase.from("avaliacoes_fisicas").insert({
+      const payload: any = {
         aluno_id: alunoId,
         tenant_id: tenantId ?? null,
         peso_kg: num(peso),
@@ -324,7 +353,18 @@ export default function JacksonPollockCalculator({
         dobra_abdominal: num(dobras.abdominal),
         dobra_suprailiaca: num(dobras.suprailiaca),
         dobra_coxa: num(dobras.coxa),
-      });
+      };
+
+      if (aiAnalysis && aiAnalysis.foundCount > 0) {
+        payload.ia_estimativa_dobras = aiAnalysis.dobras;
+        payload.ia_estimativa_soma_mm = aiProjection?.soma ? Number(aiProjection.soma.toFixed(2)) : null;
+        payload.ia_estimativa_bf_pct = aiProjection?.bf ? Number(aiProjection.bf.toFixed(2)) : null;
+        payload.ia_estimativa_prompt = aiAnalysis.promptUtilizado || SEVEN_FOLD_VISUAL_PROMPT;
+        payload.ia_estimativa_aviso = aiAnalysis.aviso || AI_ESTIMATE_WARNING;
+        payload.ia_estimativa_fonte_url = aiAnalysis.fonteUrl || JACKSON_POLLOCK_SOURCE_URL;
+      }
+
+      const { error } = await supabase.from("avaliacoes_fisicas").insert(payload);
       if (error) throw error;
       toast.success("Protocolo 7 Dobras salvo!");
       onSaved?.();
@@ -364,8 +404,8 @@ export default function JacksonPollockCalculator({
       
       const ext = data?.extractedData || data?.data || data;
       if (ext && typeof ext === "object") {
-        const { next, peso: p, idade: i, sexo: s, foundCount, textoLido } = extractSevenFolds(ext, createEmptyDobras());
-        setAiAnalysis({ dobras: next, peso: p, idade: i, sexo: s, foundCount, textoLido });
+        const { next, foundCount, textoLido, somaDobras, bfEstimado, aviso, fonteUrl, promptUtilizado } = extractSevenFolds(ext, createEmptyDobras());
+        setAiAnalysis({ dobras: next, foundCount, textoLido, somaDobras, bfEstimado, aviso, fonteUrl, promptUtilizado });
         if (foundCount === 0) {
           toast.warning("Dr. IA analisou a foto, mas não identificou valores em mm suficientes.", { id: toastId });
         } else {
@@ -391,10 +431,7 @@ export default function JacksonPollockCalculator({
       });
       return next;
     });
-    if (aiAnalysis.peso) setPeso(aiAnalysis.peso);
-    if (aiAnalysis.idade) setIdade(aiAnalysis.idade);
-    if (aiAnalysis.sexo) setSexo(aiAnalysis.sexo);
-    toast.success("Dados da IA aplicados nos campos manuais.");
+    toast.success("Dobras estimadas pela IA aplicadas nos campos manuais.");
   };
 
   const baixarPdf = async () => {
