@@ -101,6 +101,13 @@ const normalizeNumberText = (value: unknown) => {
   return match ? match[0].replace(",", ".") : "";
 };
 
+const foldValueFromSavedJson = (value: unknown, key: DobraKey) => {
+  if (!value || typeof value !== "object") return "";
+  const record = value as Record<string, unknown>;
+  const snakeKey = key === "axilarMedia" ? "axilar_media" : key;
+  return normalizeNumberText(record[key] ?? record[snakeKey]);
+};
+
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const extractSevenFolds = (payload: unknown, current: Record<DobraKey, string>) => {
@@ -294,8 +301,76 @@ export default function JacksonPollockCalculator({
     setIdade(idadeInicial ? String(idadeInicial) : "");
     setPeso(pesoInicial ? String(pesoInicial) : "");
     setSexo((sexoInicial?.toUpperCase().startsWith("F") ? "F" : "M") as Sexo);
+    setDobras(createEmptyDobras());
     setAiAnalysis(null);
   }, [alunoId, idadeInicial, pesoInicial, sexoInicial]);
+
+  useEffect(() => {
+    if (!open || !alunoId) return;
+    let cancelled = false;
+
+    const loadSavedEvaluation = async () => {
+      let query = supabase
+        .from("avaliacoes_fisicas")
+        .select(
+          "idade, peso_kg, sexo, dobra_peitoral, dobra_axilar_media, dobra_triceps, dobra_subescapular, dobra_abdominal, dobra_suprailiaca, dobra_coxa, ia_estimativa_dobras, ia_estimativa_soma_mm, ia_estimativa_bf_pct, ia_estimativa_aviso, ia_estimativa_fonte_url, ia_estimativa_prompt",
+        )
+        .eq("aluno_id", alunoId)
+        .order("data", { ascending: false })
+        .limit(1);
+
+      if (tenantId) query = query.eq("tenant_id", tenantId);
+
+      const { data, error } = await query.maybeSingle();
+      if (cancelled || error || !data) return;
+
+      const saved = data as any;
+      const savedDobras: Record<DobraKey, string> = {
+        peitoral: normalizeNumberText(saved.dobra_peitoral),
+        axilarMedia: normalizeNumberText(saved.dobra_axilar_media),
+        triceps: normalizeNumberText(saved.dobra_triceps),
+        subescapular: normalizeNumberText(saved.dobra_subescapular),
+        abdominal: normalizeNumberText(saved.dobra_abdominal),
+        suprailiaca: normalizeNumberText(saved.dobra_suprailiaca),
+        coxa: normalizeNumberText(saved.dobra_coxa),
+      };
+
+      setDobras(savedDobras);
+      if (saved.idade) setIdade(String(saved.idade));
+      if (saved.peso_kg) setPeso(String(saved.peso_kg));
+      if (saved.sexo) setSexo(String(saved.sexo).toUpperCase().startsWith("F") ? "F" : "M");
+
+      if (saved.ia_estimativa_dobras) {
+        const aiDobras: Record<DobraKey, string> = {
+          peitoral: foldValueFromSavedJson(saved.ia_estimativa_dobras, "peitoral"),
+          axilarMedia: foldValueFromSavedJson(saved.ia_estimativa_dobras, "axilarMedia"),
+          triceps: foldValueFromSavedJson(saved.ia_estimativa_dobras, "triceps"),
+          subescapular: foldValueFromSavedJson(saved.ia_estimativa_dobras, "subescapular"),
+          abdominal: foldValueFromSavedJson(saved.ia_estimativa_dobras, "abdominal"),
+          suprailiaca: foldValueFromSavedJson(saved.ia_estimativa_dobras, "suprailiaca"),
+          coxa: foldValueFromSavedJson(saved.ia_estimativa_dobras, "coxa"),
+        };
+        const foundCount = DOBRAS.filter((d) => !!aiDobras[d.key]).length;
+        if (foundCount > 0) {
+          setAiAnalysis({
+            dobras: aiDobras,
+            foundCount,
+            somaDobras: saved.ia_estimativa_soma_mm ?? null,
+            bfEstimado: saved.ia_estimativa_bf_pct ?? null,
+            aviso: saved.ia_estimativa_aviso || AI_ESTIMATE_WARNING,
+            fonteUrl: saved.ia_estimativa_fonte_url || JACKSON_POLLOCK_SOURCE_URL,
+            promptUtilizado: saved.ia_estimativa_prompt || SEVEN_FOLD_VISUAL_PROMPT,
+          });
+        }
+      }
+    };
+
+    void loadSavedEvaluation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, alunoId, tenantId]);
 
   const calc = useMemo(() => {
     const soma = DOBRAS.reduce((acc, d) => acc + num(dobras[d.key]), 0);
@@ -409,7 +484,14 @@ export default function JacksonPollockCalculator({
         if (foundCount === 0) {
           toast.warning("Dr. IA analisou a foto, mas não identificou valores em mm suficientes.", { id: toastId });
         } else {
-          toast.success(`Dr. IA criou a análise com ${foundCount} dobra(s).`, { id: toastId });
+          setDobras((prev) => {
+            const merged = { ...prev };
+            DOBRAS.forEach((d) => {
+              if (next[d.key]) merged[d.key] = next[d.key];
+            });
+            return merged;
+          });
+          toast.success(`Dr. IA preencheu ${foundCount} dobra(s). Clique em Salvar Protocolo para manter no histórico.`, { id: toastId });
         }
       } else {
         throw new Error("Não foi possível extrair dados do arquivo.");
