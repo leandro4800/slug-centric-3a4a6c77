@@ -156,7 +156,7 @@ Retorne APENAS JSON neste formato:
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY || "", "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
@@ -176,7 +176,7 @@ Retorne APENAS JSON neste formato:
         throw new Error(`IA falhou no recálculo (${aiResp.status}): ${txt.slice(0, 200)}`);
       }
       const aiData = await aiResp.json();
-      const parsed = JSON.parse(aiData.choices[0].message.content);
+      const parsed = parseJsonContent(aiData.choices?.[0]?.message?.content || "{}");
       const totais = parsed.totais || { kcal: 0, proteina_g: 0, carboidrato_g: 0, lipideos_g: 0 };
 
       if (body.dieta_id) {
@@ -309,7 +309,7 @@ na MESMA ORDEM recebida.`;
 
       const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
         method: "POST",
-        headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+        headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY || "", "Content-Type": "application/json" },
         body: JSON.stringify({
           model: "google/gemini-2.5-flash",
           messages: [
@@ -330,7 +330,7 @@ na MESMA ORDEM recebida.`;
       }
       const aiData = await aiResp.json();
       const content = aiData.choices[0].message.content;
-      const plano = JSON.parse(content);
+      const plano = parseJsonContent(content);
 
       const totais = plano.totais || { kcal: novoKcal, proteina_g: novaProt, carboidrato_g: novoCarbo, lipideos_g: novaGord };
 
@@ -581,7 +581,7 @@ Não escreva justificativas longas; o resumo deve ser direto para o aluno objeti
 
     const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
-      headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+      headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY || "", "Content-Type": "application/json" },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [{ role: "system", content: systemPrompt }],
@@ -598,7 +598,7 @@ Não escreva justificativas longas; o resumo deve ser direto para o aluno objeti
       throw new Error(`Falha na geração da IA (${aiResp.status}): ${txt.slice(0, 200)}`);
     }
     const aiData = await aiResp.json();
-    const plano = JSON.parse(aiData.choices[0].message.content);
+    const plano = parseJsonContent(aiData.choices?.[0]?.message?.content || "{}");
 
     if (targetIsAvulso) {
       return new Response(JSON.stringify({
