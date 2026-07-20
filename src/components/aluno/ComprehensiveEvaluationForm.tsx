@@ -123,17 +123,18 @@ export const ComprehensiveEvaluationForm = ({
       const { data, error } = await supabase.functions.invoke("import-with-ai", {
         body: {
           file: content,
-          fileType: file.type,
+          fileType: file.type || "image/jpeg",
           importType: "avaliacao",
           alunoId,
-          tenantId: tenantId || "any"
+          tenantId: tenantId || "any",
+          dryRun: true,
         },
       });
 
       if (error) throw error;
 
-      if (data?.data) {
-        const ext = data.data;
+      if (data?.data || data?.extractedData) {
+        const ext = data.extractedData || data.data;
         setForm({
           peso: ext.peso ? String(ext.peso) : form.peso,
           altura: ext.altura ? String(ext.altura) : form.altura,
