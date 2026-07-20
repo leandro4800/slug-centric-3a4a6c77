@@ -345,7 +345,7 @@ export default function JacksonPollockCalculator({
         if (p) setPeso(p);
         if (i) setIdade(i);
         if (foundCount === 0) {
-          toast.error("A IA não encontrou os campos: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca e Coxa.", { id: toastId });
+          toast.error("A IA não conseguiu ler valores em mm para: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca e Coxa.", { id: toastId });
         } else {
           const labels = DOBRAS.filter((d) => next[d.key] && next[d.key] !== dobras[d.key]).map((d) => d.label).join(", ");
           toast.success(`Campos preenchidos: ${labels || `${foundCount} dobra(s)`}.`, { id: toastId });
