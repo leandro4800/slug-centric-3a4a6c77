@@ -641,7 +641,7 @@ const AdminMontarDieta = () => {
       divider: isLight ? [200, 200, 200] : [60, 60, 60],
       text: isLight ? [15, 15, 15] : [255, 255, 255],
       textMute: isLight ? [95, 95, 95] : [180, 180, 180],
-      textBody: isLight ? [40, 40, 40] : [230, 230, 230],
+      textBody: isLight ? [20, 20, 20] : [235, 235, 235],
       metaLabel: isLight ? [110, 110, 110] : [160, 160, 160],
       fallbackBanner: isLight ? [235, 235, 235] : [30, 30, 30],
     } as const;
