@@ -586,7 +586,7 @@ const AdminMontarDieta = () => {
     }
   }, [searchParams, alunoId, generating, loading, perfil.peso_kg, perfil.altura_cm, gerarComIA]);
 
-  const baixarDietaPdf = async () => {
+  const baixarDietaPdf = async (theme: "dark" | "light" = "dark") => {
     if (refeicoes.length === 0) {
       toast.error("Adicione refeições antes de baixar.");
       return;
@@ -627,12 +627,31 @@ const AdminMontarDieta = () => {
     const pageW = doc.internal.pageSize.getWidth();
     const pageH = doc.internal.pageSize.getHeight();
 
-    // ==== FUNDO PRETO CINEMATOGRÁFICO ====
-    doc.setFillColor(10, 10, 10);
+    // ==== PALETA por tema ====
+    const isLight = theme === "light";
+    const C = {
+      bg: isLight ? [255, 255, 255] : [10, 10, 10],
+      bgSoft: isLight ? [248, 248, 248] : [20, 20, 20],
+      card: isLight ? [252, 252, 252] : [18, 18, 18],
+      cardStroke: isLight ? [220, 220, 220] : [45, 45, 45],
+      cellBg: isLight ? [245, 245, 245] : [12, 12, 12],
+      cellBorder: isLight ? [225, 225, 225] : [40, 40, 40],
+      pillBg: isLight ? [240, 240, 240] : [30, 30, 30],
+      pillStroke: isLight ? [200, 200, 200] : [80, 80, 80],
+      divider: isLight ? [200, 200, 200] : [60, 60, 60],
+      text: isLight ? [15, 15, 15] : [255, 255, 255],
+      textMute: isLight ? [95, 95, 95] : [180, 180, 180],
+      textBody: isLight ? [40, 40, 40] : [230, 230, 230],
+      metaLabel: isLight ? [110, 110, 110] : [160, 160, 160],
+      fallbackBanner: isLight ? [235, 235, 235] : [30, 30, 30],
+    } as const;
+
+    // ==== FUNDO CINEMATOGRÁFICO ====
+    doc.setFillColor(C.bg[0], C.bg[1], C.bg[2]);
     doc.rect(0, 0, pageW, pageH, "F");
 
-    // Vinheta radial simulada (faixa superior mais escura)
-    doc.setFillColor(20, 20, 20);
+    // Vinheta / faixa superior
+    doc.setFillColor(C.bgSoft[0], C.bgSoft[1], C.bgSoft[2]);
     doc.rect(0, 0, pageW, 70, "F");
 
     // ==== HERO NETFLIX ====
@@ -663,14 +682,14 @@ const AdminMontarDieta = () => {
     doc.text("UM ORIGINAL ALPHA COACH", heroX + 17, 13.5, { align: "center" });
 
     // Título hero
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(C.text[0], C.text[1], C.text[2]);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(28);
     doc.text("PLANO ALIMENTAR", heroX, 26);
 
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
-    doc.setTextColor(180, 180, 180);
+    doc.setTextColor(C.textMute[0], C.textMute[1], C.textMute[2]);
     doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 32);
 
     // Barra atleta/coach
@@ -678,13 +697,13 @@ const AdminMontarDieta = () => {
     doc.setLineWidth(0.4);
     doc.line(heroX, 36, pageW - 12, 36);
 
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(C.text[0], C.text[1], C.text[2]);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(10);
     const atletaLabel = alunoNome ? alunoNome.toUpperCase() : "ATLETA";
     doc.text(atletaLabel, heroX, 42);
     if (tenant?.nome) {
-      doc.setTextColor(180, 180, 180);
+      doc.setTextColor(C.textMute[0], C.textMute[1], C.textMute[2]);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(8);
       doc.text(`COACH ${tenant.nome.toUpperCase()}`, pageW - 12, 42, { align: "right" });
@@ -705,10 +724,10 @@ const AdminMontarDieta = () => {
       doc.setFont("helvetica", "bold");
       pills.forEach((p) => {
         const w = doc.getTextWidth(p) + 6;
-        doc.setFillColor(30, 30, 30);
-        doc.setDrawColor(80, 80, 80);
+        doc.setFillColor(C.pillBg[0], C.pillBg[1], C.pillBg[2]);
+        doc.setDrawColor(C.pillStroke[0], C.pillStroke[1], C.pillStroke[2]);
         doc.roundedRect(px, y, w, 5.5, 1, 1, "FD");
-        doc.setTextColor(255, 255, 255);
+        doc.setTextColor(C.text[0], C.text[1], C.text[2]);
         doc.text(p, px + w / 2, y + 3.8, { align: "center" });
         px += w + 2;
       });
@@ -726,16 +745,16 @@ const AdminMontarDieta = () => {
       const boxW = (pageW - 24 - 6) / 4;
       macros.forEach((m, i) => {
         const bx = 12 + i * (boxW + 2);
-        doc.setFillColor(20, 20, 20);
-        doc.setDrawColor(60, 60, 60);
+        doc.setFillColor(C.bgSoft[0], C.bgSoft[1], C.bgSoft[2]);
+        doc.setDrawColor(C.divider[0], C.divider[1], C.divider[2]);
         doc.roundedRect(bx, y, boxW, 14, 1.5, 1.5, "FD");
         doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
         doc.rect(bx, y, 1.5, 14, "F");
-        doc.setTextColor(160, 160, 160);
+        doc.setTextColor(C.metaLabel[0], C.metaLabel[1], C.metaLabel[2]);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(6.5);
         doc.text(m.l, bx + 4, y + 4);
-        doc.setTextColor(255, 255, 255);
+        doc.setTextColor(C.text[0], C.text[1], C.text[2]);
         doc.setFontSize(13);
         doc.text(m.v, bx + 4, y + 11);
       });
@@ -748,7 +767,7 @@ const AdminMontarDieta = () => {
     doc.setFontSize(8);
     doc.text("REFEIÇÕES DO DIA", 12, y);
     y += 4;
-    doc.setDrawColor(60, 60, 60);
+    doc.setDrawColor(C.divider[0], C.divider[1], C.divider[2]);
     doc.setLineWidth(0.2);
     doc.line(12, y, pageW - 12, y);
     y += 4;
@@ -811,8 +830,8 @@ const AdminMontarDieta = () => {
       const cy = y + row * (cardH + gap);
 
       // Card bg
-      doc.setFillColor(18, 18, 18);
-      doc.setDrawColor(45, 45, 45);
+      doc.setFillColor(C.card[0], C.card[1], C.card[2]);
+      doc.setDrawColor(C.cardStroke[0], C.cardStroke[1], C.cardStroke[2]);
       doc.roundedRect(cx, cy, cardW, cardH, 1.5, 1.5, "FD");
 
       // ==== BANNER com imagem da refeição ====
@@ -823,7 +842,7 @@ const AdminMontarDieta = () => {
           doc.addImage(mealImg.dataUrl, fmt, cx, cy, cardW, bannerH);
         } catch {}
       } else {
-        doc.setFillColor(30, 30, 30);
+        doc.setFillColor(C.fallbackBanner[0], C.fallbackBanner[1], C.fallbackBanner[2]);
         doc.rect(cx, cy, cardW, bannerH, "F");
       }
       // overlay escuro para legibilidade
@@ -860,7 +879,7 @@ const AdminMontarDieta = () => {
 
       // ==== BARRA DE MACROS ====
       const my = cy + bannerH + 1;
-      doc.setFillColor(12, 12, 12);
+      doc.setFillColor(C.cellBg[0], C.cellBg[1], C.cellBg[2]);
       doc.rect(cx, my, cardW, macrosH, "F");
       const macros = perMealMacros[i];
       const cells = [
@@ -873,7 +892,7 @@ const AdminMontarDieta = () => {
       cells.forEach((cell, ci) => {
         const bx = cx + ci * cellW;
         if (ci > 0) {
-          doc.setDrawColor(40, 40, 40);
+          doc.setDrawColor(C.cellBorder[0], C.cellBorder[1], C.cellBorder[2]);
           doc.setLineWidth(0.15);
           doc.line(bx, my + 1, bx, my + macrosH - 1);
         }
@@ -881,13 +900,13 @@ const AdminMontarDieta = () => {
         doc.setFont("helvetica", "bold");
         doc.setFontSize(5.5);
         doc.text(cell.l, bx + cellW / 2, my + 2.6, { align: "center" });
-        doc.setTextColor(255, 255, 255);
+        doc.setTextColor(C.text[0], C.text[1], C.text[2]);
         doc.setFontSize(8.5);
         doc.text(cell.v, bx + cellW / 2, my + 5.8, { align: "center" });
       });
 
       // ==== DESCRIÇÃO ====
-      doc.setTextColor(230, 230, 230);
+      doc.setTextColor(C.textBody[0], C.textBody[1], C.textBody[2]);
       doc.setFont("helvetica", "normal");
       doc.setFontSize(bodyFs);
       const text = r.descricao_ia || "—";
@@ -1149,9 +1168,13 @@ const AdminMontarDieta = () => {
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
                     Enviar para Aluno
                   </Button>
-                  <Button size="sm" variant="outline" onClick={baixarDietaPdf} disabled={refeicoes.length === 0} className="border-white/20 text-white hover:bg-white/10">
+                  <Button size="sm" variant="outline" onClick={() => baixarDietaPdf("dark")} disabled={refeicoes.length === 0} className="border-white/20 text-white hover:bg-white/10">
                     <FileDown className="h-4 w-4 mr-1" />
-                    Baixar PDF
+                    PDF Escuro
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => baixarDietaPdf("light")} disabled={refeicoes.length === 0} className="border-white/40 bg-white text-black hover:bg-white/90">
+                    <FileDown className="h-4 w-4 mr-1" />
+                    PDF Claro
                   </Button>
                 </div>
               </div>
