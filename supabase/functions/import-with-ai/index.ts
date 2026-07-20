@@ -230,7 +230,7 @@ serve(async (req) => {
         const { error } = await supabase.from("treinos_prescritos").insert(rows);
         if (error) throw error;
       }
-    } else if (importType === "dieta" && result?.refeicoes) {
+    } else if (!dryRun && importType === "dieta" && result?.refeicoes) {
       await supabase.from("dietas").delete().eq("user_id", alunoId);
       const { data: dieta, error: dError } = await supabase
         .from("dietas")
