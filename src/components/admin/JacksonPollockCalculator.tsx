@@ -617,6 +617,76 @@ export default function JacksonPollockCalculator({
                 ))}
               </div>
             </section>
+
+            {aiAnalysis && (
+              <section className="space-y-4 border border-primary/30 bg-primary/5 p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <h2 className="text-xs font-bold uppercase tracking-widest text-primary flex items-center gap-2">
+                    <span className="w-1 h-4 bg-primary rounded-full" />
+                    DADOS DO ATLETA POR IA
+                  </h2>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={aplicarAnaliseIa}
+                    disabled={aiAnalysis.foundCount === 0}
+                    className="h-8 border-primary/40 text-primary text-[10px] font-bold uppercase tracking-wider hover:bg-primary/10"
+                  >
+                    Usar dados da IA
+                  </Button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Idade por IA</Label>
+                    <Input
+                      readOnly
+                      value={aiAnalysis.idade || "—"}
+                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Peso por IA</Label>
+                    <Input
+                      readOnly
+                      value={aiAnalysis.peso || "—"}
+                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-[10px] uppercase tracking-widest text-white/40">Sexo por IA</Label>
+                    <Input
+                      readOnly
+                      value={aiAnalysis.sexo ? (aiAnalysis.sexo === "F" ? "Feminino" : "Masculino") : "—"}
+                      className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-white"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {DOBRAS.map((d) => (
+                    <div key={`ia-${d.key}`} className="space-y-2">
+                      <Label className="text-[10px] uppercase tracking-widest text-white/40 leading-none">{d.label}</Label>
+                      <Input
+                        readOnly
+                        value={aiAnalysis.dobras[d.key] || "—"}
+                        className="h-11 bg-black/30 border-white/10 text-lg font-bold rounded-none text-primary"
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                {aiAnalysis.textoLido && (
+                  <div className="border-t border-white/10 pt-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-white/40 mb-2">Leitura da foto</p>
+                    <p className="max-h-24 overflow-y-auto whitespace-pre-wrap text-xs leading-relaxed text-white/50">
+                      {aiAnalysis.textoLido}
+                    </p>
+                  </div>
+                )}
+              </section>
+            )}
           </div>
 
           {/* Lateral: Resultados (Style Sidebar) */}
