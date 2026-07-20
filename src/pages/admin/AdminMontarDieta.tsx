@@ -830,9 +830,9 @@ const AdminMontarDieta = () => {
       1,
       ...refeicoes.map((r) => (r.descricao_ia || "—").split(/\n/).length),
     );
-    let bodyFs = 9.5;
-    while (bodyFs > 6) {
-      const lineH = bodyFs * 0.42;
+    let bodyFs = 11;
+    while (bodyFs > 8) {
+      const lineH = bodyFs * 0.45;
       const est = lineH * (maxLines + 1) + 3;
       if (est <= cardH - bodyTop - 3) break;
       bodyFs -= 0.5;
