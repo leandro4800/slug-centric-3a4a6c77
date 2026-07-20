@@ -214,7 +214,7 @@ serve(async (req) => {
       result = m ? JSON.parse(m[0]) : {};
     }
 
-    if (importType === "treino" && result?.dias) {
+    if (!dryRun && importType === "treino" && result?.dias) {
       await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenantId);
       const rows: any[] = [];
       result.dias.forEach((dia: any) => {
