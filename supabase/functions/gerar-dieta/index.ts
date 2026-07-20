@@ -142,22 +142,34 @@ serve(async (req) => {
         .join("\n");
 
       const systemPrompt = `Você é um nutricionista. Receberá uma lista de refeições com os alimentos e quantidades (em gramas) ATUAIS prescritos.
-Sua tarefa: CALCULAR os macros e calorias REAIS de cada alimento USANDO OBRIGATORIAMENTE a TABELA TACO fornecida abaixo como fonte de macros por 100g, e somar.
+Sua tarefa: CALCULAR os macros e calorias REAIS de cada alimento USANDO OBRIGATORIAMENTE a TABELA TACO fornecida abaixo como fonte de macros por 100g.
 
 TABELA TACO (use estes valores — são por 100g do alimento):
 ${tacoTxt}
 
-Regras:
-- Para cada item, encontre o alimento mais próximo na TABELA TACO acima e use os macros dela proporcionalmente à quantidade prescrita.
-- Se o item não estiver listado, use o valor TACO do equivalente mais próximo (ex.: "frango grelhado" ≈ "frango, peito, sem pele, grelhado").
-- Considere TODAS as quantidades listadas (em g, ml ou unidades padronizadas — converta unidades para g quando necessário, ex.: 1 ovo ≈ 50g, 1 fatia de pão ≈ 25g, 1 colher de sopa de azeite ≈ 13g).
-- NÃO altere os alimentos. Apenas compute o que está descrito.
-- Arredonde para inteiros.
+REGRA CRÍTICA — OPÇÕES ALTERNATIVAS:
+- Dentro de UMA MESMA refeição, blocos rotulados como "Opção 1", "Opção 2", "Opção A/B", "Alternativa", ou separados por "OU" / "ou" são ALTERNATIVAS EXCLUDENTES: o aluno come APENAS UMA delas, NÃO todas.
+- NUNCA some as opções. Calcule os macros de CADA opção separadamente e escolha UMA opção representativa para compor o total da refeição (use a opção 1; se não houver "opção 1" explícita, use a MÉDIA das opções — jamais a soma).
+- Se a refeição não tiver opções alternativas, some normalmente todos os alimentos daquela refeição.
+- O campo "opcoes" no retorno deve trazer TODAS as opções calculadas separadamente (para transparência), mas kcal/proteina/carbo/gordura da refeição refletem UMA opção só.
+- "totais" é a soma das refeições (uma opção por refeição), NÃO a soma de todas as opções.
+
+Regras gerais:
+- Para cada item, encontre o alimento mais próximo na TABELA TACO e use os macros proporcionalmente à quantidade prescrita.
+- Se o item não estiver listado, use o TACO do equivalente mais próximo.
+- Converta unidades para g quando necessário (1 ovo ≈ 50g, 1 fatia de pão ≈ 25g, 1 colher de sopa de azeite ≈ 13g).
+- NÃO altere os alimentos. Apenas compute. Arredonde para inteiros.
 
 Retorne APENAS JSON neste formato:
 {
   "refeicoes": [
-    { "nome": "...", "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
+    {
+      "nome": "...",
+      "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0,
+      "opcoes": [
+        { "nome": "Opção 1", "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
+      ]
+    }
   ],
   "totais": { "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
 }`;
