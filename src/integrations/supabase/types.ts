@@ -640,6 +640,66 @@ export type Database = {
         }
         Relationships: []
       }
+      avaliacao_avulsa_alunos: {
+        Row: {
+          altura_cm: number | null
+          coach_user_id: string
+          created_at: string
+          data_nascimento: string | null
+          email: string | null
+          id: string
+          nome: string
+          peso_inicial_kg: number | null
+          sexo: string | null
+          telefone: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          altura_cm?: number | null
+          coach_user_id: string
+          created_at?: string
+          data_nascimento?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          peso_inicial_kg?: number | null
+          sexo?: string | null
+          telefone?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          altura_cm?: number | null
+          coach_user_id?: string
+          created_at?: string
+          data_nascimento?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          peso_inicial_kg?: number | null
+          sexo?: string | null
+          telefone?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "avaliacao_avulsa_alunos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "avaliacao_avulsa_alunos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       avaliacoes_fisicas: {
         Row: {
           altura_cm: number
