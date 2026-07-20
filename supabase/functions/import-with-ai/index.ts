@@ -113,8 +113,14 @@ serve(async (req) => {
       });
     }
 
-    const isImage = (fileType || "").startsWith("image/");
-    const isPDF = fileType === "application/pdf";
+    const normalizedFileType = String(fileType || "").toLowerCase();
+    const isSevenFoldsImport = importType === "7dobras" || importType === "avaliacao";
+    const isPDF = normalizedFileType === "application/pdf";
+    const isUnknownBinaryImage =
+      isSevenFoldsImport &&
+      (!normalizedFileType || normalizedFileType === "application/octet-stream" || normalizedFileType === "binary/octet-stream");
+    const isImage = normalizedFileType.startsWith("image/") || isUnknownBinaryImage;
+    const imageMimeType = normalizedFileType.startsWith("image/") ? normalizedFileType : "image/jpeg";
 
     let pdfText = "";
     if (isPDF) {
@@ -178,10 +184,21 @@ Se a imagem tiver uma tabela com linhas e colunas, leia linha por linha. Se a or
       if (importType === "7dobras" || importType === "avaliacao") {
         userContent.push({
           type: "text",
-          text: "A imagem enviada é uma ficha/foto de avaliação física. Foque apenas nos campos de DOBRAS CUTÂNEAS em mm: Peitoral, Axilar Média, Tríceps, Subescapular, Abdominal, Suprailíaca e Coxa. Preencha o JSON mesmo se os rótulos estiverem em tabela, abreviados ou com acentos diferentes.",
+          text: `A imagem enviada é uma ficha/foto de avaliação física. Leia a imagem por OCR e foque apenas nos campos de DOBRAS CUTÂNEAS em mm.
+
+Os campos da tela do app são exatamente estes e precisam voltar dentro de "dobras":
+- peitoral = campo visual "PEITORAL"
+- axilar_media = campo visual "AXILAR MÉDIA"
+- triceps = campo visual "TRÍCEPS"
+- subescapular = campo visual "SUBESCAPULAR"
+- abdominal = campo visual "ABDOMINAL"
+- suprailiaca = campo visual "SUPRAILÍACA"
+- coxa = campo visual "COXA"
+
+Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB/SUBESC, ABD, SUPRA/SI e CX/COXA. Se houver uma tabela com esses nomes e uma coluna de valor em mm, associe linha por linha. Se houver 7 números de dobras sem rótulo claro, use a ordem Jackson & Pollock: peitoral, axilar_media, triceps, subescapular, abdominal, suprailiaca, coxa. Não use idade, peso, altura ou perímetros como dobras.`,
         });
       }
-      userContent.push({ type: "image_url", image_url: { url: `data:${fileType};base64,${file}` } });
+      userContent.push({ type: "image_url", image_url: { url: `data:${imageMimeType};base64,${file}` } });
     } else if (isPDF) {
       userContent.push({ type: "text", text: `Conteúdo do PDF:\n\n${pdfText.slice(0, 60000)}` });
     } else {
