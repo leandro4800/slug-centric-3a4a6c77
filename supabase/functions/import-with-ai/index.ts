@@ -332,7 +332,6 @@ Retorne este JSON exato:
           model: "openai/gpt-5.5",
           messages: fallbackMessages,
           response_format: { type: "json_object" },
-          temperature: 0,
         }),
       });
 
