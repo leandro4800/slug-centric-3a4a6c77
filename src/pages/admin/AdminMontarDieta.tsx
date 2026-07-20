@@ -353,19 +353,28 @@ const AdminMontarDieta = () => {
     try {
       let currentDietaId = dietaId;
 
-      const dietData = {
+      const dietData: any = {
         user_id: alunoId,
         objetivo: perfil.objetivo,
         is_published: publish || isPublished,
       };
+      if (macrosCalculados) {
+        dietData.kcal_alvo = Math.round(macrosCalculados.kcal || 0);
+        dietData.macros_alvo = {
+          proteina_g: Math.round(macrosCalculados.proteina_g || 0),
+          carboidrato_g: Math.round(macrosCalculados.carboidrato_g || 0),
+          lipideos_g: Math.round(macrosCalculados.lipideos_g || 0),
+          badge: "Calculado pelos alimentos",
+        };
+      }
 
       if (!currentDietaId) {
         const { data: d, error: dErr } = await supabase
           .from("dietas")
           .insert({
             ...dietData,
-            kcal_alvo: 0,
-            macros_alvo: {},
+            kcal_alvo: dietData.kcal_alvo ?? 0,
+            macros_alvo: dietData.macros_alvo ?? {},
           })
           .select()
           .single();
@@ -471,16 +480,20 @@ const AdminMontarDieta = () => {
   };
 
   const recalcularMacros = async () => {
-    if (!alunoId || refeicoes.length === 0 || !dietaId) {
+    if (!alunoId || refeicoes.length === 0) {
+      toast.error("Adicione refeições antes de recalcular.");
+      return;
+    }
+    if (!dietaId && !isAvulso) {
       toast.error("Salve a dieta antes de recalcular.");
       return;
     }
     setRecalculating(true);
     const toastId = toast.loading("Recalculando macros a partir dos alimentos editados...");
     try {
-      // Persiste edições atuais antes de recalcular
-      await supabase.from("refeicoes").delete().eq("dieta_id", dietaId);
-      if (refeicoes.length > 0) {
+      // Persiste edições atuais antes de recalcular quando existe dieta no banco.
+      if (dietaId) {
+        await supabase.from("refeicoes").delete().eq("dieta_id", dietaId);
         await supabase.from("refeicoes").insert(
           refeicoes.map((r, i) => ({
             dieta_id: dietaId,
@@ -496,7 +509,8 @@ const AdminMontarDieta = () => {
         body: {
           mode: "recalc",
           aluno_id: alunoId,
-          dieta_id: dietaId,
+          avulso: isAvulso,
+          ...(dietaId ? { dieta_id: dietaId } : {}),
           refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
         },
       });
@@ -578,16 +592,17 @@ const AdminMontarDieta = () => {
       return;
     }
 
-    // Garante macros calculados antes de gerar PDF
+    // Garante macros calculados antes de gerar PDF, inclusive em avaliação avulsa.
     let macrosPdf = macrosCalculados;
-    if ((!macrosPdf || !macrosPdf.kcal) && dietaId && !isAvulso) {
+    if ((!macrosPdf || !macrosPdf.kcal) && alunoId && refeicoes.length > 0) {
       const t = toast.loading("Calculando macros da dieta...");
       try {
         const { data } = await supabase.functions.invoke("gerar-dieta", {
           body: {
             mode: "recalc",
             aluno_id: alunoId,
-            dieta_id: dietaId,
+            avulso: isAvulso,
+            ...(dietaId ? { dieta_id: dietaId } : {}),
             refeicoes: refeicoes.map(r => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
           },
         });
@@ -1076,6 +1091,7 @@ const AdminMontarDieta = () => {
                               body: {
                                 mode: "recalc",
                                 aluno_id: alunoId,
+                                  avulso: isAvulso,
                                 refeicoes: novasRefeicoes.map((r) => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
                               },
                             });
@@ -1117,7 +1133,7 @@ const AdminMontarDieta = () => {
                   <Button variant="outline" size="sm" onClick={addRefeicao}>
                     <Plus className="h-4 w-4 mr-1" /> Refeição
                   </Button>
-                  <Button variant="outline" size="sm" onClick={recalcularMacros} disabled={recalculating || !dietaId} className="border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10">
+                  <Button variant="outline" size="sm" onClick={recalcularMacros} disabled={recalculating || (!dietaId && !isAvulso)} className="border-emerald-500/50 text-emerald-500 hover:bg-emerald-500/10">
                     {recalculating ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Calculator className="h-4 w-4 mr-1" />}
                     Recalcular Macros
                   </Button>
