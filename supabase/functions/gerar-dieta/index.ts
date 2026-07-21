@@ -364,76 +364,15 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const refeicoesTxt = refeicoesIn
-        .map((r, i) => `Refeição ${i + 1} — ${r.nome}\n${r.descricao}`)
-        .join("\n\n");
 
-      // Carrega tabela TACO para o cálculo (fonte oficial de macros)
+      // Carrega tabela TACO para o cálculo determinístico (fonte oficial de macros).
+      // Importante: a IA NÃO faz a conta aqui, pois isso causava variação entre tentativas.
       const { data: tacoRows } = await supabase
         .from("alimentos_taco")
         .select("nome, energia_kcal, proteina_g, carboidrato_g, lipideos_g")
-        .limit(500);
-      const tacoTxt = (tacoRows || [])
-        .map((a: any) => `${a.nome} | kcal:${a.energia_kcal} P:${a.proteina_g} C:${a.carboidrato_g} G:${a.lipideos_g} (por 100g)`)
-        .join("\n");
+        .limit(2000);
 
-      const systemPrompt = `Você é um nutricionista. Receberá uma lista de refeições com os alimentos e quantidades (em gramas) ATUAIS prescritos.
-Sua tarefa: CALCULAR os macros e calorias REAIS de cada alimento USANDO OBRIGATORIAMENTE a TABELA TACO fornecida abaixo como fonte de macros por 100g.
-
-TABELA TACO (use estes valores — são por 100g do alimento):
-${tacoTxt}
-
-REGRA CRÍTICA — OPÇÕES ALTERNATIVAS:
-- Dentro de UMA MESMA refeição, blocos rotulados como "Opção 1", "Opção 2", "Opção A/B", "Alternativa", ou separados por "OU" / "ou" são ALTERNATIVAS EXCLUDENTES: o aluno come APENAS UMA delas, NÃO todas.
-- NUNCA some as opções. Calcule os macros de CADA opção separadamente e escolha UMA opção representativa para compor o total da refeição (use a opção 1; se não houver "opção 1" explícita, use a MÉDIA das opções — jamais a soma).
-- Se a refeição não tiver opções alternativas, some normalmente todos os alimentos daquela refeição.
-- O campo "opcoes" no retorno deve trazer TODAS as opções calculadas separadamente (para transparência), mas kcal/proteina/carbo/gordura da refeição refletem UMA opção só.
-- "totais" é a soma das refeições (uma opção por refeição), NÃO a soma de todas as opções.
-
-Regras gerais:
-- Para cada item, encontre o alimento mais próximo na TABELA TACO e use os macros proporcionalmente à quantidade prescrita.
-- Se o item não estiver listado, use o TACO do equivalente mais próximo.
-- Converta unidades para g quando necessário (1 ovo ≈ 50g, 1 fatia de pão ≈ 25g, 1 colher de sopa de azeite ≈ 13g).
-- NÃO altere os alimentos. Apenas compute. Arredonde para inteiros.
-
-Retorne APENAS JSON neste formato:
-{
-  "refeicoes": [
-    {
-      "nome": "...",
-      "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0,
-      "opcoes": [
-        { "nome": "Opção 1", "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
-      ]
-    }
-  ],
-  "totais": { "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
-}`;
-
-
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY || "", "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: refeicoesTxt },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0,
-        }),
-      });
-
-      if (!aiResp.ok) {
-        const txt = await aiResp.text();
-        console.error("[gerar-dieta recalc] AI error", aiResp.status, txt);
-        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições da IA atingido. Tente em alguns segundos." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        throw new Error(`IA falhou no recálculo (${aiResp.status}): ${txt.slice(0, 200)}`);
-      }
-      const aiData = await aiResp.json();
-      const parsed = parseJsonContent(aiData.choices?.[0]?.message?.content || "{}");
+      const parsed = calculateDietFromTaco(refeicoesIn, (tacoRows || []) as TacoFood[]);
       const totais = parsed.totais || { kcal: 0, proteina_g: 0, carboidrato_g: 0, lipideos_g: 0 };
 
       if (body.dieta_id) {
@@ -443,7 +382,7 @@ Retorne APENAS JSON neste formato:
             proteina_g: Math.round(Number(totais.proteina_g) || 0),
             carboidrato_g: Math.round(Number(totais.carboidrato_g) || 0),
             lipideos_g: Math.round(Number(totais.lipideos_g) || 0),
-            badge: "Recalculado",
+            badge: "Calculado pela TACO",
           },
         }).eq("id", body.dieta_id);
       }
@@ -457,7 +396,7 @@ Retorne APENAS JSON neste formato:
           proteina_g: Math.round(Number(totais.proteina_g) || 0),
           carboidrato_g: Math.round(Number(totais.carboidrato_g) || 0),
           lipideos_g: Math.round(Number(totais.lipideos_g) || 0),
-          badge: "Recalculado",
+          badge: "Calculado pela TACO",
         },
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
