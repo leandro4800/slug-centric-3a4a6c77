@@ -536,6 +536,24 @@ const AdminMontarTreino = () => {
         toast.success(`Treino gerado · ${novos.length} exercícios — revise antes de salvar`);
       }
 
+      // Auto-persist treino do aluno avulso (rascunho) para permitir re-download posterior do PDF
+      if (isAvulso) {
+        try {
+          await (supabase as any)
+            .from("avaliacao_avulsa_alunos")
+            .update({
+              treino_json: {
+                exercicios: novos,
+                cardio: data.cardio || "",
+                perfil: { objetivo: perfil.objetivo, nivel: perfil.tempo_treino, frequencia: perfil.frequencia_semanal },
+              },
+            })
+            .eq("id", alunoId);
+        } catch (err) {
+          console.warn("Falha ao auto-salvar treino avulso:", err);
+        }
+      }
+
       if (searchParams.get("andDiet") === "true") {
         toast.info("Revise e confirme o treino antes de montar a dieta.");
       }
