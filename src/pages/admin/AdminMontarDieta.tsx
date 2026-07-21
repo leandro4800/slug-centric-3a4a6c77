@@ -174,7 +174,27 @@ const AdminMontarDieta = () => {
       setRefeicoesDia(an?.refeicoes_dia || 4);
       setLoading(false);
 
-      const { data: d } = isAvulso ? { data: null } : await supabase
+      if (isAvulso) {
+        const dj: any = avulso?.dieta_json || null;
+        if (dj && Array.isArray(dj.refeicoes)) {
+          setRefeicoes(dj.refeicoes as any[]);
+          const ma: any = dj.macros_alvo || {};
+          setMacrosCalculados({
+            kcal: Math.round(dj.kcal_alvo || 0),
+            proteina_g: Math.round(ma.proteina_g || 0),
+            carboidrato_g: Math.round(ma.carboidrato_g || 0),
+            lipideos_g: Math.round(ma.lipideos_g || 0),
+          });
+        } else {
+          setRefeicoes([]);
+          setMacrosCalculados(null);
+        }
+        setDietaId(null);
+        setIsPublished(false);
+        return;
+      }
+
+      const { data: d } = await supabase
         .from("dietas")
         .select("id, is_published, kcal_alvo, macros_alvo")
         .eq("user_id", alunoId)
