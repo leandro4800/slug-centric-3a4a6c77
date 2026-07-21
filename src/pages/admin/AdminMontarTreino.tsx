@@ -1871,9 +1871,9 @@ const AdminMontarTreino = () => {
                     <FileDown className="h-4 w-4 mr-2" />
                     PDF Premium
                   </Button>
-                  <Button onClick={() => salvarPrescricao()} disabled={saving || isAvulso} size="sm" className="w-full sm:w-auto">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving} size="sm" className="w-full sm:w-auto">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    {isAvulso ? "Somente PDF" : pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
+                    {isAvulso ? "Salvar treino avulso" : pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
                   </Button>
                 </div>
               </div>
