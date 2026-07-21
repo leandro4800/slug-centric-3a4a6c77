@@ -325,7 +325,7 @@ const AdminMontarTreino = () => {
       const avulsoRes = isAvulso
         ? await (supabase as any)
           .from("avaliacao_avulsa_alunos")
-          .select("nome, sexo, data_nascimento, peso_inicial_kg, altura_cm")
+          .select("nome, sexo, data_nascimento, peso_inicial_kg, altura_cm, treino_json")
           .eq("id", alunoId)
           .eq("tenant_id", tenant.id)
           .maybeSingle()
