@@ -371,7 +371,34 @@ const AdminMontarDieta = () => {
   const salvarPrescricaoDieta = async (publish = false) => {
     if (!alunoId || !tenant) return;
     if (isAvulso) {
-      toast.info("Avaliação avulsa não é enviada para o app. Baixe o PDF e envie ao aluno.");
+      setSaving(true);
+      const toastId = toast.loading("Salvando dieta do aluno avulso...");
+      try {
+        const payload = {
+          refeicoes: refeicoes.map((r) => ({
+            nome: r.nome,
+            horario: r.horario,
+            descricao_ia: r.descricao_ia,
+          })),
+          kcal_alvo: Math.round(macrosCalculados?.kcal || 0),
+          macros_alvo: {
+            proteina_g: Math.round(macrosCalculados?.proteina_g || 0),
+            carboidrato_g: Math.round(macrosCalculados?.carboidrato_g || 0),
+            lipideos_g: Math.round(macrosCalculados?.lipideos_g || 0),
+          },
+          objetivo: perfil.objetivo,
+        };
+        const { error } = await (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .update({ dieta_json: payload })
+          .eq("id", alunoId);
+        if (error) throw error;
+        toast.success("Dieta salva. Você pode gerar o PDF quando quiser.", { id: toastId });
+      } catch (e: any) {
+        toast.error("Erro ao salvar: " + e.message, { id: toastId });
+      } finally {
+        setSaving(false);
+      }
       return;
     }
     setSaving(true);
