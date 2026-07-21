@@ -556,7 +556,27 @@ const AdminMontarTreino = () => {
     setSaving(true);
     try {
       if (isAvulso) {
-        toast.info("Avaliação avulsa não é enviada para o app. Use o botão PDF Premium para baixar e enviar ao aluno.");
+        const payload = {
+          exercicios: exerciciosToSave.map((e) => ({
+            dia_semana: e.dia_semana,
+            ordem: e.ordem,
+            exercicio: e.exercicio,
+            series: e.series,
+            repeticoes: e.repeticoes,
+            cadencia: e.cadencia,
+            detalhes_execucao: e.detalhes_execucao,
+            observacao: e.observacao,
+          })),
+          cardio,
+          perfil: { objetivo: perfil.objetivo, nivel: perfil.tempo_treino, frequencia: perfil.frequencia_semanal },
+        };
+        const { error } = await (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .update({ treino_json: payload })
+          .eq("id", alunoId);
+        if (error) throw error;
+        toast.success(`Treino avulso salvo (${exerciciosToSave.length} exercícios). Você pode gerar o PDF quando quiser.`);
+        setPendingReview(false);
         return;
       }
       const { data: alunoTenant, error: alunoError } = await supabase
