@@ -1196,22 +1196,49 @@ const AdminMontarDieta = () => {
                                 refeicoes: novasRefeicoes.map((r) => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
                               },
                             });
-                            if (error) throw error;
-                            if (rec?.totais) {
-                              macrosFinais = {
-                                kcal: Math.round(rec.totais.kcal || 0),
-                                proteina_g: Math.round(rec.totais.proteina_g || 0),
-                                carboidrato_g: Math.round(rec.totais.carboidrato_g || 0),
-                                lipideos_g: Math.round(rec.totais.lipideos_g || 0),
-                              };
-                              setMacrosCalculados(macrosFinais);
-                              toast.success("Macros calculados a partir dos alimentos.", { id: t });
-                            } else {
-                              toast.dismiss(t);
-                            }
-                          } catch (e: any) {
-                            toast.error("Não foi possível calcular macros: " + (e?.message || ""), { id: t });
-                          }
+                             if (error) throw error;
+                             if (rec?.totais) {
+                               macrosFinais = {
+                                 kcal: Math.round(rec.totais.kcal || 0),
+                                 proteina_g: Math.round(rec.totais.proteina_g || 0),
+                                 carboidrato_g: Math.round(rec.totais.carboidrato_g || 0),
+                                 lipideos_g: Math.round(rec.totais.lipideos_g || 0),
+                               };
+                               setMacrosCalculados(macrosFinais);
+                               toast.success("Macros calculados a partir dos alimentos.", { id: t });
+                             } else {
+                               toast.dismiss(t);
+                             }
+                             // Reduz cada refeição para APENAS a opção usada no total (evita
+                             // misturar "Opção 1" e "Opção 2" no PDF quando o plano original
+                             // trazia alternativas).
+                             const recRefs: any[] = Array.isArray(rec?.refeicoes) ? rec.refeicoes : [];
+                             if (recRefs.length === novasRefeicoes.length) {
+                               for (let i = 0; i < novasRefeicoes.length; i++) {
+                                 const meal = recRefs[i];
+                                 const opcoes: any[] = Array.isArray(meal?.opcoes) ? meal.opcoes : [];
+                                 if (opcoes.length <= 1) continue;
+                                 const selectedName = meal?.opcao_usada_no_total;
+                                 const selected = opcoes.find((o) => o?.nome === selectedName) || opcoes[0];
+                                 const itens: any[] = Array.isArray(selected?.itens) ? selected.itens : [];
+                                 if (!itens.length) continue;
+                                 const linhas = itens
+                                   .map((it) => {
+                                     const nome = (it?.alimento || it?.linha || "").toString().trim();
+                                     const q = it?.quantidade_g;
+                                     if (!nome) return "";
+                                     return q ? `${nome} — ${q} g` : nome;
+                                   })
+                                   .filter(Boolean);
+                                 if (linhas.length) {
+                                   novasRefeicoes[i].descricao_ia = linhas.join("\n");
+                                 }
+                               }
+                               setRefeicoes([...novasRefeicoes]);
+                             }
+                           } catch (e: any) {
+                             toast.error("Não foi possível calcular macros: " + (e?.message || ""), { id: t });
+                           }
                         if (data?.objetivo) setPerfil((p) => ({ ...p, objetivo: data.objetivo }));
 
                         // Persistência automática: aluno avulso — salva no dieta_json;
