@@ -65,6 +65,15 @@ const STOP_WORDS = new Set([
   "media", "medio", "grande", "pequeno", "baixo", "menor", "teor", "acucar", "tempero", "temperar", "recheio",
 ]);
 
+const SPECIAL_TACO_FOODS: TacoFood[] = [
+  // Alimentos/compostos comuns em planos importados que podem não existir na carga TACO do tenant.
+  // Valores por 100g/ml, derivados da referência TACO usada no relatório do usuário.
+  { nome: "Doce de leite cremoso", energia_kcal: 315, proteina_g: 7.0, carboidrato_g: 60.0, lipideos_g: 7.5 },
+  { nome: "Vitamina de fruta com leite", energia_kcal: 65, proteina_g: 2.25, carboidrato_g: 11.0, lipideos_g: 1.75 },
+  { nome: "Legumes cozidos mistos", energia_kcal: 27, proteina_g: 0.9, carboidrato_g: 5.7, lipideos_g: 0.25 },
+  { nome: "Salada crua mista", energia_kcal: 18, proteina_g: 1.4, carboidrato_g: 3.6, lipideos_g: 0.15 },
+];
+
 const FOOD_ALIASES: Array<{ terms: string[]; target: string }> = [
   { terms: ["pao de forma", "paes de forma"], target: "pao de forma" },
   { terms: ["pao frances", "frances"], target: "pao frances" },
@@ -73,6 +82,7 @@ const FOOD_ALIASES: Array<{ terms: string[]; target: string }> = [
   { terms: ["banana nanica", "banana"], target: "banana nanica" },
   { terms: ["mamao papaia", "mamao"], target: "mamao" },
   { terms: ["abacate"], target: "abacate" },
+  { terms: ["vitamina de fruta", "vitamina fruta"], target: "vitamina de fruta com leite" },
   { terms: ["laranja"], target: "laranja" },
   { terms: ["mexerica", "tangerina"], target: "tangerina" },
   { terms: ["uva"], target: "uva" },
@@ -88,6 +98,8 @@ const FOOD_ALIASES: Array<{ terms: string[]; target: string }> = [
   { terms: ["iogurte grego"], target: "iogurte grego natural" },
   { terms: ["iogurte", "iogurte natural"], target: "iogurte natural desnatado" },
   { terms: ["granola"], target: "granola" },
+  { terms: ["legumes cozidos", "legumes"], target: "legumes cozidos mistos" },
+  { terms: ["salada"], target: "salada crua mista" },
 ];
 
 const tokenize = (value: string) => normalizeText(value).split(" ").filter((t) => t.length > 2 && !STOP_WORDS.has(t));
@@ -111,7 +123,7 @@ const findTacoFood = (rawName: string, foods: TacoFood[]) => {
   const alias = FOOD_ALIASES.find((a) => a.terms.some((term) => normalized.includes(normalizeText(term))));
   const query = alias?.target || rawName;
   let best: { food: TacoFood; score: number } | null = null;
-  for (const food of foods) {
+  for (const food of [...foods, ...SPECIAL_TACO_FOODS]) {
     const score = scoreFoodMatch(query, food.nome);
     if (!best || score > best.score) best = { food, score };
   }
@@ -122,10 +134,15 @@ const parseNumber = (value: string) => Number(String(value || "").replace(",", "
 
 const defaultQuantityFor = (line: string) => {
   const n = normalizeText(line);
-  if (n.includes("a vontade")) return null;
+  if (n.includes("a vontade")) {
+    if (n.includes("legume")) return 150;
+    if (n.includes("salada")) return 100;
+    return null;
+  }
   if (n.includes("pao frances")) return 50;
   if (n.includes("pao de forma")) return 50;
-  if (n.includes("banana")) return 86;
+  if (n.includes("vitamina de fruta")) return 200;
+  if (n.includes("banana")) return 100;
   if (n.includes("laranja") || n.includes("mexerica") || n.includes("tangerina") || n.includes("uva") || n.includes("ameixa") || /^1\s+fruta/.test(n)) return 100;
   if (n.includes("iogurte")) return 170;
   if (n.includes("granola")) return 30;
@@ -144,7 +161,7 @@ const inferQuantityGrams = (line: string) => {
   if (explicitMl) return parseNumber(explicitMl[1]);
   const fatias = normalized.match(/(\d+(?:[,.]\d+)?)\s+fatias?/);
   if (fatias) {
-    const unit = normalized.includes("queijo") ? 20 : 25;
+    const unit = normalized.includes("queijo") ? 30 : 25;
     return parseNumber(fatias[1]) * unit;
   }
   const ovos = normalized.match(/(\d+(?:[,.]\d+)?)\s+ovos?/);
@@ -161,6 +178,10 @@ const inferQuantityGrams = (line: string) => {
 };
 
 const cleanFoodName = (line: string) => {
+  const n = normalizeText(line);
+  if (n.includes("vitamina de fruta")) return "vitamina de fruta com leite";
+  if (n.includes("legumes")) return "legumes cozidos mistos";
+  if (n.includes("salada")) return "salada crua mista";
   let s = String(line || "")
     .replace(/^[•\-+\s]+/, "")
     .replace(/^[0-9]{1,2}[:h][0-9]{0,2}\s*[–-]?\s*/i, "")
@@ -181,7 +202,7 @@ const cleanFoodName = (line: string) => {
 
 const shouldIgnoreDietLine = (line: string) => {
   const n = normalizeText(line);
-  return !n || /^opcao\s*[0-9a-z]*$/.test(n) || ["recheio", "sobremesa"].includes(n) || n.includes("estrategias") || n.includes("consumir de") || n.includes("processo de") || n.includes("duvida") || n.includes("abraco");
+  return !n || /^opcao\s*[0-9a-z]*$/.test(n) || ["recheio", "sobremesa"].includes(n) || n.includes("estrategias") || n.includes("consumir de") || n.includes("processo de") || n.includes("duvida") || n.includes("abraco") || n.includes("carboidratos para aumentar") || n.includes("forca e carga");
 };
 
 const splitMealOptions = (description: string) => {
@@ -189,16 +210,19 @@ const splitMealOptions = (description: string) => {
   const hasOptionMarkers = lines.some((l) => /^op[cç][aã]o\s*[0-9a-z]*/i.test(l));
   if (!hasOptionMarkers) return [{ nome: "Base", lines }];
   const groups: Array<{ nome: string; lines: string[] }> = [];
+  const prefixLines: string[] = [];
   let current: { nome: string; lines: string[] } | null = null;
   for (const line of lines) {
     if (/^op[cç][aã]o\s*[0-9a-z]*/i.test(line)) {
-      current = { nome: line.replace(/[:–—-]+$/, "").trim(), lines: [] };
+      current = { nome: line.replace(/[:–—-]+$/, "").trim(), lines: [...prefixLines] };
       groups.push(current);
     } else if (current) {
       current.lines.push(line);
+    } else {
+      prefixLines.push(line);
     }
   }
-  return groups.length ? groups : [{ nome: "Base", lines }];
+  return groups.length ? groups : [{ nome: "Base", lines: prefixLines.length ? prefixLines : lines }];
 };
 
 const calculateDietFromTaco = (refeicoesIn: Array<{ nome: string; descricao: string }>, foods: TacoFood[]) => {
