@@ -1251,14 +1251,16 @@ const AdminMontarDieta = () => {
                     {adjusting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     Equilibrar Macros
                   </Button>
-                  <Button size="sm" onClick={() => salvarPrescricaoDieta(false)} disabled={saving || !alunoId || isAvulso} className="bg-secondary hover:bg-secondary/80">
+                  <Button size="sm" onClick={() => salvarPrescricaoDieta(false)} disabled={saving || !alunoId || (isAvulso && refeicoes.length === 0)} className="bg-secondary hover:bg-secondary/80">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                    Salvar Rascunho
+                    {isAvulso ? "Salvar Dieta" : "Salvar Rascunho"}
                   </Button>
-                  <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId || isAvulso} className="bg-primary hover:bg-primary/90">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
-                    Enviar para Aluno
-                  </Button>
+                  {!isAvulso && (
+                    <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId} className="bg-primary hover:bg-primary/90">
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                      Enviar para Aluno
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => baixarDietaPdf("dark")} disabled={refeicoes.length === 0} className="border-white/20 text-white hover:bg-white/10">
                     <FileDown className="h-4 w-4 mr-1" />
                     PDF Escuro
