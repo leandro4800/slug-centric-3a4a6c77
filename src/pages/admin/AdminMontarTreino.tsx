@@ -1835,9 +1835,9 @@ const AdminMontarTreino = () => {
                 <h3 className="font-display text-base sm:text-lg leading-tight">A IA gerou {exercicios.length} exercícios. Confira tudo antes de enviar ao aluno.</h3>
                 <p className="text-xs text-muted-foreground mt-2">Edite o que precisar abaixo. O treino só vai para o aluno quando você clicar em <strong className="text-foreground">Confirmar e enviar</strong>.</p>
                 <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                  <Button onClick={() => salvarPrescricao()} disabled={saving || isAvulso} className="flex-1">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving} className="flex-1">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    {isAvulso ? "Baixe o PDF para enviar" : "Confirmar e enviar ao aluno"}
+                    {isAvulso ? "Salvar treino avulso" : "Confirmar e enviar ao aluno"}
                   </Button>
                   <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating} variant="outline" className="flex-1">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
