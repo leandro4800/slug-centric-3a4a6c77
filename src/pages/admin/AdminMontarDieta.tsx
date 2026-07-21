@@ -130,7 +130,7 @@ const AdminMontarDieta = () => {
       const avulsoRes = isAvulso
         ? await (supabase as any)
           .from("avaliacao_avulsa_alunos")
-          .select("nome, sexo, data_nascimento, peso_inicial_kg, altura_cm")
+          .select("nome, sexo, data_nascimento, peso_inicial_kg, altura_cm, dieta_json")
           .eq("id", alunoId)
           .eq("tenant_id", tenant?.id)
           .maybeSingle()
@@ -174,7 +174,27 @@ const AdminMontarDieta = () => {
       setRefeicoesDia(an?.refeicoes_dia || 4);
       setLoading(false);
 
-      const { data: d } = isAvulso ? { data: null } : await supabase
+      if (isAvulso) {
+        const dj: any = avulso?.dieta_json || null;
+        if (dj && Array.isArray(dj.refeicoes)) {
+          setRefeicoes(dj.refeicoes as any[]);
+          const ma: any = dj.macros_alvo || {};
+          setMacrosCalculados({
+            kcal: Math.round(dj.kcal_alvo || 0),
+            proteina_g: Math.round(ma.proteina_g || 0),
+            carboidrato_g: Math.round(ma.carboidrato_g || 0),
+            lipideos_g: Math.round(ma.lipideos_g || 0),
+          });
+        } else {
+          setRefeicoes([]);
+          setMacrosCalculados(null);
+        }
+        setDietaId(null);
+        setIsPublished(false);
+        return;
+      }
+
+      const { data: d } = await supabase
         .from("dietas")
         .select("id, is_published, kcal_alvo, macros_alvo")
         .eq("user_id", alunoId)
@@ -289,18 +309,25 @@ const AdminMontarDieta = () => {
       if (isAvulso && data?.refeicoes) {
         setDietaId(null);
         setIsPublished(false);
-        setRefeicoes((data.refeicoes || []).map((r: any, i: number) => ({
+        const refs = (data.refeicoes || []).map((r: any, i: number) => ({
           nome: r.nome || `Refeição ${i + 1}`,
           horario: r.horario || "08:00:00",
           descricao_ia: r.descricao_ia || "",
-        })));
+        }));
+        setRefeicoes(refs);
         const ma: any = data.macros_alvo || {};
-        setMacrosCalculados({
+        const macros = {
           kcal: Math.round(data.kcal_alvo || 0),
           proteina_g: Math.round(ma.proteina_g || 0),
           carboidrato_g: Math.round(ma.carboidrato_g || 0),
           lipideos_g: Math.round(ma.lipideos_g || 0),
-        });
+        };
+        setMacrosCalculados(macros);
+        // Persistir a dieta do aluno avulso para permitir re-download do PDF
+        await (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .update({ dieta_json: { refeicoes: refs, kcal_alvo: macros.kcal, macros_alvo: { proteina_g: macros.proteina_g, carboidrato_g: macros.carboidrato_g, lipideos_g: macros.lipideos_g }, objetivo: perfil.objetivo } })
+          .eq("id", alunoId);
       } else if (data?.dieta_id) {
         setDietaId(data.dieta_id);
         setIsPublished(false); // Sempre gera como rascunho
@@ -344,7 +371,34 @@ const AdminMontarDieta = () => {
   const salvarPrescricaoDieta = async (publish = false) => {
     if (!alunoId || !tenant) return;
     if (isAvulso) {
-      toast.info("Avaliação avulsa não é enviada para o app. Baixe o PDF e envie ao aluno.");
+      setSaving(true);
+      const toastId = toast.loading("Salvando dieta do aluno avulso...");
+      try {
+        const payload = {
+          refeicoes: refeicoes.map((r) => ({
+            nome: r.nome,
+            horario: r.horario,
+            descricao_ia: r.descricao_ia,
+          })),
+          kcal_alvo: Math.round(macrosCalculados?.kcal || 0),
+          macros_alvo: {
+            proteina_g: Math.round(macrosCalculados?.proteina_g || 0),
+            carboidrato_g: Math.round(macrosCalculados?.carboidrato_g || 0),
+            lipideos_g: Math.round(macrosCalculados?.lipideos_g || 0),
+          },
+          objetivo: perfil.objetivo,
+        };
+        const { error } = await (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .update({ dieta_json: payload })
+          .eq("id", alunoId);
+        if (error) throw error;
+        toast.success("Dieta salva. Você pode gerar o PDF quando quiser.", { id: toastId });
+      } catch (e: any) {
+        toast.error("Erro ao salvar: " + e.message, { id: toastId });
+      } finally {
+        setSaving(false);
+      }
       return;
     }
     setSaving(true);
@@ -1197,14 +1251,16 @@ const AdminMontarDieta = () => {
                     {adjusting ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Sparkles className="h-4 w-4 mr-1" />}
                     Equilibrar Macros
                   </Button>
-                  <Button size="sm" onClick={() => salvarPrescricaoDieta(false)} disabled={saving || !alunoId || isAvulso} className="bg-secondary hover:bg-secondary/80">
+                  <Button size="sm" onClick={() => salvarPrescricaoDieta(false)} disabled={saving || !alunoId || (isAvulso && refeicoes.length === 0)} className="bg-secondary hover:bg-secondary/80">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-                    Salvar Rascunho
+                    {isAvulso ? "Salvar Dieta" : "Salvar Rascunho"}
                   </Button>
-                  <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId || isAvulso} className="bg-primary hover:bg-primary/90">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
-                    Enviar para Aluno
-                  </Button>
+                  {!isAvulso && (
+                    <Button size="sm" onClick={() => salvarPrescricaoDieta(true)} disabled={saving || !alunoId} className="bg-primary hover:bg-primary/90">
+                      {saving ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Send className="h-4 w-4 mr-1" />}
+                      Enviar para Aluno
+                    </Button>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => baixarDietaPdf("dark")} disabled={refeicoes.length === 0} className="border-white/20 text-white hover:bg-white/10">
                     <FileDown className="h-4 w-4 mr-1" />
                     PDF Escuro

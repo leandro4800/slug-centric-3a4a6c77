@@ -325,7 +325,7 @@ const AdminMontarTreino = () => {
       const avulsoRes = isAvulso
         ? await (supabase as any)
           .from("avaliacao_avulsa_alunos")
-          .select("nome, sexo, data_nascimento, peso_inicial_kg, altura_cm")
+          .select("nome, sexo, data_nascimento, peso_inicial_kg, altura_cm, treino_json")
           .eq("id", alunoId)
           .eq("tenant_id", tenant.id)
           .maybeSingle()
@@ -376,39 +376,65 @@ const AdminMontarTreino = () => {
         limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
       });
 
-      const { data: tp } = isAvulso ? { data: null } : await supabase
-        .from("treinos_prescritos")
-        .select("dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
-        .eq("aluno_id", alunoId)
-        .eq("tenant_id", tenant.id)
-        .order("dia_semana")
-        .order("ordem");
-      if (tp && tp.length > 0) {
-        // Pré-carrega o treino já prescrito para edição (mesma UI da geração)
-        const carregados: ExercicioPrescrito[] = (tp as any[]).map((r, i) => ({
-          dia_semana: r.dia_semana || "",
-          ordem: typeof r.ordem === "number" ? r.ordem : i,
-          exercicio: r.exercicio || "",
-          series: r.series || "",
-          repeticoes: r.repeticoes || "",
-          cadencia: r.cadencia || "",
-          detalhes_execucao: r.detalhes_execucao || "",
-          observacao: r.observacao || "",
-        }));
-        const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
-        setExercicios(carregados);
-        if (diasUnicos.length > 0) {
-          setDivisaoCustom(diasUnicos);
-          setDivisaoSelecionadaId("custom-editar");
-        }
-        setPendingReview(true);
-        if (searchParams.get("edit") === "true") {
-          toast.success(`Treino carregado para edição (${tp.length} exercícios).`);
+      if (isAvulso) {
+        const tj: any = avulso?.treino_json || null;
+        const exs: any[] = Array.isArray(tj?.exercicios) ? tj.exercicios : [];
+        if (exs.length > 0) {
+          const carregados: ExercicioPrescrito[] = exs.map((r: any, i: number) => ({
+            dia_semana: r.dia_semana || "",
+            ordem: typeof r.ordem === "number" ? r.ordem : i,
+            exercicio: r.exercicio || "",
+            series: r.series || "",
+            repeticoes: r.repeticoes || "",
+            cadencia: r.cadencia || "",
+            detalhes_execucao: r.detalhes_execucao || "",
+            observacao: r.observacao || "",
+          }));
+          const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
+          setExercicios(carregados);
+          if (diasUnicos.length > 0) {
+            setDivisaoCustom(diasUnicos);
+            setDivisaoSelecionadaId("custom-editar");
+          }
+          setPendingReview(true);
+          toast.info(`Treino avulso carregado (${carregados.length} exercícios).`);
         } else {
-          toast.info(`Treino atual carregado (${tp.length} exercícios). Edite ou gere novamente para substituir.`);
+          setExercicios([]);
         }
       } else {
-        setExercicios([]);
+        const { data: tp } = await supabase
+          .from("treinos_prescritos")
+          .select("dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
+          .eq("aluno_id", alunoId)
+          .eq("tenant_id", tenant.id)
+          .order("dia_semana")
+          .order("ordem");
+        if (tp && tp.length > 0) {
+          const carregados: ExercicioPrescrito[] = (tp as any[]).map((r, i) => ({
+            dia_semana: r.dia_semana || "",
+            ordem: typeof r.ordem === "number" ? r.ordem : i,
+            exercicio: r.exercicio || "",
+            series: r.series || "",
+            repeticoes: r.repeticoes || "",
+            cadencia: r.cadencia || "",
+            detalhes_execucao: r.detalhes_execucao || "",
+            observacao: r.observacao || "",
+          }));
+          const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
+          setExercicios(carregados);
+          if (diasUnicos.length > 0) {
+            setDivisaoCustom(diasUnicos);
+            setDivisaoSelecionadaId("custom-editar");
+          }
+          setPendingReview(true);
+          if (searchParams.get("edit") === "true") {
+            toast.success(`Treino carregado para edição (${tp.length} exercícios).`);
+          } else {
+            toast.info(`Treino atual carregado (${tp.length} exercícios). Edite ou gere novamente para substituir.`);
+          }
+        } else {
+          setExercicios([]);
+        }
       }
       setPerfilLoading(false);
     })();
@@ -510,6 +536,24 @@ const AdminMontarTreino = () => {
         toast.success(`Treino gerado · ${novos.length} exercícios — revise antes de salvar`);
       }
 
+      // Auto-persist treino do aluno avulso (rascunho) para permitir re-download posterior do PDF
+      if (isAvulso) {
+        try {
+          await (supabase as any)
+            .from("avaliacao_avulsa_alunos")
+            .update({
+              treino_json: {
+                exercicios: novos,
+                cardio: data.cardio || "",
+                perfil: { objetivo: perfil.objetivo, nivel: perfil.tempo_treino, frequencia: perfil.frequencia_semanal },
+              },
+            })
+            .eq("id", alunoId);
+        } catch (err) {
+          console.warn("Falha ao auto-salvar treino avulso:", err);
+        }
+      }
+
       if (searchParams.get("andDiet") === "true") {
         toast.info("Revise e confirme o treino antes de montar a dieta.");
       }
@@ -530,7 +574,27 @@ const AdminMontarTreino = () => {
     setSaving(true);
     try {
       if (isAvulso) {
-        toast.info("Avaliação avulsa não é enviada para o app. Use o botão PDF Premium para baixar e enviar ao aluno.");
+        const payload = {
+          exercicios: exerciciosToSave.map((e) => ({
+            dia_semana: e.dia_semana,
+            ordem: e.ordem,
+            exercicio: e.exercicio,
+            series: e.series,
+            repeticoes: e.repeticoes,
+            cadencia: e.cadencia,
+            detalhes_execucao: e.detalhes_execucao,
+            observacao: e.observacao,
+          })),
+          cardio,
+          perfil: { objetivo: perfil.objetivo, nivel: perfil.tempo_treino, frequencia: perfil.frequencia_semanal },
+        };
+        const { error } = await (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .update({ treino_json: payload })
+          .eq("id", alunoId);
+        if (error) throw error;
+        toast.success(`Treino avulso salvo (${exerciciosToSave.length} exercícios). Você pode gerar o PDF quando quiser.`);
+        setPendingReview(false);
         return;
       }
       const { data: alunoTenant, error: alunoError } = await supabase
@@ -1789,9 +1853,9 @@ const AdminMontarTreino = () => {
                 <h3 className="font-display text-base sm:text-lg leading-tight">A IA gerou {exercicios.length} exercícios. Confira tudo antes de enviar ao aluno.</h3>
                 <p className="text-xs text-muted-foreground mt-2">Edite o que precisar abaixo. O treino só vai para o aluno quando você clicar em <strong className="text-foreground">Confirmar e enviar</strong>.</p>
                 <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                  <Button onClick={() => salvarPrescricao()} disabled={saving || isAvulso} className="flex-1">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving} className="flex-1">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    {isAvulso ? "Baixe o PDF para enviar" : "Confirmar e enviar ao aluno"}
+                    {isAvulso ? "Salvar treino avulso" : "Confirmar e enviar ao aluno"}
                   </Button>
                   <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating} variant="outline" className="flex-1">
                     {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
@@ -1825,9 +1889,9 @@ const AdminMontarTreino = () => {
                     <FileDown className="h-4 w-4 mr-2" />
                     PDF Premium
                   </Button>
-                  <Button onClick={() => salvarPrescricao()} disabled={saving || isAvulso} size="sm" className="w-full sm:w-auto">
+                  <Button onClick={() => salvarPrescricao()} disabled={saving} size="sm" className="w-full sm:w-auto">
                     {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    {isAvulso ? "Somente PDF" : pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
+                    {isAvulso ? "Salvar treino avulso" : pendingReview ? "Confirmar e enviar" : "Salvar prescrição"}
                   </Button>
                 </div>
               </div>
