@@ -376,39 +376,65 @@ const AdminMontarTreino = () => {
         limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
       });
 
-      const { data: tp } = isAvulso ? { data: null } : await supabase
-        .from("treinos_prescritos")
-        .select("dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
-        .eq("aluno_id", alunoId)
-        .eq("tenant_id", tenant.id)
-        .order("dia_semana")
-        .order("ordem");
-      if (tp && tp.length > 0) {
-        // Pré-carrega o treino já prescrito para edição (mesma UI da geração)
-        const carregados: ExercicioPrescrito[] = (tp as any[]).map((r, i) => ({
-          dia_semana: r.dia_semana || "",
-          ordem: typeof r.ordem === "number" ? r.ordem : i,
-          exercicio: r.exercicio || "",
-          series: r.series || "",
-          repeticoes: r.repeticoes || "",
-          cadencia: r.cadencia || "",
-          detalhes_execucao: r.detalhes_execucao || "",
-          observacao: r.observacao || "",
-        }));
-        const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
-        setExercicios(carregados);
-        if (diasUnicos.length > 0) {
-          setDivisaoCustom(diasUnicos);
-          setDivisaoSelecionadaId("custom-editar");
-        }
-        setPendingReview(true);
-        if (searchParams.get("edit") === "true") {
-          toast.success(`Treino carregado para edição (${tp.length} exercícios).`);
+      if (isAvulso) {
+        const tj: any = avulso?.treino_json || null;
+        const exs: any[] = Array.isArray(tj?.exercicios) ? tj.exercicios : [];
+        if (exs.length > 0) {
+          const carregados: ExercicioPrescrito[] = exs.map((r: any, i: number) => ({
+            dia_semana: r.dia_semana || "",
+            ordem: typeof r.ordem === "number" ? r.ordem : i,
+            exercicio: r.exercicio || "",
+            series: r.series || "",
+            repeticoes: r.repeticoes || "",
+            cadencia: r.cadencia || "",
+            detalhes_execucao: r.detalhes_execucao || "",
+            observacao: r.observacao || "",
+          }));
+          const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
+          setExercicios(carregados);
+          if (diasUnicos.length > 0) {
+            setDivisaoCustom(diasUnicos);
+            setDivisaoSelecionadaId("custom-editar");
+          }
+          setPendingReview(true);
+          toast.info(`Treino avulso carregado (${carregados.length} exercícios).`);
         } else {
-          toast.info(`Treino atual carregado (${tp.length} exercícios). Edite ou gere novamente para substituir.`);
+          setExercicios([]);
         }
       } else {
-        setExercicios([]);
+        const { data: tp } = await supabase
+          .from("treinos_prescritos")
+          .select("dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
+          .eq("aluno_id", alunoId)
+          .eq("tenant_id", tenant.id)
+          .order("dia_semana")
+          .order("ordem");
+        if (tp && tp.length > 0) {
+          const carregados: ExercicioPrescrito[] = (tp as any[]).map((r, i) => ({
+            dia_semana: r.dia_semana || "",
+            ordem: typeof r.ordem === "number" ? r.ordem : i,
+            exercicio: r.exercicio || "",
+            series: r.series || "",
+            repeticoes: r.repeticoes || "",
+            cadencia: r.cadencia || "",
+            detalhes_execucao: r.detalhes_execucao || "",
+            observacao: r.observacao || "",
+          }));
+          const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
+          setExercicios(carregados);
+          if (diasUnicos.length > 0) {
+            setDivisaoCustom(diasUnicos);
+            setDivisaoSelecionadaId("custom-editar");
+          }
+          setPendingReview(true);
+          if (searchParams.get("edit") === "true") {
+            toast.success(`Treino carregado para edição (${tp.length} exercícios).`);
+          } else {
+            toast.info(`Treino atual carregado (${tp.length} exercícios). Edite ou gere novamente para substituir.`);
+          }
+        } else {
+          setExercicios([]);
+        }
       }
       setPerfilLoading(false);
     })();
