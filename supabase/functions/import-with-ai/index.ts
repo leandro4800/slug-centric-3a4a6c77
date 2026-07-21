@@ -331,7 +331,8 @@ serve(async (req) => {
       importType === "treino"
         ? `Estrutura esperada: { "dias": [ { "dia": "string", "exercicios": [ { "nome": "string", "series": "string", "repeticoes": "string", "cadencia": "string", "detalhes_execucao": "string", "observacao": "string" } ] } ], "cardio": "string" }`
         : importType === "dieta"
-        ? `Estrutura esperada: { "objetivo": "string", "kcal_alvo": number, "macros_alvo": { "proteina_g": number, "carboidrato_g": number, "lipideos_g": number }, "refeicoes": [ { "nome": "string", "horario": "string", "itens": [ { "nome": "string", "quantidade_g": number } ] } ] }`
+        ? `Estrutura esperada: { "objetivo": "string", "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "texto original da refeição preservando linhas Opção 1/Opção 2/ou", "itens": [ { "nome": "string", "quantidade_g": number } ] } ] }
+IMPORTANTE PARA DIETA: não calcule kcal nem macros. Não invente calorias. Apenas extraia alimentos, quantidades e mantenha blocos de opções alternativas separados no campo descricao com as linhas "Opção 1", "Opção 2". O cálculo será feito depois pela tabela TACO do banco.`
         : importType === "anamnese"
         ? ANAMNESE_SCHEMA
         : (importType === "7dobras" || importType === "avaliacao")
