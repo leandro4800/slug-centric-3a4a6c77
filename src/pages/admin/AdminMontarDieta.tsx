@@ -309,18 +309,25 @@ const AdminMontarDieta = () => {
       if (isAvulso && data?.refeicoes) {
         setDietaId(null);
         setIsPublished(false);
-        setRefeicoes((data.refeicoes || []).map((r: any, i: number) => ({
+        const refs = (data.refeicoes || []).map((r: any, i: number) => ({
           nome: r.nome || `Refeição ${i + 1}`,
           horario: r.horario || "08:00:00",
           descricao_ia: r.descricao_ia || "",
-        })));
+        }));
+        setRefeicoes(refs);
         const ma: any = data.macros_alvo || {};
-        setMacrosCalculados({
+        const macros = {
           kcal: Math.round(data.kcal_alvo || 0),
           proteina_g: Math.round(ma.proteina_g || 0),
           carboidrato_g: Math.round(ma.carboidrato_g || 0),
           lipideos_g: Math.round(ma.lipideos_g || 0),
-        });
+        };
+        setMacrosCalculados(macros);
+        // Persistir a dieta do aluno avulso para permitir re-download do PDF
+        await (supabase as any)
+          .from("avaliacao_avulsa_alunos")
+          .update({ dieta_json: { refeicoes: refs, kcal_alvo: macros.kcal, macros_alvo: { proteina_g: macros.proteina_g, carboidrato_g: macros.carboidrato_g, lipideos_g: macros.lipideos_g }, objetivo: perfil.objetivo } })
+          .eq("id", alunoId);
       } else if (data?.dieta_id) {
         setDietaId(data.dieta_id);
         setIsPublished(false); // Sempre gera como rascunho
