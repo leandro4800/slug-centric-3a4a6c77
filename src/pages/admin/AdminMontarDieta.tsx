@@ -1204,6 +1204,7 @@ const AdminMontarDieta = () => {
                         });
                         setRefeicoes(novasRefeicoes);
                         let macrosFinais: { kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number } | null = null;
+                        let detalhesMacrosFinais: Array<{ nome: string; kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number }> = [];
                         // Sempre recalcula a partir da tabela TACO; macros vindos da IA são ignorados para evitar variação.
                           const t = toast.loading("Calculando macros dos alimentos importados...");
                           try {
@@ -1225,13 +1226,14 @@ const AdminMontarDieta = () => {
                                };
                                setMacrosCalculados(macrosFinais);
                                if (Array.isArray(rec?.refeicoes)) {
-                                 setMacroDetails(rec.refeicoes.map((r: any) => ({
+                                 detalhesMacrosFinais = rec.refeicoes.map((r: any) => ({
                                    nome: r.nome,
                                    kcal: Math.round(r.kcal || 0),
                                    proteina_g: Math.round(r.proteina_g || 0),
                                    carboidrato_g: Math.round(r.carboidrato_g || 0),
                                    lipideos_g: Math.round(r.lipideos_g || 0),
-                                 })));
+                                 }));
+                                 setMacroDetails(detalhesMacrosFinais);
                                }
                                toast.success("Macros calculados a partir dos alimentos.", { id: t });
                              } else {
@@ -1284,15 +1286,7 @@ const AdminMontarDieta = () => {
                                     carboidrato_g: macrosFinais?.carboidrato_g ?? 0,
                                     lipideos_g: macrosFinais?.lipideos_g ?? 0,
                                   },
-                                  macro_details: Array.isArray(rec?.refeicoes)
-                                    ? rec.refeicoes.map((r: any) => ({
-                                        nome: r.nome,
-                                        kcal: Math.round(r.kcal || 0),
-                                        proteina_g: Math.round(r.proteina_g || 0),
-                                        carboidrato_g: Math.round(r.carboidrato_g || 0),
-                                        lipideos_g: Math.round(r.lipideos_g || 0),
-                                      }))
-                                    : [],
+                                  macro_details: detalhesMacrosFinais,
                                   objetivo: data?.objetivo || perfil.objetivo,
                                 },
                               })
