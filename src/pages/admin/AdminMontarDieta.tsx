@@ -1186,13 +1186,15 @@ const AdminMontarDieta = () => {
                         setRefeicoes(novasRefeicoes);
                         const ma: any = data?.macros_alvo || {};
                         const temMacros = data?.kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g;
+                        let macrosFinais: { kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number } | null = null;
                         if (temMacros) {
-                          setMacrosCalculados({
+                          macrosFinais = {
                             kcal: Math.round(data.kcal_alvo || 0),
                             proteina_g: Math.round(ma.proteina_g || 0),
                             carboidrato_g: Math.round(ma.carboidrato_g || 0),
                             lipideos_g: Math.round(ma.lipideos_g || 0),
-                          });
+                          };
+                          setMacrosCalculados(macrosFinais);
                         } else {
                           // IA não devolveu macros — calcula a partir dos alimentos usando a tabela TACO
                           const t = toast.loading("Calculando macros dos alimentos importados...");
@@ -1207,12 +1209,13 @@ const AdminMontarDieta = () => {
                             });
                             if (error) throw error;
                             if (rec?.totais) {
-                              setMacrosCalculados({
+                              macrosFinais = {
                                 kcal: Math.round(rec.totais.kcal || 0),
                                 proteina_g: Math.round(rec.totais.proteina_g || 0),
                                 carboidrato_g: Math.round(rec.totais.carboidrato_g || 0),
                                 lipideos_g: Math.round(rec.totais.lipideos_g || 0),
-                              });
+                              };
+                              setMacrosCalculados(macrosFinais);
                               toast.success("Macros calculados a partir dos alimentos.", { id: t });
                             } else {
                               toast.dismiss(t);
@@ -1222,6 +1225,63 @@ const AdminMontarDieta = () => {
                           }
                         }
                         if (data?.objetivo) setPerfil((p) => ({ ...p, objetivo: data.objetivo }));
+
+                        // Persistência automática: aluno avulso — salva no dieta_json;
+                        // aluno cadastrado — cria/atualiza a dieta como rascunho para não perder o import.
+                        try {
+                          if (isAvulso) {
+                            await (supabase as any)
+                              .from("avaliacao_avulsa_alunos")
+                              .update({
+                                dieta_json: {
+                                  refeicoes: novasRefeicoes,
+                                  kcal_alvo: macrosFinais?.kcal ?? 0,
+                                  macros_alvo: {
+                                    proteina_g: macrosFinais?.proteina_g ?? 0,
+                                    carboidrato_g: macrosFinais?.carboidrato_g ?? 0,
+                                    lipideos_g: macrosFinais?.lipideos_g ?? 0,
+                                  },
+                                  objetivo: data?.objetivo || perfil.objetivo,
+                                },
+                              })
+                              .eq("id", alunoId);
+                            toast.success("Dieta importada salva automaticamente.");
+                          } else if (alunoId) {
+                            const dietPayload: any = {
+                              user_id: alunoId,
+                              objetivo: data?.objetivo || perfil.objetivo,
+                              is_published: false,
+                              kcal_alvo: macrosFinais?.kcal ?? 0,
+                              macros_alvo: macrosFinais
+                                ? {
+                                    proteina_g: macrosFinais.proteina_g,
+                                    carboidrato_g: macrosFinais.carboidrato_g,
+                                    lipideos_g: macrosFinais.lipideos_g,
+                                    badge: "Calculado pelos alimentos",
+                                  }
+                                : {},
+                            };
+                            const { data: novaDieta, error: dErr } = await supabase
+                              .from("dietas")
+                              .insert(dietPayload)
+                              .select()
+                              .single();
+                            if (!dErr && novaDieta) {
+                              setDietaId(novaDieta.id);
+                              const rows = novasRefeicoes.map((r, i) => ({
+                                dieta_id: novaDieta.id,
+                                nome: r.nome,
+                                horario: r.horario,
+                                descricao_ia: r.descricao_ia,
+                                ordem: i,
+                              }));
+                              if (rows.length) await supabase.from("refeicoes").insert(rows as any);
+                              toast.success("Dieta importada salva como rascunho.");
+                            }
+                          }
+                        } catch (e: any) {
+                          console.error("[AdminMontarDieta] auto-save import falhou:", e);
+                        }
                       }}
                     />
                   </div>
