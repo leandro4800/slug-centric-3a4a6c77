@@ -91,6 +91,7 @@ const AdminMontarDieta = () => {
   const [adjusting, setAdjusting] = useState(false);
   const [recalculating, setRecalculating] = useState(false);
   const [macrosCalculados, setMacrosCalculados] = useState<{ kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number } | null>(null);
+  const [macroDetails, setMacroDetails] = useState<Array<{ nome: string; kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number }> | null>(null);
   const [iaCommand, setIaCommand] = useState(searchParams.get("prompt") || "");
   const recognitionRef = useRef<any>(null);
 
@@ -185,9 +186,11 @@ const AdminMontarDieta = () => {
             carboidrato_g: Math.round(ma.carboidrato_g || 0),
             lipideos_g: Math.round(ma.lipideos_g || 0),
           });
+          setMacroDetails(Array.isArray(dj.macro_details) ? dj.macro_details : null);
         } else {
           setRefeicoes([]);
           setMacrosCalculados(null);
+          setMacroDetails(null);
         }
         setDietaId(null);
         setIsPublished(false);
@@ -215,6 +218,7 @@ const AdminMontarDieta = () => {
           });
         } else {
           setMacrosCalculados(null);
+          setMacroDetails(null);
         }
         const { data: refs } = await supabase
           .from("refeicoes")
@@ -227,6 +231,7 @@ const AdminMontarDieta = () => {
         setIsPublished(false);
         setRefeicoes([]);
         setMacrosCalculados(null);
+        setMacroDetails(null);
       }
     })();
   }, [alunoId, isAvulso, tenant?.id]);
@@ -577,6 +582,15 @@ const AdminMontarDieta = () => {
           lipideos_g: Math.round(data.totais.lipideos_g || 0),
         });
       }
+      if (Array.isArray(data?.refeicoes)) {
+        setMacroDetails(data.refeicoes.map((r: any) => ({
+          nome: r.nome,
+          kcal: Math.round(r.kcal || 0),
+          proteina_g: Math.round(r.proteina_g || 0),
+          carboidrato_g: Math.round(r.carboidrato_g || 0),
+          lipideos_g: Math.round(r.lipideos_g || 0),
+        })));
+      }
       toast.success("Macros recalculados com sucesso!", { id: toastId });
     } catch (e: any) {
       toast.error("Erro ao recalcular: " + e.message, { id: toastId });
@@ -646,9 +660,10 @@ const AdminMontarDieta = () => {
       return;
     }
 
-    // Garante macros calculados antes de gerar PDF, inclusive em avaliação avulsa.
+    // Sempre recalcula antes de gerar PDF para usar a TACO e evitar totais antigos/heurísticos.
     let macrosPdf = macrosCalculados;
-    if ((!macrosPdf || !macrosPdf.kcal) && alunoId && refeicoes.length > 0) {
+    let macroDetailsPdf = macroDetails;
+    if (alunoId && refeicoes.length > 0) {
       const t = toast.loading("Calculando macros da dieta...");
       try {
         const { data } = await supabase.functions.invoke("gerar-dieta", {
@@ -668,6 +683,16 @@ const AdminMontarDieta = () => {
             lipideos_g: Math.round(data.totais.lipideos_g || 0),
           };
           setMacrosCalculados(macrosPdf);
+        }
+        if (Array.isArray(data?.refeicoes)) {
+          macroDetailsPdf = data.refeicoes.map((r: any) => ({
+            nome: r.nome,
+            kcal: Math.round(r.kcal || 0),
+            proteina_g: Math.round(r.proteina_g || 0),
+            carboidrato_g: Math.round(r.carboidrato_g || 0),
+            lipideos_g: Math.round(r.lipideos_g || 0),
+          }));
+          setMacroDetails(macroDetailsPdf);
         }
         toast.dismiss(t);
       } catch {
@@ -847,20 +872,14 @@ const AdminMontarDieta = () => {
     );
     const platLogo = await loadImageDataUrl(platformLogo);
 
-    // ==== MACROS POR REFEIÇÃO (distribuição heurística) ====
-    const weights = refeicoes.map((r) => mealWeightFor(r.nome || ""));
-    const wSum = weights.reduce((s, w) => s + w, 0) || 1;
+    // ==== MACROS POR REFEIÇÃO (valores reais calculados pela TACO) ====
     const perMealMacros = refeicoes.map((_, i) => {
-      const w = weights[i] / wSum;
-      const kcal = macrosPdf?.kcal || 0;
-      const p = macrosPdf?.proteina_g || 0;
-      const c = macrosPdf?.carboidrato_g || 0;
-      const g = macrosPdf?.lipideos_g || 0;
+      const detail = macroDetailsPdf?.[i];
       return {
-        kcal: Math.round(kcal * w),
-        p: Math.round(p * w),
-        c: Math.round(c * w),
-        g: Math.round(g * w),
+        kcal: Math.round(detail?.kcal || 0),
+        p: Math.round(detail?.proteina_g || 0),
+        c: Math.round(detail?.carboidrato_g || 0),
+        g: Math.round(detail?.lipideos_g || 0),
       };
     });
 
@@ -1205,6 +1224,15 @@ const AdminMontarDieta = () => {
                                  lipideos_g: Math.round(rec.totais.lipideos_g || 0),
                                };
                                setMacrosCalculados(macrosFinais);
+                               if (Array.isArray(rec?.refeicoes)) {
+                                 setMacroDetails(rec.refeicoes.map((r: any) => ({
+                                   nome: r.nome,
+                                   kcal: Math.round(r.kcal || 0),
+                                   proteina_g: Math.round(r.proteina_g || 0),
+                                   carboidrato_g: Math.round(r.carboidrato_g || 0),
+                                   lipideos_g: Math.round(r.lipideos_g || 0),
+                                 })));
+                               }
                                toast.success("Macros calculados a partir dos alimentos.", { id: t });
                              } else {
                                toast.dismiss(t);
@@ -1256,6 +1284,15 @@ const AdminMontarDieta = () => {
                                     carboidrato_g: macrosFinais?.carboidrato_g ?? 0,
                                     lipideos_g: macrosFinais?.lipideos_g ?? 0,
                                   },
+                                  macro_details: Array.isArray(rec?.refeicoes)
+                                    ? rec.refeicoes.map((r: any) => ({
+                                        nome: r.nome,
+                                        kcal: Math.round(r.kcal || 0),
+                                        proteina_g: Math.round(r.proteina_g || 0),
+                                        carboidrato_g: Math.round(r.carboidrato_g || 0),
+                                        lipideos_g: Math.round(r.lipideos_g || 0),
+                                      }))
+                                    : [],
                                   objetivo: data?.objetivo || perfil.objetivo,
                                 },
                               })
