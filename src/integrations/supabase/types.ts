@@ -646,6 +646,7 @@ export type Database = {
           coach_user_id: string
           created_at: string
           data_nascimento: string | null
+          dieta_json: Json | null
           email: string | null
           id: string
           nome: string
@@ -653,6 +654,7 @@ export type Database = {
           sexo: string | null
           telefone: string | null
           tenant_id: string
+          treino_json: Json | null
           updated_at: string
         }
         Insert: {
@@ -660,6 +662,7 @@ export type Database = {
           coach_user_id: string
           created_at?: string
           data_nascimento?: string | null
+          dieta_json?: Json | null
           email?: string | null
           id?: string
           nome: string
@@ -667,6 +670,7 @@ export type Database = {
           sexo?: string | null
           telefone?: string | null
           tenant_id: string
+          treino_json?: Json | null
           updated_at?: string
         }
         Update: {
@@ -674,6 +678,7 @@ export type Database = {
           coach_user_id?: string
           created_at?: string
           data_nascimento?: string | null
+          dieta_json?: Json | null
           email?: string | null
           id?: string
           nome?: string
@@ -681,6 +686,7 @@ export type Database = {
           sexo?: string | null
           telefone?: string | null
           tenant_id?: string
+          treino_json?: Json | null
           updated_at?: string
         }
         Relationships: [
