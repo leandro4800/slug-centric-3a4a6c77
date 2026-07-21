@@ -1170,7 +1170,7 @@ const AdminMontarDieta = () => {
                         setIsPublished(false);
                         const novasRefeicoes = refs.map((r: any, i: number) => {
                           const itens = Array.isArray(r?.itens) ? r.itens : [];
-                          const descricao = itens
+                          const descricao = r?.descricao || r?.descricao_ia || itens
                             .map((it: any) => {
                               const q = it?.quantidade_g;
                               return q ? `${it?.nome || ""} — ${q} g` : `${it?.nome || ""}`;
@@ -1184,26 +1184,15 @@ const AdminMontarDieta = () => {
                           };
                         });
                         setRefeicoes(novasRefeicoes);
-                        const ma: any = data?.macros_alvo || {};
-                        const temMacros = data?.kcal_alvo || ma.proteina_g || ma.carboidrato_g || ma.lipideos_g;
                         let macrosFinais: { kcal: number; proteina_g: number; carboidrato_g: number; lipideos_g: number } | null = null;
-                        if (temMacros) {
-                          macrosFinais = {
-                            kcal: Math.round(data.kcal_alvo || 0),
-                            proteina_g: Math.round(ma.proteina_g || 0),
-                            carboidrato_g: Math.round(ma.carboidrato_g || 0),
-                            lipideos_g: Math.round(ma.lipideos_g || 0),
-                          };
-                          setMacrosCalculados(macrosFinais);
-                        } else {
-                          // IA não devolveu macros — calcula a partir dos alimentos usando a tabela TACO
+                        // Sempre recalcula a partir da tabela TACO; macros vindos da IA são ignorados para evitar variação.
                           const t = toast.loading("Calculando macros dos alimentos importados...");
                           try {
                             const { data: rec, error } = await supabase.functions.invoke("gerar-dieta", {
                               body: {
                                 mode: "recalc",
                                 aluno_id: alunoId,
-                                  avulso: isAvulso,
+                                avulso: isAvulso,
                                 refeicoes: novasRefeicoes.map((r) => ({ nome: r.nome, descricao: r.descricao_ia || "" })),
                               },
                             });
@@ -1223,7 +1212,6 @@ const AdminMontarDieta = () => {
                           } catch (e: any) {
                             toast.error("Não foi possível calcular macros: " + (e?.message || ""), { id: t });
                           }
-                        }
                         if (data?.objetivo) setPerfil((p) => ({ ...p, objetivo: data.objetivo }));
 
                         // Persistência automática: aluno avulso — salva no dieta_json;

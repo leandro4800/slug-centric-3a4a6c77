@@ -19,6 +19,242 @@ const parseJsonContent = (content: string) => {
   }
 };
 
+type TacoFood = {
+  nome: string;
+  energia_kcal: number | null;
+  proteina_g: number | null;
+  carboidrato_g: number | null;
+  lipideos_g: number | null;
+};
+
+type MacroTotals = {
+  kcal: number;
+  proteina_g: number;
+  carboidrato_g: number;
+  lipideos_g: number;
+};
+
+const emptyTotals = (): MacroTotals => ({ kcal: 0, proteina_g: 0, carboidrato_g: 0, lipideos_g: 0 });
+
+const addTotals = (a: MacroTotals, b: MacroTotals): MacroTotals => ({
+  kcal: a.kcal + b.kcal,
+  proteina_g: a.proteina_g + b.proteina_g,
+  carboidrato_g: a.carboidrato_g + b.carboidrato_g,
+  lipideos_g: a.lipideos_g + b.lipideos_g,
+});
+
+const roundTotals = (t: MacroTotals): MacroTotals => ({
+  kcal: Math.round(t.kcal),
+  proteina_g: Math.round(t.proteina_g),
+  carboidrato_g: Math.round(t.carboidrato_g),
+  lipideos_g: Math.round(t.lipideos_g),
+});
+
+const normalizeText = (value: unknown) =>
+  String(value ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const STOP_WORDS = new Set([
+  "de", "da", "do", "das", "dos", "com", "sem", "para", "por", "em", "no", "na", "um", "uma", "e", "ou",
+  "cozido", "cozida", "cozidos", "cozidas", "grelhado", "grelhada", "desfiado", "desfiada", "inteiro", "inteira",
+  "media", "medio", "grande", "pequeno", "baixo", "menor", "teor", "acucar", "tempero", "temperar", "recheio",
+]);
+
+const FOOD_ALIASES: Array<{ terms: string[]; target: string }> = [
+  { terms: ["pao de forma", "paes de forma"], target: "pao de forma" },
+  { terms: ["pao frances", "frances"], target: "pao frances" },
+  { terms: ["goma de tapioca", "tapioca"], target: "tapioca" },
+  { terms: ["cuscuz"], target: "cuscuz de milho" },
+  { terms: ["banana nanica", "banana"], target: "banana nanica" },
+  { terms: ["mamao papaia", "mamao"], target: "mamao" },
+  { terms: ["abacate"], target: "abacate" },
+  { terms: ["laranja"], target: "laranja" },
+  { terms: ["mexerica", "tangerina"], target: "tangerina" },
+  { terms: ["uva"], target: "uva" },
+  { terms: ["ameixa"], target: "ameixa" },
+  { terms: ["ovo mexido", "ovos mexidos", "ovo", "ovos"], target: "ovo de galinha inteiro cozido" },
+  { terms: ["queijo branco", "queijo minas", "minas frescal", "queijo"], target: "queijo minas frescal" },
+  { terms: ["arroz branco", "arroz"], target: "arroz branco cozido" },
+  { terms: ["feijao carioca", "feijao"], target: "feijao carioca cozido" },
+  { terms: ["peito de frango", "frango desfiado", "frango"], target: "frango peito grelhado" },
+  { terms: ["carne magra", "carne bovina", "patinho"], target: "patinho grelhado" },
+  { terms: ["azeite", "azeite de oliva"], target: "azeite de oliva" },
+  { terms: ["doce de leite"], target: "doce de leite" },
+  { terms: ["iogurte grego"], target: "iogurte grego natural" },
+  { terms: ["iogurte", "iogurte natural"], target: "iogurte natural desnatado" },
+  { terms: ["granola"], target: "granola" },
+];
+
+const tokenize = (value: string) => normalizeText(value).split(" ").filter((t) => t.length > 2 && !STOP_WORDS.has(t));
+
+const scoreFoodMatch = (query: string, foodName: string) => {
+  const q = normalizeText(query);
+  const f = normalizeText(foodName);
+  if (!q || !f) return 0;
+  if (f === q) return 100;
+  if (f.includes(q) || q.includes(f)) return 85;
+  const qTokens = tokenize(q);
+  const fTokens = new Set(tokenize(f));
+  if (!qTokens.length) return 0;
+  const hits = qTokens.filter((t) => fTokens.has(t)).length;
+  return (hits / qTokens.length) * 70 + hits;
+};
+
+const findTacoFood = (rawName: string, foods: TacoFood[]) => {
+  const normalized = normalizeText(rawName);
+  if (!normalized) return null;
+  const alias = FOOD_ALIASES.find((a) => a.terms.some((term) => normalized.includes(normalizeText(term))));
+  const query = alias?.target || rawName;
+  let best: { food: TacoFood; score: number } | null = null;
+  for (const food of foods) {
+    const score = scoreFoodMatch(query, food.nome);
+    if (!best || score > best.score) best = { food, score };
+  }
+  return best && best.score >= 30 ? best.food : null;
+};
+
+const parseNumber = (value: string) => Number(String(value || "").replace(",", "."));
+
+const defaultQuantityFor = (line: string) => {
+  const n = normalizeText(line);
+  if (n.includes("a vontade")) return null;
+  if (n.includes("pao frances")) return 50;
+  if (n.includes("pao de forma")) return 50;
+  if (n.includes("banana")) return 86;
+  if (n.includes("laranja") || n.includes("mexerica") || n.includes("tangerina") || n.includes("uva") || n.includes("ameixa") || /^1\s+fruta/.test(n)) return 100;
+  if (n.includes("iogurte")) return 170;
+  if (n.includes("granola")) return 30;
+  if (n.includes("tapioca") || n.includes("goma")) return 100;
+  if (n.includes("cuscuz")) return 100;
+  if (n.includes("frango") || n.includes("carne")) return 100;
+  if (n.includes("queijo")) return 30;
+  return null;
+};
+
+const inferQuantityGrams = (line: string) => {
+  const normalized = normalizeText(line);
+  const explicitG = line.match(/(\d+(?:[,.]\d+)?)\s*(?:g|gramas?)\b/i);
+  if (explicitG) return parseNumber(explicitG[1]);
+  const explicitMl = line.match(/(\d+(?:[,.]\d+)?)\s*ml\b/i);
+  if (explicitMl) return parseNumber(explicitMl[1]);
+  const fatias = normalized.match(/(\d+(?:[,.]\d+)?)\s+fatias?/);
+  if (fatias) {
+    const unit = normalized.includes("queijo") ? 20 : 25;
+    return parseNumber(fatias[1]) * unit;
+  }
+  const ovos = normalized.match(/(\d+(?:[,.]\d+)?)\s+ovos?/);
+  if (ovos) return parseNumber(ovos[1]) * 50;
+  const colheres = normalized.match(/(\d+(?:[,.]\d+)?)?\s*colher(?:es)?\s*(?:de)?\s*sopa/);
+  if (colheres) {
+    const count = colheres[1] ? parseNumber(colheres[1]) : 1;
+    const unit = normalized.includes("azeite") ? 13 : normalized.includes("granola") ? 15 : normalized.includes("doce de leite") ? 20 : 15;
+    return count * unit;
+  }
+  const copos = normalized.match(/(\d+(?:[,.]\d+)?)\s+copos?/);
+  if (copos) return parseNumber(copos[1]) * 200;
+  return defaultQuantityFor(line);
+};
+
+const cleanFoodName = (line: string) => {
+  let s = String(line || "")
+    .replace(/^[•\-+\s]+/, "")
+    .replace(/^[0-9]{1,2}[:h][0-9]{0,2}\s*[–-]?\s*/i, "")
+    .replace(/^(sobremesa|recheio)\s*:?\s*/i, "")
+    .replace(/\([^)]*\b\d+(?:[,.]\d+)?\s*(?:g|ml|gramas?)\b[^)]*\)/gi, "")
+    .replace(/\b\d+(?:[,.]\d+)?\s*(?:g|ml|gramas?)\b/gi, "")
+    .replace(/\b\d+(?:[,.]\d+)?\s*(?:fatias?|unidades?|colheres?|colher|copos?)\b/gi, "")
+    .replace(/\b(?:de|da|do)?\s*sopa\b/gi, "")
+    .replace(/\b(?:copo|unidade|unidades)\b/gi, "")
+    .replace(/^[\s–—-]+/, "")
+    .trim();
+
+  const parentheticalFoods = String(line || "").match(/\(([^)]*(?:banana|mam[aã]o|abacate|laranja|uva|ameixa|frango|ovos?)[^)]*)\)/i);
+  if (/vitamina de fruta|\bfruta\b/i.test(s) && parentheticalFoods?.[1]) s = parentheticalFoods[1];
+  s = s.split(/\s+ou\s+|\s*\/\s*/i)[0].split(",")[0].trim();
+  return s;
+};
+
+const shouldIgnoreDietLine = (line: string) => {
+  const n = normalizeText(line);
+  return !n || /^opcao\s*[0-9a-z]*$/.test(n) || ["recheio", "sobremesa"].includes(n) || n.includes("estrategias") || n.includes("consumir de") || n.includes("processo de") || n.includes("duvida") || n.includes("abraco");
+};
+
+const splitMealOptions = (description: string) => {
+  const lines = String(description || "").split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  const hasOptionMarkers = lines.some((l) => /^op[cç][aã]o\s*[0-9a-z]*/i.test(l));
+  if (!hasOptionMarkers) return [{ nome: "Base", lines }];
+  const groups: Array<{ nome: string; lines: string[] }> = [];
+  let current: { nome: string; lines: string[] } | null = null;
+  for (const line of lines) {
+    if (/^op[cç][aã]o\s*[0-9a-z]*/i.test(line)) {
+      current = { nome: line.replace(/[:–—-]+$/, "").trim(), lines: [] };
+      groups.push(current);
+    } else if (current) {
+      current.lines.push(line);
+    }
+  }
+  return groups.length ? groups : [{ nome: "Base", lines }];
+};
+
+const calculateDietFromTaco = (refeicoesIn: Array<{ nome: string; descricao: string }>, foods: TacoFood[]) => {
+  const refeicoes = refeicoesIn.map((ref, mealIndex) => {
+    const optionGroups = splitMealOptions(ref.descricao || "");
+    const opcoes = optionGroups.map((group) => {
+      const itens: any[] = [];
+      let totals = emptyTotals();
+      for (const rawLine of group.lines) {
+        if (shouldIgnoreDietLine(rawLine)) continue;
+        const quantidade_g = inferQuantityGrams(rawLine);
+        const alimentoBuscado = cleanFoodName(rawLine);
+        const alimentoTaco = findTacoFood(alimentoBuscado, foods);
+        if (!quantidade_g || !alimentoTaco) {
+          itens.push({ linha: rawLine, alimento: alimentoBuscado, quantidade_g: quantidade_g || null, calculado: false });
+          continue;
+        }
+        const factor = quantidade_g / 100;
+        const itemTotals: MacroTotals = {
+          kcal: Number(alimentoTaco.energia_kcal || 0) * factor,
+          proteina_g: Number(alimentoTaco.proteina_g || 0) * factor,
+          carboidrato_g: Number(alimentoTaco.carboidrato_g || 0) * factor,
+          lipideos_g: Number(alimentoTaco.lipideos_g || 0) * factor,
+        };
+        totals = addTotals(totals, itemTotals);
+        itens.push({
+          linha: rawLine,
+          alimento: alimentoBuscado,
+          taco_nome: alimentoTaco.nome,
+          quantidade_g: Math.round(quantidade_g),
+          ...roundTotals(itemTotals),
+          calculado: true,
+        });
+      }
+      return { nome: group.nome, ...roundTotals(totals), itens };
+    });
+    const selected = opcoes.find((o) => /op[cç][aã]o\s*1/i.test(o.nome)) || opcoes[0] || { ...emptyTotals(), nome: "Base", itens: [] };
+    return {
+      nome: ref.nome || `Refeição ${mealIndex + 1}`,
+      kcal: selected.kcal,
+      proteina_g: selected.proteina_g,
+      carboidrato_g: selected.carboidrato_g,
+      lipideos_g: selected.lipideos_g,
+      opcao_usada_no_total: selected.nome,
+      opcoes,
+    };
+  });
+  const totais = roundTotals(refeicoes.reduce((acc, ref) => addTotals(acc, {
+    kcal: ref.kcal,
+    proteina_g: ref.proteina_g,
+    carboidrato_g: ref.carboidrato_g,
+    lipideos_g: ref.lipideos_g,
+  }), emptyTotals()));
+  return { refeicoes, totais };
+};
+
 interface DietRequest {
   mode?: "generate" | "refine" | "recalc";
   objetivo?: string;
@@ -128,76 +364,15 @@ serve(async (req) => {
           status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      const refeicoesTxt = refeicoesIn
-        .map((r, i) => `Refeição ${i + 1} — ${r.nome}\n${r.descricao}`)
-        .join("\n\n");
 
-      // Carrega tabela TACO para o cálculo (fonte oficial de macros)
+      // Carrega tabela TACO para o cálculo determinístico (fonte oficial de macros).
+      // Importante: a IA NÃO faz a conta aqui, pois isso causava variação entre tentativas.
       const { data: tacoRows } = await supabase
         .from("alimentos_taco")
         .select("nome, energia_kcal, proteina_g, carboidrato_g, lipideos_g")
-        .limit(500);
-      const tacoTxt = (tacoRows || [])
-        .map((a: any) => `${a.nome} | kcal:${a.energia_kcal} P:${a.proteina_g} C:${a.carboidrato_g} G:${a.lipideos_g} (por 100g)`)
-        .join("\n");
+        .limit(2000);
 
-      const systemPrompt = `Você é um nutricionista. Receberá uma lista de refeições com os alimentos e quantidades (em gramas) ATUAIS prescritos.
-Sua tarefa: CALCULAR os macros e calorias REAIS de cada alimento USANDO OBRIGATORIAMENTE a TABELA TACO fornecida abaixo como fonte de macros por 100g.
-
-TABELA TACO (use estes valores — são por 100g do alimento):
-${tacoTxt}
-
-REGRA CRÍTICA — OPÇÕES ALTERNATIVAS:
-- Dentro de UMA MESMA refeição, blocos rotulados como "Opção 1", "Opção 2", "Opção A/B", "Alternativa", ou separados por "OU" / "ou" são ALTERNATIVAS EXCLUDENTES: o aluno come APENAS UMA delas, NÃO todas.
-- NUNCA some as opções. Calcule os macros de CADA opção separadamente e escolha UMA opção representativa para compor o total da refeição (use a opção 1; se não houver "opção 1" explícita, use a MÉDIA das opções — jamais a soma).
-- Se a refeição não tiver opções alternativas, some normalmente todos os alimentos daquela refeição.
-- O campo "opcoes" no retorno deve trazer TODAS as opções calculadas separadamente (para transparência), mas kcal/proteina/carbo/gordura da refeição refletem UMA opção só.
-- "totais" é a soma das refeições (uma opção por refeição), NÃO a soma de todas as opções.
-
-Regras gerais:
-- Para cada item, encontre o alimento mais próximo na TABELA TACO e use os macros proporcionalmente à quantidade prescrita.
-- Se o item não estiver listado, use o TACO do equivalente mais próximo.
-- Converta unidades para g quando necessário (1 ovo ≈ 50g, 1 fatia de pão ≈ 25g, 1 colher de sopa de azeite ≈ 13g).
-- NÃO altere os alimentos. Apenas compute. Arredonde para inteiros.
-
-Retorne APENAS JSON neste formato:
-{
-  "refeicoes": [
-    {
-      "nome": "...",
-      "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0,
-      "opcoes": [
-        { "nome": "Opção 1", "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
-      ]
-    }
-  ],
-  "totais": { "kcal": 0, "proteina_g": 0, "carboidrato_g": 0, "lipideos_g": 0 }
-}`;
-
-
-      const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY || "", "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: refeicoesTxt },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0,
-        }),
-      });
-
-      if (!aiResp.ok) {
-        const txt = await aiResp.text();
-        console.error("[gerar-dieta recalc] AI error", aiResp.status, txt);
-        if (aiResp.status === 429) return new Response(JSON.stringify({ error: "Limite de requisições da IA atingido. Tente em alguns segundos." }), { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        if (aiResp.status === 402) return new Response(JSON.stringify({ error: "Créditos de IA esgotados." }), { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-        throw new Error(`IA falhou no recálculo (${aiResp.status}): ${txt.slice(0, 200)}`);
-      }
-      const aiData = await aiResp.json();
-      const parsed = parseJsonContent(aiData.choices?.[0]?.message?.content || "{}");
+      const parsed = calculateDietFromTaco(refeicoesIn, (tacoRows || []) as TacoFood[]);
       const totais = parsed.totais || { kcal: 0, proteina_g: 0, carboidrato_g: 0, lipideos_g: 0 };
 
       if (body.dieta_id) {
@@ -207,7 +382,7 @@ Retorne APENAS JSON neste formato:
             proteina_g: Math.round(Number(totais.proteina_g) || 0),
             carboidrato_g: Math.round(Number(totais.carboidrato_g) || 0),
             lipideos_g: Math.round(Number(totais.lipideos_g) || 0),
-            badge: "Recalculado",
+            badge: "Calculado pela TACO",
           },
         }).eq("id", body.dieta_id);
       }
@@ -221,7 +396,7 @@ Retorne APENAS JSON neste formato:
           proteina_g: Math.round(Number(totais.proteina_g) || 0),
           carboidrato_g: Math.round(Number(totais.carboidrato_g) || 0),
           lipideos_g: Math.round(Number(totais.lipideos_g) || 0),
-          badge: "Recalculado",
+          badge: "Calculado pela TACO",
         },
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
