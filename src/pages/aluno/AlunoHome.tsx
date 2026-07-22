@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Play, Volume2, VolumeX, ChevronRight, User, Users, CalendarCheck, HelpCircle } from "lucide-react";
+import { Play, Volume2, VolumeX, ChevronRight, User, Users, CalendarCheck, HelpCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -65,7 +65,7 @@ const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) =
 
 const AlunoHome = () => {
   const { tenant } = useBranding();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { slug } = useParams();
   const tenantSlug = tenant?.slug || slug;
   const [vlogs, setVlogs] = useState<VlogPost[]>([]);
@@ -78,6 +78,11 @@ const AlunoHome = () => {
     let isMounted = true;
     const checkRole = async () => {
       if (!user) return;
+      // Coach do próprio tenant ou super-admin já libera imediatamente
+      if (hasRole("admin") || (tenant?.id && hasRole("coach", tenant.id))) {
+        if (isMounted) setIsAdmin(true);
+        return;
+      }
       try {
         const { data, error } = await supabase.rpc("has_role", {
           _user_id: user.id,
@@ -92,7 +97,7 @@ const AlunoHome = () => {
     };
     checkRole();
     return () => { isMounted = false; };
-  }, [user]);
+  }, [user, tenant?.id, hasRole]);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -322,9 +327,29 @@ const AlunoHome = () => {
 
       {/* Vlogs */}
       <section className="px-5 mt-8">
-        <h2 className="font-display text-lg mb-4 flex items-center gap-2">
-          <span className="text-primary">▶</span> VLOGS DO COACH
-        </h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="font-display text-lg flex items-center gap-2">
+            <span className="text-primary">▶</span> VLOGS DO COACH
+          </h2>
+          {isAdmin && (
+            <Link
+              to={`/${tenantSlug}/admin/vlogs`}
+              className="inline-flex items-center gap-1.5 bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-glow hover:opacity-90 transition"
+            >
+              <Plus className="h-3.5 w-3.5" /> Postar novo
+            </Link>
+          )}
+        </div>
+        {isAdmin && vlogs.length === 0 && (
+          <Link
+            to={`/${tenantSlug}/admin/vlogs`}
+            className="block bg-card border border-dashed border-primary/40 rounded-xl p-6 text-center hover:border-primary transition-all mb-3"
+          >
+            <Plus className="h-6 w-6 text-primary mx-auto mb-2" />
+            <p className="font-display text-sm uppercase tracking-wider">Publicar seu primeiro vlog</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Link YouTube, TikTok, Instagram ou upload direto</p>
+          </Link>
+        )}
         <div className="grid grid-cols-2 gap-3">
           {vlogs.slice(1).map((v) => (
             <div
