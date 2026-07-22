@@ -157,12 +157,6 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
           </div>
           <DetailItem label="Disponibilidade" value={data.disponibilidade_dias?.join(", ")} />
         </section>
-        {data.faz_uso_ergogenicos && (
-          <section className="space-y-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-            <h3 className="font-display text-sm uppercase text-primary tracking-widest">Recursos Ergogênicos</h3>
-            <p className="text-xs text-foreground/90">{data.detalhes_ergogenicos || "Uso confirmado, sem detalhes."}</p>
-          </section>
-        )}
       </div>
     );
   }
@@ -271,16 +265,6 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
         </div>
       </Field>
 
-
-      <div className="flex items-center gap-2">
-        <Checkbox id="erg" checked={!!form.faz_uso_ergogenicos} onCheckedChange={v => setForm({ ...form, faz_uso_ergogenicos: !!v })} />
-        <Label htmlFor="erg">Usa Ergogênicos</Label>
-      </div>
-      {form.faz_uso_ergogenicos && (
-        <Field label="Detalhes Ergogênicos">
-          <Textarea value={form.detalhes_ergogenicos || ""} onChange={e => setForm({ ...form, detalhes_ergogenicos: e.target.value })} />
-        </Field>
-      )}
     </div>
   );
 };

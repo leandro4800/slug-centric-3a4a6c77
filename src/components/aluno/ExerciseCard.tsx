@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic, ChevronDown } from "lucide-react";
+import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic } from "lucide-react";
+import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
@@ -73,6 +74,7 @@ export const ExerciseCard = ({
   completed = false,
   onCompleted,
 }: ExerciseCardProps) => {
+  const { tenant } = useBranding();
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
   const getSlotType = (i: number) => slotTypes[i] || "Trabalho";
@@ -495,7 +497,6 @@ export const ExerciseCard = ({
                 Última: {cargaAnterior.carga_kg}kg × {cargaAnterior.repeticoes_feitas}
               </span>
             )}
-            <ChevronDown className={`h-4 w-4 text-muted-foreground ml-auto transition-transform ${isOpen ? "rotate-180" : ""}`} />
           </div>
         </button>
 
@@ -570,7 +571,9 @@ export const ExerciseCard = ({
             )}
             {data.detalhes_execucao && (
               <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 space-y-1">
-                <p className="text-[10px] uppercase font-bold text-primary tracking-widest">Metodologia AlphaCoach</p>
+                <p className="text-[10px] uppercase font-bold text-primary tracking-widest">
+                  Metodologia {tenant?.nome || "AlphaCoach"}
+                </p>
                 <p className="text-xs text-foreground/90 leading-relaxed">{data.detalhes_execucao}</p>
               </div>
             )}

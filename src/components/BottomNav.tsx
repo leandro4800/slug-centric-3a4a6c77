@@ -1,29 +1,27 @@
 import { useState } from "react";
-import { NavLink, useParams, useNavigate } from "react-router-dom";
-import { 
-  Home, 
-  Dumbbell, 
-  Utensils, 
-  TrendingUp, 
-  Users, 
-  User, 
-  CalendarCheck, 
+import { NavLink, useParams } from "react-router-dom";
+import {
+  Home,
+  Dumbbell,
+  Utensils,
+  TrendingUp,
+  Users,
+  User,
+  CalendarCheck,
   MoreHorizontal,
   ClipboardCheck,
   Sparkles,
-  X
+  X,
 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import {
-  Drawer,
-  DrawerClose,
-  DrawerContent,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 
 const mainItems = [
   { label: "Início", icon: Home, to: "" },
@@ -35,8 +33,9 @@ const mainItems = [
 const AlunoBottomNav = () => {
   const { slug } = useParams();
   const { tenant } = useBranding();
-  const navigate = useNavigate();
-  const tenantSlug = tenant?.slug || slug;
+  const lastSlug =
+    typeof window !== "undefined" ? localStorage.getItem("last_tenant_slug") : null;
+  const tenantSlug = tenant?.slug || slug || lastSlug || "";
   const [isOpen, setIsOpen] = useState(false);
 
   const moreItems = [
@@ -47,10 +46,7 @@ const AlunoBottomNav = () => {
     { label: "Anamnese", icon: ClipboardCheck, to: "anamnese" },
   ];
 
-  const handleNavigate = (to: string) => {
-    setIsOpen(false);
-    navigate(`/${tenantSlug}/app/${to}`);
-  };
+  const appBase = tenantSlug ? `/${tenantSlug}/app` : "/app";
 
   return (
     <nav
@@ -61,16 +57,18 @@ const AlunoBottomNav = () => {
         {mainItems.map(({ label, icon: Icon, to }) => (
           <NavLink
             key={label}
-            to={`/${tenantSlug}/app${to ? `/${to}` : ""}`}
+            to={`${appBase}${to ? `/${to}` : ""}`}
             end={!to}
             className="flex-1 min-w-0"
           >
             {({ isActive }) => (
-              <div className={`flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 text-[9px] leading-tight uppercase tracking-tight transition-all duration-300 ${
-                isActive
-                  ? "text-primary filter drop-shadow-[0_0_8px_hsla(var(--primary-glow)/0.8)]"
-                  : "text-muted-foreground hover:text-foreground opacity-70"
-              }`}>
+              <div
+                className={`flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 text-[9px] leading-tight uppercase tracking-tight transition-all duration-300 ${
+                  isActive
+                    ? "text-primary filter drop-shadow-[0_0_8px_hsla(var(--primary-glow)/0.8)]"
+                    : "text-muted-foreground hover:text-foreground opacity-70"
+                }`}
+              >
                 <Icon className={`h-[18px] w-[18px] shrink-0 ${isActive ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
                 <span className={`w-full text-center ${isActive ? "font-bold" : "font-normal"}`}>{label}</span>
               </div>
@@ -78,31 +76,45 @@ const AlunoBottomNav = () => {
           </NavLink>
         ))}
 
-        {/* "Mais" Tab with Drawer */}
-        <Drawer open={isOpen} onOpenChange={setIsOpen}>
-          <DrawerTrigger asChild>
-            <button className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 text-[9px] leading-tight uppercase tracking-tight text-muted-foreground hover:text-foreground opacity-70 transition-all duration-300">
-              <MoreHorizontal className="h-[18px] w-[18px] shrink-0 stroke-[1.8px]" />
-              <span className="w-full text-center font-normal">Mais</span>
-            </button>
-          </DrawerTrigger>
-          <DrawerContent className="bg-background border-t border-border max-w-2xl mx-auto rounded-t-[2rem] pb-6">
-            <DrawerHeader className="border-b border-border/40 pb-4 flex items-center justify-between px-6">
+        <button
+          type="button"
+          aria-expanded={isOpen}
+          aria-label="Abrir menu de opções"
+          onClick={() => setIsOpen(true)}
+          className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 text-[9px] leading-tight uppercase tracking-tight text-muted-foreground hover:text-foreground opacity-70 transition-all duration-300"
+        >
+          <MoreHorizontal className="h-[18px] w-[18px] shrink-0 stroke-[1.8px]" />
+          <span className="w-full text-center font-normal">Mais</span>
+        </button>
+
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetContent
+            side="bottom"
+            className="z-[100] max-h-[85vh] rounded-t-[2rem] border-t border-border bg-background px-0 pb-6 pt-3 [&>button.absolute]:hidden"
+          >
+            <SheetHeader className="border-b border-border/40 pb-4 flex flex-row items-center justify-between px-6 space-y-0 text-left">
               <div>
-                <DrawerTitle className="font-display text-lg tracking-wider text-left">Menu de Opções</DrawerTitle>
-                <DrawerDescription className="text-xs text-muted-foreground text-left">Acesse outros recursos do seu app</DrawerDescription>
+                <SheetTitle className="font-display text-lg tracking-wider">Menu de Opções</SheetTitle>
+                <SheetDescription className="text-xs text-muted-foreground">
+                  Acesse outros recursos do seu app
+                </SheetDescription>
               </div>
-              <DrawerClose asChild>
-                <button className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors">
+              <SheetClose asChild>
+                <button
+                  type="button"
+                  className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                >
                   <X className="h-4 w-4" />
                 </button>
-              </DrawerClose>
-            </DrawerHeader>
+              </SheetClose>
+            </SheetHeader>
+
             <div className="p-6 grid grid-cols-3 gap-4">
               {moreItems.map(({ label, icon: Icon, to }) => (
-                <button
+                <NavLink
                   key={label}
-                  onClick={() => handleNavigate(to)}
+                  to={`${appBase}/${to}`}
+                  onClick={() => setIsOpen(false)}
                   className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all active:scale-95 group"
                 >
                   <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
@@ -111,11 +123,11 @@ const AlunoBottomNav = () => {
                   <span className="text-[10px] font-bold uppercase tracking-wider text-center text-foreground/80 group-hover:text-primary transition-colors">
                     {label}
                   </span>
-                </button>
+                </NavLink>
               ))}
             </div>
-          </DrawerContent>
-        </Drawer>
+          </SheetContent>
+        </Sheet>
       </div>
     </nav>
   );

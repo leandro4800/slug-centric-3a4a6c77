@@ -545,7 +545,7 @@ export default function Anamnese() {
         <section className="space-y-4">
           <div className="flex items-center gap-2 text-primary">
             <ClipboardCheck className="h-5 w-5" />
-            <h2 className="font-display text-lg uppercase">Treino & Ergogênicos</h2>
+            <h2 className="font-display text-lg uppercase">Treino</h2>
           </div>
           <div className="grid gap-4">
             <div className="space-y-2">
@@ -598,34 +598,6 @@ export default function Anamnese() {
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">Usado para posicionar o pré e pós-treino na sua dieta.</p>
-            </div>
-
-            <div className="space-y-4 p-4 rounded-xl border border-border bg-secondary/20">
-              <div className="flex items-center gap-3">
-                <Checkbox
-                  id="ergogenicos"
-                  checked={form.faz_uso_ergogenicos}
-                  onCheckedChange={v => setForm({ ...form, faz_uso_ergogenicos: !!v })}
-                />
-                <Label htmlFor="ergogenicos" className="cursor-pointer leading-tight">
-                  Faz uso de recursos ergogênicos ou terapia hormonal prescrita por um profissional de saúde?
-                </Label>
-                
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-  Esta informação é utilizada apenas para personalizar os cálculos do aplicativo e não representa recomendação de uso de qualquer substância.
-</p>
-              {form.faz_uso_ergogenicos && (
-                <div className="pt-2">
-                  <Label className="text-[10px] text-muted-foreground uppercase mb-1">Detalhes (O que, doses, tempo)</Label>
-                  <Textarea
-                    placeholder="Seja honesto(a) para sua segurança..."
-                    value={form.detalhes_ergogenicos}
-                    onChange={e => setForm({ ...form, detalhes_ergogenicos: e.target.value })}
-                    className="bg-background border-border"
-                  />
-                </div>
-              )}
             </div>
           </div>
         </section>

@@ -51,8 +51,6 @@ export default function Onboarding() {
   const [anosTreino, setAnosTreino] = useState("0");
   const [diasDisponiveis, setDiasDisponiveis] = useState<string[]>([]);
   const [nivelExperiencia, setNivelExperiencia] = useState("Iniciante");
-  const [fazUsoErgogenicos, setFazUsoErgogenicos] = useState(false);
-  const [detalhesErgogenicos, setDetalhesErgogenicos] = useState("");
   const [pesoKg, setPesoKg] = useState("");
   const [alturaCm, setAlturaCm] = useState("");
   const [pescocoCm, setPescocoCm] = useState("");
@@ -167,8 +165,6 @@ export default function Onboarding() {
           anos_treino: Number(anosTreino) || null,
           disponibilidade_dias: diasDisponiveis,
           nivel_experiencia: nivelExperiencia,
-          faz_uso_ergogenicos: fazUsoErgogenicos,
-          detalhes_ergogenicos: detalhesErgogenicos,
         },
         _avaliacao: {
           peso_kg: peso,
@@ -268,9 +264,6 @@ export default function Onboarding() {
               <section className="space-y-3">
                 <h3 className="font-display text-lg uppercase text-primary">Treino & Experiência</h3>
                 <div><Label>Nível de Experiência</Label><Select value={nivelExperiencia} onValueChange={setNivelExperiencia}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Iniciante">Iniciante</SelectItem><SelectItem value="Intermediário">Intermediário</SelectItem><SelectItem value="Avançado">Avançado</SelectItem><SelectItem value="Atleta de Alto Nível">Atleta de Alto Nível</SelectItem></SelectContent></Select></div>
-                {["Intermediário", "Avançado", "Atleta de Alto Nível"].includes(nivelExperiencia) && (
-                  <div className="space-y-3 border-l-2 border-primary/20 pl-4 pt-2"><div className="flex items-center gap-2"><Checkbox checked={fazUsoErgogenicos} onCheckedChange={v => setFazUsoErgogenicos(!!v)} id="hormonios" /><Label htmlFor="hormonios" className="leading-tight cursor-pointer">Uso de recursos ergogênicos/hormônios?</Label></div>{fazUsoErgogenicos && <Textarea value={detalhesErgogenicos} onChange={e => setDetalhesErgogenicos(e.target.value)} placeholder="Objetivo com o uso..." rows={3} className="mt-1" />}</div>
-                )}
                 <div><Label>Anos de treino</Label><Input type="number" value={anosTreino} onChange={e => setAnosTreino(e.target.value)} step={0.5} min={0} /></div>
                 <div><Label>Dias disponíveis</Label><div className="mt-2 flex flex-wrap gap-2">{dias.map(d => <button key={d} type="button" onClick={() => setDiasDisponiveis(arr => arr.includes(d) ? arr.filter(x => x !== d) : [...arr, d])} className={`rounded-full border px-4 py-1.5 text-sm ${diasDisponiveis.includes(d) ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>{d}</button>)}</div></div>
               </section>
