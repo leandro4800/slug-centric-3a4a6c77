@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Play, Volume2, VolumeX, ChevronRight, User, Users, CalendarCheck, HelpCircle } from "lucide-react";
+import { Play, Volume2, VolumeX, ChevronRight, User, Users, CalendarCheck, HelpCircle, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
