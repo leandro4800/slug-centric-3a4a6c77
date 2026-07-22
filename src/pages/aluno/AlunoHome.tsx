@@ -65,7 +65,7 @@ const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) =
 
 const AlunoHome = () => {
   const { tenant } = useBranding();
-  const { user } = useAuth();
+  const { user, hasRole } = useAuth();
   const { slug } = useParams();
   const tenantSlug = tenant?.slug || slug;
   const [vlogs, setVlogs] = useState<VlogPost[]>([]);
@@ -78,6 +78,11 @@ const AlunoHome = () => {
     let isMounted = true;
     const checkRole = async () => {
       if (!user) return;
+      // Coach do próprio tenant ou super-admin já libera imediatamente
+      if (hasRole("admin") || (tenant?.id && hasRole("coach", tenant.id))) {
+        if (isMounted) setIsAdmin(true);
+        return;
+      }
       try {
         const { data, error } = await supabase.rpc("has_role", {
           _user_id: user.id,
@@ -92,7 +97,7 @@ const AlunoHome = () => {
     };
     checkRole();
     return () => { isMounted = false; };
-  }, [user]);
+  }, [user, tenant?.id, hasRole]);
 
   useEffect(() => {
     if (!tenant?.id) return;
