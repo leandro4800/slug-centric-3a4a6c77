@@ -126,6 +126,15 @@ Deno.serve(async (req) => {
 
   const normalizedUrl = normalizeMediaUrl(url);
 
+  // YouTube downloads via Cobalt público estão instáveis (instâncias fora do ar / exigem auth).
+  // Para YouTube, oriente o coach a usar "Adicionar link manual" (o app faz embed direto).
+  if (/(?:youtube\.com|youtu\.be)/i.test(normalizedUrl)) {
+    return json(400, {
+      error:
+        "Para vídeos do YouTube, use \"Adicionar link manual\" logo acima — o app faz o embed direto sem precisar baixar. O download automático só funciona para Instagram Reels e TikTok.",
+    });
+  }
+
   const { data: roles } = await supabase
     .from("user_roles")
     .select("role,tenant_id")
