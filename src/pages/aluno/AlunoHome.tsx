@@ -132,7 +132,7 @@ const AlunoHome = () => {
     if (yt) {
       return buildYouTubeEmbedUrl(yt, {
         autoplay: true,
-        mute,
+        mute: muted,
         loop: true,
         controls,
         rel: false,
@@ -182,7 +182,7 @@ const AlunoHome = () => {
   const ytAutoSrc = ytId
     ? buildYouTubeEmbedUrl(ytId, {
         autoplay: true,
-        mute,
+        mute: muted,
         controls: expanded,
         loop: true,
         playsinline: true,
