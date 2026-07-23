@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Music, Pause, Play, Volume2, VolumeX } from "lucide-react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
+import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 
 type Source =
   | { kind: "youtube"; id: string }
@@ -139,8 +140,15 @@ const ProfileMusicPlayer = ({ url }: { url: string | null | undefined }) => {
         {source.kind === "youtube" && (
           <iframe
             ref={ytRef}
-            src={`https://www.youtube.com/embed/${source.id}?autoplay=1&loop=1&playlist=${source.id}&controls=0&enablejsapi=1&playsinline=1`}
-            allow="autoplay; encrypted-media"
+            src={buildYouTubeEmbedUrl(source.id, {
+              autoplay: true,
+              loop: true,
+              controls: false,
+              enablejsapi: true,
+              playsinline: true,
+            })}
+            allow={YOUTUBE_IFRAME_ALLOW}
+            referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
             title="background-music"
           />
         )}

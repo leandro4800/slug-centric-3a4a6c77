@@ -3,7 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { buildTenantLoginPath } from "@/lib/tenant-slug";
 
 const NAVIGATION_MEMORY_KEY = "startup_navigation_memory_v1";
 
@@ -186,13 +186,10 @@ const IndexRedirect = () => {
   }, [decisionDone, user, safeSlug, tenant?.slug, confirmed]);
 
   if (sessionReady && !user) {
-    // Se estiver em um slug específico, vai para o login do coach
     if (safeSlug) {
-      const loginPath = `/${safeSlug}/login`;
-      return <Navigate to={loginPath} replace />;
+      return <Navigate to={`/${safeSlug}/login`} replace />;
     }
-    // Senão, a porta de entrada é o login do app
-    return <Navigate to="/login" replace />;
+    return <Navigate to={buildTenantLoginPath(window.location.search)} replace />;
   }
 
   if (destination) return <Navigate to={destination} replace />;

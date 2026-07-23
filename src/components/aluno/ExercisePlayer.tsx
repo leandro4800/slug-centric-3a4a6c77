@@ -1,4 +1,5 @@
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
+import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 import { Video, Play, CheckCircle2 } from "lucide-react";
 
 interface ExercisePlayerProps {
@@ -25,10 +26,11 @@ const ExercisePlayer = ({ videoUrl, exerciseName, onPlayClick, showPlayButton = 
   if (ytId) {
     return (
       <iframe
-        src={`https://www.youtube.com/embed/${ytId}?autoplay=1&mute=0&loop=1&playlist=${ytId}`}
+        src={buildYouTubeEmbedUrl(ytId, { autoplay: true, mute: false, loop: true, controls: true, playsinline: true })}
         title={exerciseName}
         className="absolute inset-0 w-full h-full border-0"
-        allow="autoplay; encrypted-media"
+        allow={YOUTUBE_IFRAME_ALLOW}
+        referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
         allowFullScreen
       />
     );

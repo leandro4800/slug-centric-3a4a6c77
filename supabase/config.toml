@@ -40,6 +40,10 @@ additional_redirect_urls = [
     verify_jwt = true
   [functions.vlog-ingest]
     verify_jwt = false
+  [functions.vlog-download]
+    verify_jwt = true
+  [functions.instagram-publish]
+    verify_jwt = true
   [functions.send-transactional-email]
     verify_jwt = true
   [functions.preview-transactional-email]

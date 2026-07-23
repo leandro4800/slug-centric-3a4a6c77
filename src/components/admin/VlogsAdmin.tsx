@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video, Star, Upload } from "lucide-react";
 import { toast } from "sonner";
+import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 import { isDirectVideo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -218,33 +219,44 @@ export const VlogsAdmin = () => {
     if (!tenant || !downloadUrl.trim()) return;
     setDownloading(true);
     setDownloadedVideoUrl(null);
-    const { data, error } = await supabase.functions.invoke("vlog-download", {
-      body: { url: downloadUrl.trim(), tenant_id: tenant.id },
-    });
-    setDownloading(false);
-    if (error || !data?.video_url) {
-      return toast.error(error?.message || data?.error || "Falha ao baixar");
+    try {
+      const data = await invokeEdgeFunction<{ video_url?: string }>("vlog-download", {
+        url: downloadUrl.trim(),
+        tenant_id: tenant.id,
+      });
+      if (!data?.video_url) throw new Error("Resposta sem URL do vídeo.");
+      setDownloadedVideoUrl(data.video_url);
+      toast.success("Vídeo baixado! Pronto pra publicar ou baixar manualmente.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Falha ao baixar";
+      toast.error(message.includes("non-2xx") ? "Função vlog-download indisponível. Faça deploy no Supabase." : message);
+    } finally {
+      setDownloading(false);
     }
-    setDownloadedVideoUrl(data.video_url);
-    toast.success("Vídeo baixado! Pronto pra publicar ou baixar manualmente.");
   };
 
   const handlePublishIG = async () => {
     if (!tenant || !downloadedVideoUrl) return;
     if (!igConfigured) return toast.error("Configure o Instagram Access Token primeiro");
     setPublishing(true);
-    const { data, error } = await supabase.functions.invoke("instagram-publish", {
-      body: { tenant_id: tenant.id, video_url: downloadedVideoUrl, caption: publishCaption, media_type: "REELS" },
-    });
-    setPublishing(false);
-    if (error || !data?.ok) {
-      return toast.error(error?.message || data?.error || "Falha ao publicar");
+    try {
+      const data = await invokeEdgeFunction<{ ok?: boolean }>("instagram-publish", {
+        tenant_id: tenant.id,
+        video_url: downloadedVideoUrl,
+        caption: publishCaption,
+        media_type: "REELS",
+      });
+      if (!data?.ok) throw new Error("Falha ao publicar");
+      toast.success("Reel publicado no Instagram!");
+      setDownloadUrl("");
+      setDownloadedVideoUrl(null);
+      setPublishCaption("");
+      void load();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao publicar");
+    } finally {
+      setPublishing(false);
     }
-    toast.success("Reel publicado no Instagram!");
-    setDownloadUrl("");
-    setDownloadedVideoUrl(null);
-    setPublishCaption("");
-    void load();
   };
 
   const handleShare = async () => {
@@ -421,6 +433,7 @@ export const VlogsAdmin = () => {
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
           Cole a URL de um Reel, TikTok ou Short. O sistema baixa o vídeo e te dá 2 opções: <b>publicar direto no seu Instagram</b> (se configurado) ou <b>baixar o arquivo</b>.
+          Para vídeos do YouTube na home do app, prefira <b>Adicionar link manual</b> acima.
         </p>
 
         <Label>URL do vídeo (Instagram, TikTok, YouTube Shorts)</Label>

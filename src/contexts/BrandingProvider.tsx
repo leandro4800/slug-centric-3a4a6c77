@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { isSafeTenantSlug, readRememberedTenantSlug } from "@/lib/tenant-slug";
 
 export type ThemeOverrides = Partial<{
   primary: string;
@@ -158,9 +159,11 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   
   // Extrai o slug do path se useParams falhar
   const pathParts = location.pathname.split("/").filter(Boolean);
+  const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const reservedKeywords = ["index", "marketplace", "seja-coach", "login", "forgot-password", "reset-password", "checkout", "admin", "unsubscribe", "onboarding", "app", "site"];
   const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
-  const slug = params.slug || slugFromPath;
+  const rememberedSlug = pathname === "/login" ? readRememberedTenantSlug() : null;
+  const slug = params.slug || slugFromPath || rememberedSlug;
 
   const cachedTenant = slug ? readCache(slug) : null;
   const [tenant, setTenant] = useState<Tenant | null>(cachedTenant);

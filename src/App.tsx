@@ -12,6 +12,7 @@ import { SplashScreen } from "@/components/SplashScreen";
 import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
+import { buildTenantLoginPath } from "@/lib/tenant-slug";
 import PushNotificationManager from "@/components/PushNotificationManager";
 
 import Landing from "./pages/Landing";
@@ -127,7 +128,7 @@ const NativeStartupRedirect = () => {
 
   if (user) return <IndexRedirect />;
 
-  return <Navigate to={`/login${search}`} replace />;
+  return <Navigate to={buildTenantLoginPath(search)} replace />;
 };
 
 const App = () => (

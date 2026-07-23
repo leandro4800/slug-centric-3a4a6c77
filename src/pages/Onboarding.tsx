@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Logo } from "@/components/Logo";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
+import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
 import heroDefault from "@/assets/hero-default.jpg";
 
@@ -205,7 +206,21 @@ export default function Onboarding() {
       {isVideo ? (
         <div className="absolute inset-0 w-full h-full opacity-40 blur-[2px] scale-110">
           {extractYouTubeId(bgImage) ? (
-            <iframe src={`https://www.youtube.com/embed/${extractYouTubeId(bgImage)}?autoplay=1&mute=1&loop=1&playlist=${extractYouTubeId(bgImage)}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`} className="absolute inset-0 w-full h-full object-cover pointer-events-none" />
+            <iframe
+              src={buildYouTubeEmbedUrl(extractYouTubeId(bgImage)!, {
+                autoplay: true,
+                mute: true,
+                loop: true,
+                controls: false,
+                showinfo: false,
+                rel: false,
+                modestbranding: true,
+                playsinline: true,
+              })}
+              referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
+              allow={YOUTUBE_IFRAME_ALLOW}
+              className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+            />
           ) : (
             <video src={bgImage} autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover" />
           )}

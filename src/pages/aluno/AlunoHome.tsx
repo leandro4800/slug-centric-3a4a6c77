@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
+import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import heroDefault from "@/assets/hero-default.jpg";
@@ -128,7 +129,17 @@ const AlunoHome = () => {
     const controls = opts.controls ?? false;
     const u = v.url;
     const yt = extractYouTubeId(u);
-    if (yt) return `https://www.youtube.com/embed/${yt}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${yt}&controls=${controls ? 1 : 0}&rel=0&modestbranding=1&playsinline=1`;
+    if (yt) {
+      return buildYouTubeEmbedUrl(yt, {
+        autoplay: true,
+        mute,
+        loop: true,
+        controls,
+        rel: false,
+        modestbranding: true,
+        playsinline: true,
+      });
+    }
     if (u.includes("instagram.com")) {
       let clean = u.split("?")[0].split("#")[0];
       clean = clean.replace("/reels/", "/reel/");
@@ -169,7 +180,18 @@ const AlunoHome = () => {
 
   // Auto-play silencioso de fundo (YouTube)
   const ytAutoSrc = ytId
-    ? `https://www.youtube.com/embed/${ytId}?autoplay=1&mute=${muted ? 1 : 0}&controls=${expanded ? 1 : 0}&loop=1&playlist=${ytId}&playsinline=1&rel=0&modestbranding=1&showinfo=0&iv_load_policy=3${expanded ? "" : "&disablekb=1"}`
+    ? buildYouTubeEmbedUrl(ytId, {
+        autoplay: true,
+        mute,
+        controls: expanded,
+        loop: true,
+        playsinline: true,
+        rel: false,
+        modestbranding: true,
+        showinfo: false,
+        iv_load_policy: 3,
+        disablekb: !expanded,
+      })
     : null;
 
   return (
@@ -182,7 +204,21 @@ const AlunoHome = () => {
             ytAutoSrc || tenantHeroVideoId ? (
               <iframe
                 key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
-                src={ytAutoSrc || `https://www.youtube.com/embed/${tenantHeroVideoId}?autoplay=1&mute=1&loop=1&playlist=${tenantHeroVideoId}&controls=0&showinfo=0&rel=0&modestbranding=1&playsinline=1`}
+                src={
+                  ytAutoSrc ||
+                  buildYouTubeEmbedUrl(tenantHeroVideoId!, {
+                    autoplay: true,
+                    mute: true,
+                    loop: true,
+                    controls: false,
+                    showinfo: false,
+                    rel: false,
+                    modestbranding: true,
+                    playsinline: true,
+                  })
+                }
+                referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
+                allow={YOUTUBE_IFRAME_ALLOW}
                 className="w-full h-full pointer-events-none scale-135"
               />
             ) : (
@@ -402,7 +438,8 @@ const AlunoHome = () => {
                   <iframe
                     src={embed}
                     title={playing.title || "Vlog"}
-                    allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+                    allow={YOUTUBE_IFRAME_ALLOW}
+                    referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
                     allowFullScreen
                     className="w-full h-full"
                   />

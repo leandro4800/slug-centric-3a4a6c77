@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>YouTube</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        overflow: hidden;
+      }
+      iframe {
+        border: 0;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <iframe
+      id="player"
+      title="YouTube"
+      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
+      allowfullscreen
+      referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
+    <script>
+      (function () {
+        var params = new URLSearchParams(window.location.search);
+        var videoId = params.get("v");
+        if (!videoId) {
+          document.body.textContent = "Vídeo indisponível.";
+          return;
+        }
+        params.delete("v");
+        if (!params.has("origin")) params.set("origin", window.location.origin);
+        if (!params.has("playsinline")) params.set("playsinline", "1");
+        var embedUrl =
+          "https://www.youtube-nocookie.com/embed/" +
+          encodeURIComponent(videoId) +
+          "?" +
+          params.toString();
+        document.getElementById("player").src = embedUrl;
+      })();
+    </script>
+  </body>
+</html>
