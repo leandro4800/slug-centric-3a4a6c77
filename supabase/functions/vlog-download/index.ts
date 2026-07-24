@@ -159,13 +159,9 @@ Deno.serve(async (req) => {
   const allowed = roleAllowed || tenant?.owner_user_id === userData.user.id;
   if (!allowed) return json(403, { error: "Sem permissão para baixar vídeos deste tenant." });
 
-  const { url: directUrl, error: cobaltError } = await fetchVideoUrl(normalizedUrl);
+  const { url: directUrl } = await fetchVideoUrl(normalizedUrl);
   if (!directUrl) {
-    return json(502, {
-      error:
-        cobaltError ||
-        "Não foi possível extrair o vídeo. Para YouTube na home, use “Adicionar link manual”. Para repost, tente outro link ou upload direto.",
-    });
+    return json(502, { error: MANUAL_FALLBACK_MSG });
   }
 
   let videoRes: Response;
