@@ -13,7 +13,12 @@ const json = (s: number, b: unknown) =>
 const COBALT_INSTANCES = [
   "https://dwnld.nichind.dev/",
   "https://co.eepy.today/",
+  "https://cobalt.canine.tools/",
+  "https://cobalt-backend.canine.tools/",
 ];
+
+const MANUAL_FALLBACK_MSG =
+  "O serviço público de download está instável no momento. Use \"Adicionar link manual\" logo acima (cole a URL do Reel/TikTok/YouTube e o app faz o embed direto) ou \"Enviar vídeo (upload)\" abaixo para subir o arquivo do seu celular.";
 
 const COBALT_ERROR_PT: Record<string, string> = {
   "content.no_valid_content": "Este vídeo não permite download (privado, restrito ou indisponível).",
@@ -131,7 +136,7 @@ Deno.serve(async (req) => {
   if (/(?:youtube\.com|youtu\.be)/i.test(normalizedUrl)) {
     return json(400, {
       error:
-        "Para vídeos do YouTube, use \"Adicionar link manual\" logo acima — o app faz o embed direto sem precisar baixar. O download automático só funciona para Instagram Reels e TikTok.",
+        "Para vídeos do YouTube, use \"Adicionar link manual\" logo acima — o app faz o embed direto sem precisar baixar.",
     });
   }
 
@@ -154,13 +159,9 @@ Deno.serve(async (req) => {
   const allowed = roleAllowed || tenant?.owner_user_id === userData.user.id;
   if (!allowed) return json(403, { error: "Sem permissão para baixar vídeos deste tenant." });
 
-  const { url: directUrl, error: cobaltError } = await fetchVideoUrl(normalizedUrl);
+  const { url: directUrl } = await fetchVideoUrl(normalizedUrl);
   if (!directUrl) {
-    return json(502, {
-      error:
-        cobaltError ||
-        "Não foi possível extrair o vídeo. Para YouTube na home, use “Adicionar link manual”. Para repost, tente outro link ou upload direto.",
-    });
+    return json(502, { error: MANUAL_FALLBACK_MSG });
   }
 
   let videoRes: Response;
