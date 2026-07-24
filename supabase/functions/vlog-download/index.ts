@@ -136,7 +136,7 @@ Deno.serve(async (req) => {
   if (/(?:youtube\.com|youtu\.be)/i.test(normalizedUrl)) {
     return json(400, {
       error:
-        "Para vídeos do YouTube, use \"Adicionar link manual\" logo acima — o app faz o embed direto sem precisar baixar. O download automático só funciona para Instagram Reels e TikTok.",
+        "Para vídeos do YouTube, use \"Adicionar link manual\" logo acima — o app faz o embed direto sem precisar baixar.",
     });
   }
 
