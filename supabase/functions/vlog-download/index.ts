@@ -13,7 +13,12 @@ const json = (s: number, b: unknown) =>
 const COBALT_INSTANCES = [
   "https://dwnld.nichind.dev/",
   "https://co.eepy.today/",
+  "https://cobalt.canine.tools/",
+  "https://cobalt-backend.canine.tools/",
 ];
+
+const MANUAL_FALLBACK_MSG =
+  "O serviço público de download está instável no momento. Use \"Adicionar link manual\" logo acima (cole a URL do Reel/TikTok/YouTube e o app faz o embed direto) ou \"Enviar vídeo (upload)\" abaixo para subir o arquivo do seu celular.";
 
 const COBALT_ERROR_PT: Record<string, string> = {
   "content.no_valid_content": "Este vídeo não permite download (privado, restrito ou indisponível).",
