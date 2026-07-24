@@ -113,15 +113,17 @@ export const VlogsAdmin = () => {
     }
   };
 
-  const handleAdd = async () => {
-    if (!tenant || !url.trim()) return;
-    setBusy(true);
-    const cleanUrl = url.trim();
+  const addManualVlog = async (
+    rawLink: string,
+    options: { thumbnail?: string | null; successMessage?: string; useThumbInput?: boolean; source?: string } = {},
+  ) => {
+    if (!tenant || !rawLink.trim()) return false;
+    const cleanUrl = rawLink.trim();
     const platform = detectPlatform(cleanUrl);
 
     // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
     const oe = await fetchOEmbed(platform, cleanUrl);
-    let thumb: string | null = thumbInput.trim() || oe?.thumbnail_url || null;
+    let thumb: string | null = (options.useThumbInput ? thumbInput.trim() : "") || options.thumbnail || oe?.thumbnail_url || null;
     const author: string | null = oe?.author_name || null;
 
     // Fallback YouTube: thumb direta pelo ID
@@ -143,15 +145,26 @@ export const VlogsAdmin = () => {
         title: null,
         thumbnail_url: thumb,
         author,
-        source: "manual",
+        source: options.source ?? "manual",
         posted_at: new Date().toISOString(),
         visivel: true,
       },
       { onConflict: "tenant_id,url" }
     );
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    toast.success(options.successMessage ?? "Vlog adicionado!");
+    return true;
+  };
+
+  const handleAdd = async () => {
+    if (!tenant || !url.trim()) return;
+    setBusy(true);
+    const added = await addManualVlog(url, { useThumbInput: true });
     setBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success("Vlog adicionado!");
+    if (!added) return;
     setUrl("");
     setThumbInput("");
     void load();
@@ -229,6 +242,18 @@ export const VlogsAdmin = () => {
       toast.success("Vídeo baixado! Pronto pra publicar ou baixar manualmente.");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Falha ao baixar";
+      const shouldAddManualFallback = /serviço público de download|adicionar link manual|download está instável/i.test(message);
+      if (shouldAddManualFallback) {
+        const added = await addManualVlog(downloadUrl, {
+          source: "manual",
+          successMessage: "Download instável no momento; o link foi adicionado aos Vlogs.",
+        });
+        if (added) {
+          setDownloadUrl("");
+          void load();
+        }
+        return;
+      }
       toast.error(message.includes("non-2xx") ? "Função vlog-download indisponível. Faça deploy no Supabase." : message);
     } finally {
       setDownloading(false);
