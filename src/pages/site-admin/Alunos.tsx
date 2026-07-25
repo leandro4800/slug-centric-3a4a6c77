@@ -264,6 +264,28 @@ const Alunos = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!anamneseAluno} onOpenChange={(open) => { if (!open) { setAnamneseAluno(null); setAnamneseData(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Anamnese — {anamneseAluno?.nome_completo || anamneseAluno?.email}</DialogTitle>
+          </DialogHeader>
+          {anamneseLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          ) : anamneseData ? (
+            <AnamneseDetails
+              data={anamneseData}
+              alunoId={anamneseAluno?.id}
+              editable
+              onSaved={(updated) => setAnamneseData((prev: any) => ({ ...prev, ...updated }))}
+            />
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Este aluno ainda não preencheu a anamnese.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
