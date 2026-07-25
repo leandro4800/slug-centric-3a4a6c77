@@ -74,20 +74,29 @@ const tokensMusculares = (texto: string) =>
 
 const mapearDiasParaEstrutura = (diasIA: DiaGeradoIA[], divisoes: string[]): ExercicioPrescrito[] => {
   const diasComExercicios = diasIA.filter((d) => Array.isArray(d.exercicios) && d.exercicios.length > 0 && !/\boff\b|descanso/i.test(d.dia || ""));
+  if (diasComExercicios.length === 0) return [];
   const usados = new Set<number>();
+  let rrCursor = 0;
 
-  return divisoes.flatMap((diaEstrutura) => {
+  return divisoes.flatMap((diaEstrutura, posDivisao) => {
     const esperados = tokensMusculares(diaEstrutura);
+    // 1) tenta casar por tokens musculares em dia ainda não usado
     let idxDia = diasComExercicios.findIndex((d, idx) => {
       if (usados.has(idx)) return false;
       const gerado = normalizarTexto(d.dia || "");
       return esperados.length > 0 && esperados.some((token) => gerado.includes(token));
     });
-
+    // 2) pega primeiro dia não usado
     if (idxDia < 0) idxDia = diasComExercicios.findIndex((_, idx) => !usados.has(idx));
-    if (idxDia < 0) return [];
+    // 3) round-robin — reutiliza um dia da IA para NUNCA deixar uma divisão sem exercícios.
+    //    Assim uma divisão ABCDEF sempre produz 6 dias no banco, mesmo que a IA tenha devolvido menos.
+    if (idxDia < 0) {
+      idxDia = rrCursor % diasComExercicios.length;
+      rrCursor += 1;
+    } else {
+      usados.add(idxDia);
+    }
 
-    usados.add(idxDia);
     return (diasComExercicios[idxDia].exercicios || []).map((e, idx) => ({
       dia_semana: diaEstrutura,
       ordem: idx,
