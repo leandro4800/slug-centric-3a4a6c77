@@ -216,6 +216,15 @@ const Alunos = () => {
                       <Button
                         size="icon"
                         variant="outline"
+                        className="h-8 w-8 shrink-0"
+                        title="Ver anamnese"
+                        onClick={() => openAnamnese(a)}
+                      >
+                        <ClipboardList className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
                         className="h-8 w-8 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
                         title="Excluir conta do aluno"
                         onClick={() => setToDelete(a)}
