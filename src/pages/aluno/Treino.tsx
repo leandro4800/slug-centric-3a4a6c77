@@ -432,8 +432,13 @@ const PersonalTreino = () => {
 
   // Mapeia cada dia (que pode estar nomeado como "A — ...", "Treino B", etc.) ao dia da semana
   // escolhido na anamnese (availableDays na ordem da semana).
+  // Só aplica o mapeamento quando a quantidade de dias de treino BATE com a quantidade de dias
+  // disponíveis da anamnese — caso contrário, o rótulo fica com o texto original do card
+  // (ex.: "A", "B", "F"), evitando desalinhamento entre letras e dias da semana.
+  const totalDias = new Set(treinos.map((t) => t.dia_semana)).size;
   const weekdayLabelFor = (dia: string): string | null => {
     if (!availableDays.length) return null;
+    if (availableDays.length !== totalDias) return null;
     const letter = (dia.match(/\b([A-Z])\b/)?.[1] || "").toUpperCase();
     if (!letter) return null;
     const idx = letter.charCodeAt(0) - 65;
