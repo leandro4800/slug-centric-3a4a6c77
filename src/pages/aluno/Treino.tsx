@@ -724,7 +724,7 @@ const PersonalTreino = () => {
             const n = dia.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             const wd = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"].find((d) => n.includes(d));
             const wdShort: Record<string, string> = { segunda: "SEG", terca: "TER", quarta: "QUA", quinta: "QUI", sexta: "SEX", sabado: "SAB", domingo: "DOM" };
-            const letra = dia.match(/\b([A-E])\b/)?.[1];
+            const letra = dia.match(/\b([A-F])\b/)?.[1];
             // Prioriza o dia da semana vindo da anamnese (mapeado pela letra A→1º dia disponível, B→2º, ...)
             const wdFromAnamnese = weekdayLabelFor(dia);
             const wdLabel = wdFromAnamnese || (wd ? wdShort[wd] : null);
