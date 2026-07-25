@@ -5,7 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
-import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2, Link as LinkIcon, Copy, Check } from "lucide-react";
+import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2, Link as LinkIcon, Copy, Check, ClipboardList } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
 import { toast } from "@/hooks/use-toast";
 
 interface Aluno {
@@ -34,6 +36,26 @@ const Alunos = () => {
   const [toDelete, setToDelete] = useState<Aluno | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [anamneseAluno, setAnamneseAluno] = useState<Aluno | null>(null);
+  const [anamneseData, setAnamneseData] = useState<any | null>(null);
+  const [anamneseLoading, setAnamneseLoading] = useState(false);
+
+  const openAnamnese = async (a: Aluno) => {
+    setAnamneseAluno(a);
+    setAnamneseData(null);
+    setAnamneseLoading(true);
+    const { data, error } = await supabase
+      .from("anamnese_aluno")
+      .select("*")
+      .eq("aluno_id", a.id)
+      .maybeSingle();
+    setAnamneseLoading(false);
+    if (error) {
+      toast({ title: "Erro ao carregar anamnese", description: error.message, variant: "destructive" });
+      return;
+    }
+    setAnamneseData(data);
+  };
 
   const publicLink = tenant?.slug ? `https://alpha-coach.app/${tenant.slug}` : "";
 
@@ -194,6 +216,15 @@ const Alunos = () => {
                       <Button
                         size="icon"
                         variant="outline"
+                        className="h-8 w-8 shrink-0"
+                        title="Ver anamnese"
+                        onClick={() => openAnamnese(a)}
+                      >
+                        <ClipboardList className="h-3.5 w-3.5" />
+                      </Button>
+                      <Button
+                        size="icon"
+                        variant="outline"
                         className="h-8 w-8 shrink-0 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
                         title="Excluir conta do aluno"
                         onClick={() => setToDelete(a)}
@@ -233,6 +264,28 @@ const Alunos = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={!!anamneseAluno} onOpenChange={(open) => { if (!open) { setAnamneseAluno(null); setAnamneseData(null); } }}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Anamnese — {anamneseAluno?.nome_completo || anamneseAluno?.email}</DialogTitle>
+          </DialogHeader>
+          {anamneseLoading ? (
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          ) : anamneseData ? (
+            <AnamneseDetails
+              data={anamneseData}
+              alunoId={anamneseAluno?.id}
+              editable
+              onSaved={(updated) => setAnamneseData((prev: any) => ({ ...prev, ...updated }))}
+            />
+          ) : (
+            <div className="py-8 text-center text-sm text-muted-foreground">
+              Este aluno ainda não preencheu a anamnese.
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
