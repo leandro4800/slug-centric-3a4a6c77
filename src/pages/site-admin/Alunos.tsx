@@ -36,6 +36,26 @@ const Alunos = () => {
   const [toDelete, setToDelete] = useState<Aluno | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [anamneseAluno, setAnamneseAluno] = useState<Aluno | null>(null);
+  const [anamneseData, setAnamneseData] = useState<any | null>(null);
+  const [anamneseLoading, setAnamneseLoading] = useState(false);
+
+  const openAnamnese = async (a: Aluno) => {
+    setAnamneseAluno(a);
+    setAnamneseData(null);
+    setAnamneseLoading(true);
+    const { data, error } = await supabase
+      .from("anamnese_aluno")
+      .select("*")
+      .eq("aluno_id", a.id)
+      .maybeSingle();
+    setAnamneseLoading(false);
+    if (error) {
+      toast({ title: "Erro ao carregar anamnese", description: error.message, variant: "destructive" });
+      return;
+    }
+    setAnamneseData(data);
+  };
 
   const publicLink = tenant?.slug ? `https://alpha-coach.app/${tenant.slug}` : "";
 
