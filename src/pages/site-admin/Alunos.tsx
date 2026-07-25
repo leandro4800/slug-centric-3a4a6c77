@@ -5,7 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
-import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2, Link as LinkIcon, Copy, Check } from "lucide-react";
+import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2, Link as LinkIcon, Copy, Check, ClipboardList } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,6 +16,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
 import { toast } from "@/hooks/use-toast";
 
 interface Aluno {
