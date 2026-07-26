@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, Share, Plus, X } from "lucide-react";
@@ -8,23 +9,26 @@ type BIPEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const DISMISS_KEY = "pwa-install-dismissed-at-v2";
+const DISMISS_KEY = "pwa-install-dismissed-at-v3";
 const DISMISS_DAYS = 3;
 
 const isMobile = () => /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 const isIOS = () => /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+const isAndroid = () => /Android/i.test(navigator.userAgent);
 const isStandalone = () =>
   window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
 
 const InstallPwaPrompt = () => {
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const ios = isIOS();
+  const android = isAndroid();
 
   useEffect(() => {
     if (!isMobile() || isStandalone()) return;
     // Não mostrar em landing pages públicas
-    const path = window.location.pathname;
+    const path = location.pathname;
     if (path === "/" || path === "/site" || path === "/marketplace" || path === "/seja-coach" || /^\/[^/]+\/site$/.test(path)) return;
     const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0);
     if (dismissedAt && Date.now() - dismissedAt < DISMISS_DAYS * 86400000) return;
@@ -36,16 +40,14 @@ const InstallPwaPrompt = () => {
     };
     window.addEventListener("beforeinstallprompt", onBIP);
 
-    // iOS doesn't fire beforeinstallprompt — show after small delay
-    if (ios) {
-      const t = setTimeout(() => setOpen(true), 1500);
-      return () => {
-        clearTimeout(t);
-        window.removeEventListener("beforeinstallprompt", onBIP);
-      };
-    }
-    return () => window.removeEventListener("beforeinstallprompt", onBIP);
-  }, [ios]);
+    // iOS não dispara beforeinstallprompt. Em Android, se o navegador não disparar
+    // o evento nativo, ainda mostramos a orientação manual para adicionar à tela inicial.
+    const t = setTimeout(() => setOpen(true), 1500);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("beforeinstallprompt", onBIP);
+    };
+  }, [location.pathname]);
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISS_KEY, String(Date.now()));
@@ -85,9 +87,25 @@ const InstallPwaPrompt = () => {
               <span>2. Selecione <strong>Adicionar à Tela de Início</strong></span>
             </div>
           </div>
-        ) : (
+        ) : deferred ? (
           <p className="text-center text-sm text-muted-foreground">
             Toque em "Instalar" para adicionar o app à sua tela inicial.
+          </p>
+        ) : android ? (
+          <div className="space-y-3 text-sm">
+            <p className="text-muted-foreground">No Chrome, toque em:</p>
+            <div className="flex items-center gap-2 rounded-lg border border-border p-3">
+              <Plus className="h-5 w-5 text-primary" />
+              <span>Menu do navegador</span>
+            </div>
+            <div className="flex items-center gap-2 rounded-lg border border-border p-3">
+              <Download className="h-5 w-5 text-primary" />
+              <span><strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong></span>
+            </div>
+          </div>
+        ) : (
+          <p className="text-center text-sm text-muted-foreground">
+            Adicione o AlphaCoach à tela inicial pelo menu do navegador.
           </p>
         )}
 
