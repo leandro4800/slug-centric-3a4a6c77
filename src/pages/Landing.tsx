@@ -529,20 +529,26 @@ const Landing = () => {
           {/* Feature grid — bento style */}
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-6">
             {/* Planilhas de treino em PDF */}
-            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[380px]">
-              <img src={cardTreinoImg} alt="Planilhas de treino em PDF premium" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700" />
+            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-zinc-900 min-h-[380px]">
+              <img src={cardTreinoImg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
               <div className="absolute inset-0 bg-gradient-to-tr from-black via-black/70 to-transparent" />
-              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end">
-                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
-                  <FileText className="w-6 h-6 text-primary" />
+              <div className="relative p-8 md:p-10 h-full flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-1 order-2 md:order-1">
+                  <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
+                    <FileText className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Planilhas em PDF</p>
+                  <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">TREINO CINEMATOGRÁFICO EM PDF</h3>
+                  <p className="text-gray-300 max-w-lg leading-relaxed">
+                    Gere planilhas premium em segundos — modelo escuro estilo Netflix ou claro clean, com as cores da sua marca e link direto para o vídeo de cada exercício.
+                  </p>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Planilhas em PDF</p>
-                <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">TREINO CINEMATOGRÁFICO EM PDF</h3>
-                <p className="text-gray-300 max-w-lg leading-relaxed">
-                  Gere planilhas de treino premium em segundos — modelo escuro estilo Netflix ou claro clean, com as cores da sua marca, link direto para o vídeo de cada exercício no YouTube e observações inteligentes para o aluno.
-                </p>
+                <div className="order-1 md:order-2 shrink-0 w-[180px] md:w-[210px] aspect-[9/19] rounded-[2rem] border-[6px] border-zinc-800 bg-black shadow-2xl overflow-hidden">
+                  <img src={landingPlanilha.url} alt="Planilha de treino em PDF" className="w-full h-full object-cover object-top" />
+                </div>
               </div>
             </div>
+
 
             {/* Avaliação física / 7 dobras */}
             <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 to-black min-h-[380px] p-8 flex flex-col justify-between">
