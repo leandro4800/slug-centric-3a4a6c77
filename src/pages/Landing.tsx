@@ -5,6 +5,11 @@ import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, 
 import cardTreinoImg from "@/assets/card-treino.jpg";
 import cardDietaImg from "@/assets/card-dieta.jpg";
 import cardEvolucaoImg from "@/assets/card-evolucao.jpg";
+import landingPlanilha from "@/assets/landing-planilha.jpeg.asset.json";
+import landingTemplate from "@/assets/landing-template.jpeg.asset.json";
+import landingEvolucao from "@/assets/landing-evolucao.png.asset.json";
+import landingPerfil from "@/assets/landing-perfil.png.asset.json";
+import landingVlogs from "@/assets/landing-vlogs.jpeg.asset.json";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -524,20 +529,26 @@ const Landing = () => {
           {/* Feature grid — bento style */}
           <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-6">
             {/* Planilhas de treino em PDF */}
-            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[380px]">
-              <img src={cardTreinoImg} alt="Planilhas de treino em PDF premium" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700" />
+            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-zinc-900 min-h-[380px]">
+              <img src={cardTreinoImg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20" />
               <div className="absolute inset-0 bg-gradient-to-tr from-black via-black/70 to-transparent" />
-              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end">
-                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
-                  <FileText className="w-6 h-6 text-primary" />
+              <div className="relative p-8 md:p-10 h-full flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-1 order-2 md:order-1">
+                  <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
+                    <FileText className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Planilhas em PDF</p>
+                  <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">TREINO CINEMATOGRÁFICO EM PDF</h3>
+                  <p className="text-gray-300 max-w-lg leading-relaxed">
+                    Gere planilhas premium em segundos — modelo escuro estilo Netflix ou claro clean, com as cores da sua marca e link direto para o vídeo de cada exercício.
+                  </p>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Planilhas em PDF</p>
-                <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">TREINO CINEMATOGRÁFICO EM PDF</h3>
-                <p className="text-gray-300 max-w-lg leading-relaxed">
-                  Gere planilhas de treino premium em segundos — modelo escuro estilo Netflix ou claro clean, com as cores da sua marca, link direto para o vídeo de cada exercício no YouTube e observações inteligentes para o aluno.
-                </p>
+                <div className="order-1 md:order-2 shrink-0 w-[180px] md:w-[210px] aspect-[9/19] rounded-[2rem] border-[6px] border-zinc-800 bg-black shadow-2xl overflow-hidden">
+                  <img src={landingPlanilha.url} alt="Planilha de treino em PDF" className="w-full h-full object-cover object-top" />
+                </div>
               </div>
             </div>
+
 
             {/* Avaliação física / 7 dobras */}
             <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 to-black min-h-[380px] p-8 flex flex-col justify-between">
@@ -557,37 +568,48 @@ const Landing = () => {
             </div>
 
             {/* Templates Instagram */}
-            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/20 via-zinc-900 to-black min-h-[380px] p-8 flex flex-col justify-between">
-              <div className="w-12 h-12 bg-primary/25 border border-primary/40 rounded-xl flex items-center justify-center">
-                <Camera className="w-6 h-6 text-primary" />
+            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/20 via-zinc-900 to-black min-h-[380px]">
+              <div className="absolute -right-6 -bottom-6 w-[150px] aspect-[9/19] rounded-[1.75rem] border-[5px] border-zinc-800 bg-black shadow-2xl overflow-hidden opacity-90 group-hover:scale-105 transition-transform duration-500">
+                <img src={landingTemplate.url} alt="Template Instagram gerado pelo app" className="w-full h-full object-cover object-top" />
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Marketing</p>
-                <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">STORIES PRONTOS PRO INSTAGRAM</h3>
-                <p className="text-gray-300 leading-relaxed text-sm">
-                  Templates personalizados com sua marca, evolução de alunos e frases de impacto. É só baixar e postar.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/70">
-                <Sparkles className="w-3.5 h-3.5 text-primary" /> Gerador Automático
+              <div className="relative p-8 h-full flex flex-col justify-between">
+                <div className="w-12 h-12 bg-primary/25 border border-primary/40 rounded-xl flex items-center justify-center">
+                  <Camera className="w-6 h-6 text-primary" />
+                </div>
+                <div className="max-w-[65%]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Marketing</p>
+                  <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">STORIES PRONTOS PRO INSTAGRAM</h3>
+                  <p className="text-gray-300 leading-relaxed text-sm">
+                    Templates personalizados com sua marca, evolução de alunos e frases de impacto. É só baixar e postar.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/70">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" /> Gerador Automático
+                </div>
               </div>
             </div>
 
             {/* Evolução do aluno */}
-            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[380px]">
-              <img src={cardEvolucaoImg} alt="Acompanhamento de evolução" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700" />
+            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-zinc-900 min-h-[380px]">
+              <img src={cardEvolucaoImg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
               <div className="absolute inset-0 bg-gradient-to-tl from-black via-black/70 to-transparent" />
-              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end">
-                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
-                  <LineChart className="w-6 h-6 text-primary" />
+              <div className="relative p-8 md:p-10 h-full flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-1 order-2 md:order-1">
+                  <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
+                    <LineChart className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Evolução</p>
+                  <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">ACOMPANHAMENTO DE PROGRESSO</h3>
+                  <p className="text-gray-300 max-w-lg leading-relaxed">
+                    Check-ins com fotos, gráficos de evolução, comparativo antes/depois, histórico de cargas e avaliações — o aluno vê o resultado em tempo real e você retém mais tempo.
+                  </p>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Evolução</p>
-                <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">ACOMPANHAMENTO DE PROGRESSO</h3>
-                <p className="text-gray-300 max-w-lg leading-relaxed">
-                  Check-ins com fotos, gráficos de evolução, comparativo antes/depois, histórico de cargas e avaliações — o aluno vê o resultado em tempo real e você retém mais tempo.
-                </p>
+                <div className="order-1 md:order-2 shrink-0 w-[220px] md:w-[240px] aspect-[9/19] rounded-[2rem] border-[6px] border-zinc-800 bg-black shadow-2xl overflow-hidden">
+                  <img src={landingEvolucao.url} alt="Comparativo antes e depois no app" className="w-full h-full object-cover object-center" />
+                </div>
               </div>
             </div>
+
 
             {/* Vídeos próprios */}
             <div className="md:col-span-3 relative group rounded-2xl overflow-hidden border border-white/10 bg-black min-h-[320px]">
@@ -607,9 +629,11 @@ const Landing = () => {
 
             {/* App personalizado */}
             <div className="md:col-span-3 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-primary/10 min-h-[320px]">
-              <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1779216281370_7dlm0f_Screenshot_31.png" alt="App personalizado" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-70 group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end max-w-md">
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-[150px] md:w-[190px] aspect-[9/19] rounded-[1.75rem] border-[6px] border-zinc-800 bg-black shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                <img src={landingPerfil.url} alt="App personalizado com marca do coach" className="w-full h-full object-cover object-top" />
+              </div>
+              <div className="relative z-20 p-8 md:p-10 h-full flex flex-col justify-end max-w-[60%]">
                 <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
                   <Smartphone className="w-6 h-6 text-primary" />
                 </div>
@@ -620,6 +644,7 @@ const Landing = () => {
                 </p>
               </div>
             </div>
+
 
             {/* Dieta / Nutrição */}
             <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[300px]">
@@ -732,14 +757,26 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 relative">
               <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full scale-75" />
-              <div className="relative mx-auto w-[300px] h-[600px] bg-zinc-900 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
-                <DemoAppScreen 
-                  brandName={brandName}
-                  brandColor={brandColor}
-                  mode={simuladorMode}
-                />
+              <div className="relative mx-auto flex items-center justify-center gap-6 flex-wrap">
+                {/* Phone real (screenshot) */}
+                <div className="relative w-[240px] sm:w-[260px] aspect-[9/19] bg-black rounded-[2.5rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
+                  <img
+                    src={landingVlogs.url}
+                    alt="Home do app com vlogs do coach"
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+                {/* Phone interativo (simulador) */}
+                <div className="relative w-[260px] sm:w-[280px] aspect-[9/19] bg-zinc-900 rounded-[2.5rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
+                  <DemoAppScreen
+                    brandName={brandName}
+                    brandColor={brandColor}
+                    mode={simuladorMode}
+                  />
+                </div>
               </div>
             </div>
+
 
             <div className="order-1 lg:order-2">
               <div className="inline-block px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.3em] border border-primary/30 bg-primary/10 text-primary rounded-full">
