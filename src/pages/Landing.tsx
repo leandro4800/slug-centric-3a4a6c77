@@ -51,7 +51,7 @@ const defaultCoaches: CoachData[] = [
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
-    slug: "team-jackson"
+    slug: "metodojackson"
   },
   {
     name: "BADBOY TEAM",
