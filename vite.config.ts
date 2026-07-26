@@ -24,11 +24,15 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     rollupOptions: {
-      external: ["onnxruntime-web/webgpu"],
+      external: (id) => id === "onnxruntime-web/webgpu" || id.startsWith("onnxruntime-web/"),
+      onwarn(warning, warn) {
+        if (warning.code === "UNRESOLVED_IMPORT" && String(warning.message).includes("onnxruntime-web")) return;
+        warn(warning);
+      },
     },
   },
   optimizeDeps: {
-    exclude: ["onnxruntime-web/webgpu"],
+    exclude: ["onnxruntime-web/webgpu", "onnxruntime-web", "@imgly/background-removal"],
   },
 }));
 
