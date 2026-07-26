@@ -5,6 +5,11 @@ import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, 
 import cardTreinoImg from "@/assets/card-treino.jpg";
 import cardDietaImg from "@/assets/card-dieta.jpg";
 import cardEvolucaoImg from "@/assets/card-evolucao.jpg";
+import landingPlanilha from "@/assets/landing-planilha.jpeg.asset.json";
+import landingTemplate from "@/assets/landing-template.jpeg.asset.json";
+import landingEvolucao from "@/assets/landing-evolucao.png.asset.json";
+import landingPerfil from "@/assets/landing-perfil.png.asset.json";
+import landingVlogs from "@/assets/landing-vlogs.jpeg.asset.json";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
