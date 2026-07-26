@@ -1,7 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon, KeyRound, Dumbbell, Apple, Sword, Zap } from "lucide-react";
+import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon, KeyRound, Dumbbell, Apple, Sword, Zap, FileText, Ruler, Camera, LineChart, MessagesSquare, Sparkles } from "lucide-react";
+import cardTreinoImg from "@/assets/card-treino.jpg";
+import cardDietaImg from "@/assets/card-dieta.jpg";
+import cardEvolucaoImg from "@/assets/card-evolucao.jpg";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -498,6 +501,184 @@ const Landing = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features — Tudo o que o coach entrega dentro do app */}
+      <section id="recursos" className="py-24 bg-background relative overflow-hidden border-t border-white/5">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-primary/5 rounded-full blur-[140px]" />
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <div className="inline-block px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.3em] border border-primary/30 bg-primary/10 text-primary rounded-full">
+              Recursos da Plataforma
+            </div>
+            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-6 leading-none">
+              TUDO O QUE VOCÊ PRECISA <span className="text-primary">EM UM SÓ APP</span>
+            </h2>
+            <p className="text-lg md:text-xl text-gray-400 font-medium leading-relaxed">
+              Da planilha ao Instagram, da avaliação física à comunidade — o Alpha Coach entrega o pacote completo de ferramentas premium que fazem você atender como uma equipe inteira sozinho.
+            </p>
+          </div>
+
+          {/* Feature grid — bento style */}
+          <div className="grid grid-cols-1 md:grid-cols-6 gap-4 md:gap-6">
+            {/* Planilhas de treino em PDF */}
+            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[380px]">
+              <img src={cardTreinoImg} alt="Planilhas de treino em PDF premium" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-tr from-black via-black/70 to-transparent" />
+              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end">
+                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
+                  <FileText className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Planilhas em PDF</p>
+                <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">TREINO CINEMATOGRÁFICO EM PDF</h3>
+                <p className="text-gray-300 max-w-lg leading-relaxed">
+                  Gere planilhas de treino premium em segundos — modelo escuro estilo Netflix ou claro clean, com as cores da sua marca, link direto para o vídeo de cada exercício no YouTube e observações inteligentes para o aluno.
+                </p>
+              </div>
+            </div>
+
+            {/* Avaliação física / 7 dobras */}
+            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 to-black min-h-[380px] p-8 flex flex-col justify-between">
+              <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center">
+                <Ruler className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Avaliação Física</p>
+                <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">7 DOBRAS COM IA</h3>
+                <p className="text-gray-400 leading-relaxed text-sm">
+                  Protocolo Jackson & Pollock em PDF profissional. Importe a foto do avaliador físico e a IA preenche os campos automaticamente.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/60">
+                <Sparkles className="w-3.5 h-3.5 text-primary" /> IA Integrada
+              </div>
+            </div>
+
+            {/* Templates Instagram */}
+            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/20 via-zinc-900 to-black min-h-[380px] p-8 flex flex-col justify-between">
+              <div className="w-12 h-12 bg-primary/25 border border-primary/40 rounded-xl flex items-center justify-center">
+                <Camera className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Marketing</p>
+                <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">STORIES PRONTOS PRO INSTAGRAM</h3>
+                <p className="text-gray-300 leading-relaxed text-sm">
+                  Templates personalizados com sua marca, evolução de alunos e frases de impacto. É só baixar e postar.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/70">
+                <Sparkles className="w-3.5 h-3.5 text-primary" /> Gerador Automático
+              </div>
+            </div>
+
+            {/* Evolução do aluno */}
+            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[380px]">
+              <img src={cardEvolucaoImg} alt="Acompanhamento de evolução" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-tl from-black via-black/70 to-transparent" />
+              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end">
+                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
+                  <LineChart className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Evolução</p>
+                <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">ACOMPANHAMENTO DE PROGRESSO</h3>
+                <p className="text-gray-300 max-w-lg leading-relaxed">
+                  Check-ins com fotos, gráficos de evolução, comparativo antes/depois, histórico de cargas e avaliações — o aluno vê o resultado em tempo real e você retém mais tempo.
+                </p>
+              </div>
+            </div>
+
+            {/* Vídeos próprios */}
+            <div className="md:col-span-3 relative group rounded-2xl overflow-hidden border border-white/10 bg-black min-h-[320px]">
+              <video src="https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/branding/ca38c1a1-06b8-4549-9bfa-f06603ac08e9/login-1778201125522.mov" autoPlay muted loop playsInline className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/60 to-transparent" />
+              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end">
+                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
+                  <Video className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Vlogs & Vídeos</p>
+                <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">SEUS PRÓPRIOS VÍDEOS DE TREINO</h3>
+                <p className="text-gray-300 max-w-md leading-relaxed">
+                  Poste seus vlogs, vídeos de execução e conteúdo exclusivo direto na home do app do aluno.
+                </p>
+              </div>
+            </div>
+
+            {/* App personalizado */}
+            <div className="md:col-span-3 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-primary/10 min-h-[320px]">
+              <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1779216281370_7dlm0f_Screenshot_31.png" alt="App personalizado" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-70 group-hover:scale-105 transition-transform duration-700" />
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
+              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end max-w-md">
+                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
+                  <Smartphone className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Branding Total</p>
+                <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">APP 100% PERSONALIZADO</h3>
+                <p className="text-gray-300 leading-relaxed">
+                  Sua logo, suas cores, seu nome. O aluno abre o app e vê a SUA marca — não a nossa.
+                </p>
+              </div>
+            </div>
+
+            {/* Dieta / Nutrição */}
+            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[300px]">
+              <img src={cardDietaImg} alt="Dietas personalizadas" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 transition-opacity duration-500" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+              <div className="relative p-8 h-full flex flex-col justify-end">
+                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-3">
+                  <Apple className="w-6 h-6 text-primary" />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Nutrição</p>
+                <h3 className="text-xl md:text-2xl font-black uppercase leading-none mb-2">DIETA COM MACROS TABELA TACO</h3>
+                <p className="text-gray-400 leading-relaxed text-sm">
+                  Prescreva, importe PDFs e a IA calcula os macros com precisão TACO.
+                </p>
+              </div>
+            </div>
+
+            {/* Comunidade */}
+            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 to-black min-h-[300px] p-8 flex flex-col justify-between">
+              <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center">
+                <MessagesSquare className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Comunidade</p>
+                <h3 className="text-xl md:text-2xl font-black uppercase leading-none mb-2">FEED SOCIAL EXCLUSIVO</h3>
+                <p className="text-gray-400 leading-relaxed text-sm">
+                  Seus alunos postam evolução, interagem entre si e criam uma tribo em torno da sua marca. Engajamento vira retenção.
+                </p>
+              </div>
+              <div className="flex -space-x-2">
+                <div className="w-8 h-8 rounded-full border-2 border-black bg-gradient-to-br from-primary to-red-800" />
+                <div className="w-8 h-8 rounded-full border-2 border-black bg-gradient-to-br from-amber-500 to-red-600" />
+                <div className="w-8 h-8 rounded-full border-2 border-black bg-gradient-to-br from-zinc-600 to-zinc-900" />
+                <div className="w-8 h-8 rounded-full border-2 border-black bg-primary/30 flex items-center justify-center text-[10px] font-black">+</div>
+              </div>
+            </div>
+
+            {/* IA & Automação */}
+            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-primary/30 bg-gradient-to-br from-primary/20 via-black to-black min-h-[300px] p-8 flex flex-col justify-between">
+              <div className="w-12 h-12 bg-primary/30 border border-primary/50 rounded-xl flex items-center justify-center">
+                <Sparkles className="w-6 h-6 text-primary" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">IA Alpha</p>
+                <h3 className="text-xl md:text-2xl font-black uppercase leading-none mb-2">CADASTRO E MONTAGEM POR IA</h3>
+                <p className="text-gray-300 leading-relaxed text-sm">
+                  Foto ou texto viram cadastro completo. Treino e dieta gerados em segundos com a metodologia Alpha Coach.
+                </p>
+              </div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-white/60">
+                Exclusivo Alpha Pro
+              </div>
+            </div>
+          </div>
+
+          <div className="text-center mt-16">
+            <Button onClick={() => navigate(trialTarget)} size="lg" className="h-16 px-12 text-lg font-black uppercase tracking-widest">
+              {user ? "Acessar meu painel" : "Testar tudo grátis por 30 dias"}
+            </Button>
           </div>
         </div>
       </section>
