@@ -629,9 +629,11 @@ const Landing = () => {
 
             {/* App personalizado */}
             <div className="md:col-span-3 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-primary/10 min-h-[320px]">
-              <img src="https://rmetppilvfrxosvxzhgj.supabase.co/storage/v1/object/public/message-attachments/a73ad678-986d-44b2-9487-bc73eb5d5a24/1779216281370_7dlm0f_Screenshot_31.png" alt="App personalizado" className="absolute right-0 top-0 h-full w-1/2 object-cover opacity-70 group-hover:scale-105 transition-transform duration-700" />
-              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/80 to-transparent" />
-              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end max-w-md">
+              <div className="absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent z-10 pointer-events-none" />
+              <div className="absolute right-4 md:right-8 top-1/2 -translate-y-1/2 w-[150px] md:w-[190px] aspect-[9/19] rounded-[1.75rem] border-[6px] border-zinc-800 bg-black shadow-2xl overflow-hidden group-hover:scale-105 transition-transform duration-500">
+                <img src={landingPerfil.url} alt="App personalizado com marca do coach" className="w-full h-full object-cover object-top" />
+              </div>
+              <div className="relative z-20 p-8 md:p-10 h-full flex flex-col justify-end max-w-[60%]">
                 <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
                   <Smartphone className="w-6 h-6 text-primary" />
                 </div>
@@ -642,6 +644,7 @@ const Landing = () => {
                 </p>
               </div>
             </div>
+
 
             {/* Dieta / Nutrição */}
             <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[300px]">
