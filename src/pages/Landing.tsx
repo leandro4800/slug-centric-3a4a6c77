@@ -1,7 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
-import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon, KeyRound, Dumbbell, Apple, Sword, Zap } from "lucide-react";
+import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon, KeyRound, Dumbbell, Apple, Sword, Zap, FileText, Ruler, Instagram, LineChart, MessagesSquare, Sparkles } from "lucide-react";
+import cardTreinoImg from "@/assets/card-treino.jpg";
+import cardDietaImg from "@/assets/card-dieta.jpg";
+import cardEvolucaoImg from "@/assets/card-evolucao.jpg";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
