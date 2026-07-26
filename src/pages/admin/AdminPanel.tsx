@@ -39,7 +39,7 @@ const AdminPanel = () => {
   const { tenant, refresh } = useBranding();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
-  const [uploading, setUploading] = useState<"hero" | "logo" | "splash" | "login" | null>(null);
+  const [uploading, setUploading] = useState<"coach" | "hero" | "logo" | "splash" | "login" | null>(null);
   const [nome, setNome] = useState("");
   const [tagline, setTagline] = useState("");
   const [cidade, setCidade] = useState("");
@@ -90,10 +90,10 @@ const AdminPanel = () => {
     }
   };
 
-  const handleUpload = async (file: File, kind: "hero" | "logo" | "splash" | "login") => {
+  const handleUpload = async (file: File, kind: "coach" | "hero" | "logo" | "splash" | "login") => {
     if (!tenant) return;
     setUploading(kind);
-    const isImage = kind === "hero" || kind === "logo";
+    const isImage = kind === "coach" || kind === "hero" || kind === "logo";
     const isHeic = /heic|heif/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
     let uploadFile: Blob = file;
     let ext = (file.name.split(".").pop() || "jpg").toLowerCase();
@@ -109,7 +109,7 @@ const AdminPanel = () => {
             )
           : file;
         uploadFile = await withTimeout(
-          normalizeImage(Array.isArray(source) ? source[0] : source, kind === "logo" ? 900 : 1800, 0.84),
+          normalizeImage(Array.isArray(source) ? source[0] : source, kind === "logo" || kind === "coach" ? 900 : 1800, 0.84),
           45000,
           "O processamento da imagem demorou demais."
         );
@@ -128,6 +128,7 @@ const AdminPanel = () => {
     const { data: { publicUrl } } = supabase.storage.from("branding").getPublicUrl(path);
     const finalUrl = isImage ? `${publicUrl}?v=${Date.now()}` : publicUrl;
     const patch =
+      kind === "coach" ? { foto_url: finalUrl } :
       kind === "hero" ? { hero_url: finalUrl } :
       kind === "logo" ? { logo_url: finalUrl } :
       kind === "login" ? { login_video_url: publicUrl } :
@@ -267,6 +268,29 @@ const AdminPanel = () => {
               <TabsContent value="midia">
                 <div className="grid lg:grid-cols-[1fr_320px] gap-6">
                   <div className="space-y-6">
+                    {/* Foto do coach na landing */}
+                    <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+                      <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">FOTO DO COACH NA LANDING</h3>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Aparece no link público do coach e dentro da tela de celular personalizada.
+                      </p>
+                      <div className="grid sm:grid-cols-[140px_1fr] gap-4 items-center">
+                        <div className="aspect-square rounded-2xl overflow-hidden border border-border relative bg-black">
+                          {tenant?.foto_url || tenant?.hero_url ? (
+                            <img src={tenant?.foto_url || tenant?.hero_url || ""} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="flex h-full items-center justify-center text-muted-foreground"><Users className="h-8 w-8" /></div>
+                          )}
+                        </div>
+                        <label className="block">
+                          <input type="file" accept="image/*" className="hidden" onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0], "coach")} />
+                          <Button asChild variant="outline" className="w-full" disabled={uploading === "coach"}>
+                            <span>{uploading === "coach" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><ImagePlus className="h-4 w-4 mr-2" /> Trocar foto do coach</>}</span>
+                          </Button>
+                        </label>
+                      </div>
+                    </div>
+
                     {/* Hero / Login background */}
                     <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
                       <h3 className="font-display text-2xl mb-2 text-primary uppercase tracking-wider">FUNDO DA TELA DE LOGIN</h3>

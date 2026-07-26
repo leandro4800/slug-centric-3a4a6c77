@@ -172,6 +172,8 @@ export default function TenantLanding() {
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const iosBlocksPayments = blocksExternalPayments();
+  const coachImage = tenant?.foto_url || tenant?.hero_url || null;
+  const heroImage = tenant?.hero_url || tenant?.foto_url || alphaLandingHero.url;
 
   const faqItems = [
     {
@@ -356,7 +358,7 @@ export default function TenantLanding() {
       <section className="relative overflow-hidden">
         <div className="absolute inset-0">
           <img
-            src={tenant.hero_url || alphaLandingHero.url}
+            src={heroImage}
             alt=""
             className="h-full w-full object-cover"
           />
@@ -394,9 +396,9 @@ export default function TenantLanding() {
         {/* Hero content */}
         <div className="relative mx-auto max-w-6xl px-4 pb-24 pt-16 md:px-8 md:pb-32 md:pt-24">
           <div className="flex flex-col items-start gap-6 md:flex-row md:items-center">
-            {tenant.foto_url && (
+            {coachImage && (
               <img
-                src={tenant.foto_url}
+                src={coachImage}
                 alt={tenant.nome}
                 className="h-28 w-28 rounded-full border-2 border-primary/60 object-cover shadow-[0_0_40px_-5px_hsl(var(--primary)/0.6)] md:h-36 md:w-36"
               />
@@ -650,7 +652,7 @@ export default function TenantLanding() {
             <div className="order-1 md:order-2">
               <div className="relative mx-auto aspect-[9/16] w-full max-w-xs overflow-hidden rounded-[2.5rem] border-[10px] border-foreground/90 bg-card shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)]">
                 <img
-                  src={tenant.hero_url || tenant.foto_url || cardTreino}
+                  src={coachImage || cardTreino}
                   alt={`App do ${tenant.nome}`}
                   className="h-full w-full object-cover"
                 />
