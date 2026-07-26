@@ -5,7 +5,6 @@ import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantLoginPath } from "@/lib/tenant-slug";
-import { supabase } from "@/integrations/supabase/client";
 
 const NAVIGATION_MEMORY_KEY = "startup_navigation_memory_v1";
 
