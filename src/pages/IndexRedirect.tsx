@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { buildTenantLoginPath } from "@/lib/tenant-slug";
 import { supabase } from "@/integrations/supabase/client";
 

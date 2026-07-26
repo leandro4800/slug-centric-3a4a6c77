@@ -1,6 +1,7 @@
 // Public webhook to ingest vlog posts from external automations (Make/n8n/Apify/Zapier)
 // Auth: tenants.vlog_webhook_secret passed as `secret` (body or query) OR `X-Webhook-Secret` header.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { detectVlogPlatform, normalizeVlogUrl, prepareVlogUrl } from "../_shared/vlog-url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,13 +15,7 @@ const json = (status: number, body: unknown) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const detectPlatform = (url: string): "youtube" | "instagram" | "tiktok" | "other" => {
-  const u = url.toLowerCase();
-  if (u.includes("youtube.com") || u.includes("youtu.be")) return "youtube";
-  if (u.includes("instagram.com")) return "instagram";
-  if (u.includes("tiktok.com")) return "tiktok";
-  return "other";
-};
+const detectPlatform = detectVlogPlatform;
 
 const extractYouTubeId = (url: string): string | null => {
   const m = url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
@@ -70,7 +65,8 @@ Deno.serve(async (req) => {
   const u = new URL(req.url);
   const headerSecret = req.headers.get("x-webhook-secret");
   const secret = String(payload.secret || u.searchParams.get("secret") || headerSecret || "");
-  const url = String(payload.url || "").trim();
+  const rawUrl = String(payload.url || "").trim();
+  const url = prepareVlogUrl(rawUrl) || rawUrl;
   const tenantSlug = payload.tenant_slug ? String(payload.tenant_slug) : null;
   const tenantId = payload.tenant_id ? String(payload.tenant_id) : null;
 
@@ -85,7 +81,7 @@ Deno.serve(async (req) => {
   if (tErr) return json(500, { error: tErr.message });
   if (!tenant) return json(401, { error: "invalid webhook secret" });
 
-  const platform = (payload.platform as string | undefined)?.toLowerCase() || detectPlatform(url);
+  const platform = (payload.platform as string | undefined)?.toLowerCase() || detectPlatform(normalizeVlogUrl(url));
 
   // Enrichment: thumbnail + author via oEmbed (NUNCA salva título em vlogs)
   let thumbnail_url = (payload.thumbnail_url as string | undefined) || null;
@@ -113,7 +109,7 @@ Deno.serve(async (req) => {
       {
         tenant_id: tenant.id,
         platform,
-        url,
+        url: normalizeVlogUrl(url),
         title: null,
         description,
         thumbnail_url,

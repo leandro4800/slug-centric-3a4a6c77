@@ -10,10 +10,17 @@ import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 import { isDirectVideo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import {
+  detectVlogPlatform,
+  isDownloadableVlogUrl,
+  normalizeVlogUrl,
+  prepareVlogUrl,
+  type VlogPlatform,
+} from "@/lib/vlog-url";
 
 interface VlogPost {
   id: string;
-  platform: "youtube" | "instagram" | "tiktok" | "other";
+  platform: VlogPlatform;
   url: string;
   title: string | null;
   thumbnail_url: string | null;
@@ -32,13 +39,7 @@ const PlatformIcon = ({ p }: { p: string }) => {
   return <LinkIcon className="h-4 w-4 text-muted-foreground" />;
 };
 
-const detectPlatform = (url: string): VlogPost["platform"] => {
-  const u = url.toLowerCase();
-  if (u.includes("youtube.com") || u.includes("youtu.be")) return "youtube";
-  if (u.includes("instagram.com")) return "instagram";
-  if (u.includes("tiktok.com")) return "tiktok";
-  return "other";
-};
+const normalizeInput = (raw: string) => prepareVlogUrl(raw) ?? raw.trim();
 
 export const VlogsAdmin = () => {
   const { tenant, refresh } = useBranding();
@@ -118,8 +119,13 @@ export const VlogsAdmin = () => {
     options: { thumbnail?: string | null; successMessage?: string; useThumbInput?: boolean; source?: string } = {},
   ) => {
     if (!tenant || !rawLink.trim()) return false;
-    const cleanUrl = rawLink.trim();
-    const platform = detectPlatform(cleanUrl);
+    const prepared = prepareVlogUrl(rawLink);
+    if (!prepared) {
+      toast.error("URL inválida. Cole o link completo do Reel, post ou vídeo.");
+      return false;
+    }
+    const cleanUrl = normalizeVlogUrl(prepared);
+    const platform = detectVlogPlatform(cleanUrl);
 
     // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
     const oe = await fetchOEmbed(platform, cleanUrl);
@@ -161,10 +167,24 @@ export const VlogsAdmin = () => {
 
   const handleAdd = async () => {
     if (!tenant || !url.trim()) return;
+    const prepared = prepareVlogUrl(url);
+    if (!prepared) {
+      toast.error("URL inválida. Cole o link completo do Reel, post ou vídeo.");
+      return;
+    }
+    const cleanUrl = normalizeVlogUrl(prepared);
     setBusy(true);
-    const added = await addManualVlog(url, { useThumbInput: true });
+    const added = await addManualVlog(url, {
+      useThumbInput: true,
+      successMessage: isDownloadableVlogUrl(cleanUrl)
+        ? "Vlog adicionado! Link copiado para a seção Importar — clique Baixar."
+        : "Vlog adicionado!",
+    });
     setBusy(false);
     if (!added) return;
+    if (isDownloadableVlogUrl(cleanUrl)) {
+      setDownloadUrl(cleanUrl);
+    }
     setUrl("");
     setThumbInput("");
     void load();
@@ -228,13 +248,29 @@ export const VlogsAdmin = () => {
     void load();
   };
 
-  const handleDownload = async () => {
-    if (!tenant || !downloadUrl.trim()) return;
+  const runDownload = async (sourceUrl: string) => {
+    if (!tenant) return;
+    const prepared = prepareVlogUrl(sourceUrl);
+    if (!prepared) {
+      toast.error("URL inválida. Cole o link completo do Instagram, TikTok ou YouTube.");
+      return;
+    }
+    const normalized = normalizeVlogUrl(prepared);
+    if (!isDownloadableVlogUrl(normalized)) {
+      toast.error("Plataforma não suportada para download automático.");
+      return;
+    }
+
+    setDownloadUrl(normalized);
     setDownloading(true);
     setDownloadedVideoUrl(null);
     try {
-      const data = await invokeEdgeFunction<{ video_url?: string }>("vlog-download", {
-        url: downloadUrl.trim(),
+      const data = await invokeEdgeFunction<{
+        video_url?: string;
+        platform?: string;
+        source_url?: string;
+      }>("vlog-download", {
+        url: normalized,
         tenant_id: tenant.id,
       });
       if (!data?.video_url) throw new Error("Resposta sem URL do vídeo.");
@@ -258,6 +294,11 @@ export const VlogsAdmin = () => {
     } finally {
       setDownloading(false);
     }
+  };
+
+  const handleDownload = async () => {
+    if (!downloadUrl.trim()) return;
+    await runDownload(downloadUrl);
   };
 
   const handlePublishIG = async () => {
@@ -313,7 +354,7 @@ export const VlogsAdmin = () => {
       {
         tenant_id: tenant.id,
         url: downloadedVideoUrl,
-        platform: detectPlatform(downloadUrl),
+        platform: detectVlogPlatform(normalizeVlogUrl(downloadUrl)),
         title: null,
         thumbnail_url: null,
         source: "import",
@@ -391,8 +432,16 @@ export const VlogsAdmin = () => {
         <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
         <div className="grid gap-3 items-end">
           <div>
-            <Label>URL (YouTube,  TikTok…)</Label>
-            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+            <Label>URL (YouTube, Instagram, TikTok…)</Label>
+            <Input
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onBlur={() => {
+                const normalized = normalizeInput(url);
+                if (normalized !== url.trim()) setUrl(normalized);
+              }}
+              placeholder="https://www.instagram.com/reel/..."
+            />
           </div>
           <div>
             <Label>Thumbnail (opcional · cole URL de uma imagem)</Label>
@@ -457,13 +506,22 @@ export const VlogsAdmin = () => {
           <Download className="h-6 w-6" /> IMPORTAR VÍDEO DE URL
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Cole a URL de um Reel, TikTok ou Short. O sistema baixa o vídeo e te dá 2 opções: <b>publicar direto no seu Instagram</b> (se configurado) ou <b>baixar o arquivo</b>.
-          Para vídeos do YouTube na home do app, prefira <b>Adicionar link manual</b> acima.
+          Cole a URL de um Reel, post ou vídeo do Instagram, TikTok ou YouTube Shorts. O link é normalizado e enviado
+          para a função <code>vlog-download</code> no Supabase (não há fila — o download roda na hora).
+          Se o Instagram bloquear, use <b>Enviar vídeo (Upload)</b>.
         </p>
 
         <Label>URL do vídeo (Instagram, TikTok, YouTube Shorts)</Label>
         <div className="flex gap-2 mt-1.5">
-          <Input value={downloadUrl} onChange={(e) => setDownloadUrl(e.target.value)} placeholder="https://www.instagram.com/reel/..." />
+          <Input
+            value={downloadUrl}
+            onChange={(e) => setDownloadUrl(e.target.value)}
+            onBlur={() => {
+              const normalized = normalizeInput(downloadUrl);
+              if (normalized !== downloadUrl.trim()) setDownloadUrl(normalized);
+            }}
+            placeholder="https://www.instagram.com/reel/..."
+          />
           <Button onClick={handleDownload} disabled={downloading || !downloadUrl.trim()} className="bg-gradient-primary shadow-glow">
             {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="h-4 w-4 mr-2" /> Baixar</>}
           </Button>
@@ -635,7 +693,22 @@ export const VlogsAdmin = () => {
                 </a>
                 <div className="p-3 space-y-2">
                   {p.author && <p className="text-xs text-muted-foreground">@{p.author}</p>}
-                  <div className="flex gap-2 pt-1">
+                  <div className="flex gap-2 pt-1 flex-wrap">
+                    {isDownloadableVlogUrl(p.url) && !isDirectVideo(p.url) && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => void runDownload(p.url)}
+                        disabled={downloading}
+                        className="flex-1 min-w-[7rem]"
+                      >
+                        {downloading && downloadUrl === normalizeVlogUrl(p.url) ? (
+                          <Loader2 className="h-3 w-3 animate-spin" />
+                        ) : (
+                          <><Download className="h-3 w-3 mr-1" /> Baixar</>
+                        )}
+                      </Button>
+                    )}
                     <Button
                       size="sm"
                       variant={p.destaque ? "default" : "outline"}

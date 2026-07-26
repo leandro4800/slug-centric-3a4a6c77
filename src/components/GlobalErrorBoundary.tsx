@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { buildTenantLoginPath } from "@/lib/tenant-slug";
 
 interface Props {
   children: ReactNode;
@@ -28,7 +29,10 @@ export class GlobalErrorBoundary extends Component<Props, State> {
           <h1 className="text-xl font-bold mb-4">Ops! Algo deu errado.</h1>
           <p className="text-sm text-zinc-400 mb-6">O aplicativo encontrou um erro inesperado.</p>
           <button
-            onClick={() => window.location.href = "/login"}
+            onClick={() => {
+              this.setState({ hasError: false });
+              window.location.replace(buildTenantLoginPath());
+            }}
             className="px-6 py-2 bg-primary rounded-full text-white font-medium"
           >
             Recarregar Aplicativo

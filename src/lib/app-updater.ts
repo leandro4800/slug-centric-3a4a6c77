@@ -3,6 +3,8 @@
 // Quando detecta diferença, limpa caches e recarrega. Essencial para PWAs
 // instalados (Android/iOS) que tendem a reter a "shell" antiga.
 
+import { Capacitor } from "@capacitor/core";
+
 const isInIframe = (() => {
   try { return window.self !== window.top; } catch { return true; }
 })();
@@ -73,6 +75,7 @@ const checkForUpdate = async () => {
 };
 
 export const startUpdateChecker = () => {
+  if (Capacitor.isNativePlatform()) return;
   if (isPreviewHost || isInIframe) return; // não rodar no editor Lovable
   if (typeof window === "undefined") return;
 

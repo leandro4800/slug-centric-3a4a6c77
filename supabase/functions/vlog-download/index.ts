@@ -1,5 +1,6 @@
 // Baixa vídeo de URL pública (Instagram, TikTok, YouTube) via Cobalt e salva no bucket vlog_videos.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { detectVlogPlatform, normalizeVlogUrl, prepareVlogUrl } from "../_shared/vlog-url.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,7 +13,6 @@ const json = (s: number, b: unknown) =>
 
 const COBALT_INSTANCES = [
   "https://dwnld.nichind.dev/",
-  "https://co.eepy.today/",
   "https://cobalt.canine.tools/",
   "https://cobalt-backend.canine.tools/",
 ];
@@ -21,28 +21,27 @@ const MANUAL_FALLBACK_MSG =
   "O serviço público de download está instável no momento. Use \"Adicionar link manual\" logo acima (cole a URL do Reel/TikTok/YouTube e o app faz o embed direto) ou \"Enviar vídeo (upload)\" abaixo para subir o arquivo do seu celular.";
 
 const COBALT_ERROR_PT: Record<string, string> = {
-  "content.no_valid_content": "Este vídeo não permite download (privado, restrito ou indisponível).",
-  "error.api.fetch.critical": "Serviço de download indisponível no momento. Tente de novo ou faça upload manual.",
+  "content.no_valid_content":
+    "Este vídeo não permite download automático (privado, restrito ou bloqueado pela plataforma).",
+  "error.api.fetch.critical": "Serviço de download indisponível no momento. Tente upload manual do MP4.",
   "error.api.fetch.empty": "Nenhum arquivo de vídeo encontrado neste link.",
   "error.api.link.invalid": "Link inválido. Cole a URL completa do Reel, TikTok ou YouTube.",
 };
 
-const normalizeMediaUrl = (raw: string): string => {
-  const trimmed = raw.trim();
-  try {
-    const url = new URL(trimmed);
-    url.hash = "";
-    if (url.hostname === "youtu.be" && url.pathname.length > 1) {
-      return `https://www.youtube.com/watch?v=${url.pathname.slice(1)}`;
-    }
-    if (url.hostname.includes("youtube.com") && url.pathname.startsWith("/shorts/")) {
-      const id = url.pathname.split("/")[2];
-      if (id) return `https://www.youtube.com/watch?v=${id}`;
-    }
-    return url.toString();
-  } catch {
-    return trimmed;
+const platformFallbackMessage = (platform: ReturnType<typeof detectVlogPlatform>): string => {
+  if (platform === "instagram") {
+    return "Não foi possível baixar este Reel. Salve o vídeo no celular e use “Enviar vídeo (Upload)”, ou “Adicionar link manual” para mostrar na home.";
   }
+  if (platform === "youtube") {
+    return "Para YouTube na home use “Adicionar link manual”. Para repost, faça upload do MP4 ou tente outro link.";
+  }
+  return "Não foi possível baixar este vídeo. Tente upload manual do arquivo MP4.";
+};
+
+const cobaltInstances = (): string[] => {
+  const custom = Deno.env.get("COBALT_API_URL")?.trim();
+  if (custom) return [custom.endsWith("/") ? custom : `${custom}/`];
+  return COBALT_INSTANCES;
 };
 
 const extractDirectUrl = (data: Record<string, unknown>): string | null => {
@@ -60,10 +59,13 @@ const extractDirectUrl = (data: Record<string, unknown>): string | null => {
   return null;
 };
 
-async function fetchVideoUrl(sourceUrl: string): Promise<{ url: string | null; error: string | null }> {
-  let lastError = "Não foi possível extrair o vídeo deste link.";
+async function fetchVideoUrl(
+  sourceUrl: string,
+  platform: ReturnType<typeof detectVlogPlatform>,
+): Promise<{ url: string | null; error: string | null }> {
+  let lastError = platformFallbackMessage(platform);
 
-  for (const api of COBALT_INSTANCES) {
+  for (const api of cobaltInstances()) {
     try {
       const r = await fetch(api, {
         method: "POST",
@@ -81,21 +83,24 @@ async function fetchVideoUrl(sourceUrl: string): Promise<{ url: string | null; e
       });
 
       if (!r.ok) {
-        lastError = `Serviço ${api} respondeu ${r.status}.`;
+        console.warn("[vlog-download] cobalt HTTP", api, r.status);
+        lastError = "Serviço de download temporariamente indisponível. Tente upload manual do MP4.";
         continue;
       }
 
       const data = (await r.json()) as Record<string, unknown>;
       if (data.status === "error") {
         const code = (data.error as { code?: string } | undefined)?.code;
-        lastError = (code && COBALT_ERROR_PT[code]) || COBALT_ERROR_PT["content.no_valid_content"];
+        lastError = (code && COBALT_ERROR_PT[code]) || platformFallbackMessage(platform);
+        console.warn("[vlog-download] cobalt error", code, sourceUrl);
         continue;
       }
 
       const directUrl = extractDirectUrl(data);
       if (directUrl) return { url: directUrl, error: null };
     } catch (err) {
-      lastError = err instanceof Error ? err.message : "Falha ao contactar serviço de download.";
+      console.warn("[vlog-download] cobalt fetch failed", api, err);
+      lastError = "Falha de rede ao contactar serviço de download. Tente upload manual.";
     }
   }
 
@@ -126,10 +131,20 @@ Deno.serve(async (req) => {
   }
 
   const { url, tenant_id } = body;
-  if (!url || !/^https?:\/\//i.test(url)) return json(400, { error: "Informe uma URL válida (https://...)." });
+  const prepared = prepareVlogUrl(url || "");
+  if (!prepared) return json(400, { error: "Informe uma URL válida (https://...)." });
   if (!tenant_id) return json(400, { error: "Tenant não identificado." });
 
-  const normalizedUrl = normalizeMediaUrl(url);
+  const normalizedUrl = normalizeVlogUrl(prepared);
+  const platform = detectVlogPlatform(normalizedUrl);
+
+  if (platform === "other") {
+    return json(400, {
+      error: "Link não reconhecido. Use URL completa de Reel/Post do Instagram, TikTok ou YouTube.",
+    });
+  }
+
+  console.log("[vlog-download] request", { platform, normalizedUrl, tenant_id });
 
   // YouTube downloads via Cobalt público estão instáveis (instâncias fora do ar / exigem auth).
   // Para YouTube, oriente o coach a usar "Adicionar link manual" (o app faz embed direto).
@@ -159,28 +174,28 @@ Deno.serve(async (req) => {
   const allowed = roleAllowed || tenant?.owner_user_id === userData.user.id;
   if (!allowed) return json(403, { error: "Sem permissão para baixar vídeos deste tenant." });
 
-  const { url: directUrl } = await fetchVideoUrl(normalizedUrl);
+  const { url: directUrl, error: cobaltError } = await fetchVideoUrl(normalizedUrl, platform);
   if (!directUrl) {
-    return json(502, { error: MANUAL_FALLBACK_MSG });
+    return json(502, { error: cobaltError || MANUAL_FALLBACK_MSG });
   }
 
   let videoRes: Response;
   try {
     videoRes = await fetch(directUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (compatible; AlphaCoach/1.6)",
+        "User-Agent": "Mozilla/5.0 (compatible; AlphaCoach/1.7)",
         Accept: "video/*,*/*",
       },
       redirect: "follow",
     });
   } catch (err) {
     return json(502, {
-      error: `Falha ao baixar bytes do vídeo: ${err instanceof Error ? err.message : "erro de rede"}`,
+      error: `Falha ao baixar o arquivo. ${platformFallbackMessage(platform)}`,
     });
   }
 
   if (!videoRes.ok) {
-    return json(502, { error: `Download do arquivo falhou (HTTP ${videoRes.status}). Tente upload manual.` });
+    return json(502, { error: platformFallbackMessage(platform) });
   }
 
   const bytes = new Uint8Array(await videoRes.arrayBuffer());
@@ -200,5 +215,12 @@ Deno.serve(async (req) => {
   if (upErr) return json(500, { error: `Falha ao salvar no storage: ${upErr.message}` });
 
   const { data: pub } = supabase.storage.from("vlog_videos").getPublicUrl(path);
-  return json(200, { ok: true, video_url: pub.publicUrl, path, size: bytes.length });
+  return json(200, {
+    ok: true,
+    video_url: pub.publicUrl,
+    path,
+    size: bytes.length,
+    platform,
+    source_url: normalizedUrl,
+  });
 });

@@ -6,6 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
+import { VlogPlayerModal } from "@/components/aluno/VlogPlayerModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import heroDefault from "@/assets/hero-default.jpg";
@@ -123,35 +124,6 @@ const AlunoHome = () => {
   const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
 
   const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
-
-  const buildEmbed = (v: VlogPost, opts: { muted?: boolean; controls?: boolean } = {}): string | null => {
-    const muted = opts.muted ?? true;
-    const controls = opts.controls ?? false;
-    const u = v.url;
-    const yt = extractYouTubeId(u);
-    if (yt) {
-      return buildYouTubeEmbedUrl(yt, {
-        autoplay: true,
-        mute: muted,
-        loop: true,
-        controls,
-        rel: false,
-        modestbranding: true,
-        playsinline: true,
-      });
-    }
-    if (u.includes("instagram.com")) {
-      let clean = u.split("?")[0].split("#")[0];
-      clean = clean.replace("/reels/", "/reel/");
-      if (!clean.endsWith("/")) clean += "/";
-      return `${clean}embed/captioned/`;
-    }
-    if (u.includes("tiktok.com")) {
-      const m = u.match(/\/video\/(\d+)/);
-      if (m) return `https://www.tiktok.com/embed/v2/${m[1]}`;
-    }
-    return null;
-  };
 
   const buildThumb = (v: VlogPost): string => {
     if (v.thumbnail_url) return v.thumbnail_url;
@@ -415,50 +387,12 @@ const AlunoHome = () => {
         </div>
       </section>
 
-      {/* In-app player modal */}
       {playing && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setPlaying(null)}
-        >
-          <button
-            onClick={() => setPlaying(null)}
-            className="absolute top-4 right-4 px-4 h-9 rounded-full bg-background/80 border border-border text-xs font-semibold backdrop-blur z-10"
-          >
-            Fechar
-          </button>
-          <div
-            className="relative w-full max-w-4xl aspect-video bg-black rounded-xl overflow-hidden"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {(() => {
-              const embed = buildEmbed(playing, { muted: false, controls: true });
-              if (embed) {
-                return (
-                  <iframe
-                    src={embed}
-                    title={playing.title || "Vlog"}
-                    allow={YOUTUBE_IFRAME_ALLOW}
-                    referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
-                    allowFullScreen
-                    className="w-full h-full"
-                  />
-                );
-              }
-              if (isDirectVideo(playing.url)) {
-                return <video src={playing.url} controls autoPlay className="w-full h-full" />;
-              }
-              return (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
-                  <p className="text-sm text-muted-foreground">Não foi possível embutir esse vídeo.</p>
-                  <a href={playing.url} target="_blank" rel="noreferrer" className="text-primary underline text-sm">
-                    Abrir em nova aba
-                  </a>
-                </div>
-              );
-            })()}
-          </div>
-        </div>
+        <VlogPlayerModal
+          url={playing.url}
+          title={playing.title}
+          onClose={() => setPlaying(null)}
+        />
       )}
     </>
   );

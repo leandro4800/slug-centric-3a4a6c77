@@ -141,9 +141,14 @@ const TENANT_PUBLIC_COLUMNS =
   "id, slug, nome, tagline, logo_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, login_video_url, splash_video_url, music_url, owner_user_id, vertical";
 
 // O cache local foi desativado para garantir que o tema venha sempre do Supabase
-const readCache = (slug: string) => {
-  const cached = localStorage.getItem(`branding_${slug}`);
-  return cached ? JSON.parse(cached) : null;
+const readCache = (slug: string): Tenant | null => {
+  try {
+    const cached = localStorage.getItem(`branding_${slug}`);
+    return cached ? (JSON.parse(cached) as Tenant) : null;
+  } catch {
+    localStorage.removeItem(`branding_${slug}`);
+    return null;
+  }
 };
 const writeCache = (slug: string, tenant: Tenant | null) => {
   if (tenant) {

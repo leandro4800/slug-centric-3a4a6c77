@@ -1,7 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Logo } from "./Logo";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -142,11 +141,15 @@ export const SplashScreen = () => {
                 {tenant.nome}
               </h1>
             </div>
-          ) : (
-            <div className="scale-[2] mb-12">
-              <Logo withText={true} />
-            </div>
-          )}
+            ) : (
+              <div className="scale-[2] mb-12">
+                <img
+                  src="/icons/icon-192.webp"
+                  alt={tenant?.nome || "AlphaCoach"}
+                  className="w-24 h-24 object-contain"
+                />
+              </div>
+            )}
 
           <div className="mt-12 flex flex-col items-center gap-4">
             <div className="w-56 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">

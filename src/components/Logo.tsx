@@ -1,9 +1,10 @@
-import logoAsset from "@/assets/alphacoachpro-logo.png.asset.json";
 import { useBranding } from "@/contexts/BrandingProvider";
+
+const DEFAULT_LOGO_SRC = "/icons/icon-192.webp";
 
 export const Logo = ({ size = 36, withText = true }: { size?: number; withText?: boolean }) => {
   const { tenant } = useBranding();
-  const src = tenant?.logo_url || logoAsset.url;
+  const src = tenant?.logo_url || DEFAULT_LOGO_SRC;
   const name = tenant?.nome || "ALPHACOACH PRO";
 
   return (
