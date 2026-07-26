@@ -757,14 +757,26 @@ const Landing = () => {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="order-2 lg:order-1 relative">
               <div className="absolute inset-0 bg-primary/20 blur-[100px] rounded-full scale-75" />
-              <div className="relative mx-auto w-[300px] h-[600px] bg-zinc-900 rounded-[3rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
-                <DemoAppScreen 
-                  brandName={brandName}
-                  brandColor={brandColor}
-                  mode={simuladorMode}
-                />
+              <div className="relative mx-auto flex items-center justify-center gap-6 flex-wrap">
+                {/* Phone real (screenshot) */}
+                <div className="relative w-[240px] sm:w-[260px] aspect-[9/19] bg-black rounded-[2.5rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
+                  <img
+                    src={landingVlogs.url}
+                    alt="Home do app com vlogs do coach"
+                    className="w-full h-full object-cover object-top"
+                  />
+                </div>
+                {/* Phone interativo (simulador) */}
+                <div className="relative w-[260px] sm:w-[280px] aspect-[9/19] bg-zinc-900 rounded-[2.5rem] border-[8px] border-zinc-800 shadow-2xl overflow-hidden">
+                  <DemoAppScreen
+                    brandName={brandName}
+                    brandColor={brandColor}
+                    mode={simuladorMode}
+                  />
+                </div>
               </div>
             </div>
+
 
             <div className="order-1 lg:order-2">
               <div className="inline-block px-3 py-1 mb-6 text-[10px] font-bold uppercase tracking-[0.3em] border border-primary/30 bg-primary/10 text-primary rounded-full">
