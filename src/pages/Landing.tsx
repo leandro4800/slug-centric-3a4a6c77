@@ -41,7 +41,7 @@ const defaultCoaches: CoachData[] = [
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
-    slug: "pikachu-team"
+    slug: "pikachuteam"
   },
   {
     name: "TEAM JACKSON",
@@ -51,7 +51,7 @@ const defaultCoaches: CoachData[] = [
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
-    slug: "team-jackson"
+    slug: "metodojackson"
   },
   {
     name: "BADBOY TEAM",
@@ -61,7 +61,7 @@ const defaultCoaches: CoachData[] = [
     tag: "VERIFICADO",
     cidade: "São Paulo",
     estado: "SP",
-    slug: "badboy-team"
+    slug: "badboyteam"
   },
   {
     name: "NUTRI SAMILA DIAS",
@@ -71,7 +71,7 @@ const defaultCoaches: CoachData[] = [
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
-    slug: "samila-dias"
+    slug: "nutrisamiladias"
   }
 ];
 
