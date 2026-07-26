@@ -346,7 +346,11 @@ const PersonalTreino = () => {
         const i = WEEK_ORDER.findIndex((d) => n.includes(d));
         return i === -1 ? 99 : i;
       };
-      const isOff = (s: string) => /\boff\b|descanso|rest/i.test(s || "");
+      const isOff = (s: string) => {
+        const n = (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        // Não tratar técnicas como Rest-Pause como descanso.
+        return /\boff\b|descanso|folga|sem\s+treino|dia\s+livre/i.test(n);
+      };
 
       if (treinosRes && !(treinosRes as any).error) {
         const data = (treinosRes as any).data as any[] | null;
