@@ -19,12 +19,13 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
       "@shared": path.resolve(__dirname, "./src/shared"),
       "@shared/schema": path.resolve(__dirname, "./src/shared/schema.ts"),
+      "onnxruntime-web/webgpu": path.resolve(__dirname, "./node_modules/onnxruntime-web/dist/ort.webgpu.bundle.min.mjs"),
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "react/jsx-dev-runtime", "@tanstack/react-query", "@tanstack/query-core"],
   },
   build: {
     rollupOptions: {
-      external: (id) => id === "onnxruntime-web/webgpu" || id.startsWith("onnxruntime-web/"),
+      external: (id) => id.startsWith("onnxruntime-web/") && id !== "onnxruntime-web/webgpu",
       onwarn(warning, warn) {
         if (warning.code === "UNRESOLVED_IMPORT" && String(warning.message).includes("onnxruntime-web")) return;
         warn(warning);
