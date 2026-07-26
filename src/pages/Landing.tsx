@@ -552,21 +552,27 @@ const Landing = () => {
 
 
             {/* Avaliação física / 7 dobras */}
-            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 to-black min-h-[380px] p-8 flex flex-col justify-between">
-              <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center">
-                <Ruler className="w-6 h-6 text-primary" />
+            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 to-black min-h-[380px]">
+              <div className="absolute -right-6 -bottom-6 w-[150px] aspect-[9/19] rounded-[1.75rem] border-[5px] border-zinc-800 bg-black shadow-2xl overflow-hidden opacity-95 group-hover:scale-105 transition-transform duration-500">
+                <img src={landing7dobras.url} alt="Protocolo 7 dobras em PDF gerado pela IA" className="w-full h-full object-cover object-top" />
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Avaliação Física</p>
-                <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">7 DOBRAS COM IA</h3>
-                <p className="text-gray-400 leading-relaxed text-sm">
-                  Protocolo Jackson & Pollock em PDF profissional. Importe a foto do avaliador físico e a IA preenche os campos automaticamente.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/60">
-                <Sparkles className="w-3.5 h-3.5 text-primary" /> IA Integrada
+              <div className="relative p-8 h-full flex flex-col justify-between">
+                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center">
+                  <Ruler className="w-6 h-6 text-primary" />
+                </div>
+                <div className="max-w-[65%]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Avaliação Física</p>
+                  <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">7 DOBRAS COM IA</h3>
+                  <p className="text-gray-400 leading-relaxed text-sm">
+                    Protocolo Jackson & Pollock em PDF profissional. Importe a foto do avaliador físico e a IA preenche os campos automaticamente.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/60">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" /> IA Integrada
+                </div>
               </div>
             </div>
+
 
             {/* Templates Instagram */}
             <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/20 via-zinc-900 to-black min-h-[380px]">
