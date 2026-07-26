@@ -568,37 +568,48 @@ const Landing = () => {
             </div>
 
             {/* Templates Instagram */}
-            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/20 via-zinc-900 to-black min-h-[380px] p-8 flex flex-col justify-between">
-              <div className="w-12 h-12 bg-primary/25 border border-primary/40 rounded-xl flex items-center justify-center">
-                <Camera className="w-6 h-6 text-primary" />
+            <div className="md:col-span-2 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-primary/20 via-zinc-900 to-black min-h-[380px]">
+              <div className="absolute -right-6 -bottom-6 w-[150px] aspect-[9/19] rounded-[1.75rem] border-[5px] border-zinc-800 bg-black shadow-2xl overflow-hidden opacity-90 group-hover:scale-105 transition-transform duration-500">
+                <img src={landingTemplate.url} alt="Template Instagram gerado pelo app" className="w-full h-full object-cover object-top" />
               </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Marketing</p>
-                <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">STORIES PRONTOS PRO INSTAGRAM</h3>
-                <p className="text-gray-300 leading-relaxed text-sm">
-                  Templates personalizados com sua marca, evolução de alunos e frases de impacto. É só baixar e postar.
-                </p>
-              </div>
-              <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/70">
-                <Sparkles className="w-3.5 h-3.5 text-primary" /> Gerador Automático
+              <div className="relative p-8 h-full flex flex-col justify-between">
+                <div className="w-12 h-12 bg-primary/25 border border-primary/40 rounded-xl flex items-center justify-center">
+                  <Camera className="w-6 h-6 text-primary" />
+                </div>
+                <div className="max-w-[65%]">
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Marketing</p>
+                  <h3 className="text-2xl md:text-3xl font-black uppercase leading-none mb-3">STORIES PRONTOS PRO INSTAGRAM</h3>
+                  <p className="text-gray-300 leading-relaxed text-sm">
+                    Templates personalizados com sua marca, evolução de alunos e frases de impacto. É só baixar e postar.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/70">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" /> Gerador Automático
+                </div>
               </div>
             </div>
 
             {/* Evolução do aluno */}
-            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-zinc-900 min-h-[380px]">
-              <img src={cardEvolucaoImg} alt="Acompanhamento de evolução" className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-60 group-hover:scale-105 transition-all duration-700" />
+            <div className="md:col-span-4 relative group rounded-2xl overflow-hidden border border-white/10 bg-gradient-to-br from-zinc-900 via-black to-zinc-900 min-h-[380px]">
+              <img src={cardEvolucaoImg} alt="" className="absolute inset-0 w-full h-full object-cover opacity-15" />
               <div className="absolute inset-0 bg-gradient-to-tl from-black via-black/70 to-transparent" />
-              <div className="relative p-8 md:p-10 h-full flex flex-col justify-end">
-                <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
-                  <LineChart className="w-6 h-6 text-primary" />
+              <div className="relative p-8 md:p-10 h-full flex flex-col md:flex-row items-center gap-6">
+                <div className="flex-1 order-2 md:order-1">
+                  <div className="w-12 h-12 bg-primary/15 border border-primary/30 rounded-xl flex items-center justify-center mb-4">
+                    <LineChart className="w-6 h-6 text-primary" />
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Evolução</p>
+                  <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">ACOMPANHAMENTO DE PROGRESSO</h3>
+                  <p className="text-gray-300 max-w-lg leading-relaxed">
+                    Check-ins com fotos, gráficos de evolução, comparativo antes/depois, histórico de cargas e avaliações — o aluno vê o resultado em tempo real e você retém mais tempo.
+                  </p>
                 </div>
-                <p className="text-[10px] font-black uppercase tracking-[0.3em] text-primary mb-2">Evolução</p>
-                <h3 className="text-3xl md:text-4xl font-black uppercase leading-none mb-3">ACOMPANHAMENTO DE PROGRESSO</h3>
-                <p className="text-gray-300 max-w-lg leading-relaxed">
-                  Check-ins com fotos, gráficos de evolução, comparativo antes/depois, histórico de cargas e avaliações — o aluno vê o resultado em tempo real e você retém mais tempo.
-                </p>
+                <div className="order-1 md:order-2 shrink-0 w-[220px] md:w-[240px] aspect-[9/19] rounded-[2rem] border-[6px] border-zinc-800 bg-black shadow-2xl overflow-hidden">
+                  <img src={landingEvolucao.url} alt="Comparativo antes e depois no app" className="w-full h-full object-cover object-center" />
+                </div>
               </div>
             </div>
+
 
             {/* Vídeos próprios */}
             <div className="md:col-span-3 relative group rounded-2xl overflow-hidden border border-white/10 bg-black min-h-[320px]">
