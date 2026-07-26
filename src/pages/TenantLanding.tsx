@@ -650,13 +650,27 @@ export default function TenantLanding() {
             <div className="order-1 md:order-2">
               <div className="relative mx-auto aspect-[9/16] w-full max-w-xs overflow-hidden rounded-[2.5rem] border-[10px] border-foreground/90 bg-card shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)]">
                 <img
-                  src={cardTreino}
-                  alt="App preview"
+                  src={tenant.hero_url || tenant.foto_url || cardTreino}
+                  alt={`App do ${tenant.nome}`}
                   className="h-full w-full object-cover"
                 />
+                {/* Overlay estilo "tela de perfil" personalizada do coach */}
+                <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-black/40 to-black/90" />
+                <div className="absolute inset-x-0 bottom-0 p-5 text-white">
+                  <Badge className="mb-2 border border-primary/50 bg-primary/20 text-primary text-[10px]">
+                    <Sparkles className="mr-1 h-3 w-3" /> Perfil do Coach
+                  </Badge>
+                  <p className="font-display text-xl uppercase leading-tight">{tenant.nome}</p>
+                  {tenant.tagline && (
+                    <p className="mt-1 text-[11px] text-white/80 line-clamp-2">{tenant.tagline}</p>
+                  )}
+                </div>
                 <div className="absolute inset-x-0 top-0 h-6 bg-foreground/90" />
                 <div className="absolute left-1/2 top-1.5 h-3 w-20 -translate-x-1/2 rounded-full bg-background" />
               </div>
+              <p className="mt-3 text-center text-[11px] uppercase tracking-widest text-muted-foreground">
+                App personalizado do {tenant.nome}
+              </p>
             </div>
           </div>
         </div>
