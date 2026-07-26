@@ -71,7 +71,7 @@ const defaultCoaches: CoachData[] = [
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
-    slug: "samila-dias"
+    slug: "nutrisamiladias"
   }
 ];
 
