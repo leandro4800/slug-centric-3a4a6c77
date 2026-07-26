@@ -10,6 +10,7 @@ import landingTemplate from "@/assets/landing-template.jpeg.asset.json";
 import landingEvolucao from "@/assets/landing-evolucao.png.asset.json";
 import landingPerfil from "@/assets/landing-perfil.png.asset.json";
 import landingVlogs from "@/assets/landing-vlogs.jpeg.asset.json";
+import landing7dobras from "@/assets/landing-7dobras.jpeg.asset.json";
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
