@@ -719,7 +719,7 @@ const PersonalTreino = () => {
           </a>
         )}
 
-        <div className="flex gap-2 mt-5 overflow-x-auto pb-1">
+        <div className="flex flex-wrap gap-2 mt-5 pb-1">
           {dias.map((dia) => {
             const n = dia.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
             const wd = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"].find((d) => n.includes(d));
