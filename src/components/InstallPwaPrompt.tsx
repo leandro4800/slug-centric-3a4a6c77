@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, Share, Plus, X } from "lucide-react";
@@ -18,6 +19,7 @@ const isStandalone = () =>
   window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
 
 const InstallPwaPrompt = () => {
+  const location = useLocation();
   const [open, setOpen] = useState(false);
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const ios = isIOS();
@@ -26,7 +28,7 @@ const InstallPwaPrompt = () => {
   useEffect(() => {
     if (!isMobile() || isStandalone()) return;
     // Não mostrar em landing pages públicas
-    const path = window.location.pathname;
+    const path = location.pathname;
     if (path === "/" || path === "/site" || path === "/marketplace" || path === "/seja-coach" || /^\/[^/]+\/site$/.test(path)) return;
     const dismissedAt = Number(localStorage.getItem(DISMISS_KEY) || 0);
     if (dismissedAt && Date.now() - dismissedAt < DISMISS_DAYS * 86400000) return;
@@ -45,7 +47,7 @@ const InstallPwaPrompt = () => {
       clearTimeout(t);
       window.removeEventListener("beforeinstallprompt", onBIP);
     };
-  }, []);
+  }, [location.pathname]);
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISS_KEY, String(Date.now()));
