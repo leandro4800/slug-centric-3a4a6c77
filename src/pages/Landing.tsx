@@ -61,7 +61,7 @@ const defaultCoaches: CoachData[] = [
     tag: "VERIFICADO",
     cidade: "São Paulo",
     estado: "SP",
-    slug: "badboy-team"
+    slug: "badboyteam"
   },
   {
     name: "NUTRI SAMILA DIAS",
