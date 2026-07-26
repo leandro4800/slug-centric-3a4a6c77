@@ -41,7 +41,7 @@ const defaultCoaches: CoachData[] = [
     tag: "VERIFICADO",
     cidade: "Serra",
     estado: "ES",
-    slug: "pikachu-team"
+    slug: "pikachuteam"
   },
   {
     name: "TEAM JACKSON",
