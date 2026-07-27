@@ -130,7 +130,7 @@ const AlunoHome = () => {
 
   const buildThumb = (v: VlogPost): string => {
     if (v.thumbnail_url && !isVlogVideoPageUrl(v.thumbnail_url)) return v.thumbnail_url;
-    const yt = extractYouTubeId(v.url);
+    const yt = extractYouTubeId(v.url) || extractYouTubeId(v.thumbnail_url);
     if (yt) return buildYouTubeThumbnailUrl(yt);
     // fallback genérico via screenshot
     return `https://api.microlink.io/?url=${encodeURIComponent(v.url)}&screenshot=true&meta=false&embed=screenshot.url`;

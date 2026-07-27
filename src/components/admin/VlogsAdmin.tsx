@@ -98,20 +98,24 @@ export const VlogsAdmin = () => {
     const rows = (list as VlogPost[]) || [];
     setPosts(rows);
     // Backfill: preenche thumbnail_url ausente em vlogs do YouTube usando o próprio ID do vídeo
-    const missingYt = rows.filter((r) => (!r.thumbnail_url || isVlogVideoPageUrl(r.thumbnail_url)) && r.platform === "youtube");
+    const missingYt = rows.filter((r) => (!r.thumbnail_url || isVlogVideoPageUrl(r.thumbnail_url) || !extractVlogYouTubeId(r.url)) && r.platform === "youtube");
     if (missingYt.length) {
       await Promise.all(
         missingYt.map((r) => {
-          const ytId = extractVlogYouTubeId(r.url);
+          const ytId = extractVlogYouTubeId(r.url) || extractVlogYouTubeId(r.thumbnail_url);
           if (!ytId) return Promise.resolve();
           const thumb = buildYouTubeThumbnailUrl(ytId);
-          return supabase.from("vlog_posts").update({ thumbnail_url: thumb }).eq("id", r.id).then(() => {});
+          return supabase
+            .from("vlog_posts")
+            .update({ url: `https://www.youtube.com/watch?v=${ytId}`, thumbnail_url: thumb, source: "import" })
+            .eq("id", r.id)
+            .then(() => {});
         })
       );
       setPosts(rows.map((r) => {
         if ((r.thumbnail_url && !isVlogVideoPageUrl(r.thumbnail_url)) || r.platform !== "youtube") return r;
-        const ytId = extractVlogYouTubeId(r.url);
-        return ytId ? { ...r, thumbnail_url: buildYouTubeThumbnailUrl(ytId) } : r;
+        const ytId = extractVlogYouTubeId(r.url) || extractVlogYouTubeId(r.thumbnail_url);
+        return ytId ? { ...r, url: `https://www.youtube.com/watch?v=${ytId}`, thumbnail_url: buildYouTubeThumbnailUrl(ytId), source: "import" } : r;
       }));
     }
     const tp = (t as unknown) as { vlog_webhook_secret?: string; instagram_access_token?: string; instagram_business_account_id?: string } | null;
@@ -125,7 +129,7 @@ export const VlogsAdmin = () => {
   const resolveThumb = (p: VlogPost): string | null => {
     if (p.thumbnail_url && !isVlogVideoPageUrl(p.thumbnail_url)) return p.thumbnail_url;
     if (p.platform === "youtube") {
-      const ytId = extractVlogYouTubeId(p.url);
+      const ytId = extractVlogYouTubeId(p.url) || extractVlogYouTubeId(p.thumbnail_url);
       if (ytId) return buildYouTubeThumbnailUrl(ytId);
     }
     return null;
@@ -185,8 +189,13 @@ export const VlogsAdmin = () => {
       toast.error("URL inválida. Cole o link completo do Reel, post ou vídeo.");
       return false;
     }
-    const cleanUrl = normalizeVlogUrl(prepared);
-    const platform = detectVlogPlatform(cleanUrl);
+    let cleanUrl = normalizeVlogUrl(prepared);
+    let platform = detectVlogPlatform(cleanUrl);
+    const thumbVideoId = options.useThumbInput ? extractVlogYouTubeId(thumbInput) : null;
+    if (platform === "youtube" && !extractVlogYouTubeId(cleanUrl) && thumbVideoId) {
+      cleanUrl = `https://www.youtube.com/watch?v=${thumbVideoId}`;
+      platform = "youtube";
+    }
 
     // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
     const oe = await fetchOEmbed(platform, cleanUrl);
@@ -196,7 +205,7 @@ export const VlogsAdmin = () => {
 
     // Fallback YouTube: thumb direta pelo ID
     if (!thumb && platform === "youtube") {
-      const ytId = extractVlogYouTubeId(cleanUrl);
+      const ytId = extractVlogYouTubeId(cleanUrl) || thumbVideoId;
       if (ytId) thumb = buildYouTubeThumbnailUrl(ytId);
     }
 
