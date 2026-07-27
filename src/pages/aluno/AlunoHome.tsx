@@ -116,7 +116,17 @@ const AlunoHome = () => {
       .then(({ data }) => setVlogs((data as VlogPost[]) || []));
   }, [tenant?.id]);
 
-  const featured = vlogs[0];
+  const normalizePlayableVlog = (v: VlogPost): VlogPost => {
+    const yt = extractYouTubeId(v.url) || extractYouTubeId(v.thumbnail_url);
+    if (!yt) return v;
+    return {
+      ...v,
+      url: `https://www.youtube.com/watch?v=${yt}`,
+      thumbnail_url: v.thumbnail_url && !isVlogVideoPageUrl(v.thumbnail_url) ? v.thumbnail_url : buildYouTubeThumbnailUrl(yt),
+    };
+  };
+
+  const featured = vlogs[0] ? normalizePlayableVlog(vlogs[0]) : undefined;
   const ytId = featured ? extractYouTubeId(featured.url) : extractYouTubeId(tenant?.hero_url);
   
   // Vídeo direto do featured (mp4 etc) ou fallback para hero do tenant
@@ -154,7 +164,7 @@ const AlunoHome = () => {
   };
 
   // Auto-play silencioso de fundo (YouTube)
-  const ytAutoSrc = ytId
+  const ytAutoSrc = !featured && ytId
     ? buildYouTubeEmbedUrl(ytId, {
         autoplay: true,
         mute: muted,
@@ -367,7 +377,7 @@ const AlunoHome = () => {
           {vlogs.map((v) => (
             <div
               key={v.id}
-              onClick={() => setPlaying(v)}
+              onClick={() => setPlaying(normalizePlayableVlog(v))}
               className="bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 transition-all group"
             >
               <div className="relative aspect-video">

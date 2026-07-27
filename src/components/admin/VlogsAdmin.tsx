@@ -4,7 +4,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload, Play } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -17,7 +17,6 @@ import {
   prepareVlogUrl,
   type VlogPlatform,
 } from "@/lib/vlog-url";
-import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 
 interface VlogPost {
   id: string;
@@ -49,31 +48,24 @@ const isImageUrl = (value: string | null | undefined) => {
 };
 
 export const VlogsAdmin = () => {
-  const { tenant, refresh } = useBranding();
+  const { tenant } = useBranding();
   const [posts, setPosts] = useState<VlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
   const [thumbInput, setThumbInput] = useState("");
-  const [showSecret, setShowSecret] = useState(false);
-  const [secret, setSecret] = useState<string | null>(null);
 
   // Instagram Graph API config
   const [igToken, setIgToken] = useState("");
   const [igAccountId, setIgAccountId] = useState("");
   const [showIgToken, setShowIgToken] = useState(false);
   const [igConfigured, setIgConfigured] = useState(false);
-
-  const [publishing, setPublishing] = useState(false);
   
   // Upload direto
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [vlogTitle, setVlogTitle] = useState("");
-
-  const projectRef = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) || "";
-  const webhookUrl = `https://${projectRef}.functions.supabase.co/vlog-ingest`;
 
   const load = async () => {
     if (!tenant) return;
@@ -85,12 +77,28 @@ export const VlogsAdmin = () => {
         .eq("tenant_id", tenant.id)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false }),
-      supabase.from("tenants_private" as any).select("vlog_webhook_secret, instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
+      supabase.from("tenants_private" as any).select("instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     const rows = (list as VlogPost[]) || [];
-    setPosts(rows);
-    // Backfill: preenche thumbnail_url ausente em vlogs do YouTube usando o próprio ID do vídeo
-    const missingYt = rows.filter((r) => (!r.thumbnail_url || isVlogVideoPageUrl(r.thumbnail_url) || !extractVlogYouTubeId(r.url)) && r.platform === "youtube");
+    const normalizedRows = rows.map((r) => {
+      if (r.platform !== "youtube") return r;
+      const ytId = extractVlogYouTubeId(r.url) || extractVlogYouTubeId(r.thumbnail_url);
+      if (!ytId) return r;
+      return {
+        ...r,
+        url: `https://www.youtube.com/watch?v=${ytId}`,
+        thumbnail_url: buildYouTubeThumbnailUrl(ytId),
+        source: "import",
+      };
+    });
+    setPosts(normalizedRows);
+    // Backfill: corrige URL/thumbnail/source de vlogs do YouTube salvos por versões antigas.
+    const missingYt = rows.filter((r) => {
+      if (r.platform !== "youtube") return false;
+      const ytId = extractVlogYouTubeId(r.url) || extractVlogYouTubeId(r.thumbnail_url);
+      if (!ytId) return false;
+      return !extractVlogYouTubeId(r.url) || !r.thumbnail_url || isVlogVideoPageUrl(r.thumbnail_url) || r.source !== "import";
+    });
     if (missingYt.length) {
       await Promise.all(
         missingYt.map((r) => {
@@ -104,14 +112,8 @@ export const VlogsAdmin = () => {
             .then(() => {});
         })
       );
-      setPosts(rows.map((r) => {
-        if ((r.thumbnail_url && !isVlogVideoPageUrl(r.thumbnail_url)) || r.platform !== "youtube") return r;
-        const ytId = extractVlogYouTubeId(r.url) || extractVlogYouTubeId(r.thumbnail_url);
-        return ytId ? { ...r, url: `https://www.youtube.com/watch?v=${ytId}`, thumbnail_url: buildYouTubeThumbnailUrl(ytId), source: "import" } : r;
-      }));
     }
-    const tp = (t as unknown) as { vlog_webhook_secret?: string; instagram_access_token?: string; instagram_business_account_id?: string } | null;
-    setSecret(tp?.vlog_webhook_secret ?? null);
+    const tp = (t as unknown) as { instagram_access_token?: string; instagram_business_account_id?: string } | null;
     setIgToken(tp?.instagram_access_token ?? "");
     setIgAccountId(tp?.instagram_business_account_id ?? "");
     setIgConfigured(!!(tp?.instagram_access_token && tp?.instagram_business_account_id));
@@ -135,7 +137,10 @@ export const VlogsAdmin = () => {
   const importExternalVlog = async (rawLink: string, successMessage = "Vlog importado!") => {
     if (busy) return;
     const prepared = prepareVlogUrl(rawLink);
-    if (!prepared) return;
+    if (!prepared) {
+      toast.error("URL inválida. Cole o link completo do vídeo.");
+      return;
+    }
     const cleanUrl = normalizeVlogUrl(prepared);
     setUrl(cleanUrl);
     setBusy(true);
@@ -176,17 +181,21 @@ export const VlogsAdmin = () => {
     options: { thumbnail?: string | null; successMessage?: string; useThumbInput?: boolean; source?: string } = {},
   ) => {
     if (!tenant || !rawLink.trim()) return false;
-    const prepared = prepareVlogUrl(rawLink);
+    const thumbVideoId = options.useThumbInput ? extractVlogYouTubeId(thumbInput) : null;
+    const prepared = prepareVlogUrl(rawLink) || (thumbVideoId ? `https://www.youtube.com/watch?v=${thumbVideoId}` : null);
     if (!prepared) {
       toast.error("URL inválida. Cole o link completo do Reel, post ou vídeo.");
       return false;
     }
     let cleanUrl = normalizeVlogUrl(prepared);
     let platform = detectVlogPlatform(cleanUrl);
-    const thumbVideoId = options.useThumbInput ? extractVlogYouTubeId(thumbInput) : null;
     if (platform === "youtube" && !extractVlogYouTubeId(cleanUrl) && thumbVideoId) {
       cleanUrl = `https://www.youtube.com/watch?v=${thumbVideoId}`;
       platform = "youtube";
+    }
+    if (platform === "youtube" && !extractVlogYouTubeId(cleanUrl)) {
+      toast.error("Link do YouTube incompleto. Cole a URL completa do vídeo.");
+      return false;
     }
 
     // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
@@ -237,14 +246,14 @@ export const VlogsAdmin = () => {
 
   const handleAdd = async () => {
     if (!tenant || !url.trim()) return;
-    const prepared = prepareVlogUrl(url);
+    const thumbVideoId = extractVlogYouTubeId(thumbInput);
+    const prepared = prepareVlogUrl(url) || (thumbVideoId ? `https://www.youtube.com/watch?v=${thumbVideoId}` : null);
     if (!prepared) {
       toast.error("URL inválida. Cole o link completo do Reel, post ou vídeo.");
       return;
     }
-    const cleanUrl = normalizeVlogUrl(prepared);
     setBusy(true);
-    const added = await addManualVlog(url, {
+    const added = await addManualVlog(prepared, {
       useThumbInput: true,
       source: "import",
       successMessage: "Vlog importado direto para os Vlogs!",
@@ -282,24 +291,6 @@ export const VlogsAdmin = () => {
     void load();
   };
 
-  const rotateSecret = async () => {
-    if (!tenant) return;
-    if (!confirm("Gerar novo segredo? Suas automações antigas vão parar até atualizarem o segredo.")) return;
-    const newSecret = Array.from(crypto.getRandomValues(new Uint8Array(24)))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    const { error } = await supabase.from("tenants_private" as any).upsert({ tenant_id: tenant.id, vlog_webhook_secret: newSecret });
-    if (error) return toast.error(error.message);
-    toast.success("Novo segredo gerado");
-    await refresh();
-    void load();
-  };
-
-  const copy = (txt: string, label: string) => {
-    navigator.clipboard.writeText(txt);
-    toast.success(`${label} copiado`);
-  };
-
   const saveIgConfig = async () => {
     if (!tenant) return;
     const { error } = await supabase
@@ -312,10 +303,6 @@ export const VlogsAdmin = () => {
     if (error) return toast.error(error.message);
     toast.success("Credenciais do Instagram salvas");
     void load();
-  };
-
-  const handlePublishIG = async () => {
-    toast.error("A publicação direta no Instagram precisa de um vídeo enviado por upload.");
   };
 
   const handleFileUpload = async () => {
@@ -364,14 +351,6 @@ export const VlogsAdmin = () => {
       setUploading(false);
     }
   };
-
-  const exemploCurl = `curl -X POST '${webhookUrl}' \\
-  -H 'Content-Type: application/json' \\
-  -d '{
-    "secret": "${secret || "SEU_SEGREDO"}",
-    "url": "https://www.instagram.com/reel/XXXXXX/",
-    "thumbnail_url": "https://...jpg"
-  }'`;
 
   return (
     <div className="space-y-6">
@@ -546,23 +525,18 @@ export const VlogsAdmin = () => {
               <div key={p.id} className="border border-border rounded-xl overflow-hidden bg-background/40">
                 <div className="block aspect-video bg-muted relative overflow-hidden">
                   {(() => {
-                    const ytId = extractVlogYouTubeId(p.url);
+                    const ytId = extractVlogYouTubeId(p.url) || extractVlogYouTubeId(p.thumbnail_url);
                     if (ytId) {
+                      const thumb = buildYouTubeThumbnailUrl(ytId);
                       return (
-                        <iframe
-                          src={buildYouTubeEmbedUrl(ytId, {
-                            autoplay: false,
-                            mute: true,
-                            controls: false,
-                            rel: false,
-                            modestbranding: true,
-                            playsinline: true,
-                          })}
-                          title={p.title || "Vlog do YouTube"}
-                          allow={YOUTUBE_IFRAME_ALLOW}
-                          referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
-                          className="w-full h-full pointer-events-none"
-                        />
+                        <>
+                          <img src={thumb} alt={p.title || "Vlog do YouTube"} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/20">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-glow">
+                              <Play className="h-5 w-5 fill-current" />
+                            </span>
+                          </div>
+                        </>
                       );
                     }
                     if (isDirectVideo(p.url)) {

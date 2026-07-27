@@ -1,7 +1,10 @@
 export type VlogPlatform = "youtube" | "instagram" | "tiktok" | "other";
 
 const URL_IN_TEXT = /https?:\/\/[^\s<>"']+/i;
-const YOUTUBE_ID_IN_URL = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{11})/i;
+const YOUTUBE_ID_IN_URLS = [
+  /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/live\/|\/embed\/|\/v\/)([A-Za-z0-9_-]{11})/i,
+  /i\.ytimg\.com\/vi\/([A-Za-z0-9_-]{11})/i,
+];
 
 /** Pulls the first http(s) URL from pasted share text (common on mobile). */
 export const extractFirstUrl = (text: string): string | null => {
@@ -24,16 +27,13 @@ export const detectVlogPlatform = (url: string): VlogPlatform => {
   return "other";
 };
 
-export const isDownloadableVlogUrl = (url: string) => {
-  const platform = detectVlogPlatform(url);
-  // YouTube não é baixado pelo Cobalt (instável / bloqueado). Usa embed direto via link manual.
-  return platform === "instagram" || platform === "tiktok";
-};
-
 export const extractVlogYouTubeId = (url: string | null | undefined): string | null => {
   if (!url) return null;
-  const match = url.match(YOUTUBE_ID_IN_URL);
-  return match?.[1] ?? null;
+  for (const regex of YOUTUBE_ID_IN_URLS) {
+    const match = url.match(regex);
+    if (match?.[1]) return match[1];
+  }
+  return null;
 };
 
 export const buildYouTubeThumbnailUrl = (videoId: string) =>
@@ -54,7 +54,7 @@ export const isVlogVideoPageUrl = (value: string | null | undefined) => {
   );
 };
 
-/** Normalizes URLs before saving to DB or sending to vlog-download. */
+/** Normalizes URLs before saving to DB. */
 export const normalizeVlogUrl = (raw: string): string => {
   let input = raw.trim();
   const extracted = extractFirstUrl(input);
@@ -67,22 +67,13 @@ export const normalizeVlogUrl = (raw: string): string => {
   try {
     const url = new URL(input);
 
-    if (url.hostname === "youtu.be" && url.pathname.length > 1) {
-      const id = url.pathname.slice(1).split("/")[0];
-      return `https://www.youtube.com/watch?v=${id}`;
-    }
-    if (url.hostname.includes("youtube.com") && url.pathname === "/watch") {
-      const id = url.searchParams.get("v");
+    if (url.hostname.includes("youtube.com") || url.hostname === "youtu.be" || url.hostname.includes("ytimg.com")) {
+      const id = extractVlogYouTubeId(url.toString());
       if (id) return `https://www.youtube.com/watch?v=${id}`;
     }
 
     url.hash = "";
     url.search = "";
-
-    if (url.hostname.includes("youtube.com") && (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/live/") || url.pathname.startsWith("/embed/"))) {
-      const id = url.pathname.split("/")[2];
-      if (id) return `https://www.youtube.com/watch?v=${id}`;
-    }
 
     if (url.hostname === "instagr.am" || url.hostname.endsWith(".instagr.am")) {
       url.hostname = "www.instagram.com";
@@ -118,6 +109,9 @@ export const prepareVlogUrl = (raw: string): string | null => {
   const normalized = normalizeVlogUrl(candidate);
   try {
     new URL(normalized);
+    if (detectVlogPlatform(normalized) === "youtube" && !extractVlogYouTubeId(normalized)) {
+      return null;
+    }
     return normalized;
   } catch {
     return null;

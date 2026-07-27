@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { isIOSNativeApp } from "@/lib/native-platform";
 import { openVideoExternally, resolveVideoPlayback } from "@/lib/video-embed";
 import { YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
+import { buildYouTubeThumbnailUrl } from "@/lib/vlog-url";
 
 type VlogPlayerModalProps = {
   url: string;
@@ -33,14 +34,23 @@ export const VlogPlayerModal = ({ url, title, onClose }: VlogPlayerModalProps) =
       >
         <div className="relative w-full aspect-video bg-black rounded-xl overflow-hidden">
           {playback.embedUrl ? (
-            <iframe
-              src={playback.embedUrl}
-              title={title || "Vlog"}
-              allow={YOUTUBE_IFRAME_ALLOW}
-              referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
-              allowFullScreen
-              className="w-full h-full"
-            />
+            <>
+              {playback.ytId && (
+                <img
+                  src={buildYouTubeThumbnailUrl(playback.ytId)}
+                  alt=""
+                  className="absolute inset-0 h-full w-full object-cover opacity-40"
+                />
+              )}
+              <iframe
+                src={playback.embedUrl}
+                title={title || "Vlog"}
+                allow={YOUTUBE_IFRAME_ALLOW}
+                referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
+                allowFullScreen
+                className="relative h-full w-full"
+              />
+            </>
           ) : playback.isDirect ? (
             <video src={url} controls autoPlay playsInline className="w-full h-full" />
           ) : (
