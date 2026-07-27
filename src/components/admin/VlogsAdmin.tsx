@@ -137,7 +137,10 @@ export const VlogsAdmin = () => {
   const importExternalVlog = async (rawLink: string, successMessage = "Vlog importado!") => {
     if (busy) return;
     const prepared = prepareVlogUrl(rawLink);
-    if (!prepared) return;
+    if (!prepared) {
+      toast.error("URL inválida. Cole o link completo do vídeo.");
+      return;
+    }
     const cleanUrl = normalizeVlogUrl(prepared);
     setUrl(cleanUrl);
     setBusy(true);
@@ -178,14 +181,14 @@ export const VlogsAdmin = () => {
     options: { thumbnail?: string | null; successMessage?: string; useThumbInput?: boolean; source?: string } = {},
   ) => {
     if (!tenant || !rawLink.trim()) return false;
-    const prepared = prepareVlogUrl(rawLink);
+    const thumbVideoId = options.useThumbInput ? extractVlogYouTubeId(thumbInput) : null;
+    const prepared = prepareVlogUrl(rawLink) || (thumbVideoId ? `https://www.youtube.com/watch?v=${thumbVideoId}` : null);
     if (!prepared) {
       toast.error("URL inválida. Cole o link completo do Reel, post ou vídeo.");
       return false;
     }
     let cleanUrl = normalizeVlogUrl(prepared);
     let platform = detectVlogPlatform(cleanUrl);
-    const thumbVideoId = options.useThumbInput ? extractVlogYouTubeId(thumbInput) : null;
     if (platform === "youtube" && !extractVlogYouTubeId(cleanUrl) && thumbVideoId) {
       cleanUrl = `https://www.youtube.com/watch?v=${thumbVideoId}`;
       platform = "youtube";
@@ -243,7 +246,8 @@ export const VlogsAdmin = () => {
 
   const handleAdd = async () => {
     if (!tenant || !url.trim()) return;
-    const prepared = prepareVlogUrl(url);
+    const thumbVideoId = extractVlogYouTubeId(thumbInput);
+    const prepared = prepareVlogUrl(url) || (thumbVideoId ? `https://www.youtube.com/watch?v=${thumbVideoId}` : null);
     if (!prepared) {
       toast.error("URL inválida. Cole o link completo do Reel, post ou vídeo.");
       return;
