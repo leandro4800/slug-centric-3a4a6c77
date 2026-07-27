@@ -41,12 +41,18 @@ export const normalizeVlogUrl = (raw: string): string => {
 
   try {
     const url = new URL(input);
-    url.hash = "";
-    url.search = "";
 
     if (url.hostname === "youtu.be" && url.pathname.length > 1) {
       return `https://www.youtube.com/watch?v=${url.pathname.slice(1)}`;
     }
+    if (url.hostname.includes("youtube.com") && url.pathname === "/watch") {
+      const id = url.searchParams.get("v");
+      if (id) return `https://www.youtube.com/watch?v=${id}`;
+    }
+
+    url.hash = "";
+    url.search = "";
+
     if (url.hostname.includes("youtube.com") && url.pathname.startsWith("/shorts/")) {
       const id = url.pathname.split("/")[2];
       if (id) return `https://www.youtube.com/watch?v=${id}`;
