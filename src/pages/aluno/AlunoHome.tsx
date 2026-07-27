@@ -6,6 +6,7 @@ import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
+import { buildYouTubeThumbnailUrl, isVlogVideoPageUrl } from "@/lib/vlog-url";
 import { VlogPlayerModal } from "@/components/aluno/VlogPlayerModal";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -29,11 +30,6 @@ const sections = [
   { title: "Minha Dieta", to: "dieta", img: cardDieta },
   { title: "Minha Evolução", to: "evolucao", img: cardEvolucao },
 ];
-
-const isVideoPageUrl = (value: string | null | undefined) => {
-  const url = value?.toLowerCase() ?? "";
-  return url.includes("youtube.com/watch") || url.includes("youtu.be/") || url.includes("instagram.com/") || url.includes("tiktok.com/");
-};
 
 const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) => {
   const ref = useRef<HTMLAnchorElement>(null);
@@ -129,13 +125,13 @@ const AlunoHome = () => {
   const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
 
   const heroImg = featured
-    ? (!isVideoPageUrl(featured.thumbnail_url) && featured.thumbnail_url) || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : tenant?.hero_url || heroDefault)
+    ? (!isVlogVideoPageUrl(featured.thumbnail_url) && featured.thumbnail_url) || (ytId ? buildYouTubeThumbnailUrl(ytId) : tenant?.hero_url || heroDefault)
     : tenant?.hero_url || heroDefault;
 
   const buildThumb = (v: VlogPost): string => {
-    if (v.thumbnail_url && !isVideoPageUrl(v.thumbnail_url)) return v.thumbnail_url;
-    const yt = extractYouTubeId(v.url);
-    if (yt) return `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`;
+    if (v.thumbnail_url && !isVlogVideoPageUrl(v.thumbnail_url)) return v.thumbnail_url;
+    const yt = extractYouTubeId(v.url) || extractYouTubeId(v.thumbnail_url);
+    if (yt) return buildYouTubeThumbnailUrl(yt);
     // fallback genérico via screenshot
     return `https://api.microlink.io/?url=${encodeURIComponent(v.url)}&screenshot=true&meta=false&embed=screenshot.url`;
   };
@@ -172,6 +168,20 @@ const AlunoHome = () => {
         disablekb: !expanded,
       })
     : null;
+  const tenantHeroEmbedSrc = tenantHeroVideoId
+    ? buildYouTubeEmbedUrl(tenantHeroVideoId, {
+        autoplay: true,
+        mute: true,
+        loop: true,
+        controls: false,
+        showinfo: false,
+        rel: false,
+        modestbranding: true,
+        playsinline: true,
+      })
+    : null;
+  const heroEmbedSrc = ytAutoSrc || tenantHeroEmbedSrc;
+  const heroVideoSrc = featuredDirectUrl || tenantHeroDirectUrl;
 
   return (
     <>
@@ -179,37 +189,25 @@ const AlunoHome = () => {
       <section className="relative h-[70vh] min-h-[400px] w-full overflow-hidden flex flex-col justify-end pb-[10%] px-5">
         {/* Background Hero (contido na seção) */}
         <div className="hero-mask">
-          {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
-            ytAutoSrc || tenantHeroVideoId ? (
+          {(heroEmbedSrc || heroVideoSrc) ? (
+            heroEmbedSrc ? (
               <iframe
                 key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
-                src={
-                  ytAutoSrc ||
-                  buildYouTubeEmbedUrl(tenantHeroVideoId!, {
-                    autoplay: true,
-                    mute: true,
-                    loop: true,
-                    controls: false,
-                    showinfo: false,
-                    rel: false,
-                    modestbranding: true,
-                    playsinline: true,
-                  })
-                }
+                src={heroEmbedSrc}
                 referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
                 allow={YOUTUBE_IFRAME_ALLOW}
                 className="w-full h-full pointer-events-none scale-135"
               />
-            ) : (
+            ) : heroVideoSrc ? (
               <video
-                src={(featuredDirectUrl || tenantHeroDirectUrl)!}
+                src={heroVideoSrc}
                 autoPlay
                 muted
                 loop
                 playsInline
                 className="w-full h-full object-cover"
               />
-            )
+            ) : null
           ) : (
             <img src={heroImg} alt="" className="w-full h-full object-cover" />
           )}
