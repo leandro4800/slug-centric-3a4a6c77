@@ -41,6 +41,11 @@ const PlatformIcon = ({ p }: { p: string }) => {
 
 const normalizeInput = (raw: string) => prepareVlogUrl(raw) ?? raw.trim();
 
+const isVideoPageUrl = (value: string | null | undefined) => {
+  const url = value?.toLowerCase() ?? "";
+  return url.includes("youtube.com/watch") || url.includes("youtu.be/") || url.includes("instagram.com/") || url.includes("tiktok.com/");
+};
+
 export const VlogsAdmin = () => {
   const { tenant, refresh } = useBranding();
   const [posts, setPosts] = useState<VlogPost[]>([]);
@@ -113,7 +118,7 @@ export const VlogsAdmin = () => {
   };
 
   const resolveThumb = (p: VlogPost): string | null => {
-    if (p.thumbnail_url) return p.thumbnail_url;
+    if (p.thumbnail_url && !isVideoPageUrl(p.thumbnail_url)) return p.thumbnail_url;
     if (p.platform === "youtube") {
       const m = p.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
       if (m) return `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
@@ -156,7 +161,8 @@ export const VlogsAdmin = () => {
 
     // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
     const oe = await fetchOEmbed(platform, cleanUrl);
-    let thumb: string | null = (options.useThumbInput ? thumbInput.trim() : "") || options.thumbnail || oe?.thumbnail_url || null;
+    const manualThumb = options.useThumbInput && !isVideoPageUrl(thumbInput) ? thumbInput.trim() : "";
+    let thumb: string | null = manualThumb || options.thumbnail || oe?.thumbnail_url || null;
     const author: string | null = oe?.author_name || null;
 
     // Fallback YouTube: thumb direta pelo ID

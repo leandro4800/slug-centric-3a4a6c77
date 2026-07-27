@@ -30,6 +30,11 @@ const sections = [
   { title: "Minha Evolução", to: "evolucao", img: cardEvolucao },
 ];
 
+const isVideoPageUrl = (value: string | null | undefined) => {
+  const url = value?.toLowerCase() ?? "";
+  return url.includes("youtube.com/watch") || url.includes("youtu.be/") || url.includes("instagram.com/") || url.includes("tiktok.com/");
+};
+
 const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) => {
   const ref = useRef<HTMLAnchorElement>(null);
   const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
@@ -123,10 +128,12 @@ const AlunoHome = () => {
   const tenantHeroVideoId = !featured ? extractYouTubeId(tenant?.hero_url) : null;
   const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
 
-  const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
+  const heroImg = featured
+    ? (!isVideoPageUrl(featured.thumbnail_url) && featured.thumbnail_url) || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : tenant?.hero_url || heroDefault)
+    : tenant?.hero_url || heroDefault;
 
   const buildThumb = (v: VlogPost): string => {
-    if (v.thumbnail_url) return v.thumbnail_url;
+    if (v.thumbnail_url && !isVideoPageUrl(v.thumbnail_url)) return v.thumbnail_url;
     const yt = extractYouTubeId(v.url);
     if (yt) return `https://i.ytimg.com/vi/${yt}/hqdefault.jpg`;
     // fallback genérico via screenshot
@@ -359,7 +366,7 @@ const AlunoHome = () => {
           </Link>
         )}
         <div className="grid grid-cols-2 gap-3">
-          {vlogs.slice(1).map((v) => (
+          {vlogs.map((v) => (
             <div
               key={v.id}
               onClick={() => setPlaying(v)}
