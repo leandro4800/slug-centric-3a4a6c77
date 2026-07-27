@@ -163,8 +163,8 @@ const AlunoHome = () => {
     }
   };
 
-  // Auto-play silencioso de fundo (YouTube)
-  const ytAutoSrc = !featured && ytId
+  // Auto-play silencioso de fundo (YouTube) — usa featured se houver, senão hero do tenant
+  const ytAutoSrc = ytId
     ? buildYouTubeEmbedUrl(ytId, {
         autoplay: true,
         mute: muted,

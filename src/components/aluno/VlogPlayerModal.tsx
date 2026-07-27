@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isIOSNativeApp } from "@/lib/native-platform";
@@ -14,6 +15,18 @@ type VlogPlayerModalProps = {
 export const VlogPlayerModal = ({ url, title, onClose }: VlogPlayerModalProps) => {
   const playback = resolveVideoPlayback(url);
   const showExternalFallback = Boolean(playback.ytId) && isIOSNativeApp();
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const handleIframeLoad = () => {
+    const win = iframeRef.current?.contentWindow;
+    if (!win) return;
+    // Força play com áudio via YouTube iframe postMessage API
+    try {
+      win.postMessage('{"event":"command","func":"unMute","args":""}', "*");
+      win.postMessage('{"event":"command","func":"setVolume","args":[100]}', "*");
+      win.postMessage('{"event":"command","func":"playVideo","args":""}', "*");
+    } catch {}
+  };
 
   return (
     <div
@@ -43,11 +56,13 @@ export const VlogPlayerModal = ({ url, title, onClose }: VlogPlayerModalProps) =
                 />
               )}
               <iframe
+                ref={iframeRef}
                 src={playback.embedUrl}
                 title={title || "Vlog"}
                 allow={YOUTUBE_IFRAME_ALLOW}
                 referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
                 allowFullScreen
+                onLoad={handleIframeLoad}
                 className="relative h-full w-full"
               />
             </>
