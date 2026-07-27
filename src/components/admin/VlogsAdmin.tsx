@@ -732,7 +732,7 @@ export const VlogsAdmin = () => {
           <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
         ) : posts.length === 0 ? (
           <p className="text-muted-foreground text-sm py-8 text-center">
-            Nenhum vlog ainda. Adicione um link manual ou configure a automação.
+            Nenhum vlog ainda. Importe um link de vídeo ou envie um upload.
           </p>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -741,40 +741,45 @@ export const VlogsAdmin = () => {
                 <div className="block aspect-video bg-muted relative overflow-hidden">
                   {(() => {
                     const ytId = extractVlogYouTubeId(p.url);
-                    if (!ytId) return null;
+                    if (ytId) {
+                      return (
+                        <iframe
+                          src={buildYouTubeEmbedUrl(ytId, {
+                            autoplay: false,
+                            mute: true,
+                            controls: false,
+                            rel: false,
+                            modestbranding: true,
+                            playsinline: true,
+                          })}
+                          title={p.title || "Vlog do YouTube"}
+                          allow={YOUTUBE_IFRAME_ALLOW}
+                          referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
+                          className="w-full h-full pointer-events-none"
+                        />
+                      );
+                    }
+                    if (isDirectVideo(p.url)) {
+                      return (
+                        <video
+                          src={`${p.url}#t=0.1`}
+                          autoPlay
+                          muted
+                          loop
+                          playsInline
+                          preload="auto"
+                          className="w-full h-full object-cover"
+                        />
+                      );
+                    }
+                    const thumb = resolveThumb(p);
+                    if (thumb) return <img src={thumb} alt="" className="w-full h-full object-cover" />;
                     return (
-                    <iframe
-                      src={buildYouTubeEmbedUrl(ytId, {
-                        autoplay: false,
-                        mute: true,
-                        controls: false,
-                        rel: false,
-                        modestbranding: true,
-                        playsinline: true,
-                      })}
-                      title={p.title || "Vlog do YouTube"}
-                      allow={YOUTUBE_IFRAME_ALLOW}
-                      referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
-                      className="w-full h-full pointer-events-none"
-                    />
+                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
+                        sem preview
+                      </div>
                     );
-                  })() || (isDirectVideo(p.url) ? (
-                    <video
-                      src={`${p.url}#t=0.1`}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="auto"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : resolveThumb(p) ? (
-                    <img src={resolveThumb(p)!} alt="" className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
-                      sem thumbnail
-                    </div>
-                  ))}
+                  })()}
                   <div className="absolute top-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider">
                     <PlatformIcon p={p.platform} /> {p.platform}
                   </div>
