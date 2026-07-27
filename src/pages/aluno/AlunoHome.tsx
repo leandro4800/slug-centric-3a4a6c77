@@ -208,7 +208,6 @@ const AlunoHome = () => {
                 className="w-full h-full object-cover"
               />
             ) : null
-            )
           ) : (
             <img src={heroImg} alt="" className="w-full h-full object-cover" />
           )}
