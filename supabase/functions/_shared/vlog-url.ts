@@ -41,7 +41,7 @@ export const normalizeVlogUrl = (raw: string): string => {
     url.hash = "";
     url.search = "";
 
-    if (url.hostname.includes("youtube.com") && url.pathname.startsWith("/shorts/")) {
+    if (url.hostname.includes("youtube.com") && (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/live/") || url.pathname.startsWith("/embed/"))) {
       const id = url.pathname.split("/")[2];
       if (id) return `https://www.youtube.com/watch?v=${id}`;
     }

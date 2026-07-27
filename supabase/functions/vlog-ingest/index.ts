@@ -18,7 +18,7 @@ const json = (status: number, body: unknown) =>
 const detectPlatform = detectVlogPlatform;
 
 const extractYouTubeId = (url: string): string | null => {
-  const m = url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+  const m = url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
   return m ? m[1] : null;
 };
 

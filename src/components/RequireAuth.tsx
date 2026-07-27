@@ -130,7 +130,13 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
   }
 
   // Se requer um papel específico e não o possui
-  if (requireRole && !hasRole(requireRole)) {
+  const hasRequiredRole = requireRole
+    ? checkTenant && tenant?.id && requireRole !== "admin"
+      ? hasRole("admin") || hasRole(requireRole, tenant.id) || (requireRole === "coach" && tenant.owner_user_id === user.id)
+      : hasRole(requireRole)
+    : true;
+
+  if (requireRole && !hasRequiredRole) {
     console.warn(`[RequireAuth] User ${user.id} does not have required role: ${requireRole}. Bloqueando acesso.`);
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center">

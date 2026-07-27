@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export const extractYouTubeId = (url: string | null | undefined): string | null => {
   if (!url) return null;
-  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+  const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?|shorts|live)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
   const match = url.match(regex);
   return match ? match[1] : null;
 };

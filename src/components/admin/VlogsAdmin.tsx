@@ -46,6 +46,12 @@ const isVideoPageUrl = (value: string | null | undefined) => {
   return url.includes("youtube.com/watch") || url.includes("youtu.be/") || url.includes("instagram.com/") || url.includes("tiktok.com/");
 };
 
+const isImageUrl = (value: string | null | undefined) => {
+  if (!value?.trim()) return false;
+  if (isVideoPageUrl(value)) return false;
+  return /^https?:\/\//i.test(value.trim());
+};
+
 export const VlogsAdmin = () => {
   const { tenant, refresh } = useBranding();
   const [posts, setPosts] = useState<VlogPost[]>([]);
@@ -97,7 +103,7 @@ export const VlogsAdmin = () => {
     if (missingYt.length) {
       await Promise.all(
         missingYt.map((r) => {
-          const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+          const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
           if (!m) return Promise.resolve();
           const thumb = `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
           return supabase.from("vlog_posts").update({ thumbnail_url: thumb }).eq("id", r.id).then(() => {});
@@ -105,7 +111,7 @@ export const VlogsAdmin = () => {
       );
       setPosts(rows.map((r) => {
         if (r.thumbnail_url || r.platform !== "youtube") return r;
-        const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+        const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
         return m ? { ...r, thumbnail_url: `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg` } : r;
       }));
     }
@@ -120,7 +126,7 @@ export const VlogsAdmin = () => {
   const resolveThumb = (p: VlogPost): string | null => {
     if (p.thumbnail_url && !isVideoPageUrl(p.thumbnail_url)) return p.thumbnail_url;
     if (p.platform === "youtube") {
-      const m = p.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+      const m = p.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
       if (m) return `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
     }
     return null;
@@ -161,13 +167,13 @@ export const VlogsAdmin = () => {
 
     // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
     const oe = await fetchOEmbed(platform, cleanUrl);
-    const manualThumb = options.useThumbInput && !isVideoPageUrl(thumbInput) ? thumbInput.trim() : "";
+    const manualThumb = options.useThumbInput && isImageUrl(thumbInput) ? thumbInput.trim() : "";
     let thumb: string | null = manualThumb || options.thumbnail || oe?.thumbnail_url || null;
     const author: string | null = oe?.author_name || null;
 
     // Fallback YouTube: thumb direta pelo ID
     if (!thumb && platform === "youtube") {
-      const ytMatch = cleanUrl.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+      const ytMatch = cleanUrl.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
       if (ytMatch) thumb = `https://i.ytimg.com/vi/${ytMatch[1]}/hqdefault.jpg`;
     }
 
@@ -176,7 +182,7 @@ export const VlogsAdmin = () => {
       thumb = `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url`;
     }
 
-    const { error } = await supabase.from("vlog_posts").upsert(
+    const { data: saved, error } = await supabase.from("vlog_posts").upsert(
       {
         tenant_id: tenant.id,
         url: cleanUrl,
@@ -189,9 +195,16 @@ export const VlogsAdmin = () => {
         visivel: true,
       },
       { onConflict: "tenant_id,url" }
-    );
+    ).select("id").single();
     if (error) {
-      toast.error(error.message);
+      const message = /row-level security|permission|violates/i.test(error.message)
+        ? `Sem permissão para salvar vlogs em ${tenant.nome}. Entre com o login do coach deste tenant.`
+        : error.message;
+      toast.error(message);
+      return false;
+    }
+    if (!saved?.id) {
+      toast.error("Não foi possível confirmar o salvamento do vlog. Tente novamente.");
       return false;
     }
     toast.success(options.successMessage ?? "Vlog adicionado!");
