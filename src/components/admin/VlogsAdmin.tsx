@@ -17,7 +17,6 @@ import {
   prepareVlogUrl,
   type VlogPlatform,
 } from "@/lib/vlog-url";
-import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 
 interface VlogPost {
   id: string;
@@ -49,31 +48,24 @@ const isImageUrl = (value: string | null | undefined) => {
 };
 
 export const VlogsAdmin = () => {
-  const { tenant, refresh } = useBranding();
+  const { tenant } = useBranding();
   const [posts, setPosts] = useState<VlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [url, setUrl] = useState("");
   const [thumbInput, setThumbInput] = useState("");
-  const [showSecret, setShowSecret] = useState(false);
-  const [secret, setSecret] = useState<string | null>(null);
 
   // Instagram Graph API config
   const [igToken, setIgToken] = useState("");
   const [igAccountId, setIgAccountId] = useState("");
   const [showIgToken, setShowIgToken] = useState(false);
   const [igConfigured, setIgConfigured] = useState(false);
-
-  const [publishing, setPublishing] = useState(false);
   
   // Upload direto
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [vlogTitle, setVlogTitle] = useState("");
-
-  const projectRef = (import.meta.env.VITE_SUPABASE_PROJECT_ID as string) || "";
-  const webhookUrl = `https://${projectRef}.functions.supabase.co/vlog-ingest`;
 
   const load = async () => {
     if (!tenant) return;
@@ -85,7 +77,7 @@ export const VlogsAdmin = () => {
         .eq("tenant_id", tenant.id)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false }),
-      supabase.from("tenants_private" as any).select("vlog_webhook_secret, instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
+      supabase.from("tenants_private" as any).select("instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     const rows = (list as VlogPost[]) || [];
     const normalizedRows = rows.map((r) => {
@@ -121,8 +113,7 @@ export const VlogsAdmin = () => {
         })
       );
     }
-    const tp = (t as unknown) as { vlog_webhook_secret?: string; instagram_access_token?: string; instagram_business_account_id?: string } | null;
-    setSecret(tp?.vlog_webhook_secret ?? null);
+    const tp = (t as unknown) as { instagram_access_token?: string; instagram_business_account_id?: string } | null;
     setIgToken(tp?.instagram_access_token ?? "");
     setIgAccountId(tp?.instagram_business_account_id ?? "");
     setIgConfigured(!!(tp?.instagram_access_token && tp?.instagram_business_account_id));
@@ -257,7 +248,6 @@ export const VlogsAdmin = () => {
       toast.error("URL inválida. Cole o link completo do Reel, post ou vídeo.");
       return;
     }
-    const cleanUrl = normalizeVlogUrl(prepared);
     setBusy(true);
     const added = await addManualVlog(url, {
       useThumbInput: true,
@@ -297,24 +287,6 @@ export const VlogsAdmin = () => {
     void load();
   };
 
-  const rotateSecret = async () => {
-    if (!tenant) return;
-    if (!confirm("Gerar novo segredo? Suas automações antigas vão parar até atualizarem o segredo.")) return;
-    const newSecret = Array.from(crypto.getRandomValues(new Uint8Array(24)))
-      .map((b) => b.toString(16).padStart(2, "0"))
-      .join("");
-    const { error } = await supabase.from("tenants_private" as any).upsert({ tenant_id: tenant.id, vlog_webhook_secret: newSecret });
-    if (error) return toast.error(error.message);
-    toast.success("Novo segredo gerado");
-    await refresh();
-    void load();
-  };
-
-  const copy = (txt: string, label: string) => {
-    navigator.clipboard.writeText(txt);
-    toast.success(`${label} copiado`);
-  };
-
   const saveIgConfig = async () => {
     if (!tenant) return;
     const { error } = await supabase
@@ -327,10 +299,6 @@ export const VlogsAdmin = () => {
     if (error) return toast.error(error.message);
     toast.success("Credenciais do Instagram salvas");
     void load();
-  };
-
-  const handlePublishIG = async () => {
-    toast.error("A publicação direta no Instagram precisa de um vídeo enviado por upload.");
   };
 
   const handleFileUpload = async () => {
@@ -379,14 +347,6 @@ export const VlogsAdmin = () => {
       setUploading(false);
     }
   };
-
-  const exemploCurl = `curl -X POST '${webhookUrl}' \\
-  -H 'Content-Type: application/json' \\
-  -d '{
-    "secret": "${secret || "SEU_SEGREDO"}",
-    "url": "https://www.instagram.com/reel/XXXXXX/",
-    "thumbnail_url": "https://...jpg"
-  }'`;
 
   return (
     <div className="space-y-6">
