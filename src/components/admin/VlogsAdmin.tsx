@@ -4,17 +4,14 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Download, Send, Save, Share2, AlertTriangle, Video, Star, Upload } from "lucide-react";
+import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 import { isDirectVideo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
   buildYouTubeThumbnailUrl,
   detectVlogPlatform,
   extractVlogYouTubeId,
-  isDownloadableVlogUrl,
   isVlogVideoPageUrl,
   normalizeVlogUrl,
   prepareVlogUrl,
@@ -67,11 +64,6 @@ export const VlogsAdmin = () => {
   const [showIgToken, setShowIgToken] = useState(false);
   const [igConfigured, setIgConfigured] = useState(false);
 
-  // Download + auto-publish
-  const [downloadUrl, setDownloadUrl] = useState("");
-  const [downloadedVideoUrl, setDownloadedVideoUrl] = useState<string | null>(null);
-  const [publishCaption, setPublishCaption] = useState("");
-  const [downloading, setDownloading] = useState(false);
   const [publishing, setPublishing] = useState(false);
   
   // Upload direto
@@ -239,7 +231,7 @@ export const VlogsAdmin = () => {
       toast.error("Não foi possível confirmar o salvamento do vlog. Tente novamente.");
       return false;
     }
-    toast.success(options.successMessage ?? "Vlog adicionado!");
+      toast.success(options.successMessage ?? "Vlog importado direto para os Vlogs!");
     return true;
   };
 
@@ -255,7 +247,7 @@ export const VlogsAdmin = () => {
     const added = await addManualVlog(url, {
       useThumbInput: true,
       source: "import",
-      successMessage: "Vlog importado!",
+      successMessage: "Vlog importado direto para os Vlogs!",
     });
     setBusy(false);
     if (!added) return;
@@ -322,124 +314,8 @@ export const VlogsAdmin = () => {
     void load();
   };
 
-  const runDownload = async (sourceUrl: string) => {
-    if (!tenant) return;
-    const prepared = prepareVlogUrl(sourceUrl);
-    if (!prepared) {
-      toast.error("URL inválida. Cole o link completo do Instagram, TikTok ou YouTube.");
-      return;
-    }
-    const normalized = normalizeVlogUrl(prepared);
-    if (!isDownloadableVlogUrl(normalized)) {
-      toast.error("Plataforma não suportada para download automático.");
-      return;
-    }
-
-    setDownloadUrl(normalized);
-    setDownloading(true);
-    setDownloadedVideoUrl(null);
-    try {
-      const data = await invokeEdgeFunction<{
-        video_url?: string;
-        platform?: string;
-        source_url?: string;
-      }>("vlog-download", {
-        url: normalized,
-        tenant_id: tenant.id,
-      });
-      if (!data?.video_url) throw new Error("Resposta sem URL do vídeo.");
-      setDownloadedVideoUrl(data.video_url);
-      toast.success("Vídeo baixado! Pronto pra publicar ou baixar manualmente.");
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Falha ao baixar";
-      const shouldAddManualFallback = /serviço público de download|adicionar link manual|download está instável/i.test(message);
-      if (shouldAddManualFallback) {
-        const added = await addManualVlog(downloadUrl, {
-          source: "import",
-          successMessage: "Download instável no momento; o link foi adicionado aos Vlogs.",
-        });
-        if (added) {
-          setDownloadUrl("");
-          void load();
-        }
-        return;
-      }
-      toast.error(message.includes("non-2xx") ? "Função vlog-download indisponível. Faça deploy no Supabase." : message);
-    } finally {
-      setDownloading(false);
-    }
-  };
-
-  const handleDownload = async () => {
-    if (!downloadUrl.trim()) return;
-    await runDownload(downloadUrl);
-  };
-
   const handlePublishIG = async () => {
-    if (!tenant || !downloadedVideoUrl) return;
-    if (!igConfigured) return toast.error("Configure o Instagram Access Token primeiro");
-    setPublishing(true);
-    try {
-      const data = await invokeEdgeFunction<{ ok?: boolean }>("instagram-publish", {
-        tenant_id: tenant.id,
-        video_url: downloadedVideoUrl,
-        caption: publishCaption,
-        media_type: "REELS",
-      });
-      if (!data?.ok) throw new Error("Falha ao publicar");
-      toast.success("Reel publicado no Instagram!");
-      setDownloadUrl("");
-      setDownloadedVideoUrl(null);
-      setPublishCaption("");
-      void load();
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Falha ao publicar");
-    } finally {
-      setPublishing(false);
-    }
-  };
-
-  const handleShare = async () => {
-    if (!downloadedVideoUrl) return;
-    try {
-      // Tenta share nativo com arquivo (mobile)
-      const res = await fetch(downloadedVideoUrl);
-      const blob = await res.blob();
-      const file = new File([blob], "reel.mp4", { type: blob.type || "video/mp4" });
-      const nav = navigator as Navigator & { canShare?: (d: ShareData) => boolean };
-      if (nav.canShare?.({ files: [file] })) {
-        await navigator.share({ files: [file], title: "Vlog", text: publishCaption });
-        return;
-      }
-      // Fallback: compartilha link
-      if (navigator.share) {
-        await navigator.share({ title: "Vlog", text: publishCaption, url: downloadedVideoUrl });
-        return;
-      }
-      copy(downloadedVideoUrl, "Link do vídeo");
-    } catch (e: any) {
-      if (e?.name !== "AbortError") toast.error("Compartilhamento não suportado neste navegador");
-    }
-  };
-
-  const handleSaveAsVlog = async () => {
-    if (!tenant || !downloadedVideoUrl) return;
-    const { error } = await supabase.from("vlog_posts").upsert(
-      {
-        tenant_id: tenant.id,
-        url: downloadedVideoUrl,
-        platform: detectVlogPlatform(normalizeVlogUrl(downloadUrl)),
-        title: null,
-        thumbnail_url: null,
-        source: "import",
-        posted_at: new Date().toISOString(),
-        visivel: true,
-      },
-      { onConflict: "tenant_id,url" }
-    );
-    if (error) return toast.error(error.message);
-    toast.success("Vídeo adicionado aos seus Vlogs!");
-    void load();
+    toast.error("A publicação direta no Instagram precisa de um vídeo enviado por upload.");
   };
 
   const handleFileUpload = async () => {
@@ -501,7 +377,7 @@ export const VlogsAdmin = () => {
     <div className="space-y-6">
       {/* Automação externa e tutoriais de Zapier/Make removidos — a estruturar */}
 
-      {/* Manual add — primeira opção */}
+        {/* Link import — primeira opção */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-4 text-primary">IMPORTAR LINK DE VÍDEO</h3>
         <div className="grid gap-3 items-end">
@@ -521,14 +397,14 @@ export const VlogsAdmin = () => {
                 const normalized = normalizeInput(url);
                 if (normalized !== url.trim()) setUrl(normalized);
               }}
-              placeholder="https://www.instagram.com/reel/..."
+              placeholder="https://www.youtube.com/watch?v=..."
             />
           </div>
           <div>
-            <Label>Thumbnail (opcional · cole URL de uma imagem)</Label>
+            <Label>Thumbnail (opcional · somente URL de imagem)</Label>
             <Input value={thumbInput} onChange={(e) => setThumbInput(e.target.value)} placeholder="https://...jpg — útil para Instagram" />
             <p className="text-[11px] text-muted-foreground mt-1">
-              Instagram não fornece thumb pública. Se não colar uma imagem, geramos um screenshot automático.
+              YouTube gera capa automática. Para Instagram/TikTok, cole uma imagem ou usamos um screenshot automático.
             </p>
           </div>
           <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow">
@@ -536,10 +412,6 @@ export const VlogsAdmin = () => {
           </Button>
         </div>
       </div>
-
-
-
-
       {/* IG Graph API config */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-2 text-primary flex items-center gap-2">
@@ -579,81 +451,6 @@ export const VlogsAdmin = () => {
           <Save className="h-4 w-4 mr-2" /> Salvar credenciais
         </Button>
         {igConfigured && <p className="text-xs text-green-500 mt-2">✓ Instagram conectado</p>}
-      </div>
-
-      {/* Download from URL + auto-publish */}
-      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
-        <h3 className="font-display text-2xl mb-2 text-primary flex items-center gap-2">
-          <Download className="h-6 w-6" /> IMPORTAR VÍDEO DE URL
-        </h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Cole a URL de um Reel, post ou vídeo do Instagram, TikTok ou YouTube Shorts. O link é normalizado e enviado
-          para a função <code>vlog-download</code> no Supabase (não há fila — o download roda na hora).
-          Se o Instagram bloquear, use <b>Enviar vídeo (Upload)</b>.
-        </p>
-
-        <Label>URL do vídeo (Instagram, TikTok, YouTube Shorts)</Label>
-        <div className="flex gap-2 mt-1.5">
-          <Input
-            value={downloadUrl}
-            onChange={(e) => setDownloadUrl(e.target.value)}
-            onBlur={() => {
-              const normalized = normalizeInput(downloadUrl);
-              if (normalized !== downloadUrl.trim()) setDownloadUrl(normalized);
-            }}
-            placeholder="https://www.instagram.com/reel/..."
-          />
-          <Button onClick={handleDownload} disabled={downloading || !downloadUrl.trim()} className="bg-gradient-primary shadow-glow">
-            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="h-4 w-4 mr-2" /> Baixar</>}
-          </Button>
-        </div>
-
-        {downloadedVideoUrl && (
-          <div className="mt-4 space-y-3 border-t border-white/10 pt-4">
-            <video src={downloadedVideoUrl} controls className="w-full max-h-80 rounded-lg bg-black" />
-
-            <div className="grid sm:grid-cols-3 gap-2">
-              <Button asChild variant="outline">
-                <a href={downloadedVideoUrl} download target="_blank" rel="noreferrer">
-                  <Download className="h-4 w-4 mr-2" /> Baixar arquivo
-                </a>
-              </Button>
-              <Button variant="outline" onClick={handleShare}>
-                <Share2 className="h-4 w-4 mr-2" /> Compartilhar
-              </Button>
-              <Button variant="outline" onClick={handleSaveAsVlog}>
-                <Plus className="h-4 w-4 mr-2" /> Salvar nos Vlogs
-              </Button>
-            </div>
-
-            <Label>Legenda do post</Label>
-            <Textarea
-              value={publishCaption}
-              onChange={(e) => setPublishCaption(e.target.value)}
-              placeholder="Escreva a legenda do Reel..."
-              rows={3}
-            />
-            <Button
-              onClick={handlePublishIG}
-              disabled={publishing || !igConfigured}
-              className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:opacity-90 disabled:opacity-50"
-            >
-              {publishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4 mr-2" /> Publicar como Reel no Instagram</>}
-            </Button>
-            {!igConfigured && (
-              <div className="flex gap-2 items-start bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 text-xs">
-                <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-yellow-500 mb-1">Publicação automática desativada</p>
-                  <p className="text-muted-foreground">
-                    Para postar direto no  configure o <b>Access Token</b> e o <b>Business Account ID</b> na seção
-                    "PUBLICAÇÃO DIRETA NO INSTAGRAM" acima. Enquanto isso, use <b>"Baixar arquivo"</b> ou <b>"Compartilhar"</b> e poste manualmente pelo app do Instagram.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Upload direto */}
@@ -799,21 +596,6 @@ export const VlogsAdmin = () => {
                 <div className="p-3 space-y-2">
                   {p.author && <p className="text-xs text-muted-foreground">@{p.author}</p>}
                   <div className="flex gap-2 pt-1 flex-wrap">
-                    {isDownloadableVlogUrl(p.url) && !isDirectVideo(p.url) && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => void runDownload(p.url)}
-                        disabled={downloading}
-                        className="flex-1 min-w-[7rem]"
-                      >
-                        {downloading && downloadUrl === normalizeVlogUrl(p.url) ? (
-                          <Loader2 className="h-3 w-3 animate-spin" />
-                        ) : (
-                          <><Download className="h-3 w-3 mr-1" /> Baixar</>
-                        )}
-                      </Button>
-                    )}
                     <Button
                       size="sm"
                       variant={p.destaque ? "default" : "outline"}
