@@ -739,9 +739,12 @@ export const VlogsAdmin = () => {
             {posts.map((p) => (
               <div key={p.id} className="border border-border rounded-xl overflow-hidden bg-background/40">
                 <div className="block aspect-video bg-muted relative overflow-hidden">
-                  {extractVlogYouTubeId(p.url) ? (
+                  {(() => {
+                    const ytId = extractVlogYouTubeId(p.url);
+                    if (!ytId) return null;
+                    return (
                     <iframe
-                      src={buildYouTubeEmbedUrl(extractVlogYouTubeId(p.url)!, {
+                      src={buildYouTubeEmbedUrl(ytId, {
                         autoplay: false,
                         mute: true,
                         controls: false,
@@ -754,7 +757,8 @@ export const VlogsAdmin = () => {
                       referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
                       className="w-full h-full pointer-events-none"
                     />
-                  ) : isDirectVideo(p.url) ? (
+                    );
+                  })() || (isDirectVideo(p.url) ? (
                     <video
                       src={`${p.url}#t=0.1`}
                       autoPlay
@@ -770,7 +774,7 @@ export const VlogsAdmin = () => {
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                       sem thumbnail
                     </div>
-                  )}
+                  ))}
                   <div className="absolute top-2 left-2 bg-background/80 backdrop-blur rounded px-2 py-1 flex items-center gap-1.5 text-[10px] uppercase tracking-wider">
                     <PlatformIcon p={p.platform} /> {p.platform}
                   </div>
