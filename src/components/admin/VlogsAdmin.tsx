@@ -103,7 +103,7 @@ export const VlogsAdmin = () => {
     if (missingYt.length) {
       await Promise.all(
         missingYt.map((r) => {
-          const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+          const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
           if (!m) return Promise.resolve();
           const thumb = `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
           return supabase.from("vlog_posts").update({ thumbnail_url: thumb }).eq("id", r.id).then(() => {});
@@ -111,7 +111,7 @@ export const VlogsAdmin = () => {
       );
       setPosts(rows.map((r) => {
         if (r.thumbnail_url || r.platform !== "youtube") return r;
-        const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+        const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
         return m ? { ...r, thumbnail_url: `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg` } : r;
       }));
     }
@@ -126,7 +126,7 @@ export const VlogsAdmin = () => {
   const resolveThumb = (p: VlogPost): string | null => {
     if (p.thumbnail_url && !isVideoPageUrl(p.thumbnail_url)) return p.thumbnail_url;
     if (p.platform === "youtube") {
-      const m = p.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+      const m = p.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
       if (m) return `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
     }
     return null;
@@ -173,7 +173,7 @@ export const VlogsAdmin = () => {
 
     // Fallback YouTube: thumb direta pelo ID
     if (!thumb && platform === "youtube") {
-      const ytMatch = cleanUrl.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+      const ytMatch = cleanUrl.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
       if (ytMatch) thumb = `https://i.ytimg.com/vi/${ytMatch[1]}/hqdefault.jpg`;
     }
 
