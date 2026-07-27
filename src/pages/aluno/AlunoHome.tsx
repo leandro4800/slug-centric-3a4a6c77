@@ -123,7 +123,9 @@ const AlunoHome = () => {
   const tenantHeroVideoId = !featured ? extractYouTubeId(tenant?.hero_url) : null;
   const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
 
-  const heroImg = featured?.thumbnail_url || tenant?.hero_url || heroDefault;
+  const heroImg = featured
+    ? featured.thumbnail_url || (ytId ? `https://i.ytimg.com/vi/${ytId}/hqdefault.jpg` : tenant?.hero_url || heroDefault)
+    : tenant?.hero_url || heroDefault;
 
   const buildThumb = (v: VlogPost): string => {
     if (v.thumbnail_url) return v.thumbnail_url;
@@ -359,7 +361,7 @@ const AlunoHome = () => {
           </Link>
         )}
         <div className="grid grid-cols-2 gap-3">
-          {vlogs.slice(1).map((v) => (
+          {vlogs.map((v) => (
             <div
               key={v.id}
               onClick={() => setPlaying(v)}
