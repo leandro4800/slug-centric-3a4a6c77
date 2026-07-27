@@ -36,6 +36,7 @@ export const buildVlogEmbedUrl = (url: string, opts: VlogEmbedOptions = {}): str
       rel: false,
       modestbranding: true,
       playsinline: true,
+      enablejsapi: true,
     };
     return buildYouTubeEmbedUrl(yt, embedOpts);
   }
