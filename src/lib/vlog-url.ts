@@ -1,6 +1,7 @@
 export type VlogPlatform = "youtube" | "instagram" | "tiktok" | "other";
 
 const URL_IN_TEXT = /https?:\/\/[^\s<>"']+/i;
+const YOUTUBE_ID_IN_URL = /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{11})/i;
 
 /** Pulls the first http(s) URL from pasted share text (common on mobile). */
 export const extractFirstUrl = (text: string): string | null => {
@@ -29,6 +30,30 @@ export const isDownloadableVlogUrl = (url: string) => {
   return platform === "instagram" || platform === "tiktok";
 };
 
+export const extractVlogYouTubeId = (url: string | null | undefined): string | null => {
+  if (!url) return null;
+  const match = url.match(YOUTUBE_ID_IN_URL);
+  return match?.[1] ?? null;
+};
+
+export const buildYouTubeThumbnailUrl = (videoId: string) =>
+  `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+export const isVlogVideoPageUrl = (value: string | null | undefined) => {
+  const url = value?.toLowerCase() ?? "";
+  return (
+    url.includes("youtube.com/watch") ||
+    url.includes("youtu.be/") ||
+    url.includes("youtube.com/shorts/") ||
+    url.includes("youtube.com/live/") ||
+    url.includes("youtube.com/embed/") ||
+    url.includes("instagram.com/") ||
+    url.includes("instagr.am/") ||
+    url.includes("tiktok.com/") ||
+    url.includes("vm.tiktok.com/")
+  );
+};
+
 /** Normalizes URLs before saving to DB or sending to vlog-download. */
 export const normalizeVlogUrl = (raw: string): string => {
   let input = raw.trim();
@@ -43,7 +68,8 @@ export const normalizeVlogUrl = (raw: string): string => {
     const url = new URL(input);
 
     if (url.hostname === "youtu.be" && url.pathname.length > 1) {
-      return `https://www.youtube.com/watch?v=${url.pathname.slice(1)}`;
+      const id = url.pathname.slice(1).split("/")[0];
+      return `https://www.youtube.com/watch?v=${id}`;
     }
     if (url.hostname.includes("youtube.com") && url.pathname === "/watch") {
       const id = url.searchParams.get("v");

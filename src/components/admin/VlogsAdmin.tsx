@@ -11,12 +11,16 @@ import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 import { isDirectVideo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import {
+  buildYouTubeThumbnailUrl,
   detectVlogPlatform,
+  extractVlogYouTubeId,
   isDownloadableVlogUrl,
+  isVlogVideoPageUrl,
   normalizeVlogUrl,
   prepareVlogUrl,
   type VlogPlatform,
 } from "@/lib/vlog-url";
+import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 
 interface VlogPost {
   id: string;
@@ -41,14 +45,9 @@ const PlatformIcon = ({ p }: { p: string }) => {
 
 const normalizeInput = (raw: string) => prepareVlogUrl(raw) ?? raw.trim();
 
-const isVideoPageUrl = (value: string | null | undefined) => {
-  const url = value?.toLowerCase() ?? "";
-  return url.includes("youtube.com/watch") || url.includes("youtu.be/") || url.includes("instagram.com/") || url.includes("tiktok.com/");
-};
-
 const isImageUrl = (value: string | null | undefined) => {
   if (!value?.trim()) return false;
-  if (isVideoPageUrl(value)) return false;
+  if (isVlogVideoPageUrl(value)) return false;
   return /^https?:\/\//i.test(value.trim());
 };
 
@@ -99,20 +98,20 @@ export const VlogsAdmin = () => {
     const rows = (list as VlogPost[]) || [];
     setPosts(rows);
     // Backfill: preenche thumbnail_url ausente em vlogs do YouTube usando o próprio ID do vídeo
-    const missingYt = rows.filter((r) => !r.thumbnail_url && r.platform === "youtube");
+    const missingYt = rows.filter((r) => (!r.thumbnail_url || isVlogVideoPageUrl(r.thumbnail_url)) && r.platform === "youtube");
     if (missingYt.length) {
       await Promise.all(
         missingYt.map((r) => {
-          const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
-          if (!m) return Promise.resolve();
-          const thumb = `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
+          const ytId = extractVlogYouTubeId(r.url);
+          if (!ytId) return Promise.resolve();
+          const thumb = buildYouTubeThumbnailUrl(ytId);
           return supabase.from("vlog_posts").update({ thumbnail_url: thumb }).eq("id", r.id).then(() => {});
         })
       );
       setPosts(rows.map((r) => {
-        if (r.thumbnail_url || r.platform !== "youtube") return r;
-        const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
-        return m ? { ...r, thumbnail_url: `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg` } : r;
+        if ((r.thumbnail_url && !isVlogVideoPageUrl(r.thumbnail_url)) || r.platform !== "youtube") return r;
+        const ytId = extractVlogYouTubeId(r.url);
+        return ytId ? { ...r, thumbnail_url: buildYouTubeThumbnailUrl(ytId) } : r;
       }));
     }
     const tp = (t as unknown) as { vlog_webhook_secret?: string; instagram_access_token?: string; instagram_business_account_id?: string } | null;
@@ -124,12 +123,36 @@ export const VlogsAdmin = () => {
   };
 
   const resolveThumb = (p: VlogPost): string | null => {
-    if (p.thumbnail_url && !isVideoPageUrl(p.thumbnail_url)) return p.thumbnail_url;
+    if (p.thumbnail_url && !isVlogVideoPageUrl(p.thumbnail_url)) return p.thumbnail_url;
     if (p.platform === "youtube") {
-      const m = p.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
-      if (m) return `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
+      const ytId = extractVlogYouTubeId(p.url);
+      if (ytId) return buildYouTubeThumbnailUrl(ytId);
     }
     return null;
+  };
+
+  const displaySource = (p: VlogPost) => {
+    if ((p.source === "manual" || !p.source) && isVlogVideoPageUrl(p.url)) return "import";
+    return p.source || "import";
+  };
+
+  const importExternalVlog = async (rawLink: string, successMessage = "Vlog importado!") => {
+    if (busy) return;
+    const prepared = prepareVlogUrl(rawLink);
+    if (!prepared) return;
+    const cleanUrl = normalizeVlogUrl(prepared);
+    setUrl(cleanUrl);
+    setBusy(true);
+    const added = await addManualVlog(cleanUrl, {
+      useThumbInput: true,
+      source: "import",
+      successMessage,
+    });
+    setBusy(false);
+    if (!added) return;
+    setUrl("");
+    setThumbInput("");
+    void load();
   };
 
   useEffect(() => {
@@ -173,8 +196,8 @@ export const VlogsAdmin = () => {
 
     // Fallback YouTube: thumb direta pelo ID
     if (!thumb && platform === "youtube") {
-      const ytMatch = cleanUrl.match(/(?:youtu\.be\/|v=|\/shorts\/|\/live\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
-      if (ytMatch) thumb = `https://i.ytimg.com/vi/${ytMatch[1]}/hqdefault.jpg`;
+      const ytId = extractVlogYouTubeId(cleanUrl);
+      if (ytId) thumb = buildYouTubeThumbnailUrl(ytId);
     }
 
     // Fallback Instagram: usa serviço de screenshot público (microlink)
@@ -190,7 +213,7 @@ export const VlogsAdmin = () => {
         title: null,
         thumbnail_url: thumb,
         author,
-        source: options.source ?? "manual",
+        source: options.source ?? "import",
         posted_at: new Date().toISOString(),
         visivel: true,
       },
@@ -222,15 +245,11 @@ export const VlogsAdmin = () => {
     setBusy(true);
     const added = await addManualVlog(url, {
       useThumbInput: true,
-      successMessage: isDownloadableVlogUrl(cleanUrl)
-        ? "Vlog adicionado! Link copiado para a seção Importar — clique Baixar."
-        : "Vlog adicionado!",
+      source: "import",
+      successMessage: "Vlog importado!",
     });
     setBusy(false);
     if (!added) return;
-    if (isDownloadableVlogUrl(cleanUrl)) {
-      setDownloadUrl(cleanUrl);
-    }
     setUrl("");
     setThumbInput("");
     void load();
@@ -327,7 +346,7 @@ export const VlogsAdmin = () => {
       const shouldAddManualFallback = /serviço público de download|adicionar link manual|download está instável/i.test(message);
       if (shouldAddManualFallback) {
         const added = await addManualVlog(downloadUrl, {
-          source: "manual",
+          source: "import",
           successMessage: "Download instável no momento; o link foi adicionado aos Vlogs.",
         });
         if (added) {
@@ -475,13 +494,20 @@ export const VlogsAdmin = () => {
 
       {/* Manual add — primeira opção */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
-        <h3 className="font-display text-2xl mb-4 text-primary">ADICIONAR LINK MANUAL</h3>
+        <h3 className="font-display text-2xl mb-4 text-primary">IMPORTAR LINK DE VÍDEO</h3>
         <div className="grid gap-3 items-end">
           <div>
             <Label>URL (YouTube, Instagram, TikTok…)</Label>
             <Input
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData("text");
+                const prepared = prepareVlogUrl(pasted);
+                if (!prepared) return;
+                e.preventDefault();
+                void importExternalVlog(prepared);
+              }}
               onBlur={() => {
                 const normalized = normalizeInput(url);
                 if (normalized !== url.trim()) setUrl(normalized);
@@ -497,7 +523,7 @@ export const VlogsAdmin = () => {
             </p>
           </div>
           <Button onClick={handleAdd} disabled={busy || !url.trim()} className="bg-gradient-primary shadow-glow">
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-2" /> Adicionar</>}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Plus className="h-4 w-4 mr-2" /> Importar</>}
           </Button>
         </div>
       </div>
@@ -712,8 +738,23 @@ export const VlogsAdmin = () => {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {posts.map((p) => (
               <div key={p.id} className="border border-border rounded-xl overflow-hidden bg-background/40">
-                <a href={p.url} target="_blank" rel="noreferrer" className="block aspect-video bg-muted relative">
-                  {isDirectVideo(p.url) ? (
+                <div className="block aspect-video bg-muted relative overflow-hidden">
+                  {extractVlogYouTubeId(p.url) ? (
+                    <iframe
+                      src={buildYouTubeEmbedUrl(extractVlogYouTubeId(p.url)!, {
+                        autoplay: false,
+                        mute: true,
+                        controls: false,
+                        rel: false,
+                        modestbranding: true,
+                        playsinline: true,
+                      })}
+                      title={p.title || "Vlog do YouTube"}
+                      allow={YOUTUBE_IFRAME_ALLOW}
+                      referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
+                      className="w-full h-full pointer-events-none"
+                    />
+                  ) : isDirectVideo(p.url) ? (
                     <video
                       src={`${p.url}#t=0.1`}
                       autoPlay
@@ -734,9 +775,9 @@ export const VlogsAdmin = () => {
                     <PlatformIcon p={p.platform} /> {p.platform}
                   </div>
                   <div className="absolute top-2 right-2 bg-background/80 backdrop-blur rounded px-2 py-1 text-[10px] uppercase">
-                    {p.source}
+                    {displaySource(p)}
                   </div>
-                </a>
+                </div>
                 <div className="p-3 space-y-2">
                   {p.author && <p className="text-xs text-muted-foreground">@{p.author}</p>}
                   <div className="flex gap-2 pt-1 flex-wrap">
