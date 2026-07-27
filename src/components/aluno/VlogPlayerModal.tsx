@@ -56,11 +56,13 @@ export const VlogPlayerModal = ({ url, title, onClose }: VlogPlayerModalProps) =
                 />
               )}
               <iframe
+                ref={iframeRef}
                 src={playback.embedUrl}
                 title={title || "Vlog"}
                 allow={YOUTUBE_IFRAME_ALLOW}
                 referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
                 allowFullScreen
+                onLoad={handleIframeLoad}
                 className="relative h-full w-full"
               />
             </>
