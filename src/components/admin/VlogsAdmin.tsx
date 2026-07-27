@@ -4,7 +4,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Trash2, Copy, RefreshCw, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload, Play } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -88,9 +88,25 @@ export const VlogsAdmin = () => {
       supabase.from("tenants_private" as any).select("vlog_webhook_secret, instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     const rows = (list as VlogPost[]) || [];
-    setPosts(rows);
-    // Backfill: preenche thumbnail_url ausente em vlogs do YouTube usando o próprio ID do vídeo
-    const missingYt = rows.filter((r) => (!r.thumbnail_url || isVlogVideoPageUrl(r.thumbnail_url) || !extractVlogYouTubeId(r.url)) && r.platform === "youtube");
+    const normalizedRows = rows.map((r) => {
+      if (r.platform !== "youtube") return r;
+      const ytId = extractVlogYouTubeId(r.url) || extractVlogYouTubeId(r.thumbnail_url);
+      if (!ytId) return r;
+      return {
+        ...r,
+        url: `https://www.youtube.com/watch?v=${ytId}`,
+        thumbnail_url: buildYouTubeThumbnailUrl(ytId),
+        source: "import",
+      };
+    });
+    setPosts(normalizedRows);
+    // Backfill: corrige URL/thumbnail/source de vlogs do YouTube salvos por versões antigas.
+    const missingYt = rows.filter((r) => {
+      if (r.platform !== "youtube") return false;
+      const ytId = extractVlogYouTubeId(r.url) || extractVlogYouTubeId(r.thumbnail_url);
+      if (!ytId) return false;
+      return !extractVlogYouTubeId(r.url) || !r.thumbnail_url || isVlogVideoPageUrl(r.thumbnail_url) || r.source !== "import";
+    });
     if (missingYt.length) {
       await Promise.all(
         missingYt.map((r) => {
@@ -104,11 +120,6 @@ export const VlogsAdmin = () => {
             .then(() => {});
         })
       );
-      setPosts(rows.map((r) => {
-        if ((r.thumbnail_url && !isVlogVideoPageUrl(r.thumbnail_url)) || r.platform !== "youtube") return r;
-        const ytId = extractVlogYouTubeId(r.url) || extractVlogYouTubeId(r.thumbnail_url);
-        return ytId ? { ...r, url: `https://www.youtube.com/watch?v=${ytId}`, thumbnail_url: buildYouTubeThumbnailUrl(ytId), source: "import" } : r;
-      }));
     }
     const tp = (t as unknown) as { vlog_webhook_secret?: string; instagram_access_token?: string; instagram_business_account_id?: string } | null;
     setSecret(tp?.vlog_webhook_secret ?? null);
@@ -187,6 +198,10 @@ export const VlogsAdmin = () => {
     if (platform === "youtube" && !extractVlogYouTubeId(cleanUrl) && thumbVideoId) {
       cleanUrl = `https://www.youtube.com/watch?v=${thumbVideoId}`;
       platform = "youtube";
+    }
+    if (platform === "youtube" && !extractVlogYouTubeId(cleanUrl)) {
+      toast.error("Link do YouTube incompleto. Cole a URL completa do vídeo.");
+      return false;
     }
 
     // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
@@ -546,23 +561,18 @@ export const VlogsAdmin = () => {
               <div key={p.id} className="border border-border rounded-xl overflow-hidden bg-background/40">
                 <div className="block aspect-video bg-muted relative overflow-hidden">
                   {(() => {
-                    const ytId = extractVlogYouTubeId(p.url);
+                    const ytId = extractVlogYouTubeId(p.url) || extractVlogYouTubeId(p.thumbnail_url);
                     if (ytId) {
+                      const thumb = buildYouTubeThumbnailUrl(ytId);
                       return (
-                        <iframe
-                          src={buildYouTubeEmbedUrl(ytId, {
-                            autoplay: false,
-                            mute: true,
-                            controls: false,
-                            rel: false,
-                            modestbranding: true,
-                            playsinline: true,
-                          })}
-                          title={p.title || "Vlog do YouTube"}
-                          allow={YOUTUBE_IFRAME_ALLOW}
-                          referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
-                          className="w-full h-full pointer-events-none"
-                        />
+                        <>
+                          <img src={thumb} alt={p.title || "Vlog do YouTube"} className="w-full h-full object-cover" />
+                          <div className="absolute inset-0 flex items-center justify-center bg-background/20">
+                            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-glow">
+                              <Play className="h-5 w-5 fill-current" />
+                            </span>
+                          </div>
+                        </>
                       );
                     }
                     if (isDirectVideo(p.url)) {
