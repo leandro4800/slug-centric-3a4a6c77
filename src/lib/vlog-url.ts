@@ -27,11 +27,6 @@ export const detectVlogPlatform = (url: string): VlogPlatform => {
   return "other";
 };
 
-export const isDownloadableVlogUrl = (url: string) => {
-  void url;
-  return false;
-};
-
 export const extractVlogYouTubeId = (url: string | null | undefined): string | null => {
   if (!url) return null;
   for (const regex of YOUTUBE_ID_IN_URLS) {
