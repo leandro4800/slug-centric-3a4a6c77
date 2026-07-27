@@ -25,7 +25,8 @@ export const detectVlogPlatform = (url: string): VlogPlatform => {
 
 export const isDownloadableVlogUrl = (url: string) => {
   const platform = detectVlogPlatform(url);
-  return platform === "instagram" || platform === "tiktok" || platform === "youtube";
+  // YouTube não é baixado pelo Cobalt (instável / bloqueado). Usa embed direto via link manual.
+  return platform === "instagram" || platform === "tiktok";
 };
 
 /** Normalizes URLs before saving to DB or sending to vlog-download. */
