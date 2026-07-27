@@ -85,13 +85,40 @@ export const VlogsAdmin = () => {
         .order("created_at", { ascending: false }),
       supabase.from("tenants_private" as any).select("vlog_webhook_secret, instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
-    setPosts((list as VlogPost[]) || []);
+    const rows = (list as VlogPost[]) || [];
+    setPosts(rows);
+    // Backfill: preenche thumbnail_url ausente em vlogs do YouTube usando o próprio ID do vídeo
+    const missingYt = rows.filter((r) => !r.thumbnail_url && r.platform === "youtube");
+    if (missingYt.length) {
+      await Promise.all(
+        missingYt.map((r) => {
+          const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+          if (!m) return Promise.resolve();
+          const thumb = `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
+          return supabase.from("vlog_posts").update({ thumbnail_url: thumb }).eq("id", r.id).then(() => {});
+        })
+      );
+      setPosts(rows.map((r) => {
+        if (r.thumbnail_url || r.platform !== "youtube") return r;
+        const m = r.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+        return m ? { ...r, thumbnail_url: `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg` } : r;
+      }));
+    }
     const tp = (t as unknown) as { vlog_webhook_secret?: string; instagram_access_token?: string; instagram_business_account_id?: string } | null;
     setSecret(tp?.vlog_webhook_secret ?? null);
     setIgToken(tp?.instagram_access_token ?? "");
     setIgAccountId(tp?.instagram_business_account_id ?? "");
     setIgConfigured(!!(tp?.instagram_access_token && tp?.instagram_business_account_id));
     setLoading(false);
+  };
+
+  const resolveThumb = (p: VlogPost): string | null => {
+    if (p.thumbnail_url) return p.thumbnail_url;
+    if (p.platform === "youtube") {
+      const m = p.url.match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{6,})/);
+      if (m) return `https://i.ytimg.com/vi/${m[1]}/hqdefault.jpg`;
+    }
+    return null;
   };
 
   useEffect(() => {
@@ -677,8 +704,8 @@ export const VlogsAdmin = () => {
                       preload="auto"
                       className="w-full h-full object-cover"
                     />
-                  ) : p.thumbnail_url ? (
-                    <img src={p.thumbnail_url} alt="" className="w-full h-full object-cover" />
+                  ) : resolveThumb(p) ? (
+                    <img src={resolveThumb(p)!} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
                       sem thumbnail
