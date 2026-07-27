@@ -168,6 +168,20 @@ const AlunoHome = () => {
         disablekb: !expanded,
       })
     : null;
+  const tenantHeroEmbedSrc = tenantHeroVideoId
+    ? buildYouTubeEmbedUrl(tenantHeroVideoId, {
+        autoplay: true,
+        mute: true,
+        loop: true,
+        controls: false,
+        showinfo: false,
+        rel: false,
+        modestbranding: true,
+        playsinline: true,
+      })
+    : null;
+  const heroEmbedSrc = ytAutoSrc || tenantHeroEmbedSrc;
+  const heroVideoSrc = featuredDirectUrl || tenantHeroDirectUrl;
 
   return (
     <>
@@ -175,36 +189,25 @@ const AlunoHome = () => {
       <section className="relative h-[70vh] min-h-[400px] w-full overflow-hidden flex flex-col justify-end pb-[10%] px-5">
         {/* Background Hero (contido na seção) */}
         <div className="hero-mask">
-          {(ytAutoSrc || tenantHeroVideoId || tenantHeroDirectUrl || featuredDirectUrl) ? (
-            ytAutoSrc || tenantHeroVideoId ? (
+          {(heroEmbedSrc || heroVideoSrc) ? (
+            heroEmbedSrc ? (
               <iframe
                 key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
-                src={
-                  ytAutoSrc ||
-                  buildYouTubeEmbedUrl(tenantHeroVideoId!, {
-                    autoplay: true,
-                    mute: true,
-                    loop: true,
-                    controls: false,
-                    showinfo: false,
-                    rel: false,
-                    modestbranding: true,
-                    playsinline: true,
-                  })
-                }
+                src={heroEmbedSrc}
                 referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
                 allow={YOUTUBE_IFRAME_ALLOW}
                 className="w-full h-full pointer-events-none scale-135"
               />
-            ) : (
+            ) : heroVideoSrc ? (
               <video
-                src={(featuredDirectUrl || tenantHeroDirectUrl)!}
+                src={heroVideoSrc}
                 autoPlay
                 muted
                 loop
                 playsInline
                 className="w-full h-full object-cover"
               />
+            ) : null
             )
           ) : (
             <img src={heroImg} alt="" className="w-full h-full object-cover" />
