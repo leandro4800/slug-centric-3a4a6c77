@@ -253,7 +253,7 @@ export const VlogsAdmin = () => {
       return;
     }
     setBusy(true);
-    const added = await addManualVlog(url, {
+    const added = await addManualVlog(prepared, {
       useThumbInput: true,
       source: "import",
       successMessage: "Vlog importado direto para os Vlogs!",
