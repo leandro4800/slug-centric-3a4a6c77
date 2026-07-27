@@ -46,6 +46,12 @@ const isVideoPageUrl = (value: string | null | undefined) => {
   return url.includes("youtube.com/watch") || url.includes("youtu.be/") || url.includes("instagram.com/") || url.includes("tiktok.com/");
 };
 
+const isImageUrl = (value: string | null | undefined) => {
+  if (!value?.trim()) return false;
+  if (isVideoPageUrl(value)) return false;
+  return /^https?:\/\//i.test(value.trim());
+};
+
 export const VlogsAdmin = () => {
   const { tenant, refresh } = useBranding();
   const [posts, setPosts] = useState<VlogPost[]>([]);
@@ -161,7 +167,7 @@ export const VlogsAdmin = () => {
 
     // Auto-enriquecimento: busca apenas thumb/autor via oEmbed (NUNCA título automático)
     const oe = await fetchOEmbed(platform, cleanUrl);
-    const manualThumb = options.useThumbInput && !isVideoPageUrl(thumbInput) ? thumbInput.trim() : "";
+    const manualThumb = options.useThumbInput && isImageUrl(thumbInput) ? thumbInput.trim() : "";
     let thumb: string | null = manualThumb || options.thumbnail || oe?.thumbnail_url || null;
     const author: string | null = oe?.author_name || null;
 
@@ -176,7 +182,7 @@ export const VlogsAdmin = () => {
       thumb = `https://api.microlink.io/?url=${encodeURIComponent(cleanUrl)}&screenshot=true&meta=false&embed=screenshot.url`;
     }
 
-    const { error } = await supabase.from("vlog_posts").upsert(
+    const { data: saved, error } = await supabase.from("vlog_posts").upsert(
       {
         tenant_id: tenant.id,
         url: cleanUrl,
@@ -189,9 +195,16 @@ export const VlogsAdmin = () => {
         visivel: true,
       },
       { onConflict: "tenant_id,url" }
-    );
+    ).select("id").single();
     if (error) {
-      toast.error(error.message);
+      const message = /row-level security|permission|violates/i.test(error.message)
+        ? `Sem permissão para salvar vlogs em ${tenant.nome}. Entre com o login do coach deste tenant.`
+        : error.message;
+      toast.error(message);
+      return false;
+    }
+    if (!saved?.id) {
+      toast.error("Não foi possível confirmar o salvamento do vlog. Tente novamente.");
       return false;
     }
     toast.success(options.successMessage ?? "Vlog adicionado!");
