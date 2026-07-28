@@ -89,31 +89,66 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
       return;
     }
 
+    const cacheKey = `tenant_member:${user.id}:${tenant.id}`;
+    const cachedMember = (() => {
+      try { return localStorage.getItem(cacheKey) === "1"; } catch { return false; }
+    })();
+
     const isOwnerOrStaff = hasRole("admin") || hasRole("coach", tenant.id);
     const hasAlunoRole = hasRole("aluno", tenant.id);
     if (isOwnerOrStaff || hasAlunoRole) {
       setTenantMembership(true);
+      try { localStorage.setItem(cacheKey, "1"); } catch {}
       return;
     }
 
+    // Se já validamos antes que este usuário pertence ao tenant, confia no cache
+    // e revalida em background — evita mandar pra onboarding em qualquer hiccup de rede.
+    if (cachedMember) {
+      setTenantMembership(true);
+    } else {
+      setTenantMembership(null);
+    }
+
     let cancelled = false;
-    setTenantMembership(null);
     (async () => {
       try {
-        const [{ data: profile }, { data: subscription }] = await withGuardTimeout(Promise.all([
-          supabase.from("perfis").select("tenant_id").eq("id", user.id).eq("tenant_id", tenant.id).maybeSingle(),
+        const TIMEOUT_FALLBACK = Symbol("timeout");
+        const result: any = await withGuardTimeout(Promise.all([
+          supabase.from("perfis").select("tenant_id, onboarding_completo").eq("id", user.id).maybeSingle(),
           supabase.from("assinaturas").select("id").eq("aluno_id", user.id).eq("tenant_id", tenant.id).in("status", ["active", "trialing"]).maybeSingle(),
-        ]), [{ data: null }, { data: null }] as any, "Verificação de vínculo");
+        ]), TIMEOUT_FALLBACK as any, "Verificação de vínculo");
 
-        if (!cancelled) setTenantMembership(!!profile || !!subscription);
+        if (cancelled) return;
+
+        // Timeout: NÃO regredir para false — mantém cache/estado atual.
+        if (result === TIMEOUT_FALLBACK) {
+          if (!cachedMember) setTenantMembership(true); // dá benefício da dúvida
+          return;
+        }
+
+        const [{ data: profile }, { data: subscription }] = result;
+        const belongs =
+          (profile?.tenant_id === tenant.id) ||
+          !!subscription ||
+          // Já concluiu onboarding em algum tenant — não pede de novo
+          (!!profile?.onboarding_completo && cachedMember);
+
+        if (belongs) {
+          setTenantMembership(true);
+          try { localStorage.setItem(cacheKey, "1"); } catch {}
+        } else if (!cachedMember) {
+          setTenantMembership(false);
+        }
       } catch (error) {
         console.error("[RequireAuth] Erro verificando vínculo:", error);
-        if (!cancelled) setTenantMembership(false);
+        if (!cancelled && !cachedMember) setTenantMembership(false);
       }
     })();
 
     return () => { cancelled = true; };
   }, [checkTenant, user?.id, tenant?.id, hasRole]);
+
 
   if (isLoading || (checkTenant && user && tenant?.id && tenantMembership === null)) {
     return (
