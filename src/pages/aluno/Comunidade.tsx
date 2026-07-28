@@ -390,11 +390,11 @@ const Comunidade = () => {
                     />
                   </div>
                 ) : post.imagem_url && (
-                  <div className="relative aspect-square w-full bg-card/50 flex items-center justify-center overflow-hidden">
+                  <div className="relative w-full bg-black flex items-center justify-center overflow-hidden max-h-[80vh]">
                     <img
                       src={post.imagem_url}
                       alt=""
-                      className="w-full h-full object-cover transition-all hover:scale-105 duration-700"
+                      className="w-full h-auto max-h-[80vh] object-contain"
                     />
                   </div>
                 )}
