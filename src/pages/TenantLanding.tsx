@@ -67,6 +67,7 @@ interface Tenant {
   estado: string | null;
   permite_aula_avulsa: boolean | null;
   preco_aula_avulsa: number | null;
+  free_access?: boolean | null;
 }
 interface Plano {
   id: string;
@@ -86,7 +87,8 @@ const intervaloLabel = {
 };
 
 const TENANT_PUBLIC_COLUMNS =
-  "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
+  "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, free_access";
+
 
 const FEATURES = [
   {
