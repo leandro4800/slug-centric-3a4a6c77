@@ -78,15 +78,26 @@ export default function Onboarding() {
 
     try {
       const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
-      const { data: ownedTenant } = await supabase.from("tenants").select("slug").eq("owner_user_id", user.id).maybeSingle();
+      const { data: ownedTenant } = await supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle();
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      
       const isCoach = isCoachSignup || !!ownedTenant || roles?.some((r) => r.role === "coach");
+
+      // Se coach já preencheu anamnese + avaliação, vai direto ao painel.
+      // Se ainda não preencheu, permitimos que ele faça o preenchimento aqui.
       if (isCoach) {
-        const target = ownedTenant?.slug ? `/${ownedTenant.slug}/admin` : "/seja-coach";
-        console.log("[Onboarding] Usuário é coach, redirecionando para:", target);
-        navigate(target, { replace: true });
-        return;
+        const { count: anamCount } = await supabase.from("anamnese_aluno").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
+        const { count: avalCount } = await supabase.from("avaliacoes_fisicas").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
+        if (anamCount && avalCount) {
+          const target = ownedTenant?.slug ? `/${ownedTenant.slug}/admin` : "/seja-coach";
+          console.log("[Onboarding] Coach já preenchido, redirecionando para:", target);
+          navigate(target, { replace: true });
+          return;
+        }
+        // Coach sem anamnese/avaliação: força usar o tenant dele para salvar
+        if (ownedTenant?.id) {
+          setTenantId(ownedTenant.id);
+          setTenantSlug(ownedTenant.slug);
+        }
       }
 
       const { data: perfil } = await supabase.from("perfis").select("nome_completo, tenant_id, onboarding_completo").eq("id", user.id).maybeSingle();

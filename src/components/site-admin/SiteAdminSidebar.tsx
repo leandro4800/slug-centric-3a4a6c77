@@ -30,6 +30,7 @@ const baseItems: Item[] = [
   { to: "/site/admin/planos", label: "Meus Planos", icon: Tag, section: "Negócio" },
   { to: "/site/admin/aparencia", label: "Aparência", icon: Palette, section: "Negócio" },
 
+  { to: "/site/admin/meu-perfil", label: "Meu perfil", icon: UserCog, section: "Conta" },
   { to: "/site/admin/minha-conta", label: "Minha conta", icon: UserCog, section: "Conta" },
   { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy, section: "Conta" },
 ];
