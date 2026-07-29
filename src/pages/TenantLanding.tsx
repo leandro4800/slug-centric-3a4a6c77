@@ -764,9 +764,27 @@ export default function TenantLanding() {
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
               Este coach está com acesso 100% gratuito no momento. Crie sua conta e libere o app imediatamente, sem cartão.
             </p>
+            {!user && (
+              <div className="mx-auto mt-6 grid max-w-md gap-3 text-left">
+                <Input
+                  placeholder="Seu nome completo"
+                  value={freeName}
+                  onChange={(e) => setFreeName(e.target.value)}
+                />
+                <Input
+                  type="email"
+                  placeholder="Seu melhor e-mail"
+                  value={freeEmail}
+                  onChange={(e) => setFreeEmail(e.target.value)}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Sua senha será gerada automaticamente no padrão <strong>primeironome2026</strong> (ex.: joao2026). Você pode alterá-la depois no perfil.
+                </p>
+              </div>
+            )}
             <Button
               size="lg"
-              className="mt-8 w-full font-bold uppercase tracking-widest shadow-[0_0_30px_-5px_hsl(var(--primary))] md:w-auto md:px-12"
+              className="mt-6 w-full font-bold uppercase tracking-widest shadow-[0_0_30px_-5px_hsl(var(--primary))] md:w-auto md:px-12"
               disabled={!!checkoutLoading}
               onClick={handleJoinFree}
             >
