@@ -173,6 +173,8 @@ export default function TenantLanding() {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [freeName, setFreeName] = useState("");
+  const [freeEmail, setFreeEmail] = useState("");
   const iosBlocksPayments = blocksExternalPayments();
   const coachImage = tenant?.foto_url || tenant?.hero_url || null;
   const heroImage = tenant?.hero_url || tenant?.foto_url || alphaLandingHero.url;
