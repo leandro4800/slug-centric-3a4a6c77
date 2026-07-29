@@ -210,6 +210,28 @@ export default function TenantLanding() {
     }
   };
 
+  const handleJoinFree = async () => {
+    if (!user) {
+      sessionStorage.setItem("pending_free_join", slug || "");
+      navigate(`/${slug}/login`);
+      return;
+    }
+    setCheckoutLoading("__free__");
+    try {
+      const { data, error } = await supabase.functions.invoke("join-free-tenant", {
+        body: { tenant_slug: slug },
+      });
+      if (error) throw error;
+      if (!(data as any)?.ok) throw new Error((data as any)?.error || "Falha ao liberar acesso");
+      toast({ title: "Acesso liberado!", description: "Bem-vindo(a) 🎉" });
+      navigate(`/${slug}/app`, { replace: true });
+    } catch (e: any) {
+      toast({ title: "Erro ao entrar", description: e.message, variant: "destructive" });
+      setCheckoutLoading(null);
+    }
+  };
+
+
   const handleRedeemVoucher = async (codeOverride?: string) => {
     const code = (codeOverride || voucherCode).trim();
     if (!code) {
