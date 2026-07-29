@@ -3143,6 +3143,7 @@ export type Database = {
           especialidades: string[] | null
           estado: string | null
           foto_url: string | null
+          free_access: boolean
           hero_url: string | null
           id: string
           is_partner: boolean
@@ -3171,6 +3172,7 @@ export type Database = {
           especialidades?: string[] | null
           estado?: string | null
           foto_url?: string | null
+          free_access?: boolean
           hero_url?: string | null
           id?: string
           is_partner?: boolean
@@ -3199,6 +3201,7 @@ export type Database = {
           especialidades?: string[] | null
           estado?: string | null
           foto_url?: string | null
+          free_access?: boolean
           hero_url?: string | null
           id?: string
           is_partner?: boolean
