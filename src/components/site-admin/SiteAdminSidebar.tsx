@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet,
+  Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
   LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag,
   ChevronLeft, ChevronRight,
 } from "lucide-react";
@@ -23,6 +23,7 @@ const baseItems: Item[] = [
   { to: "/site/admin/treinos", label: "Montar treino", icon: Dumbbell, section: "Programação" },
   { to: "/site/admin/dieta", label: "Montar dieta", icon: Apple, section: "Programação" },
   { to: "/site/admin/avaliacao-fisica", label: "Avaliação física", icon: Ruler, section: "Programação" },
+  { to: "/site/admin/metricas", label: "Métricas & evolução", icon: Activity, section: "Programação" },
 
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench, section: "Negócio" },
   { to: "/site/admin/integracao-ia", label: "Integração com IA", icon: Bot, section: "Negócio" },
