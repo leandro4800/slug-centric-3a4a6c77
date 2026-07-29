@@ -173,6 +173,8 @@ export default function TenantLanding() {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [freeName, setFreeName] = useState("");
+  const [freeEmail, setFreeEmail] = useState("");
   const iosBlocksPayments = blocksExternalPayments();
   const coachImage = tenant?.foto_url || tenant?.hero_url || null;
   const heroImage = tenant?.hero_url || tenant?.foto_url || alphaLandingHero.url;
@@ -210,13 +212,57 @@ export default function TenantLanding() {
     }
   };
 
+  const buildFreePassword = (nome: string) => {
+    const first = nome
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().trim().split(/\s+/)[0].replace(/[^a-z0-9]/g, "");
+    return `${first || "aluno"}2026`;
+  };
+
   const handleJoinFree = async () => {
+    // Se ainda não está logado, cria a conta com padrão nome+2026
     if (!user) {
-      sessionStorage.setItem("pending_free_join", slug || "");
-      navigate(`/${slug}/login`);
-      return;
+      const nome = freeName.trim();
+      const email = freeEmail.trim().toLowerCase();
+      if (!nome || !email) {
+        toast({ title: "Preencha nome e e-mail", variant: "destructive" });
+        return;
+      }
+      setCheckoutLoading("__free__");
+      const password = buildFreePassword(nome);
+      try {
+        const { error: signUpErr } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { nome_completo: nome } },
+        });
+        if (signUpErr && !/already registered|already exists/i.test(signUpErr.message)) {
+          throw signUpErr;
+        }
+        // Tenta logar imediatamente (funciona se e-mail já confirmado ou signup auto-loga)
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInErr) {
+          toast({
+            title: "Conta criada!",
+            description: `Sua senha é: ${password}. Faça login para continuar.`,
+          });
+          sessionStorage.setItem("pending_free_join", slug || "");
+          navigate(`/${slug}/login`);
+          setCheckoutLoading(null);
+          return;
+        }
+        toast({
+          title: "Conta criada!",
+          description: `Guarde sua senha: ${password}`,
+        });
+      } catch (e: any) {
+        toast({ title: "Erro ao criar conta", description: e.message, variant: "destructive" });
+        setCheckoutLoading(null);
+        return;
+      }
+    } else {
+      setCheckoutLoading("__free__");
     }
-    setCheckoutLoading("__free__");
     try {
       const { data, error } = await supabase.functions.invoke("join-free-tenant", {
         body: { tenant_slug: slug },
@@ -718,9 +764,27 @@ export default function TenantLanding() {
             <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
               Este coach está com acesso 100% gratuito no momento. Crie sua conta e libere o app imediatamente, sem cartão.
             </p>
+            {!user && (
+              <div className="mx-auto mt-6 grid max-w-md gap-3 text-left">
+                <Input
+                  placeholder="Seu nome completo"
+                  value={freeName}
+                  onChange={(e) => setFreeName(e.target.value)}
+                />
+                <Input
+                  type="email"
+                  placeholder="Seu melhor e-mail"
+                  value={freeEmail}
+                  onChange={(e) => setFreeEmail(e.target.value)}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Sua senha será gerada automaticamente no padrão <strong>primeironome2026</strong> (ex.: joao2026). Você pode alterá-la depois no perfil.
+                </p>
+              </div>
+            )}
             <Button
               size="lg"
-              className="mt-8 w-full font-bold uppercase tracking-widest shadow-[0_0_30px_-5px_hsl(var(--primary))] md:w-auto md:px-12"
+              className="mt-6 w-full font-bold uppercase tracking-widest shadow-[0_0_30px_-5px_hsl(var(--primary))] md:w-auto md:px-12"
               disabled={!!checkoutLoading}
               onClick={handleJoinFree}
             >
