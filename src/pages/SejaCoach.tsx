@@ -302,9 +302,9 @@ export default function SejaCoach() {
           {step === "welcome" && !user && (
             <form onSubmit={handleSignup} className="space-y-5">
               <div className="text-center space-y-2">
-                <h2 className="font-display text-2xl uppercase italic">Aproveite a avaliação gratuita</h2>
+                <h2 className="font-display text-2xl uppercase italic">Crie sua conta de coach</h2>
                 <p className="text-sm text-muted-foreground">
-                  Ganhe 3 dias grátis e depois 1 mês por apenas <span className="font-black text-primary">R$ 1,00</span>
+                  Ative sua assinatura por <span className="font-black text-primary">R$ 1,00</span> e tenha <span className="font-black text-primary">30 dias</span> de acesso completo à plataforma. Cancele quando quiser.
                 </p>
               </div>
               <div>
