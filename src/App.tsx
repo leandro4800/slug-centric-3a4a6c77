@@ -67,6 +67,7 @@ import SiteAdminFinanceiro from "./pages/site-admin/Financeiro";
 import SiteAdminMontarTreino from "./pages/site-admin/MontarTreino";
 import SiteAdminMontarDieta from "./pages/site-admin/MontarDieta";
 import SiteAdminAvaliacaoFisica from "./pages/site-admin/AvaliacaoFisica";
+import SiteAdminMetricas from "./pages/site-admin/Metricas";
 import SiteAdminFerramentas from "./pages/site-admin/Ferramentas";
 import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
 import SiteAdminMeuPerfil from "./pages/site-admin/MeuPerfil";
