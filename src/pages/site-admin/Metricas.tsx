@@ -94,6 +94,14 @@ const Metricas = () => {
   );
 };
 
+interface CheckinFoto {
+  id: string;
+  data_checkin: string;
+  peso_kg: number | null;
+  bf_percentual: number | null;
+  fotos: { angulo: string; url: string }[];
+}
+
 const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => void }) => {
   const [loading, setLoading] = useState(true);
   const [perfil, setPerfil] = useState<Aluno | null>(null);
@@ -104,6 +112,53 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const [exercicio, setExercicio] = useState<string>("");
   const [analise, setAnalise] = useState<string>("");
   const [analisando, setAnalisando] = useState(false);
+  const [checkins, setCheckins] = useState<CheckinFoto[]>([]);
+  const [fotosLoading, setFotosLoading] = useState(true);
+  const [antesId, setAntesId] = useState<string>("");
+  const [depoisId, setDepoisId] = useState<string>("");
+  const [analiseFotos, setAnaliseFotos] = useState<string>("");
+  const [analisandoFotos, setAnalisandoFotos] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setFotosLoading(true);
+      try {
+        const { data, error } = await supabase.functions.invoke("coach-fotos-evolucao", {
+          body: { aluno_id: alunoId, action: "list" },
+        });
+        if (error) throw error;
+        const lista = ((data as any)?.checkins || []) as CheckinFoto[];
+        setCheckins(lista);
+        if (lista.length) {
+          setAntesId(lista[0].id);
+          setDepoisId(lista[lista.length - 1].id);
+        }
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setFotosLoading(false);
+      }
+    })();
+  }, [alunoId]);
+
+  const analisarFotos = async () => {
+    setAnalisandoFotos(true);
+    setAnaliseFotos("");
+    try {
+      const { data, error } = await supabase.functions.invoke("coach-fotos-evolucao", {
+        body: { aluno_id: alunoId, action: "analisar", antes_id: antesId, depois_id: depoisId },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setAnaliseFotos((data as any)?.analise || "Sem retorno da IA.");
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Não foi possível analisar as fotos: " + (e?.message || "erro"));
+    } finally {
+      setAnalisandoFotos(false);
+    }
+  };
+
 
   useEffect(() => {
     (async () => {
