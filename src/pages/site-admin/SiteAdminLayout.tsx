@@ -1,5 +1,5 @@
 import { Outlet, Navigate, useLocation, NavLink } from "react-router-dom";
-import { Loader2, Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Menu, Wrench, UserCog, LifeBuoy, Calendar } from "lucide-react";
+import { Loader2, Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Menu, Wrench, UserCog, LifeBuoy, Calendar, Activity } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteTenantProvider, useSiteTenant } from "@/hooks/use-site-tenant";
 import { SiteAdminSidebar } from "@/components/site-admin/SiteAdminSidebar";
