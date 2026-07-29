@@ -314,6 +314,90 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
         <Kpi icon={Dumbbell} label="Recorde de carga" value={recordeCarga ? `${recordeCarga} kg` : "—"} />
       </div>
 
+      {/* Fotos de evolução (app) */}
+      <div className="mb-6">
+        <Painel title="Fotos de evolução do app">
+          {fotosLoading ? (
+            <div className="flex h-24 items-center justify-center">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            </div>
+          ) : checkins.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Este atleta ainda não enviou fotos no botão Evolução do app.
+            </p>
+          ) : (
+            <>
+              <div className="flex gap-3 overflow-x-auto pb-2">
+                {checkins.map((c) => (
+                  <div key={c.id} className="min-w-[190px]">
+                    <p className="mb-1 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                      {fmtDate(c.data_checkin)} · {c.peso_kg ? `${c.peso_kg}kg` : "—"}
+                      {c.bf_percentual ? ` · ${c.bf_percentual}%BF` : ""}
+                    </p>
+                    <div className="flex gap-1.5">
+                      {c.fotos.map((f) => (
+                        <a key={f.angulo} href={f.url} target="_blank" rel="noreferrer" className="block">
+                          <img
+                            src={f.url}
+                            alt={`Foto ${f.angulo} de ${fmtDate(c.data_checkin)}`}
+                            loading="lazy"
+                            className="h-32 w-[58px] rounded-md border border-white/10 object-cover"
+                          />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <label className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Antes
+                  <select
+                    value={antesId}
+                    onChange={(e) => setAntesId(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm normal-case tracking-normal text-foreground"
+                  >
+                    {checkins.map((c) => (
+                      <option key={c.id} value={c.id}>{fmtDate(c.data_checkin)}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Depois
+                  <select
+                    value={depoisId}
+                    onChange={(e) => setDepoisId(e.target.value)}
+                    className="mt-1 w-full rounded-md border border-white/10 bg-zinc-900 px-3 py-2 text-sm normal-case tracking-normal text-foreground"
+                  >
+                    {checkins.map((c) => (
+                      <option key={c.id} value={c.id}>{fmtDate(c.data_checkin)}</option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+
+              <button
+                onClick={analisarFotos}
+                disabled={analisandoFotos || !antesId || !depoisId}
+                className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-60"
+              >
+                {analisandoFotos ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {analisandoFotos ? "Analisando fotos..." : "Analisar fotos com IA"}
+              </button>
+
+              {analiseFotos && (
+                <div className="mt-3 max-h-[320px] overflow-y-auto whitespace-pre-wrap text-sm leading-relaxed text-muted-foreground">
+                  {analiseFotos}
+                </div>
+              )}
+            </>
+          )}
+        </Painel>
+      </div>
+
+
+
       {semDados ? (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           Este atleta ainda não registrou métricas no app.
