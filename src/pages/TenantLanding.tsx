@@ -212,13 +212,57 @@ export default function TenantLanding() {
     }
   };
 
+  const buildFreePassword = (nome: string) => {
+    const first = nome
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().trim().split(/\s+/)[0].replace(/[^a-z0-9]/g, "");
+    return `${first || "aluno"}2026`;
+  };
+
   const handleJoinFree = async () => {
+    // Se ainda não está logado, cria a conta com padrão nome+2026
     if (!user) {
-      sessionStorage.setItem("pending_free_join", slug || "");
-      navigate(`/${slug}/login`);
-      return;
+      const nome = freeName.trim();
+      const email = freeEmail.trim().toLowerCase();
+      if (!nome || !email) {
+        toast({ title: "Preencha nome e e-mail", variant: "destructive" });
+        return;
+      }
+      setCheckoutLoading("__free__");
+      const password = buildFreePassword(nome);
+      try {
+        const { error: signUpErr } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { nome_completo: nome } },
+        });
+        if (signUpErr && !/already registered|already exists/i.test(signUpErr.message)) {
+          throw signUpErr;
+        }
+        // Tenta logar imediatamente (funciona se e-mail já confirmado ou signup auto-loga)
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInErr) {
+          toast({
+            title: "Conta criada!",
+            description: `Sua senha é: ${password}. Faça login para continuar.`,
+          });
+          sessionStorage.setItem("pending_free_join", slug || "");
+          navigate(`/${slug}/login`);
+          setCheckoutLoading(null);
+          return;
+        }
+        toast({
+          title: "Conta criada!",
+          description: `Guarde sua senha: ${password}`,
+        });
+      } catch (e: any) {
+        toast({ title: "Erro ao criar conta", description: e.message, variant: "destructive" });
+        setCheckoutLoading(null);
+        return;
+      }
+    } else {
+      setCheckoutLoading("__free__");
     }
-    setCheckoutLoading("__free__");
     try {
       const { data, error } = await supabase.functions.invoke("join-free-tenant", {
         body: { tenant_slug: slug },
