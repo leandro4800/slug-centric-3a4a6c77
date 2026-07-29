@@ -16,6 +16,12 @@ const AlunoLayout = () => {
     let cancelled = false;
     (async () => {
       if (!user) { setChecking(false); return; }
+      // Coaches (owners de tenant) NÃO passam por onboarding no mobile —
+      // preenchimento de perfil/anamnese/avaliação fica no painel do site.
+      const { data: ownedTenant } = await supabase
+        .from("tenants").select("id").eq("owner_user_id", user.id).maybeSingle();
+      if (ownedTenant?.id) { if (!cancelled) { setNeedsOnboarding(false); setChecking(false); } return; }
+
       const [{ data: perfil }, { count: anam }, { count: aval }] = await Promise.all([
         supabase.from("perfis").select("onboarding_completo").eq("id", user.id).maybeSingle(),
         supabase.from("anamnese_aluno").select("id", { count: "exact", head: true }).eq("aluno_id", user.id),
