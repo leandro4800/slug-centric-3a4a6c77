@@ -17,6 +17,7 @@ const mobileItems = [
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench },
   { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet },
   { to: "/site/admin/aparencia", label: "Aparência", icon: Palette },
+  { to: "/site/admin/meu-perfil", label: "Meu perfil", icon: UserCog },
   { to: "/site/admin/minha-conta", label: "Minha conta", icon: UserCog },
   { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy },
 ];
