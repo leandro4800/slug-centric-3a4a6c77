@@ -83,10 +83,22 @@ export const SiteAdminSidebar = () => {
     )}>
       <div className={cn("border-b border-white/10 relative", collapsed ? "px-2 py-4" : "px-5 py-6")}>
         <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
-          <Logo withText={false} />
+          {tenant?.logo_url ? (
+            <img
+              src={tenant.logo_url}
+              alt={tenant.nome}
+              className="h-9 w-9 object-contain rounded-none"
+            />
+          ) : (
+            <Logo withText={false} />
+          )}
           {!collapsed && (
             <div className="leading-tight">
-              <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span> PRO</p>
+              {tenant?.logo_url ? (
+                <p className="font-display text-sm tracking-widest uppercase truncate max-w-[160px]">{tenant.nome}</p>
+              ) : (
+                <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span> PRO</p>
+              )}
               <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Painel do site</p>
             </div>
           )}

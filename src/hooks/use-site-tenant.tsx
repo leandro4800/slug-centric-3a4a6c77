@@ -6,6 +6,7 @@ interface SiteTenant {
   id: string;
   slug: string;
   nome: string;
+  logo_url?: string | null;
 }
 
 interface Ctx {
@@ -29,7 +30,7 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
       setLoading(true);
       const { data } = await supabase
         .from("tenants")
-        .select("id, slug, nome")
+        .select("id, slug, nome, logo_url")
         .eq("owner_user_id", user.id)
         .maybeSingle();
       if (!cancelled) {
