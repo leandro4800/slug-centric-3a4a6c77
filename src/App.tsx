@@ -172,6 +172,7 @@ const App = () => (
               <Route path="faturamento" element={<SiteAdminFinanceiro />} />
               <Route path="planos" element={<SiteAdminPlanos />} />
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
+              <Route path="meu-perfil" element={<SiteAdminMeuPerfil />} />
               <Route path="integracao-ia" element={<SiteAdminIntegracaoIA />} />
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="ct/camps" element={<SiteAdminCtCamps />} />
