@@ -14,6 +14,7 @@ const mobileItems = [
   { to: "/site/admin/treinos", label: "Treino", icon: Dumbbell },
   { to: "/site/admin/dieta", label: "Dieta", icon: Apple },
   { to: "/site/admin/avaliacao-fisica", label: "Avaliação", icon: Ruler },
+  { to: "/site/admin/metricas", label: "Métricas", icon: Activity },
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench },
   { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet },
   { to: "/site/admin/aparencia", label: "Aparência", icon: Palette },
