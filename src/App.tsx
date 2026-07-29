@@ -168,6 +168,7 @@ const App = () => (
               <Route path="treinos" element={<SiteAdminMontarTreino />} />
               <Route path="dieta" element={<SiteAdminMontarDieta />} />
               <Route path="avaliacao-fisica" element={<SiteAdminAvaliacaoFisica />} />
+              <Route path="metricas" element={<SiteAdminMetricas />} />
               <Route path="agenda" element={<SiteAdminPlaceholder icon={CalendarIcon} title="Agenda" description="Em breve: agenda de aulas presenciais e online." />} />
               <Route path="ferramentas" element={<SiteAdminFerramentas />} />
               <Route path="aparencia" element={<SiteAdminAparencia />} />
