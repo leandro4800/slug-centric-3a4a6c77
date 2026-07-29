@@ -299,7 +299,11 @@ export default function TenantLanding() {
     if (!loading && user && !hasSubscription) {
       const isVoucherRequested = searchParams.get("voucher") === "1";
       const pendingCode = sessionStorage.getItem("pending_voucher");
-      if (isVoucherRequested) {
+      const pendingFree = sessionStorage.getItem("pending_free_join");
+      if (pendingFree && pendingFree === slug && tenant?.free_access) {
+        sessionStorage.removeItem("pending_free_join");
+        void handleJoinFree();
+      } else if (isVoucherRequested) {
         setVoucherOpen(true);
         const nextParams = new URLSearchParams(searchParams);
         nextParams.delete("voucher");
@@ -308,7 +312,8 @@ export default function TenantLanding() {
         void handleRedeemVoucher(pendingCode);
       }
     }
-  }, [loading, user, hasSubscription, searchParams, navigate, slug]);
+  }, [loading, user, hasSubscription, searchParams, navigate, slug, tenant?.free_access]);
+
 
   const load = async () => {
     if (!slug) return;
