@@ -183,7 +183,9 @@ serve(async (req) => {
       const nivelInput = nivelKey;
       const variant = Math.floor(Math.random() * 3) + 1; // Sorteio de Variante (1, 2 ou 3)
 
-      const [pachoResp, descansoResp, absResp] = await Promise.all([
+      const nivelVolumeKey = nivelInput === "alto_nivel" ? "atleta" : nivelInput;
+
+      const [pachoResp, descansoResp, absResp, volumeResp] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/biblioteca_metodologia_pacho?nivel=eq.${nivelInput}&variante=eq.${variant}&order=ordem_exercicio.asc`, {
           headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
         }),
@@ -192,8 +194,26 @@ serve(async (req) => {
         }),
         fetch(`${SUPABASE_URL}/rest/v1/biblioteca_abdominais_pacho`, {
           headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
-        })
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/regras_volume_pacho?nivel=eq.${nivelVolumeKey}`, {
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+        }),
       ]);
+
+      if (volumeResp.ok) {
+        const volData = await volumeResp.json();
+        const v = Array.isArray(volData) ? volData[0] : null;
+        if (v) {
+          regrasVolumeContext = `\n\n=== REGRAS DE VOLUME OBRIGATÓRIAS (BANCO — NÍVEL ${nivelLabel.toUpperCase()}) — PRIORIDADE MÁXIMA, INVIOLÁVEL ===
+- MÚSCULOS GRANDES (Peito, Costas, Quadríceps, Posterior de Coxa, Glúteo): MÍNIMO ${v.min_exercicios_grandes} exercícios por sessão do grupo. NUNCA menos.
+- MÚSCULOS PEQUENOS (Bíceps, Tríceps, Panturrilha, Antebraço, Abdômen): MÍNIMO ${v.min_exercicios_pequenos} exercícios.
+- OMBRO: MÍNIMO ${v.min_exercicios_ombro} exercícios (distribuídos entre anterior, lateral e posterior).
+- TÉCNICAS AVANÇADAS DE INTENSIFICAÇÃO: ${v.usa_tecnicas_avancadas ? "OBRIGATÓRIAS (Série Descendente, Pausa-Descanso, Pico de Contração, Bi-set, Isometria) — sempre em português." : "PROIBIDAS neste nível."}
+⛔ Se qualquer dia da prescrição violar estes mínimos, a resposta é INVÁLIDA. Conte os exercícios de cada grupo antes de responder e corrija antes de enviar.
+=== FIM DAS REGRAS DE VOLUME ===\n`;
+        }
+      }
+
 
       if (pachoResp.ok) {
         const pachoData = await pachoResp.json();
