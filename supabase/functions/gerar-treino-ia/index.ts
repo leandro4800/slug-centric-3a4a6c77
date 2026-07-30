@@ -315,7 +315,7 @@ serve(async (req) => {
       }
     }
 
-    const knowledgeContext = bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
+    const knowledgeContext = regrasVolumeContext + bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
 
     const divisoesEscolhidas = Array.isArray(divisoes) && divisoes.length > 0
       ? divisoes
