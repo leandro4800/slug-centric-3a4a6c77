@@ -1,4 +1,3 @@
-import DebugStep2 from "@/pages/DebugStep2";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -192,7 +191,6 @@ const App = () => (
             {/* Onboarding obrigatório */}
             <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
             <Route path="/:slug/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
-            <Route path="/_debug-step2" element={<DebugStep2 />} />
 
 
             {/* Admin AlphaCoach (super admin) */}
