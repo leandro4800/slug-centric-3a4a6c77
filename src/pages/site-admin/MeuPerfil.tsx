@@ -212,7 +212,24 @@ const MeuPerfil = () => {
 
           <TabsContent value="landing">
             <div className="bg-black/60 border border-white/10 rounded-2xl p-6 space-y-4 max-w-2xl">
+              <div className="space-y-2 pb-4 border-b border-white/10">
+                <Label>Slogan / Tagline</Label>
+                <Input
+                  value={tagline}
+                  onChange={(e) => setTagline(e.target.value)}
+                  maxLength={60}
+                  placeholder="Ex: HIPERTROFIA & EMAGRECIMENTO"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Aparece como título na tela inicial do app dos seus alunos e na sua landing pública.
+                </p>
+                <Button onClick={saveTagline} disabled={savingTagline || !tenant?.id} className="bg-gradient-primary">
+                  {savingTagline ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />} Salvar slogan
+                </Button>
+              </div>
+
               <h3 className="font-display text-xl text-primary uppercase tracking-wider">Personalize sua página pública</h3>
+
               <p className="text-sm text-muted-foreground">
                 A tela de vendas do seu time (link público) usa sua foto, logo, tagline, cores e vídeos.
                 Abra o editor completo para atualizar imagens, textos e cores da landing.
