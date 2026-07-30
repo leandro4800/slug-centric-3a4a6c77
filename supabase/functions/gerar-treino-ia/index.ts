@@ -393,16 +393,19 @@ C) AVANÇADO / ATLETA (Intensidade Máxima):
 ═══════════════════════════════════════════════
 6. EXECUÇÃO PACHO ELITE — 3 FASES POR EXERCÍCIO (OBRIGATÓRIO)
 ═══════════════════════════════════════════════
-Para CADA exercício, descreva no campo "detalhes_execucao" as 3 fases:
-- WARM-UP SET (~50% da carga de trabalho, 10-15 reps, longe da falha) — preparar tecido conjuntivo.
-- FEEDER SET (~75% da carga, 4-6 reps, sem falha) — calibrar carga real e padrão neural.
-- WORK SETS (carga máxima, 6-12 reps até a FALHA TÉCNICA absoluta) — estímulo principal.
+Para CADA exercício, descreva no campo "detalhes_execucao" as 3 fases — SEMPRE EM PORTUGUÊS (proibido usar inglês: nada de "warm-up", "feeder", "work set", "top set", "back-off", "drop set", "rest-pause"):
+- SÉRIE DE AQUECIMENTO (~50% da carga de trabalho, 10-15 reps, longe da falha) — preparar tecido conjuntivo.
+- SÉRIE DE AJUSTE (~75% da carga, 4-6 reps, sem falha) — calibrar carga real e padrão neural.
+- SÉRIES DE TRABALHO (carga máxima, 6-12 reps até a FALHA TÉCNICA absoluta) — estímulo principal.
 CADÊNCIA EXCÊNTRICA: SEMPRE 3 segundos na descida controlada. Padrão de cadência DEFAULT: "3-1-X-0" (3s desc, 1s pausa, explosivo concêntrico, 0s topo). Exceções permitidas apenas se a base Pacho indicar.
 
-TOP SET / BACK-OFF (compostos básicos: agachamento, supino, levantamento terra, desenvolvimento, remada curvada):
-- 1ª Work Set: PESADA — 6 a 8 reps até falha.
-- 2ª Work Set (Back-off): MESMO exercício com -20% de carga, 10-12 reps até falha.
-Inclua isso explicitamente no campo "series" e "repeticoes".
+SÉRIE PESADA / SÉRIE LEVE (compostos básicos: agachamento, supino, levantamento terra, desenvolvimento, remada curvada):
+- 1ª Série de Trabalho (SÉRIE PESADA): 6 a 8 reps até falha.
+- 2ª Série de Trabalho (SÉRIE LEVE, redução de carga): MESMO exercício com -20% de carga, 10-12 reps até falha.
+Inclua isso explicitamente no campo "series" e "repeticoes", em português.
+
+GLOSSÁRIO OBRIGATÓRIO DE TÉCNICAS (use estes nomes em português): Série Descendente (drop set), Pausa-Descanso (rest-pause), Bi-set, Tri-set, Série Combinada, Pico de Contração, Isometria, Repetições Forçadas, Repetições Parciais, Série Gigante, Pré-exaustão, Cluster (Séries Fracionadas).
+
 
 PSE (Percepção de Esforço) por nível — informe no campo "observacao":
 - Iniciante: PSE 7-8 (deixar 2-3 reps na reserva).
