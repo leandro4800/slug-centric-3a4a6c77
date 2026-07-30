@@ -1962,49 +1962,13 @@ const AdminMontarTreino = () => {
                         </div>
                         <div>
                           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nome do exercício</Label>
-                          <Popover>
-                            <div className="flex gap-1 mt-1">
-                              <Input
-                                placeholder="Ex: Supino Reto"
-                                value={e.exercicio}
-                                onChange={(ev) => updateEx(globalIdx, { exercicio: ev.target.value })}
-                                className="flex-1"
-                              />
-                              <PopoverTrigger asChild>
-                                <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" title="Escolher dos exercícios salvos (com vídeo)">
-                                  <ChevronDown className="h-3.5 w-3.5" />
-                                </Button>
-                              </PopoverTrigger>
-                            </div>
-                            <PopoverContent align="end" className="w-[280px] p-0 max-h-80 overflow-auto">
-                              <div className="p-2 border-b border-border/40 text-[10px] uppercase tracking-wider text-muted-foreground">
-                                Da biblioteca · {sugestoes.length} sugestões
-                              </div>
-                              {sugestoes.length === 0 ? (
-                                <div className="p-3 text-xs text-muted-foreground">Nenhum exercício salvo para esse grupo. Cadastre na Biblioteca.</div>
-                              ) : (
-                                <ul className="divide-y divide-border/30">
-                                  {sugestoes.map((b) => (
-                                    <li key={b.id}>
-                                      <button
-                                        type="button"
-                                        onClick={(ev) => {
-                                          updateEx(globalIdx, { exercicio: b.nome });
-                                          // close popover
-                                          (ev.currentTarget.closest("[data-radix-popper-content-wrapper]") as HTMLElement | null)
-                                            ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-                                        }}
-                                        className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center justify-between gap-2"
-                                      >
-                                        <span className="text-xs truncate">{b.nome}</span>
-                                        <span className="text-[9px] uppercase text-muted-foreground shrink-0">{b.grupo_muscular}</span>
-                                      </button>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </PopoverContent>
-                          </Popover>
+                          <ExercisePicker
+                            value={e.exercicio}
+                            sugestoes={sugestoes}
+                            biblioteca={biblioteca}
+                            onChangeText={(v) => updateEx(globalIdx, { exercicio: v })}
+                            onPick={(b) => updateEx(globalIdx, { exercicio: b.nome })}
+                          />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
