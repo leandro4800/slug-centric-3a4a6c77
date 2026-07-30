@@ -35,11 +35,20 @@ const getLoadedMainScript = (): string | null => {
   return null;
 };
 
-const clearAllCachesAndReload = async () => {
+/**
+ * Limpa caches do navegador (exceto os do Firebase Messaging), força atualização
+ * dos service workers e recarrega o app com URL "bustada".
+ * Usado tanto pelo checador de versão quanto pela recuperação de erro fatal.
+ */
+export const hardResetAndReload = async (targetPath?: string) => {
   try {
     if ("caches" in window) {
       const keys = await caches.keys();
-      await Promise.all(keys.map((k) => caches.delete(k)));
+      await Promise.all(
+        keys
+          .filter((k) => !k.toLowerCase().includes("firebase"))
+          .map((k) => caches.delete(k)),
+      );
     }
     if ("serviceWorker" in navigator) {
       const regs = await navigator.serviceWorker.getRegistrations();
@@ -49,10 +58,12 @@ const clearAllCachesAndReload = async () => {
     console.warn("[updater] erro limpando caches", e);
   }
   // Bust de URL para forçar revalidação na navegação
-  const url = new URL(window.location.href);
+  const url = new URL(targetPath ?? window.location.href, window.location.origin);
   url.searchParams.set("_v", Date.now().toString());
   window.location.replace(url.toString());
 };
+
+const clearAllCachesAndReload = () => hardResetAndReload();
 
 const checkForUpdate = async () => {
   try {
@@ -89,6 +100,42 @@ export const startUpdateChecker = () => {
 
   // Checa a cada 2 minutos com a aba aberta
   setInterval(() => void checkForUpdate(), 2 * 60 * 1000);
+
+  // Falha ao baixar um chunk = shell antiga em cache (PWA instalado).
+  // Recupera automaticamente, no máximo uma vez por minuto.
+  const RECOVER_KEY = "ac_chunk_recovered_at";
+  const recoverFromStaleShell = () => {
+    try {
+      const last = Number(sessionStorage.getItem(RECOVER_KEY) || 0);
+      if (Date.now() - last < 60_000) return;
+      sessionStorage.setItem(RECOVER_KEY, String(Date.now()));
+    } catch {
+      /* storage indisponível */
+    }
+    console.warn("[updater] chunk defasado detectado — atualizando app");
+    void hardResetAndReload();
+  };
+
+  const looksStale = (msg: string) => {
+    const m = msg.toLowerCase();
+    return (
+      m.includes("dynamically imported module") ||
+      m.includes("importing a module script failed") ||
+      m.includes("chunkloaderror") ||
+      m.includes("failed to fetch dynamically")
+    );
+  };
+
+  window.addEventListener("vite:preloadError", () => recoverFromStaleShell());
+  window.addEventListener("error", (ev) => {
+    const msg = (ev as ErrorEvent)?.message || "";
+    if (looksStale(msg)) recoverFromStaleShell();
+  });
+  window.addEventListener("unhandledrejection", (ev) => {
+    const reason: any = (ev as PromiseRejectionEvent)?.reason;
+    const msg = typeof reason === "string" ? reason : reason?.message || "";
+    if (looksStale(msg)) recoverFromStaleShell();
+  });
 
   // Primeira checagem 5s após o load
   setTimeout(() => void checkForUpdate(), 5000);
