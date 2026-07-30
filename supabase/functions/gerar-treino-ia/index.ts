@@ -18,6 +18,45 @@ const jsonResponse = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// Garante que nenhum termo técnico em inglês chegue ao app/banco.
+const TRADUCOES: [RegExp, string][] = [
+  [/warm[- ]?up set[s]?/gi, "Série de Aquecimento"],
+  [/warm[- ]?up/gi, "Aquecimento"],
+  [/feeder set[s]?/gi, "Série de Ajuste"],
+  [/feeder/gi, "Ajuste"],
+  [/work set[s]?/gi, "Séries de Trabalho"],
+  [/working set[s]?/gi, "Séries de Trabalho"],
+  [/top set/gi, "Série Pesada"],
+  [/back[- ]?off set[s]?/gi, "Série Leve"],
+  [/back[- ]?off/gi, "Série Leve"],
+  [/drop[- ]?set[s]?/gi, "Série Descendente"],
+  [/rest[- ]?pause/gi, "Pausa-Descanso"],
+  [/cluster set[s]?/gi, "Séries Fracionadas"],
+  [/super[- ]?set[s]?/gi, "Bi-set"],
+  [/giant set[s]?/gi, "Série Gigante"],
+  [/forced rep[s]?/gi, "Repetições Forçadas"],
+  [/partial rep[s]?/gi, "Repetições Parciais"],
+  [/pre[- ]?exhaust(ion)?/gi, "Pré-exaustão"],
+  [/to failure/gi, "até a falha"],
+  [/failure/gi, "falha"],
+  [/reps?\b/gi, "reps"],
+];
+
+const traduzirTexto = (s: string) => TRADUCOES.reduce((acc, [re, to]) => acc.replace(re, to), s);
+
+const traduzirTermos = <T,>(value: T): T => {
+  if (typeof value === "string") return traduzirTexto(value) as unknown as T;
+  if (Array.isArray(value)) return value.map((v) => traduzirTermos(v)) as unknown as T;
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = traduzirTermos(v);
+    return out as unknown as T;
+  }
+  return value;
+};
+
+
+
 const stripAccents = (s: string) =>
   String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
