@@ -39,6 +39,9 @@ const MeuPerfil = () => {
   const [avalOpen, setAvalOpen] = useState(false);
   const [lastAval, setLastAval] = useState<any>(null);
 
+  const [tagline, setTagline] = useState("");
+  const [savingTagline, setSavingTagline] = useState(false);
+
   const load = async () => {
     if (!user) return;
     setLoading(true);
