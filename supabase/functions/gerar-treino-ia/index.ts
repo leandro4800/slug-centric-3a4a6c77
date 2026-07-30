@@ -157,6 +157,7 @@ serve(async (req) => {
     let bibliotecaPachoContext = "";
     let regrasDescansoContext = "";
     let bibliotecaAbsContext = "";
+    let regrasVolumeContext = "";
 
     // Normaliza nível removendo acento (DB usa "intermediario", "avancado", "alto_nivel")
     const stripAcc = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
