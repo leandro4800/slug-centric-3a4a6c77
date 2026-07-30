@@ -586,7 +586,7 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
       return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
-    return new Response(JSON.stringify(args), {
+    return new Response(JSON.stringify(traduzirTermos(args)), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
