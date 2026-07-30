@@ -473,7 +473,7 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
                         type: "object",
                         properties: {
                           nome: { type: "string" },
-                          series: { type: "string", description: "Ex: 1 Warm-up + 1 Feeder + 2 Work Sets (Top Set 6-8 + Back-off 10-12)" },
+                          series: { type: "string", description: "Em português. Ex: 1 Série de Aquecimento + 1 Série de Ajuste + 2 Séries de Trabalho (Pesada 6-8 + Leve 10-12)" },
                           repeticoes: { type: "string", description: "Ex: 6-8 (top) / 10-12 (back-off)" },
                           cadencia: { type: "string", description: "Padrão 3-1-X-0 (excêntrica 3s sempre)" },
                           detalhes_execucao: { type: "string", description: "Descreva as 3 fases: Warm-up (~50%), Feeder (~75%), Work Sets até falha + biomecânica" },
