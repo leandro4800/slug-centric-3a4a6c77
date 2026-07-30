@@ -62,6 +62,24 @@ const MeuPerfil = () => {
 
   useEffect(() => { void load(); }, [user?.id]);
 
+  useEffect(() => {
+    if (!tenant?.id) return;
+    supabase.from("tenants").select("tagline").eq("id", tenant.id).maybeSingle()
+      .then(({ data }) => setTagline(data?.tagline || ""));
+  }, [tenant?.id]);
+
+  const saveTagline = async () => {
+    if (!tenant?.id) return;
+    setSavingTagline(true);
+    const { error } = await supabase.from("tenants")
+      .update({ tagline: tagline.trim() || null })
+      .eq("id", tenant.id);
+    setSavingTagline(false);
+    if (error) toast.error(error.message);
+    else toast.success("Slogan atualizado");
+  };
+
+
   const saveDados = async () => {
     if (!user) return;
     setSaving(true);
