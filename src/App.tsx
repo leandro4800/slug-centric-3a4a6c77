@@ -1,3 +1,4 @@
+import DebugStep2 from "@/pages/DebugStep2";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, useLocation, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
