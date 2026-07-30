@@ -430,7 +430,8 @@ PSE (Percepção de Esforço) por nível — informe no campo "observacao":
 ═══════════════════════════════════════════════
 - PROIBIDO treinar Peito e Costas no mesmo dia (exceto Full Body iniciante).
 - Frequências de 5x/semana DEVEM ter pelo menos 1 dia de OFF na quarta OU quinta-feira.
-- Volume MÍNIMO para grandes grupos (Peito, Costas, Quadríceps): 4 exercícios em divisão.
+- Volume MÍNIMO para grandes grupos: siga EXATAMENTE as REGRAS DE VOLUME do banco no topo deste prompt (nunca 3 exercícios para músculo grande em intermediário/avançado/atleta).
+- IDIOMA: todos os campos de texto DEVEM estar em português do Brasil. Qualquer termo em inglês invalida a resposta.
 - Avançado treinando 1 músculo/dia: MÍNIMO 4-5 exercícios + técnicas avançadas obrigatórias.
 - Anti-repetição: respeite o histórico — varie pelo menos 60% dos exercícios protagonistas em relação ao último ciclo, mantendo o padrão/divisão do coach se existente.
 
