@@ -192,6 +192,7 @@ const App = () => (
             <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
             <Route path="/:slug/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
 
+
             {/* Admin AlphaCoach (super admin) */}
             <Route path="/admin/coaches" element={<RequireAuth requireRole="admin"><AdminCoaches /></RequireAuth>} />
             <Route path="/admin/debug-push" element={<RequireAuth requireRole="admin"><AdminDebugPush /></RequireAuth>} />
