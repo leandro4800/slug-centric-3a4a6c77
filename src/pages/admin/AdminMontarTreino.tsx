@@ -2029,13 +2029,12 @@ const ExercisePicker = ({
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState("");
 
-  const sugIds = new Set(sugestoes.map((s) => s.id));
-  const outros = biblioteca.filter((b) => !sugIds.has(b.id));
   const q = normalizarTexto(busca.trim());
   const filtrar = (list: BibItem[]) =>
     q ? list.filter((b) => normalizarTexto(`${b.nome} ${b.grupo_muscular}`).includes(q)) : list;
   const listaSug = filtrar(sugestoes);
-  const listaOutros = filtrar(outros);
+  // Sempre lista a biblioteca completa (todos os grupos), inclusive itens sem grupo salvo
+  const listaOutros = filtrar(biblioteca);
 
   const Item = ({ b }: { b: BibItem }) => (
     <li>
