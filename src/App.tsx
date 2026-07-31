@@ -63,6 +63,7 @@ import SiteAdminAlunos from "./pages/site-admin/Alunos";
 import SiteAdminNovoAluno from "./pages/site-admin/NovoAluno";
 import SiteAdminPlaceholder from "./pages/site-admin/Placeholder";
 import SiteAdminAparencia from "./pages/site-admin/Aparencia";
+import SiteAdminLandingEditor from "./pages/site-admin/LandingEditor";
 import SiteAdminFinanceiro from "./pages/site-admin/Financeiro";
 import SiteAdminMontarTreino from "./pages/site-admin/MontarTreino";
 import SiteAdminMontarDieta from "./pages/site-admin/MontarDieta";
@@ -173,6 +174,7 @@ const App = () => (
               <Route path="agenda" element={<SiteAdminPlaceholder icon={CalendarIcon} title="Agenda" description="Em breve: agenda de aulas presenciais e online." />} />
               <Route path="ferramentas" element={<SiteAdminFerramentas />} />
               <Route path="aparencia" element={<SiteAdminAparencia />} />
+              <Route path="landing" element={<SiteAdminLandingEditor />} />
               <Route path="faturamento" element={<SiteAdminFinanceiro />} />
               <Route path="planos" element={<SiteAdminPlanos />} />
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
