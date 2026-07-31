@@ -178,6 +178,7 @@ const App = () => (
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
               <Route path="meu-perfil" element={<SiteAdminMeuPerfil />} />
               <Route path="integracao-ia" element={<SiteAdminIntegracaoIA />} />
+              <Route path="coaches" element={<SiteAdminCoaches />} />
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="ct/camps" element={<SiteAdminCtCamps />} />
               <Route path="ct/nutricao" element={<SiteAdminCtNutricao />} />
