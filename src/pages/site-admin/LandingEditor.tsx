@@ -7,8 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { PlanConfig } from "@/components/coach/PlanConfig";
 
-type MediaKind = "coach" | "hero" | "logo" | "login" | "splash";
+type MediaKind = "coach" | "hero" | "logo" | "login" | "splash" | "app_preview";
 
 interface TenantLanding {
   id: string;
@@ -24,6 +25,7 @@ interface TenantLanding {
   hero_url: string | null;
   login_video_url: string | null;
   splash_video_url: string | null;
+  app_preview_url: string | null;
 }
 
 const COLUMN_BY_KIND: Record<MediaKind, keyof TenantLanding> = {
@@ -32,6 +34,7 @@ const COLUMN_BY_KIND: Record<MediaKind, keyof TenantLanding> = {
   logo: "logo_url",
   login: "login_video_url",
   splash: "splash_video_url",
+  app_preview: "app_preview_url",
 };
 
 const LandingEditor = () => {
@@ -53,7 +56,7 @@ const LandingEditor = () => {
     setLoading(true);
     const { data: t, error } = await supabase
       .from("tenants")
-      .select("id, slug, nome, tagline, bio, cidade, estado, especialidades, logo_url, foto_url, hero_url, login_video_url, splash_video_url")
+      .select("id, slug, nome, tagline, bio, cidade, estado, especialidades, logo_url, foto_url, hero_url, login_video_url, splash_video_url, app_preview_url")
       .eq("id", siteTenant.id)
       .maybeSingle();
     if (error) toast.error(error.message);
@@ -114,7 +117,7 @@ const LandingEditor = () => {
     if (!data) return;
     setUploading(kind);
     try {
-      const isImage = kind === "coach" || kind === "hero" || kind === "logo";
+      const isImage = kind === "coach" || kind === "hero" || kind === "logo" || kind === "app_preview";
       let uploadFile: Blob = file;
       let ext = (file.name.split(".").pop() || "jpg").toLowerCase();
       let contentType = file.type || "application/octet-stream";
@@ -211,9 +214,20 @@ const LandingEditor = () => {
             <MediaSlot label="Foto do coach" hint="Aparece no topo da landing e nos cards." kind="coach" url={data.foto_url} uploading={uploading} onUpload={handleUpload} onClear={clearMedia} />
             <MediaSlot label="Imagem de capa (hero)" hint="Fundo principal da página pública." kind="hero" url={data.hero_url} uploading={uploading} onUpload={handleUpload} onClear={clearMedia} />
             <MediaSlot label="Logo" hint="Usada no painel, no app e no cabeçalho." kind="logo" url={data.logo_url} uploading={uploading} onUpload={handleUpload} onClear={clearMedia} />
+            <MediaSlot label="Tela do celular (mockup)" hint="Imagem exibida dentro do celular na seção “Como funciona”." kind="app_preview" url={data.app_preview_url} uploading={uploading} onUpload={handleUpload} onClear={clearMedia} />
             <MediaSlot label="Vídeo de login" hint="Fundo da tela de login do seu app." kind="login" url={data.login_video_url} video uploading={uploading} onUpload={handleUpload} onClear={clearMedia} />
             <MediaSlot label="Vídeo de abertura (splash)" hint="Exibido ao abrir o app." kind="splash" url={data.splash_video_url} video uploading={uploading} onUpload={handleUpload} onClear={clearMedia} />
           </section>
+        </div>
+      )}
+
+      {!loading && data && (
+        <div className="max-w-6xl mt-8 bg-black/60 border border-white/10 rounded-2xl p-6">
+          <h2 className="font-display text-xl text-primary uppercase tracking-wider mb-1">Planos da landing</h2>
+          <p className="text-xs text-muted-foreground mb-5">
+            Os valores abaixo são os planos exibidos na sua página pública.
+          </p>
+          <PlanConfig />
         </div>
       )}
     </div>

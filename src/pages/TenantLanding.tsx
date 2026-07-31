@@ -87,7 +87,7 @@ const intervaloLabel = {
 };
 
 const TENANT_PUBLIC_COLUMNS =
-  "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, free_access";
+  "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, free_access, app_preview_url";
 
 
 const FEATURES = [
@@ -728,7 +728,7 @@ export default function TenantLanding() {
             <div className="order-1 md:order-2">
               <div className="relative mx-auto aspect-[9/16] w-full max-w-xs overflow-hidden rounded-[2.5rem] border-[10px] border-foreground/90 bg-card shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)]">
                 <img
-                  src={coachImage || cardTreino}
+                  src={(tenant as any)?.app_preview_url || coachImage || cardTreino}
                   alt={`App do ${tenant.nome}`}
                   className="h-full w-full object-cover"
                 />

@@ -3137,6 +3137,7 @@ export type Database = {
       tenants: {
         Row: {
           accent_hsl: string
+          app_preview_url: string | null
           bio: string | null
           cidade: string | null
           created_at: string
@@ -3166,6 +3167,7 @@ export type Database = {
         }
         Insert: {
           accent_hsl?: string
+          app_preview_url?: string | null
           bio?: string | null
           cidade?: string | null
           created_at?: string
@@ -3195,6 +3197,7 @@ export type Database = {
         }
         Update: {
           accent_hsl?: string
+          app_preview_url?: string | null
           bio?: string | null
           cidade?: string | null
           created_at?: string

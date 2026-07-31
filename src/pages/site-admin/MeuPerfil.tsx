@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { UserCog, Loader2, Ruler, Heart, ExternalLink, Palette, Save } from "lucide-react";
+import { UserCog, Loader2, Ruler, Heart, Save } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,9 +39,6 @@ const MeuPerfil = () => {
   const [avalOpen, setAvalOpen] = useState(false);
   const [lastAval, setLastAval] = useState<any>(null);
 
-  const [tagline, setTagline] = useState("");
-  const [savingTagline, setSavingTagline] = useState(false);
-
   const load = async () => {
     if (!user) return;
     setLoading(true);
@@ -62,24 +58,6 @@ const MeuPerfil = () => {
   };
 
   useEffect(() => { void load(); }, [user?.id]);
-
-  useEffect(() => {
-    if (!tenant?.id) return;
-    supabase.from("tenants").select("tagline").eq("id", tenant.id).maybeSingle()
-      .then(({ data }) => setTagline(data?.tagline || ""));
-  }, [tenant?.id]);
-
-  const saveTagline = async () => {
-    if (!tenant?.id) return;
-    setSavingTagline(true);
-    const { error } = await supabase.from("tenants")
-      .update({ tagline: tagline.trim() || null })
-      .eq("id", tenant.id);
-    setSavingTagline(false);
-    if (error) toast.error(error.message);
-    else toast.success("Slogan atualizado");
-  };
-
 
   const saveDados = async () => {
     if (!user) return;
@@ -130,7 +108,6 @@ const MeuPerfil = () => {
             <TabsTrigger value="dados"><UserCog className="h-4 w-4 mr-2" /> Dados pessoais</TabsTrigger>
             <TabsTrigger value="anamnese"><Heart className="h-4 w-4 mr-2" /> Anamnese</TabsTrigger>
             <TabsTrigger value="avaliacao"><Ruler className="h-4 w-4 mr-2" /> Avaliação física</TabsTrigger>
-            <TabsTrigger value="landing"><Palette className="h-4 w-4 mr-2" /> Landing page</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dados">
@@ -211,48 +188,7 @@ const MeuPerfil = () => {
             </div>
           </TabsContent>
 
-          <TabsContent value="landing">
-            <div className="bg-black/60 border border-white/10 rounded-2xl p-6 space-y-4 max-w-2xl">
-              <div className="space-y-2 pb-4 border-b border-white/10">
-                <Label>Slogan / Tagline</Label>
-                <Input
-                  value={tagline}
-                  onChange={(e) => setTagline(e.target.value)}
-                  maxLength={60}
-                  placeholder="Ex: HIPERTROFIA & EMAGRECIMENTO"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Aparece como título na tela inicial do app dos seus alunos e na sua landing pública.
-                </p>
-                <Button onClick={saveTagline} disabled={savingTagline || !tenant?.id} className="bg-gradient-primary">
-                  {savingTagline ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />} Salvar slogan
-                </Button>
-              </div>
 
-              <h3 className="font-display text-xl text-primary uppercase tracking-wider">Personalize sua página pública</h3>
-
-              <p className="text-sm text-muted-foreground">
-                A tela de vendas do seu time (link público) usa sua foto, logo, tagline, cores e vídeos.
-                Abra o editor completo para atualizar imagens, textos e cores da landing.
-              </p>
-              {tenant?.slug ? (
-                <div className="flex flex-wrap gap-2">
-                  <Button asChild className="bg-gradient-primary">
-                    <Link to="/site/admin/landing">
-                      <Palette className="h-4 w-4 mr-2" /> Editar aparência e mídias
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <a href={`/${tenant.slug}?preview=1`} target="_blank" rel="noreferrer">
-                      Ver landing pública <ExternalLink className="h-3 w-3 ml-2" />
-                    </a>
-                  </Button>
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground">Tenant não encontrado.</p>
-              )}
-            </div>
-          </TabsContent>
         </Tabs>
       )}
     </div>
