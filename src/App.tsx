@@ -63,6 +63,7 @@ import SiteAdminAlunos from "./pages/site-admin/Alunos";
 import SiteAdminNovoAluno from "./pages/site-admin/NovoAluno";
 import SiteAdminPlaceholder from "./pages/site-admin/Placeholder";
 import SiteAdminAparencia from "./pages/site-admin/Aparencia";
+import SiteAdminLandingEditor from "./pages/site-admin/LandingEditor";
 import SiteAdminFinanceiro from "./pages/site-admin/Financeiro";
 import SiteAdminMontarTreino from "./pages/site-admin/MontarTreino";
 import SiteAdminMontarDieta from "./pages/site-admin/MontarDieta";
