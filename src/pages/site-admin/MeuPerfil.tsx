@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { UserCog, Loader2, Ruler, Heart, ExternalLink, Palette, Save } from "lucide-react";
+import { UserCog, Loader2, Ruler, Heart, Save } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,9 +39,6 @@ const MeuPerfil = () => {
   const [avalOpen, setAvalOpen] = useState(false);
   const [lastAval, setLastAval] = useState<any>(null);
 
-  const [tagline, setTagline] = useState("");
-  const [savingTagline, setSavingTagline] = useState(false);
-
   const load = async () => {
     if (!user) return;
     setLoading(true);
@@ -62,24 +58,6 @@ const MeuPerfil = () => {
   };
 
   useEffect(() => { void load(); }, [user?.id]);
-
-  useEffect(() => {
-    if (!tenant?.id) return;
-    supabase.from("tenants").select("tagline").eq("id", tenant.id).maybeSingle()
-      .then(({ data }) => setTagline(data?.tagline || ""));
-  }, [tenant?.id]);
-
-  const saveTagline = async () => {
-    if (!tenant?.id) return;
-    setSavingTagline(true);
-    const { error } = await supabase.from("tenants")
-      .update({ tagline: tagline.trim() || null })
-      .eq("id", tenant.id);
-    setSavingTagline(false);
-    if (error) toast.error(error.message);
-    else toast.success("Slogan atualizado");
-  };
-
 
   const saveDados = async () => {
     if (!user) return;
