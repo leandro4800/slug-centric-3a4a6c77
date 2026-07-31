@@ -2,7 +2,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
   LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, ShieldCheck,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +54,9 @@ export const SiteAdminSidebar = () => {
 
   const items: Item[] = [
     ...baseItems,
+    ...(tenant?.slug === "alphateam" ? [
+      { to: "/site/admin/coaches", label: "Coaches parceiros", icon: ShieldCheck, section: "Negócio" },
+    ] : []),
     ...(vertical === "fight" ? [
       { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
       { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
