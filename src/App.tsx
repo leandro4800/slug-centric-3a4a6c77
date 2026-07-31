@@ -74,6 +74,7 @@ import SiteAdminMeuPerfil from "./pages/site-admin/MeuPerfil";
 import SiteAdminSuporte from "./pages/site-admin/Suporte";
 import SiteAdminPlanos from "./pages/site-admin/Planos";
 import SiteAdminIntegracaoIA from "./pages/site-admin/IntegracaoIA";
+import SiteAdminCoaches from "./pages/site-admin/Coaches";
 import { Calendar as CalendarIcon, Loader2, Palette, Wallet } from "lucide-react";
 import SiteAdminCtCamps from "./pages/site-admin/ct/Camps";
 import SiteAdminCtNutricao from "./pages/site-admin/ct/NutricaoCombate";
