@@ -237,12 +237,12 @@ const MeuPerfil = () => {
               {tenant?.slug ? (
                 <div className="flex flex-wrap gap-2">
                   <Button asChild className="bg-gradient-primary">
-                    <a href={`/${tenant.slug}/admin?tab=aparencia`} target="_blank" rel="noreferrer">
-                      <Palette className="h-4 w-4 mr-2" /> Editar aparência e mídias <ExternalLink className="h-3 w-3 ml-2" />
-                    </a>
+                    <Link to="/site/admin/aparencia">
+                      <Palette className="h-4 w-4 mr-2" /> Editar aparência e mídias
+                    </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <a href={`/${tenant.slug}`} target="_blank" rel="noreferrer">
+                    <a href={`/${tenant.slug}?preview=1`} target="_blank" rel="noreferrer">
                       Ver landing pública <ExternalLink className="h-3 w-3 ml-2" />
                     </a>
                   </Button>
