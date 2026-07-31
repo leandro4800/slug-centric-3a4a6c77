@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { UserCog, Loader2, Ruler, Heart, ExternalLink, Palette, Save } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
