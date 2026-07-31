@@ -392,7 +392,8 @@ export default function TenantLanding() {
           .maybeSingle();
 
         setHasSubscription(!!sub);
-        if (sub) {
+        const previewMode = searchParams.get("preview") !== null;
+        if (sub && !previewMode) {
           navigate(`/${slug}/app`, { replace: true });
           return;
         }
