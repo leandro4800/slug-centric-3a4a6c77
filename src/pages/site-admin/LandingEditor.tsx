@@ -129,7 +129,7 @@ const LandingEditor = () => {
       const { data: { publicUrl } } = supabase.storage.from("branding").getPublicUrl(path);
       const finalUrl = isImage ? `${publicUrl}?v=${Date.now()}` : publicUrl;
       const { error: upErr } = await supabase.from("tenants")
-        .update({ [COLUMN_BY_KIND[kind]]: finalUrl })
+        .update({ [COLUMN_BY_KIND[kind]]: finalUrl } as never)
         .eq("id", data.id);
       if (upErr) throw upErr;
       toast.success("Mídia atualizada!");
@@ -143,7 +143,7 @@ const LandingEditor = () => {
 
   const clearMedia = async (kind: MediaKind) => {
     if (!data) return;
-    const { error } = await supabase.from("tenants").update({ [COLUMN_BY_KIND[kind]]: null }).eq("id", data.id);
+    const { error } = await supabase.from("tenants").update({ [COLUMN_BY_KIND[kind]]: null } as never).eq("id", data.id);
     if (error) toast.error(error.message);
     else { toast.success("Removido"); await load(); }
   };
