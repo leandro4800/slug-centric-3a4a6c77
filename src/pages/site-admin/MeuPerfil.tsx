@@ -130,7 +130,6 @@ const MeuPerfil = () => {
             <TabsTrigger value="dados"><UserCog className="h-4 w-4 mr-2" /> Dados pessoais</TabsTrigger>
             <TabsTrigger value="anamnese"><Heart className="h-4 w-4 mr-2" /> Anamnese</TabsTrigger>
             <TabsTrigger value="avaliacao"><Ruler className="h-4 w-4 mr-2" /> Avaliação física</TabsTrigger>
-            <TabsTrigger value="landing"><Palette className="h-4 w-4 mr-2" /> Landing page</TabsTrigger>
           </TabsList>
 
           <TabsContent value="dados">
