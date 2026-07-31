@@ -15,6 +15,9 @@ const config: CapacitorConfig = {
   appId: 'app.leandro.alphacoach',
   appName: 'AlphaCoach',
   webDir: 'dist',
+  android: {
+    packageName: 'com.alphacoachpro.app'
+  },
   ...(isDev && {
     server: {
       url: 'https://164775dd-51cd-4aab-8398-20f1eeab0a23.lovableproject.com?forceHideBadge=true',
