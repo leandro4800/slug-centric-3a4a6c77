@@ -238,7 +238,7 @@ const MeuPerfil = () => {
               {tenant?.slug ? (
                 <div className="flex flex-wrap gap-2">
                   <Button asChild className="bg-gradient-primary">
-                    <Link to="/site/admin/aparencia">
+                    <Link to="/site/admin/landing">
                       <Palette className="h-4 w-4 mr-2" /> Editar aparência e mídias
                     </Link>
                   </Button>
