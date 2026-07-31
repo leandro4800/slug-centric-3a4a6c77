@@ -54,6 +54,9 @@ export const SiteAdminSidebar = () => {
 
   const items: Item[] = [
     ...baseItems,
+    ...(tenant?.slug === "alphateam" ? [
+      { to: "/site/admin/coaches", label: "Coaches parceiros", icon: ShieldCheck, section: "Negócio" },
+    ] : []),
     ...(vertical === "fight" ? [
       { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
       { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
