@@ -655,7 +655,25 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
       return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
-    return new Response(JSON.stringify(traduzirTermos(args)), {
+    // Segunda camada de segurança: filtra/substitui o que a IA devolveu
+    const { args: argsSeguros, bloqueados } = aplicarFiltroRestricoes(args, restricoes);
+    if (bloqueados.length > 0) {
+      console.warn("Trava clínica acionada:", JSON.stringify(bloqueados));
+    }
+
+    const payload = {
+      ...traduzirTermos(argsSeguros),
+      restricoes_aplicadas: restricoes.temRestricao
+        ? {
+            gravidade: restricoes.gravidade,
+            regioes: restricoes.regioes.map((r) => r.rotulo),
+            relato: restricoes.textoOriginal,
+            bloqueados,
+          }
+        : null,
+    };
+
+    return new Response(JSON.stringify(payload), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
