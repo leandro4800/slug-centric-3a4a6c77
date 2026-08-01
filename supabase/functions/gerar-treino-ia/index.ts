@@ -187,6 +187,34 @@ serve(async (req) => {
       resolvedUserId = requestedTarget;
     }
 
+    // === RESTRIÇÕES CLÍNICAS ===
+    // Busca a anamnese direto no banco (rede de segurança: mesmo que o cliente
+    // não envie lesões, o servidor considera o que o aluno declarou).
+    let anamneseRestricoes: string[] = [];
+    try {
+      const { data: anam } = await adminE
+        .from("anamnese_aluno")
+        .select("lesoes_atuais, cirurgias, doencas, medicamentos")
+        .eq("aluno_id", resolvedUserId)
+        .maybeSingle();
+      if (anam) {
+        anamneseRestricoes = [
+          anam.lesoes_atuais || "",
+          anam.cirurgias ? `cirurgia: ${anam.cirurgias}` : "",
+          ...(Array.isArray(anam.doencas) ? anam.doencas : []),
+        ].filter(Boolean);
+      }
+    } catch (_e) {
+      // anamnese ausente não bloqueia a geração
+    }
+
+    const restricoes = analisarRestricoes(
+      perfil?.lesoes,
+      perfil?.limitacoes,
+      perfil?.restricoes_extras,
+      anamneseRestricoes,
+    );
+
     const lesoes = (perfil?.lesoes || []).join(", ") || "nenhuma";
     const limitacoes = (perfil?.limitacoes || []).join(", ") || "nenhuma";
 
