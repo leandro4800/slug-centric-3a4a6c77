@@ -17,6 +17,9 @@ type Preset = {
 };
 
 // Defaults Netflix/Ferrari já estão no BrandingProvider; aqui só os presets.
+// IMPORTANTE: os temas alteram APENAS cores de destaque (botões, faixas, bordas).
+// Fundo, cards, texto e texturas NÃO são alterados para não sobrepor vídeos/thumbs
+// nem quebrar a legibilidade das telas (principalmente a tela Início).
 const PRESETS: Preset[] = [
   {
     id: "ferrari",
@@ -26,11 +29,9 @@ const PRESETS: Preset[] = [
     overrides: {
       primary: "355 100% 48%",
       primary_glow: "355 100% 60%",
+      primary_foreground: "0 0% 100%",
       accent: "355 100% 48%",
-      background: "0 0% 0%",
-      card: "0 0% 3%",
-      foreground: "0 0% 98%",
-      border: "0 0% 15%",
+      accent_foreground: "0 0% 100%",
     },
   },
   {
@@ -39,33 +40,24 @@ const PRESETS: Preset[] = [
     subtitle: "Industrial · Concreto & Detalhes",
     swatches: ["#9A9A9A", "#FFFFFF", "#E10600", "#000000"],
     overrides: {
-      primary: "355 100% 48%",
-      primary_glow: "355 100% 60%",
-      primary_foreground: "0 0% 100%",
+      primary: "0 0% 75%",
+      primary_glow: "0 0% 90%",
+      primary_foreground: "0 0% 5%",
       accent: "0 0% 100%",
       accent_foreground: "0 0% 0%",
-      background: "0 0% 60%",
-      card: "0 0% 65%",
-      foreground: "0 0% 5%",
-      border: "0 0% 45%",
-      bg_texture: "url('/cimento-texture.jpg')",
     },
   },
   {
     id: "gold-rush",
     name: "BLACK GOLD",
-    subtitle: "Cimento realista · Dourado",
+    subtitle: "Luxo · Dourado",
     swatches: ["#101010", "#2F2F2F", "#FFD700", "#FFFACD"],
-    previewBackground: "url('/black-gold-cement-bg.jpg') center/cover",
     overrides: {
       primary: "45 100% 50%",
       primary_glow: "45 100% 80%",
+      primary_foreground: "0 0% 8%",
       accent: "44 85% 50%",
-      background: "0 0% 4%",
-      card: "0 0% 6%",
-      foreground: "0 0% 98%",
-      border: "0 0% 15%",
-      bg_texture: "url('/black-gold-cement-bg.jpg')",
+      accent_foreground: "0 0% 8%",
     },
   },
   {
@@ -76,11 +68,9 @@ const PRESETS: Preset[] = [
     overrides: {
       primary: "212 100% 50%",
       primary_glow: "212 100% 65%",
+      primary_foreground: "0 0% 100%",
       accent: "212 100% 50%",
-      background: "220 14% 8%",
-      card: "222 18% 13%",
-      foreground: "0 0% 100%",
-      border: "220 14% 22%",
+      accent_foreground: "0 0% 100%",
     },
   },
   {
@@ -91,26 +81,22 @@ const PRESETS: Preset[] = [
     overrides: {
       primary: "199 89% 74%",
       primary_glow: "199 89% 85%",
+      primary_foreground: "222 47% 11%",
       accent: "199 89% 74%",
-      background: "222 47% 11%",
-      card: "217 33% 17%",
-      foreground: "60 100% 97%",
-      border: "217 33% 25%",
+      accent_foreground: "222 47% 11%",
     },
   },
   {
     id: "nordic-minimalist",
-    name: "NORDIC MINIMALIST",
+    name: "NORDIC SILVER",
     subtitle: "Limpo & Sofisticado",
     swatches: ["#FBF9FA", "#212529", "#A9A9A9", "#000000"],
     overrides: {
-      primary: "210 11% 15%",
-      primary_glow: "210 11% 30%",
-      accent: "210 11% 15%",
-      background: "330 14% 98%",
-      card: "0 0% 100%",
-      foreground: "210 11% 15%",
-      border: "0 0% 85%",
+      primary: "210 8% 72%",
+      primary_glow: "210 8% 88%",
+      primary_foreground: "210 11% 12%",
+      accent: "210 8% 72%",
+      accent_foreground: "210 11% 12%",
     },
   },
   {
@@ -119,13 +105,11 @@ const PRESETS: Preset[] = [
     subtitle: "Tático · Verde Militar",
     swatches: ["#1A1C14", "#2D3021", "#4B5320", "#D1D5B8"],
     overrides: {
-      primary: "72 45% 23%",
-      primary_glow: "72 45% 40%",
-      accent: "72 45% 23%",
-      background: "75 15% 9%",
-      card: "75 15% 14%",
-      foreground: "60 30% 96%",
-      border: "75 15% 25%",
+      primary: "72 45% 38%",
+      primary_glow: "72 45% 52%",
+      primary_foreground: "60 30% 96%",
+      accent: "72 45% 38%",
+      accent_foreground: "60 30% 96%",
     },
   },
   {
@@ -136,11 +120,9 @@ const PRESETS: Preset[] = [
     overrides: {
       primary: "45 38% 63%",
       primary_glow: "45 38% 80%",
+      primary_foreground: "30 10% 12%",
       accent: "45 38% 63%",
-      background: "30 10% 12%",
-      card: "30 10% 18%",
-      foreground: "40 20% 98%",
-      border: "30 10% 25%",
+      accent_foreground: "30 10% 12%",
     },
   },
   {
@@ -151,11 +133,9 @@ const PRESETS: Preset[] = [
     overrides: {
       primary: "282 100% 54%",
       primary_glow: "282 100% 75%",
+      primary_foreground: "0 0% 100%",
       accent: "282 100% 54%",
-      background: "270 100% 3%",
-      card: "270 100% 7%",
-      foreground: "0 0% 100%",
-      border: "270 50% 20%",
+      accent_foreground: "0 0% 100%",
     },
   },
   {
@@ -164,19 +144,15 @@ const PRESETS: Preset[] = [
     subtitle: "Cinematográfico · Dark & Red",
     swatches: ["#000000", "#1A1A1A", "#E10600", "#FFFFFF"],
     overrides: {
-      primary: "355 100% 48%",
-      primary_glow: "355 100% 60%",
+      primary: "0 84% 45%",
+      primary_glow: "0 84% 60%",
       primary_foreground: "0 0% 100%",
-      accent: "355 100% 48%",
+      accent: "0 84% 45%",
       accent_foreground: "0 0% 100%",
-      background: "0 0% 2%",
-      card: "0 0% 5%",
-      foreground: "0 0% 98%",
-      border: "0 0% 15%",
-      bg_texture: "url('/blackflow-bg.jpg')",
     },
   },
 ];
+
 
 export const IdentidadeVisual = () => {
   const { tenant, refresh, applyPreview, clearPreview } = useBranding();
