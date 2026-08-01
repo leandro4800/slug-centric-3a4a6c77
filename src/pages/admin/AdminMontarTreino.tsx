@@ -41,6 +41,30 @@ interface PerfilTreino {
   limitacoes: string[];
 }
 
+/** Une listas de texto removendo vazios, "nenhuma" e duplicados. */
+const NEGATIVOS_RESTRICAO = ["nenhuma", "nenhum", "nao", "não", "n/a", "na", "-", "nada", "sem lesao", "sem lesão"];
+const uniqStrings = (arr: (string | null | undefined)[]): string[] => {
+  const out: string[] = [];
+  for (const raw of arr) {
+    const v = String(raw ?? "").trim();
+    if (!v) continue;
+    const n = v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (NEGATIVOS_RESTRICAO.includes(n)) continue;
+    if (out.some((o) => o.toLowerCase() === v.toLowerCase())) continue;
+    out.push(v);
+  }
+  return out;
+};
+
+/** Info de restrições retornada pela IA (trava clínica). */
+interface RestricoesAplicadas {
+  gravidade: string;
+  regioes: string[];
+  relato: string;
+  bloqueados: { dia: string; nome: string; motivo: string; substituto: string }[];
+}
+
+
 interface ExercicioPrescrito {
   dia_semana: string;
   ordem: number;
@@ -236,6 +260,7 @@ const AdminMontarTreino = () => {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingReview, setPendingReview] = useState(false);
+  const [restricoesIA, setRestricoesIA] = useState<RestricoesAplicadas | null>(null);
   const [perfilLoading, setPerfilLoading] = useState(Boolean(searchParams.get("aluno")));
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
@@ -357,7 +382,7 @@ const AdminMontarTreino = () => {
         supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
         supabase.from("perfis").select("sexo, data_nascimento").eq("id", alunoId).maybeSingle(),
         supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("anamnese_aluno").select("nivel_experiencia, anos_treino, lesoes_atuais, doencas, disponibilidade_dias").eq("aluno_id", alunoId).maybeSingle(),
+        supabase.from("anamnese_aluno").select("nivel_experiencia, anos_treino, lesoes_atuais, cirurgias, doencas, disponibilidade_dias").eq("aluno_id", alunoId).maybeSingle(),
       ]);
 
       const pt = perfilTreinoRes.data as any;
@@ -388,8 +413,13 @@ const AdminMontarTreino = () => {
         objetivo: pt?.objetivo || "hipertrofia",
         frequencia_semanal: pt?.frequencia_semanal || (Array.isArray(an?.disponibilidade_dias) && an.disponibilidade_dias.length >= 2 ? Math.min(6, an.disponibilidade_dias.length) : 4),
         tempo_treino: tempoMesclado,
-        lesoes: pt?.lesoes && pt.lesoes.length > 0 ? pt.lesoes : (an?.lesoes_atuais ? [an.lesoes_atuais] : []),
-        limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
+        // União (não substituição): overrides do coach + tudo que o aluno declarou na anamnese
+        lesoes: uniqStrings([
+          ...(pt?.lesoes || []),
+          an?.lesoes_atuais || "",
+          an?.cirurgias ? `Cirurgia: ${an.cirurgias}` : "",
+        ]),
+        limitacoes: uniqStrings([...(pt?.limitacoes || []), ...(an?.doencas || [])]),
       });
 
       if (isAvulso) {
@@ -546,6 +576,16 @@ const AdminMontarTreino = () => {
       setExercicios(novos);
       setCardio(data.cardio || "");
       setPendingReview(true);
+      const rest = (data as any)?.restricoes_aplicadas as RestricoesAplicadas | null;
+      setRestricoesIA(rest ?? null);
+      if (rest) {
+        toast.warning(
+          rest.bloqueados?.length > 0
+            ? `Restrição clínica: ${rest.bloqueados.length} exercício(s) contraindicado(s) substituído(s). Revise o treino.`
+            : "Aluno com restrição clínica — o treino foi adaptado. Revise antes de enviar.",
+          { duration: 8000 },
+        );
+      }
       if ((data as any)?.fallback) {
         toast.warning((data as any).error || "Rascunho gerado para revisão porque a IA oscilou.");
       } else {
@@ -1859,6 +1899,36 @@ const AdminMontarTreino = () => {
               <div className="bg-accent/10 border border-accent/30 rounded-2xl p-4">
                 <p className="text-xs uppercase tracking-wider text-accent font-bold mb-1">Cardio sugerido</p>
                 <p className="text-sm">{cardio}</p>
+              </div>
+            )}
+
+            {/* Alerta de restrição clínica (trava de segurança) */}
+            {restricoesIA && (
+              <div className="bg-destructive/10 border border-destructive/50 rounded-2xl p-4 sm:p-5 animate-in fade-in slide-in-from-top-2">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-destructive font-bold mb-1">
+                  ⚠️ Restrição clínica detectada · gravidade {restricoesIA.gravidade}
+                </p>
+                <h3 className="font-display text-base sm:text-lg leading-tight">
+                  {restricoesIA.regioes.length > 0 ? restricoesIA.regioes.join(" · ") : "Restrição relatada na anamnese"}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Relato do aluno: <span className="text-foreground">{restricoesIA.relato}</span>
+                </p>
+                {restricoesIA.bloqueados.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    <p className="text-xs font-bold">
+                      {restricoesIA.bloqueados.length} exercício(s) contraindicado(s) foram substituídos automaticamente:
+                    </p>
+                    {restricoesIA.bloqueados.map((b, i) => (
+                      <p key={i} className="text-[11px] text-muted-foreground">
+                        • <span className="line-through">{b.nome}</span> → <strong className="text-foreground">{b.substituto}</strong> ({b.motivo})
+                      </p>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+                  Treino para aluno com patologia diagnosticada exige <strong className="text-foreground">liberação médica ou fisioterapêutica</strong>. Revise exercício por exercício antes de enviar.
+                </p>
               </div>
             )}
 

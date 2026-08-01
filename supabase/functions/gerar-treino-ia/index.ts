@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { analisarRestricoes, aplicarFiltroRestricoes } from "./restricoes.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -185,6 +186,34 @@ serve(async (req) => {
       }
       resolvedUserId = requestedTarget;
     }
+
+    // === RESTRIÇÕES CLÍNICAS ===
+    // Busca a anamnese direto no banco (rede de segurança: mesmo que o cliente
+    // não envie lesões, o servidor considera o que o aluno declarou).
+    let anamneseRestricoes: string[] = [];
+    try {
+      const { data: anam } = await adminE
+        .from("anamnese_aluno")
+        .select("lesoes_atuais, cirurgias, doencas, medicamentos")
+        .eq("aluno_id", resolvedUserId)
+        .maybeSingle();
+      if (anam) {
+        anamneseRestricoes = [
+          anam.lesoes_atuais || "",
+          anam.cirurgias ? `cirurgia: ${anam.cirurgias}` : "",
+          ...(Array.isArray(anam.doencas) ? anam.doencas : []),
+        ].filter(Boolean);
+      }
+    } catch (_e) {
+      // anamnese ausente não bloqueia a geração
+    }
+
+    const restricoes = analisarRestricoes(
+      perfil?.lesoes,
+      perfil?.limitacoes,
+      perfil?.restricoes_extras,
+      anamneseRestricoes,
+    );
 
     const lesoes = (perfil?.lesoes || []).join(", ") || "nenhuma";
     const limitacoes = (perfil?.limitacoes || []).join(", ") || "nenhuma";
@@ -369,7 +398,7 @@ serve(async (req) => {
       ? `\n\n═══════════════════════════════════════════════\n0. DIVISÃO OBRIGATÓRIA (DEFINIDA PELO COACH) — INVIOLÁVEL — PRIORIDADE MÁXIMA\n═══════════════════════════════════════════════\nO Coach já escolheu EXATAMENTE como o aluno vai dividir a semana. Você DEVE retornar um dia para cada item abaixo, com o nome IDÊNTICO ao informado, na MESMA ORDEM, e os exercícios DEVEM corresponder aos grupos musculares descritos no nome de cada dia.\n\n⛔ PROIBIDO ABSOLUTAMENTE: Gerar Full Body, juntar grupos não listados, ou trocar a divisão por outra que você ache melhor. Se a divisão diz "Peito + Tríceps", o dia tem APENAS peito e tríceps — NUNCA full body, NUNCA pernas/costas no mesmo dia.\n⛔ Esta regra SOBRESCREVE qualquer regra de "Estrutura por Nível" abaixo. Mesmo que o nível seja Iniciante, se o coach passou divisão dividida, RESPEITE a divisão dividida.\n\nDIVISÃO ESCOLHIDA (${divisoesEscolhidas.length} dias de treino, nível do aluno = ${nivelLabel}):\n${divisoesEscolhidas.map((d: string, i: number) => `${i + 1}. "${d}"`).join("\n")}\n\nREGRAS DE INTERPRETAÇÃO:\n- "Peito + Tríceps" = treine SOMENTE peito e tríceps nesse dia (e ombro anterior se mencionado).\n- "Peito + Bíceps" = treine SOMENTE peito e bíceps (combinação alternativa, válida).\n- "Costas + Bíceps" / "Costas + Tríceps" — siga literalmente.\n- "Pernas Completas" = quadríceps + posterior + glúteo + panturrilha.\n- "Push" = peito/ombro/tríceps. "Pull" = costas/bíceps. "Legs" = pernas.\n- "Full Body" = todos os grandes grupos no mesmo dia (USE APENAS se o nome do dia contiver "Full Body").\n- NÃO adicione grupos musculares que não estejam no nome do dia.\n- Complete a semana (7 entradas) com OFFs estratégicos nos dias restantes.\n`
       : "";
 
-    const systemPrompt = `${knowledgeContext}${femininoBlock}${divisaoBlock}
+    const systemPrompt = `${knowledgeContext}${restricoes.blocoPrompt}${femininoBlock}${divisaoBlock}
 
 Você é a Dr. IA, a mente estratégica por trás da metodologia Alpha Coach. Sua missão é gerar prescrições de treino com precisão cirúrgica, seguindo a Base de Conhecimento Pacholok (acima como Fonte de Verdade Absoluta) e as Regras de Estrutura de Elite abaixo.
 
@@ -484,6 +513,7 @@ ESTRUTURA DE RESPOSTA: Retorne APENAS um JSON válido com a prescrição complet
 - Frequência semanal: ${perfil?.frequencia_semanal || 4}x
 - Ênfase desejada: ${perfil?.enfase || "Geral"}
 - Lesões/Limitações: ${lesoes} / ${limitacoes}
+${restricoes.temRestricao ? `\n🚨 ATENÇÃO CLÍNICA (${restricoes.gravidade.toUpperCase()}): ${restricoes.regioes.map((r) => r.rotulo).join(", ") || "restrição relatada"}. Aplique a REGRA 0 do system prompt SEM EXCEÇÃO — ela sobrepõe volume mínimo e técnicas avançadas.\n` : ""}
 ${biomarkerTier ? `- Tier biomarcador: ${biomarkerTier.toUpperCase()} (aplique a Regra 7)\n` : ""}${divisoesEscolhidas ? `\n⚠️ DIVISÃO OBRIGATÓRIA (não invente outra, NÃO USE FULL BODY): ${divisoesEscolhidas.map((d: string, i: number) => `Dia ${i + 1} = "${d}"`).join(" | ")}\n` : ""}
 ${Array.isArray(estimulos_extras) && estimulos_extras.length > 0 ? `\n🎯 ESTÍMULOS EXTRAS (acessórios obrigatórios): ${estimulos_extras.join(", ")}.\nDistribua esses grupos como exercícios ACESSÓRIOS (1-2 exercícios por grupo) ao FINAL dos dias mais coerentes da divisão (ex: panturrilha em dia de pernas, ombro lateral em dia de ombro/peito, core em 3 dias separados). NÃO substituem os grupos principais do dia — são adições.\n` : ""}
 ${customPrompt ? `\n=== PEDIDO ESPECÍFICO DO COACH (PRIORIDADE MÁXIMA) ===\n"${customPrompt}"\n\nINTERPRETE este pedido e aplique a Diretriz #6 (Ênfase/Pontos Fracos): aumente o volume e a frequência semanal dos grupos mencionados.\n` : ""}
@@ -625,7 +655,25 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
       return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
-    return new Response(JSON.stringify(traduzirTermos(args)), {
+    // Segunda camada de segurança: filtra/substitui o que a IA devolveu
+    const { args: argsSeguros, bloqueados } = aplicarFiltroRestricoes(args, restricoes);
+    if (bloqueados.length > 0) {
+      console.warn("Trava clínica acionada:", JSON.stringify(bloqueados));
+    }
+
+    const payload = {
+      ...traduzirTermos(argsSeguros),
+      restricoes_aplicadas: restricoes.temRestricao
+        ? {
+            gravidade: restricoes.gravidade,
+            regioes: restricoes.regioes.map((r) => r.rotulo),
+            relato: restricoes.textoOriginal,
+            bloqueados,
+          }
+        : null,
+    };
+
+    return new Response(JSON.stringify(payload), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
