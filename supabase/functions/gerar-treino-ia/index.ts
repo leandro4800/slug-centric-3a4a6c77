@@ -513,6 +513,7 @@ ESTRUTURA DE RESPOSTA: Retorne APENAS um JSON válido com a prescrição complet
 - Frequência semanal: ${perfil?.frequencia_semanal || 4}x
 - Ênfase desejada: ${perfil?.enfase || "Geral"}
 - Lesões/Limitações: ${lesoes} / ${limitacoes}
+${restricoes.temRestricao ? `\n🚨 ATENÇÃO CLÍNICA (${restricoes.gravidade.toUpperCase()}): ${restricoes.regioes.map((r) => r.rotulo).join(", ") || "restrição relatada"}. Aplique a REGRA 0 do system prompt SEM EXCEÇÃO — ela sobrepõe volume mínimo e técnicas avançadas.\n` : ""}
 ${biomarkerTier ? `- Tier biomarcador: ${biomarkerTier.toUpperCase()} (aplique a Regra 7)\n` : ""}${divisoesEscolhidas ? `\n⚠️ DIVISÃO OBRIGATÓRIA (não invente outra, NÃO USE FULL BODY): ${divisoesEscolhidas.map((d: string, i: number) => `Dia ${i + 1} = "${d}"`).join(" | ")}\n` : ""}
 ${Array.isArray(estimulos_extras) && estimulos_extras.length > 0 ? `\n🎯 ESTÍMULOS EXTRAS (acessórios obrigatórios): ${estimulos_extras.join(", ")}.\nDistribua esses grupos como exercícios ACESSÓRIOS (1-2 exercícios por grupo) ao FINAL dos dias mais coerentes da divisão (ex: panturrilha em dia de pernas, ombro lateral em dia de ombro/peito, core em 3 dias separados). NÃO substituem os grupos principais do dia — são adições.\n` : ""}
 ${customPrompt ? `\n=== PEDIDO ESPECÍFICO DO COACH (PRIORIDADE MÁXIMA) ===\n"${customPrompt}"\n\nINTERPRETE este pedido e aplique a Diretriz #6 (Ênfase/Pontos Fracos): aumente o volume e a frequência semanal dos grupos mencionados.\n` : ""}
