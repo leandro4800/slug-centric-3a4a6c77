@@ -83,7 +83,10 @@ const TOKEN_TO_VAR: Record<keyof typeof DEFAULTS, string[]> = {
   border: ["--border", "--sidebar-border"],
 };
 
-const SAFE_KEYS = Object.keys(DEFAULTS) as (keyof typeof DEFAULTS)[];
+// Apenas cores de destaque podem ser sobrescritas pelo tenant.
+// background/card/foreground/bg_texture ficam TRAVADOS para não sobrepor
+// vídeos, thumbs e textos das telas (principalmente a tela Início).
+const SAFE_KEYS = ["primary", "primary_glow", "primary_foreground", "accent", "accent_foreground", "border"] as (keyof typeof DEFAULTS)[];
 
 const clearTokens = (root: HTMLElement) => {
   Object.values(TOKEN_TO_VAR).flat().forEach((v) => root.style.removeProperty(v));
