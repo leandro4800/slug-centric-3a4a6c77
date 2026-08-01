@@ -1891,6 +1891,36 @@ const AdminMontarTreino = () => {
               </div>
             )}
 
+            {/* Alerta de restrição clínica (trava de segurança) */}
+            {restricoesIA && (
+              <div className="bg-destructive/10 border border-destructive/50 rounded-2xl p-4 sm:p-5 animate-in fade-in slide-in-from-top-2">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-destructive font-bold mb-1">
+                  ⚠️ Restrição clínica detectada · gravidade {restricoesIA.gravidade}
+                </p>
+                <h3 className="font-display text-base sm:text-lg leading-tight">
+                  {restricoesIA.regioes.length > 0 ? restricoesIA.regioes.join(" · ") : "Restrição relatada na anamnese"}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Relato do aluno: <span className="text-foreground">{restricoesIA.relato}</span>
+                </p>
+                {restricoesIA.bloqueados.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    <p className="text-xs font-bold">
+                      {restricoesIA.bloqueados.length} exercício(s) contraindicado(s) foram substituídos automaticamente:
+                    </p>
+                    {restricoesIA.bloqueados.map((b, i) => (
+                      <p key={i} className="text-[11px] text-muted-foreground">
+                        • <span className="line-through">{b.nome}</span> → <strong className="text-foreground">{b.substituto}</strong> ({b.motivo})
+                      </p>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+                  Treino para aluno com patologia diagnosticada exige <strong className="text-foreground">liberação médica ou fisioterapêutica</strong>. Revise exercício por exercício antes de enviar.
+                </p>
+              </div>
+            )}
+
             {/* Banner de revisão pós IA */}
             {pendingReview && exercicios.length > 0 && (
               <div className="bg-primary/10 border border-primary/40 rounded-2xl p-4 sm:p-5 shadow-[0_0_25px_-8px_hsl(var(--primary)/0.6)] animate-in fade-in slide-in-from-top-2">
