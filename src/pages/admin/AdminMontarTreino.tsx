@@ -41,6 +41,30 @@ interface PerfilTreino {
   limitacoes: string[];
 }
 
+/** Une listas de texto removendo vazios, "nenhuma" e duplicados. */
+const NEGATIVOS_RESTRICAO = ["nenhuma", "nenhum", "nao", "não", "n/a", "na", "-", "nada", "sem lesao", "sem lesão"];
+const uniqStrings = (arr: (string | null | undefined)[]): string[] => {
+  const out: string[] = [];
+  for (const raw of arr) {
+    const v = String(raw ?? "").trim();
+    if (!v) continue;
+    const n = v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (NEGATIVOS_RESTRICAO.includes(n)) continue;
+    if (out.some((o) => o.toLowerCase() === v.toLowerCase())) continue;
+    out.push(v);
+  }
+  return out;
+};
+
+/** Info de restrições retornada pela IA (trava clínica). */
+interface RestricoesAplicadas {
+  gravidade: string;
+  regioes: string[];
+  relato: string;
+  bloqueados: { dia: string; nome: string; motivo: string; substituto: string }[];
+}
+
+
 interface ExercicioPrescrito {
   dia_semana: string;
   ordem: number;
