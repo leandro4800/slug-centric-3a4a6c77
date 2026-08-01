@@ -388,8 +388,13 @@ const AdminMontarTreino = () => {
         objetivo: pt?.objetivo || "hipertrofia",
         frequencia_semanal: pt?.frequencia_semanal || (Array.isArray(an?.disponibilidade_dias) && an.disponibilidade_dias.length >= 2 ? Math.min(6, an.disponibilidade_dias.length) : 4),
         tempo_treino: tempoMesclado,
-        lesoes: pt?.lesoes && pt.lesoes.length > 0 ? pt.lesoes : (an?.lesoes_atuais ? [an.lesoes_atuais] : []),
-        limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
+        // União (não substituição): overrides do coach + tudo que o aluno declarou na anamnese
+        lesoes: uniqStrings([
+          ...(pt?.lesoes || []),
+          an?.lesoes_atuais || "",
+          an?.cirurgias ? `Cirurgia: ${an.cirurgias}` : "",
+        ]),
+        limitacoes: uniqStrings([...(pt?.limitacoes || []), ...(an?.doencas || [])]),
       });
 
       if (isAvulso) {
