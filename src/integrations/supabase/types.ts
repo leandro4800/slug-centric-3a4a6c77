@@ -3071,6 +3071,42 @@ export type Database = {
           },
         ]
       }
+      sessoes_treino: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_treino: string
+          dia_semana: string | null
+          duracao_min: number
+          exercicios_total: number
+          id: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_treino?: string
+          dia_semana?: string | null
+          duracao_min?: number
+          exercicios_total?: number
+          id?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_treino?: string
+          dia_semana?: string | null
+          duracao_min?: number
+          exercicios_total?: number
+          id?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       templates_treino: {
         Row: {
           ativo: boolean
@@ -3823,6 +3859,7 @@ export type Database = {
         }[]
       }
       get_my_mcp_token: { Args: never; Returns: string }
+      get_stats_treino: { Args: { _aluno_id?: string }; Returns: Json }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_active_subscription_for_tenant: {
         Args: { _tenant_id: string; _user_id: string }
@@ -3851,6 +3888,16 @@ export type Database = {
         }[]
       }
       redeem_voucher: { Args: { _code: string }; Returns: Json }
+      registrar_sessao_treino: {
+        Args: {
+          _data?: string
+          _dia_semana: string
+          _duracao_min?: number
+          _exercicios_total?: number
+          _tenant_id: string
+        }
+        Returns: Json
+      }
       rotate_my_mcp_token: { Args: never; Returns: string }
       send_push_notification: {
         Args: {
