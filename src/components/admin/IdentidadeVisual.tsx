@@ -75,10 +75,28 @@ export const IdentidadeVisual = () => {
   const [busy, setBusy] = useState(false);
   const [musicUrl, setMusicUrl] = useState<string>("");
   const [savingMusic, setSavingMusic] = useState(false);
+  const [presets, setPresets] = useState<Preset[]>(FALLBACK_PRESETS);
 
   useEffect(() => {
     setMusicUrl((tenant as any)?.music_url ?? "");
   }, [tenant?.id, (tenant as any)?.music_url]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("theme_presets")
+        .select("codigo, nome, subtitulo, swatches, primary_hsl, primary_glow_hsl, primary_foreground_hsl, accent_hsl, accent_foreground_hsl, border_hsl")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true });
+      if (!alive || error || !data?.length) return;
+      setPresets((data as PresetRow[]).map(rowToPreset));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
 
   if (!tenant) return null;
 
