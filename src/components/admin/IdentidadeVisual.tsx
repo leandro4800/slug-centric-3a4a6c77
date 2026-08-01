@@ -188,7 +188,7 @@ export const IdentidadeVisual = () => {
           </p>
 
           <div className="grid sm:grid-cols-2 gap-3">
-            {PRESETS.map((p) => {
+            {presets.map((p) => {
               const isActive = selected?.id === p.id;
               return (
                 <button
