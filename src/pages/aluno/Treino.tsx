@@ -161,30 +161,31 @@ const PersonalTreino = () => {
         setSexo((data as any)?.sexo || null);
       });
 
-    // Stats: deriva treinos concluídos, minutos e sequência a partir de historico_cargas
+    // Stats: treinos concluídos, minutos e sequência computados no banco (sessoes_treino)
     (async () => {
-      const { data } = await supabase
-        .from("historico_cargas")
-        .select("data_treino")
-        .eq("user_id", user.id);
-      if (!data) return;
-      const dias = Array.from(new Set(data.map((r: any) => r.data_treino).filter(Boolean))).sort();
-      const treinos = dias.length;
-      const minutos = treinos * 60;
-      // sequência: dias consecutivos até hoje (ou ontem)
-      let sequencia = 0;
-      const set = new Set(dias);
-      const d = new Date();
-      // se hoje não treinou, começa de ontem
-      const today = d.toISOString().split("T")[0];
-      if (!set.has(today)) d.setDate(d.getDate() - 1);
-      while (set.has(d.toISOString().split("T")[0])) {
-        sequencia++;
-        d.setDate(d.getDate() - 1);
+      const { data, error } = await supabase.rpc("get_stats_treino" as any, {} as any);
+      if (!error && data) {
+        const s = data as any;
+        setStats({
+          treinos: Number(s.treinos) || 0,
+          minutos: Number(s.minutos) || 0,
+          sequencia: Number(s.sequencia) || 0,
+        });
       }
-      setStats({ treinos, minutos, sequencia });
     })();
-  }, [user?.id]);
+  }, [user?.id, reloadKey]);
+
+  // Cronômetro da sessão: marca o início ao abrir o treino do dia
+  const sessionStartKey = `treino:inicio:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}:${diaAtual}`;
+  useEffect(() => {
+    if (!diaAtual) return;
+    try {
+      if (!localStorage.getItem(sessionStartKey)) {
+        localStorage.setItem(sessionStartKey, String(Date.now()));
+      }
+    } catch {}
+  }, [sessionStartKey, diaAtual]);
+
 
   // Persiste seleção de dia / exercício aberto
   useEffect(() => {
