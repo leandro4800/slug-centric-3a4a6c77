@@ -838,6 +838,20 @@ const PersonalTreino = () => {
                         serie_index: 0,
                       });
                     }
+                    // Registra a sessão (duração real) no banco
+                    let duracao = 60;
+                    try {
+                      const ini = Number(localStorage.getItem(sessionStartKey) || 0);
+                      if (ini > 0) duracao = Math.round((Date.now() - ini) / 60000);
+                    } catch {}
+                    duracao = Math.min(Math.max(duracao || 60, 10), 240);
+                    await supabase.rpc("registrar_sessao_treino" as any, {
+                      _tenant_id: tenant.id,
+                      _dia_semana: diaAtual,
+                      _duracao_min: duracao,
+                      _exercicios_total: treinosDoDia.length,
+                    } as any);
+                    try { localStorage.removeItem(sessionStartKey); } catch {}
                     // marca todos como concluído na UI
                     const next = new Set(completedIds);
                     treinosDoDia.forEach((t) => next.add(t.id));
@@ -847,6 +861,7 @@ const PersonalTreino = () => {
                     setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
                     // recarrega stats
                     setReloadKey((k) => k + 1);
+
                   } catch (e) {
                     console.warn("Não foi possível registrar conclusão", e);
                   }
