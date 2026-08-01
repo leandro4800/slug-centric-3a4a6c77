@@ -3284,6 +3284,60 @@ export type Database = {
           },
         ]
       }
+      theme_presets: {
+        Row: {
+          accent_foreground_hsl: string | null
+          accent_hsl: string | null
+          ativo: boolean
+          border_hsl: string | null
+          codigo: string
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          primary_foreground_hsl: string | null
+          primary_glow_hsl: string | null
+          primary_hsl: string
+          subtitulo: string | null
+          swatches: Json
+          updated_at: string
+        }
+        Insert: {
+          accent_foreground_hsl?: string | null
+          accent_hsl?: string | null
+          ativo?: boolean
+          border_hsl?: string | null
+          codigo: string
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          primary_foreground_hsl?: string | null
+          primary_glow_hsl?: string | null
+          primary_hsl: string
+          subtitulo?: string | null
+          swatches?: Json
+          updated_at?: string
+        }
+        Update: {
+          accent_foreground_hsl?: string | null
+          accent_hsl?: string | null
+          ativo?: boolean
+          border_hsl?: string | null
+          codigo?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          primary_foreground_hsl?: string | null
+          primary_glow_hsl?: string | null
+          primary_hsl?: string
+          subtitulo?: string | null
+          swatches?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       treinos_prescritos: {
         Row: {
           aluno_id: string
