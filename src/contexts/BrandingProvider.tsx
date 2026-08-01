@@ -131,14 +131,8 @@ export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl
   }
 
   // bg-texture: textura de fundo opcional vinda do tenant. Sem isso, nenhuma textura é aplicada.
-  const bgTexture = (overrides as ThemeOverrides | null | undefined)?.bg_texture;
-  if (bgTexture) {
-    if (root.style.getPropertyValue("--bg-texture") !== bgTexture) {
-      root.style.setProperty("--bg-texture", bgTexture);
-    }
-  } else {
-    root.style.removeProperty("--bg-texture");
-  }
+  // bg-texture desativado: texturas de fundo sobrepunham o conteúdo das telas.
+  root.style.removeProperty("--bg-texture");
 };
 
 const TENANT_PUBLIC_COLUMNS =
