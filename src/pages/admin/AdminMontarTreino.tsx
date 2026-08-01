@@ -260,6 +260,7 @@ const AdminMontarTreino = () => {
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingReview, setPendingReview] = useState(false);
+  const [restricoesIA, setRestricoesIA] = useState<RestricoesAplicadas | null>(null);
   const [perfilLoading, setPerfilLoading] = useState(Boolean(searchParams.get("aluno")));
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
