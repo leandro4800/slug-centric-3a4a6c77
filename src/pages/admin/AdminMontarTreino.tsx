@@ -576,6 +576,16 @@ const AdminMontarTreino = () => {
       setExercicios(novos);
       setCardio(data.cardio || "");
       setPendingReview(true);
+      const rest = (data as any)?.restricoes_aplicadas as RestricoesAplicadas | null;
+      setRestricoesIA(rest ?? null);
+      if (rest) {
+        toast.warning(
+          rest.bloqueados?.length > 0
+            ? `Restrição clínica: ${rest.bloqueados.length} exercício(s) contraindicado(s) substituído(s). Revise o treino.`
+            : "Aluno com restrição clínica — o treino foi adaptado. Revise antes de enviar.",
+          { duration: 8000 },
+        );
+      }
       if ((data as any)?.fallback) {
         toast.warning((data as any).error || "Rascunho gerado para revisão porque a IA oscilou.");
       } else {
