@@ -49,6 +49,7 @@ const SaudeLesoes = () => {
   const [gerandoLaudo, setGerandoLaudo] = useState(false);
   const [meta, setMeta] = useState<RestricoesMeta | null>(null);
   const fimChat = useRef<HTMLDivElement>(null);
+  const laudoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!tenant?.id) return;
