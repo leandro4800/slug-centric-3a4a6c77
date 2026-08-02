@@ -8,8 +8,24 @@ import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
 import {
-  HeartPulse, Loader2, Send, FileDown, ShieldAlert, Stethoscope, Info, ExternalLink, AlertTriangle,
+  HeartPulse, Loader2, Send, FileDown, ShieldAlert, Stethoscope, Info, ExternalLink, AlertTriangle, Pencil,
 } from "lucide-react";
+
+const CAMPOS: [string, string, string][] = [
+  ["nome", "Nome", "Nome do atleta"],
+  ["sexo", "Sexo", "masculino / feminino"],
+  ["idade", "Idade", "30"],
+  ["peso_kg", "Peso (kg)", "82"],
+  ["altura_cm", "Altura (cm)", "178"],
+  ["nivel", "Nível", "iniciante / intermediário / avançado"],
+  ["objetivo", "Objetivo", "hipertrofia, emagrecimento..."],
+  ["dias_disponiveis", "Dias disponíveis", "seg, ter, qua, qui, sex"],
+  ["doencas", "Doenças", "hipertensão, diabetes..."],
+  ["medicamentos", "Medicamentos", "losartana 50mg"],
+  ["lesoes_atuais", "Lesões atuais", "hérnia de disco L5-S1"],
+  ["cirurgias", "Cirurgias", "menisco 2023"],
+  ["limitacoes", "Limitações", "não flexiona coluna sob carga"],
+];
 
 interface Aluno {
   id: string;
@@ -66,7 +82,8 @@ const SaudeLesoes = () => {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>("");
   const [relato, setRelato] = useState("");
-  const [contexto, setContexto] = useState<Record<string, unknown> | null>(null);
+  const [dados, setDados] = useState<Record<string, string>>({});
+  const [editandoDados, setEditandoDados] = useState(false);
   const [pergunta, setPergunta] = useState("");
   const [chat, setChat] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [loading, setLoading] = useState(false);
@@ -103,7 +120,7 @@ const SaudeLesoes = () => {
 
   useEffect(() => {
     if (!alunoId) {
-      setContexto(null);
+      setDados({});
       return;
     }
     (async () => {
@@ -120,22 +137,31 @@ const SaudeLesoes = () => {
         p.limitacoes,
         ...(Array.isArray(a.doencas) ? a.doencas : []),
       ]);
-      setContexto({
-        nome: alunos.find((x) => x.id === alunoId)?.nome_completo,
-        sexo: p.sexo ?? null,
-        peso_kg: p.peso_kg ?? null,
-        altura_cm: p.altura_cm ?? null,
-        nivel: a.nivel_experiencia ?? p.nivel ?? null,
-        dias_disponiveis: a.disponibilidade_dias ?? null,
-        doencas: a.doencas ?? null,
-        medicamentos: a.medicamentos ?? null,
-        lesoes_atuais: a.lesoes_atuais ?? null,
-        cirurgias: a.cirurgias ?? null,
-        limitacoes: p.limitacoes ?? null,
+      const txt = (v: unknown) =>
+        v === null || v === undefined || v === "" ? "" : Array.isArray(v) ? v.join(", ") : String(v);
+      setDados({
+        nome: txt(alunos.find((x) => x.id === alunoId)?.nome_completo),
+        sexo: txt(p.sexo),
+        idade: txt(p.idade),
+        peso_kg: txt(p.peso_kg),
+        altura_cm: txt(p.altura_cm),
+        nivel: txt(a.nivel_experiencia ?? p.nivel),
+        objetivo: txt(p.objetivo),
+        dias_disponiveis: txt(a.disponibilidade_dias),
+        doencas: txt(a.doencas),
+        medicamentos: txt(a.medicamentos),
+        lesoes_atuais: txt(a.lesoes_atuais),
+        cirurgias: txt(a.cirurgias),
+        limitacoes: txt(p.limitacoes),
       });
       if (lesoes.length) setRelato(lesoes.join(" | "));
     })();
   }, [alunoId, alunos]);
+
+  const contexto = useMemo(() => {
+    const entries = Object.entries(dados).filter(([, v]) => (v || "").trim().length > 0);
+    return entries.length ? Object.fromEntries(entries) : null;
+  }, [dados]);
 
   const chamar = async (modo: "chat" | "laudo", texto: string) => {
     return invokeEdgeFunction<{ texto: string; restricoes: RestricoesMeta }>("ia-lesoes", {
@@ -256,7 +282,7 @@ const SaudeLesoes = () => {
       title: "LAUDO TÉCNICO DE EXERCÍCIOS",
       subtitle: "Adequação de treino a restrições clínicas",
       coachName: branding?.nome || tenant?.nome,
-      studentName: alunoSelecionado?.nome_completo || null,
+      studentName: dados.nome?.trim() || alunoSelecionado?.nome_completo || null,
       logo,
       primary,
     });
@@ -301,7 +327,7 @@ const SaudeLesoes = () => {
     y += 7;
     doc.text(aviso, 14, y);
 
-    const nome = (alunoSelecionado?.nome_completo || "atleta").replace(/\s+/g, "-").toLowerCase();
+    const nome = (dados.nome?.trim() || alunoSelecionado?.nome_completo || "atleta").replace(/\s+/g, "-").toLowerCase();
     doc.save(`laudo-exercicios-${nome}.pdf`);
   };
 
@@ -360,6 +386,42 @@ const SaudeLesoes = () => {
                 </option>
               ))}
             </select>
+
+            <button
+              type="button"
+              onClick={() => setEditandoDados((v) => !v)}
+              className="flex w-full items-center justify-between rounded-md border border-white/10 px-3 py-2 text-left text-sm hover:border-primary/40"
+            >
+              <span className="font-semibold">
+                {dados.nome?.trim() || alunoSelecionado?.nome_completo || "Dados do atleta"}
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wide text-primary">
+                <Pencil className="h-3.5 w-3.5" /> {editandoDados ? "Fechar" : "Editar"}
+              </span>
+            </button>
+
+            {editandoDados && (
+              <div className="space-y-2 rounded-md border border-primary/25 bg-black/40 p-3">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                  Dados usados no laudo
+                </p>
+                {CAMPOS.map(([key, label, ph]) => (
+                  <label key={key} className="block">
+                    <span className="text-[10px] uppercase tracking-wide text-muted-foreground">{label}</span>
+                    <input
+                      value={dados[key] ?? ""}
+                      onChange={(e) => setDados((d) => ({ ...d, [key]: e.target.value }))}
+                      placeholder={ph}
+                      className="mt-0.5 w-full rounded-md border border-white/10 bg-background px-2.5 py-1.5 text-sm"
+                    />
+                  </label>
+                ))}
+                <p className="text-[11px] text-muted-foreground">
+                  Campos vazios não entram no laudo. Preencha antes de gerar.
+                </p>
+              </div>
+            )}
+
 
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Quadro clínico relatado</p>
             <textarea
