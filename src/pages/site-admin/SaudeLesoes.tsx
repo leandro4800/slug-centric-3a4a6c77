@@ -66,7 +66,8 @@ const SaudeLesoes = () => {
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>("");
   const [relato, setRelato] = useState("");
-  const [contexto, setContexto] = useState<Record<string, unknown> | null>(null);
+  const [dados, setDados] = useState<Record<string, string>>({});
+  const [editandoDados, setEditandoDados] = useState(false);
   const [pergunta, setPergunta] = useState("");
   const [chat, setChat] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
   const [loading, setLoading] = useState(false);
