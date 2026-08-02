@@ -393,6 +393,8 @@ const AdminMontarTreino = () => {
       const pr = perfilRes.data as any;
       const av = avaliacaoRes.data as any;
       const an = anamneseRes.data as any;
+      setDiasDisponiveis(Array.isArray(an?.disponibilidade_dias) ? an.disponibilidade_dias : []);
+
 
       // Calcular idade a partir de data_nascimento se necessário
       let idadeCalc: number | null = null;
