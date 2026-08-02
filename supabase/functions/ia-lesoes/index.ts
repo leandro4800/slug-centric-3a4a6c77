@@ -27,11 +27,18 @@ Responda em markdown curto e prático (máx. ~450 palavras) com:
 
 const PROMPT_LAUDO = `${BASE}
 
+FORMATO OBRIGATÓRIO: NÃO use tabelas markdown em nenhuma seção (proibido usar o caractere "|").
+Use apenas títulos e listas com hífen. Nunca escreva linhas de separação (---, ===, ___).
+Cada item de lista deve ter no máximo 2 linhas. Seja conciso: o laudo inteiro deve ter no máximo 900 palavras.
+
 Gere um LAUDO TÉCNICO DE ADEQUAÇÃO DE EXERCÍCIOS, objetivo e auditável, em markdown, com EXATAMENTE estas seções:
 ## 1. Identificação do caso
 ## 2. Restrições relatadas e classificação de gravidade
 ## 3. Exercícios contraindicados (lista com justificativa biomecânica)
-## 4. Exercícios liberados e prescrição segura (tabela: Exercício | Séries x Reps | Amplitude/Cadência | PSE máx | Observação)
+## 4. Exercícios liberados e prescrição segura
+Para cada exercício, uma linha em lista no formato:
+- **Nome do exercício** — Séries x Reps: X | Amplitude/Cadência: Y | PSE máx: Z | Observação: W
+Liste de 6 a 10 exercícios. Esta seção é obrigatória e não pode ficar vazia.
 ## 5. Progressão sugerida (4 semanas)
 ## 6. Critérios de reavaliação e sinais de interrupção
 ## 7. Limitações deste documento
