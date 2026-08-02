@@ -38,7 +38,11 @@ const uniq = (arr: (string | null | undefined)[]) =>
 
 // Remove repetições em loop (linhas de tabela vazias/duplicadas) que o modelo às vezes gera.
 const limparLoop = (texto: string) => {
-  const linhas = texto.split("\n");
+  // Colapsa corridas gigantes de traços/pipes dentro da mesma linha
+  const base = texto
+    .replace(/[-–—_|:\s]{80,}/g, "\n")
+    .replace(/(-{4,}|—{3,}|_{4,})/g, "");
+  const linhas = base.split("\n");
   const out: string[] = [];
   let repet = 0;
   let anterior = "";
