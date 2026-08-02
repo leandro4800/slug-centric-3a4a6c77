@@ -137,10 +137,69 @@ const SaudeLesoes = () => {
       return;
     }
     setGerandoLaudo(true);
+    setLaudo("");
     try {
-      const res = await chamar("laudo", pergunta.trim());
-      setMeta(res.restricoes);
-      setLaudo(res.texto);
+      const { data: sess } = await supabase.auth.getSession();
+      const resp = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ia-lesoes`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+            Authorization: `Bearer ${sess.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: JSON.stringify({
+            modo: "laudo",
+            pergunta: pergunta.trim(),
+            relato,
+            aluno: contexto,
+            historico: [],
+          }),
+        },
+      );
+
+      if (!resp.ok || !resp.body) {
+        let msg = `Falha ao gerar o laudo (${resp.status})`;
+        try {
+          const j = await resp.json();
+          if (j?.error) msg = j.error;
+        } catch { /* ignore */ }
+        throw new Error(msg);
+      }
+
+      const reader = resp.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let texto = "";
+      let eventName = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        for (const raw of lines) {
+          const line = raw.trim();
+          if (!line) { eventName = ""; continue; }
+          if (line.startsWith("event:")) { eventName = line.slice(6).trim(); continue; }
+          if (!line.startsWith("data:")) continue;
+          const payload = line.slice(5).trim();
+          if (payload === "[DONE]") continue;
+          try {
+            const json = JSON.parse(payload);
+            if (eventName === "meta") setMeta(json as RestricoesMeta);
+            else if (eventName === "error") throw new Error(json?.error || "Erro na IA");
+            else if (json?.delta) {
+              texto += json.delta;
+              setLaudo(texto);
+            }
+          } catch { /* chunk parcial */ }
+        }
+      }
+
+      if (!texto.trim()) throw new Error("A IA não retornou conteúdo. Tente novamente.");
       toast.success("Laudo gerado. Revise antes de baixar.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar o laudo");
@@ -148,6 +207,7 @@ const SaudeLesoes = () => {
       setGerandoLaudo(false);
     }
   };
+
 
   const baixarPdf = async () => {
     if (!laudo) return;
