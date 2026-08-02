@@ -3107,6 +3107,39 @@ export type Database = {
         }
         Relationships: []
       }
+      stats_treino_aluno: {
+        Row: {
+          aluno_id: string
+          melhor_sequencia: number
+          minutos_total: number
+          sequencia_atual: number
+          tenant_id: string | null
+          treinos_total: number
+          ultimo_treino: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          melhor_sequencia?: number
+          minutos_total?: number
+          sequencia_atual?: number
+          tenant_id?: string | null
+          treinos_total?: number
+          ultimo_treino?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          melhor_sequencia?: number
+          minutos_total?: number
+          sequencia_atual?: number
+          tenant_id?: string | null
+          treinos_total?: number
+          ultimo_treino?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       templates_treino: {
         Row: {
           ativo: boolean
@@ -3872,6 +3905,25 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      recalcular_stats_treino: {
+        Args: { _aluno_id: string }
+        Returns: {
+          aluno_id: string
+          melhor_sequencia: number
+          minutos_total: number
+          sequencia_atual: number
+          tenant_id: string | null
+          treinos_total: number
+          ultimo_treino: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "stats_treino_aluno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       redeem_delivery_lookup: {
         Args: { p_token: string }
