@@ -36,6 +36,27 @@ const SUGESTOES = [
 const uniq = (arr: (string | null | undefined)[]) =>
   Array.from(new Set(arr.map((s) => (s || "").trim()).filter((s) => s.length > 1 && !/^(nenhum|nenhuma|não|nao|n\/a)$/i.test(s))));
 
+// Remove repetições em loop (linhas de tabela vazias/duplicadas) que o modelo às vezes gera.
+const limparLoop = (texto: string) => {
+  const linhas = texto.split("\n");
+  const out: string[] = [];
+  let repet = 0;
+  let anterior = "";
+  for (const l of linhas) {
+    const t = l.trim();
+    const lixo = /^[\s|:_—–-]*$/.test(t) && t.length > 2;
+    if ((lixo && repet >= 1) || (t.length > 0 && t === anterior)) {
+      repet++;
+      if (repet >= 2) continue;
+    } else {
+      repet = lixo ? 1 : 0;
+    }
+    anterior = t;
+    out.push(l);
+  }
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd();
+};
+
 const SaudeLesoes = () => {
   const { tenant, loading: tenantLoading } = useSiteTenant();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
