@@ -675,10 +675,16 @@ const AdminMontarTreino = () => {
         .eq("tenant_id", tenant.id);
       if (deleteError) throw deleteError;
 
+      // Mapeia cada divisão de treino (A, B, C...) para o dia da semana escolhido pelo aluno
+      const mapaDias = mapearDiasSemana(
+        [...new Set(exerciciosToSave.map((e) => e.dia_semana))],
+        diasDisponiveis
+      );
+
       const rows = exerciciosToSave.map((e) => ({
         tenant_id: tenant.id,
         aluno_id: alunoId,
-        dia_semana: e.dia_semana,
+        dia_semana: mapaDias[e.dia_semana] || e.dia_semana,
         ordem: e.ordem,
         ordem_execucao: e.ordem,
         exercicio: e.exercicio,
