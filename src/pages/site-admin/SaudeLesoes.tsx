@@ -492,20 +492,8 @@ const SaudeLesoes = () => {
             </div>
           </div>
 
-          {laudo && (
-            <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Prévia do laudo</p>
-                <button onClick={baixarPdf} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                  <FileDown className="h-3.5 w-3.5" /> Baixar PDF
-                </button>
-              </div>
-              <div className="prose prose-sm prose-invert max-w-none prose-table:text-xs">
-                <ReactMarkdown>{laudo}</ReactMarkdown>
-              </div>
-            </div>
-          )}
         </div>
+
       </div>
     </div>
   );
