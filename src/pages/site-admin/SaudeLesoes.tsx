@@ -282,7 +282,7 @@ const SaudeLesoes = () => {
       title: "LAUDO TÉCNICO DE EXERCÍCIOS",
       subtitle: "Adequação de treino a restrições clínicas",
       coachName: branding?.nome || tenant?.nome,
-      studentName: alunoSelecionado?.nome_completo || null,
+      studentName: dados.nome?.trim() || alunoSelecionado?.nome_completo || null,
       logo,
       primary,
     });
@@ -327,7 +327,7 @@ const SaudeLesoes = () => {
     y += 7;
     doc.text(aviso, 14, y);
 
-    const nome = (alunoSelecionado?.nome_completo || "atleta").replace(/\s+/g, "-").toLowerCase();
+    const nome = (dados.nome?.trim() || alunoSelecionado?.nome_completo || "atleta").replace(/\s+/g, "-").toLowerCase();
     doc.save(`laudo-exercicios-${nome}.pdf`);
   };
 
