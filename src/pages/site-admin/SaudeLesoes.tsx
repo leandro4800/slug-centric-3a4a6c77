@@ -67,6 +67,13 @@ const SaudeLesoes = () => {
     fimChat.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat, loading]);
 
+  useEffect(() => {
+    if (gerandoLaudo || laudo) {
+      laudoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [gerandoLaudo]);
+
+
   const alunoSelecionado = useMemo(() => alunos.find((a) => a.id === alunoId) || null, [alunos, alunoId]);
 
   useEffect(() => {
