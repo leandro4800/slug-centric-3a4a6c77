@@ -110,11 +110,14 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
       },
     ];
 
+    const stream = modo === "laudo";
+
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, temperature: 0.2 }),
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, temperature: 0.2, stream }),
     });
+
 
     if (resp.status === 429) {
       return new Response(JSON.stringify({ error: "Limite de requisições atingido. Tente novamente em instantes." }), {
@@ -133,8 +136,67 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
       throw new Error(`Falha na IA: ${resp.status} ${t.slice(0, 300)}`);
     }
 
+    const restricoesMeta = {
+      detectadas: analise.temRestricao,
+      gravidade: analise.gravidade,
+      regioes: analise.regioes.map((r) => r.rotulo),
+      proibidos: analise.proibidos,
+      substitutos: analise.substitutos,
+    };
+
+    if (stream && resp.body) {
+      // Modo laudo: repassa o SSE do gateway (evita timeout da edge function em respostas longas).
+      const encoder = new TextEncoder();
+      const decoder = new TextDecoder();
+      const reader = resp.body.getReader();
+      const out = new ReadableStream({
+        async start(controller) {
+          controller.enqueue(encoder.encode(`event: meta\ndata: ${JSON.stringify(restricoesMeta)}\n\n`));
+          let buffer = "";
+          try {
+            while (true) {
+              const { done, value } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              const lines = buffer.split("\n");
+              buffer = lines.pop() ?? "";
+              for (const line of lines) {
+                if (!line.startsWith("data:")) continue;
+                const payload = line.slice(5).trim();
+                if (!payload || payload === "[DONE]") continue;
+                try {
+                  const json = JSON.parse(payload);
+                  const delta = json?.choices?.[0]?.delta?.content;
+                  if (delta) {
+                    controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+                  }
+                } catch { /* chunk parcial */ }
+              }
+            }
+            controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+          } catch (err) {
+            controller.enqueue(
+              encoder.encode(`event: error\ndata: ${JSON.stringify({ error: String(err) })}\n\n`),
+            );
+          } finally {
+            controller.close();
+          }
+        },
+      });
+
+      return new Response(out, {
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        },
+      });
+    }
+
     const data = await resp.json();
     const texto = data?.choices?.[0]?.message?.content ?? "";
+
 
     return new Response(
       JSON.stringify({
