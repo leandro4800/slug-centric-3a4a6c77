@@ -222,13 +222,14 @@ const SaudeLesoes = () => {
             else if (eventName === "error") throw new Error(json?.error || "Erro na IA");
             else if (json?.delta) {
               texto += json.delta;
-              setLaudo(texto);
+              setLaudo(limparLoop(texto));
             }
           } catch { /* chunk parcial */ }
         }
       }
 
       if (!texto.trim()) throw new Error("A IA não retornou conteúdo. Tente novamente.");
+      setLaudo(limparLoop(texto));
       toast.success("Laudo gerado. Revise antes de baixar.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar o laudo");
