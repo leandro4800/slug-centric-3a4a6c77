@@ -110,11 +110,14 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
       },
     ];
 
+    const stream = modo === "laudo";
+
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${LOVABLE_API_KEY}` },
-      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, temperature: 0.2 }),
+      body: JSON.stringify({ model: "google/gemini-2.5-flash", messages, temperature: 0.2, stream }),
     });
+
 
     if (resp.status === 429) {
       return new Response(JSON.stringify({ error: "Limite de requisições atingido. Tente novamente em instantes." }), {
