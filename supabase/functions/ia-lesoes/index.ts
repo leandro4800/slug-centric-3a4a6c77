@@ -159,6 +159,18 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
         async start(controller) {
           controller.enqueue(encoder.encode(`event: meta\ndata: ${JSON.stringify(restricoesMeta)}\n\n`));
           let buffer = "";
+          // Guarda anti-loop: alguns modelos entram em repetição de linhas de tabela.
+          let acumulado = "";
+          let abortado = false;
+          const ehLixo = (l: string) => /^[\s|:_—–-]*$/.test(l) && l.trim().length > 2;
+          const detectarLoop = () => {
+            const linhas = acumulado.split("\n");
+            const ultimas = linhas.slice(-6);
+            if (ultimas.length < 6) return false;
+            if (ultimas.every(ehLixo)) return true;
+            const norm = ultimas.map((l) => l.trim());
+            return norm.every((l) => l.length > 0 && l === norm[0]);
+          };
           try {
             while (true) {
               const { done, value } = await reader.read();
@@ -174,10 +186,17 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
                   const json = JSON.parse(payload);
                   const delta = json?.choices?.[0]?.delta?.content;
                   if (delta) {
+                    acumulado += delta;
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify({ delta })}\n\n`));
+                    if (detectarLoop()) { abortado = true; break; }
                   }
                 } catch { /* chunk parcial */ }
               }
+              if (abortado) break;
+            }
+            if (abortado) {
+              try { await reader.cancel(); } catch { /* ignore */ }
+              controller.enqueue(encoder.encode(`event: truncated\ndata: ${JSON.stringify({ truncated: true })}\n\n`));
             }
             controller.enqueue(encoder.encode("data: [DONE]\n\n"));
           } catch (err) {
