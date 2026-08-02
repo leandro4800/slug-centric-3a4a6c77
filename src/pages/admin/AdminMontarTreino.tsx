@@ -245,6 +245,50 @@ const contemFullBody = (texto: string) => /full\s*body|corpo\s*todo/i.test(texto
 const fullBodyBloqueado = (nivel: string, divisoes: string[]) =>
   nivel !== "Iniciante" && divisoes.some(contemFullBody);
 
+// Mapeia as divisões de treino (A, B, C...) para os dias da semana escolhidos pelo aluno na anamnese.
+// Ex.: ["Push A","Pull A","Legs A","Push B","Pull B","Legs B"] + [Seg..Sáb]
+//   → "Seg — Push A", "Ter — Pull A", "Qua — Legs A", "Qui — Push B", ...
+const WD_FULL = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+const WD_LABEL = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+const normDia = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const idxDiaSemana = (s: string): number => {
+  const n = normDia(s);
+  const i = WD_FULL.findIndex((d) => n.includes(d));
+  if (i >= 0) return i;
+  return ["seg", "ter", "qua", "qui", "sex", "sab", "dom"].findIndex((d) => n.startsWith(d));
+};
+
+export function mapearDiasSemana(dias: string[], disponibilidade: string[]): Record<string, string> {
+  const mapa: Record<string, string> = {};
+  const disponiveis = (disponibilidade || [])
+    .map(idxDiaSemana)
+    .filter((i) => i >= 0)
+    .sort((a, b) => a - b);
+  if (!dias.length) return mapa;
+
+  // Ordem de prescrição: pela letra da divisão quando existir, senão a ordem já definida
+  const ordenados = [...dias].sort((a, b) => {
+    const la = a.match(/\b([A-F])\b/)?.[1];
+    const lb = b.match(/\b([A-F])\b/)?.[1];
+    if (la && lb && la !== lb) return la.charCodeAt(0) - lb.charCodeAt(0);
+    return dias.indexOf(a) - dias.indexOf(b);
+  });
+
+  ordenados.forEach((dia, pos) => {
+    if (idxDiaSemana(dia) >= 0) {
+      mapa[dia] = dia; // já contém o dia da semana no nome
+      return;
+    }
+    if (!disponiveis.length) {
+      mapa[dia] = dia;
+      return;
+    }
+    const wd = disponiveis[pos % disponiveis.length];
+    mapa[dia] = `${WD_LABEL[wd]} — ${dia}`;
+  });
+  return mapa;
+}
+
 const AdminMontarTreino = () => {
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
