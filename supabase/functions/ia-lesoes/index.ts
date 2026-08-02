@@ -171,6 +171,12 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
           let abortado = false;
           const ehLixo = (l: string) => /^[\s|:_—–-]*$/.test(l) && l.trim().length > 2;
           const detectarLoop = () => {
+            // 1) Corrida longa de traços/pipes dentro de UMA linha (caso mais comum)
+            const cauda = acumulado.slice(-600);
+            if (/[-–—_|:\s]{200,}$/.test(cauda)) return true;
+            // 2) Linha única gigante sem quebra
+            const ultimaLinha = acumulado.slice(acumulado.lastIndexOf("\n") + 1);
+            if (ultimaLinha.length > 1200) return true;
             const linhas = acumulado.split("\n");
             const ultimas = linhas.slice(-6);
             if (ultimas.length < 6) return false;
