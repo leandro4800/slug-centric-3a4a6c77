@@ -497,7 +497,8 @@ PSE (Percepção de Esforço) por nível — informe no campo "observacao":
 8. TRAVAS DE SEGURANÇA (NÃO VIOLE)
 ═══════════════════════════════════════════════
 - PROIBIDO treinar Peito e Costas no mesmo dia (exceto Full Body iniciante).
-- Frequências de 5x/semana DEVEM ter pelo menos 1 dia de OFF na quarta OU quinta-feira.
+- DIAS DE TREINO = DISPONIBILIDADE DO ALUNO. Nunca invente dia de descanso no meio da semana: gere EXATAMENTE a quantidade de dias da frequência semanal informada e, quando a divisão trouxer rótulos com dias (Seg, Ter, Qua, Qui, Sex, Sáb), use esses dias sem trocar nem pular nenhum.
+- Só distribua OFF no meio da semana (quarta OU quinta) quando a frequência for 5x ou menos. Com 6x/semana o único descanso é o domingo — é PROIBIDO tirar quarta ou quinta.
 - Volume MÍNIMO para grandes grupos: siga EXATAMENTE as REGRAS DE VOLUME do banco no topo deste prompt (nunca 3 exercícios para músculo grande em intermediário/avançado/atleta).
 - IDIOMA: todos os campos de texto DEVEM estar em português do Brasil. Qualquer termo em inglês invalida a resposta.
 - Avançado treinando 1 músculo/dia: MÍNIMO 4-5 exercícios + técnicas avançadas obrigatórias.
