@@ -104,7 +104,7 @@ const SaudeLesoes = () => {
 
   useEffect(() => {
     if (!alunoId) {
-      setContexto(null);
+      setDados({});
       return;
     }
     (async () => {
@@ -121,22 +121,31 @@ const SaudeLesoes = () => {
         p.limitacoes,
         ...(Array.isArray(a.doencas) ? a.doencas : []),
       ]);
-      setContexto({
-        nome: alunos.find((x) => x.id === alunoId)?.nome_completo,
-        sexo: p.sexo ?? null,
-        peso_kg: p.peso_kg ?? null,
-        altura_cm: p.altura_cm ?? null,
-        nivel: a.nivel_experiencia ?? p.nivel ?? null,
-        dias_disponiveis: a.disponibilidade_dias ?? null,
-        doencas: a.doencas ?? null,
-        medicamentos: a.medicamentos ?? null,
-        lesoes_atuais: a.lesoes_atuais ?? null,
-        cirurgias: a.cirurgias ?? null,
-        limitacoes: p.limitacoes ?? null,
+      const txt = (v: unknown) =>
+        v === null || v === undefined || v === "" ? "" : Array.isArray(v) ? v.join(", ") : String(v);
+      setDados({
+        nome: txt(alunos.find((x) => x.id === alunoId)?.nome_completo),
+        sexo: txt(p.sexo),
+        idade: txt(p.idade),
+        peso_kg: txt(p.peso_kg),
+        altura_cm: txt(p.altura_cm),
+        nivel: txt(a.nivel_experiencia ?? p.nivel),
+        objetivo: txt(p.objetivo),
+        dias_disponiveis: txt(a.disponibilidade_dias),
+        doencas: txt(a.doencas),
+        medicamentos: txt(a.medicamentos),
+        lesoes_atuais: txt(a.lesoes_atuais),
+        cirurgias: txt(a.cirurgias),
+        limitacoes: txt(p.limitacoes),
       });
       if (lesoes.length) setRelato(lesoes.join(" | "));
     })();
   }, [alunoId, alunos]);
+
+  const contexto = useMemo(() => {
+    const entries = Object.entries(dados).filter(([, v]) => (v || "").trim().length > 0);
+    return entries.length ? Object.fromEntries(entries) : null;
+  }, [dados]);
 
   const chamar = async (modo: "chat" | "laudo", texto: string) => {
     return invokeEdgeFunction<{ texto: string; restricoes: RestricoesMeta }>("ia-lesoes", {
