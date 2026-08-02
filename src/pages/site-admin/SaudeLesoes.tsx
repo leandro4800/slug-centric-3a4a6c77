@@ -8,8 +8,24 @@ import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
 import {
-  HeartPulse, Loader2, Send, FileDown, ShieldAlert, Stethoscope, Info, ExternalLink, AlertTriangle,
+  HeartPulse, Loader2, Send, FileDown, ShieldAlert, Stethoscope, Info, ExternalLink, AlertTriangle, Pencil,
 } from "lucide-react";
+
+const CAMPOS: [string, string, string][] = [
+  ["nome", "Nome", "Nome do atleta"],
+  ["sexo", "Sexo", "masculino / feminino"],
+  ["idade", "Idade", "30"],
+  ["peso_kg", "Peso (kg)", "82"],
+  ["altura_cm", "Altura (cm)", "178"],
+  ["nivel", "Nível", "iniciante / intermediário / avançado"],
+  ["objetivo", "Objetivo", "hipertrofia, emagrecimento..."],
+  ["dias_disponiveis", "Dias disponíveis", "seg, ter, qua, qui, sex"],
+  ["doencas", "Doenças", "hipertensão, diabetes..."],
+  ["medicamentos", "Medicamentos", "losartana 50mg"],
+  ["lesoes_atuais", "Lesões atuais", "hérnia de disco L5-S1"],
+  ["cirurgias", "Cirurgias", "menisco 2023"],
+  ["limitacoes", "Limitações", "não flexiona coluna sob carga"],
+];
 
 interface Aluno {
   id: string;
