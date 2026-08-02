@@ -259,6 +259,7 @@ const AdminMontarTreino = () => {
     lesoes: [], limitacoes: [],
   });
   const [exercicios, setExercicios] = useState<ExercicioPrescrito[]>([]);
+  const [diasDisponiveis, setDiasDisponiveis] = useState<string[]>([]);
   const [cardio, setCardio] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
