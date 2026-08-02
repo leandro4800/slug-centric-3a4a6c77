@@ -49,6 +49,7 @@ const SaudeLesoes = () => {
   const [gerandoLaudo, setGerandoLaudo] = useState(false);
   const [meta, setMeta] = useState<RestricoesMeta | null>(null);
   const fimChat = useRef<HTMLDivElement>(null);
+  const laudoRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -65,6 +66,13 @@ const SaudeLesoes = () => {
   useEffect(() => {
     fimChat.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat, loading]);
+
+  useEffect(() => {
+    if (gerandoLaudo || laudo) {
+      laudoRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [gerandoLaudo]);
+
 
   const alunoSelecionado = useMemo(() => alunos.find((a) => a.id === alunoId) || null, [alunos, alunoId]);
 
@@ -415,6 +423,28 @@ const SaudeLesoes = () => {
 
         {/* Chat + laudo */}
         <div className="space-y-4">
+          {(gerandoLaudo || laudo) && (
+            <div ref={laudoRef} className="rounded-xl border border-primary/30 bg-black/40 p-4">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Prévia do laudo</p>
+                {laudo && (
+                  <button onClick={baixarPdf} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                    <FileDown className="h-3.5 w-3.5" /> Baixar PDF
+                  </button>
+                )}
+              </div>
+              {laudo ? (
+                <div className="prose prose-sm prose-invert max-w-none prose-table:text-xs">
+                  <ReactMarkdown>{laudo}</ReactMarkdown>
+                </div>
+              ) : (
+                <p className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando laudo técnico...
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="rounded-xl border border-white/10 bg-black/30 p-4">
             <p className="mb-3 text-[10px] uppercase tracking-widest text-muted-foreground">Consultar a IA clínica</p>
 
@@ -484,20 +514,8 @@ const SaudeLesoes = () => {
             </div>
           </div>
 
-          {laudo && (
-            <div className="rounded-xl border border-white/10 bg-black/30 p-4">
-              <div className="mb-3 flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Prévia do laudo</p>
-                <button onClick={baixarPdf} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
-                  <FileDown className="h-3.5 w-3.5" /> Baixar PDF
-                </button>
-              </div>
-              <div className="prose prose-sm prose-invert max-w-none prose-table:text-xs">
-                <ReactMarkdown>{laudo}</ReactMarkdown>
-              </div>
-            </div>
-          )}
         </div>
+
       </div>
     </div>
   );
