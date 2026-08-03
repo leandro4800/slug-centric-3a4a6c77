@@ -23,10 +23,6 @@ interface CargaMap {
 
 type VideoRef = { yt: string | null; coach: string | null };
 
-const VOLUME_GROUPS = ["peito", "costas", "quadríceps", "quadriceps", "glúteo", "gluteo", "ombro", "bíceps", "biceps", "tríceps", "triceps"];
-const MIN_EXERCISES_PER_DAY = 4;
-
-
 import FightTrainingView from "@/pages/aluno/fight/FightTrainingView";
 
 const Treino = () => {
@@ -237,44 +233,6 @@ const PersonalTreino = () => {
     const resolveVideo = (nome: string, refMap: any) => findBest(nome, refMap).yt;
     const resolveCoach = (nome: string, refMap: any) => findBest(nome, refMap).coach;
 
-    const autoFillVolume = async (list: Treino[], refMap: any): Promise<Treino[]> => {
-      if (!tenant) return list;
-      const dias = [...new Set(list.map((t) => t.dia_semana))];
-      const extras: Treino[] = [];
-      for (const dia of dias) {
-        const diaEx = list.filter((t) => t.dia_semana === dia);
-        if (diaEx.length >= MIN_EXERCISES_PER_DAY) continue;
-        const allText = diaEx.map((e) => `${e.exercicio} ${e.observacao || ""}`).join(" ").toLowerCase();
-        const matched = VOLUME_GROUPS.find((g) => allText.includes(g));
-        if (!matched) continue;
-        const needed = MIN_EXERCISES_PER_DAY - diaEx.length;
-        const existing = new Set(diaEx.map((e) => e.exercicio.toLowerCase()));
-        const grupo = matched.charAt(0).toUpperCase() + matched.slice(1);
-        const { data: candidates } = await supabase
-          .from("biblioteca_exercicios")
-          .select("nome, series_trabalho, repeticoes, tecnica_intensidade, video_url, video_coach_url")
-          .eq("tenant_id", tenant.id)
-          .ilike("grupo_muscular", `%${grupo}%`)
-          .limit(20);
-        if (!candidates) continue;
-        const filtered = candidates.filter((c: any) => !existing.has(c.nome.toLowerCase())).slice(0, needed);
-        for (const ex of filtered as any[]) {
-          extras.push({
-            id: `extra-${dia}-${ex.nome}`,
-            dia_semana: dia,
-            exercicio: ex.nome,
-            series: ex.series_trabalho ? String(ex.series_trabalho) : "3",
-            repeticoes: ex.repeticoes || "10-12",
-            observacao: ex.tecnica_intensidade || "Adicionado para volume ideal.",
-            video_url: ex.video_url || resolveVideo(ex.nome, refMap),
-            video_coach_url: ex.video_coach_url || resolveCoach(ex.nome, refMap),
-            is_extra: true,
-          });
-        }
-      }
-      return [...list, ...extras];
-    };
-
     const loadCargas = async () => {
       if (!user) return;
       const { data } = await supabase
@@ -371,22 +329,15 @@ const PersonalTreino = () => {
             video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
           }));
           mapped.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
-          let filled = mapped;
-          try {
-            filled = await withTimeout(autoFillVolume(mapped, refMap), 4000);
-            filled.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
-          } catch (e) {
-            console.warn("autoFillVolume pulado", e);
-          }
-          setTreinos(filled);
+          setTreinos(mapped);
           setDiaAtual((cur) => {
-            if (cur && filled.some((t) => t.dia_semana === cur)) return cur;
+            if (cur && mapped.some((t) => t.dia_semana === cur)) return cur;
             const todayWd = ["domingo","segunda","terca","quarta","quinta","sexta","sabado"][new Date().getDay()];
-            const todayMatch = filled.find((t) => {
+            const todayMatch = mapped.find((t) => {
               const n = (t.dia_semana || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
               return n.includes(todayWd);
             });
-            return todayMatch ? todayMatch.dia_semana : filled[0].dia_semana;
+            return todayMatch ? todayMatch.dia_semana : mapped[0].dia_semana;
           });
           setIsMock(false);
           setLoading(false);
