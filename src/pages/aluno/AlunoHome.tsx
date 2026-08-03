@@ -8,6 +8,7 @@ import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 import { buildYouTubeThumbnailUrl, isVlogVideoPageUrl } from "@/lib/vlog-url";
 import { VlogPlayerModal } from "@/components/aluno/VlogPlayerModal";
+import { normalizeVideoUrl } from "@/lib/video-embed";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import heroDefault from "@/assets/hero-default.jpg";
@@ -113,24 +114,35 @@ const AlunoHome = () => {
       .order("posted_at", { ascending: false, nullsFirst: false })
       .order("created_at", { ascending: false })
       .limit(6)
-      .then(({ data }) => setVlogs((data as VlogPost[]) || []));
+      .then(({ data }) => {
+        const rows = ((data as VlogPost[]) || []).filter((v) => Boolean(v.url?.trim()));
+        setVlogs(rows);
+      });
   }, [tenant?.id]);
 
   const normalizePlayableVlog = (v: VlogPost): VlogPost => {
-    const yt = extractYouTubeId(v.url) || extractYouTubeId(v.thumbnail_url);
-    if (!yt) return v;
+    const normalizedUrl = normalizeVideoUrl(v.url);
+    const yt = extractYouTubeId(normalizedUrl) || extractYouTubeId(v.thumbnail_url);
+    if (!yt) return { ...v, url: normalizedUrl || v.url };
     return {
       ...v,
       url: `https://www.youtube.com/watch?v=${yt}`,
-      thumbnail_url: v.thumbnail_url && !isVlogVideoPageUrl(v.thumbnail_url) ? v.thumbnail_url : buildYouTubeThumbnailUrl(yt),
+      thumbnail_url:
+        v.thumbnail_url && !isVlogVideoPageUrl(v.thumbnail_url)
+          ? v.thumbnail_url
+          : buildYouTubeThumbnailUrl(yt),
     };
   };
 
-  const featured = vlogs[0] ? normalizePlayableVlog(vlogs[0]) : undefined;
-  const ytId = featured ? extractYouTubeId(featured.url) : extractYouTubeId(tenant?.hero_url);
+  const featuredRaw = vlogs.find((v) => Boolean(v.url?.trim())) ?? vlogs[0];
+  const featured = featuredRaw ? normalizePlayableVlog(featuredRaw) : undefined;
+  const featuredUrl = featured?.url ? normalizeVideoUrl(featured.url) : null;
+  const ytId = featuredUrl
+    ? extractYouTubeId(featuredUrl)
+    : extractYouTubeId(tenant?.hero_url);
   
   // Vídeo direto do featured (mp4 etc) ou fallback para hero do tenant
-  const featuredDirectUrl = featured && isDirectVideo(featured.url) ? featured.url : null;
+  const featuredDirectUrl = featuredUrl && isDirectVideo(featuredUrl) ? featuredUrl : null;
   const tenantHeroVideoId = !featured ? extractYouTubeId(tenant?.hero_url) : null;
   const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
 
@@ -140,22 +152,23 @@ const AlunoHome = () => {
 
   const buildThumb = (v: VlogPost): string => {
     if (v.thumbnail_url && !isVlogVideoPageUrl(v.thumbnail_url)) return v.thumbnail_url;
-    const yt = extractYouTubeId(v.url) || extractYouTubeId(v.thumbnail_url);
+    const normalized = normalizeVideoUrl(v.url);
+    const yt = extractYouTubeId(normalized) || extractYouTubeId(v.thumbnail_url);
     if (yt) return buildYouTubeThumbnailUrl(yt);
-    // fallback genérico via screenshot
-    return `https://api.microlink.io/?url=${encodeURIComponent(v.url)}&screenshot=true&meta=false&embed=screenshot.url`;
+    if (!normalized?.trim()) return heroDefault;
+    return `https://api.microlink.io/?url=${encodeURIComponent(normalized)}&screenshot=true&meta=false&embed=screenshot.url`;
   };
 
   const handlePlay = () => {
-    if (featured) {
-      setPlaying(featured);
+    if (featured && featuredUrl) {
+      setPlaying({ ...featured, url: featuredUrl });
       return;
     }
     
     if (tenant?.hero_url) {
       setPlaying({
         id: "hero",
-        url: tenant.hero_url,
+        url: normalizeVideoUrl(tenant.hero_url),
         title: tenant.tagline || tenant.nome || "Apresentação",
         thumbnail_url: null,
         platform: "hero"
@@ -261,7 +274,7 @@ const AlunoHome = () => {
           </div>
           <Button
             onClick={handlePlay}
-            disabled={!featured && !tenant?.hero_url}
+            disabled={!featuredUrl && !tenant?.hero_url}
             className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-md tracking-widest shadow-xl transition-all active:scale-95 bg-white text-black hover:bg-white/90"
           >
             <Play className="h-5 w-5 fill-current" /> ASSISTIR
@@ -374,7 +387,9 @@ const AlunoHome = () => {
           </Link>
         )}
         <div className="grid grid-cols-2 gap-3">
-          {vlogs.map((v) => (
+          {vlogs
+            .filter((v) => v.id !== featured?.id && v.url?.trim())
+            .map((v) => (
             <div
               key={v.id}
               onClick={() => setPlaying(normalizePlayableVlog(v))}
@@ -406,6 +421,7 @@ const AlunoHome = () => {
         <VlogPlayerModal
           url={playing.url}
           title={playing.title}
+          thumbnailUrl={playing.thumbnail_url || buildThumb(playing)}
           onClose={() => setPlaying(null)}
         />
       )}

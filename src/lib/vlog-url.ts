@@ -39,6 +39,9 @@ export const extractVlogYouTubeId = (url: string | null | undefined): string | n
 export const buildYouTubeThumbnailUrl = (videoId: string) =>
   `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
 
+export const buildYouTubeWatchUrl = (videoId: string) =>
+  `https://www.youtube.com/watch?v=${videoId}`;
+
 export const isVlogVideoPageUrl = (value: string | null | undefined) => {
   const url = value?.toLowerCase() ?? "";
   return (
@@ -69,7 +72,7 @@ export const normalizeVlogUrl = (raw: string): string => {
 
     if (url.hostname.includes("youtube.com") || url.hostname === "youtu.be" || url.hostname.includes("ytimg.com")) {
       const id = extractVlogYouTubeId(url.toString());
-      if (id) return `https://www.youtube.com/watch?v=${id}`;
+      if (id) return buildYouTubeWatchUrl(id);
     }
 
     url.hash = "";
@@ -97,7 +100,8 @@ export const normalizeVlogUrl = (raw: string): string => {
 };
 
 /** Validates and normalizes user input; returns null when no usable URL. */
-export const prepareVlogUrl = (raw: string): string | null => {
+export const prepareVlogUrl = (raw: string | null | undefined): string | null => {
+  if (!raw) return null;
   const trimmed = raw.trim();
   if (!trimmed) return null;
 

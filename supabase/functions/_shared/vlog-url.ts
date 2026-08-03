@@ -1,6 +1,10 @@
 export type VlogPlatform = "instagram" | "tiktok" | "youtube" | "other";
 
 const URL_IN_TEXT = /https?:\/\/[^\s<>"']+/i;
+const YOUTUBE_ID_IN_URLS = [
+  /(?:youtu\.be\/|[?&]v=|\/shorts\/|\/live\/|\/embed\/|\/v\/)([A-Za-z0-9_-]{11})/i,
+  /i\.ytimg\.com\/vi\/([A-Za-z0-9_-]{11})/i,
+];
 
 export const extractFirstUrl = (text: string): string | null => {
   const match = text.trim().match(URL_IN_TEXT);
@@ -18,6 +22,14 @@ export const detectVlogPlatform = (url: string): VlogPlatform => {
   return "other";
 };
 
+const extractVlogYouTubeId = (url: string): string | null => {
+  for (const regex of YOUTUBE_ID_IN_URLS) {
+    const match = url.match(regex);
+    if (match?.[1]) return match[1];
+  }
+  return null;
+};
+
 export const normalizeVlogUrl = (raw: string): string => {
   let input = raw.trim();
   const extracted = extractFirstUrl(input);
@@ -30,21 +42,13 @@ export const normalizeVlogUrl = (raw: string): string => {
   try {
     const url = new URL(input);
 
-    if (url.hostname === "youtu.be" && url.pathname.length > 1) {
-      return `https://www.youtube.com/watch?v=${url.pathname.slice(1)}`;
-    }
-    if (url.hostname.includes("youtube.com") && url.pathname === "/watch") {
-      const id = url.searchParams.get("v");
+    if (url.hostname.includes("youtube.com") || url.hostname === "youtu.be" || url.hostname.includes("ytimg.com")) {
+      const id = extractVlogYouTubeId(url.toString());
       if (id) return `https://www.youtube.com/watch?v=${id}`;
     }
 
     url.hash = "";
     url.search = "";
-
-    if (url.hostname.includes("youtube.com") && (url.pathname.startsWith("/shorts/") || url.pathname.startsWith("/live/") || url.pathname.startsWith("/embed/"))) {
-      const id = url.pathname.split("/")[2];
-      if (id) return `https://www.youtube.com/watch?v=${id}`;
-    }
 
     if (url.hostname === "instagr.am" || url.hostname.endsWith(".instagr.am")) {
       url.hostname = "www.instagram.com";
@@ -67,7 +71,8 @@ export const normalizeVlogUrl = (raw: string): string => {
   }
 };
 
-export const prepareVlogUrl = (raw: string): string | null => {
+export const prepareVlogUrl = (raw: string | null | undefined): string | null => {
+  if (!raw) return null;
   const trimmed = raw.trim();
   if (!trimmed) return null;
   const candidate = extractFirstUrl(trimmed) || trimmed;

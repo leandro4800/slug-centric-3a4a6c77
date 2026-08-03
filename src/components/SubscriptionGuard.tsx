@@ -5,12 +5,16 @@ import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { SubscriptionLockScreen } from "@/components/SubscriptionLockScreen";
+import {
+  readSubscriptionGuardCache,
+  writeSubscriptionGuardCache,
+} from "@/lib/subscription-guard-cache";
 
 interface Props {
   children: ReactNode;
 }
 
-const SUBSCRIPTION_TIMEOUT_MS = 5500;
+const SUBSCRIPTION_TIMEOUT_MS = 3500;
 
 const withSubscriptionTimeout = async <T,>(promise: PromiseLike<T>, fallback: T, label: string): Promise<T> => {
   let timeoutId: ReturnType<typeof setTimeout> | undefined;
@@ -29,7 +33,7 @@ const withSubscriptionTimeout = async <T,>(promise: PromiseLike<T>, fallback: T,
 };
 
 export const SubscriptionGuard = ({ children }: Props) => {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, sessionReady } = useAuth();
   const { slug } = useParams();
   const { tenant: brandedTenant, loading: brandingLoading } = useBranding();
   const [status, setStatus] = useState<string | null>(null);
@@ -43,23 +47,33 @@ export const SubscriptionGuard = ({ children }: Props) => {
         console.warn("[SubscriptionGuard] Timeout atingido, forçando renderização.");
         setForceShow(true);
       }
-    }, 5000);
+    }, 2800);
     return () => clearTimeout(timer);
   }, [loading]);
 
   useEffect(() => {
-    if (authLoading || brandingLoading || !user) return;
+    if (!sessionReady || brandingLoading || !user) return;
 
     const checkSubscriptionAndCompletion = async () => {
+      const cached = readSubscriptionGuardCache(user.id, brandedTenant?.id);
+      if (cached) {
+        setIsCoach(cached.isCoach);
+        setStatus(cached.status);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-      
-      // 1. Resolve tenant with ownership explicitly.
-      const { data: tenant } = brandedTenant?.id
-        ? await withSubscriptionTimeout(supabase.from("tenants").select("id, owner_user_id").eq("id", brandedTenant.id).maybeSingle(), { data: brandedTenant, error: null } as any, "Busca do tenant")
+      const tenant = brandedTenant?.id
+        ? { id: brandedTenant.id, owner_user_id: brandedTenant.owner_user_id ?? null }
         : slug && slug !== "demo"
-          ? await withSubscriptionTimeout(supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle(), { data: null, error: null } as any, "Busca do tenant por slug")
-          : { data: null };
+          ? (await withSubscriptionTimeout(
+              supabase.from("tenants").select("id, owner_user_id").eq("slug", slug).maybeSingle(),
+              { data: null, error: null } as any,
+              "Busca do tenant por slug",
+            )).data
+          : null;
 
       const pendingVoucher = sessionStorage.getItem("pending_voucher");
       const urlParams = new URLSearchParams(window.location.search);
@@ -103,6 +117,8 @@ export const SubscriptionGuard = ({ children }: Props) => {
       if (tenant?.owner_user_id === user.id) {
         console.log("[SubscriptionGuard] Usuário é o dono do tenant, liberando acesso.");
         setIsCoach(true);
+        setStatus("active");
+        writeSubscriptionGuardCache(user.id, tenant.id, { isCoach: true, status: "active" });
         setLoading(false);
         return;
       }
@@ -110,6 +126,7 @@ export const SubscriptionGuard = ({ children }: Props) => {
       // 2. Check if user has an active/trialing subscription
       if (!tenant?.id) {
         console.warn("[SubscriptionGuard] Tenant indisponível; liberando tela para evitar loop.");
+        writeSubscriptionGuardCache(user.id, null, { isCoach: false, status: "active" });
         setLoading(false);
         return;
       }
@@ -123,31 +140,35 @@ export const SubscriptionGuard = ({ children }: Props) => {
         .maybeSingle(), { data: null, error: null } as any, "Verificação de assinatura");
 
       const subscriptionStatus = sub?.status || "inactive";
-      setStatus(subscriptionStatus);
+      let nextStatus = subscriptionStatus;
 
       // 3. Check for profile/onboarding completion
       if (subscriptionStatus === "active" || subscriptionStatus === "trialing") {
-        const { data: profile } = await withSubscriptionTimeout(supabase
-          .from("perfis")
-          .select("onboarding_completo")
-          .eq("id", user.id)
-          .maybeSingle(), { data: null, error: null } as any, "Verificação de perfil");
-
-        const { count: anamneseCount } = await withSubscriptionTimeout(supabase
-          .from("anamnese_aluno")
-          .select("id", { count: 'exact', head: true })
-          .eq("aluno_id", user.id), { count: 0, error: null } as any, "Verificação de anamnese");
-
-        const { count: avaliacaoCount } = await withSubscriptionTimeout(supabase
-          .from("avaliacoes_fisicas")
-          .select("id", { count: 'exact', head: true })
-          .eq("aluno_id", user.id), { count: 0, error: null } as any, "Verificação de avaliação");
+        const [{ data: profile }, { count: anamneseCount }, { count: avaliacaoCount }] = await Promise.all([
+          withSubscriptionTimeout(
+            supabase.from("perfis").select("onboarding_completo").eq("id", user.id).maybeSingle(),
+            { data: null, error: null } as any,
+            "Verificação de perfil",
+          ),
+          withSubscriptionTimeout(
+            supabase.from("anamnese_aluno").select("id", { count: "exact", head: true }).eq("aluno_id", user.id),
+            { count: 0, error: null } as any,
+            "Verificação de anamnese",
+          ),
+          withSubscriptionTimeout(
+            supabase.from("avaliacoes_fisicas").select("id", { count: "exact", head: true }).eq("aluno_id", user.id),
+            { count: 0, error: null } as any,
+            "Verificação de avaliação",
+          ),
+        ]);
 
         if (!profile?.onboarding_completo || !anamneseCount || !avaliacaoCount) {
-          setStatus("incomplete");
+          nextStatus = "incomplete";
         }
       }
 
+      setStatus(nextStatus);
+      writeSubscriptionGuardCache(user.id, tenant.id, { isCoach: false, status: nextStatus });
       setLoading(false);
       } catch (error) {
         console.error("[SubscriptionGuard] Erro inesperado; liberando render para evitar loop:", error);
@@ -156,9 +177,9 @@ export const SubscriptionGuard = ({ children }: Props) => {
     };
 
     void checkSubscriptionAndCompletion();
-  }, [user, authLoading, brandingLoading, slug, brandedTenant?.id]);
+  }, [user, sessionReady, brandingLoading, slug, brandedTenant?.id, brandedTenant?.owner_user_id]);
 
-  if ((authLoading || loading) && !forceShow) {
+  if ((!sessionReady || loading) && !forceShow) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-6 w-6 animate-spin text-primary" />

@@ -21,7 +21,7 @@ import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluati
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import heic2any from "heic2any";
 import { AthleteEvaluationsViewer } from "@/components/aluno/AthleteEvaluationsViewer";
-import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
+import { readProfileSnapshot, writeProfileSnapshot } from "@/lib/profile-cache";
 
 type ProfileData = {
   id?: string;
@@ -169,18 +169,57 @@ const Perfil = () => {
   };
 
   useEffect(() => {
-    if (user) loadData();
-  }, [user]);
+    if (!user?.id) return;
+    const cached = readProfileSnapshot(user.id);
+    if (cached) {
+      if (cached.profile) {
+        const p = cached.profile as ProfileData;
+        setProfile(p);
+        setFormProfile({
+          nome_completo: p.nome_completo || "",
+          telefone: p.telefone || "",
+          data_nascimento: p.data_nascimento || "",
+          sexo: (p.sexo as "M" | "F") || "M",
+          avatar_url: p.avatar_url || "",
+          music_url: p.music_url || "",
+          avatar_pos_y: p.avatar_pos_y ?? 50,
+        });
+      }
+      if (cached.lastEval) {
+        const e = cached.lastEval as LastEvalData;
+        setLastEval(e);
+        setFormEval({
+          peso_kg: String(e.peso_kg || ""),
+          altura_cm: String(e.altura_cm || ""),
+          pescoco_cm: String(e.pescoco_cm || ""),
+          cintura_cm: String(e.cintura_cm || ""),
+          quadril_cm: String(e.quadril_cm || ""),
+        });
+      }
+      setIsCoach(cached.isCoach);
+      setLoading(false);
+    }
+    void loadData(Boolean(cached));
+  }, [user?.id]);
 
   const loadData = async (silent = false) => {
+    if (!user?.id) return;
     try {
       if (!silent) setLoading(true);
-      const { data: p } = await supabase.from("perfis").select("*").eq("id", user?.id).maybeSingle();
-      const { data: e } = await supabase.from("avaliacoes_fisicas").select("*").eq("aluno_id", user?.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user?.id);
-      const { data: ownedTenant } = await supabase.from("tenants").select("id").eq("owner_user_id", user?.id).maybeSingle();
-      
-      setIsCoach(roles?.some(r => r.role === "coach" || r.role === "admin") || !!ownedTenant);
+      const [profileRes, evalRes, rolesRes, ownedRes] = await Promise.all([
+        supabase.from("perfis").select("*").eq("id", user.id).maybeSingle(),
+        supabase.from("avaliacoes_fisicas").select("*").eq("aluno_id", user.id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", user.id),
+        supabase.from("tenants").select("id").eq("owner_user_id", user.id).maybeSingle(),
+      ]);
+
+      const p = profileRes.data;
+      const e = evalRes.data;
+      const roles = rolesRes.data;
+      const ownedTenant = ownedRes.data;
+      const coachFlag = roles?.some((r) => r.role === "coach" || r.role === "admin") || !!ownedTenant;
+
+      setIsCoach(coachFlag);
       if (p) {
         setProfile(p);
         setFormProfile({
@@ -203,6 +242,12 @@ const Perfil = () => {
           quadril_cm: String(e.quadril_cm || ""),
         });
       }
+
+      writeProfileSnapshot(user.id, {
+        profile: p ?? null,
+        lastEval: e ?? null,
+        isCoach: coachFlag,
+      });
     } catch (err) {
       console.error(err);
     } finally {

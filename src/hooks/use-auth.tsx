@@ -1,6 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
+import { App } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
+import { consumeAuthRolesPrefetch } from "@/lib/auth-roles-prefetch";
 
 export type AppRole = "admin" | "coach" | "aluno";
 
@@ -13,6 +16,7 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   sessionReady: boolean;
+  rolesReady: boolean;
   isLoading: boolean;
   roles: UserRole[];
   signOut: () => Promise<void>;
@@ -23,6 +27,7 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   session: null,
   sessionReady: false,
+  rolesReady: false,
   isLoading: true,
   roles: [],
   signOut: async () => {},
@@ -53,7 +58,7 @@ const withTimeout = async <T,>(promise: Promise<T>, fallback: T, label: string, 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionReady, setSessionReady] = useState(false);
-  const [rolesLoading, setRolesLoading] = useState(true);
+  const [rolesLoading, setRolesLoading] = useState(false);
   const [roles, setRoles] = useState<UserRole[]>([]);
   const roleRequestId = useRef(0);
 
@@ -119,6 +124,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    let removeListener: (() => void) | undefined;
+    void App.addListener("appStateChange", ({ isActive }) => {
+      if (isActive) {
+        void supabase.auth.startAutoRefresh();
+        void supabase.auth.getSession().then(({ data, error }) => {
+          if (error) {
+            console.warn("[Auth] Falha ao restaurar sessão ao voltar ao app:", error);
+            return;
+          }
+          if (data.session) setSession(data.session);
+        });
+        return;
+      }
+      void supabase.auth.stopAutoRefresh();
+    }).then((handle) => {
+      removeListener = () => handle.remove();
+    });
+
+    return () => {
+      removeListener?.();
+    };
+  }, []);
+
 
   useEffect(() => {
     if (!sessionReady) return;
@@ -127,6 +158,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     if (!session?.user) {
       setRoles([]);
+      setRolesLoading(false);
+      return;
+    }
+
+    const prefetched = consumeAuthRolesPrefetch();
+    if (prefetched?.length) {
+      setRoles(prefetched);
       setRolesLoading(false);
       return;
     }
@@ -156,10 +194,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   }, [roles]);
 
-  const isLoading = !sessionReady || rolesLoading;
+  const sessionLoading = !sessionReady;
+  const rolesReady = !session?.user || !rolesLoading;
+  const isLoading = sessionLoading;
 
   return (
-    <AuthContext.Provider value={{ user: session?.user ?? null, session, sessionReady, isLoading, roles, signOut, hasRole }}>
+    <AuthContext.Provider value={{ user: session?.user ?? null, session, sessionReady, rolesReady, isLoading, roles, signOut, hasRole }}>
       {children}
     </AuthContext.Provider>
   );

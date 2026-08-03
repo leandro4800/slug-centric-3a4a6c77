@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, Share, Plus, X } from "lucide-react";
@@ -19,6 +20,7 @@ const isStandalone = () =>
   window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone === true;
 
 const InstallPwaPrompt = () => {
+  const isNativeApp = Capacitor.isNativePlatform();
   const location = useLocation();
   const [open, setOpen] = useState(false);
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
@@ -26,6 +28,7 @@ const InstallPwaPrompt = () => {
   const android = isAndroid();
 
   useEffect(() => {
+    if (isNativeApp) return;
     if (!isMobile() || isStandalone()) return;
     // Não mostrar em landing pages públicas
     const path = location.pathname;
@@ -47,7 +50,7 @@ const InstallPwaPrompt = () => {
       clearTimeout(t);
       window.removeEventListener("beforeinstallprompt", onBIP);
     };
-  }, [location.pathname]);
+  }, [location.pathname, isNativeApp]);
 
   const handleDismiss = () => {
     localStorage.setItem(DISMISS_KEY, String(Date.now()));
@@ -61,6 +64,8 @@ const InstallPwaPrompt = () => {
     setDeferred(null);
     setOpen(false);
   };
+
+  if (isNativeApp) return null;
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && handleDismiss()}>

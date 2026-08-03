@@ -4,7 +4,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import Login from "@/pages/Login";
+import { buildTenantLoginPath } from "@/lib/tenant-slug";
 
 interface Props {
   children: ReactNode;
@@ -75,13 +75,17 @@ const withGuardTimeout = async <T,>(promise: PromiseLike<T>, fallback: T, label:
 };
 
 export const RequireAuth = ({ children, requireRole, checkTenant = false }: Props) => {
-  const { user, isLoading: authLoading, hasRole } = useAuth();
+  const { user, sessionReady, rolesReady, hasRole } = useAuth();
   const { tenant, loading: brandingLoading } = useBranding();
   const location = useLocation();
   const { slug } = useParams();
   const [tenantMembership, setTenantMembership] = useState<boolean | null>(null);
 
-  const isLoading = authLoading || (checkTenant && brandingLoading);
+  const needsRoles = Boolean(requireRole) || checkTenant;
+  const isLoading =
+    !sessionReady ||
+    (needsRoles && user && !rolesReady) ||
+    (checkTenant && brandingLoading);
 
   useEffect(() => {
     if (!checkTenant || !user || !tenant?.id) {
@@ -125,8 +129,9 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
   }
 
   if (!user) {
-    console.log("[RequireAuth] Sem usuário, redirecionando para login. Slug:", slug);
-    return <Login />;
+    const loginPath = slug ? `/${slug}/login` : buildTenantLoginPath(location.search);
+    console.log("[RequireAuth] Sem usuário, redirecionando para login:", loginPath);
+    return <Navigate to={loginPath} replace state={{ from: location.pathname }} />;
   }
 
   // Se requer um papel específico e não o possui

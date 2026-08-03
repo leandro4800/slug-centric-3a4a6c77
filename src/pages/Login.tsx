@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,18 @@ import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
+import { isSafeTenantSlug, readFallbackTenantSlug } from "@/lib/tenant-slug";
+import { readStartupBranding } from "@/lib/startup-branding";
 import { useAuth } from "@/hooks/use-auth";
 
 import { buildAuthRedirectUrl } from "@/lib/app-url";
+import {
+  defaultRememberLogin,
+  loadSavedLoginCredentials,
+  saveLoginCredentials,
+} from "@/lib/login-credentials";
+import { stashAuthRolesPrefetch, type PrefetchedRole } from "@/lib/auth-roles-prefetch";
 
 const getSafeAppSlug = (slug?: string | null) => {
   if (!slug || !/^[a-z0-9-]+$/i.test(slug) || slug === "index" || slug === "demo") return null;
@@ -21,52 +30,74 @@ const getSafeAppSlug = (slug?: string | null) => {
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
+  const startupBranding = readStartupBranding();
+  const brandingSlug =
+    (urlSlug && isSafeTenantSlug(urlSlug) ? urlSlug : null) ?? readFallbackTenantSlug();
+  const cachedTenant = brandingSlug ? readTenantBrandingCache(brandingSlug) : null;
+  const displayTenant =
+    tenant ??
+    cachedTenant ??
+    (startupBranding
+      ? {
+          nome: startupBranding.nome,
+          logo_url: startupBranding.logo_url,
+          hero_url: startupBranding.hero_url ?? null,
+          login_video_url: null,
+        }
+      : null);
   const { user, sessionReady } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [rememberLogin, setRememberLogin] = useState(defaultRememberLogin());
   
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
+  useEffect(() => {
+    let cancelled = false;
+    void loadSavedLoginCredentials().then((saved) => {
+      if (cancelled || !saved) return;
+      setEmail(saved.email);
+      if (saved.password) setPassword(saved.password);
+      setRememberLogin(saved.remember);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const resolveAppDestination = async (userId: string) => {
-    const { data: ownedTenant } = await supabase
-      .from("tenants")
-      .select("slug")
-      .eq("owner_user_id", userId)
-      .maybeSingle();
+    const [{ data: ownedTenant }, { data: roleRows }, { data: alunoRow }] = await Promise.all([
+      supabase.from("tenants").select("slug").eq("owner_user_id", userId).maybeSingle(),
+      supabase.from("user_roles").select("role, tenant_id, tenants:tenant_id(slug)").eq("user_id", userId),
+      supabase.from("alunos").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
+    ]);
+
+    const prefetchedRoles: PrefetchedRole[] = [];
+    if (ownedTenant?.slug) {
+      prefetchedRoles.push({ role: "coach", tenant_id: null });
+    }
+    for (const row of roleRows ?? []) {
+      prefetchedRoles.push({ role: row.role as PrefetchedRole["role"], tenant_id: row.tenant_id });
+    }
+    if (prefetchedRoles.length) stashAuthRolesPrefetch(prefetchedRoles);
 
     if (ownedTenant?.slug) return `/${ownedTenant.slug}/app`;
 
-    // Multi-tenant: um mesmo aluno pode estar em vários tenants.
-    // Prioriza o tenant do slug da URL (link enviado pelo coach) para não vazar dados
-    // de outro tenant onde o usuário também é aluno.
-    const { data: alunoRoles } = await supabase
-      .from("user_roles")
-      .select("tenant_id, tenants:tenant_id(slug)")
-      .eq("user_id", userId)
-      .eq("role", "aluno");
-
-    const rolesList = (alunoRoles as any[] | null) ?? [];
+    const rolesList = (roleRows as any[] | null)?.filter((r) => r.role === "aluno") ?? [];
     const contextSlug = getSafeAppSlug(urlSlug || tenant?.slug);
     if (contextSlug) {
       const match = rolesList.find((r) => r?.tenants?.slug === contextSlug);
       if (match) return `/${contextSlug}/app`;
     }
 
-    // Se só é aluno em 1 tenant, vai direto pra ele.
     if (rolesList.length === 1) {
       const onlySlug = getSafeAppSlug(rolesList[0]?.tenants?.slug);
       if (onlySlug) return `/${onlySlug}/app`;
     }
-
-    // Fallback: tabela alunos (legado) ou último slug conhecido.
-    const { data: alunoRow } = await supabase
-      .from("alunos")
-      .select("tenants:tenant_id(slug)")
-      .eq("id", userId)
-      .maybeSingle();
 
     const alunoSlug = getSafeAppSlug((alunoRow as any)?.tenants?.slug);
     if (alunoSlug) return `/${alunoSlug}/app`;
@@ -78,16 +109,21 @@ const Login = () => {
 
   useEffect(() => {
     if (!sessionReady || !user || loading) return;
-    let cancelled = false;
+    if (!location.pathname.endsWith("/login")) return;
 
-    void resolveAppDestination(user.id).then((destination) => {
-      if (!cancelled) navigate(destination, { replace: true });
-    });
+    let cancelled = false;
+    void resolveAppDestination(user.id)
+      .then((destination) => {
+        if (!cancelled) navigate(destination, { replace: true });
+      })
+      .catch((err) => {
+        console.error("[Login] Erro ao redirecionar sessão existente:", err);
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [sessionReady, user?.id, loading, urlSlug, tenant?.slug, navigate]);
+  }, [sessionReady, user?.id, loading, urlSlug, tenant?.slug, navigate, location.pathname]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -102,26 +138,46 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { data: signInData, error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
-    setLoading(false);
-    if (error) {
-      const msg = error.message?.toLowerCase() || "";
-      if (msg.includes("not confirmed") || msg.includes("confirm")) {
-        toast.error("E-mail ainda não confirmado. Use 'Reenviar confirmação' abaixo.");
-      } else {
-        toast.error(error.message);
+    try {
+      const { data: signInData, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (error) {
+        const msg = error.message?.toLowerCase() || "";
+        if (msg.includes("not confirmed") || msg.includes("confirm")) {
+          toast.error("E-mail ainda não confirmado. Use 'Reenviar confirmação' abaixo.");
+        } else {
+          toast.error(error.message);
+        }
+        return;
       }
-      return;
+
+      const userId = signInData?.user?.id;
+      if (!userId) {
+        navigate("/onboarding", { replace: true });
+        return;
+      }
+
+      void saveLoginCredentials(email, password, rememberLogin);
+
+      const quickSlug = getSafeAppSlug(
+        urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug"),
+      );
+      if (quickSlug) {
+        navigate(`/${quickSlug}/app`, { replace: true });
+        void resolveAppDestination(userId);
+        return;
+      }
+
+      const destination = await resolveAppDestination(userId);
+      navigate(destination, { replace: true });
+    } catch (err) {
+      console.error("[Login] Erro inesperado:", err);
+      toast.error("Erro ao entrar. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
-
-    const userId = signInData?.user?.id;
-    if (userId) {
-      navigate(await resolveAppDestination(userId), { replace: true });
-      return;
-    }
-
-    navigate("/onboarding", { replace: true });
-
   };
 
   const handleResendConfirmation = async () => {
@@ -149,7 +205,7 @@ const Login = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-background">
-      {tenant?.login_video_url ? (
+      {displayTenant?.login_video_url ? (
         <video
           autoPlay
           loop
@@ -157,19 +213,19 @@ const Login = () => {
           playsInline
           className="absolute inset-0 w-full h-full object-cover scale-110 lg:block hidden"
         >
-          <source src={tenant.login_video_url} type="video/mp4" />
+          <source src={displayTenant.login_video_url} type="video/mp4" />
         </video>
       ) : (
         <div
           className="absolute inset-0 bg-cover bg-center scale-110 lg:block hidden"
-          style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
+          style={{ backgroundImage: `url(${displayTenant?.hero_url || loginBg})` }}
         />
       )}
       
       {/* Background for mobile/tablet when video is inside the container */}
       <div 
         className="absolute inset-0 bg-cover bg-center scale-110 lg:hidden block"
-        style={{ backgroundImage: `url(${tenant?.hero_url || loginBg})` }}
+        style={{ backgroundImage: `url(${displayTenant?.hero_url || loginBg})` }}
       />
 
       <div className="absolute inset-0 bg-black/60 lg:bg-black/40" />
@@ -179,14 +235,14 @@ const Login = () => {
       <div className="relative w-full max-w-md">
         <div className="flex justify-center mb-8">
           <div className="flex items-center gap-3">
-            {tenant?.logo_url ? (
-              <img src={tenant.logo_url} alt={tenant.nome} className="h-12 w-auto object-contain" />
+            {displayTenant?.logo_url ? (
+              <img src={displayTenant.logo_url} alt={displayTenant.nome} className="h-12 w-auto object-contain" />
             ) : (
               <Logo withText={false} />
             )}
-            {tenant ? (
+            {displayTenant ? (
               <span className="font-display text-xl tracking-wider uppercase">
-                {tenant.nome}
+                {displayTenant.nome}
               </span>
             ) : (
               <span className="font-display text-xl tracking-wider">
@@ -197,7 +253,7 @@ const Login = () => {
         </div>
         <div className="relative bg-black/40 lg:bg-black/10 border border-white/20 rounded-none shadow-card overflow-hidden min-h-screen lg:min-h-[400px] flex flex-col">
           {/* Responsive Video Container for Mobile/Tablet */}
-          {tenant?.login_video_url && (
+          {displayTenant?.login_video_url && (
             <div className="lg:hidden absolute inset-0 z-0">
               <video
                 autoPlay
@@ -206,7 +262,7 @@ const Login = () => {
                 playsInline
                 className="w-full h-full object-cover"
               >
-                <source src={tenant.login_video_url} type="video/mp4" />
+                <source src={displayTenant.login_video_url} type="video/mp4" />
               </video>
               <div className="absolute inset-0 bg-black/40" />
             </div>
@@ -250,6 +306,15 @@ const Login = () => {
                 </button>
               </div>
             </div>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={rememberLogin}
+                onChange={(e) => setRememberLogin(e.target.checked)}
+                className="h-4 w-4 rounded border-white/20 bg-white/5 accent-primary"
+              />
+              Lembrar meus dados neste dispositivo
+            </label>
             <Button type="submit" disabled={loading} className="w-full">
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : "ACESSAR AGORA"}
             </Button>
@@ -268,7 +333,7 @@ const Login = () => {
             </div>
           </form>
             <p className="text-center text-xs text-muted-foreground mt-6">
-              {tenant ? `${tenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
+              {displayTenant ? `${displayTenant.nome} @ Alpha Coach` : "Alpha Coach 1.0 · Plataforma multi-tenant para coaches"}
             </p>
           </div>
         </div>

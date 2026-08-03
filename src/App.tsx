@@ -1,18 +1,21 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes, Navigate, useLocation, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/use-auth";
 import { BrandingProvider, useBranding } from "@/contexts/BrandingProvider";
+import { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { SplashScreen } from "@/components/SplashScreen";
 import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
-import { buildTenantLoginPath } from "@/lib/tenant-slug";
+import { buildTenantLoginPath, readFallbackTenantSlug } from "@/lib/tenant-slug";
+import { readStartupBranding } from "@/lib/startup-branding";
+import { Loader2 } from "lucide-react";
 import PushNotificationManager from "@/components/PushNotificationManager";
 
 import Landing from "./pages/Landing";
@@ -32,7 +35,7 @@ import Dieta from "./pages/aluno/Dieta";
 import Evolucao from "./pages/aluno/Evolucao";
 import CompararEvolucao from "./pages/aluno/CompararEvolucao";
 import Comunidade from "./pages/aluno/Comunidade";
-import Perfil from "./pages/aluno/Perfil";
+const Perfil = lazy(() => import("./pages/aluno/Perfil"));
 import ControleCentral from "./pages/aluno/ControleCentral";
 import Parceiros from "./pages/aluno/Parceiros";
 import Anamnese from "./pages/aluno/Anamnese";
@@ -116,10 +119,31 @@ const NativeStartupRedirect = () => {
   const location = useLocation();
   const { user, sessionReady } = useAuth();
   const search = location.search || window.location.search;
+  const rememberedSlug = readFallbackTenantSlug();
+  const startupBranding = readStartupBranding();
+  const cachedTenant = rememberedSlug ? readTenantBrandingCache(rememberedSlug) : null;
+  const startupLogo = cachedTenant?.logo_url ?? startupBranding?.logo_url ?? null;
+  const startupName = cachedTenant?.nome ?? startupBranding?.nome ?? null;
 
   if (!sessionReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 bg-background px-6">
+        {startupLogo ? (
+          <>
+            <img
+              src={startupLogo}
+              alt={startupName || "Coach"}
+              className="h-24 w-auto max-w-[220px] object-contain"
+            />
+            {startupName ? (
+              <p className="font-display text-sm uppercase tracking-[0.25em] text-muted-foreground">
+                {startupName}
+              </p>
+            ) : null}
+          </>
+        ) : (
+          <img src="/icons/icon-192.webp" alt="AlphaCoach" className="h-20 w-20 object-contain" />
+        )}
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="sr-only">Carregando...</span>
       </div>
@@ -218,7 +242,15 @@ const App = () => (
               <Route path="evolucao" element={<Evolucao />} />
               <Route path="evolucao/comparar" element={<CompararEvolucao />} />
               <Route path="comunidade" element={<Comunidade />} />
-              <Route path="perfil" element={<Perfil />} />
+              <Route path="perfil" element={
+                <Suspense fallback={
+                  <div className="min-h-[50vh] flex items-center justify-center">
+                    <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                  </div>
+                }>
+                  <Perfil />
+                </Suspense>
+              } />
               <Route path="anamnese" element={<Anamnese />} />
               <Route path="controle" element={<ControleCentral />} />
               <Route path="parceiros" element={<Parceiros />} />

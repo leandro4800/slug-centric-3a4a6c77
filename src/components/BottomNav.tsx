@@ -80,7 +80,10 @@ const AlunoBottomNav = () => {
           type="button"
           aria-expanded={isOpen}
           aria-label="Abrir menu de opções"
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            void import("@/pages/aluno/Perfil");
+            setIsOpen(true);
+          }}
           className="flex-1 min-w-0 flex flex-col items-center justify-center gap-0.5 py-1 px-0.5 text-[9px] leading-tight uppercase tracking-tight text-muted-foreground hover:text-foreground opacity-70 transition-all duration-300"
         >
           <MoreHorizontal className="h-[18px] w-[18px] shrink-0 stroke-[1.8px]" />

@@ -4,7 +4,9 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { Loader2 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { buildTenantLoginPath } from "@/lib/tenant-slug";
+import { buildTenantLoginPath, readFallbackTenantSlug } from "@/lib/tenant-slug";
+import { readStartupBranding } from "@/lib/startup-branding";
+import { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
 
 const NAVIGATION_MEMORY_KEY = "startup_navigation_memory_v1";
 
@@ -195,9 +197,23 @@ const IndexRedirect = () => {
 
   if (destination) return <Navigate to={destination} replace />;
 
+  const startupSlug = safeSlug || readFallbackTenantSlug();
+  const startupBranding = readStartupBranding();
+  const startupTenant = startupSlug ? readTenantBrandingCache(startupSlug) : null;
+  const startupLogo = startupTenant?.logo_url ?? startupBranding?.logo_url ?? "/icons/icon-192.webp";
+  const startupName = startupTenant?.nome ?? startupBranding?.nome;
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
+        <img
+          src={startupLogo}
+          alt={startupName || "AlphaCoach"}
+          className="h-20 w-auto max-w-[200px] object-contain"
+        />
+        {startupName ? (
+          <p className="text-xs uppercase tracking-[0.25em] text-muted-foreground">{startupName}</p>
+        ) : null}
         <Loader2 className="h-10 w-10 animate-spin text-primary" />
         <span className="text-xs text-muted-foreground uppercase tracking-widest animate-pulse">
           Organizando Ecossistema

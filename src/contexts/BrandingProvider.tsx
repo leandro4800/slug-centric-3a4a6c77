@@ -1,7 +1,11 @@
 import { createContext, useContext, useEffect, useRef, useState, ReactNode } from "react";
 import { useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { isSafeTenantSlug, readRememberedTenantSlug } from "@/lib/tenant-slug";
+import { resolveBrandingSlug } from "@/lib/tenant-slug";
+import { writeStartupBranding } from "@/lib/startup-branding";
+import { readTenantBrandingCache, writeTenantBrandingCache } from "@/lib/tenant-branding-cache";
+
+export { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
 
 export type ThemeOverrides = Partial<{
   primary: string;
@@ -141,44 +145,28 @@ export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl
 const TENANT_PUBLIC_COLUMNS =
   "id, slug, nome, tagline, logo_url, foto_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, login_video_url, splash_video_url, music_url, owner_user_id, vertical";
 
-// O cache local foi desativado para garantir que o tema venha sempre do Supabase
-const readCache = (slug: string): Tenant | null => {
-  try {
-    const cached = localStorage.getItem(`branding_${slug}`);
-    return cached ? (JSON.parse(cached) as Tenant) : null;
-  } catch {
-    localStorage.removeItem(`branding_${slug}`);
-    return null;
-  }
-};
-const writeCache = (slug: string, tenant: Tenant | null) => {
-  if (tenant) {
-    localStorage.setItem(`branding_${slug}`, JSON.stringify(tenant));
-  } else {
-    localStorage.removeItem(`branding_${slug}`);
-  }
-};
-
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const params = useParams<{ slug: string }>();
   const location = useLocation();
-  
-  // Extrai o slug do path se useParams falhar
-  const pathParts = location.pathname.split("/").filter(Boolean);
-  const pathname = location.pathname.replace(/\/+$/, "") || "/";
-  const reservedKeywords = ["index", "marketplace", "seja-coach", "login", "forgot-password", "reset-password", "checkout", "admin", "unsubscribe", "onboarding", "app", "site"];
-  const slugFromPath = pathParts.length > 0 && !reservedKeywords.includes(pathParts[0]) ? pathParts[0] : null;
-  const rememberedSlug = pathname === "/login" ? readRememberedTenantSlug() : null;
-  const slug = params.slug || slugFromPath || rememberedSlug;
 
-  const cachedTenant = slug ? readCache(slug) : null;
+  const pathname = location.pathname.replace(/\/+$/, "") || "/";
+  const slug = resolveBrandingSlug(pathname, params.slug);
+
+  const cachedTenant = slug ? readTenantBrandingCache(slug) : null;
   const [tenant, setTenant] = useState<Tenant | null>(cachedTenant);
   const [loading, setLoading] = useState(true);
-  const [lastCheckTime, setLastCheckTime] = useState(Date.now()); // Para forçar re-check se necessário
   const isMountedRef = useRef(true);
   const loadingRef = useRef(true);
   const lastLoadedSlug = useRef<string | null>(null);
   const lastLoadedTenantId = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!slug) return;
+    const cached = readTenantBrandingCache(slug);
+    if (!cached) return;
+    setTenant((current) => current ?? cached);
+    applyTheme((cached.theme_overrides as ThemeOverrides | null) ?? null, cached.hero_url);
+  }, [slug]);
 
   useEffect(() => {
     loadingRef.current = loading;
@@ -226,8 +214,14 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
         if (isMountedRef.current) {
           setTenant(t);
           if (t) {
-            writeCache(t.slug, t);
+            writeTenantBrandingCache(t.slug, t);
             localStorage.setItem("last_tenant_slug", t.slug);
+            writeStartupBranding({
+              slug: t.slug,
+              nome: t.nome,
+              logo_url: t.logo_url,
+              hero_url: t.hero_url,
+            });
           }
           applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force);
           setLoading(false); // Garante que o loading termina aqui
@@ -252,7 +246,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
         .maybeSingle();
 
       const timeoutPromise = new Promise<{ data: any, error: any }>((resolve) => 
-        setTimeout(() => resolve({ data: readCache(targetSlug), error: null }), 3500)
+        setTimeout(() => resolve({ data: readTenantBrandingCache(targetSlug), error: null }), 3500)
       );
 
       const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
@@ -265,8 +259,16 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
       const t = data as Tenant | null;
       setTenant(t);
-      if (targetSlug) writeCache(targetSlug, t);
-      if (t?.slug) localStorage.setItem("last_tenant_slug", t.slug);
+      if (targetSlug) writeTenantBrandingCache(targetSlug, t);
+      if (t?.slug) {
+        localStorage.setItem("last_tenant_slug", t.slug);
+        writeStartupBranding({
+          slug: t.slug,
+          nome: t.nome,
+          logo_url: t.logo_url,
+          hero_url: t.hero_url,
+        });
+      }
       const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
       applyTheme(overrides, t?.hero_url, force);
       if (t) lastLoadedTenantId.current = t.id;
