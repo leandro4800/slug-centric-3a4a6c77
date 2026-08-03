@@ -2184,19 +2184,18 @@ const ExercisePicker = ({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <div className="relative isolate mt-1">
+      <div className="relative isolate mt-1 overflow-visible">
         <Input
           placeholder="Ex: Supino Reto"
           value={value}
           onChange={(ev) => onChangeText(ev.target.value)}
-          className="relative z-0 w-full pr-14"
+          className="relative z-0 w-full min-w-0 pr-14"
         />
         <PopoverTrigger asChild>
           <Button
             type="button"
             size="icon"
-            variant="destructive"
-            className="absolute inset-y-px right-px z-30 h-auto w-12 rounded-l-none rounded-r-[5px] border-l border-destructive bg-destructive p-0 text-destructive-foreground opacity-100 hover:bg-destructive/90 [&_svg]:relative [&_svg]:z-30 [&_svg]:!h-6 [&_svg]:!w-6"
+            className="absolute right-px top-px z-[60] h-[calc(100%-2px)] w-12 shrink-0 overflow-visible rounded-l-none rounded-r-[5px] border-0 border-l border-primary-foreground/30 bg-primary p-0 text-primary-foreground opacity-100 shadow-none hover:bg-primary focus-visible:z-[70] [&_svg]:relative [&_svg]:z-[70] [&_svg]:!h-6 [&_svg]:!w-6"
             title="Buscar exercícios salvos nos vídeos técnicos"
             aria-label="Buscar exercícios salvos nos vídeos técnicos"
           >
