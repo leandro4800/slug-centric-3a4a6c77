@@ -91,7 +91,7 @@ export default function Anamnese() {
           refeicoes_dia: String(data.refeicoes_dia ?? "4"),
           agua_litros: String(data.agua_litros ?? "2"),
           anos_treino: String(data.anos_treino ?? "0"),
-          disponibilidade_dias: (data.disponibilidade_dias as string[]) || [],
+          disponibilidade_dias: canonizarDias(data.disponibilidade_dias as string[]),
           horario_treino: (data as any).horario_treino || "tarde",
           nivel_experiencia: toNivelCanonico(data.nivel_experiencia) || "Intermediário",
           faz_uso_ergogenicos: data.faz_uso_ergogenicos || false,
@@ -155,7 +155,7 @@ export default function Anamnese() {
         refeicoes_dia: parseInt(form.refeicoes_dia) || 0,
         agua_litros: parseFloat(form.agua_litros) || 0,
         anos_treino: parseFloat(form.anos_treino) || 0,
-        disponibilidade_dias: form.disponibilidade_dias,
+        disponibilidade_dias: canonizarDias(form.disponibilidade_dias),
         horario_treino: form.horario_treino,
         nivel_experiencia: form.nivel_experiencia,
         faz_uso_ergogenicos: form.faz_uso_ergogenicos,
@@ -578,7 +578,7 @@ export default function Anamnese() {
                     key={d}
                     onClick={() => toggleDia(d)}
                     className={`px-3 py-1.5 rounded-lg border text-xs font-bold transition-colors ${
-                      form.disponibilidade_dias.includes(d)
+                      canonizarDias(form.disponibilidade_dias).includes(d)
                         ? "bg-primary border-primary text-primary-foreground"
                         : "bg-secondary/40 border-border text-muted-foreground"
                     }`}
