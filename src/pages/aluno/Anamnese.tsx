@@ -119,14 +119,21 @@ export default function Anamnese() {
     }
   };
 
-  const toggleDia = (d: string) => {
-    setForm(prev => ({
-      ...prev,
-      disponibilidade_dias: prev.disponibilidade_dias.includes(d)
-        ? prev.disponibilidade_dias.filter(x => x !== d)
-        : [...prev.disponibilidade_dias, d]
-    }));
+  const normDia = (s: string) =>
+    String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim().slice(0, 3);
+  const canonizarDias = (arr: string[] | null | undefined): string[] => {
+    const flat = (arr || []).flatMap(d => String(d).split(",")).map(s => s.trim()).filter(Boolean);
+    return DIAS.filter(d => flat.some(f => normDia(f) === normDia(d)));
   };
+
+  const toggleDia = (d: string) => {
+    setForm(prev => {
+      const atuais = canonizarDias(prev.disponibilidade_dias);
+      const novo = atuais.includes(d) ? atuais.filter(x => x !== d) : [...atuais, d];
+      return { ...prev, disponibilidade_dias: DIAS.filter(x => novo.includes(x)) };
+    });
+  };
+
 
   const handleSave = async () => {
     if (!user) return;
