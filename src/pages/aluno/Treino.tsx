@@ -23,10 +23,6 @@ interface CargaMap {
 
 type VideoRef = { yt: string | null; coach: string | null };
 
-const VOLUME_GROUPS = ["peito", "costas", "quadríceps", "quadriceps", "glúteo", "gluteo", "ombro", "bíceps", "biceps", "tríceps", "triceps"];
-const MIN_EXERCISES_PER_DAY = 4;
-
-
 import FightTrainingView from "@/pages/aluno/fight/FightTrainingView";
 
 const Treino = () => {
@@ -161,30 +157,31 @@ const PersonalTreino = () => {
         setSexo((data as any)?.sexo || null);
       });
 
-    // Stats: deriva treinos concluídos, minutos e sequência a partir de historico_cargas
+    // Stats: treinos concluídos, minutos e sequência computados no banco (sessoes_treino)
     (async () => {
-      const { data } = await supabase
-        .from("historico_cargas")
-        .select("data_treino")
-        .eq("user_id", user.id);
-      if (!data) return;
-      const dias = Array.from(new Set(data.map((r: any) => r.data_treino).filter(Boolean))).sort();
-      const treinos = dias.length;
-      const minutos = treinos * 60;
-      // sequência: dias consecutivos até hoje (ou ontem)
-      let sequencia = 0;
-      const set = new Set(dias);
-      const d = new Date();
-      // se hoje não treinou, começa de ontem
-      const today = d.toISOString().split("T")[0];
-      if (!set.has(today)) d.setDate(d.getDate() - 1);
-      while (set.has(d.toISOString().split("T")[0])) {
-        sequencia++;
-        d.setDate(d.getDate() - 1);
+      const { data, error } = await supabase.rpc("get_stats_treino" as any, {} as any);
+      if (!error && data) {
+        const s = data as any;
+        setStats({
+          treinos: Number(s.treinos) || 0,
+          minutos: Number(s.minutos) || 0,
+          sequencia: Number(s.sequencia) || 0,
+        });
       }
-      setStats({ treinos, minutos, sequencia });
     })();
-  }, [user?.id]);
+  }, [user?.id, reloadKey]);
+
+  // Cronômetro da sessão: marca o início ao abrir o treino do dia
+  const sessionStartKey = `treino:inicio:${user?.id || "anon"}:${new Date().toISOString().split("T")[0]}:${diaAtual}`;
+  useEffect(() => {
+    if (!diaAtual) return;
+    try {
+      if (!localStorage.getItem(sessionStartKey)) {
+        localStorage.setItem(sessionStartKey, String(Date.now()));
+      }
+    } catch {}
+  }, [sessionStartKey, diaAtual]);
+
 
   // Persiste seleção de dia / exercício aberto
   useEffect(() => {
@@ -235,44 +232,6 @@ const PersonalTreino = () => {
 
     const resolveVideo = (nome: string, refMap: any) => findBest(nome, refMap).yt;
     const resolveCoach = (nome: string, refMap: any) => findBest(nome, refMap).coach;
-
-    const autoFillVolume = async (list: Treino[], refMap: any): Promise<Treino[]> => {
-      if (!tenant) return list;
-      const dias = [...new Set(list.map((t) => t.dia_semana))];
-      const extras: Treino[] = [];
-      for (const dia of dias) {
-        const diaEx = list.filter((t) => t.dia_semana === dia);
-        if (diaEx.length >= MIN_EXERCISES_PER_DAY) continue;
-        const allText = diaEx.map((e) => `${e.exercicio} ${e.observacao || ""}`).join(" ").toLowerCase();
-        const matched = VOLUME_GROUPS.find((g) => allText.includes(g));
-        if (!matched) continue;
-        const needed = MIN_EXERCISES_PER_DAY - diaEx.length;
-        const existing = new Set(diaEx.map((e) => e.exercicio.toLowerCase()));
-        const grupo = matched.charAt(0).toUpperCase() + matched.slice(1);
-        const { data: candidates } = await supabase
-          .from("biblioteca_exercicios")
-          .select("nome, series_trabalho, repeticoes, tecnica_intensidade, video_url, video_coach_url")
-          .eq("tenant_id", tenant.id)
-          .ilike("grupo_muscular", `%${grupo}%`)
-          .limit(20);
-        if (!candidates) continue;
-        const filtered = candidates.filter((c: any) => !existing.has(c.nome.toLowerCase())).slice(0, needed);
-        for (const ex of filtered as any[]) {
-          extras.push({
-            id: `extra-${dia}-${ex.nome}`,
-            dia_semana: dia,
-            exercicio: ex.nome,
-            series: ex.series_trabalho ? String(ex.series_trabalho) : "3",
-            repeticoes: ex.repeticoes || "10-12",
-            observacao: ex.tecnica_intensidade || "Adicionado para volume ideal.",
-            video_url: ex.video_url || resolveVideo(ex.nome, refMap),
-            video_coach_url: ex.video_coach_url || resolveCoach(ex.nome, refMap),
-            is_extra: true,
-          });
-        }
-      }
-      return [...list, ...extras];
-    };
 
     const loadCargas = async () => {
       if (!user) return;
@@ -328,6 +287,7 @@ const PersonalTreino = () => {
             .from("treinos_prescritos")
             .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url")
             .eq("aluno_id", user.id)
+            .eq("tenant_id", tenant.id)
             .order("dia_semana")
             .order("ordem")
         ),
@@ -369,22 +329,15 @@ const PersonalTreino = () => {
             video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
           }));
           mapped.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
-          let filled = mapped;
-          try {
-            filled = await withTimeout(autoFillVolume(mapped, refMap), 4000);
-            filled.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
-          } catch (e) {
-            console.warn("autoFillVolume pulado", e);
-          }
-          setTreinos(filled);
+          setTreinos(mapped);
           setDiaAtual((cur) => {
-            if (cur && filled.some((t) => t.dia_semana === cur)) return cur;
+            if (cur && mapped.some((t) => t.dia_semana === cur)) return cur;
             const todayWd = ["domingo","segunda","terca","quarta","quinta","sexta","sabado"][new Date().getDay()];
-            const todayMatch = filled.find((t) => {
+            const todayMatch = mapped.find((t) => {
               const n = (t.dia_semana || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
               return n.includes(todayWd);
             });
-            return todayMatch ? todayMatch.dia_semana : filled[0].dia_semana;
+            return todayMatch ? todayMatch.dia_semana : mapped[0].dia_semana;
           });
           setIsMock(false);
           setLoading(false);
@@ -431,41 +384,67 @@ const PersonalTreino = () => {
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, []);
 
-  const dias = [...new Set(treinos.map((t) => t.dia_semana))];
+  const diasRaw = [...new Set(treinos.map((t) => t.dia_semana))];
   const treinosDoDia = treinos.filter((t) => t.dia_semana === diaAtual);
 
-  // Mapeia cada dia (que pode estar nomeado como "A — ...", "Treino B", etc.) ao dia da semana
-  // escolhido na anamnese (availableDays na ordem da semana).
-  // Só aplica o mapeamento quando a quantidade de dias de treino BATE com a quantidade de dias
-  // disponíveis da anamnese — caso contrário, o rótulo fica com o texto original do card
-  // (ex.: "A", "B", "F"), evitando desalinhamento entre letras e dias da semana.
-  const totalDias = new Set(treinos.map((t) => t.dia_semana)).size;
-  const weekdayLabelFor = (dia: string): string | null => {
-    if (!availableDays.length) return null;
-    if (availableDays.length !== totalDias) return null;
-    const letter = (dia.match(/\b([A-Z])\b/)?.[1] || "").toUpperCase();
-    if (!letter) return null;
-    const idx = letter.charCodeAt(0) - 65;
-    if (idx < 0 || idx >= availableDays.length) return null;
-    const wd = availableDays[idx];
-    return wd ? wd.toUpperCase() : null;
+  // ---- Mapeamento dia do treino → dia da semana real escolhido na anamnese ----
+  const WD_SHORT = ["SEG", "TER", "QUA", "QUI", "SEX", "SAB", "DOM"] as const;
+  const normTxt = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  const wdIndexFromText = (s: string): number => {
+    const n = normTxt(s);
+    const full = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+    const i = full.findIndex((d) => n.includes(d));
+    if (i >= 0) return i;
+    const abbr = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
+    const j = abbr.findIndex((d) => n.startsWith(d));
+    return j;
   };
+
+  // Dias disponíveis da anamnese, já em índices de semana (0=Seg ... 6=Dom)
+  const availableIdx = availableDays.map(wdIndexFromText).filter((i) => i >= 0);
+
+  // Ordem "de prescrição" (A, B, C...) — usa a letra quando existir, senão mantém a ordem vinda do banco
+  const diasOrdemPrescricao = [...diasRaw].sort((a, b) => {
+    const la = a.match(/\b([A-Z])\b/)?.[1];
+    const lb = b.match(/\b([A-Z])\b/)?.[1];
+    if (la && lb) return la.charCodeAt(0) - lb.charCodeAt(0);
+    if (la) return -1;
+    if (lb) return 1;
+    return diasRaw.indexOf(a) - diasRaw.indexOf(b);
+  });
+
+  // Índice de semana resolvido para cada dia de treino
+  const weekIdxForDia = (dia: string): number => {
+    const own = wdIndexFromText(dia);
+    if (own >= 0) return own;
+    if (!availableIdx.length) return 99;
+    const pos = diasOrdemPrescricao.indexOf(dia);
+    // Se o aluno tem menos dias disponíveis que treinos prescritos, faz o ciclo pela lista
+    if (pos < 0) return 99;
+    return availableIdx[pos % availableIdx.length] ?? 99;
+  };
+
+  const weekdayLabelFor = (dia: string): string | null => {
+    const i = weekIdxForDia(dia);
+    return i >= 0 && i < 7 ? WD_SHORT[i] : null;
+  };
+
+  // Chips sempre na ordem da semana (Seg → Dom)
+  const dias = [...diasRaw].sort((a, b) => {
+    const d = weekIdxForDia(a) - weekIdxForDia(b);
+    if (d !== 0) return d;
+    return diasOrdemPrescricao.indexOf(a) - diasOrdemPrescricao.indexOf(b);
+  });
 
   // Quando availableDays carrega, seleciona automaticamente o dia de HOJE (se hoje for treino).
   useEffect(() => {
-    if (!availableDays.length || !dias.length) return;
-    const todayIdx = new Date().getDay(); // 0=Dom..6=Sáb
-    const todayShort = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"][todayIdx];
-    const matchIdx = availableDays.findIndex((d) => {
-      const n = d.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").slice(0, 3);
-      return n === todayShort;
-    });
-    if (matchIdx < 0) return;
-    const targetLetter = String.fromCharCode(65 + matchIdx);
-    const targetDia = dias.find((d) => d.match(/\b([A-Z])\b/)?.[1] === targetLetter);
+    if (!dias.length) return;
+    const todayIdx = (new Date().getDay() + 6) % 7; // 0=Seg ... 6=Dom
+    const targetDia = dias.find((d) => weekIdxForDia(d) === todayIdx);
     if (targetDia && targetDia !== diaAtual) setDiaAtual(targetDia);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [availableDays.join("|"), dias.join("|")]);
+
 
   // Deriva nome do grupo muscular a partir dos exercícios do dia
   const grupoMuscularDoDia = (() => {
@@ -811,6 +790,20 @@ const PersonalTreino = () => {
                         serie_index: 0,
                       });
                     }
+                    // Registra a sessão (duração real) no banco
+                    let duracao = 60;
+                    try {
+                      const ini = Number(localStorage.getItem(sessionStartKey) || 0);
+                      if (ini > 0) duracao = Math.round((Date.now() - ini) / 60000);
+                    } catch {}
+                    duracao = Math.min(Math.max(duracao || 60, 10), 240);
+                    await supabase.rpc("registrar_sessao_treino" as any, {
+                      _tenant_id: tenant.id,
+                      _dia_semana: diaAtual,
+                      _duracao_min: duracao,
+                      _exercicios_total: treinosDoDia.length,
+                    } as any);
+                    try { localStorage.removeItem(sessionStartKey); } catch {}
                     // marca todos como concluído na UI
                     const next = new Set(completedIds);
                     treinosDoDia.forEach((t) => next.add(t.id));
@@ -820,6 +813,7 @@ const PersonalTreino = () => {
                     setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
                     // recarrega stats
                     setReloadKey((k) => k + 1);
+
                   } catch (e) {
                     console.warn("Não foi possível registrar conclusão", e);
                   }

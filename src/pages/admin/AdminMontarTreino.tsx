@@ -41,6 +41,30 @@ interface PerfilTreino {
   limitacoes: string[];
 }
 
+/** Une listas de texto removendo vazios, "nenhuma" e duplicados. */
+const NEGATIVOS_RESTRICAO = ["nenhuma", "nenhum", "nao", "não", "n/a", "na", "-", "nada", "sem lesao", "sem lesão"];
+const uniqStrings = (arr: (string | null | undefined)[]): string[] => {
+  const out: string[] = [];
+  for (const raw of arr) {
+    const v = String(raw ?? "").trim();
+    if (!v) continue;
+    const n = v.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+    if (NEGATIVOS_RESTRICAO.includes(n)) continue;
+    if (out.some((o) => o.toLowerCase() === v.toLowerCase())) continue;
+    out.push(v);
+  }
+  return out;
+};
+
+/** Info de restrições retornada pela IA (trava clínica). */
+interface RestricoesAplicadas {
+  gravidade: string;
+  regioes: string[];
+  relato: string;
+  bloqueados: { dia: string; nome: string; motivo: string; substituto: string }[];
+}
+
+
 interface ExercicioPrescrito {
   dia_semana: string;
   ordem: number;
@@ -172,6 +196,9 @@ const DIVISOES_PRESETS: DivisaoPreset[] = [
   // ===== 6x semana =====
   { id: "abcdef-av", label: "ABCDEF 6x — Super Avançado (1 músculo/dia)", freq: 6, publico: "unisex", nivel: ["Avançado", "Atleta de Alto Nível"], dias: ["A — Peito", "B — Costas", "C — Pernas (Quad)", "D — Ombro", "E — Braços (Bi+Tri)", "F — Posterior + Glúteo + Trapézio"] },
   { id: "ppl-2x", label: "PPL 6x — Push/Pull/Legs 2x semana", freq: 6, publico: "unisex", nivel: ["Avançado", "Atleta de Alto Nível"], dias: ["Push A", "Pull A", "Legs A (Quad + Glúteo)", "Push B", "Pull B", "Legs B (Posterior + Glúteo)"] },
+  { id: "abcdef-int-segsab", label: "ABCDEF 6x — Intermediário Seg a Sáb (descanso só domingo)", freq: 6, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Seg — Peito + Tríceps", "Ter — Costas + Bíceps", "Qua — Perna Completa (ênfase Quadríceps)", "Qui — Ombro Completo + Trapézio", "Sex — Braços (Bíceps + Tríceps) + Antebraço", "Sáb — Posterior + Glúteo + Panturrilha"] },
+  { id: "ppl-2x-int-segsab", label: "PPL 6x — Intermediário Seg a Sáb (Push/Pull/Legs 2x)", freq: 6, publico: "unisex", nivel: ["Intermediário", "Avançado"], dias: ["Seg — Push A (Peito/Ombro/Tríceps)", "Ter — Pull A (Costas/Bíceps)", "Qua — Legs A (Quadríceps/Glúteo)", "Qui — Push B (Ombro/Peito Superior/Tríceps)", "Sex — Pull B (Costas Espessura/Bíceps)", "Sáb — Legs B (Posterior/Glúteo/Panturrilha)"] },
+  { id: "abcdef-int-alternado", label: "ABCDEF 6x — Intermediário Superior/Inferior alternado (Seg a Sáb)", freq: 6, publico: "unisex", nivel: ["Intermediário"], dias: ["Seg — Peito + Ombro Anterior", "Ter — Quadríceps + Panturrilha", "Qua — Costas + Ombro Posterior", "Qui — Posterior de Coxa + Glúteo", "Sex — Ombro Lateral + Trapézio", "Sáb — Braços (Bi + Tri) + Core"] },
   { id: "fem-6x-int", label: "Mulher 6x Intermediária — Glúteo 3x", freq: 6, publico: "feminino", nivel: ["Intermediário"], dias: ["A — Glúteo/Posterior", "B — Costas/Ombro", "C — Quadríceps + Panturrilha", "D — Glúteo Acessório + Core", "E — Peito/Braços", "F — Glúteo/Posterior (volume)"] },
   { id: "fem-6x-av", label: "Mulher 6x Avançada — Glúteo 3x + Quad 2x", freq: 6, publico: "feminino", nivel: ["Avançado", "Atleta de Alto Nível"], dias: ["A — Glúteo (pesado)", "B — Quadríceps", "C — Costas/Ombro", "D — Glúteo/Posterior", "E — Peito/Braços", "F — Quadríceps + Panturrilha"] },
 
@@ -218,6 +245,50 @@ const contemFullBody = (texto: string) => /full\s*body|corpo\s*todo/i.test(texto
 const fullBodyBloqueado = (nivel: string, divisoes: string[]) =>
   nivel !== "Iniciante" && divisoes.some(contemFullBody);
 
+// Mapeia as divisões de treino (A, B, C...) para os dias da semana escolhidos pelo aluno na anamnese.
+// Ex.: ["Push A","Pull A","Legs A","Push B","Pull B","Legs B"] + [Seg..Sáb]
+//   → "Seg — Push A", "Ter — Pull A", "Qua — Legs A", "Qui — Push B", ...
+const WD_FULL = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+const WD_LABEL = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
+const normDia = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+const idxDiaSemana = (s: string): number => {
+  const n = normDia(s);
+  const i = WD_FULL.findIndex((d) => n.includes(d));
+  if (i >= 0) return i;
+  return ["seg", "ter", "qua", "qui", "sex", "sab", "dom"].findIndex((d) => n.startsWith(d));
+};
+
+export function mapearDiasSemana(dias: string[], disponibilidade: string[]): Record<string, string> {
+  const mapa: Record<string, string> = {};
+  const disponiveis = (disponibilidade || [])
+    .map(idxDiaSemana)
+    .filter((i) => i >= 0)
+    .sort((a, b) => a - b);
+  if (!dias.length) return mapa;
+
+  // Ordem de prescrição: pela letra da divisão quando existir, senão a ordem já definida
+  const ordenados = [...dias].sort((a, b) => {
+    const la = a.match(/\b([A-F])\b/)?.[1];
+    const lb = b.match(/\b([A-F])\b/)?.[1];
+    if (la && lb && la !== lb) return la.charCodeAt(0) - lb.charCodeAt(0);
+    return dias.indexOf(a) - dias.indexOf(b);
+  });
+
+  ordenados.forEach((dia, pos) => {
+    if (idxDiaSemana(dia) >= 0) {
+      mapa[dia] = dia; // já contém o dia da semana no nome
+      return;
+    }
+    if (!disponiveis.length) {
+      mapa[dia] = dia;
+      return;
+    }
+    const wd = disponiveis[pos % disponiveis.length];
+    mapa[dia] = `${WD_LABEL[wd]} — ${dia}`;
+  });
+  return mapa;
+}
+
 const AdminMontarTreino = () => {
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
@@ -232,10 +303,12 @@ const AdminMontarTreino = () => {
     lesoes: [], limitacoes: [],
   });
   const [exercicios, setExercicios] = useState<ExercicioPrescrito[]>([]);
+  const [diasDisponiveis, setDiasDisponiveis] = useState<string[]>([]);
   const [cardio, setCardio] = useState<string>("");
   const [generating, setGenerating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [pendingReview, setPendingReview] = useState(false);
+  const [restricoesIA, setRestricoesIA] = useState<RestricoesAplicadas | null>(null);
   const [perfilLoading, setPerfilLoading] = useState(Boolean(searchParams.get("aluno")));
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
@@ -357,13 +430,15 @@ const AdminMontarTreino = () => {
         supabase.from("perfis_treino").select("*").eq("aluno_id", alunoId).maybeSingle(),
         supabase.from("perfis").select("sexo, data_nascimento").eq("id", alunoId).maybeSingle(),
         supabase.from("avaliacoes_fisicas").select("peso_kg, altura_cm, bf_pct_calculado, idade, sexo").eq("aluno_id", alunoId).order("data", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("anamnese_aluno").select("nivel_experiencia, anos_treino, lesoes_atuais, doencas, disponibilidade_dias").eq("aluno_id", alunoId).maybeSingle(),
+        supabase.from("anamnese_aluno").select("nivel_experiencia, anos_treino, lesoes_atuais, cirurgias, doencas, disponibilidade_dias").eq("aluno_id", alunoId).maybeSingle(),
       ]);
 
       const pt = perfilTreinoRes.data as any;
       const pr = perfilRes.data as any;
       const av = avaliacaoRes.data as any;
       const an = anamneseRes.data as any;
+      setDiasDisponiveis(Array.isArray(an?.disponibilidade_dias) ? an.disponibilidade_dias : []);
+
 
       // Calcular idade a partir de data_nascimento se necessário
       let idadeCalc: number | null = null;
@@ -388,8 +463,13 @@ const AdminMontarTreino = () => {
         objetivo: pt?.objetivo || "hipertrofia",
         frequencia_semanal: pt?.frequencia_semanal || (Array.isArray(an?.disponibilidade_dias) && an.disponibilidade_dias.length >= 2 ? Math.min(6, an.disponibilidade_dias.length) : 4),
         tempo_treino: tempoMesclado,
-        lesoes: pt?.lesoes && pt.lesoes.length > 0 ? pt.lesoes : (an?.lesoes_atuais ? [an.lesoes_atuais] : []),
-        limitacoes: pt?.limitacoes && pt.limitacoes.length > 0 ? pt.limitacoes : (an?.doencas || []),
+        // União (não substituição): overrides do coach + tudo que o aluno declarou na anamnese
+        lesoes: uniqStrings([
+          ...(pt?.lesoes || []),
+          an?.lesoes_atuais || "",
+          an?.cirurgias ? `Cirurgia: ${an.cirurgias}` : "",
+        ]),
+        limitacoes: uniqStrings([...(pt?.limitacoes || []), ...(an?.doencas || [])]),
       });
 
       if (isAvulso) {
@@ -546,6 +626,16 @@ const AdminMontarTreino = () => {
       setExercicios(novos);
       setCardio(data.cardio || "");
       setPendingReview(true);
+      const rest = (data as any)?.restricoes_aplicadas as RestricoesAplicadas | null;
+      setRestricoesIA(rest ?? null);
+      if (rest) {
+        toast.warning(
+          rest.bloqueados?.length > 0
+            ? `Restrição clínica: ${rest.bloqueados.length} exercício(s) contraindicado(s) substituído(s). Revise o treino.`
+            : "Aluno com restrição clínica — o treino foi adaptado. Revise antes de enviar.",
+          { duration: 8000 },
+        );
+      }
       if ((data as any)?.fallback) {
         toast.warning((data as any).error || "Rascunho gerado para revisão porque a IA oscilou.");
       } else {
@@ -629,10 +719,16 @@ const AdminMontarTreino = () => {
         .eq("tenant_id", tenant.id);
       if (deleteError) throw deleteError;
 
+      // Mapeia cada divisão de treino (A, B, C...) para o dia da semana escolhido pelo aluno
+      const mapaDias = mapearDiasSemana(
+        [...new Set(exerciciosToSave.map((e) => e.dia_semana))],
+        diasDisponiveis
+      );
+
       const rows = exerciciosToSave.map((e) => ({
         tenant_id: tenant.id,
         aluno_id: alunoId,
-        dia_semana: e.dia_semana,
+        dia_semana: mapaDias[e.dia_semana] || e.dia_semana,
         ordem: e.ordem,
         ordem_execucao: e.ordem,
         exercicio: e.exercicio,
@@ -1862,6 +1958,36 @@ const AdminMontarTreino = () => {
               </div>
             )}
 
+            {/* Alerta de restrição clínica (trava de segurança) */}
+            {restricoesIA && (
+              <div className="bg-destructive/10 border border-destructive/50 rounded-2xl p-4 sm:p-5 animate-in fade-in slide-in-from-top-2">
+                <p className="text-[10px] uppercase tracking-[0.25em] text-destructive font-bold mb-1">
+                  ⚠️ Restrição clínica detectada · gravidade {restricoesIA.gravidade}
+                </p>
+                <h3 className="font-display text-base sm:text-lg leading-tight">
+                  {restricoesIA.regioes.length > 0 ? restricoesIA.regioes.join(" · ") : "Restrição relatada na anamnese"}
+                </h3>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Relato do aluno: <span className="text-foreground">{restricoesIA.relato}</span>
+                </p>
+                {restricoesIA.bloqueados.length > 0 && (
+                  <div className="mt-3 space-y-1">
+                    <p className="text-xs font-bold">
+                      {restricoesIA.bloqueados.length} exercício(s) contraindicado(s) foram substituídos automaticamente:
+                    </p>
+                    {restricoesIA.bloqueados.map((b, i) => (
+                      <p key={i} className="text-[11px] text-muted-foreground">
+                        • <span className="line-through">{b.nome}</span> → <strong className="text-foreground">{b.substituto}</strong> ({b.motivo})
+                      </p>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground mt-3 leading-relaxed">
+                  Treino para aluno com patologia diagnosticada exige <strong className="text-foreground">liberação médica ou fisioterapêutica</strong>. Revise exercício por exercício antes de enviar.
+                </p>
+              </div>
+            )}
+
             {/* Banner de revisão pós IA */}
             {pendingReview && exercicios.length > 0 && (
               <div className="bg-primary/10 border border-primary/40 rounded-2xl p-4 sm:p-5 shadow-[0_0_25px_-8px_hsl(var(--primary)/0.6)] animate-in fade-in slide-in-from-top-2">
@@ -1962,49 +2088,13 @@ const AdminMontarTreino = () => {
                         </div>
                         <div>
                           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Nome do exercício</Label>
-                          <Popover>
-                            <div className="flex gap-1 mt-1">
-                              <Input
-                                placeholder="Ex: Supino Reto"
-                                value={e.exercicio}
-                                onChange={(ev) => updateEx(globalIdx, { exercicio: ev.target.value })}
-                                className="flex-1"
-                              />
-                              <PopoverTrigger asChild>
-                                <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" title="Escolher dos exercícios salvos (com vídeo)">
-                                  <ChevronDown className="h-3.5 w-3.5" />
-                                </Button>
-                              </PopoverTrigger>
-                            </div>
-                            <PopoverContent align="end" className="w-[280px] p-0 max-h-80 overflow-auto">
-                              <div className="p-2 border-b border-border/40 text-[10px] uppercase tracking-wider text-muted-foreground">
-                                Da biblioteca · {sugestoes.length} sugestões
-                              </div>
-                              {sugestoes.length === 0 ? (
-                                <div className="p-3 text-xs text-muted-foreground">Nenhum exercício salvo para esse grupo. Cadastre na Biblioteca.</div>
-                              ) : (
-                                <ul className="divide-y divide-border/30">
-                                  {sugestoes.map((b) => (
-                                    <li key={b.id}>
-                                      <button
-                                        type="button"
-                                        onClick={(ev) => {
-                                          updateEx(globalIdx, { exercicio: b.nome });
-                                          // close popover
-                                          (ev.currentTarget.closest("[data-radix-popper-content-wrapper]") as HTMLElement | null)
-                                            ?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-                                        }}
-                                        className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center justify-between gap-2"
-                                      >
-                                        <span className="text-xs truncate">{b.nome}</span>
-                                        <span className="text-[9px] uppercase text-muted-foreground shrink-0">{b.grupo_muscular}</span>
-                                      </button>
-                                    </li>
-                                  ))}
-                                </ul>
-                              )}
-                            </PopoverContent>
-                          </Popover>
+                          <ExercisePicker
+                            value={e.exercicio}
+                            sugestoes={sugestoes}
+                            biblioteca={biblioteca}
+                            onChangeText={(v) => updateEx(globalIdx, { exercicio: v })}
+                            onPick={(b) => updateEx(globalIdx, { exercicio: b.nome })}
+                          />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
                           <div>
@@ -2044,6 +2134,117 @@ const AdminMontarTreino = () => {
         )}
       </main>
     </div>
+  );
+};
+
+type BibItem = { id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null };
+
+const ExercisePicker = ({
+  value,
+  sugestoes,
+  biblioteca,
+  onChangeText,
+  onPick,
+}: {
+  value: string;
+  sugestoes: BibItem[];
+  biblioteca: BibItem[];
+  onChangeText: (v: string) => void;
+  onPick: (b: BibItem) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [busca, setBusca] = useState("");
+
+  const q = normalizarTexto(busca.trim());
+  const filtrar = (list: BibItem[]) =>
+    q ? list.filter((b) => normalizarTexto(`${b.nome} ${b.grupo_muscular}`).includes(q)) : list;
+  const listaSug = filtrar(sugestoes);
+  // Sempre lista a biblioteca completa (todos os grupos), inclusive itens sem grupo salvo
+  const listaOutros = filtrar(biblioteca);
+
+  const Item = ({ b }: { b: BibItem }) => (
+    <li>
+      <button
+        type="button"
+        onClick={() => {
+          onPick(b);
+          setOpen(false);
+          setBusca("");
+        }}
+        className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center justify-between gap-2"
+      >
+        <span className="text-xs truncate flex items-center gap-1.5">
+          {(b.video_coach_url || b.video_url) && <Video className="h-3 w-3 text-emerald-400 shrink-0" />}
+          {b.nome}
+        </span>
+        <span className="text-[9px] uppercase text-muted-foreground shrink-0">{b.grupo_muscular}</span>
+      </button>
+    </li>
+  );
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <div className="relative isolate mt-1 overflow-visible">
+        <Input
+          placeholder="Ex: Supino Reto"
+          value={value}
+          onChange={(ev) => onChangeText(ev.target.value)}
+          className="relative z-0 w-full min-w-0 pr-14"
+        />
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            size="icon"
+            className="absolute right-px top-px z-[60] h-[calc(100%-2px)] w-12 shrink-0 overflow-visible rounded-l-none rounded-r-[5px] border-0 border-l border-primary-foreground/30 bg-primary p-0 text-primary-foreground opacity-100 shadow-none hover:bg-primary focus-visible:z-[70] [&_svg]:relative [&_svg]:z-[70] [&_svg]:!h-6 [&_svg]:!w-6"
+            title="Buscar exercícios salvos nos vídeos técnicos"
+            aria-label="Buscar exercícios salvos nos vídeos técnicos"
+          >
+            <ChevronDown className="h-5 w-5" />
+          </Button>
+        </PopoverTrigger>
+      </div>
+      <PopoverContent align="end" className="w-[300px] p-0 max-h-[22rem] overflow-auto">
+        <div className="p-2 border-b border-border/40 sticky top-0 bg-popover z-10">
+          <Input
+            autoFocus
+            value={busca}
+            onChange={(ev) => setBusca(ev.target.value)}
+            placeholder="Buscar exercício..."
+            className="h-8 text-xs"
+          />
+        </div>
+        {listaSug.length === 0 && listaOutros.length === 0 ? (
+          <div className="p-3 text-xs text-muted-foreground">Nenhum exercício encontrado. Cadastre na Biblioteca.</div>
+        ) : (
+          <>
+            {listaSug.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground bg-secondary/40">
+                  Sugestões do dia · {listaSug.length}
+                </div>
+                <ul className="divide-y divide-border/30">
+                  {listaSug.map((b) => (
+                    <Item key={b.id} b={b} />
+                  ))}
+                </ul>
+              </>
+            )}
+            {listaOutros.length > 0 && (
+              <>
+                <div className="px-3 py-1.5 text-[10px] uppercase tracking-wider text-muted-foreground bg-secondary/40">
+                  Todos os exercícios · {listaOutros.length}
+                </div>
+                <ul className="divide-y divide-border/30">
+                  {listaOutros.map((b) => (
+                    <Item key={b.id} b={b} />
+                  ))}
+                </ul>
+              </>
+            )}
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 };
 

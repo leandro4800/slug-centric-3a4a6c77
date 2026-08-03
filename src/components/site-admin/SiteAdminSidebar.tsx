@@ -1,8 +1,8 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
-  Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet,
+  Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
   LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag,
-  ChevronLeft, ChevronRight,
+  ChevronLeft, ChevronRight, ShieldCheck, Crown, HeartPulse,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -23,13 +23,18 @@ const baseItems: Item[] = [
   { to: "/site/admin/treinos", label: "Montar treino", icon: Dumbbell, section: "Programação" },
   { to: "/site/admin/dieta", label: "Montar dieta", icon: Apple, section: "Programação" },
   { to: "/site/admin/avaliacao-fisica", label: "Avaliação física", icon: Ruler, section: "Programação" },
+  { to: "/site/admin/metricas", label: "Métricas & evolução", icon: Activity, section: "Programação" },
+  { to: "/site/admin/saude-lesoes", label: "Saúde & lesões", icon: HeartPulse, section: "Programação" },
+
 
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench, section: "Negócio" },
   { to: "/site/admin/integracao-ia", label: "Integração com IA", icon: Bot, section: "Negócio" },
   { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet, section: "Negócio" },
   { to: "/site/admin/planos", label: "Meus Planos", icon: Tag, section: "Negócio" },
   { to: "/site/admin/aparencia", label: "Aparência", icon: Palette, section: "Negócio" },
+  { to: "/site/admin/landing", label: "Landing page", icon: Palette, section: "Negócio" },
 
+  { to: "/site/admin/meu-perfil", label: "Meu perfil", icon: UserCog, section: "Conta" },
   { to: "/site/admin/minha-conta", label: "Minha conta", icon: UserCog, section: "Conta" },
   { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy, section: "Conta" },
 ];
@@ -52,6 +57,11 @@ export const SiteAdminSidebar = () => {
 
   const items: Item[] = [
     ...baseItems,
+    ...(tenant?.slug === "alphateam" ? [
+      { to: "/site/admin/coaches", label: "Coaches parceiros", icon: ShieldCheck, section: "Negócio" },
+      { to: "/site/admin/vips", label: "VIPs", icon: Crown, section: "Negócio" },
+
+    ] : []),
     ...(vertical === "fight" ? [
       { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
       { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
@@ -82,10 +92,22 @@ export const SiteAdminSidebar = () => {
     )}>
       <div className={cn("border-b border-white/10 relative", collapsed ? "px-2 py-4" : "px-5 py-6")}>
         <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
-          <Logo withText={false} />
+          {tenant?.logo_url ? (
+            <img
+              src={tenant.logo_url}
+              alt={tenant.nome}
+              className="h-9 w-9 object-contain rounded-none"
+            />
+          ) : (
+            <Logo withText={false} />
+          )}
           {!collapsed && (
             <div className="leading-tight">
-              <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span> PRO</p>
+              {tenant?.logo_url ? (
+                <p className="font-display text-sm tracking-widest uppercase truncate max-w-[160px]">{tenant.nome}</p>
+              ) : (
+                <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span> PRO</p>
+              )}
               <p className="text-[9px] uppercase tracking-widest text-muted-foreground">Painel do site</p>
             </div>
           )}

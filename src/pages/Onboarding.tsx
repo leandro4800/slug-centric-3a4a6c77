@@ -78,13 +78,15 @@ export default function Onboarding() {
 
     try {
       const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
-      const { data: ownedTenant } = await supabase.from("tenants").select("slug").eq("owner_user_id", user.id).maybeSingle();
+      const { data: ownedTenant } = await supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle();
       const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
-      
       const isCoach = isCoachSignup || !!ownedTenant || roles?.some((r) => r.role === "coach");
+
+      // Coach (owner de tenant) NÃO preenche perfil/anamnese/avaliação no mobile.
+      // Esse fluxo fica exclusivamente no painel do site (/site/admin/meu-perfil).
       if (isCoach) {
         const target = ownedTenant?.slug ? `/${ownedTenant.slug}/admin` : "/seja-coach";
-        console.log("[Onboarding] Usuário é coach, redirecionando para:", target);
+        console.log("[Onboarding] Coach detectado, redirecionando para o painel:", target);
         navigate(target, { replace: true });
         return;
       }

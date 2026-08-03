@@ -16,8 +16,11 @@ type Preset = {
   overrides: ThemeOverrides;
 };
 
-// Defaults Netflix/Ferrari já estão no BrandingProvider; aqui só os presets.
-const PRESETS: Preset[] = [
+// Os temas ficam salvos no Supabase (tabela `theme_presets`) para poderem ser
+// ajustados sem novo build do app. A lista abaixo é apenas fallback offline.
+// IMPORTANTE: os temas alteram APENAS cores de destaque (botões, faixas, bordas).
+// Fundo, cards, texto e texturas NÃO são alterados para não sobrepor vídeos/thumbs.
+const FALLBACK_PRESETS: Preset[] = [
   {
     id: "ferrari",
     name: "FERRARI BLACK",
@@ -26,157 +29,45 @@ const PRESETS: Preset[] = [
     overrides: {
       primary: "355 100% 48%",
       primary_glow: "355 100% 60%",
-      accent: "355 100% 48%",
-      background: "0 0% 0%",
-      card: "0 0% 3%",
-      foreground: "0 0% 98%",
-      border: "0 0% 15%",
-    },
-  },
-  {
-    id: "cimento",
-    name: "CIMENTO",
-    subtitle: "Industrial · Concreto & Detalhes",
-    swatches: ["#9A9A9A", "#FFFFFF", "#E10600", "#000000"],
-    overrides: {
-      primary: "355 100% 48%",
-      primary_glow: "355 100% 60%",
-      primary_foreground: "0 0% 100%",
-      accent: "0 0% 100%",
-      accent_foreground: "0 0% 0%",
-      background: "0 0% 60%",
-      card: "0 0% 65%",
-      foreground: "0 0% 5%",
-      border: "0 0% 45%",
-      bg_texture: "url('/cimento-texture.jpg')",
-    },
-  },
-  {
-    id: "gold-rush",
-    name: "BLACK GOLD",
-    subtitle: "Cimento realista · Dourado",
-    swatches: ["#101010", "#2F2F2F", "#FFD700", "#FFFACD"],
-    previewBackground: "url('/black-gold-cement-bg.jpg') center/cover",
-    overrides: {
-      primary: "45 100% 50%",
-      primary_glow: "45 100% 80%",
-      accent: "44 85% 50%",
-      background: "0 0% 4%",
-      card: "0 0% 6%",
-      foreground: "0 0% 98%",
-      border: "0 0% 15%",
-      bg_texture: "url('/black-gold-cement-bg.jpg')",
-    },
-  },
-  {
-    id: "tech-titanium",
-    name: "TECH TITANIUM",
-    subtitle: "Performance · Azul Elétrico",
-    swatches: ["#121417", "#1C1F28", "#007BFF", "#FFFFFF"],
-    overrides: {
-      primary: "212 100% 50%",
-      primary_glow: "212 100% 65%",
-      accent: "212 100% 50%",
-      background: "220 14% 8%",
-      card: "222 18% 13%",
-      foreground: "0 0% 100%",
-      border: "220 14% 22%",
-    },
-  },
-  {
-    id: "deep-sea-glass",
-    name: "DEEP SEA GLASS",
-    subtitle: "Moderno & Fluido",
-    swatches: ["#0F172A", "#1E293B", "#7DD3FC", "#FEFFEF"],
-    overrides: {
-      primary: "199 89% 74%",
-      primary_glow: "199 89% 85%",
-      accent: "199 89% 74%",
-      background: "222 47% 11%",
-      card: "217 33% 17%",
-      foreground: "60 100% 97%",
-      border: "217 33% 25%",
-    },
-  },
-  {
-    id: "nordic-minimalist",
-    name: "NORDIC MINIMALIST",
-    subtitle: "Limpo & Sofisticado",
-    swatches: ["#FBF9FA", "#212529", "#A9A9A9", "#000000"],
-    overrides: {
-      primary: "210 11% 15%",
-      primary_glow: "210 11% 30%",
-      accent: "210 11% 15%",
-      background: "330 14% 98%",
-      card: "0 0% 100%",
-      foreground: "210 11% 15%",
-      border: "0 0% 85%",
-    },
-  },
-  {
-    id: "army-stealth",
-    name: "ARMY STEALTH",
-    subtitle: "Tático · Verde Militar",
-    swatches: ["#1A1C14", "#2D3021", "#4B5320", "#D1D5B8"],
-    overrides: {
-      primary: "72 45% 23%",
-      primary_glow: "72 45% 40%",
-      accent: "72 45% 23%",
-      background: "75 15% 9%",
-      card: "75 15% 14%",
-      foreground: "60 30% 96%",
-      border: "75 15% 25%",
-    },
-  },
-  {
-    id: "desert-storm",
-    name: "DESERT STORM",
-    subtitle: "Ação · Areia & Cinza",
-    swatches: ["#2B2824", "#3D3934", "#C2B280", "#F5F5DC"],
-    overrides: {
-      primary: "45 38% 63%",
-      primary_glow: "45 38% 80%",
-      accent: "45 38% 63%",
-      background: "30 10% 12%",
-      card: "30 10% 18%",
-      foreground: "40 20% 98%",
-      border: "30 10% 25%",
-    },
-  },
-  {
-    id: "midnight-neon",
-    name: "MIDNIGHT NEON",
-    subtitle: "Cyberpunk · Roxo & Preto",
-    swatches: ["#000000", "#12001F", "#BC13FE", "#FFFFFF"],
-    overrides: {
-      primary: "282 100% 54%",
-      primary_glow: "282 100% 75%",
-      accent: "282 100% 54%",
-      background: "270 100% 3%",
-      card: "270 100% 7%",
-      foreground: "0 0% 100%",
-      border: "270 50% 20%",
-    },
-  },
-  {
-    id: "black-flow",
-    name: "BLACK FLOW",
-    subtitle: "Cinematográfico · Dark & Red",
-    swatches: ["#000000", "#1A1A1A", "#E10600", "#FFFFFF"],
-    overrides: {
-      primary: "355 100% 48%",
-      primary_glow: "355 100% 60%",
       primary_foreground: "0 0% 100%",
       accent: "355 100% 48%",
       accent_foreground: "0 0% 100%",
-      background: "0 0% 2%",
-      card: "0 0% 5%",
-      foreground: "0 0% 98%",
-      border: "0 0% 15%",
-      bg_texture: "url('/blackflow-bg.jpg')",
     },
   },
 ];
+
+type PresetRow = {
+  codigo: string;
+  nome: string;
+  subtitulo: string | null;
+  swatches: unknown;
+  primary_hsl: string;
+  primary_glow_hsl: string | null;
+  primary_foreground_hsl: string | null;
+  accent_hsl: string | null;
+  accent_foreground_hsl: string | null;
+  border_hsl: string | null;
+};
+
+const rowToPreset = (r: PresetRow): Preset => {
+  const overrides: ThemeOverrides = { primary: r.primary_hsl };
+  if (r.primary_glow_hsl) overrides.primary_glow = r.primary_glow_hsl;
+  if (r.primary_foreground_hsl) overrides.primary_foreground = r.primary_foreground_hsl;
+  if (r.accent_hsl) overrides.accent = r.accent_hsl;
+  if (r.accent_foreground_hsl) overrides.accent_foreground = r.accent_foreground_hsl;
+  if (r.border_hsl) overrides.border = r.border_hsl;
+  return {
+    id: r.codigo,
+    name: r.nome,
+    subtitle: r.subtitulo ?? "",
+    swatches: Array.isArray(r.swatches) && r.swatches.length >= 4
+      ? (r.swatches as string[])
+      : ["#000000", "#111111", "#E10600", "#FFFFFF"],
+    overrides,
+  };
+};
+
+
 
 export const IdentidadeVisual = () => {
   const { tenant, refresh, applyPreview, clearPreview } = useBranding();
@@ -184,10 +75,28 @@ export const IdentidadeVisual = () => {
   const [busy, setBusy] = useState(false);
   const [musicUrl, setMusicUrl] = useState<string>("");
   const [savingMusic, setSavingMusic] = useState(false);
+  const [presets, setPresets] = useState<Preset[]>(FALLBACK_PRESETS);
 
   useEffect(() => {
     setMusicUrl((tenant as any)?.music_url ?? "");
   }, [tenant?.id, (tenant as any)?.music_url]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("theme_presets")
+        .select("codigo, nome, subtitulo, swatches, primary_hsl, primary_glow_hsl, primary_foreground_hsl, accent_hsl, accent_foreground_hsl, border_hsl")
+        .eq("ativo", true)
+        .order("ordem", { ascending: true });
+      if (!alive || error || !data?.length) return;
+      setPresets((data as PresetRow[]).map(rowToPreset));
+    })();
+    return () => {
+      alive = false;
+    };
+  }, []);
+
 
   if (!tenant) return null;
 
@@ -279,7 +188,7 @@ export const IdentidadeVisual = () => {
           </p>
 
           <div className="grid sm:grid-cols-2 gap-3">
-            {PRESETS.map((p) => {
+            {presets.map((p) => {
               const isActive = selected?.id === p.id;
               return (
                 <button

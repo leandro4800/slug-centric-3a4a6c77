@@ -66,15 +66,21 @@ import SiteAdminAlunos from "./pages/site-admin/Alunos";
 import SiteAdminNovoAluno from "./pages/site-admin/NovoAluno";
 import SiteAdminPlaceholder from "./pages/site-admin/Placeholder";
 import SiteAdminAparencia from "./pages/site-admin/Aparencia";
+import SiteAdminLandingEditor from "./pages/site-admin/LandingEditor";
 import SiteAdminFinanceiro from "./pages/site-admin/Financeiro";
 import SiteAdminMontarTreino from "./pages/site-admin/MontarTreino";
 import SiteAdminMontarDieta from "./pages/site-admin/MontarDieta";
 import SiteAdminAvaliacaoFisica from "./pages/site-admin/AvaliacaoFisica";
+import SiteAdminMetricas from "./pages/site-admin/Metricas";
+import SiteAdminSaudeLesoes from "./pages/site-admin/SaudeLesoes";
 import SiteAdminFerramentas from "./pages/site-admin/Ferramentas";
 import SiteAdminMinhaConta from "./pages/site-admin/MinhaConta";
+import SiteAdminMeuPerfil from "./pages/site-admin/MeuPerfil";
 import SiteAdminSuporte from "./pages/site-admin/Suporte";
 import SiteAdminPlanos from "./pages/site-admin/Planos";
 import SiteAdminIntegracaoIA from "./pages/site-admin/IntegracaoIA";
+import SiteAdminCoaches from "./pages/site-admin/Coaches";
+import SiteAdminVips from "./pages/site-admin/Vips";
 import { Calendar as CalendarIcon, Loader2, Palette, Wallet } from "lucide-react";
 import SiteAdminCtCamps from "./pages/site-admin/ct/Camps";
 import SiteAdminCtNutricao from "./pages/site-admin/ct/NutricaoCombate";
@@ -190,13 +196,21 @@ const App = () => (
               <Route path="treinos" element={<SiteAdminMontarTreino />} />
               <Route path="dieta" element={<SiteAdminMontarDieta />} />
               <Route path="avaliacao-fisica" element={<SiteAdminAvaliacaoFisica />} />
+              <Route path="metricas" element={<SiteAdminMetricas />} />
+              <Route path="saude-lesoes" element={<SiteAdminSaudeLesoes />} />
+
               <Route path="agenda" element={<SiteAdminPlaceholder icon={CalendarIcon} title="Agenda" description="Em breve: agenda de aulas presenciais e online." />} />
               <Route path="ferramentas" element={<SiteAdminFerramentas />} />
               <Route path="aparencia" element={<SiteAdminAparencia />} />
+              <Route path="landing" element={<SiteAdminLandingEditor />} />
               <Route path="faturamento" element={<SiteAdminFinanceiro />} />
               <Route path="planos" element={<SiteAdminPlanos />} />
               <Route path="minha-conta" element={<SiteAdminMinhaConta />} />
+              <Route path="meu-perfil" element={<SiteAdminMeuPerfil />} />
               <Route path="integracao-ia" element={<SiteAdminIntegracaoIA />} />
+              <Route path="coaches" element={<SiteAdminCoaches />} />
+              <Route path="vips" element={<SiteAdminVips />} />
+
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="ct/camps" element={<SiteAdminCtCamps />} />
               <Route path="ct/nutricao" element={<SiteAdminCtNutricao />} />
@@ -211,6 +225,7 @@ const App = () => (
             {/* Onboarding obrigatório */}
             <Route path="/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
             <Route path="/:slug/onboarding" element={<RequireAuth><Onboarding /></RequireAuth>} />
+
 
             {/* Admin AlphaCoach (super admin) */}
             <Route path="/admin/coaches" element={<RequireAuth requireRole="admin"><AdminCoaches /></RequireAuth>} />

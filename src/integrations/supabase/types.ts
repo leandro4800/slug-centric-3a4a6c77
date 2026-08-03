@@ -3071,6 +3071,75 @@ export type Database = {
           },
         ]
       }
+      sessoes_treino: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          data_treino: string
+          dia_semana: string | null
+          duracao_min: number
+          exercicios_total: number
+          id: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          data_treino?: string
+          dia_semana?: string | null
+          duracao_min?: number
+          exercicios_total?: number
+          id?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          data_treino?: string
+          dia_semana?: string | null
+          duracao_min?: number
+          exercicios_total?: number
+          id?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stats_treino_aluno: {
+        Row: {
+          aluno_id: string
+          melhor_sequencia: number
+          minutos_total: number
+          sequencia_atual: number
+          tenant_id: string | null
+          treinos_total: number
+          ultimo_treino: string | null
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          melhor_sequencia?: number
+          minutos_total?: number
+          sequencia_atual?: number
+          tenant_id?: string | null
+          treinos_total?: number
+          ultimo_treino?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          melhor_sequencia?: number
+          minutos_total?: number
+          sequencia_atual?: number
+          tenant_id?: string | null
+          treinos_total?: number
+          ultimo_treino?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       templates_treino: {
         Row: {
           ativo: boolean
@@ -3137,12 +3206,14 @@ export type Database = {
       tenants: {
         Row: {
           accent_hsl: string
+          app_preview_url: string | null
           bio: string | null
           cidade: string | null
           created_at: string
           especialidades: string[] | null
           estado: string | null
           foto_url: string | null
+          free_access: boolean
           hero_url: string | null
           id: string
           is_partner: boolean
@@ -3165,12 +3236,14 @@ export type Database = {
         }
         Insert: {
           accent_hsl?: string
+          app_preview_url?: string | null
           bio?: string | null
           cidade?: string | null
           created_at?: string
           especialidades?: string[] | null
           estado?: string | null
           foto_url?: string | null
+          free_access?: boolean
           hero_url?: string | null
           id?: string
           is_partner?: boolean
@@ -3193,12 +3266,14 @@ export type Database = {
         }
         Update: {
           accent_hsl?: string
+          app_preview_url?: string | null
           bio?: string | null
           cidade?: string | null
           created_at?: string
           especialidades?: string[] | null
           estado?: string | null
           foto_url?: string | null
+          free_access?: boolean
           hero_url?: string | null
           id?: string
           is_partner?: boolean
@@ -3277,6 +3352,60 @@ export type Database = {
             referencedColumns: ["tenant_id"]
           },
         ]
+      }
+      theme_presets: {
+        Row: {
+          accent_foreground_hsl: string | null
+          accent_hsl: string | null
+          ativo: boolean
+          border_hsl: string | null
+          codigo: string
+          created_at: string
+          id: string
+          nome: string
+          ordem: number
+          primary_foreground_hsl: string | null
+          primary_glow_hsl: string | null
+          primary_hsl: string
+          subtitulo: string | null
+          swatches: Json
+          updated_at: string
+        }
+        Insert: {
+          accent_foreground_hsl?: string | null
+          accent_hsl?: string | null
+          ativo?: boolean
+          border_hsl?: string | null
+          codigo: string
+          created_at?: string
+          id?: string
+          nome: string
+          ordem?: number
+          primary_foreground_hsl?: string | null
+          primary_glow_hsl?: string | null
+          primary_hsl: string
+          subtitulo?: string | null
+          swatches?: Json
+          updated_at?: string
+        }
+        Update: {
+          accent_foreground_hsl?: string | null
+          accent_hsl?: string | null
+          ativo?: boolean
+          border_hsl?: string | null
+          codigo?: string
+          created_at?: string
+          id?: string
+          nome?: string
+          ordem?: number
+          primary_foreground_hsl?: string | null
+          primary_glow_hsl?: string | null
+          primary_hsl?: string
+          subtitulo?: string | null
+          swatches?: Json
+          updated_at?: string
+        }
+        Relationships: []
       }
       treinos_prescritos: {
         Row: {
@@ -3401,6 +3530,63 @@ export type Database = {
           },
           {
             foreignKeyName: "user_roles_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
+      vips_plataforma: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          created_by: string | null
+          email: string
+          id: string
+          nome: string
+          observacao: string | null
+          telefone: string | null
+          tenant_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          email: string
+          id?: string
+          nome: string
+          observacao?: string | null
+          telefone?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          id?: string
+          nome?: string
+          observacao?: string | null
+          telefone?: string | null
+          tenant_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vips_plataforma_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vips_plataforma_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "v_coach_dashboard_kpis"
@@ -3706,6 +3892,7 @@ export type Database = {
         }[]
       }
       get_my_mcp_token: { Args: never; Returns: string }
+      get_stats_treino: { Args: { _aluno_id?: string }; Returns: Json }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
       has_active_subscription_for_tenant: {
         Args: { _tenant_id: string; _user_id: string }
@@ -3718,6 +3905,25 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      recalcular_stats_treino: {
+        Args: { _aluno_id: string }
+        Returns: {
+          aluno_id: string
+          melhor_sequencia: number
+          minutos_total: number
+          sequencia_atual: number
+          tenant_id: string | null
+          treinos_total: number
+          ultimo_treino: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "stats_treino_aluno"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       redeem_delivery_lookup: {
         Args: { p_token: string }
@@ -3734,6 +3940,16 @@ export type Database = {
         }[]
       }
       redeem_voucher: { Args: { _code: string }; Returns: Json }
+      registrar_sessao_treino: {
+        Args: {
+          _data?: string
+          _dia_semana: string
+          _duracao_min?: number
+          _exercicios_total?: number
+          _tenant_id: string
+        }
+        Returns: Json
+      }
       rotate_my_mcp_token: { Args: never; Returns: string }
       send_push_notification: {
         Args: {

@@ -67,6 +67,7 @@ interface Tenant {
   estado: string | null;
   permite_aula_avulsa: boolean | null;
   preco_aula_avulsa: number | null;
+  free_access?: boolean | null;
 }
 interface Plano {
   id: string;
@@ -86,7 +87,8 @@ const intervaloLabel = {
 };
 
 const TENANT_PUBLIC_COLUMNS =
-  "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa";
+  "id, slug, nome, tagline, bio, foto_url, hero_url, especialidades, status, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, free_access, app_preview_url";
+
 
 const FEATURES = [
   {
@@ -171,6 +173,8 @@ export default function TenantLanding() {
   const [voucherCode, setVoucherCode] = useState("");
   const [voucherLoading, setVoucherLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const [freeName, setFreeName] = useState("");
+  const [freeEmail, setFreeEmail] = useState("");
   const iosBlocksPayments = blocksExternalPayments();
   const coachImage = tenant?.foto_url || tenant?.hero_url || null;
   const heroImage = tenant?.hero_url || tenant?.foto_url || alphaLandingHero.url;
@@ -207,6 +211,72 @@ export default function TenantLanding() {
       setCheckoutLoading(null);
     }
   };
+
+  const buildFreePassword = (nome: string) => {
+    const first = nome
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().trim().split(/\s+/)[0].replace(/[^a-z0-9]/g, "");
+    return `${first || "aluno"}2026`;
+  };
+
+  const handleJoinFree = async () => {
+    // Se ainda não está logado, cria a conta com padrão nome+2026
+    if (!user) {
+      const nome = freeName.trim();
+      const email = freeEmail.trim().toLowerCase();
+      if (!nome || !email) {
+        toast({ title: "Preencha nome e e-mail", variant: "destructive" });
+        return;
+      }
+      setCheckoutLoading("__free__");
+      const password = buildFreePassword(nome);
+      try {
+        const { error: signUpErr } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { nome_completo: nome } },
+        });
+        if (signUpErr && !/already registered|already exists/i.test(signUpErr.message)) {
+          throw signUpErr;
+        }
+        // Tenta logar imediatamente (funciona se e-mail já confirmado ou signup auto-loga)
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInErr) {
+          toast({
+            title: "Conta criada!",
+            description: `Sua senha é: ${password}. Faça login para continuar.`,
+          });
+          sessionStorage.setItem("pending_free_join", slug || "");
+          navigate(`/${slug}/login`);
+          setCheckoutLoading(null);
+          return;
+        }
+        toast({
+          title: "Conta criada!",
+          description: `Guarde sua senha: ${password}`,
+        });
+      } catch (e: any) {
+        toast({ title: "Erro ao criar conta", description: e.message, variant: "destructive" });
+        setCheckoutLoading(null);
+        return;
+      }
+    } else {
+      setCheckoutLoading("__free__");
+    }
+    try {
+      const { data, error } = await supabase.functions.invoke("join-free-tenant", {
+        body: { tenant_slug: slug },
+      });
+      if (error) throw error;
+      if (!(data as any)?.ok) throw new Error((data as any)?.error || "Falha ao liberar acesso");
+      toast({ title: "Acesso liberado!", description: "Bem-vindo(a) 🎉" });
+      navigate(`/${slug}/app`, { replace: true });
+    } catch (e: any) {
+      toast({ title: "Erro ao entrar", description: e.message, variant: "destructive" });
+      setCheckoutLoading(null);
+    }
+  };
+
 
   const handleRedeemVoucher = async (codeOverride?: string) => {
     const code = (codeOverride || voucherCode).trim();
@@ -275,7 +345,11 @@ export default function TenantLanding() {
     if (!loading && user && !hasSubscription) {
       const isVoucherRequested = searchParams.get("voucher") === "1";
       const pendingCode = sessionStorage.getItem("pending_voucher");
-      if (isVoucherRequested) {
+      const pendingFree = sessionStorage.getItem("pending_free_join");
+      if (pendingFree && pendingFree === slug && tenant?.free_access) {
+        sessionStorage.removeItem("pending_free_join");
+        void handleJoinFree();
+      } else if (isVoucherRequested) {
         setVoucherOpen(true);
         const nextParams = new URLSearchParams(searchParams);
         nextParams.delete("voucher");
@@ -284,7 +358,8 @@ export default function TenantLanding() {
         void handleRedeemVoucher(pendingCode);
       }
     }
-  }, [loading, user, hasSubscription, searchParams, navigate, slug]);
+  }, [loading, user, hasSubscription, searchParams, navigate, slug, tenant?.free_access]);
+
 
   const load = async () => {
     if (!slug) return;
@@ -317,7 +392,8 @@ export default function TenantLanding() {
           .maybeSingle();
 
         setHasSubscription(!!sub);
-        if (sub) {
+        const previewMode = searchParams.get("preview") !== null;
+        if (sub && !previewMode) {
           navigate(`/${slug}/app`, { replace: true });
           return;
         }
@@ -652,7 +728,7 @@ export default function TenantLanding() {
             <div className="order-1 md:order-2">
               <div className="relative mx-auto aspect-[9/16] w-full max-w-xs overflow-hidden rounded-[2.5rem] border-[10px] border-foreground/90 bg-card shadow-[0_30px_80px_-20px_hsl(var(--primary)/0.5)]">
                 <img
-                  src={coachImage || cardTreino}
+                  src={(tenant as any)?.app_preview_url || coachImage || cardTreino}
                   alt={`App do ${tenant.nome}`}
                   className="h-full w-full object-cover"
                 />
@@ -680,106 +756,161 @@ export default function TenantLanding() {
 
       {/* ===== PLANOS ===== */}
       <section id="planos" className="mx-auto max-w-6xl px-4 py-20 md:px-8 md:py-28">
-        <div className="text-center">
-          <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
-            <ShieldCheck className="mr-1 h-3 w-3" /> Sem fidelidade · Cancele quando quiser
-          </Badge>
-          <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-            {iosBlocksPayments
-              ? "No app iOS, use o código de acesso fornecido pelo seu coach. Pagamentos online estão disponíveis em alpha-coach.app pelo navegador."
-              : <>Acesso total ao app do coach com pagamento seguro. <span className="font-bold text-primary">Sem fidelidade</span>. Cancele quando quiser.</>}
-          </p>
-        </div>
-
-        {planos.length === 0 ? (
-          <p className="mt-10 text-center text-muted-foreground">
-            Nenhum plano disponível no momento.
-          </p>
-        ) : (
-          <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {planos.map((p, idx) => {
-              const destacado = idx === 1 || planos.length === 1;
-              return (
-                <div
-                  key={p.id}
-                  className={`relative flex flex-col rounded-2xl border p-8 transition-all ${
-                    destacado
-                      ? "scale-[1.02] border-primary bg-gradient-to-b from-primary/10 to-card shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)]"
-                      : "border-border bg-card hover:border-primary/40"
-                  }`}
-                >
-                  {destacado && (
-                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground shadow-lg">
-                      ⭐ Mais popular
-                    </Badge>
-                  )}
-                  <h3 className="font-display text-2xl uppercase">{p.nome}</h3>
-                  {p.descricao && (
-                    <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>
-                  )}
-                  <div className="mt-6 flex items-baseline gap-1">
-                    <span className="font-display text-5xl">{formatBRL(p.preco_centavos)}</span>
-                    <span className="text-muted-foreground">{intervaloLabel[p.intervalo]}</span>
-                  </div>
-                  <ul className="mt-6 flex-1 space-y-3 text-sm">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-primary" /> Acesso imediato ao app
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-primary" /> Treinos + dieta + IA 24/7
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-primary" /> Evolução visual e métricas
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 shrink-0 text-primary" /> Cancele quando quiser
-                    </li>
-                  </ul>
-                  {iosBlocksPayments ? (
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className={`mt-8 w-full font-bold uppercase tracking-widest ${
-                        destacado ? "border-primary" : ""
-                      }`}
-                      onClick={() => setVoucherOpen(true)}
-                    >
-                      <KeyRound className="mr-2 h-4 w-4" /> Resgatar código
-                    </Button>
-                  ) : (
-                    <Button
-                      size="lg"
-                      className={`mt-8 w-full font-bold uppercase tracking-widest ${
-                        destacado ? "shadow-[0_0_30px_-5px_hsl(var(--primary))]" : ""
-                      }`}
-                      disabled={!!checkoutLoading}
-                      onClick={() => handleCheckout(p.id)}
-                    >
-                      {checkoutLoading === p.id ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        "Assinar plano"
-                      )}
-                    </Button>
-                  )}
-                </div>
-              );
-            })}
+        {tenant?.free_access ? (
+          <div className="mx-auto max-w-2xl rounded-3xl border border-primary/50 bg-gradient-to-b from-primary/15 to-card p-10 text-center shadow-[0_0_80px_-10px_hsl(var(--primary)/0.6)]">
+            <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
+              <ShieldCheck className="mr-1 h-3 w-3" /> Acesso liberado · Fase de testes
+            </Badge>
+            <h2 className="font-display text-4xl uppercase md:text-5xl">Entrar grátis</h2>
+            <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
+              Este coach está com acesso 100% gratuito no momento. Crie sua conta e libere o app imediatamente, sem cartão.
+            </p>
+            {!user && (
+              <div className="mx-auto mt-6 grid max-w-md gap-3 text-left">
+                <Input
+                  placeholder="Seu nome completo"
+                  value={freeName}
+                  onChange={(e) => setFreeName(e.target.value)}
+                />
+                <Input
+                  type="email"
+                  placeholder="Seu melhor e-mail"
+                  value={freeEmail}
+                  onChange={(e) => setFreeEmail(e.target.value)}
+                />
+                <p className="text-[11px] text-muted-foreground">
+                  Sua senha será gerada automaticamente no padrão <strong>primeironome2026</strong> (ex.: joao2026). Você pode alterá-la depois no perfil.
+                </p>
+              </div>
+            )}
+            <Button
+              size="lg"
+              className="mt-6 w-full font-bold uppercase tracking-widest shadow-[0_0_30px_-5px_hsl(var(--primary))] md:w-auto md:px-12"
+              disabled={!!checkoutLoading}
+              onClick={handleJoinFree}
+            >
+              {checkoutLoading === "__free__" ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Entrar grátis agora"
+              )}
+            </Button>
+            <div className="mt-8 border-t border-border pt-6">
+              <p className="text-xs text-muted-foreground">Tem um código do coach?</p>
+              <Button
+                variant="outline"
+                className="mt-3 font-bold uppercase tracking-widest"
+                onClick={() => setVoucherOpen(true)}
+              >
+                <KeyRound className="mr-2 h-4 w-4" /> Resgatar código
+              </Button>
+            </div>
           </div>
-        )}
+        ) : (
+          <>
+            <div className="text-center">
+              <Badge className="mb-4 border border-primary/40 bg-primary/10 text-primary">
+                <ShieldCheck className="mr-1 h-3 w-3" /> Sem fidelidade · Cancele quando quiser
+              </Badge>
+              <h2 className="font-display text-4xl uppercase md:text-5xl">Escolha seu plano</h2>
+              <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
+                {iosBlocksPayments
+                  ? "No app iOS, use o código de acesso fornecido pelo seu coach. Pagamentos online estão disponíveis em alpha-coach.app pelo navegador."
+                  : <>Acesso total ao app do coach com pagamento seguro. <span className="font-bold text-primary">Sem fidelidade</span>. Cancele quando quiser.</>}
+              </p>
+            </div>
 
-        <div className="mt-12 border-t border-border pt-8 text-center">
-          <p className="text-sm text-muted-foreground">Tem um código de acesso do coach?</p>
-          <Button
-            variant="outline"
-            className="mt-3 font-bold uppercase tracking-widest"
-            onClick={() => setVoucherOpen(true)}
-          >
-            <KeyRound className="mr-2 h-4 w-4" /> Resgatar código
-          </Button>
-        </div>
+            {planos.length === 0 ? (
+              <p className="mt-10 text-center text-muted-foreground">
+                Nenhum plano disponível no momento.
+              </p>
+            ) : (
+              <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {planos.map((p, idx) => {
+                  const destacado = idx === 1 || planos.length === 1;
+                  return (
+                    <div
+                      key={p.id}
+                      className={`relative flex flex-col rounded-2xl border p-8 transition-all ${
+                        destacado
+                          ? "scale-[1.02] border-primary bg-gradient-to-b from-primary/10 to-card shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)]"
+                          : "border-border bg-card hover:border-primary/40"
+                      }`}
+                    >
+                      {destacado && (
+                        <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground shadow-lg">
+                          ⭐ Mais popular
+                        </Badge>
+                      )}
+                      <h3 className="font-display text-2xl uppercase">{p.nome}</h3>
+                      {p.descricao && (
+                        <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>
+                      )}
+                      <div className="mt-6 flex items-baseline gap-1">
+                        <span className="font-display text-5xl">{formatBRL(p.preco_centavos)}</span>
+                        <span className="text-muted-foreground">{intervaloLabel[p.intervalo]}</span>
+                      </div>
+                      <ul className="mt-6 flex-1 space-y-3 text-sm">
+                        <li className="flex items-center gap-2">
+                          <Check className="h-4 w-4 shrink-0 text-primary" /> Acesso imediato ao app
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-4 w-4 shrink-0 text-primary" /> Treinos + dieta + IA 24/7
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-4 w-4 shrink-0 text-primary" /> Evolução visual e métricas
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <Check className="h-4 w-4 shrink-0 text-primary" /> Cancele quando quiser
+                        </li>
+                      </ul>
+                      {iosBlocksPayments ? (
+                        <Button
+                          size="lg"
+                          variant="outline"
+                          className={`mt-8 w-full font-bold uppercase tracking-widest ${
+                            destacado ? "border-primary" : ""
+                          }`}
+                          onClick={() => setVoucherOpen(true)}
+                        >
+                          <KeyRound className="mr-2 h-4 w-4" /> Resgatar código
+                        </Button>
+                      ) : (
+                        <Button
+                          size="lg"
+                          className={`mt-8 w-full font-bold uppercase tracking-widest ${
+                            destacado ? "shadow-[0_0_30px_-5px_hsl(var(--primary))]" : ""
+                          }`}
+                          disabled={!!checkoutLoading}
+                          onClick={() => handleCheckout(p.id)}
+                        >
+                          {checkoutLoading === p.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            "Assinar plano"
+                          )}
+                        </Button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <div className="mt-12 border-t border-border pt-8 text-center">
+              <p className="text-sm text-muted-foreground">Tem um código de acesso do coach?</p>
+              <Button
+                variant="outline"
+                className="mt-3 font-bold uppercase tracking-widest"
+                onClick={() => setVoucherOpen(true)}
+              >
+                <KeyRound className="mr-2 h-4 w-4" /> Resgatar código
+              </Button>
+            </div>
+          </>
+        )}
       </section>
+
 
       {/* ===== TESTIMONIALS ===== */}
       <section className="border-y border-border bg-card/30">

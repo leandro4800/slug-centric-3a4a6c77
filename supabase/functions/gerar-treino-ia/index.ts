@@ -5,6 +5,7 @@
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { analisarRestricoes, aplicarFiltroRestricoes } from "../_shared/restricoes.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +18,45 @@ const jsonResponse = (body: unknown, status = 200) =>
     status,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
+
+// Garante que nenhum termo técnico em inglês chegue ao app/banco.
+const TRADUCOES: [RegExp, string][] = [
+  [/warm[- ]?up set[s]?/gi, "Série de Aquecimento"],
+  [/warm[- ]?up/gi, "Aquecimento"],
+  [/feeder set[s]?/gi, "Série de Ajuste"],
+  [/feeder/gi, "Ajuste"],
+  [/work set[s]?/gi, "Séries de Trabalho"],
+  [/working set[s]?/gi, "Séries de Trabalho"],
+  [/top set/gi, "Série Pesada"],
+  [/back[- ]?off set[s]?/gi, "Série Leve"],
+  [/back[- ]?off/gi, "Série Leve"],
+  [/drop[- ]?set[s]?/gi, "Série Descendente"],
+  [/rest[- ]?pause/gi, "Pausa-Descanso"],
+  [/cluster set[s]?/gi, "Séries Fracionadas"],
+  [/super[- ]?set[s]?/gi, "Bi-set"],
+  [/giant set[s]?/gi, "Série Gigante"],
+  [/forced rep[s]?/gi, "Repetições Forçadas"],
+  [/partial rep[s]?/gi, "Repetições Parciais"],
+  [/pre[- ]?exhaust(ion)?/gi, "Pré-exaustão"],
+  [/to failure/gi, "até a falha"],
+  [/failure/gi, "falha"],
+  [/reps?\b/gi, "reps"],
+];
+
+const traduzirTexto = (s: string) => TRADUCOES.reduce((acc, [re, to]) => acc.replace(re, to), s);
+
+const traduzirTermos = <T,>(value: T): T => {
+  if (typeof value === "string") return traduzirTexto(value) as unknown as T;
+  if (Array.isArray(value)) return value.map((v) => traduzirTermos(v)) as unknown as T;
+  if (value && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(value as Record<string, unknown>)) out[k] = traduzirTermos(v);
+    return out as unknown as T;
+  }
+  return value;
+};
+
+
 
 const stripAccents = (s: string) =>
   String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -147,6 +187,34 @@ serve(async (req) => {
       resolvedUserId = requestedTarget;
     }
 
+    // === RESTRIÇÕES CLÍNICAS ===
+    // Busca a anamnese direto no banco (rede de segurança: mesmo que o cliente
+    // não envie lesões, o servidor considera o que o aluno declarou).
+    let anamneseRestricoes: string[] = [];
+    try {
+      const { data: anam } = await adminE
+        .from("anamnese_aluno")
+        .select("lesoes_atuais, cirurgias, doencas, medicamentos")
+        .eq("aluno_id", resolvedUserId)
+        .maybeSingle();
+      if (anam) {
+        anamneseRestricoes = [
+          anam.lesoes_atuais || "",
+          anam.cirurgias ? `cirurgia: ${anam.cirurgias}` : "",
+          ...(Array.isArray(anam.doencas) ? anam.doencas : []),
+        ].filter(Boolean);
+      }
+    } catch (_e) {
+      // anamnese ausente não bloqueia a geração
+    }
+
+    const restricoes = analisarRestricoes(
+      perfil?.lesoes,
+      perfil?.limitacoes,
+      perfil?.restricoes_extras,
+      anamneseRestricoes,
+    );
+
     const lesoes = (perfil?.lesoes || []).join(", ") || "nenhuma";
     const limitacoes = (perfil?.limitacoes || []).join(", ") || "nenhuma";
 
@@ -157,6 +225,7 @@ serve(async (req) => {
     let bibliotecaPachoContext = "";
     let regrasDescansoContext = "";
     let bibliotecaAbsContext = "";
+    let regrasVolumeContext = "";
 
     // Normaliza nível removendo acento (DB usa "intermediario", "avancado", "alto_nivel")
     const stripAcc = (s: string) => s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
@@ -182,7 +251,9 @@ serve(async (req) => {
       const nivelInput = nivelKey;
       const variant = Math.floor(Math.random() * 3) + 1; // Sorteio de Variante (1, 2 ou 3)
 
-      const [pachoResp, descansoResp, absResp] = await Promise.all([
+      const nivelVolumeKey = nivelInput === "alto_nivel" ? "atleta" : nivelInput;
+
+      const [pachoResp, descansoResp, absResp, volumeResp] = await Promise.all([
         fetch(`${SUPABASE_URL}/rest/v1/biblioteca_metodologia_pacho?nivel=eq.${nivelInput}&variante=eq.${variant}&order=ordem_exercicio.asc`, {
           headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
         }),
@@ -191,8 +262,26 @@ serve(async (req) => {
         }),
         fetch(`${SUPABASE_URL}/rest/v1/biblioteca_abdominais_pacho`, {
           headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
-        })
+        }),
+        fetch(`${SUPABASE_URL}/rest/v1/regras_volume_pacho?nivel=eq.${nivelVolumeKey}`, {
+          headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` },
+        }),
       ]);
+
+      if (volumeResp.ok) {
+        const volData = await volumeResp.json();
+        const v = Array.isArray(volData) ? volData[0] : null;
+        if (v) {
+          regrasVolumeContext = `\n\n=== REGRAS DE VOLUME OBRIGATÓRIAS (BANCO — NÍVEL ${nivelLabel.toUpperCase()}) — PRIORIDADE MÁXIMA, INVIOLÁVEL ===
+- MÚSCULOS GRANDES (Peito, Costas, Quadríceps, Posterior de Coxa, Glúteo): MÍNIMO ${v.min_exercicios_grandes} exercícios por sessão do grupo. NUNCA menos.
+- MÚSCULOS PEQUENOS (Bíceps, Tríceps, Panturrilha, Antebraço, Abdômen): MÍNIMO ${v.min_exercicios_pequenos} exercícios.
+- OMBRO: MÍNIMO ${v.min_exercicios_ombro} exercícios (distribuídos entre anterior, lateral e posterior).
+- TÉCNICAS AVANÇADAS DE INTENSIFICAÇÃO: ${v.usa_tecnicas_avancadas ? "OBRIGATÓRIAS (Série Descendente, Pausa-Descanso, Pico de Contração, Bi-set, Isometria) — sempre em português." : "PROIBIDAS neste nível."}
+⛔ Se qualquer dia da prescrição violar estes mínimos, a resposta é INVÁLIDA. Conte os exercícios de cada grupo antes de responder e corrija antes de enviar.
+=== FIM DAS REGRAS DE VOLUME ===\n`;
+        }
+      }
+
 
       if (pachoResp.ok) {
         const pachoData = await pachoResp.json();
@@ -294,7 +383,7 @@ serve(async (req) => {
       }
     }
 
-    const knowledgeContext = bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
+    const knowledgeContext = regrasVolumeContext + bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
 
     const divisoesEscolhidas = Array.isArray(divisoes) && divisoes.length > 0
       ? divisoes
@@ -309,7 +398,7 @@ serve(async (req) => {
       ? `\n\n═══════════════════════════════════════════════\n0. DIVISÃO OBRIGATÓRIA (DEFINIDA PELO COACH) — INVIOLÁVEL — PRIORIDADE MÁXIMA\n═══════════════════════════════════════════════\nO Coach já escolheu EXATAMENTE como o aluno vai dividir a semana. Você DEVE retornar um dia para cada item abaixo, com o nome IDÊNTICO ao informado, na MESMA ORDEM, e os exercícios DEVEM corresponder aos grupos musculares descritos no nome de cada dia.\n\n⛔ PROIBIDO ABSOLUTAMENTE: Gerar Full Body, juntar grupos não listados, ou trocar a divisão por outra que você ache melhor. Se a divisão diz "Peito + Tríceps", o dia tem APENAS peito e tríceps — NUNCA full body, NUNCA pernas/costas no mesmo dia.\n⛔ Esta regra SOBRESCREVE qualquer regra de "Estrutura por Nível" abaixo. Mesmo que o nível seja Iniciante, se o coach passou divisão dividida, RESPEITE a divisão dividida.\n\nDIVISÃO ESCOLHIDA (${divisoesEscolhidas.length} dias de treino, nível do aluno = ${nivelLabel}):\n${divisoesEscolhidas.map((d: string, i: number) => `${i + 1}. "${d}"`).join("\n")}\n\nREGRAS DE INTERPRETAÇÃO:\n- "Peito + Tríceps" = treine SOMENTE peito e tríceps nesse dia (e ombro anterior se mencionado).\n- "Peito + Bíceps" = treine SOMENTE peito e bíceps (combinação alternativa, válida).\n- "Costas + Bíceps" / "Costas + Tríceps" — siga literalmente.\n- "Pernas Completas" = quadríceps + posterior + glúteo + panturrilha.\n- "Push" = peito/ombro/tríceps. "Pull" = costas/bíceps. "Legs" = pernas.\n- "Full Body" = todos os grandes grupos no mesmo dia (USE APENAS se o nome do dia contiver "Full Body").\n- NÃO adicione grupos musculares que não estejam no nome do dia.\n- Complete a semana (7 entradas) com OFFs estratégicos nos dias restantes.\n`
       : "";
 
-    const systemPrompt = `${knowledgeContext}${femininoBlock}${divisaoBlock}
+    const systemPrompt = `${knowledgeContext}${restricoes.blocoPrompt}${femininoBlock}${divisaoBlock}
 
 Você é a Dr. IA, a mente estratégica por trás da metodologia Alpha Coach. Sua missão é gerar prescrições de treino com precisão cirúrgica, seguindo a Base de Conhecimento Pacholok (acima como Fonte de Verdade Absoluta) e as Regras de Estrutura de Elite abaixo.
 
@@ -318,11 +407,11 @@ Você é a Dr. IA, a mente estratégica por trás da metodologia Alpha Coach. Su
 ═══════════════════════════════════════════════
 - BLOCOS DE MÚSCULO: Termine TODA a sequência de um grupo muscular antes de iniciar o próximo. NUNCA alterne (ex: 1 exerc. de Peito, 1 de Tríceps, 1 de Peito). Feche o bloco de Peito completamente, depois inicie Tríceps.
 - PRIORIDADE DE PONTO FRACO: Se um ponto fraco for identificado (ex: Peitoral Clavicular, Ombro), o treino do dia DEVE iniciar OBRIGATORIAMENTE pelos exercícios desse ponto fraco (onde o aluno tem mais força e foco neural).
-- SÉRIES PACHO: Padrão por exercício: 2x Série de Aquecimento + 1x Série de Ajuste (Feeder) + 1 a 2 Séries de Trabalho até a falha absoluta.
+- SÉRIES PACHO: Padrão por exercício: 2x Série de Aquecimento + 1x Série de Ajuste + 1 a 2 Séries de Trabalho até a falha absoluta. Escreva SEMPRE em português.
 - TERMINOLOGIA: Use EXCLUSIVAMENTE "Série de Aquecimento" (10-15 reps leve), "Série de Ajuste" (4-6 reps, longe da falha) e "Série de Trabalho" (falha absoluta).
 
 ═══════════════════════════════════════════════
-2. ESTRUTURA POR NÍVEL (OBRIGATÓRIO)
+2. ESTRUTURA POR NÍVEL (OBRIGATÓRIO — os mínimos das REGRAS DE VOLUME do banco prevalecem sempre)
 ═══════════════════════════════════════════════
 
 A) INICIANTE:
@@ -330,19 +419,24 @@ A) INICIANTE:
 - Volume: 1 exercício por grupo muscular principal por sessão.
 - Foco: Aprendizado motor e técnica perfeita. NÃO usar técnicas avançadas.
 
-B) INTERMEDIÁRIO (Divisão Estratégica 5-6 dias):
-- Dia 1 — Peito + Tríceps + Anterior de Ombro: mín. 4 exerc. de Peito + 3 de Tríceps + 1 de Anterior de Ombro com técnica.
-- Dia 2 — Costas + Bíceps + Posterior de Ombro: mín. 4 de Costas + 2 de Bíceps + 1 de Posterior de Ombro com técnica.
-- Dia 3 — Perna Completa: mín. 4 de Quadríceps + 2 de Posterior + 1 de Panturrilha.
-- Dia 4 — Ombro Completo + Trapézio: mín. 2 exerc. por porção (anterior, lateral, posterior). Aplicar técnicas de intensificação (Drop-set / Rest-pause) em TODOS os finais.
-- Dia 5 — Ênfase Cadeia Posterior: 4 exerc. de Posterior + 2 de Quadríceps.
-- Dia 6 (Opcional/Ênfase): 3 de Peito + 3 de Costas + 1 técnica isolada para Ombro.
+B) INTERMEDIÁRIO (Divisão Estratégica 5-6 dias) — mínimo 4 exercícios para CADA músculo grande (Peito, Costas, Quadríceps, Posterior, Glúteo). NUNCA 3.
+- Dia 1 — Peito + Tríceps + Anterior de Ombro: mín. 4 exerc. de Peito + 3 de Tríceps + 2 de Anterior de Ombro com técnica.
+- Dia 2 — Costas + Bíceps + Posterior de Ombro: mín. 4 de Costas + 3 de Bíceps + 2 de Posterior de Ombro com técnica.
+- Dia 3 — Perna Completa: mín. 4 de Quadríceps + 4 de Posterior + 3 de Panturrilha.
+- Dia 4 — Ombro Completo + Trapézio: mín. 2 exerc. por porção (anterior, lateral, posterior). Aplicar técnicas de intensificação (Série Descendente / Pausa-Descanso) em TODOS os finais.
+- Dia 5 — Ênfase Cadeia Posterior: mín. 4 exerc. de Posterior + 4 de Quadríceps.
+- Dia 6 (Opcional/Ênfase): 4 de Peito + 4 de Costas + técnica isolada para Ombro.
 
-C) AVANÇADO / ATLETA (Intensidade Máxima):
+C) AVANÇADO (Intensidade Máxima):
 - Lógica: 1 Músculo por Dia (Foco Total).
-- Volume: MÍNIMO 5 exercícios por grupo principal.
-- Técnicas: Se usar apenas 4 exercícios, técnicas avançadas (SST, Cluster Set, Drop-set, Rest-pause, Pico de Contração, Isometria) são OBRIGATÓRIAS em TODOS os exercícios.
+- Volume: MÍNIMO 5 exercícios por músculo grande, 4 para músculos pequenos, 3 para ombro.
+- Técnicas avançadas (Séries Fracionadas, Série Descendente, Pausa-Descanso, Pico de Contração, Isometria) OBRIGATÓRIAS.
+
+D) ATLETA DE ALTO NÍVEL:
+- Volume: MÍNIMO 6 exercícios por músculo grande, 4 para músculos pequenos, 4 para ombro.
+- Técnicas avançadas obrigatórias em praticamente todos os exercícios.
 - Foco: Explorar biomecânica profunda e exaustão de TODAS as porções.
+
 
 ═══════════════════════════════════════════════
 3. REGRAS DE DESCANSO E CARDIO (INVIOLÁVEIS)
@@ -372,16 +466,19 @@ C) AVANÇADO / ATLETA (Intensidade Máxima):
 ═══════════════════════════════════════════════
 6. EXECUÇÃO PACHO ELITE — 3 FASES POR EXERCÍCIO (OBRIGATÓRIO)
 ═══════════════════════════════════════════════
-Para CADA exercício, descreva no campo "detalhes_execucao" as 3 fases:
-- WARM-UP SET (~50% da carga de trabalho, 10-15 reps, longe da falha) — preparar tecido conjuntivo.
-- FEEDER SET (~75% da carga, 4-6 reps, sem falha) — calibrar carga real e padrão neural.
-- WORK SETS (carga máxima, 6-12 reps até a FALHA TÉCNICA absoluta) — estímulo principal.
+Para CADA exercício, descreva no campo "detalhes_execucao" as 3 fases — SEMPRE EM PORTUGUÊS (proibido usar inglês: nada de "warm-up", "feeder", "work set", "top set", "back-off", "drop set", "rest-pause"):
+- SÉRIE DE AQUECIMENTO (~50% da carga de trabalho, 10-15 reps, longe da falha) — preparar tecido conjuntivo.
+- SÉRIE DE AJUSTE (~75% da carga, 4-6 reps, sem falha) — calibrar carga real e padrão neural.
+- SÉRIES DE TRABALHO (carga máxima, 6-12 reps até a FALHA TÉCNICA absoluta) — estímulo principal.
 CADÊNCIA EXCÊNTRICA: SEMPRE 3 segundos na descida controlada. Padrão de cadência DEFAULT: "3-1-X-0" (3s desc, 1s pausa, explosivo concêntrico, 0s topo). Exceções permitidas apenas se a base Pacho indicar.
 
-TOP SET / BACK-OFF (compostos básicos: agachamento, supino, levantamento terra, desenvolvimento, remada curvada):
-- 1ª Work Set: PESADA — 6 a 8 reps até falha.
-- 2ª Work Set (Back-off): MESMO exercício com -20% de carga, 10-12 reps até falha.
-Inclua isso explicitamente no campo "series" e "repeticoes".
+SÉRIE PESADA / SÉRIE LEVE (compostos básicos: agachamento, supino, levantamento terra, desenvolvimento, remada curvada):
+- 1ª Série de Trabalho (SÉRIE PESADA): 6 a 8 reps até falha.
+- 2ª Série de Trabalho (SÉRIE LEVE, redução de carga): MESMO exercício com -20% de carga, 10-12 reps até falha.
+Inclua isso explicitamente no campo "series" e "repeticoes", em português.
+
+GLOSSÁRIO OBRIGATÓRIO DE TÉCNICAS (use estes nomes em português): Série Descendente (drop set), Pausa-Descanso (rest-pause), Bi-set, Tri-set, Série Combinada, Pico de Contração, Isometria, Repetições Forçadas, Repetições Parciais, Série Gigante, Pré-exaustão, Cluster (Séries Fracionadas).
+
 
 PSE (Percepção de Esforço) por nível — informe no campo "observacao":
 - Iniciante: PSE 7-8 (deixar 2-3 reps na reserva).
@@ -400,8 +497,10 @@ PSE (Percepção de Esforço) por nível — informe no campo "observacao":
 8. TRAVAS DE SEGURANÇA (NÃO VIOLE)
 ═══════════════════════════════════════════════
 - PROIBIDO treinar Peito e Costas no mesmo dia (exceto Full Body iniciante).
-- Frequências de 5x/semana DEVEM ter pelo menos 1 dia de OFF na quarta OU quinta-feira.
-- Volume MÍNIMO para grandes grupos (Peito, Costas, Quadríceps): 4 exercícios em divisão.
+- DIAS DE TREINO = DISPONIBILIDADE DO ALUNO. Nunca invente dia de descanso no meio da semana: gere EXATAMENTE a quantidade de dias da frequência semanal informada e, quando a divisão trouxer rótulos com dias (Seg, Ter, Qua, Qui, Sex, Sáb), use esses dias sem trocar nem pular nenhum.
+- Só distribua OFF no meio da semana (quarta OU quinta) quando a frequência for 5x ou menos. Com 6x/semana o único descanso é o domingo — é PROIBIDO tirar quarta ou quinta.
+- Volume MÍNIMO para grandes grupos: siga EXATAMENTE as REGRAS DE VOLUME do banco no topo deste prompt (nunca 3 exercícios para músculo grande em intermediário/avançado/atleta).
+- IDIOMA: todos os campos de texto DEVEM estar em português do Brasil. Qualquer termo em inglês invalida a resposta.
 - Avançado treinando 1 músculo/dia: MÍNIMO 4-5 exercícios + técnicas avançadas obrigatórias.
 - Anti-repetição: respeite o histórico — varie pelo menos 60% dos exercícios protagonistas em relação ao último ciclo, mantendo o padrão/divisão do coach se existente.
 
@@ -415,6 +514,7 @@ ESTRUTURA DE RESPOSTA: Retorne APENAS um JSON válido com a prescrição complet
 - Frequência semanal: ${perfil?.frequencia_semanal || 4}x
 - Ênfase desejada: ${perfil?.enfase || "Geral"}
 - Lesões/Limitações: ${lesoes} / ${limitacoes}
+${restricoes.temRestricao ? `\n🚨 ATENÇÃO CLÍNICA (${restricoes.gravidade.toUpperCase()}): ${restricoes.regioes.map((r) => r.rotulo).join(", ") || "restrição relatada"}. Aplique a REGRA 0 do system prompt SEM EXCEÇÃO — ela sobrepõe volume mínimo e técnicas avançadas.\n` : ""}
 ${biomarkerTier ? `- Tier biomarcador: ${biomarkerTier.toUpperCase()} (aplique a Regra 7)\n` : ""}${divisoesEscolhidas ? `\n⚠️ DIVISÃO OBRIGATÓRIA (não invente outra, NÃO USE FULL BODY): ${divisoesEscolhidas.map((d: string, i: number) => `Dia ${i + 1} = "${d}"`).join(" | ")}\n` : ""}
 ${Array.isArray(estimulos_extras) && estimulos_extras.length > 0 ? `\n🎯 ESTÍMULOS EXTRAS (acessórios obrigatórios): ${estimulos_extras.join(", ")}.\nDistribua esses grupos como exercícios ACESSÓRIOS (1-2 exercícios por grupo) ao FINAL dos dias mais coerentes da divisão (ex: panturrilha em dia de pernas, ombro lateral em dia de ombro/peito, core em 3 dias separados). NÃO substituem os grupos principais do dia — são adições.\n` : ""}
 ${customPrompt ? `\n=== PEDIDO ESPECÍFICO DO COACH (PRIORIDADE MÁXIMA) ===\n"${customPrompt}"\n\nINTERPRETE este pedido e aplique a Diretriz #6 (Ênfase/Pontos Fracos): aumente o volume e a frequência semanal dos grupos mencionados.\n` : ""}
@@ -443,10 +543,10 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
                         type: "object",
                         properties: {
                           nome: { type: "string" },
-                          series: { type: "string", description: "Ex: 1 Warm-up + 1 Feeder + 2 Work Sets (Top Set 6-8 + Back-off 10-12)" },
+                          series: { type: "string", description: "Em português. Ex: 1 Série de Aquecimento + 1 Série de Ajuste + 2 Séries de Trabalho (Pesada 6-8 + Leve 10-12)" },
                           repeticoes: { type: "string", description: "Ex: 6-8 (top) / 10-12 (back-off)" },
                           cadencia: { type: "string", description: "Padrão 3-1-X-0 (excêntrica 3s sempre)" },
-                          detalhes_execucao: { type: "string", description: "Descreva as 3 fases: Warm-up (~50%), Feeder (~75%), Work Sets até falha + biomecânica" },
+                          detalhes_execucao: { type: "string", description: "Em português. Descreva as 3 fases: SÉRIE DE AQUECIMENTO (~50%), SÉRIE DE AJUSTE (~75%), SÉRIES DE TRABALHO até a falha + biomecânica" },
                           observacao: { type: "string", description: "Inclua PSE alvo e marcação de ponto fraco se aplicável" },
                         },
                         required: ["nome", "series", "repeticoes", "cadencia", "detalhes_execucao", "observacao"],
@@ -556,7 +656,25 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
       return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
 
-    return new Response(JSON.stringify(args), {
+    // Segunda camada de segurança: filtra/substitui o que a IA devolveu
+    const { args: argsSeguros, bloqueados } = aplicarFiltroRestricoes(args, restricoes);
+    if (bloqueados.length > 0) {
+      console.warn("Trava clínica acionada:", JSON.stringify(bloqueados));
+    }
+
+    const payload = {
+      ...traduzirTermos(argsSeguros),
+      restricoes_aplicadas: restricoes.temRestricao
+        ? {
+            gravidade: restricoes.gravidade,
+            regioes: restricoes.regioes.map((r) => r.rotulo),
+            relato: restricoes.textoOriginal,
+            bloqueados,
+          }
+        : null,
+    };
+
+    return new Response(JSON.stringify(payload), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

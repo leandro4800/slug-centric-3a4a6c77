@@ -381,20 +381,20 @@ const Comunidade = () => {
                 </div>
 
                 {post.video_url ? (
-                  <div className="relative w-full max-h-[80vh] bg-black flex items-center justify-center overflow-hidden">
+                  <div className="relative w-full bg-background flex items-center justify-center overflow-hidden">
                     <video
                       src={post.video_url}
                       controls
                       playsInline
-                      className="w-full h-auto max-h-[80vh] object-contain"
+                      className="max-h-[80vh] max-w-full h-auto w-auto object-contain"
                     />
                   </div>
                 ) : post.imagem_url && (
-                  <div className="relative aspect-square w-full bg-card/50 flex items-center justify-center overflow-hidden">
+                  <div className="relative w-full bg-background flex items-center justify-center overflow-hidden">
                     <img
                       src={post.imagem_url}
                       alt=""
-                      className="w-full h-full object-cover transition-all hover:scale-105 duration-700"
+                      className="max-h-[80vh] max-w-full h-auto w-auto object-contain"
                     />
                   </div>
                 )}
@@ -534,11 +534,11 @@ const Comunidade = () => {
             </div>
 
             {previewUrl && (
-              <div className="relative rounded-2xl overflow-hidden max-h-[50vh] bg-black border border-border flex items-center justify-center">
+              <div className="relative rounded-2xl overflow-hidden bg-background border border-border flex items-center justify-center">
                 {selectedFile?.type.startsWith("video") ? (
-                  <video src={previewUrl} controls playsInline className="w-full max-h-[50vh] object-contain" />
+                  <video src={previewUrl} controls playsInline className="max-h-[50vh] max-w-full h-auto w-auto object-contain" />
                 ) : (
-                  <img src={previewUrl} alt="Preview" className="w-full max-h-[50vh] object-contain" />
+                  <img src={previewUrl} alt="Preview" className="max-h-[50vh] max-w-full h-auto w-auto object-contain" />
                 )}
                 <Button
                   onClick={() => {
