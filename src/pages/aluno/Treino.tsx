@@ -329,6 +329,7 @@ const PersonalTreino = () => {
             .from("treinos_prescritos")
             .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url")
             .eq("aluno_id", user.id)
+            .eq("tenant_id", tenant.id)
             .order("dia_semana")
             .order("ordem")
         ),
