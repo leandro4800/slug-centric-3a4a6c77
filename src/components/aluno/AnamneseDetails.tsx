@@ -240,7 +240,7 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
       <Field label="Disponibilidade Dias">
         <div className="flex flex-wrap gap-2">
           {DIAS_SEMANA.map(dia => {
-            const selected = (form.disponibilidade_dias || []).includes(dia);
+            const selected = canonizarDias(form.disponibilidade_dias).includes(dia);
             return (
               <button
                 key={dia}
@@ -249,11 +249,12 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
                   e.preventDefault();
                   e.stopPropagation();
                   setForm(prev => {
-                    const atuais = prev.disponibilidade_dias || [];
+                    const atuais = canonizarDias(prev.disponibilidade_dias);
                     const novo = atuais.includes(dia)
                       ? atuais.filter(d => d !== dia)
                       : [...atuais, dia];
-                    return { ...prev, disponibilidade_dias: novo };
+                    // sempre ordenado Seg → Dom
+                    return { ...prev, disponibilidade_dias: DIAS_SEMANA.filter(d => novo.includes(d)) };
                   });
                 }}
                 className={`px-3 py-2 rounded-md border text-sm font-medium transition ${selected ? "bg-primary text-primary-foreground border-primary" : "bg-background text-foreground border-input hover:bg-accent"}`}
