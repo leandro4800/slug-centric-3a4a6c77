@@ -845,19 +845,20 @@ const TreinoEditor = ({
   const [biblioteca, setBiblioteca] = useState<BibliotecaExercicio[]>([]);
 
   useEffect(() => {
-    if (!tenantId) {
-      setBiblioteca([]);
-      return;
-    }
     void (async () => {
+      const bibliotecaQuery = tenantId
+        ? supabase
+            .from("biblioteca_exercicios")
+            .select("id, nome, grupo_muscular, video_url, video_coach_url")
+            .eq("tenant_id", tenantId)
+            .limit(2000)
+        : Promise.resolve({ data: [] as any[] });
       const [bibliotecaRes, referenciasRes] = await Promise.all([
-        supabase
-          .from("biblioteca_exercicios")
-          .select("id, nome, grupo_muscular, video_url, video_coach_url")
-          .eq("tenant_id", tenantId),
+        bibliotecaQuery,
         supabase
           .from("referencia_exercicios")
-          .select("id, nome_exercicio, grupamento_muscular, url_video"),
+          .select("id, nome_exercicio, grupamento_muscular, url_video")
+          .limit(2000),
       ]);
       const locais: BibliotecaExercicio[] = ((bibliotecaRes.data as any[]) || []).map((item) => ({
         id: item.id,
