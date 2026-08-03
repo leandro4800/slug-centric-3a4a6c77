@@ -27,7 +27,10 @@ import {
   Trash2,
   Sparkles,
   RefreshCw,
+  ChevronDown,
+  Video,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
 
 interface Props {
@@ -84,6 +87,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const reload = async () => {
+    if (!tenant?.id) return;
     setLoading(true);
     const [trRes, dtRes] = await Promise.all([
       supabase
@@ -92,6 +96,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
           "id, dia_semana, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao",
         )
         .eq("aluno_id", alunoId)
+        .eq("tenant_id", tenant.id)
         .order("dia_semana")
         .order("ordem"),
       supabase
@@ -664,6 +669,101 @@ interface TreinoEditItem {
   observacao: string;
 }
 
+interface BibliotecaExercicio {
+  id: string;
+  nome: string;
+  grupo_muscular: string;
+  video_url: string | null;
+  video_coach_url: string | null;
+}
+
+const normalizarBusca = (texto: string) =>
+  texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+const ExerciseLibraryPicker = ({
+  value,
+  biblioteca,
+  onChange,
+}: {
+  value: string;
+  biblioteca: BibliotecaExercicio[];
+  onChange: (value: string) => void;
+}) => {
+  const [open, setOpen] = useState(false);
+  const [busca, setBusca] = useState("");
+  const termo = normalizarBusca(busca);
+  const lista = termo
+    ? biblioteca.filter((item) =>
+        normalizarBusca(`${item.nome} ${item.grupo_muscular}`).includes(termo),
+      )
+    : biblioteca;
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <div className="relative isolate mt-1 overflow-visible">
+        <Input
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder="Ex: Agachamento Livre"
+          className="relative z-0 w-full min-w-0 pr-14"
+        />
+        <PopoverTrigger asChild>
+          <Button
+            type="button"
+            size="icon"
+            className="absolute right-px top-px z-[60] h-[calc(100%-2px)] w-12 rounded-l-none rounded-r-[5px] border-0 border-l border-primary-foreground/30 bg-primary p-0 text-primary-foreground shadow-none hover:bg-primary/90"
+            title="Buscar exercícios salvos nos vídeos técnicos"
+            aria-label="Buscar exercícios salvos nos vídeos técnicos"
+          >
+            <ChevronDown className="h-6 w-6" />
+          </Button>
+        </PopoverTrigger>
+      </div>
+      <PopoverContent align="end" className="w-[min(300px,calc(100vw-2rem))] max-h-[22rem] overflow-auto p-0">
+        <div className="sticky top-0 z-10 border-b border-border/40 bg-popover p-2">
+          <Input
+            autoFocus
+            value={busca}
+            onChange={(event) => setBusca(event.target.value)}
+            placeholder="Buscar exercício..."
+            className="h-8 text-xs"
+          />
+        </div>
+        {lista.length === 0 ? (
+          <p className="p-3 text-xs text-muted-foreground">Nenhum exercício salvo encontrado.</p>
+        ) : (
+          <ul className="divide-y divide-border/30">
+            {lista.map((item) => (
+              <li key={item.id}>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    onChange(item.nome);
+                    setOpen(false);
+                    setBusca("");
+                  }}
+                  className="h-auto w-full justify-between rounded-none px-3 py-2 text-left"
+                >
+                  <span className="flex min-w-0 items-center gap-1.5 truncate text-xs">
+                    {(item.video_coach_url || item.video_url) && (
+                      <Video className="h-3 w-3 shrink-0 text-emerald-400" />
+                    )}
+                    <span className="truncate">{item.nome}</span>
+                  </span>
+                  <span className="ml-2 shrink-0 text-[9px] uppercase text-muted-foreground">
+                    {item.grupo_muscular}
+                  </span>
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 // Campo compacto que abre um editor maior em modal ao clicar
 const ExpandableField = ({
   label,
@@ -742,6 +842,49 @@ const TreinoEditor = ({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [items, setItems] = useState<TreinoEditItem[]>([]);
+  const [biblioteca, setBiblioteca] = useState<BibliotecaExercicio[]>([]);
+
+  useEffect(() => {
+    if (!tenantId) {
+      setBiblioteca([]);
+      return;
+    }
+    void (async () => {
+      const [bibliotecaRes, referenciasRes] = await Promise.all([
+        supabase
+          .from("biblioteca_exercicios")
+          .select("id, nome, grupo_muscular, video_url, video_coach_url")
+          .eq("tenant_id", tenantId),
+        supabase
+          .from("referencia_exercicios")
+          .select("id, nome_exercicio, grupamento_muscular, url_video"),
+      ]);
+      const locais: BibliotecaExercicio[] = ((bibliotecaRes.data as any[]) || []).map((item) => ({
+        id: item.id,
+        nome: item.nome,
+        grupo_muscular: item.grupo_muscular || "",
+        video_url: item.video_url,
+        video_coach_url: item.video_coach_url,
+      }));
+      const referencias: BibliotecaExercicio[] = ((referenciasRes.data as any[]) || []).map((item) => ({
+        id: item.id,
+        nome: item.nome_exercicio,
+        grupo_muscular: item.grupamento_muscular || "",
+        video_url: item.url_video,
+        video_coach_url: null,
+      }));
+      const nomes = new Set<string>();
+      const mesclados = [...locais, ...referencias]
+        .filter((item) => {
+          const chave = normalizarBusca(item.nome || "");
+          if (!chave || nomes.has(chave)) return false;
+          nomes.add(chave);
+          return true;
+        })
+        .sort((a, b) => a.nome.localeCompare(b.nome));
+      setBiblioteca(mesclados);
+    })();
+  }, [tenantId]);
 
   const buildFromTreinos = (): TreinoEditItem[] =>
     treinos.map((t, i) => ({
@@ -1044,10 +1187,10 @@ const TreinoEditor = ({
 
                       <div>
                         <Label className="text-[10px] uppercase">Nome do exercício</Label>
-                        <Input
+                        <ExerciseLibraryPicker
                           value={e.exercicio}
-                          onChange={(ev) => updateItem(e._key, { exercicio: ev.target.value })}
-                          placeholder="Ex: Agachamento Livre"
+                          biblioteca={biblioteca}
+                          onChange={(value) => updateItem(e._key, { exercicio: value })}
                         />
                       </div>
 
