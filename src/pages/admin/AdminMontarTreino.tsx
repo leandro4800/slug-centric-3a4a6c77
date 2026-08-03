@@ -2184,16 +2184,22 @@ const ExercisePicker = ({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <div className="flex gap-1 mt-1">
+      <div className="relative mt-1">
         <Input
           placeholder="Ex: Supino Reto"
           value={value}
           onChange={(ev) => onChangeText(ev.target.value)}
-          className="flex-1"
+          className="w-full pr-12"
         />
         <PopoverTrigger asChild>
-          <Button type="button" variant="outline" size="sm" className="shrink-0 px-2" title="Escolher dos exercícios salvos (com vídeo)">
-            <ChevronDown className="h-3.5 w-3.5" />
+          <Button
+            type="button"
+            size="icon"
+            className="absolute right-1 top-1/2 h-8 w-9 -translate-y-1/2 bg-primary text-primary-foreground hover:bg-primary/90"
+            title="Buscar exercícios salvos nos vídeos técnicos"
+            aria-label="Buscar exercícios salvos nos vídeos técnicos"
+          >
+            <ChevronDown className="h-5 w-5" />
           </Button>
         </PopoverTrigger>
       </div>
