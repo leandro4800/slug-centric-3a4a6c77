@@ -21,7 +21,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
-import { blocksExternalPayments } from "@/lib/native-platform";
+import { blocksExternalPayments, isNativeApp } from "@/lib/native-platform";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
