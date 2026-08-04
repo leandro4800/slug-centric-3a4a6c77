@@ -21,6 +21,7 @@ import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluati
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
 import heic2any from "heic2any";
 import { AthleteEvaluationsViewer } from "@/components/aluno/AthleteEvaluationsViewer";
+import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 import { readProfileSnapshot, writeProfileSnapshot } from "@/lib/profile-cache";
 
 type ProfileData = {
