@@ -69,7 +69,9 @@ const Login = () => {
     };
   }, []);
 
-  const resolveAppDestination = async (userId: string) => {
+  type Resolution = { destination: string; blockedSlug?: string | null; ownerRedirect?: boolean };
+
+  const resolveAppDestination = async (userId: string): Promise<Resolution> => {
     const [{ data: ownedTenant }, { data: roleRows }, { data: alunoRow }] = await Promise.all([
       supabase.from("tenants").select("slug").eq("owner_user_id", userId).maybeSingle(),
       supabase.from("user_roles").select("role, tenant_id, tenants:tenant_id(slug)").eq("user_id", userId),
@@ -85,26 +87,51 @@ const Login = () => {
     }
     if (prefetchedRoles.length) stashAuthRolesPrefetch(prefetchedRoles);
 
-    if (ownedTenant?.slug) return `/${ownedTenant.slug}/app`;
-
-    const rolesList = (roleRows as any[] | null)?.filter((r) => r.role === "aluno") ?? [];
     const contextSlug = getSafeAppSlug(urlSlug || tenant?.slug);
+
+    // 1) Dono de tenant SEMPRE entra no próprio app — nunca no app de outro coach.
+    if (ownedTenant?.slug) {
+      const ownSlug = getSafeAppSlug(ownedTenant.slug)!;
+      return {
+        destination: `/${ownSlug}/app`,
+        ownerRedirect: Boolean(contextSlug && contextSlug !== ownSlug),
+      };
+    }
+
+    // 2) Aluno: só entra onde tem vínculo.
+    const alunoSlugs = new Set<string>();
+    for (const r of (roleRows as any[] | null) ?? []) {
+      if (r.role !== "aluno") continue;
+      const s = getSafeAppSlug(r?.tenants?.slug);
+      if (s) alunoSlugs.add(s);
+    }
+    const alunoTableSlug = getSafeAppSlug((alunoRow as any)?.tenants?.slug);
+    if (alunoTableSlug) alunoSlugs.add(alunoTableSlug);
+
     if (contextSlug) {
-      const match = rolesList.find((r) => r?.tenants?.slug === contextSlug);
-      if (match) return `/${contextSlug}/app`;
+      if (alunoSlugs.has(contextSlug)) return { destination: `/${contextSlug}/app` };
+      // Não pertence a este coach: bloqueia.
+      return { destination: `/${contextSlug}/login`, blockedSlug: contextSlug };
     }
 
-    if (rolesList.length === 1) {
-      const onlySlug = getSafeAppSlug(rolesList[0]?.tenants?.slug);
-      if (onlySlug) return `/${onlySlug}/app`;
+    if (alunoSlugs.size >= 1) {
+      const first = Array.from(alunoSlugs)[0];
+      return { destination: `/${first}/app` };
     }
 
-    const alunoSlug = getSafeAppSlug((alunoRow as any)?.tenants?.slug);
-    if (alunoSlug) return `/${alunoSlug}/app`;
+    return { destination: "/onboarding" };
+  };
 
-    const candidateSlug = urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug");
-    const targetSlug = getSafeAppSlug(candidateSlug);
-    return targetSlug ? `/${targetSlug}/app` : "/onboarding";
+  const applyResolution = async (res: Resolution) => {
+    if (res.blockedSlug) {
+      await supabase.auth.signOut();
+      toast.error("Esta conta não tem acesso ao app deste coach. Faça login no app onde você foi cadastrado.");
+      return;
+    }
+    if (res.ownerRedirect) {
+      toast.info("Sua conta é de coach — abrindo o seu próprio app.");
+    }
+    navigate(res.destination, { replace: true });
   };
 
   useEffect(() => {
@@ -113,8 +140,8 @@ const Login = () => {
 
     let cancelled = false;
     void resolveAppDestination(user.id)
-      .then((destination) => {
-        if (!cancelled) navigate(destination, { replace: true });
+      .then((res) => {
+        if (!cancelled) void applyResolution(res);
       })
       .catch((err) => {
         console.error("[Login] Erro ao redirecionar sessão existente:", err);
@@ -124,6 +151,7 @@ const Login = () => {
       cancelled = true;
     };
   }, [sessionReady, user?.id, loading, urlSlug, tenant?.slug, navigate, location.pathname]);
+
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
