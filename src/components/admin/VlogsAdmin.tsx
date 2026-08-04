@@ -4,7 +4,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Trash2, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload, Play } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload, Play, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -60,7 +60,7 @@ export const VlogsAdmin = () => {
   const [igAccountId, setIgAccountId] = useState("");
   const [showIgToken, setShowIgToken] = useState(false);
   const [igConfigured, setIgConfigured] = useState(false);
-  
+  const [igSyncing, setIgSyncing] = useState(false);
   // Upload direto
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
@@ -305,6 +305,36 @@ export const VlogsAdmin = () => {
     void load();
   };
 
+  const syncInstagramReels = async () => {
+    if (!tenant || !igConfigured) {
+      toast.error("Configure o Instagram Business antes de sincronizar.");
+      return;
+    }
+    setIgSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("instagram-sync-reels", {
+        body: { tenant_id: tenant.id, limit: 25 },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(String(data.error));
+
+      const imported = Number(data?.imported ?? 0);
+      const updated = Number(data?.updated ?? 0);
+      const fetched = Number(data?.fetched ?? 0);
+      toast.success(
+        fetched
+          ? `Reels sincronizados: ${imported} novo(s), ${updated} atualizado(s).`
+          : "Nenhum Reel encontrado na conta.",
+      );
+      void load();
+    } catch (err: any) {
+      console.error("[VlogsAdmin] instagram-sync-reels:", err);
+      toast.error(err?.message || "Falha ao sincronizar Reels do Instagram.");
+    } finally {
+      setIgSyncing(false);
+    }
+  };
+
   const handleFileUpload = async () => {
     if (!tenant || !videoFile) return;
     setUploading(true);
@@ -394,13 +424,13 @@ export const VlogsAdmin = () => {
       {/* IG Graph API config */}
       <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
         <h3 className="font-display text-2xl mb-2 text-primary flex items-center gap-2">
-          <Video className="h-6 w-6" /> PUBLICAÇÃO DIRETA NO INSTAGRAM
+          <Video className="h-6 w-6" /> INSTAGRAM — PUBLICAR E SINCRONIZAR REELS
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Para postar Reels diretamente do app, cole abaixo o <b>Access Token de longa duração</b> e o <b>ID da conta Business</b> do Instagram.
-          Requer conta Business/Creator vinculada a uma Página do Facebook + App aprovado pela Meta com permissão <code>instagram_content_publish</code>.{" "}
-          <a href="https://developers.facebook.com/docs/instagram-platform/content-publishing" target="_blank" rel="noreferrer" className="text-primary underline">
-            Tutorial oficial
+          Conecte a conta Business do coach para <b>publicar Reels</b> e <b>importar automaticamente</b> os últimos Reels para os Vlogs dos alunos.
+          Requer token de longa duração + permissões de leitura/publicação na Meta.{" "}
+          <a href="https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/reference/ig-user/media" target="_blank" rel="noreferrer" className="text-primary underline">
+            Graph API — Media
           </a>
         </p>
 
@@ -428,6 +458,19 @@ export const VlogsAdmin = () => {
 
         <Button onClick={saveIgConfig} className="bg-gradient-primary shadow-glow mt-4 w-full">
           <Save className="h-4 w-4 mr-2" /> Salvar credenciais
+        </Button>
+        <Button
+          onClick={() => void syncInstagramReels()}
+          disabled={!igConfigured || igSyncing}
+          variant="outline"
+          className="mt-3 w-full border-primary/40 hover:bg-primary/10"
+        >
+          {igSyncing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          )}
+          Sincronizar últimos Reels
         </Button>
         {igConfigured && <p className="text-xs text-green-500 mt-2">✓ Instagram conectado</p>}
       </div>

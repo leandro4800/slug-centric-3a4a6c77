@@ -105,19 +105,42 @@ const AlunoHome = () => {
 
   useEffect(() => {
     if (!tenant?.id) return;
-    void supabase
-      .from("vlog_posts")
-      .select("id, url, title, thumbnail_url, platform, destaque")
-      .eq("tenant_id", tenant.id)
-      .eq("visivel", true)
-      .order("destaque", { ascending: false })
-      .order("posted_at", { ascending: false, nullsFirst: false })
-      .order("created_at", { ascending: false })
-      .limit(6)
-      .then(({ data }) => {
-        const rows = ((data as VlogPost[]) || []).filter((v) => Boolean(v.url?.trim()));
-        setVlogs(rows);
-      });
+
+    const loadVlogs = () => {
+      void supabase
+        .from("vlog_posts")
+        .select("id, url, title, thumbnail_url, platform, destaque")
+        .eq("tenant_id", tenant.id)
+        .eq("visivel", true)
+        .order("destaque", { ascending: false })
+        .order("posted_at", { ascending: false, nullsFirst: false })
+        .order("created_at", { ascending: false })
+        .limit(6)
+        .then(({ data }) => {
+          const rows = ((data as VlogPost[]) || []).filter((v) => Boolean(v.url?.trim()));
+          setVlogs(rows);
+        });
+    };
+
+    loadVlogs();
+
+    const channel = supabase
+      .channel(`vlog-posts-${tenant.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "vlog_posts",
+          filter: `tenant_id=eq.${tenant.id}`,
+        },
+        () => loadVlogs(),
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
   }, [tenant?.id]);
 
   const normalizePlayableVlog = (v: VlogPost): VlogPost => {

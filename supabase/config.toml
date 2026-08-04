@@ -44,6 +44,8 @@ additional_redirect_urls = [
     verify_jwt = true
   [functions.instagram-publish]
     verify_jwt = true
+  [functions.instagram-sync-reels]
+    verify_jwt = true
   [functions.send-transactional-email]
     verify_jwt = true
   [functions.preview-transactional-email]
