@@ -172,6 +172,8 @@ const filterEmptyCoaches = (coaches: CoachData[]) => {
 };
 
 const Landing = () => {
+  // No app nativo nunca exibimos landing/site de vendas.
+  if (isNativeApp()) return <Navigate to="/" replace />;
   const { user, isLoading: authLoading } = useAuth();
   const [mode, setMode] = useState<"choice" | "aluno" | "coach" | null>(null);
   const [showSimulador, setShowSimulador] = useState(false);
