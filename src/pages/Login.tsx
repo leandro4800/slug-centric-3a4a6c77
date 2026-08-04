@@ -187,19 +187,10 @@ const Login = () => {
         return;
       }
 
-      void saveLoginCredentials(email, password, rememberLogin);
+      const res = await resolveAppDestination(userId);
+      if (!res.blockedSlug) void saveLoginCredentials(email, password, rememberLogin);
+      await applyResolution(res);
 
-      const quickSlug = getSafeAppSlug(
-        urlSlug || tenant?.slug || localStorage.getItem("last_tenant_slug"),
-      );
-      if (quickSlug) {
-        navigate(`/${quickSlug}/app`, { replace: true });
-        void resolveAppDestination(userId);
-        return;
-      }
-
-      const destination = await resolveAppDestination(userId);
-      navigate(destination, { replace: true });
     } catch (err) {
       console.error("[Login] Erro inesperado:", err);
       toast.error("Erro ao entrar. Tente novamente.");
