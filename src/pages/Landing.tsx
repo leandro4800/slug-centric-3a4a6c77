@@ -880,4 +880,10 @@ const LandingContent = () => {
   );
 };
 
+const Landing = () => {
+  // No app nativo nunca exibimos landing/site de vendas.
+  if (isNativeApp()) return <Navigate to="/" replace />;
+  return <LandingContent />;
+};
+
 export default Landing;
