@@ -161,6 +161,15 @@ const FAQ_BASE = [
 
 export default function TenantLanding() {
   const { slug } = useParams<{ slug: string }>();
+  // No app nativo nunca exibimos a landing de vendas do coach.
+  if (isNativeApp()) {
+    return <Navigate to={slug ? `/${slug}/login` : "/"} replace />;
+  }
+  return <TenantLandingContent />;
+}
+
+function TenantLandingContent() {
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
