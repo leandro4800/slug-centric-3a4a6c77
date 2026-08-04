@@ -719,7 +719,7 @@ const ExerciseLibraryPicker = ({
           </Button>
         </PopoverTrigger>
       </div>
-      <PopoverContent align="end" className="w-[min(300px,calc(100vw-2rem))] max-h-[22rem] overflow-auto p-0">
+      <PopoverContent align="end" className="z-[100] w-[min(340px,calc(100vw-2rem))] max-h-[22rem] overflow-auto p-0">
         <div className="sticky top-0 z-10 border-b border-border/40 bg-popover p-2">
           <Input
             autoFocus
@@ -845,19 +845,21 @@ const TreinoEditor = ({
   const [biblioteca, setBiblioteca] = useState<BibliotecaExercicio[]>([]);
 
   useEffect(() => {
-    if (!tenantId) {
-      setBiblioteca([]);
-      return;
-    }
     void (async () => {
+      const bibliotecaQuery = tenantId
+        ? supabase
+            .from("biblioteca_exercicios")
+            .select("id, nome, grupo_muscular, video_url, video_coach_url")
+            .eq("tenant_id", tenantId)
+            .limit(2000)
+        : Promise.resolve({ data: [] as any[] });
       const [bibliotecaRes, referenciasRes] = await Promise.all([
-        supabase
-          .from("biblioteca_exercicios")
-          .select("id, nome, grupo_muscular, video_url, video_coach_url")
-          .eq("tenant_id", tenantId),
+        bibliotecaQuery,
         supabase
           .from("referencia_exercicios")
-          .select("id, nome_exercicio, grupamento_muscular, url_video"),
+          .select("id, nome_exercicio, grupamento_muscular, url_video")
+          .not("url_video", "is", null)
+          .range(0, 4999),
       ]);
       const locais: BibliotecaExercicio[] = ((bibliotecaRes.data as any[]) || []).map((item) => ({
         id: item.id,
@@ -873,8 +875,15 @@ const TreinoEditor = ({
         video_url: item.url_video,
         video_coach_url: null,
       }));
+      // Prioriza a versão que possui vídeo. Sem isso, um item local sem vídeo
+      // pode ocultar uma referência técnica de mesmo nome que possui URL salva.
+      const porPrioridade = [...locais, ...referencias].sort((a, b) => {
+        const aTemVideo = Boolean(a.video_coach_url || a.video_url);
+        const bTemVideo = Boolean(b.video_coach_url || b.video_url);
+        return Number(bTemVideo) - Number(aTemVideo);
+      });
       const nomes = new Set<string>();
-      const mesclados = [...locais, ...referencias]
+      const mesclados = porPrioridade
         .filter((item) => {
           const chave = normalizarBusca(item.nome || "");
           if (!chave || nomes.has(chave)) return false;

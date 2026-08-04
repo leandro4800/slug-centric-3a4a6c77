@@ -149,7 +149,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const pathname = location.pathname.replace(/\/+$/, "") || "/";
   const slug = resolveBrandingSlug(pathname, params.slug);
 
-  const cachedTenant = slug ? readTenantBrandingCache(slug) : null;
+  const cachedTenant = slug ? ((readTenantBrandingCache(slug) as unknown) as Tenant | null) : null;
   const [tenant, setTenant] = useState<Tenant | null>(cachedTenant);
   const [loading, setLoading] = useState(true);
   const isMountedRef = useRef(true);
@@ -161,7 +161,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     if (!slug) return;
     const cached = readTenantBrandingCache(slug);
     if (!cached) return;
-    setTenant((current) => current ?? cached);
+    setTenant((current) => current ?? ((cached as unknown) as Tenant));
     applyTheme((cached.theme_overrides as ThemeOverrides | null) ?? null, cached.hero_url);
   }, [slug]);
 
@@ -211,7 +211,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
         if (isMountedRef.current) {
           setTenant(t);
           if (t) {
-            writeTenantBrandingCache(t.slug, t);
+            writeTenantBrandingCache(t.slug, t as any);
             localStorage.setItem("last_tenant_slug", t.slug);
             writeStartupBranding({
               slug: t.slug,
@@ -256,7 +256,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
       const t = data as Tenant | null;
       setTenant(t);
-      if (targetSlug) writeTenantBrandingCache(targetSlug, t);
+      if (targetSlug) writeTenantBrandingCache(targetSlug, t as any);
       if (t?.slug) {
         localStorage.setItem("last_tenant_slug", t.slug);
         writeStartupBranding({

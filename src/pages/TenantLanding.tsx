@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams, Navigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,7 +21,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { formatBRL } from "@/lib/body-metrics";
-import { blocksExternalPayments } from "@/lib/native-platform";
+import { blocksExternalPayments, isNativeApp } from "@/lib/native-platform";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -160,6 +160,15 @@ const FAQ_BASE = [
 ];
 
 export default function TenantLanding() {
+  const { slug } = useParams<{ slug: string }>();
+  // No app nativo nunca exibimos a landing de vendas do coach.
+  if (isNativeApp()) {
+    return <Navigate to={slug ? `/${slug}/login` : "/"} replace />;
+  }
+  return <TenantLandingContent />;
+}
+
+function TenantLandingContent() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();

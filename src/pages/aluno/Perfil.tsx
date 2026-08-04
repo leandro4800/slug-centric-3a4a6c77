@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket, Users, CalendarCheck, Trash2, X } from "lucide-react";
+import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
