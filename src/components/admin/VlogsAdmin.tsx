@@ -55,6 +55,10 @@ export const VlogsAdmin = () => {
   const [url, setUrl] = useState("");
   const [thumbInput, setThumbInput] = useState("");
 
+  // YouTube sync config
+  const [ytChannelId, setYtChannelId] = useState("");
+  const [ytConfigured, setYtConfigured] = useState(false);
+  const [ytSyncing, setYtSyncing] = useState(false);
   // Instagram Graph API config
   const [igToken, setIgToken] = useState("");
   const [igAccountId, setIgAccountId] = useState("");
@@ -77,7 +81,7 @@ export const VlogsAdmin = () => {
         .eq("tenant_id", tenant.id)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false }),
-      supabase.from("tenants_private" as any).select("instagram_access_token, instagram_business_account_id").eq("tenant_id", tenant.id).maybeSingle(),
+      supabase.from("tenants_private" as any).select("instagram_access_token, instagram_business_account_id, youtube_channel_id").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     const rows = (list as VlogPost[]) || [];
     const normalizedRows = rows.map((r) => {
@@ -113,10 +117,16 @@ export const VlogsAdmin = () => {
         })
       );
     }
-    const tp = (t as unknown) as { instagram_access_token?: string; instagram_business_account_id?: string } | null;
+    const tp = (t as unknown) as {
+      instagram_access_token?: string;
+      instagram_business_account_id?: string;
+      youtube_channel_id?: string;
+    } | null;
     setIgToken(tp?.instagram_access_token ?? "");
     setIgAccountId(tp?.instagram_business_account_id ?? "");
     setIgConfigured(!!(tp?.instagram_access_token && tp?.instagram_business_account_id));
+    setYtChannelId(tp?.youtube_channel_id ?? "");
+    setYtConfigured(!!tp?.youtube_channel_id?.trim());
     setLoading(false);
   };
 
@@ -305,6 +315,49 @@ export const VlogsAdmin = () => {
     void load();
   };
 
+  const saveYtConfig = async () => {
+    if (!tenant) return;
+    const { error } = await supabase
+      .from("tenants_private" as any)
+      .upsert({
+        tenant_id: tenant.id,
+        youtube_channel_id: ytChannelId.trim() || null,
+      });
+    if (error) return toast.error(error.message);
+    toast.success("Canal YouTube salvo");
+    void load();
+  };
+
+  const syncYoutubeVideos = async () => {
+    if (!tenant || !ytConfigured) {
+      toast.error("Configure o canal YouTube antes de sincronizar.");
+      return;
+    }
+    setYtSyncing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("youtube-sync-videos", {
+        body: { tenant_id: tenant.id, limit: 25 },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(String(data.error));
+
+      const imported = Number(data?.imported ?? 0);
+      const updated = Number(data?.updated ?? 0);
+      const fetched = Number(data?.fetched ?? 0);
+      toast.success(
+        fetched
+          ? `Vídeos sincronizados: ${imported} novo(s), ${updated} atualizado(s).`
+          : "Nenhum vídeo encontrado no canal.",
+      );
+      void load();
+    } catch (err: any) {
+      console.error("[VlogsAdmin] youtube-sync-videos:", err);
+      toast.error(err?.message || "Falha ao sincronizar vídeos do YouTube.");
+    } finally {
+      setYtSyncing(false);
+    }
+  };
+
   const syncInstagramReels = async () => {
     if (!tenant || !igConfigured) {
       toast.error("Configure o Instagram Business antes de sincronizar.");
@@ -473,6 +526,51 @@ export const VlogsAdmin = () => {
           Sincronizar últimos Reels
         </Button>
         {igConfigured && <p className="text-xs text-green-500 mt-2">✓ Instagram conectado</p>}
+      </div>
+
+      {/* YouTube sync */}
+      <div className="bg-black/60 border border-white/20 rounded-2xl p-6 shadow-2xl backdrop-blur-md">
+        <h3 className="font-display text-2xl mb-2 text-primary flex items-center gap-2">
+          <Video className="h-6 w-6 text-[hsl(0_85%_55%)]" /> YOUTUBE — SINCRONIZAR VÍDEOS
+        </h3>
+        <p className="text-sm text-muted-foreground mb-4">
+          Conecte o canal do coach para <b>importar automaticamente</b> os últimos vídeos (inclui Shorts) para os Vlogs dos alunos.
+          Cole o <b>Channel ID</b> (UC…) ou o <b>@handle</b> do canal.{" "}
+          <a
+            href="https://support.google.com/youtube/answer/3250431"
+            target="_blank"
+            rel="noreferrer"
+            className="text-primary underline"
+          >
+            Como encontrar o Channel ID
+          </a>
+        </p>
+
+        <Label className="text-xs uppercase tracking-wider">Canal YouTube (Channel ID ou @handle)</Label>
+        <Input
+          value={ytChannelId}
+          onChange={(e) => setYtChannelId(e.target.value)}
+          placeholder="UCxxxxxxxxxxxxxxxx ou @seucanal"
+          className="font-mono text-xs mt-1.5"
+        />
+
+        <Button onClick={saveYtConfig} className="bg-gradient-primary shadow-glow mt-4 w-full">
+          <Save className="h-4 w-4 mr-2" /> Salvar canal
+        </Button>
+        <Button
+          onClick={() => void syncYoutubeVideos()}
+          disabled={!ytConfigured || ytSyncing}
+          variant="outline"
+          className="mt-3 w-full border-primary/40 hover:bg-primary/10"
+        >
+          {ytSyncing ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <RefreshCw className="h-4 w-4 mr-2" />
+          )}
+          Sincronizar últimos vídeos
+        </Button>
+        {ytConfigured && <p className="text-xs text-green-500 mt-2">✓ YouTube configurado</p>}
       </div>
 
       {/* Upload direto */}

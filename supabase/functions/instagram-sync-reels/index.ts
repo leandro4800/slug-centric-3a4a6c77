@@ -1,6 +1,7 @@
 // Busca Reels recentes da conta Instagram Business via Graph API e upsert em vlog_posts.
 // Requer: tenants_private.instagram_access_token + instagram_business_account_id
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { assertCoachAccess } from "../_shared/coach-access.ts";
 import { normalizeVlogUrl } from "../_shared/vlog-url.ts";
 
 const corsHeaders = {
@@ -33,30 +34,6 @@ const isReel = (item: IgMedia) => {
   const link = item.permalink?.toLowerCase() ?? "";
   return item.media_type?.toUpperCase() === "VIDEO" && link.includes("/reel/");
 };
-
-async function assertCoachAccess(
-  supabase: ReturnType<typeof createClient>,
-  userId: string,
-  tenantId: string,
-) {
-  const { data: ownerTenant } = await supabase
-    .from("tenants")
-    .select("id")
-    .eq("id", tenantId)
-    .eq("owner_user_id", userId)
-    .maybeSingle();
-  if (ownerTenant) return true;
-
-  const { data: roles } = await supabase
-    .from("user_roles")
-    .select("role, tenant_id")
-    .eq("user_id", userId)
-    .in("role", ["coach", "admin"]);
-
-  return (roles ?? []).some(
-    (r) => r.role === "admin" || (r.role === "coach" && r.tenant_id === tenantId),
-  );
-}
 
 async function fetchAllReels(igId: string, token: string, maxItems: number): Promise<IgMedia[]> {
   const reels: IgMedia[] = [];

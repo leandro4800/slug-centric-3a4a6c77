@@ -22,12 +22,38 @@ export const detectVlogPlatform = (url: string): VlogPlatform => {
   return "other";
 };
 
-const extractVlogYouTubeId = (url: string): string | null => {
+export const extractVlogYouTubeId = (url: string): string | null => {
   for (const regex of YOUTUBE_ID_IN_URLS) {
     const match = url.match(regex);
     if (match?.[1]) return match[1];
   }
   return null;
+};
+
+export const buildYouTubeThumbnailUrl = (videoId: string) =>
+  `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+
+export const buildYouTubeWatchUrl = (videoId: string) =>
+  `https://www.youtube.com/watch?v=${videoId}`;
+
+const CHANNEL_ID_RE = /^UC[\w-]{10,}$/i;
+
+/** Resolve channel ID from UC…, channel URL, or @handle (handle needs API key or HTML fallback). */
+export const parseYouTubeChannelInput = (raw: string): { channelId?: string; handle?: string } => {
+  const input = raw.trim();
+  if (!input) return {};
+
+  if (CHANNEL_ID_RE.test(input)) return { channelId: input };
+
+  const fromUrl = input.match(/\/channel\/(UC[\w-]{10,})/i);
+  if (fromUrl?.[1]) return { channelId: fromUrl[1] };
+
+  const handleFromUrl = input.match(/youtube\.com\/@([\w.-]+)/i);
+  if (handleFromUrl?.[1]) return { handle: handleFromUrl[1] };
+
+  if (input.startsWith("@")) return { handle: input.slice(1) };
+
+  return { handle: input.replace(/^@/, "") };
 };
 
 export const normalizeVlogUrl = (raw: string): string => {
