@@ -46,6 +46,10 @@ additional_redirect_urls = [
     verify_jwt = true
   [functions.instagram-sync-reels]
     verify_jwt = true
+  [functions.instagram-oauth-start]
+    verify_jwt = true
+  [functions.instagram-oauth-callback]
+    verify_jwt = false
   [functions.youtube-sync-videos]
     verify_jwt = true
   [functions.send-transactional-email]

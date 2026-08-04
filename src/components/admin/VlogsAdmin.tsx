@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Plus, Trash2, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload, Play, RefreshCw } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye, EyeOff, Music2, Link as LinkIcon, Save, Video, Star, Upload, Play, RefreshCw, Share2, Unplug } from "lucide-react";
 import { toast } from "sonner";
 import { isDirectVideo } from "@/lib/utils";
 import { cn } from "@/lib/utils";
@@ -49,6 +50,7 @@ const isImageUrl = (value: string | null | undefined) => {
 
 export const VlogsAdmin = () => {
   const { tenant } = useBranding();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [posts, setPosts] = useState<VlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -65,6 +67,9 @@ export const VlogsAdmin = () => {
   const [showIgToken, setShowIgToken] = useState(false);
   const [igConfigured, setIgConfigured] = useState(false);
   const [igSyncing, setIgSyncing] = useState(false);
+  const [igConnecting, setIgConnecting] = useState(false);
+  const [igTokenExpiresAt, setIgTokenExpiresAt] = useState<string | null>(null);
+  const [showIgManual, setShowIgManual] = useState(false);
   // Upload direto
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbFile, setThumbFile] = useState<File | null>(null);
@@ -81,7 +86,7 @@ export const VlogsAdmin = () => {
         .eq("tenant_id", tenant.id)
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false }),
-      supabase.from("tenants_private" as any).select("instagram_access_token, instagram_business_account_id, youtube_channel_id").eq("tenant_id", tenant.id).maybeSingle(),
+      supabase.from("tenants_private" as any).select("instagram_access_token, instagram_business_account_id, instagram_token_expires_at, youtube_channel_id").eq("tenant_id", tenant.id).maybeSingle(),
     ]);
     const rows = (list as VlogPost[]) || [];
     const normalizedRows = rows.map((r) => {
@@ -120,11 +125,13 @@ export const VlogsAdmin = () => {
     const tp = (t as unknown) as {
       instagram_access_token?: string;
       instagram_business_account_id?: string;
+      instagram_token_expires_at?: string | null;
       youtube_channel_id?: string;
     } | null;
     setIgToken(tp?.instagram_access_token ?? "");
     setIgAccountId(tp?.instagram_business_account_id ?? "");
     setIgConfigured(!!(tp?.instagram_access_token && tp?.instagram_business_account_id));
+    setIgTokenExpiresAt(tp?.instagram_token_expires_at ?? null);
     setYtChannelId(tp?.youtube_channel_id ?? "");
     setYtConfigured(!!tp?.youtube_channel_id?.trim());
     setLoading(false);
@@ -170,6 +177,32 @@ export const VlogsAdmin = () => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant?.id]);
+
+  useEffect(() => {
+    const status = searchParams.get("instagram");
+    if (!status) return;
+
+    const message = searchParams.get("instagram_msg");
+    const pageName = searchParams.get("instagram_page");
+
+    if (status === "connected") {
+      toast.success(
+        pageName
+          ? `Instagram conectado via ${pageName}.`
+          : "Instagram conectado com sucesso.",
+      );
+      void load();
+    } else if (status === "error") {
+      toast.error(message || "Não foi possível conectar o Instagram.");
+    }
+
+    const next = new URLSearchParams(searchParams);
+    next.delete("instagram");
+    next.delete("instagram_msg");
+    next.delete("instagram_page");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, setSearchParams]);
 
   const fetchOEmbed = async (platform: string, link: string): Promise<{ title?: string; thumbnail_url?: string; author_name?: string } | null> => {
     try {
@@ -314,6 +347,44 @@ export const VlogsAdmin = () => {
     toast.success("Credenciais do Instagram salvas");
     void load();
   };
+
+  const connectInstagram = async () => {
+    if (!tenant) return;
+    setIgConnecting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("instagram-oauth-start", {
+        body: { tenant_id: tenant.id, slug: tenant.slug },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(String(data.error));
+      if (!data?.auth_url) throw new Error("URL de autorização não retornada");
+      window.location.href = String(data.auth_url);
+    } catch (err: any) {
+      console.error("[VlogsAdmin] instagram-oauth-start:", err);
+      toast.error(err?.message || "Falha ao iniciar conexão com Instagram.");
+      setIgConnecting(false);
+    }
+  };
+
+  const disconnectInstagram = async () => {
+    if (!tenant) return;
+    if (!confirm("Desconectar Instagram deste tenant?")) return;
+    const { error } = await supabase
+      .from("tenants_private" as any)
+      .upsert({
+        tenant_id: tenant.id,
+        instagram_access_token: null,
+        instagram_business_account_id: null,
+        instagram_token_expires_at: null,
+      });
+    if (error) return toast.error(error.message);
+    toast.success("Instagram desconectado");
+    void load();
+  };
+
+  const igExpiryLabel = igTokenExpiresAt
+    ? new Date(igTokenExpiresAt).toLocaleDateString("pt-BR")
+    : null;
 
   const saveYtConfig = async () => {
     if (!tenant) return;
@@ -481,37 +552,29 @@ export const VlogsAdmin = () => {
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
           Conecte a conta Business do coach para <b>publicar Reels</b> e <b>importar automaticamente</b> os últimos Reels para os Vlogs dos alunos.
-          Requer token de longa duração + permissões de leitura/publicação na Meta.{" "}
-          <a href="https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/reference/ig-user/media" target="_blank" rel="noreferrer" className="text-primary underline">
-            Graph API — Media
-          </a>
+          Use o botão abaixo — o token é salvo automaticamente por tenant.
         </p>
 
-        <Label className="text-xs uppercase tracking-wider">Instagram Business Account ID</Label>
-        <Input
-          value={igAccountId}
-          onChange={(e) => setIgAccountId(e.target.value)}
-          placeholder="17841400000000000"
-          className="font-mono text-xs mt-1.5"
-        />
-
-        <Label className="text-xs uppercase tracking-wider mt-4 block">Access Token (longa duração)</Label>
-        <div className="flex gap-2 mt-1.5">
-          <Input
-            value={igToken}
-            onChange={(e) => setIgToken(e.target.value)}
-            type={showIgToken ? "text" : "password"}
-            placeholder="EAAB..."
-            className="font-mono text-xs"
-          />
-          <Button variant="outline" size="icon" onClick={() => setShowIgToken((v) => !v)}>
-            {showIgToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-          </Button>
-        </div>
-
-        <Button onClick={saveIgConfig} className="bg-gradient-primary shadow-glow mt-4 w-full">
-          <Save className="h-4 w-4 mr-2" /> Salvar credenciais
+        <Button
+          onClick={() => void connectInstagram()}
+          disabled={igConnecting}
+          className="bg-gradient-to-r from-[hsl(330_85%_55%)] to-[hsl(280_80%_55%)] shadow-glow w-full"
+        >
+          {igConnecting ? (
+            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+          ) : (
+            <Share2 className="h-4 w-4 mr-2" />
+          )}
+          Conectar com Instagram
         </Button>
+
+        {igConfigured && (
+          <div className="mt-3 rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-xs text-green-200">
+            <p>✓ Instagram conectado {igAccountId ? `(ID ${igAccountId})` : ""}</p>
+            {igExpiryLabel && <p className="text-green-300/80 mt-1">Token válido até {igExpiryLabel}</p>}
+          </div>
+        )}
+
         <Button
           onClick={() => void syncInstagramReels()}
           disabled={!igConfigured || igSyncing}
@@ -525,7 +588,62 @@ export const VlogsAdmin = () => {
           )}
           Sincronizar últimos Reels
         </Button>
-        {igConfigured && <p className="text-xs text-green-500 mt-2">✓ Instagram conectado</p>}
+
+        {igConfigured && (
+          <Button
+            onClick={() => void disconnectInstagram()}
+            variant="ghost"
+            className="mt-2 w-full text-muted-foreground hover:text-destructive"
+          >
+            <Unplug className="h-4 w-4 mr-2" />
+            Desconectar Instagram
+          </Button>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setShowIgManual((v) => !v)}
+          className="mt-4 text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
+        >
+          {showIgManual ? "Ocultar configuração manual" : "Configuração manual (token)"}
+        </button>
+
+        {showIgManual && (
+          <div className="mt-3 space-y-3 border-t border-white/10 pt-4">
+            <p className="text-xs text-muted-foreground">
+              Alternativa avançada — cole token e Account ID manualmente.{" "}
+              <a href="https://developers.facebook.com/docs/instagram-platform/instagram-graph-api/reference/ig-user/media" target="_blank" rel="noreferrer" className="text-primary underline">
+                Graph API — Media
+              </a>
+            </p>
+
+            <Label className="text-xs uppercase tracking-wider">Instagram Business Account ID</Label>
+            <Input
+              value={igAccountId}
+              onChange={(e) => setIgAccountId(e.target.value)}
+              placeholder="17841400000000000"
+              className="font-mono text-xs mt-1.5"
+            />
+
+            <Label className="text-xs uppercase tracking-wider mt-2 block">Access Token (longa duração)</Label>
+            <div className="flex gap-2 mt-1.5">
+              <Input
+                value={igToken}
+                onChange={(e) => setIgToken(e.target.value)}
+                type={showIgToken ? "text" : "password"}
+                placeholder="EAAB..."
+                className="font-mono text-xs"
+              />
+              <Button variant="outline" size="icon" onClick={() => setShowIgToken((v) => !v)}>
+                {showIgToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
+            </div>
+
+            <Button onClick={saveIgConfig} variant="outline" className="w-full">
+              <Save className="h-4 w-4 mr-2" /> Salvar credenciais manualmente
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* YouTube sync */}
