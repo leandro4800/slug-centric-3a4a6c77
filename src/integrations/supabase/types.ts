@@ -3309,6 +3309,7 @@ export type Database = {
           tenant_id: string
           updated_at: string
           vlog_webhook_secret: string | null
+          youtube_channel_id: string | null
         }
         Insert: {
           asaas_wallet_id?: string | null
@@ -3322,6 +3323,7 @@ export type Database = {
           tenant_id: string
           updated_at?: string
           vlog_webhook_secret?: string | null
+          youtube_channel_id?: string | null
         }
         Update: {
           asaas_wallet_id?: string | null
@@ -3335,6 +3337,7 @@ export type Database = {
           tenant_id?: string
           updated_at?: string
           vlog_webhook_secret?: string | null
+          youtube_channel_id?: string | null
         }
         Relationships: [
           {
