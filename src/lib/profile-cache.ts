@@ -1,4 +1,5 @@
-const KEY_PREFIX = "profile_snapshot_v1";
+// v2 invalida snapshots antigos que podiam conter a música herdada do tenant.
+const KEY_PREFIX = "profile_snapshot_v2";
 
 export type ProfileSnapshot = {
   profile: Record<string, unknown> | null;
