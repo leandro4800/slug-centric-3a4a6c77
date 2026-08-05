@@ -78,8 +78,25 @@ export const IdentidadeVisual = () => {
   const [presets, setPresets] = useState<Preset[]>(FALLBACK_PRESETS);
 
   useEffect(() => {
-    setMusicUrl((tenant as any)?.music_url ?? "");
-  }, [tenant?.id, (tenant as any)?.music_url]);
+    if (!tenant?.owner_user_id) {
+      setMusicUrl("");
+      return;
+    }
+
+    let alive = true;
+    void supabase
+      .from("perfis")
+      .select("music_url")
+      .eq("id", tenant.owner_user_id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (alive) setMusicUrl(data?.music_url ?? "");
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, [tenant?.owner_user_id]);
 
   useEffect(() => {
     let alive = true;
@@ -101,15 +118,15 @@ export const IdentidadeVisual = () => {
   if (!tenant) return null;
 
   const saveMusic = async () => {
+    if (!tenant.owner_user_id) return toast.error("Perfil do coach não identificado");
     setSavingMusic(true);
     const { error } = await supabase
-      .from("tenants")
+      .from("perfis")
       .update({ music_url: musicUrl.trim() || null })
-      .eq("id", tenant.id);
+      .eq("id", tenant.owner_user_id);
     setSavingMusic(false);
     if (error) return toast.error(error.message);
-    toast.success(musicUrl.trim() ? "Música de fundo salva!" : "Música removida");
-    await refresh();
+    toast.success(musicUrl.trim() ? "Música do seu perfil salva!" : "Música do perfil removida");
   };
 
   const handlePick = (p: Preset) => {
@@ -238,7 +255,7 @@ export const IdentidadeVisual = () => {
             <h3 className="font-display text-base">MÚSICA DE FUNDO DO PERFIL</h3>
           </div>
           <p className="text-xs text-muted-foreground">
-            Cole o link de uma música do <strong>YouTube</strong>, <strong>Spotify</strong>, <strong>SoundCloud</strong> ou arquivo direto (.mp3). Ela tocará quando o aluno abrir a tela Perfil.
+            Cole o link de uma música do <strong>YouTube</strong>, <strong>Spotify</strong>, <strong>SoundCloud</strong> ou arquivo direto (.mp3). Ela tocará somente no seu perfil de coach.
           </p>
           <div className="flex gap-2">
             <Input
