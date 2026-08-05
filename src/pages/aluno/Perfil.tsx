@@ -488,7 +488,8 @@ const Perfil = () => {
 
   return (
     <>
-      <ProfileMusicPlayer url={profile?.music_url || tenant?.music_url} />
+      {/* Cada perfil toca APENAS a própria música — nunca a do tenant */}
+      <ProfileMusicPlayer url={profile?.music_url ?? null} />
       {/* Hero estilo Netflix */}
       <section className="relative h-[95vh] min-h-[640px] -mt-0">
         <img
