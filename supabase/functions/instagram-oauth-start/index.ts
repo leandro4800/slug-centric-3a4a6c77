@@ -25,6 +25,7 @@ Deno.serve(async (req) => {
 
   const appId = Deno.env.get("META_APP_ID")?.trim();
   const appSecret = Deno.env.get("META_APP_SECRET")?.trim();
+  const loginConfigId = Deno.env.get("META_LOGIN_CONFIG_ID")?.trim();
   const stateSecret = Deno.env.get("INSTAGRAM_OAUTH_STATE_SECRET")?.trim() ||
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
@@ -80,7 +81,12 @@ Deno.serve(async (req) => {
   );
 
   const redirectUri = getInstagramOAuthRedirectUri(supabaseUrl);
-  const authUrl = buildInstagramOAuthUrl({ appId, redirectUri, state });
+  const authUrl = buildInstagramOAuthUrl({
+    appId,
+    redirectUri,
+    state,
+    loginConfigId,
+  });
 
   return json(200, { auth_url: authUrl });
 });

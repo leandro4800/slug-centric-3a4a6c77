@@ -1,5 +1,5 @@
-const FB = "https://graph.facebook.com/v21.0";
-const FB_DIALOG = "https://www.facebook.com/v21.0/dialog/oauth";
+const FB = "https://graph.facebook.com/v22.0";
+const FB_DIALOG = "https://www.facebook.com/v22.0/dialog/oauth";
 
 export const IG_OAUTH_SCOPES = [
   "instagram_basic",
@@ -88,14 +88,23 @@ export function buildInstagramOAuthUrl(args: {
   appId: string;
   redirectUri: string;
   state: string;
+  /** Facebook Login for Business — Configuration ID from Meta App Dashboard. */
+  loginConfigId?: string;
 }) {
   const params = new URLSearchParams({
     client_id: args.appId,
     redirect_uri: args.redirectUri,
     state: args.state,
-    scope: IG_OAUTH_SCOPES,
     response_type: "code",
   });
+
+  // Prefer Login Configuration (Business) when set; otherwise fall back to scope list.
+  if (args.loginConfigId?.trim()) {
+    params.set("config_id", args.loginConfigId.trim());
+  } else {
+    params.set("scope", IG_OAUTH_SCOPES);
+  }
+
   return `${FB_DIALOG}?${params.toString()}`;
 }
 

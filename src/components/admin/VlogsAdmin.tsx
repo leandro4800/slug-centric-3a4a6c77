@@ -18,6 +18,7 @@ import {
   prepareVlogUrl,
   type VlogPlatform,
 } from "@/lib/vlog-url";
+import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 
 interface VlogPost {
   id: string;
@@ -352,11 +353,10 @@ export const VlogsAdmin = () => {
     if (!tenant) return;
     setIgConnecting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("instagram-oauth-start", {
-        body: { tenant_id: tenant.id, slug: tenant.slug },
+      const data = await invokeEdgeFunction<{ auth_url?: string }>("instagram-oauth-start", {
+        tenant_id: tenant.id,
+        slug: tenant.slug,
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(String(data.error));
       if (!data?.auth_url) throw new Error("URL de autorização não retornada");
       window.location.href = String(data.auth_url);
     } catch (err: any) {
@@ -406,11 +406,14 @@ export const VlogsAdmin = () => {
     }
     setYtSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("youtube-sync-videos", {
-        body: { tenant_id: tenant.id, limit: 25 },
+      const data = await invokeEdgeFunction<{
+        imported?: number;
+        updated?: number;
+        fetched?: number;
+      }>("youtube-sync-videos", {
+        tenant_id: tenant.id,
+        limit: 25,
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(String(data.error));
 
       const imported = Number(data?.imported ?? 0);
       const updated = Number(data?.updated ?? 0);
@@ -436,11 +439,14 @@ export const VlogsAdmin = () => {
     }
     setIgSyncing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("instagram-sync-reels", {
-        body: { tenant_id: tenant.id, limit: 25 },
+      const data = await invokeEdgeFunction<{
+        imported?: number;
+        updated?: number;
+        fetched?: number;
+      }>("instagram-sync-reels", {
+        tenant_id: tenant.id,
+        limit: 25,
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(String(data.error));
 
       const imported = Number(data?.imported ?? 0);
       const updated = Number(data?.updated ?? 0);
