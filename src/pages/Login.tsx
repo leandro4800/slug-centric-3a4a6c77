@@ -110,9 +110,14 @@ const Login = () => {
 
     if (contextSlug) {
       if (alunoSlugs.has(contextSlug)) return { destination: `/${contextSlug}/app` };
-      // Não pertence a este coach: bloqueia.
+      // Não pertence a este coach: se tiver vínculo em outro, manda para o app correto.
+      if (alunoSlugs.size >= 1) {
+        const own = Array.from(alunoSlugs)[0];
+        return { destination: `/${own}/app`, ownerRedirect: true };
+      }
       return { destination: `/${contextSlug}/login`, blockedSlug: contextSlug };
     }
+
 
     if (alunoSlugs.size >= 1) {
       const first = Array.from(alunoSlugs)[0];
