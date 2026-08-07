@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +30,6 @@ const getSafeAppSlug = (slug?: string | null) => {
 
 const Login = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
   const startupBranding = readStartupBranding();
@@ -48,7 +47,7 @@ const Login = () => {
           login_video_url: null,
         }
       : null);
-  const { user, sessionReady } = useAuth();
+  const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberLogin, setRememberLogin] = useState(defaultRememberLogin());
