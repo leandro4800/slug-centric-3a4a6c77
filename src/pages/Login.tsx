@@ -72,10 +72,11 @@ const Login = () => {
   type Resolution = { destination: string; blockedSlug?: string | null; ownerRedirect?: boolean };
 
   const resolveAppDestination = async (userId: string): Promise<Resolution> => {
-    const [{ data: ownedTenant }, { data: roleRows }, { data: alunoRow }] = await Promise.all([
+    const [{ data: ownedTenant }, { data: roleRows }, { data: alunoRow }, { data: perfilRow }] = await Promise.all([
       supabase.from("tenants").select("slug").eq("owner_user_id", userId).maybeSingle(),
       supabase.from("user_roles").select("role, tenant_id, tenants:tenant_id(slug)").eq("user_id", userId),
       supabase.from("alunos").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
+      supabase.from("perfis").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
     ]);
 
     const prefetchedRoles: PrefetchedRole[] = [];
@@ -91,7 +92,8 @@ const Login = () => {
 
     // 1) Dono de tenant SEMPRE entra no próprio app — nunca no app de outro coach.
     if (ownedTenant?.slug) {
-      const ownSlug = getSafeAppSlug(ownedTenant.slug)!;
+      const ownSlug = getSafeAppSlug(ownedTenant.slug);
+      if (!ownSlug) return { destination: "/onboarding" };
       return {
         destination: `/${ownSlug}/app`,
         ownerRedirect: Boolean(contextSlug && contextSlug !== ownSlug),
@@ -107,6 +109,8 @@ const Login = () => {
     }
     const alunoTableSlug = getSafeAppSlug((alunoRow as any)?.tenants?.slug);
     if (alunoTableSlug) alunoSlugs.add(alunoTableSlug);
+    const perfilTenantSlug = getSafeAppSlug((perfilRow as any)?.tenants?.slug);
+    if (perfilTenantSlug) alunoSlugs.add(perfilTenantSlug);
 
     if (contextSlug) {
       if (alunoSlugs.has(contextSlug)) return { destination: `/${contextSlug}/app` };
