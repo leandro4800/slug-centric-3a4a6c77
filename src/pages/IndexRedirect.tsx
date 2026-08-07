@@ -93,14 +93,6 @@ const IndexRedirect = () => {
           return;
         }
 
-        const cachedSlug = safeSlug || localStorage.getItem("last_tenant_slug");
-        if (cachedSlug && cachedSlug !== "index" && cachedSlug !== "demo") {
-          const target = `/${cachedSlug}/app`;
-          console.log("[IndexRedirect] Usando último tenant conhecido:", target);
-          go(target);
-          return;
-        }
-
         const withDecisionTimeout = async (promise: PromiseLike<any>, fallback: any) => {
           let timeoutId: ReturnType<typeof setTimeout> | undefined;
           const timeout = new Promise<any>((resolve) => {
@@ -113,6 +105,23 @@ const IndexRedirect = () => {
             if (timeoutId) clearTimeout(timeoutId);
           }
         };
+
+        // O banco é a fonte autoritativa. Nunca usa o slug aberto nem o último
+        // coach salvo no aparelho para decidir o app de uma conta autenticada.
+        const { data: destinationRows, error: destinationError } = await withDecisionTimeout(
+          supabase.rpc("get_my_app_destination"),
+          { data: null, error: new Error("timeout") },
+        );
+        const databaseSlug = destinationRows?.[0]?.tenant_slug;
+        if (databaseSlug && /^[a-z0-9-]+$/i.test(databaseSlug)) {
+          const target = `/${databaseSlug}/app`;
+          console.log("[IndexRedirect] Destino autoritativo do banco:", target);
+          go(target);
+          return;
+        }
+        if (destinationError) {
+          console.warn("[IndexRedirect] Falha no destino autoritativo; usando compatibilidade:", destinationError);
+        }
 
         // 1. Prioridade: Se o usuário é dono de um tenant
         const { data: ownedTenant } = await withDecisionTimeout(supabase

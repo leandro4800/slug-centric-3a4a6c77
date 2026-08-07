@@ -138,12 +138,13 @@ const Login = () => {
 
     if (contextSlug) {
       if (alunoSlugs.has(contextSlug)) return { destination: `/${contextSlug}/app` };
-      // Não pertence a este coach: se tiver vínculo em outro, manda para o app correto.
+      // A tela de login aberta nunca define o app do atleta. Se ele pertence a
+      // outro coach, abre diretamente o tenant persistido no banco.
       if (alunoSlugs.size >= 1) {
         const own = Array.from(alunoSlugs)[0];
         return { destination: `/${own}/app`, ownerRedirect: true };
       }
-      return { destination: `/${contextSlug}/login`, blockedSlug: contextSlug };
+      return { destination: "/onboarding" };
     }
 
 
@@ -156,11 +157,6 @@ const Login = () => {
   };
 
   const applyResolution = async (res: Resolution) => {
-    if (res.blockedSlug) {
-      await supabase.auth.signOut();
-      toast.error("Esta conta não tem acesso ao app deste coach. Faça login no app onde você foi cadastrado.");
-      return;
-    }
     if (res.ownerRedirect) {
       toast.info("Abrindo o app onde sua conta está cadastrada.");
     }
@@ -214,7 +210,7 @@ const Login = () => {
       }
 
       const res = await resolveAppDestination(userId);
-      if (!res.blockedSlug) void saveLoginCredentials(email, password, rememberLogin);
+      void saveLoginCredentials(email, password, rememberLogin);
       await applyResolution(res);
 
     } catch (err) {
