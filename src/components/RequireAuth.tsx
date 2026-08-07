@@ -165,7 +165,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
     })();
 
     return () => { cancelled = true; };
-  }, [checkTenant, user?.id, tenant?.id, hasRole]);
+  }, [checkTenant, user?.id, tenant?.id, hasRole, slug]);
 
 
   if (isLoading || (checkTenant && user && tenant?.id && tenantMembership === null)) {
