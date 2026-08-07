@@ -134,8 +134,9 @@ const Login = () => {
       return;
     }
     if (res.ownerRedirect) {
-      toast.info("Sua conta é de coach — abrindo o seu próprio app.");
+      toast.info("Abrindo o app onde sua conta está cadastrada.");
     }
+
     navigate(res.destination, { replace: true });
   };
 
