@@ -68,7 +68,7 @@ const Login = () => {
     };
   }, []);
 
-  type Resolution = { destination: string; blockedSlug?: string | null; ownerRedirect?: boolean };
+  type Resolution = { destination: string; ownerRedirect?: boolean };
 
   const resolveAppDestination = async (userId: string): Promise<Resolution> => {
     // Fonte autoritativa: o banco resolve o tenant da conta autenticada sem
