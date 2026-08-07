@@ -248,12 +248,18 @@ function TenantLandingContent() {
         if (signUpErr && !/already registered|already exists/i.test(signUpErr.message)) {
           throw signUpErr;
         }
+        // Dispara o e-mail com as credenciais de acesso (não bloqueia o fluxo)
+        void supabase.functions
+          .invoke("landing-welcome-email", {
+            body: { email, nome, slug, password },
+          })
+          .catch((err) => console.error("[landing] welcome email", err));
         // Tenta logar imediatamente (funciona se e-mail já confirmado ou signup auto-loga)
         const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
         if (signInErr) {
           toast({
             title: "Conta criada!",
-            description: `Sua senha é: ${password}. Faça login para continuar.`,
+            description: `Sua senha é: ${password}. Enviamos também por e-mail. Faça login para continuar.`,
           });
           sessionStorage.setItem("pending_free_join", slug || "");
           navigate(`/${slug}/login`);
@@ -262,8 +268,9 @@ function TenantLandingContent() {
         }
         toast({
           title: "Conta criada!",
-          description: `Guarde sua senha: ${password}`,
+          description: `Senha: ${password}. Enviamos os dados de acesso para o seu e-mail.`,
         });
+
       } catch (e: any) {
         toast({ title: "Erro ao criar conta", description: e.message, variant: "destructive" });
         setCheckoutLoading(null);
