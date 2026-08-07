@@ -795,8 +795,13 @@ function TenantLandingContent() {
                   onChange={(e) => setFreeEmail(e.target.value)}
                 />
                 <p className="text-[11px] text-muted-foreground">
-                  Sua senha será gerada automaticamente no padrão <strong>primeironome2026</strong> (ex.: joao2026). Você pode alterá-la depois no perfil.
+                  Sua senha será gerada automaticamente no padrão <strong>primeironome2026</strong> (ex.: joao2026) e enviada para o seu e-mail. Você pode trocá-la depois no perfil ou{" "}
+                  <a href="/forgot-password" className="text-primary underline underline-offset-2">
+                    redefinir sua senha aqui
+                  </a>
+                  .
                 </p>
+
               </div>
             )}
             <Button
