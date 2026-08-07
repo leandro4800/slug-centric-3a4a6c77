@@ -70,10 +70,31 @@ const Login = () => {
 
   type Resolution = { destination: string; ownerRedirect?: boolean };
 
+  const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const resolveAppDestination = async (userId: string): Promise<Resolution> => {
     // Fonte autoritativa: o banco resolve o tenant da conta autenticada sem
     // depender do slug que ficou salvo/aberto no app nativo.
-    const { data: destinationRows, error: destinationError } = await supabase.rpc("get_my_app_destination");
+    let destinationRows: Awaited<ReturnType<typeof supabase.rpc<"get_my_app_destination">>>["data"] = null;
+    let destinationError: Error | null = null;
+
+    // No WebView nativo, a troca do token persistido pode levar um frame após
+    // signInWithPassword. Revalida a identidade e tenta novamente antes de
+    // qualquer fallback, para nunca autorizar pelo coach exibido na tela.
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      const { data: verified } = await supabase.auth.getUser();
+      if (verified.user?.id !== userId) {
+        await wait(150 * (attempt + 1));
+        continue;
+      }
+
+      const result = await supabase.rpc("get_my_app_destination");
+      destinationRows = result.data;
+      destinationError = result.error;
+      if (destinationRows?.[0]?.tenant_slug) break;
+      await wait(150 * (attempt + 1));
+    }
+
     const databaseDestination = destinationRows?.[0];
     const databaseSlug = getSafeAppSlug(databaseDestination?.tenant_slug);
     const contextSlug = getSafeAppSlug(urlSlug || tenant?.slug);
@@ -96,13 +117,14 @@ const Login = () => {
       console.error("[Login] Falha na resolução autoritativa do tenant; usando compatibilidade:", destinationError);
     }
 
-    // Compatibilidade temporária para instalações conectadas antes da função
-    // autoritativa existir no banco.
-    const [{ data: ownedTenant }, { data: roleRows }, { data: alunoRow }, { data: perfilRow }] = await Promise.all([
+    // Fallback autenticado: ainda ignora completamente a tela/slug atual e
+    // resolve somente pelos vínculos persistidos desta conta no banco.
+    const [{ data: ownedTenant }, { data: roleRows }, { data: alunoRow }, { data: perfilRow }, { data: subscriptionRow }] = await Promise.all([
       supabase.from("tenants").select("slug").eq("owner_user_id", userId).maybeSingle(),
       supabase.from("user_roles").select("role, tenant_id, tenants:tenant_id(slug)").eq("user_id", userId),
       supabase.from("alunos").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
       supabase.from("perfis").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
+      supabase.from("assinaturas").select("tenants:tenant_id(slug)").eq("aluno_id", userId).in("status", ["active", "trialing"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
     const prefetchedRoles: PrefetchedRole[] = [];
@@ -135,22 +157,15 @@ const Login = () => {
     if (alunoTableSlug) alunoSlugs.add(alunoTableSlug);
     const perfilTenantSlug = getSafeAppSlug((perfilRow as any)?.tenants?.slug);
     if (perfilTenantSlug) alunoSlugs.add(perfilTenantSlug);
-
-    if (contextSlug) {
-      if (alunoSlugs.has(contextSlug)) return { destination: `/${contextSlug}/app` };
-      // A tela de login aberta nunca define o app do atleta. Se ele pertence a
-      // outro coach, abre diretamente o tenant persistido no banco.
-      if (alunoSlugs.size >= 1) {
-        const own = Array.from(alunoSlugs)[0];
-        return { destination: `/${own}/app`, ownerRedirect: true };
-      }
-      return { destination: "/onboarding" };
-    }
-
+    const subscriptionSlug = getSafeAppSlug((subscriptionRow as any)?.tenants?.slug);
+    if (subscriptionSlug) alunoSlugs.add(subscriptionSlug);
 
     if (alunoSlugs.size >= 1) {
       const first = Array.from(alunoSlugs)[0];
-      return { destination: `/${first}/app` };
+      return {
+        destination: `/${first}/app`,
+        ownerRedirect: Boolean(contextSlug && contextSlug !== first),
+      };
     }
 
     return { destination: "/onboarding" };
@@ -205,7 +220,7 @@ const Login = () => {
       }
 
       const res = await resolveAppDestination(userId);
-      void saveLoginCredentials(email, password, rememberLogin);
+      void saveLoginCredentials(cleanEmail, password, rememberLogin);
       if (res.ownerRedirect) {
         toast.info("Abrindo o app onde sua conta está cadastrada.");
       }
