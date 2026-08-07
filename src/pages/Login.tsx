@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +24,7 @@ import {
   saveLoginCredentials,
 } from "@/lib/login-credentials";
 import { stashAuthRolesPrefetch, type PrefetchedRole } from "@/lib/auth-roles-prefetch";
+import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase-env";
 
 const getSafeAppSlug = (slug?: string | null) => {
   if (!slug || !/^[a-z0-9-]+$/i.test(slug) || slug === "index" || slug === "demo") return null;
@@ -72,23 +75,35 @@ const Login = () => {
 
   const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-  const resolveAppDestination = async (userId: string): Promise<Resolution> => {
+  const resolveAppDestination = async (userId: string, accessToken: string): Promise<Resolution> => {
+    // Cliente isolado e preso ao token que ACABOU de autenticar. Ele não lê a
+    // sessão persistida do aparelho, portanto a conta/tenant anterior jamais
+    // participa da resolução do novo login.
+    const loginClient = createClient<Database>(getSupabaseUrl(), getSupabaseAnonKey(), {
+      global: { headers: { Authorization: `Bearer ${accessToken}` } },
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
+
     // Fonte autoritativa: o banco resolve o tenant da conta autenticada sem
     // depender do slug que ficou salvo/aberto no app nativo.
     let destinationRows: Awaited<ReturnType<typeof supabase.rpc<"get_my_app_destination">>>["data"] = null;
     let destinationError: Error | null = null;
 
-    // No WebView nativo, a troca do token persistido pode levar um frame após
-    // signInWithPassword. Revalida a identidade e tenta novamente antes de
-    // qualquer fallback, para nunca autorizar pelo coach exibido na tela.
+    // A RPC e todos os fallbacks abaixo usam exclusivamente o token retornado
+    // por este signInWithPassword, mesmo que o WebView ainda restaure a sessão
+    // anterior em paralelo.
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      const { data: verified } = await supabase.auth.getUser();
+      const { data: verified } = await loginClient.auth.getUser(accessToken);
       if (verified.user?.id !== userId) {
         await wait(150 * (attempt + 1));
         continue;
       }
 
-      const result = await supabase.rpc("get_my_app_destination");
+      const result = await loginClient.rpc("get_my_app_destination");
       destinationRows = result.data;
       destinationError = result.error;
       if (destinationRows?.[0]?.tenant_slug) break;
@@ -120,11 +135,11 @@ const Login = () => {
     // Fallback autenticado: ainda ignora completamente a tela/slug atual e
     // resolve somente pelos vínculos persistidos desta conta no banco.
     const [{ data: ownedTenant }, { data: roleRows }, { data: alunoRow }, { data: perfilRow }, { data: subscriptionRow }] = await Promise.all([
-      supabase.from("tenants").select("slug").eq("owner_user_id", userId).maybeSingle(),
-      supabase.from("user_roles").select("role, tenant_id, tenants:tenant_id(slug)").eq("user_id", userId),
-      supabase.from("alunos").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
-      supabase.from("perfis").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
-      supabase.from("assinaturas").select("tenants:tenant_id(slug)").eq("aluno_id", userId).in("status", ["active", "trialing"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+      loginClient.from("tenants").select("slug").eq("owner_user_id", userId).maybeSingle(),
+      loginClient.from("user_roles").select("role, tenant_id, tenants:tenant_id(slug)").eq("user_id", userId),
+      loginClient.from("alunos").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
+      loginClient.from("perfis").select("tenants:tenant_id(slug)").eq("id", userId).maybeSingle(),
+      loginClient.from("assinaturas").select("tenants:tenant_id(slug)").eq("aluno_id", userId).in("status", ["active", "trialing"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
     const prefetchedRoles: PrefetchedRole[] = [];
@@ -214,12 +229,13 @@ const Login = () => {
       }
 
       const userId = signInData?.user?.id;
-      if (!userId) {
+      const accessToken = signInData?.session?.access_token;
+      if (!userId || !accessToken) {
         navigate("/onboarding", { replace: true });
         return;
       }
 
-      const res = await resolveAppDestination(userId);
+      const res = await resolveAppDestination(userId, accessToken);
       void saveLoginCredentials(cleanEmail, password, rememberLogin);
       if (res.ownerRedirect) {
         toast.info("Abrindo o app onde sua conta está cadastrada.");
