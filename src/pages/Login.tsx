@@ -72,6 +72,33 @@ const Login = () => {
   type Resolution = { destination: string; blockedSlug?: string | null; ownerRedirect?: boolean };
 
   const resolveAppDestination = async (userId: string): Promise<Resolution> => {
+    // Fonte autoritativa: o banco resolve o tenant da conta autenticada sem
+    // depender do slug que ficou salvo/aberto no app nativo.
+    const { data: destinationRows, error: destinationError } = await supabase.rpc("get_my_app_destination");
+    const databaseDestination = destinationRows?.[0];
+    const databaseSlug = getSafeAppSlug(databaseDestination?.tenant_slug);
+    const contextSlug = getSafeAppSlug(urlSlug || tenant?.slug);
+
+    if (databaseSlug) {
+      if (databaseDestination.account_role) {
+        stashAuthRolesPrefetch([{
+          role: databaseDestination.account_role as PrefetchedRole["role"],
+          tenant_id: databaseDestination.tenant_id,
+        }]);
+      }
+
+      return {
+        destination: `/${databaseSlug}/app`,
+        ownerRedirect: Boolean(contextSlug && contextSlug !== databaseSlug),
+      };
+    }
+
+    if (destinationError) {
+      console.error("[Login] Falha na resolução autoritativa do tenant; usando compatibilidade:", destinationError);
+    }
+
+    // Compatibilidade temporária para instalações conectadas antes da função
+    // autoritativa existir no banco.
     const [{ data: ownedTenant }, { data: roleRows }, { data: alunoRow }, { data: perfilRow }] = await Promise.all([
       supabase.from("tenants").select("slug").eq("owner_user_id", userId).maybeSingle(),
       supabase.from("user_roles").select("role, tenant_id, tenants:tenant_id(slug)").eq("user_id", userId),
@@ -87,8 +114,6 @@ const Login = () => {
       prefetchedRoles.push({ role: row.role as PrefetchedRole["role"], tenant_id: row.tenant_id });
     }
     if (prefetchedRoles.length) stashAuthRolesPrefetch(prefetchedRoles);
-
-    const contextSlug = getSafeAppSlug(urlSlug || tenant?.slug);
 
     // 1) Dono de tenant SEMPRE entra no próprio app — nunca no app de outro coach.
     if (ownedTenant?.slug) {

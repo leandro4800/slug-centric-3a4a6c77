@@ -80,6 +80,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
   const location = useLocation();
   const { slug } = useParams();
   const [tenantMembership, setTenantMembership] = useState<boolean | null>(null);
+  const [correctTenantPath, setCorrectTenantPath] = useState<string | null>(null);
 
   const needsRoles = Boolean(requireRole) || checkTenant;
   const isLoading =
@@ -90,8 +91,11 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
   useEffect(() => {
     if (!checkTenant || !user || !tenant?.id) {
       setTenantMembership(null);
+      setCorrectTenantPath(null);
       return;
     }
+
+    setCorrectTenantPath(null);
 
     const cacheKey = `tenant_member:${user.id}:${tenant.id}`;
     const cachedMember = (() => {
@@ -142,6 +146,16 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
           setTenantMembership(true);
           try { localStorage.setItem(cacheKey, "1"); } catch {}
         } else if (!cachedMember) {
+          const { data: destinations, error: destinationError } = await supabase.rpc("get_my_app_destination");
+          if (cancelled) return;
+
+          const correctSlug = destinations?.[0]?.tenant_slug;
+          if (!destinationError && correctSlug && correctSlug !== slug) {
+            setCorrectTenantPath(`/${correctSlug}/app`);
+            setTenantMembership(false);
+            return;
+          }
+
           setTenantMembership(false);
         }
       } catch (error) {
@@ -151,7 +165,7 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
     })();
 
     return () => { cancelled = true; };
-  }, [checkTenant, user?.id, tenant?.id, hasRole]);
+  }, [checkTenant, user?.id, tenant?.id, hasRole, slug]);
 
 
   if (isLoading || (checkTenant && user && tenant?.id && tenantMembership === null)) {
@@ -167,6 +181,11 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
     const loginPath = slug ? `/${slug}/login` : buildTenantLoginPath(location.search);
     console.log("[RequireAuth] Sem usuário, redirecionando para login:", loginPath);
     return <Navigate to={loginPath} replace state={{ from: location.pathname }} />;
+  }
+
+  if (correctTenantPath) {
+    console.info("[RequireAuth] Redirecionando a conta para o tenant persistido no banco:", correctTenantPath);
+    return <Navigate to={correctTenantPath} replace />;
   }
 
   // Se requer um papel específico e não o possui
