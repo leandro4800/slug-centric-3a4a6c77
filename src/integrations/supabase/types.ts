@@ -3894,6 +3894,14 @@ export type Database = {
           nome_completo: string
         }[]
       }
+      get_my_app_destination: {
+        Args: never
+        Returns: {
+          account_role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string
+          tenant_slug: string
+        }[]
+      }
       get_my_mcp_token: { Args: never; Returns: string }
       get_stats_treino: { Args: { _aluno_id?: string }; Returns: Json }
       get_user_tenant_id: { Args: { _user_id: string }; Returns: string }
