@@ -83,13 +83,14 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
   const [correctTenantPath, setCorrectTenantPath] = useState<string | null>(null);
 
   const needsRoles = Boolean(requireRole) || checkTenant;
+  const brandingMatchesRoute = !checkTenant || !slug || tenant?.slug === slug;
   const isLoading =
     !sessionReady ||
     (needsRoles && user && !rolesReady) ||
-    (checkTenant && brandingLoading);
+    (checkTenant && (brandingLoading || !brandingMatchesRoute));
 
   useEffect(() => {
-    if (!checkTenant || !user || !tenant?.id) {
+    if (!checkTenant || !user || !tenant?.id || (slug && tenant.slug !== slug)) {
       setTenantMembership(null);
       setCorrectTenantPath(null);
       return;
@@ -165,10 +166,10 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
     })();
 
     return () => { cancelled = true; };
-  }, [checkTenant, user?.id, tenant?.id, hasRole, slug]);
+  }, [checkTenant, user?.id, tenant?.id, tenant?.slug, hasRole, slug]);
 
 
-  if (isLoading || (checkTenant && user && tenant?.id && tenantMembership === null)) {
+  if (isLoading || (checkTenant && user && (!tenant?.id || tenantMembership === null))) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

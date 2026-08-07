@@ -156,14 +156,6 @@ const Login = () => {
     return { destination: "/onboarding" };
   };
 
-  const applyResolution = async (res: Resolution) => {
-    if (res.ownerRedirect) {
-      toast.info("Abrindo o app onde sua conta está cadastrada.");
-    }
-
-    navigate(res.destination, { replace: true });
-  };
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("confirmed") === "1") {
@@ -180,14 +172,17 @@ const Login = () => {
     try {
       const cleanEmail = email.trim().toLowerCase();
 
-      // A rota de login também funciona como troca de conta. Nunca deixa a
-      // sessão anterior decidir o tenant da nova credencial no mesmo aparelho.
-      if (user) {
-        await supabase.auth.signOut({ scope: "local" });
-        try {
-          sessionStorage.removeItem("startup_navigation_memory_v1");
-        } catch {}
-      }
+      // A rota de login também funciona como troca de conta. Limpa sempre a
+      // sessão e os caches da conta anterior, mesmo quando o React ainda não
+      // restaurou `user` no primeiro frame do app nativo.
+      await supabase.auth.signOut({ scope: "local" });
+      try {
+        sessionStorage.removeItem("startup_navigation_memory_v1");
+        sessionStorage.removeItem("auth_roles_prefetch_v1");
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith("tenant_member:") || key.startsWith("subscription_guard:"))
+          .forEach((key) => localStorage.removeItem(key));
+      } catch {}
 
       const { data: signInData, error } = await supabase.auth.signInWithPassword({
         email: cleanEmail,
@@ -211,7 +206,14 @@ const Login = () => {
 
       const res = await resolveAppDestination(userId);
       void saveLoginCredentials(email, password, rememberLogin);
-      await applyResolution(res);
+      if (res.ownerRedirect) {
+        toast.info("Abrindo o app onde sua conta está cadastrada.");
+      }
+
+      // Recarrega no tenant correto para que AuthProvider, BrandingProvider e
+      // os guards nasçam juntos com a nova conta. Isso evita que o tenant da
+      // sessão anterior sobreviva durante a troca de usuário no app instalado.
+      window.location.replace(res.destination);
 
     } catch (err) {
       console.error("[Login] Erro inesperado:", err);
