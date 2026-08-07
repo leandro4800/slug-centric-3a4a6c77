@@ -7,7 +7,9 @@ const cors = {
 };
 
 const TARGETS = [
-  { email: "atilahenrique20@gmail.com", password: "atila2026", nome: "Atila Henrique", slug: "alphateam" },
+  { email: "jonathan_dmelo@hotmail.com", password: "jonathan2026", nome: "Jonathan de Melo", slug: "metodojackson" },
+  { email: "jonathann_dmelo@hotmail.com", password: "jonathan2026", nome: "Jonathan de Melo", slug: "metodojackson" },
+  { email: "jonathan_demelo@hotmail.com", password: "jonathan2026", nome: "Jonathan de Melo", slug: "metodojackson" },
 ];
 
 Deno.serve(async (req) => {
