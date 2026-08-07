@@ -1,0 +1,1 @@
+UPDATE public.tenants SET free_access = true, updated_at = now() WHERE slug = 'metodojackson';
