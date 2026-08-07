@@ -170,25 +170,6 @@ const Login = () => {
   };
 
   useEffect(() => {
-    if (!sessionReady || !user || loading) return;
-    if (!location.pathname.endsWith("/login")) return;
-
-    let cancelled = false;
-    void resolveAppDestination(user.id)
-      .then((res) => {
-        if (!cancelled) void applyResolution(res);
-      })
-      .catch((err) => {
-        console.error("[Login] Erro ao redirecionar sessão existente:", err);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [sessionReady, user?.id, loading, urlSlug, tenant?.slug, navigate, location.pathname]);
-
-
-  useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("confirmed") === "1") {
       toast.success("E-mail confirmado! Faça login para continuar.");
@@ -202,8 +183,19 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
+      const cleanEmail = email.trim().toLowerCase();
+
+      // A rota de login também funciona como troca de conta. Nunca deixa a
+      // sessão anterior decidir o tenant da nova credencial no mesmo aparelho.
+      if (user) {
+        await supabase.auth.signOut({ scope: "local" });
+        try {
+          sessionStorage.removeItem("startup_navigation_memory_v1");
+        } catch {}
+      }
+
       const { data: signInData, error } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
+        email: cleanEmail,
         password,
       });
       if (error) {
