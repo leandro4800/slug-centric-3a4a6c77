@@ -156,14 +156,6 @@ const Login = () => {
     return { destination: "/onboarding" };
   };
 
-  const applyResolution = async (res: Resolution) => {
-    if (res.ownerRedirect) {
-      toast.info("Abrindo o app onde sua conta está cadastrada.");
-    }
-
-    navigate(res.destination, { replace: true });
-  };
-
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get("confirmed") === "1") {
