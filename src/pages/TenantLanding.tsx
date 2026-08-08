@@ -243,7 +243,14 @@ function TenantLandingContent() {
         const { error: signUpErr } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { nome_completo: nome } },
+          options: {
+            data: {
+              nome_completo: nome,
+              tenant_id: tenant?.id,
+              tenant_slug: tenant?.slug || slug,
+              signup_source: "tenant_landing",
+            },
+          },
         });
         if (signUpErr && !/already registered|already exists/i.test(signUpErr.message)) {
           throw signUpErr;
