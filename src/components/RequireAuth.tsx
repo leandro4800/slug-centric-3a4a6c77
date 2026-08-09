@@ -203,12 +203,20 @@ export const RequireAuth = ({ children, requireRole, checkTenant = false }: Prop
         <div className="max-w-sm space-y-4">
           <p className="text-sm font-semibold uppercase tracking-widest text-primary">Acesso Restrito</p>
           <p className="text-sm text-muted-foreground">Você não possui permissão para acessar esta área.</p>
-          <button 
-            onClick={() => window.history.back()}
-            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
-          >
-            Voltar
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground"
+            >
+              Tentar novamente
+            </button>
+            <button 
+              onClick={() => window.history.back()}
+              className="inline-flex h-10 items-center justify-center rounded-md border border-border px-4 text-sm font-medium text-foreground"
+            >
+              Voltar
+            </button>
+          </div>
         </div>
       </div>
     );
