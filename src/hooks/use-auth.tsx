@@ -75,6 +75,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return data as UserRole[];
   };
 
+  // Retry com backoff: um timeout de rede não pode virar "sem permissões".
+  const fetchRolesWithRetry = async (userId: string) => {
+    const delays = [0, 800, 1600];
+    for (let attempt = 0; attempt < delays.length; attempt++) {
+      if (delays[attempt] > 0) {
+        await new Promise((resolve) => setTimeout(resolve, delays[attempt]));
+      }
+      const result = await withTimeout(
+        fetchRoles(userId),
+        [] as UserRole[],
+        `Busca de permissões (tentativa ${attempt + 1})`,
+      );
+      if (result.length) return result;
+      if (attempt < delays.length - 1) {
+        console.warn("[Auth] Nenhuma permissão retornada; tentando novamente...");
+      }
+    }
+    console.warn("[Auth] Não foi possível carregar permissões após 3 tentativas.");
+    return [] as UserRole[];
+  };
+
   useEffect(() => {
     let mounted = true;
 
