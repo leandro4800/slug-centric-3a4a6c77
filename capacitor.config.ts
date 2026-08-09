@@ -16,7 +16,8 @@ const config: CapacitorConfig = {
   appName: 'AlphaCoach',
   webDir: 'dist',
   android: {
-    packageName: 'com.alphacoachpro.app'
+    packageName: 'com.alphacoachpro.app',
+    backgroundColor: '#000000',
   },
   ...(isDev && {
     server: {
@@ -26,9 +27,6 @@ const config: CapacitorConfig = {
   }),
   ios: {
     contentInset: 'always',
-  },
-  android: {
-    backgroundColor: '#000000',
   },
   plugins: {
     SplashScreen: {
