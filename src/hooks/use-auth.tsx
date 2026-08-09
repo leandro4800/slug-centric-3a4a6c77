@@ -191,7 +191,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
 
     setRolesLoading(true);
-    void withTimeout(fetchRoles(session.user.id), [], "Busca de permissões")
+    void fetchRolesWithRetry(session.user.id)
       .then((userRoles) => {
         if (requestId === roleRequestId.current) setRoles(userRoles);
       })
