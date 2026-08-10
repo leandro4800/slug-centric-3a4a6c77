@@ -162,7 +162,7 @@ const AdminVideosTecnicos = () => {
           return {
             nome_exercicio: parts[0].trim(),
             url_video: parts[1].trim(),
-            tenant_id: tenant.id,
+            tenant_id: isPlatformAdmin && publicarComoApp ? null : tenant.id,
             profissional_id: userId,
             origem: parts[1].includes("drive.google.com") ? "drive" : "youtube",
           };
