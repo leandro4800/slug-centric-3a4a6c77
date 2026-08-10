@@ -27,6 +27,9 @@ const AdminVideosTecnicos = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"todos" | "meus" | "app">("todos");
 
+  const isPlatformAdmin = tenant?.slug === "alphateam";
+  const [publicarComoApp, setPublicarComoApp] = useState(false);
+
   const [novoNome, setNovoNome] = useState("");
   const [novoUrl, setNovoUrl] = useState("");
   const [novoArquivo, setNovoArquivo] = useState<File | null>(null);
@@ -119,7 +122,7 @@ const AdminVideosTecnicos = () => {
       const { error } = await supabase.from("referencia_exercicios").insert({
         nome_exercicio: novoNome.trim(),
         url_video: url,
-        tenant_id: tenant.id,
+        tenant_id: isPlatformAdmin && publicarComoApp ? null : tenant.id,
         profissional_id: userId,
         origem,
         storage_path: storagePath,
@@ -131,6 +134,7 @@ const AdminVideosTecnicos = () => {
       setNovoNome("");
       setNovoUrl("");
       setNovoArquivo(null);
+      setPublicarComoApp(false);
       setIsAdding(false);
       loadVideos();
     } catch (error: any) {
@@ -158,7 +162,7 @@ const AdminVideosTecnicos = () => {
           return {
             nome_exercicio: parts[0].trim(),
             url_video: parts[1].trim(),
-            tenant_id: tenant.id,
+            tenant_id: isPlatformAdmin && publicarComoApp ? null : tenant.id,
             profissional_id: userId,
             origem: parts[1].includes("drive.google.com") ? "drive" : "youtube",
           };
@@ -177,6 +181,7 @@ const AdminVideosTecnicos = () => {
       if (error) throw error;
       toast.success(`${toInsert.length} exercícios importados!`);
       setBulkData("");
+      setPublicarComoApp(false);
       setIsBulkMode(false);
       loadVideos();
     } catch (error: any) {
@@ -261,6 +266,7 @@ const AdminVideosTecnicos = () => {
               onClick={() => {
                 setIsAdding(!isAdding);
                 setIsBulkMode(false);
+                setPublicarComoApp(false);
               }}
               variant={isAdding ? "default" : "outline"}
               className="rounded-none h-auto px-4"
@@ -271,6 +277,7 @@ const AdminVideosTecnicos = () => {
               onClick={() => {
                 setIsBulkMode(!isBulkMode);
                 setIsAdding(false);
+                setPublicarComoApp(false);
               }}
               variant={isBulkMode ? "default" : "outline"}
               className="rounded-none h-auto px-4"
@@ -342,11 +349,32 @@ const AdminVideosTecnicos = () => {
               </div>
             )}
 
+            {isPlatformAdmin && (
+              <label className="flex items-center gap-3 bg-black border border-white/10 px-3 py-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={publicarComoApp}
+                  onChange={(e) => setPublicarComoApp(e.target.checked)}
+                  className="h-4 w-4 accent-[hsl(var(--primary))]"
+                />
+                <span className="text-[10px] uppercase tracking-widest text-white font-bold">
+                  Publicar para todos os coaches (Do App)
+                </span>
+              </label>
+            )}
+
             <div className="flex gap-2">
               <Button onClick={handleAdd} disabled={uploading} className="flex-1 rounded-none">
                 <Save className="h-4 w-4 mr-2" /> {uploading ? "Enviando..." : "Salvar Exercício"}
               </Button>
-              <Button onClick={() => setIsAdding(false)} variant="outline" className="rounded-none">
+              <Button
+                onClick={() => {
+                  setIsAdding(false);
+                  setPublicarComoApp(false);
+                }}
+                variant="outline"
+                className="rounded-none"
+              >
                 Cancelar
               </Button>
             </div>
@@ -366,11 +394,33 @@ const AdminVideosTecnicos = () => {
                 className="w-full bg-black border border-white/10 rounded-none px-3 py-2 text-xs text-white focus:border-primary/50 outline-none font-mono"
               />
             </div>
+
+            {isPlatformAdmin && (
+              <label className="flex items-center gap-3 bg-black border border-white/10 px-3 py-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={publicarComoApp}
+                  onChange={(e) => setPublicarComoApp(e.target.checked)}
+                  className="h-4 w-4 accent-[hsl(var(--primary))]"
+                />
+                <span className="text-[10px] uppercase tracking-widest text-white font-bold">
+                  Publicar para todos os coaches (Do App)
+                </span>
+              </label>
+            )}
+
             <div className="flex gap-2">
               <Button onClick={handleBulkImport} className="flex-1 rounded-none">
                 <FileText className="h-4 w-4 mr-2" /> Importar Tudo
               </Button>
-              <Button onClick={() => setIsBulkMode(false)} variant="outline" className="rounded-none">
+              <Button
+                onClick={() => {
+                  setIsBulkMode(false);
+                  setPublicarComoApp(false);
+                }}
+                variant="outline"
+                className="rounded-none"
+              >
                 Cancelar
               </Button>
             </div>
