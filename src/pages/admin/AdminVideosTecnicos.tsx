@@ -349,11 +349,32 @@ const AdminVideosTecnicos = () => {
               </div>
             )}
 
+            {isPlatformAdmin && (
+              <label className="flex items-center gap-3 bg-black border border-white/10 px-3 py-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={publicarComoApp}
+                  onChange={(e) => setPublicarComoApp(e.target.checked)}
+                  className="h-4 w-4 accent-[hsl(var(--primary))]"
+                />
+                <span className="text-[10px] uppercase tracking-widest text-white font-bold">
+                  Publicar para todos os coaches (Do App)
+                </span>
+              </label>
+            )}
+
             <div className="flex gap-2">
               <Button onClick={handleAdd} disabled={uploading} className="flex-1 rounded-none">
                 <Save className="h-4 w-4 mr-2" /> {uploading ? "Enviando..." : "Salvar Exercício"}
               </Button>
-              <Button onClick={() => setIsAdding(false)} variant="outline" className="rounded-none">
+              <Button
+                onClick={() => {
+                  setIsAdding(false);
+                  setPublicarComoApp(false);
+                }}
+                variant="outline"
+                className="rounded-none"
+              >
                 Cancelar
               </Button>
             </div>
