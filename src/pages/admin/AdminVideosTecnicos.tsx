@@ -337,7 +337,6 @@ const AdminVideosTecnicos = () => {
                 <input
                   type="file"
                   accept="video/*"
-                  capture="environment"
                   onChange={(e) => setNovoArquivo(e.target.files?.[0] ?? null)}
                   className="w-full bg-black border border-white/10 rounded-none px-3 py-2 text-sm text-white file:mr-3 file:bg-primary file:text-primary-foreground file:border-0 file:px-3 file:py-1 file:text-[10px] file:uppercase file:font-bold"
                 />
