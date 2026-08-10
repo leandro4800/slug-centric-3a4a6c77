@@ -55,6 +55,7 @@ import { Textarea } from "@/components/ui/textarea";
 import heroDefault from "@/assets/hero-default.jpg";
 import heic2any from "heic2any";
 import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
+import { ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip } from "recharts";
 
 interface Aluno {
   id: string;
@@ -167,6 +168,7 @@ const AtletaDetalhe = () => {
   const [anamnese, setAnamnese] = useState<any>(null);
   const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
   const [ultimaAvaliacao, setUltimaAvaliacao] = useState<any>(null);
+  const [pesoSerie, setPesoSerie] = useState<{ data: string; peso: number }[]>([]);
   const [loadingAnamnese, setLoadingAnamnese] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
   const [promptType, setPromptType] = useState<"treino" | "dieta" | "ambos">("treino");
@@ -202,7 +204,8 @@ const AtletaDetalhe = () => {
       { data: a }, 
       { data: pt }, 
       { data: ana },
-      { data: aval }
+      { data: avals },
+      { data: checkins }
     ] = await Promise.all([
       supabase
         .from("perfis")
@@ -223,14 +226,37 @@ const AtletaDetalhe = () => {
         .from("avaliacoes_fisicas")
         .select("*")
         .eq("aluno_id", atletaId!)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle(),
+        .order("created_at", { ascending: true }),
+      supabase
+        .from("evolucao_checkins")
+        .select("data_checkin, peso_kg")
+        .eq("user_id", atletaId!)
+        .order("data_checkin", { ascending: true }),
     ]);
+    const listaAvals = (avals as any[]) || [];
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
     setAnamnese(ana);
-    setUltimaAvaliacao(aval);
+    setUltimaAvaliacao(listaAvals.length ? listaAvals[listaAvals.length - 1] : null);
+
+    const pontos = [
+      ...((checkins as any[]) || []).map((c) => ({
+        raw: c.data_checkin,
+        peso: c.peso_kg != null ? Number(c.peso_kg) : null,
+      })),
+      ...listaAvals.map((v) => ({
+        raw: v.data || v.created_at,
+        peso: v.peso_kg != null ? Number(v.peso_kg) : null,
+      })),
+    ]
+      .filter((p) => p.raw && p.peso != null && !Number.isNaN(p.peso))
+      .sort((x, y) => new Date(x.raw).getTime() - new Date(y.raw).getTime())
+      .map((p) => ({
+        data: new Date(p.raw).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }),
+        peso: p.peso as number,
+      }));
+    setPesoSerie(pontos);
+
     setNivel(TEMPO_TO_NIVEL((pt as PerfilTreino | null)?.tempo_treino));
     setLoading(false);
   };
@@ -842,9 +868,41 @@ const AtletaDetalhe = () => {
               Evolução de peso
             </p>
           </div>
-          <div className="h-28 rounded-lg bg-background/40 flex items-center justify-center text-xs text-muted-foreground">
-            Sem registros ainda
-          </div>
+          {pesoSerie.length < 2 ? (
+            <div className="h-28 rounded-lg bg-background/40 flex items-center justify-center text-xs text-muted-foreground">
+              Sem registros ainda
+            </div>
+          ) : (
+            <>
+              <div className="h-28 rounded-lg bg-background/40 p-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={pesoSerie} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
+                    <XAxis dataKey="data" fontSize={9} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+                    <YAxis fontSize={9} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} domain={["auto", "auto"]} width={34} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        fontSize: "11px",
+                      }}
+                      formatter={(v: any) => [`${v} kg`, "Peso"]}
+                    />
+                    <Line type="monotone" dataKey="peso" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Atual: {pesoSerie[pesoSerie.length - 1].peso} kg</span>
+                <span>
+                  Variação:{" "}
+                  {(() => {
+                    const delta = pesoSerie[pesoSerie.length - 1].peso - pesoSerie[0].peso;
+                    return `${delta > 0 ? "+" : ""}${delta.toFixed(1)} kg`;
+                  })()}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="space-y-3">
