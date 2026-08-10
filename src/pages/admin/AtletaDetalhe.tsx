@@ -868,9 +868,41 @@ const AtletaDetalhe = () => {
               Evolução de peso
             </p>
           </div>
-          <div className="h-28 rounded-lg bg-background/40 flex items-center justify-center text-xs text-muted-foreground">
-            Sem registros ainda
-          </div>
+          {pesoSerie.length < 2 ? (
+            <div className="h-28 rounded-lg bg-background/40 flex items-center justify-center text-xs text-muted-foreground">
+              Sem registros ainda
+            </div>
+          ) : (
+            <>
+              <div className="h-28 rounded-lg bg-background/40 p-1">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={pesoSerie} margin={{ top: 6, right: 8, bottom: 0, left: -18 }}>
+                    <XAxis dataKey="data" fontSize={9} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} />
+                    <YAxis fontSize={9} stroke="hsl(var(--muted-foreground))" tickLine={false} axisLine={false} domain={["auto", "auto"]} width={34} />
+                    <Tooltip
+                      contentStyle={{
+                        background: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        fontSize: "11px",
+                      }}
+                      formatter={(v: any) => [`${v} kg`, "Peso"]}
+                    />
+                    <Line type="monotone" dataKey="peso" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
+                <span>Atual: {pesoSerie[pesoSerie.length - 1].peso} kg</span>
+                <span>
+                  Variação:{" "}
+                  {(() => {
+                    const delta = pesoSerie[pesoSerie.length - 1].peso - pesoSerie[0].peso;
+                    return `${delta > 0 ? "+" : ""}${delta.toFixed(1)} kg`;
+                  })()}
+                </span>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="space-y-3">
