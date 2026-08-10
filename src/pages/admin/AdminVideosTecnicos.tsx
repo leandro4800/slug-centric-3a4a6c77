@@ -27,6 +27,9 @@ const AdminVideosTecnicos = () => {
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<"todos" | "meus" | "app">("todos");
 
+  const isPlatformAdmin = tenant?.slug === "alphateam";
+  const [publicarComoApp, setPublicarComoApp] = useState(false);
+
   const [novoNome, setNovoNome] = useState("");
   const [novoUrl, setNovoUrl] = useState("");
   const [novoArquivo, setNovoArquivo] = useState<File | null>(null);
