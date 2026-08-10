@@ -205,7 +205,10 @@ const Login = () => {
       // A rota de login também funciona como troca de conta. Limpa sempre a
       // sessão e os caches da conta anterior, mesmo quando o React ainda não
       // restaurou `user` no primeiro frame do app nativo.
-      await supabase.auth.signOut({ scope: "local" });
+      await supabase.auth.signOut({ scope: "global" }).catch(() => {
+        // Se falhar (ex: sem conexão), tenta fallback local para não travar o fluxo de login.
+        return supabase.auth.signOut({ scope: "local" });
+      });
       try {
         sessionStorage.removeItem("startup_navigation_memory_v1");
         sessionStorage.removeItem("auth_roles_prefetch_v1");
