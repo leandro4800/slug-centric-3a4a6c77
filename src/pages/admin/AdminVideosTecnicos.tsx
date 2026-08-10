@@ -181,6 +181,7 @@ const AdminVideosTecnicos = () => {
       if (error) throw error;
       toast.success(`${toInsert.length} exercícios importados!`);
       setBulkData("");
+      setPublicarComoApp(false);
       setIsBulkMode(false);
       loadVideos();
     } catch (error: any) {
