@@ -266,6 +266,7 @@ const AdminVideosTecnicos = () => {
               onClick={() => {
                 setIsAdding(!isAdding);
                 setIsBulkMode(false);
+                setPublicarComoApp(false);
               }}
               variant={isAdding ? "default" : "outline"}
               className="rounded-none h-auto px-4"
@@ -276,6 +277,7 @@ const AdminVideosTecnicos = () => {
               onClick={() => {
                 setIsBulkMode(!isBulkMode);
                 setIsAdding(false);
+                setPublicarComoApp(false);
               }}
               variant={isBulkMode ? "default" : "outline"}
               className="rounded-none h-auto px-4"
