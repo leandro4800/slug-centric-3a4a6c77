@@ -25,6 +25,7 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
   // Pré-carrega o avatar de comemoração (gera 1x e cacheia no perfil — não gasta IA toda vez)
   const { url: avatarCelebracao } = useAvatarVariant("celebracao");
 
+  const [dataCheckin, setDataCheckin] = useState(() => new Date().toISOString().slice(0, 10));
   const [peso, setPeso] = useState("");
   const [bf, setBf] = useState("");
   const [fotos, setFotos] = useState<{ frente?: File; costas?: File; lado?: File }>({});
@@ -93,7 +94,7 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
         foto_costas_url,
         foto_lado_url,
         dobras: dobras,
-        data_checkin: new Date().toISOString()
+        data_checkin: new Date(dataCheckin + "T12:00:00").toISOString()
       });
 
       if (error) throw error;
@@ -105,6 +106,7 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
       setShowCelebration(true);
       setTimeout(() => setShowCelebration(false), 4500);
       // Reset form
+      setDataCheckin(new Date().toISOString().slice(0, 10));
       setPeso("");
       setBf("");
       setFotos({});
@@ -173,6 +175,19 @@ export const CheckInModal = ({ onSaved }: CheckInModalProps = {}) => {
                 </label>
               ))}
             </div>
+          </div>
+
+          {/* Data do registro */}
+          <div className="space-y-2">
+            <Label className="text-[10px] tracking-widest uppercase text-muted-foreground">Data do registro</Label>
+            <Input
+              type="date"
+              required
+              max={new Date().toISOString().slice(0, 10)}
+              value={dataCheckin}
+              onChange={(e) => setDataCheckin(e.target.value)}
+              className="bg-card/40 border-border rounded-none h-12 text-center"
+            />
           </div>
 
           {/* Métricas Section */}
