@@ -122,7 +122,7 @@ const AdminVideosTecnicos = () => {
       const { error } = await supabase.from("referencia_exercicios").insert({
         nome_exercicio: novoNome.trim(),
         url_video: url,
-        tenant_id: tenant.id,
+        tenant_id: isPlatformAdmin && publicarComoApp ? null : tenant.id,
         profissional_id: userId,
         origem,
         storage_path: storagePath,
@@ -134,6 +134,7 @@ const AdminVideosTecnicos = () => {
       setNovoNome("");
       setNovoUrl("");
       setNovoArquivo(null);
+      setPublicarComoApp(false);
       setIsAdding(false);
       loadVideos();
     } catch (error: any) {
