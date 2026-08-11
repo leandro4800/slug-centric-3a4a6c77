@@ -75,8 +75,11 @@ const IntegracaoIA = () => {
           <h2 className="font-display text-lg uppercase tracking-wider">Copie o seu token pessoal</h2>
         </div>
         <p className="text-xs text-muted-foreground">
-          Este token identifica você. Cada coach tem o seu, e só enxerga os próprios alunos.
+          Este token identifica você. Cada coach tem o seu, e só enxerga os próprios alunos.{" "}
+          <strong className="text-foreground">Informe este token diretamente nas mensagens ao assistente de IA</strong>{" "}
+          (ex.: “Meu token é ...”), e não em um campo de configuração separado.
         </p>
+
         {mcpToken ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
