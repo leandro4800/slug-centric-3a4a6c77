@@ -98,7 +98,7 @@ var list_athletes_default = defineTool2({
   title: "Listar alunos",
   description: "Lista os alunos (perfis) vinculados ao tenant do coach. Retorna id, nome, email e telefone.",
   inputSchema: {
-    mcp_token: z2.string().describe("Token MCP do coach (obtenha em Minha Conta)."),
+    mcp_token: z2.string().optional().describe("Token MCP do coach. Opcional se enviado via cabe\xE7alho Authorization: Bearer."),
     search: z2.string().optional().describe("Filtro opcional por nome ou email."),
     limit: z2.number().int().min(1).max(200).optional().describe("M\xE1ximo de resultados (padr\xE3o 50).")
   },

@@ -51,7 +51,7 @@
           "properties": {
             "mcp_token": {
               "type": "string",
-              "description": "Token MCP do coach (obtenha em Minha Conta)."
+              "description": "Token MCP do coach. Opcional se enviado via cabeçalho Authorization: Bearer."
             },
             "search": {
               "type": "string",
@@ -64,9 +64,6 @@
               "description": "Máximo de resultados (padrão 50)."
             }
           },
-          "required": [
-            "mcp_token"
-          ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
         },

@@ -7,7 +7,7 @@ export default defineTool({
   title: "Listar alunos",
   description: "Lista os alunos (perfis) vinculados ao tenant do coach. Retorna id, nome, email e telefone.",
   inputSchema: {
-    mcp_token: z.string().describe("Token MCP do coach (obtenha em Minha Conta)."),
+    mcp_token: z.string().optional().describe("Token MCP do coach. Opcional se enviado via cabeçalho Authorization: Bearer."),
     search: z.string().optional().describe("Filtro opcional por nome ou email."),
     limit: z.number().int().min(1).max(200).optional().describe("Máximo de resultados (padrão 50)."),
   },
