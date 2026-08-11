@@ -46,6 +46,33 @@ export async function resolveTenant(mcpToken: string): Promise<AuthResult> {
   };
 }
 
+/**
+ * Extract a bearer token from the tool handler's second argument, when the
+ * runtime exposes the raw request headers (`extra.requestInfo.headers`) or a
+ * verified token accessor (`ctx.getToken()`). Returns null when unavailable.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function extractBearerToken(extra: any): string | null {
+  try {
+    const headers = extra?.requestInfo?.headers;
+    if (headers) {
+      const raw =
+        typeof headers.get === "function" ? headers.get("authorization") : headers["authorization"];
+      if (raw) {
+        const match = /^Bearer\s+(.+)$/i.exec(String(raw).trim());
+        return match ? match[1].trim() : String(raw).trim();
+      }
+    }
+    if (typeof extra?.getToken === "function") {
+      const token = extra.getToken();
+      if (token) return String(token).trim();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export function errorResult(message: string) {
   return { content: [{ type: "text" as const, text: message }], isError: true };
 }
