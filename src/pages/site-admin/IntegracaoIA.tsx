@@ -75,8 +75,11 @@ const IntegracaoIA = () => {
           <h2 className="font-display text-lg uppercase tracking-wider">Copie o seu token pessoal</h2>
         </div>
         <p className="text-xs text-muted-foreground">
-          Este token identifica você. Cada coach tem o seu, e só enxerga os próprios alunos.
+          Este token identifica você. Cada coach tem o seu, e só enxerga os próprios alunos.{" "}
+          <strong className="text-foreground">Informe este token diretamente nas mensagens ao assistente de IA</strong>{" "}
+          (ex.: “Meu token é ...”), e não em um campo de configuração separado.
         </p>
+
         {mcpToken ? (
           <div className="space-y-3">
             <div className="flex items-center gap-2 flex-wrap">
@@ -133,9 +136,9 @@ const IntegracaoIA = () => {
           steps={[
             "Abra o ChatGPT no navegador ou app.",
             "Vá em Configurações → Conectores → Adicionar novo.",
-            "Cole a URL do servidor (passo 2) no campo endereço.",
-            "Cole o seu token (passo 1) no campo de autenticação (Bearer).",
-            "Salve. Pronto — em qualquer chat, peça: “Liste meus alunos ativos”.",
+            "Cole a URL do servidor (passo 2) no campo de endereço.",
+            "Não preencha campo de autenticação — não é necessário.",
+            "Salve. Em qualquer chat, cole seu token (passo 1) e peça: “Meu token é [seu token]. Liste meus alunos ativos”.",
           ]}
         />
 
@@ -146,8 +149,8 @@ const IntegracaoIA = () => {
             "Abra Claude → Configurações → Integrações (MCP).",
             "Clique em Adicionar servidor customizado.",
             "Nome: Alpha Coach. URL: cole o endereço do passo 2.",
-            "Autorização: Bearer + o seu token do passo 1.",
-            "Salve e teste: “Mostre o treino atual do João Silva.”",
+            "Não preencha campo de autenticação — não é necessário.",
+            "Salve e teste: “Meu token é [seu token]. Mostre o treino atual do João Silva.”",
           ]}
         />
 
@@ -165,7 +168,12 @@ const IntegracaoIA = () => {
     "headers": { "Authorization": "Bearer SEU_TOKEN_AQUI" }
   }
 }`}</pre>
+          <p className="text-[11px] text-amber-400/90 mt-2">
+            Nota: hoje o servidor ignora o cabeçalho <code>Authorization</code>. O token precisa ser passado
+            nas mensagens/prompts ao assistente (ex.: “Meu token é ...”), não no header.
+          </p>
         </ClientBlock>
+
       </section>
 
       {/* O que dá pra pedir */}
