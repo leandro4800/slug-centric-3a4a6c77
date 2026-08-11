@@ -51,6 +51,25 @@ async function resolveTenant(mcpToken) {
     error: ""
   };
 }
+function extractBearerToken(extra) {
+  try {
+    const headers = extra?.requestInfo?.headers;
+    if (headers) {
+      const raw = typeof headers.get === "function" ? headers.get("authorization") : headers["authorization"];
+      if (raw) {
+        const match = /^Bearer\s+(.+)$/i.exec(String(raw).trim());
+        return match ? match[1].trim() : String(raw).trim();
+      }
+    }
+    if (typeof extra?.getToken === "function") {
+      const token = extra.getToken();
+      if (token) return String(token).trim();
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
 function errorResult(message) {
   return { content: [{ type: "text", text: message }], isError: true };
 }
@@ -84,8 +103,9 @@ var list_athletes_default = defineTool2({
     limit: z2.number().int().min(1).max(200).optional().describe("M\xE1ximo de resultados (padr\xE3o 50).")
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
-  handler: async ({ mcp_token, search, limit }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, search, limit }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const supa = getServiceClient();
     let q = supa.from("perfis").select("id, nome_completo, email, telefone, sexo, data_nascimento, onboarding_completo").eq("tenant_id", auth.tenantId).order("nome_completo", { ascending: true }).limit(limit ?? 50);
@@ -108,15 +128,16 @@ var get_athlete_workout_default = defineTool3({
   title: "Consultar treino do aluno",
   description: "Retorna os exerc\xEDcios prescritos para um aluno. Filtre por dia da semana (segunda, terca, ...) se quiser apenas o treino do dia.",
   inputSchema: {
-    mcp_token: z3.string(),
+    mcp_token: z3.string().optional().describe("Token MCP do coach. Opcional se enviado via cabe\xE7alho Authorization: Bearer."),
     athlete_id: z3.string().uuid().optional(),
     email: z3.string().optional(),
     nome: z3.string().optional(),
     dia_semana: z3.enum(DIAS).optional()
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
-  handler: async ({ mcp_token, athlete_id, email, nome, dia_semana }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, athlete_id, email, nome, dia_semana }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
@@ -137,14 +158,15 @@ var get_athlete_diet_default = defineTool4({
   title: "Consultar dieta do aluno",
   description: "Retorna a dieta publicada do aluno com objetivo, kcal alvo, macros, refei\xE7\xF5es, hor\xE1rios e alimentos de cada refei\xE7\xE3o.",
   inputSchema: {
-    mcp_token: z4.string(),
+    mcp_token: z4.string().optional().describe("Token MCP do coach. Opcional se enviado via cabe\xE7alho Authorization: Bearer."),
     athlete_id: z4.string().uuid().optional(),
     email: z4.string().optional(),
     nome: z4.string().optional()
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
-  handler: async ({ mcp_token, athlete_id, email, nome }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, athlete_id, email, nome }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
@@ -171,15 +193,16 @@ var get_athlete_progress_default = defineTool5({
   title: "Consultar evolu\xE7\xE3o do aluno",
   description: "Retorna as m\xE9tricas de evolu\xE7\xE3o do aluno: check-ins (peso, BF%, medidas) e avalia\xE7\xF5es f\xEDsicas recentes com composi\xE7\xE3o corporal. Ideal para acompanhar cutting/bulking.",
   inputSchema: {
-    mcp_token: z5.string(),
+    mcp_token: z5.string().optional().describe("Token MCP do coach. Opcional se enviado via cabe\xE7alho Authorization: Bearer."),
     athlete_id: z5.string().uuid().optional(),
     email: z5.string().optional(),
     nome: z5.string().optional(),
     checkin_limit: z5.number().int().min(1).max(60).optional().describe("Quantidade de check-ins recentes (padr\xE3o 20).")
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
-  handler: async ({ mcp_token, athlete_id, email, nome, checkin_limit }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, athlete_id, email, nome, checkin_limit }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
@@ -230,14 +253,15 @@ var get_athlete_anamnesis_default = defineTool6({
   title: "Consultar anamnese do aluno",
   description: "Retorna a anamnese completa do aluno: hist\xF3rico de sa\xFAde, sono, estresse, alimenta\xE7\xE3o, suplementos, treino e ergog\xEAnicos.",
   inputSchema: {
-    mcp_token: z6.string(),
+    mcp_token: z6.string().optional().describe("Token MCP do coach. Opcional se enviado via cabe\xE7alho Authorization: Bearer."),
     athlete_id: z6.string().uuid().optional(),
     email: z6.string().optional(),
     nome: z6.string().optional()
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
-  handler: async ({ mcp_token, athlete_id, email, nome }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, athlete_id, email, nome }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
@@ -256,15 +280,16 @@ var add_athlete_default = defineTool7({
   title: "Adicionar aluno",
   description: "Cria um novo aluno no tenant do coach. Envia convite por e-mail com senha tempor\xE1ria para que o aluno complete o onboarding no app.",
   inputSchema: {
-    mcp_token: z7.string(),
+    mcp_token: z7.string().optional().describe("Token MCP do coach. Opcional se enviado via cabe\xE7alho Authorization: Bearer."),
     nome_completo: z7.string().min(2).describe("Nome completo do aluno."),
     email: z7.string().describe("E-mail do aluno."),
     telefone: z7.string().optional(),
     sexo: z7.enum(["masculino", "feminino"]).optional()
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  handler: async ({ mcp_token, nome_completo, email, telefone, sexo }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, nome_completo, email, telefone, sexo }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const supa = getServiceClient();
     const normalizedEmail = email.trim().toLowerCase();

@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { errorResult, findAthlete, getServiceClient, jsonResult, resolveTenant } from "./_shared";
+import { errorResult, extractBearerToken, findAthlete, getServiceClient, jsonResult, resolveTenant } from "./_shared";
 
 const DIAS = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"] as const;
 
@@ -10,15 +10,16 @@ export default defineTool({
   description:
     "Retorna os exercícios prescritos para um aluno. Filtre por dia da semana (segunda, terca, ...) se quiser apenas o treino do dia.",
   inputSchema: {
-    mcp_token: z.string(),
+    mcp_token: z.string().optional().describe("Token MCP do coach. Opcional se enviado via cabeçalho Authorization: Bearer."),
     athlete_id: z.string().uuid().optional(),
     email: z.string().optional(),
     nome: z.string().optional(),
     dia_semana: z.enum(DIAS).optional(),
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
-  handler: async ({ mcp_token, athlete_id, email, nome, dia_semana }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, athlete_id, email, nome, dia_semana }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);

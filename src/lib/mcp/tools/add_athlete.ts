@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { errorResult, getServiceClient, jsonResult, resolveTenant } from "./_shared";
+import { errorResult, extractBearerToken, getServiceClient, jsonResult, resolveTenant } from "./_shared";
 
 export default defineTool({
   name: "add_athlete",
@@ -8,15 +8,16 @@ export default defineTool({
   description:
     "Cria um novo aluno no tenant do coach. Envia convite por e-mail com senha temporária para que o aluno complete o onboarding no app.",
   inputSchema: {
-    mcp_token: z.string(),
+    mcp_token: z.string().optional().describe("Token MCP do coach. Opcional se enviado via cabeçalho Authorization: Bearer."),
     nome_completo: z.string().min(2).describe("Nome completo do aluno."),
     email: z.string().describe("E-mail do aluno."),
     telefone: z.string().optional(),
     sexo: z.enum(["masculino", "feminino"]).optional(),
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
-  handler: async ({ mcp_token, nome_completo, email, telefone, sexo }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, nome_completo, email, telefone, sexo }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const supa = getServiceClient();
     const normalizedEmail = email.trim().toLowerCase();

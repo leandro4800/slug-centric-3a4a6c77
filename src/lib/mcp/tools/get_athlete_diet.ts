@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { errorResult, findAthlete, getServiceClient, jsonResult, resolveTenant } from "./_shared";
+import { errorResult, extractBearerToken, findAthlete, getServiceClient, jsonResult, resolveTenant } from "./_shared";
 
 export default defineTool({
   name: "get_athlete_diet",
@@ -8,14 +8,15 @@ export default defineTool({
   description:
     "Retorna a dieta publicada do aluno com objetivo, kcal alvo, macros, refeições, horários e alimentos de cada refeição.",
   inputSchema: {
-    mcp_token: z.string(),
+    mcp_token: z.string().optional().describe("Token MCP do coach. Opcional se enviado via cabeçalho Authorization: Bearer."),
     athlete_id: z.string().uuid().optional(),
     email: z.string().optional(),
     nome: z.string().optional(),
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
-  handler: async ({ mcp_token, athlete_id, email, nome }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, athlete_id, email, nome }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
