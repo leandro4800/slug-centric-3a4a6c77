@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { errorResult, findAthlete, getServiceClient, jsonResult, resolveTenant } from "./_shared";
+import { errorResult, extractBearerToken, findAthlete, getServiceClient, jsonResult, resolveTenant } from "./_shared";
 
 export default defineTool({
   name: "get_athlete_progress",
@@ -8,15 +8,16 @@ export default defineTool({
   description:
     "Retorna as métricas de evolução do aluno: check-ins (peso, BF%, medidas) e avaliações físicas recentes com composição corporal. Ideal para acompanhar cutting/bulking.",
   inputSchema: {
-    mcp_token: z.string(),
+    mcp_token: z.string().optional().describe("Token MCP do coach. Opcional se enviado via cabeçalho Authorization: Bearer."),
     athlete_id: z.string().uuid().optional(),
     email: z.string().optional(),
     nome: z.string().optional(),
     checkin_limit: z.number().int().min(1).max(60).optional().describe("Quantidade de check-ins recentes (padrão 20)."),
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
-  handler: async ({ mcp_token, athlete_id, email, nome, checkin_limit }) => {
-    const auth = await resolveTenant(mcp_token);
+  handler: async ({ mcp_token, athlete_id, email, nome, checkin_limit }, extra) => {
+    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
+    const auth = await resolveTenant(effectiveToken);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
