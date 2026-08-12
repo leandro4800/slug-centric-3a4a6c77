@@ -38,16 +38,21 @@ const IntegracaoIA = () => {
     toast({ title: `${label} copiado`, description: "Cole no seu assistente de IA." });
   };
 
-  const rotate = async () => {
-    if (!confirm("Gerar novo token? O token atual deixará de funcionar imediatamente.")) return;
+  const generate = async () => {
     setRotating(true);
     const { data, error } = await supabase.rpc("rotate_my_mcp_token");
     setRotating(false);
-    if (error) return toast({ title: "Erro", description: error.message, variant: "destructive" });
+    if (error) return toast({ title: "Erro ao gerar token", description: error.message, variant: "destructive" });
     setMcpToken(data as string);
     setShowToken(true);
-    toast({ title: "Novo token gerado", description: "Atualize seus assistentes com o novo token." });
+    toast({ title: "Token gerado", description: "Copie e use nas mensagens ao seu assistente." });
   };
+
+  const rotate = async () => {
+    if (!confirm("Gerar novo token? O token atual deixará de funcionar imediatamente.")) return;
+    await generate();
+  };
+
 
   if (loading) {
     return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
@@ -104,8 +109,17 @@ const IntegracaoIA = () => {
             </div>
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">Não foi possível carregar o token. Recarregue a página.</p>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Você ainda não tem um token. Clique abaixo para gerar o seu.
+            </p>
+            <Button size="sm" onClick={generate} disabled={rotating} className="gap-1.5">
+              {rotating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              Gerar meu token
+            </Button>
+          </div>
         )}
+
       </section>
 
       {/* Passo 2 — URL do servidor */}
