@@ -62,6 +62,9 @@ additional_redirect_urls = [
     verify_jwt = false
   [functions.landing-welcome-email]
     verify_jwt = false
+  [functions.landing-signup]
+    verify_jwt = false
+
 
   [functions.agendamento-aula]
     verify_jwt = false
