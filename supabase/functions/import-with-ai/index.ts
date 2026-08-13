@@ -608,11 +608,24 @@ Retorne exatamente:
         .select().single();
       if (dError) throw dError;
 
+      const parseHorario = (raw: unknown): string | null => {
+        if (raw == null) return null;
+        const s = String(raw).trim();
+        if (!s) return null;
+        const m = s.match(/(\d{1,2})\s*[:hH]\s*(\d{2})?/);
+        if (!m) return null;
+        const h = Number(m[1]);
+        const min = Number(m[2] ?? "0");
+        if (!Number.isFinite(h) || h > 23 || !Number.isFinite(min) || min > 59) return null;
+        return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`;
+      };
+
       for (const [idx, ref] of result.refeicoes.entries()) {
         const { data: refeicao, error: rError } = await supabase
           .from("refeicoes")
-          .insert({ dieta_id: dieta.id, nome: ref.nome, horario: ref.horario || null, ordem: idx })
+          .insert({ dieta_id: dieta.id, nome: ref.nome, horario: parseHorario(ref.horario), ordem: idx })
           .select().single();
+
         if (rError) throw rError;
 
         if (ref.itens && ref.itens.length > 0) {
