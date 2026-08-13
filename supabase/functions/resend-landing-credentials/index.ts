@@ -45,7 +45,7 @@ Deno.serve(async (req) => {
 
     const { data: tenant } = await admin
       .from("tenants")
-      .select("id, slug, nome, free_access, status")
+      .select("id, slug, nome, free_access, status, owner_user_id")
       .eq("slug", slug)
       .maybeSingle();
     if (!tenant || !tenant.free_access || tenant.status !== "approved") {
