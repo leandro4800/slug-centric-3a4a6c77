@@ -51,16 +51,38 @@ const SiteLogin = () => {
       return;
     }
 
-    // Verifica se é dono de algum tenant (coach)
-    const { data: ownedTenant } = await supabase
-      .from("tenants")
-      .select("slug")
-      .eq("owner_user_id", userId)
-      .maybeSingle();
+    // Verifica se é dono de algum tenant (coach) — com retry para não
+    // derrubar o coach por uma falha momentânea de rede.
+    let ownedSlug: string | null = null;
+    let lookupFailed = false;
+    const delays = [0, 700, 1500];
+    for (let i = 0; i < delays.length; i++) {
+      if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
+      const { data, error: err } = await supabase
+        .from("tenants")
+        .select("slug")
+        .eq("owner_user_id", userId)
+        .limit(1)
+        .maybeSingle();
+      if (!err) {
+        ownedSlug = data?.slug ?? null;
+        lookupFailed = false;
+        break;
+      }
+      lookupFailed = true;
+      console.warn("[SiteLogin] Falha ao verificar painel do coach:", err.message);
+    }
 
     setLoading(false);
 
-    if (ownedTenant?.slug) {
+    if (ownedSlug) {
+      navigate(`/site/admin/dashboard`, { replace: true });
+      return;
+    }
+
+    if (lookupFailed) {
+      // Não desloga: pode ser instabilidade de rede. Deixa entrar no painel,
+      // que também valida o acesso e oferece "tentar novamente".
       navigate(`/site/admin/dashboard`, { replace: true });
       return;
     }
@@ -70,6 +92,7 @@ const SiteLogin = () => {
     toast.error(
       "Este painel é exclusivo para coaches. Alunos devem entrar pelo aplicativo Alpha Coach."
     );
+
   };
 
   return (
