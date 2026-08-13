@@ -662,7 +662,14 @@ Retorne exatamente:
       await supabase.from("dietas").delete().eq("user_id", alunoId);
       const { data: dieta, error: dError } = await supabase
         .from("dietas")
-        .insert({ user_id: alunoId, objetivo: result.objetivo, kcal_alvo: result.kcal_alvo, macros_alvo: result.macros_alvo })
+        .insert({
+          user_id: alunoId,
+          objetivo: result.objetivo,
+          kcal_alvo: Number.isFinite(Number(result.kcal_alvo)) ? Number(result.kcal_alvo) : null,
+          tmb_estimada: Number.isFinite(Number(result.tmb)) ? Number(result.tmb) : null,
+          macros_alvo: result.macros_alvo,
+          observacoes_clinicas: [result.observacoes, result.agua_litros_dia ? `Água: ${result.agua_litros_dia}` : "", result.gasto_calorico_treino ? `Gasto calórico treino: ${result.gasto_calorico_treino}` : ""].filter(Boolean).join("\n") || null,
+        })
         .select().single();
       if (dError) throw dError;
 
