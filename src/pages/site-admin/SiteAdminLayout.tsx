@@ -24,7 +24,7 @@ const mobileItems = [
 ];
 
 const Inner = () => {
-  const { tenant, loading } = useSiteTenant();
+  const { tenant, loading, error, reload } = useSiteTenant();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
@@ -40,17 +40,32 @@ const Inner = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center">
         <div className="max-w-sm space-y-3">
-          <p className="text-sm uppercase tracking-widest text-primary font-bold">Acesso restrito</p>
-          <p className="text-sm text-muted-foreground">
-            Este painel é exclusivo para coaches. Você ainda não tem um painel de coach ativo.
+          <p className="text-sm uppercase tracking-widest text-primary font-bold">
+            {error ? "Falha ao carregar" : "Acesso restrito"}
           </p>
-          <a href="/seja-coach" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-bold text-primary-foreground">
-            Testar por R$ 1
-          </a>
+          <p className="text-sm text-muted-foreground">
+            {error
+              ? "Não conseguimos carregar seu painel agora. Verifique sua conexão e tente novamente."
+              : "Este painel é exclusivo para coaches. Você ainda não tem um painel de coach ativo."}
+          </p>
+          <div className="flex flex-col gap-2">
+            <button
+              onClick={reload}
+              className="inline-flex h-10 items-center justify-center rounded-md border border-white/20 px-4 text-sm font-bold"
+            >
+              Tentar novamente
+            </button>
+            {!error && (
+              <a href="/seja-coach" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-bold text-primary-foreground">
+                Testar por R$ 1
+              </a>
+            )}
+          </div>
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen flex bg-background">
