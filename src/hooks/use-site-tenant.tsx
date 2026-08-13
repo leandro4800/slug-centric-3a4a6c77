@@ -65,12 +65,4 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-
-  return (
-    <SiteTenantContext.Provider value={{ tenant, loading, reload: () => setTick((t) => t + 1) }}>
-      {children}
-    </SiteTenantContext.Provider>
-  );
-};
-
 export const useSiteTenant = () => useContext(SiteTenantContext);
