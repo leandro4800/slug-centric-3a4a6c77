@@ -255,12 +255,18 @@ function TenantLandingContent() {
         if (signUpErr && !/already registered|already exists/i.test(signUpErr.message)) {
           throw signUpErr;
         }
-        // Dispara o e-mail com as credenciais de acesso (não bloqueia o fluxo)
-        void supabase.functions
-          .invoke("landing-welcome-email", {
+        // Dispara o e-mail com as credenciais de acesso.
+        // IMPORTANTE: precisa ser aguardado — antes era "fire and forget" e a
+        // navegação logo em seguida cancelava a requisição, então o e-mail
+        // nunca chegava a ser enviado.
+        try {
+          await supabase.functions.invoke("landing-welcome-email", {
             body: { email, nome, slug, password },
-          })
-          .catch((err) => console.error("[landing] welcome email", err));
+          });
+        } catch (err) {
+          console.error("[landing] welcome email", err);
+        }
+
         // Tenta logar imediatamente (funciona se e-mail já confirmado ou signup auto-loga)
         const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
         if (signInErr) {
