@@ -473,6 +473,48 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
     const content = aiData?.choices?.[0]?.message?.content || "{}";
     let result: any = parseJsonContent(content);
 
+    // Dieta: se a IA devolveu refeições sem descrição, tenta de novo cobrando o conteúdo completo.
+    if (importType === "dieta") {
+      const refs = Array.isArray(result?.refeicoes) ? result.refeicoes : [];
+      const semDescricao = refs.length > 0 && refs.every((r: any) => !String(r?.descricao || "").trim() && !(Array.isArray(r?.itens) && r.itens.length));
+      if (refs.length === 0 || semDescricao) {
+        const retry = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-pro",
+            messages: [
+              {
+                role: "system",
+                content: `Você transcreve planos alimentares em JSON. Retorne APENAS JSON válido. É PROIBIDO devolver refeições com "descricao" vazia: cada refeição precisa listar todos os alimentos com medidas caseiras e substituições, uma linha por alimento. Também extraia kcal_alvo, tmb e observações se estiverem escritos no documento.`,
+              },
+              { role: "user", content: userContent },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (retry.ok) {
+          const retryData = await retry.json();
+          const retryResult = parseJsonContent(retryData?.choices?.[0]?.message?.content || "{}");
+          const retryRefs = Array.isArray(retryResult?.refeicoes) ? retryResult.refeicoes : [];
+          if (retryRefs.some((r: any) => String(r?.descricao || "").trim())) result = retryResult;
+        } else {
+          console.error("[import-with-ai] dieta retry error", retry.status, await retry.text().catch(() => ""));
+        }
+      }
+      // Fallback final: monta descricao a partir dos itens quando a IA só devolveu itens.
+      if (Array.isArray(result?.refeicoes)) {
+        result.refeicoes = result.refeicoes.map((r: any) => {
+          if (String(r?.descricao || "").trim()) return r;
+          const itens = Array.isArray(r?.itens) ? r.itens : [];
+          const linhas = itens
+            .map((it: any) => (it?.quantidade_g ? `${it?.nome || ""} — ${it.quantidade_g} g` : String(it?.nome || "")))
+            .filter((l: string) => l.trim());
+          return { ...r, descricao: linhas.join("\n") };
+        });
+      }
+    }
+
     if ((importType === "7dobras" || importType === "avaliacao") && isImage && !hasSevenFoldValues(result)) {
       const fallbackMessages = [
         {
