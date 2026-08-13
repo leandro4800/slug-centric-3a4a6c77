@@ -1270,6 +1270,17 @@ const AdminMontarDieta = () => {
                              toast.error("Não foi possível calcular macros: " + (e?.message || ""), { id: t });
                            }
                         if (data?.objetivo) setPerfil((p) => ({ ...p, objetivo: data.objetivo }));
+                        // Kcal alvo escrito no documento tem prioridade quando o cálculo TACO não retornou nada.
+                        const kcalDoc = Number(data?.kcal_alvo);
+                        if (Number.isFinite(kcalDoc) && kcalDoc > 0 && !(macrosFinais?.kcal)) {
+                          macrosFinais = {
+                            kcal: Math.round(kcalDoc),
+                            proteina_g: 0,
+                            carboidrato_g: 0,
+                            lipideos_g: 0,
+                          };
+                          setMacrosCalculados(macrosFinais);
+                        }
 
                         // Persistência automática: aluno avulso — salva no dieta_json;
                         // aluno cadastrado — cria/atualiza a dieta como rascunho para não perder o import.

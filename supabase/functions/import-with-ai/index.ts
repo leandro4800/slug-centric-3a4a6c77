@@ -331,8 +331,24 @@ serve(async (req) => {
       importType === "treino"
         ? `Estrutura esperada: { "dias": [ { "dia": "string", "exercicios": [ { "nome": "string", "series": "string", "repeticoes": "string", "cadencia": "string", "detalhes_execucao": "string", "observacao": "string" } ] } ], "cardio": "string" }`
         : importType === "dieta"
-        ? `Estrutura esperada: { "objetivo": "string", "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "texto original da refeição preservando linhas Opção 1/Opção 2/ou", "itens": [ { "nome": "string", "quantidade_g": number } ] } ] }
-IMPORTANTE PARA DIETA: não calcule kcal nem macros. Não invente calorias. Apenas extraia alimentos, quantidades e mantenha blocos de opções alternativas separados no campo descricao com as linhas "Opção 1", "Opção 2". O cálculo será feito depois pela tabela TACO do banco.`
+        ? `Estrutura esperada: {
+  "objetivo": "string (objetivo/meta do plano, como escrito no documento)",
+  "kcal_alvo": number | null,
+  "tmb": number | null,
+  "gasto_calorico_treino": "string | null",
+  "agua_litros_dia": "string | null",
+  "observacoes": "string (TODAS as observações, orientações, restrições, suplementação e recados do documento, uma por linha)",
+  "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "TODAS as linhas da refeição", "itens": [ { "nome": "string", "quantidade_g": number } ] } ]
+}
+
+REGRAS OBRIGATÓRIAS PARA DIETA:
+- NÃO calcule kcal nem macros. Só preencha "kcal_alvo" e "tmb" se o documento trouxer o número escrito (ex.: "Valor do Plano Alimentar: 2400kcal/dia" -> kcal_alvo = 2400; "TMB: 1780Kcal/dia" -> tmb = 1780).
+- O campo "descricao" NUNCA pode ficar vazio. Ele deve conter TODAS as linhas da refeição no formato "Alimento — medida caseira (substituições)", uma por linha, exatamente como no documento (inclusive "Livre", "200-350g", "3 unidades", "OU Ricota OU Cottage").
+- Se o documento vier de uma tabela com colunas (Refeição/Horário | Distribuição dos Alimentos | Medidas Caseiras | Substituições), associe linha a linha: cada alimento com a sua medida caseira e a sua substituição.
+- Blocos gerais que não são refeição (ex.: "EM JEJUM ... 500ml de água + 1 cápsula", "Suplementação antes de dormir 5g de creatina") também devem virar refeições com nome e descrição completa, com horario null se não houver.
+- Mantenha blocos de opções alternativas separados no campo descricao com linhas "Opção 1", "Opção 2" quando existirem.
+- Preencha "itens" com os alimentos e a quantidade em gramas quando a medida for em gramas/ml; se for "livre" ou unidades, mantenha só na descricao.
+- O cálculo de macros será feito depois pela tabela TACO do banco.`
         : importType === "anamnese"
         ? ANAMNESE_SCHEMA
         : (importType === "7dobras" || importType === "avaliacao")
@@ -456,6 +472,48 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
     const aiData = await response.json();
     const content = aiData?.choices?.[0]?.message?.content || "{}";
     let result: any = parseJsonContent(content);
+
+    // Dieta: se a IA devolveu refeições sem descrição, tenta de novo cobrando o conteúdo completo.
+    if (importType === "dieta") {
+      const refs = Array.isArray(result?.refeicoes) ? result.refeicoes : [];
+      const semDescricao = refs.length > 0 && refs.every((r: any) => !String(r?.descricao || "").trim() && !(Array.isArray(r?.itens) && r.itens.length));
+      if (refs.length === 0 || semDescricao) {
+        const retry = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            model: "google/gemini-2.5-pro",
+            messages: [
+              {
+                role: "system",
+                content: `Você transcreve planos alimentares em JSON. Retorne APENAS JSON válido. É PROIBIDO devolver refeições com "descricao" vazia: cada refeição precisa listar todos os alimentos com medidas caseiras e substituições, uma linha por alimento. Também extraia kcal_alvo, tmb e observações se estiverem escritos no documento.`,
+              },
+              { role: "user", content: userContent },
+            ],
+            response_format: { type: "json_object" },
+          }),
+        });
+        if (retry.ok) {
+          const retryData = await retry.json();
+          const retryResult = parseJsonContent(retryData?.choices?.[0]?.message?.content || "{}");
+          const retryRefs = Array.isArray(retryResult?.refeicoes) ? retryResult.refeicoes : [];
+          if (retryRefs.some((r: any) => String(r?.descricao || "").trim())) result = retryResult;
+        } else {
+          console.error("[import-with-ai] dieta retry error", retry.status, await retry.text().catch(() => ""));
+        }
+      }
+      // Fallback final: monta descricao a partir dos itens quando a IA só devolveu itens.
+      if (Array.isArray(result?.refeicoes)) {
+        result.refeicoes = result.refeicoes.map((r: any) => {
+          if (String(r?.descricao || "").trim()) return r;
+          const itens = Array.isArray(r?.itens) ? r.itens : [];
+          const linhas = itens
+            .map((it: any) => (it?.quantidade_g ? `${it?.nome || ""} — ${it.quantidade_g} g` : String(it?.nome || "")))
+            .filter((l: string) => l.trim());
+          return { ...r, descricao: linhas.join("\n") };
+        });
+      }
+    }
 
     if ((importType === "7dobras" || importType === "avaliacao") && isImage && !hasSevenFoldValues(result)) {
       const fallbackMessages = [
@@ -604,7 +662,14 @@ Retorne exatamente:
       await supabase.from("dietas").delete().eq("user_id", alunoId);
       const { data: dieta, error: dError } = await supabase
         .from("dietas")
-        .insert({ user_id: alunoId, objetivo: result.objetivo, kcal_alvo: result.kcal_alvo, macros_alvo: result.macros_alvo })
+        .insert({
+          user_id: alunoId,
+          objetivo: result.objetivo,
+          kcal_alvo: Number.isFinite(Number(result.kcal_alvo)) ? Number(result.kcal_alvo) : null,
+          tmb_estimada: Number.isFinite(Number(result.tmb)) ? Number(result.tmb) : null,
+          macros_alvo: result.macros_alvo,
+          observacoes_clinicas: [result.observacoes, result.agua_litros_dia ? `Água: ${result.agua_litros_dia}` : "", result.gasto_calorico_treino ? `Gasto calórico treino: ${result.gasto_calorico_treino}` : ""].filter(Boolean).join("\n") || null,
+        })
         .select().single();
       if (dError) throw dError;
 
@@ -623,7 +688,7 @@ Retorne exatamente:
       for (const [idx, ref] of result.refeicoes.entries()) {
         const { data: refeicao, error: rError } = await supabase
           .from("refeicoes")
-          .insert({ dieta_id: dieta.id, nome: ref.nome, horario: parseHorario(ref.horario), ordem: idx })
+          .insert({ dieta_id: dieta.id, nome: ref.nome, horario: parseHorario(ref.horario), ordem: idx, descricao_ia: String(ref.descricao || "").trim() || null })
           .select().single();
 
         if (rError) throw rError;
