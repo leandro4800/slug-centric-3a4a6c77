@@ -240,32 +240,16 @@ function TenantLandingContent() {
       setCheckoutLoading("__free__");
       const password = buildFreePassword(nome);
       try {
-        const { error: signUpErr } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              nome_completo: nome,
-              tenant_id: tenant?.id,
-              tenant_slug: tenant?.slug || slug,
-              signup_source: "tenant_landing",
-            },
-          },
-        });
-        if (signUpErr && !/already registered|already exists/i.test(signUpErr.message)) {
-          throw signUpErr;
-        }
-        // Dispara o e-mail com as credenciais de acesso.
-        // IMPORTANTE: precisa ser aguardado — antes era "fire and forget" e a
-        // navegação logo em seguida cancelava a requisição, então o e-mail
-        // nunca chegava a ser enviado.
-        try {
-          await supabase.functions.invoke("landing-welcome-email", {
-            body: { email, nome, slug, password },
-          });
-        } catch (err) {
-          console.error("[landing] welcome email", err);
-        }
+        // Cria a conta pelo backend (service role) para não depender do e-mail
+        // de confirmação do Supabase, que tem rate limit baixo e derrubava o
+        // cadastro com "email rate limit exceeded".
+        const { data: signupData, error: signupErr } = await supabase.functions.invoke(
+          "landing-signup",
+          { body: { email, nome, slug: tenant?.slug || slug, password } },
+        );
+        if (signupErr) throw signupErr;
+        if (!(signupData as any)?.ok) throw new Error((signupData as any)?.error || "Falha ao criar conta");
+
 
         // Tenta logar imediatamente (funciona se e-mail já confirmado ou signup auto-loga)
         const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password });
