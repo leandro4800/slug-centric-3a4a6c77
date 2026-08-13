@@ -688,7 +688,7 @@ Retorne exatamente:
       for (const [idx, ref] of result.refeicoes.entries()) {
         const { data: refeicao, error: rError } = await supabase
           .from("refeicoes")
-          .insert({ dieta_id: dieta.id, nome: ref.nome, horario: parseHorario(ref.horario), ordem: idx })
+          .insert({ dieta_id: dieta.id, nome: ref.nome, horario: parseHorario(ref.horario), ordem: idx, descricao_ia: String(ref.descricao || "").trim() || null })
           .select().single();
 
         if (rError) throw rError;
