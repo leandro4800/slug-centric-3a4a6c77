@@ -331,8 +331,24 @@ serve(async (req) => {
       importType === "treino"
         ? `Estrutura esperada: { "dias": [ { "dia": "string", "exercicios": [ { "nome": "string", "series": "string", "repeticoes": "string", "cadencia": "string", "detalhes_execucao": "string", "observacao": "string" } ] } ], "cardio": "string" }`
         : importType === "dieta"
-        ? `Estrutura esperada: { "objetivo": "string", "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "texto original da refeição preservando linhas Opção 1/Opção 2/ou", "itens": [ { "nome": "string", "quantidade_g": number } ] } ] }
-IMPORTANTE PARA DIETA: não calcule kcal nem macros. Não invente calorias. Apenas extraia alimentos, quantidades e mantenha blocos de opções alternativas separados no campo descricao com as linhas "Opção 1", "Opção 2". O cálculo será feito depois pela tabela TACO do banco.`
+        ? `Estrutura esperada: {
+  "objetivo": "string (objetivo/meta do plano, como escrito no documento)",
+  "kcal_alvo": number | null,
+  "tmb": number | null,
+  "gasto_calorico_treino": "string | null",
+  "agua_litros_dia": "string | null",
+  "observacoes": "string (TODAS as observações, orientações, restrições, suplementação e recados do documento, uma por linha)",
+  "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "TODAS as linhas da refeição", "itens": [ { "nome": "string", "quantidade_g": number } ] } ]
+}
+
+REGRAS OBRIGATÓRIAS PARA DIETA:
+- NÃO calcule kcal nem macros. Só preencha "kcal_alvo" e "tmb" se o documento trouxer o número escrito (ex.: "Valor do Plano Alimentar: 2400kcal/dia" -> kcal_alvo = 2400; "TMB: 1780Kcal/dia" -> tmb = 1780).
+- O campo "descricao" NUNCA pode ficar vazio. Ele deve conter TODAS as linhas da refeição no formato "Alimento — medida caseira (substituições)", uma por linha, exatamente como no documento (inclusive "Livre", "200-350g", "3 unidades", "OU Ricota OU Cottage").
+- Se o documento vier de uma tabela com colunas (Refeição/Horário | Distribuição dos Alimentos | Medidas Caseiras | Substituições), associe linha a linha: cada alimento com a sua medida caseira e a sua substituição.
+- Blocos gerais que não são refeição (ex.: "EM JEJUM ... 500ml de água + 1 cápsula", "Suplementação antes de dormir 5g de creatina") também devem virar refeições com nome e descrição completa, com horario null se não houver.
+- Mantenha blocos de opções alternativas separados no campo descricao com linhas "Opção 1", "Opção 2" quando existirem.
+- Preencha "itens" com os alimentos e a quantidade em gramas quando a medida for em gramas/ml; se for "livre" ou unidades, mantenha só na descricao.
+- O cálculo de macros será feito depois pela tabela TACO do banco.`
         : importType === "anamnese"
         ? ANAMNESE_SCHEMA
         : (importType === "7dobras" || importType === "avaliacao")
