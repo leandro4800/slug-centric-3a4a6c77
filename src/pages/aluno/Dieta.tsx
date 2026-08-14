@@ -210,16 +210,21 @@ const PersonalDieta = () => {
   useEffect(() => { void carregar(); }, [carregar]);
 
   const imgMap = buildImageMap(dieta?.refeicoes || []);
-  const hasStructuredItems = !!dieta?.refeicoes.some(r => r.itens.length > 0);
 
+  const somaItens = dieta
+    ? dieta.refeicoes.reduce((acc, r) => {
+        const m = calcMacros(r.itens);
+        return { kcal: acc.kcal + m.kcal, p: acc.p + m.p, c: acc.c + m.c, g: acc.g + m.g };
+      }, { kcal: 0, p: 0, c: 0, g: 0 })
+    : { kcal: 0, p: 0, c: 0, g: 0 };
+
+  // Se os itens importados não têm valores nutricionais vinculados, usa as metas prescritas
   const totalDia = dieta
-    ? hasStructuredItems
-      ? dieta.refeicoes.reduce((acc, r) => {
-          const m = calcMacros(r.itens);
-          return { kcal: acc.kcal + m.kcal, p: acc.p + m.p, c: acc.c + m.c, g: acc.g + m.g };
-        }, { kcal: 0, p: 0, c: 0, g: 0 })
+    ? somaItens.kcal > 0
+      ? somaItens
       : macrosFromTarget(dieta)
     : { kcal: 0, p: 0, c: 0, g: 0 };
+
 
   const pieData = [
     { name: "Proteína", value: totalDia.p * 4, color: `hsl(${COLOR_PROT})` },
