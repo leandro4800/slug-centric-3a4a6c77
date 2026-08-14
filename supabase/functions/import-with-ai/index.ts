@@ -669,6 +669,7 @@ Retorne exatamente:
           tmb_estimada: Number.isFinite(Number(result.tmb)) ? Number(result.tmb) : null,
           macros_alvo: result.macros_alvo,
           observacoes_clinicas: [result.observacoes, result.agua_litros_dia ? `Água: ${result.agua_litros_dia}` : "", result.gasto_calorico_treino ? `Gasto calórico treino: ${result.gasto_calorico_treino}` : ""].filter(Boolean).join("\n") || null,
+          is_published: true,
         })
         .select().single();
       if (dError) throw dError;
