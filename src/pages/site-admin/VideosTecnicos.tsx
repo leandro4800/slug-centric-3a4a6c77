@@ -25,7 +25,7 @@ const VideosTecnicos = () => {
   const [rows, setRows] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"todos" | "app">("todos");
+  const [filter, setFilter] = useState<"todos" | "app" | "meus">("todos");
   const [onlyMine, setOnlyMine] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
 
@@ -191,7 +191,9 @@ const VideosTecnicos = () => {
     () =>
       rows
         .filter((v) => v.nome_exercicio.toLowerCase().includes(search.toLowerCase()))
-        .filter((v) => (filter === "app" ? v.tenant_id === null : true)),
+        .filter((v) =>
+          filter === "app" ? v.tenant_id === null : filter === "meus" ? v.tenant_id !== null : true,
+        ),
     [rows, search, filter],
   );
 
@@ -232,7 +234,7 @@ const VideosTecnicos = () => {
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2 items-center">
-        {(["todos", "app"] as const).map((f) => (
+        {(["todos", "meus", "app"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -242,7 +244,7 @@ const VideosTecnicos = () => {
                 : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
             }`}
           >
-            {f === "todos" ? "Todos" : "Do App"}
+            {f === "todos" ? "Todos" : f === "meus" ? "Meus vídeos" : "Do App"}
           </button>
         ))}
         <button
