@@ -376,12 +376,15 @@ const PersonalDieta = () => {
                       <div className="relative px-4 py-3 flex items-center justify-between min-h-[72px]">
                         <div className="flex flex-col gap-1">
                           <span className="text-[10px] font-bold tracking-[0.2em] text-white drop-shadow-md">{m.l}</span>
-                          <span className="text-[10px] text-white/70 uppercase tracking-wider">{pct}% da meta</span>
+                          <span className="text-[10px] text-white/70 uppercase tracking-wider">
+                            {alvo ? `${pct}% da meta` : "total do dia"}
+                          </span>
                         </div>
                         <div className="flex items-baseline gap-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                           <span className="font-display text-2xl text-white">{m.v}</span>
-                          <span className="text-xs text-white/80">/ {m.alvo || "-"}g</span>
+                          <span className="text-xs text-white/80">{alvo ? `/ ${alvo}g` : "g"}</span>
                         </div>
+
                       </div>
 
                       {/* Barra de progresso na borda inferior */}
