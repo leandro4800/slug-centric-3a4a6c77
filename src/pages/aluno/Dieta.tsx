@@ -76,73 +76,75 @@ const norm = (s: string) =>
 
 const has = (txt: string, words: string[]) => words.some(w => txt.includes(w));
 
-// Lista de imagens candidatas, da mais adequada para a menos adequada,
-// baseada no nome da refeição + descrição + alimentos escritos.
-const imgCandidates = (nome: string, descricao?: string | null, itens?: Item[]): string[] => {
-  const n = norm(nome);
+// Escolhe a imagem SEMPRE de acordo com o que está escrito na refeição
+// (nome + descrição + alimentos) e, na falta disso, pelo horário.
+// Repetir a mesma imagem é aceitável; imagem incoerente não é.
+const supl = ["suplement", "creatina", "whey", "caseina", "albumina", "bcaa", "glutamina",
+  "cafein", "termogenico", "hipercalorico", "maltodextrina", "dextrose", "colageno",
+  "multivitamin", "omega 3", "omega-3", "vitamina", "capsula", "capsulas", "scoop",
+  "pre-workout", "pre workout", "beta alanina", "zma", "melatonina", "magnesio", "lipodrene"];
+
+const horaDe = (horario?: string | null) => {
+  const m = String(horario || "").match(/^(\d{1,2})/);
+  const h = m ? Number(m[1]) : NaN;
+  return Number.isFinite(h) ? h : null;
+};
+
+const imgFor = (r: { nome: string; horario?: string | null; descricao_ia?: string | null; itens?: Item[] }): string => {
+  const n = norm(r.nome);
   const conteudo = norm(
-    [descricao || "", ...(itens || []).map(i => `${i.substituicoes || ""} ${i.alimento?.nome || ""}`)].join(" ")
+    [r.descricao_ia || "", ...(r.itens || []).map(i => `${i.substituicoes || ""} ${i.alimento?.nome || ""}`)].join(" ")
   );
   const all = `${n} ${conteudo}`;
-  const out: string[] = [];
-  const push = (img: string) => { if (!out.includes(img)) out.push(img); };
 
-  const supl = ["suplement", "creatina", "whey", "caseina", "albumina", "bcaa", "glutamina",
-    "cafein", "termogenico", "hipercalorico", "maltodextrina", "dextrose", "colageno",
-    "multivitamin", "omega 3", "omega-3", "vitamina", "capsula", "capsulas", "scoop",
-    "pre-workout", "pre workout", "beta alanina", "zma", "melatonina", "magnesio", "lipodrene"];
+  // 1) Nome da refeição
+  if (has(n, ["pos-treino", "pos treino", "pós"])) return imgPost;
+  if (has(n, ["pre-treino", "pre treino", "pre-workout"])) return imgPre;
+  if (has(n, ["ceia", "antes de dormir"])) return imgSupper;
+  if (has(n, ["jantar"])) return imgDinner;
+  if (has(n, ["almoco"])) return imgLunch;
+  if (has(n, ["cafe da manha", "desjejum"])) return imgBreakfast;
+  if (has(n, ["lanche"])) return imgSnack;
 
-  // 1) Nome da refeição manda primeiro (horário/refeição real)
-  if (has(n, ["pos-treino", "pos treino", "pós"])) push(imgPost);
-  if (has(n, ["pre-treino", "pre treino", "pre-workout"])) push(imgPre);
-  if (has(n, ["ceia", "antes de dormir"])) push(imgSupper);
-  if (has(n, ["jantar", "noite"])) push(imgDinner);
-  if (has(n, ["almoco"])) push(imgLunch);
-  if (has(n, ["cafe da manha", "desjejum", "manha", "jejum"])) push(imgBreakfast);
-  if (has(n, ["lanche"])) push(imgSnack);
-
-  // 2) Suplementos / cápsulas quando o conteúdo é de suplementação
-  if (has(n, supl) || has(conteudo, supl)) push(imgSupplement);
+  // 2) Bloco só de suplementação / cápsulas
+  const soSuplemento = has(n, supl) || (has(conteudo, supl) && !has(all, ["arroz", "frango", "carne", "ovo", "pao", "batata", "peixe", "salada"]));
+  if (soSuplemento) return imgSupplement;
 
   // 3) Conteúdo escrito dos alimentos
-  if (has(all, ["arroz", "feijao", "frango", "carne", "patinho", "file", "macarrao", "batata", "peixe", "bovino"])) push(imgLunch);
-  if (has(all, ["ovo", "pao", "tapioca", "aveia", "leite", "cuscuz", "queijo", "cafe"])) push(imgBreakfast);
-  if (has(all, ["iogurte", "fruta", "banana", "maca", "castanha", "barra", "inhame", "aipim"])) push(imgSnack);
-  if (has(all, ["sopa", "salada", "omelete"])) push(imgDinner);
+  if (has(all, ["arroz", "feijao", "frango", "carne", "patinho", "file", "macarrao", "batata", "peixe", "bovino"])) return imgLunch;
+  if (has(all, ["ovo", "pao", "tapioca", "aveia", "leite", "cuscuz", "queijo", "cafe"])) return imgBreakfast;
+  if (has(all, ["iogurte", "fruta", "banana", "maca", "castanha", "barra", "inhame", "aipim", "shake"])) return imgSnack;
+  if (has(all, ["sopa", "salada", "omelete"])) return imgDinner;
 
-  push(imgBreakfast);
-  return out;
+  // 4) Horário
+  const h = horaDe(r.horario);
+  if (h !== null) {
+    if (h < 10) return imgBreakfast;
+    if (h < 15) return imgLunch;
+    if (h < 19) return imgSnack;
+    if (h < 22) return imgDinner;
+    return imgSupper;
+  }
+  return imgBreakfast;
 };
-
-const imgFor = (r: { nome: string; descricao_ia?: string | null; itens?: Item[] }) =>
-  imgCandidates(r.nome, r.descricao_ia, r.itens)[0];
 
 // Remove refeições duplicadas (mesmo nome + horário + itens) vindas de importações repetidas
-const dedupeRefeicoes = <T extends { nome: string; horario?: string | null; itens?: Item[] }>(lista: T[]): T[] => {
+const dedupeRefeicoes = <T extends { nome: string; horario?: string | null; descricao_ia?: string | null; itens?: Item[] }>(lista: T[]): T[] => {
   const vistos = new Set<string>();
+  const conteudos = new Set<string>();
   return (lista || []).filter((r) => {
-    const chave = [
-      norm(r.nome),
-      String(r.horario || ""),
+    const conteudo = [
+      norm(r.descricao_ia || ""),
       (r.itens || []).map((i) => norm(`${i.substituicoes || ""}${i.alimento?.nome || ""}${i.quantidade_g ?? ""}`)).sort().join("|"),
     ].join("::");
+    const chave = [norm(r.nome), String(r.horario || ""), conteudo].join("::");
     if (vistos.has(chave)) return false;
+    // conteúdo idêntico em horários diferentes = repetição indevida da IA
+    if (conteudo.replace(/[:|]/g, "").trim() && conteudos.has(conteudo)) return false;
     vistos.add(chave);
+    conteudos.add(conteudo);
     return true;
   });
-};
-
-// Evita repetir a mesma imagem, mas sempre dentro das candidatas coerentes com a refeição
-const buildImageMap = (lista: { id: string; nome: string; descricao_ia?: string | null; itens?: Item[] }[]) => {
-  const usados = new Set<string>();
-  const map: Record<string, string> = {};
-  (lista || []).forEach((r) => {
-    const cands = imgCandidates(r.nome, r.descricao_ia, r.itens);
-    const escolha = cands.find((c) => !usados.has(c)) ?? cands[0];
-    usados.add(escolha);
-    map[r.id] = escolha;
-  });
-  return map;
 };
 
 
