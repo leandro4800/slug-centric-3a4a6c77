@@ -338,7 +338,7 @@ serve(async (req) => {
   "gasto_calorico_treino": "string | null",
   "agua_litros_dia": "string | null",
   "observacoes": "string (TODAS as observações, orientações, restrições, suplementação e recados do documento, uma por linha)",
-  "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "TODAS as linhas da refeição", "itens": [ { "nome": "string (nome simples do alimento, sem substituições)", "quantidade_g": number } ] } ]
+  "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "TODAS as linhas da refeição, exatamente como escritas", "itens": [ { "nome": "string (texto do item exatamente como no documento)", "quantidade_g": number | null, "unidade": "g | ml | unidade" } ] } ]
 }
 
 REGRAS OBRIGATÓRIAS PARA DIETA:
@@ -347,7 +347,9 @@ REGRAS OBRIGATÓRIAS PARA DIETA:
 - Se o documento vier de uma tabela com colunas (Refeição/Horário | Distribuição dos Alimentos | Medidas Caseiras | Substituições), associe linha a linha: cada alimento com a sua medida caseira e a sua substituição.
 - Blocos gerais que não são refeição (ex.: "EM JEJUM ... 500ml de água + 1 cápsula", "Suplementação antes de dormir 5g de creatina") também devem virar refeições com nome e descrição completa, com horario null se não houver.
 - Mantenha blocos de opções alternativas separados no campo descricao com linhas "Opção 1", "Opção 2" quando existirem.
-- "itens" é OBRIGATÓRIO para TODA refeição que tenha alimento sólido/líquido: liste CADA alimento principal (o primeiro da linha, sem as substituições) com "quantidade_g" em gramas. Converta medidas caseiras para gramas aproximados (1 ovo = 50g, 1 unidade de banana = 100g, 1 fatia de queijo = 30g, 200ml de leite = 200g, 1 scoop de whey = 30g). Em faixas (ex.: "200-350g") use o valor médio. Para "Livre", use 100g quando for alimento (saladas/vegetais) e ignore quando for água/café/suplemento sem caloria.
+- PROIBIDO INVENTAR: transcreva SOMENTE o que está escrito no documento. Nunca acrescente alimentos, quantidades, marcas ou substituições que não estejam no texto. Se algo não estiver escrito, deixe fora (null / lista vazia). Copie os nomes exatamente como aparecem (ex.: "500ml de água", "1 cápsula de Lipodrene amarelo").
+- "itens": liste CADA linha de alimento/bebida/suplemento exatamente como escrita, com "quantidade_g" numérica quando houver quantidade. Para líquidos em ml, use o número em ml (500ml -> 500) e marque "unidade": "ml"; para sólidos use gramas e "unidade": "g". Converta medidas caseiras SÓ quando o documento não trouxer peso (1 ovo = 50g, 1 fatia de queijo = 30g, 1 scoop de whey = 30g). Em faixas ("200-350g") use a média. Se não houver quantidade, use null.
+- Água, chá, café e cápsulas/suplementos NÃO são gramas de alimento: mantenha o texto e a unidade corretos (ml para líquidos, "cápsula"/"comprimido" no nome).
 - O cálculo de macros será feito depois pela tabela TACO do banco.`
         : importType === "anamnese"
         ? ANAMNESE_SCHEMA
@@ -697,19 +699,27 @@ Retorne exatamente:
       const stop = new Set(["de","da","do","com","sem","em","e","ou","a","o","cru","cozido","grelhado","integral","light","zero","natural"]);
       const tacoList = (tacoAll ?? []).map((t: any) => ({ id: t.id, tokens: norm(t.nome).split(" ").filter((w: string) => w && !stop.has(w)) }));
 
+      // Itens sem valor nutricional (água, café, chá, cápsulas) não devem virar alimento da TACO.
+      const semMacro = /(agua|cha\b|cafe|capsula|comprimido|lipodrene|termogenico|creatina|bcaa|glutamina|multivitaminico|omega|vitamina|colageno|adocante)/;
       const matchAlimento = (nome: string): string | null => {
-        const tokens = norm(String(nome || "")).split(" ").filter((w) => w && !stop.has(w));
+        const raw = norm(String(nome || ""));
+        if (!raw || semMacro.test(raw)) return null;
+        const tokens = raw.split(" ").filter((w) => w && !stop.has(w) && !/^\d+$/.test(w) && w.length > 2);
         if (!tokens.length || !tacoList.length) return null;
         let best: { id: string; score: number } | null = null;
         for (const t of tacoList) {
           if (!t.tokens.length) continue;
           const hits = tokens.filter((w) => t.tokens.some((tw: string) => tw === w || tw.startsWith(w) || w.startsWith(tw))).length;
           if (!hits) continue;
+          // exige que a maior parte do nome escrito esteja no alimento da TACO (evita casar "água" com "Atum em água")
+          const cobertura = hits / tokens.length;
+          if (cobertura < 0.6) continue;
           const score = hits / Math.max(tokens.length, t.tokens.length);
           if (!best || score > best.score) best = { id: t.id, score };
         }
-        return best && best.score >= 0.4 ? best.id : null;
+        return best && best.score >= 0.6 ? best.id : null;
       };
+
 
       for (const [idx, ref] of result.refeicoes.entries()) {
         const { data: refeicao, error: rError } = await supabase
@@ -725,7 +735,7 @@ Retorne exatamente:
             return {
               refeicao_id: refeicao.id,
               substituicoes: item.nome,
-              quantidade_g: Number.isFinite(qtd) && qtd > 0 ? qtd : 100,
+              quantidade_g: Number.isFinite(qtd) && qtd > 0 ? qtd : 0,
               alimento_id: matchAlimento(item.nome),
             };
           });
