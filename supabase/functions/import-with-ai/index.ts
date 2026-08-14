@@ -735,7 +735,7 @@ Retorne exatamente:
             return {
               refeicao_id: refeicao.id,
               substituicoes: item.nome,
-              quantidade_g: Number.isFinite(qtd) && qtd > 0 ? qtd : 100,
+              quantidade_g: Number.isFinite(qtd) && qtd > 0 ? qtd : 0,
               alimento_id: matchAlimento(item.nome),
             };
           });
