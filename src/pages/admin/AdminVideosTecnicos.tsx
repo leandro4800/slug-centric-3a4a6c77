@@ -29,6 +29,40 @@ const AdminVideosTecnicos = () => {
 
   const isPlatformAdmin = tenant?.slug === "alphateam";
   const [publicarComoApp, setPublicarComoApp] = useState(false);
+  const [onlyMine, setOnlyMine] = useState(false);
+  const [savingPref, setSavingPref] = useState(false);
+
+  useEffect(() => {
+    if (!tenant?.id) return;
+    (async () => {
+      const { data } = await supabase
+        .from("tenants")
+        .select("usar_apenas_meus_videos")
+        .eq("id", tenant.id)
+        .maybeSingle();
+      setOnlyMine(Boolean((data as any)?.usar_apenas_meus_videos));
+    })();
+  }, [tenant?.id]);
+
+  const toggleOnlyMine = async () => {
+    if (!tenant?.id) return;
+    const next = !onlyMine;
+    try {
+      setSavingPref(true);
+      const { error } = await supabase
+        .from("tenants")
+        .update({ usar_apenas_meus_videos: next } as any)
+        .eq("id", tenant.id);
+      if (error) throw error;
+      setOnlyMine(next);
+      toast.success(next ? "Agora seus alunos verão apenas os SEUS vídeos" : "Vídeos do app reativados para seus alunos");
+    } catch (e: any) {
+      toast.error("Erro ao salvar preferência: " + e.message);
+    } finally {
+      setSavingPref(false);
+    }
+  };
+
 
   const [novoNome, setNovoNome] = useState("");
   const [novoUrl, setNovoUrl] = useState("");
