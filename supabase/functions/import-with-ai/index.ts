@@ -338,7 +338,7 @@ serve(async (req) => {
   "gasto_calorico_treino": "string | null",
   "agua_litros_dia": "string | null",
   "observacoes": "string (TODAS as observações, orientações, restrições, suplementação e recados do documento, uma por linha)",
-  "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "TODAS as linhas da refeição", "itens": [ { "nome": "string (nome simples do alimento, sem substituições)", "quantidade_g": number } ] } ]
+  "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "TODAS as linhas da refeição, exatamente como escritas", "itens": [ { "nome": "string (texto do item exatamente como no documento)", "quantidade_g": number | null, "unidade": "g | ml | unidade" } ] } ]
 }
 
 REGRAS OBRIGATÓRIAS PARA DIETA:
