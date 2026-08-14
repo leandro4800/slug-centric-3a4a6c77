@@ -256,7 +256,7 @@ const VideosTecnicos = () => {
               : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
           }`}
         >
-          Meus {onlyMine ? "(ativo)" : ""}
+          Só meus p/ alunos {onlyMine ? "(ativo)" : ""}
         </button>
         <span className="text-[11px] text-muted-foreground">
           {onlyMine
@@ -364,26 +364,27 @@ const VideosTecnicos = () => {
                     >
                       <Play className="h-4 w-4 mr-1" /> {previewId === v.id ? "Fechar" : "Ver"}
                     </Button>
-                    {!isGlobal &&
-                      (isEditing ? (
-                        <>
-                          <Button size="sm" onClick={saveEdit}>
-                            <Save className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => setEditId(null)}>
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button size="sm" variant="outline" onClick={() => startEdit(v)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(v)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ))}
+                    {isGlobal ? (
+                      <span className="text-[10px] text-muted-foreground">Vídeo do app</span>
+                    ) : isEditing ? (
+                      <>
+                        <Button size="sm" onClick={saveEdit}>
+                          <Save className="h-4 w-4 mr-1" /> Salvar
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditId(null)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => startEdit(v)}>
+                          <Pencil className="h-4 w-4 mr-1" /> Editar
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDelete(v)}>
+                          <Trash2 className="h-4 w-4 mr-1" /> Excluir
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
                 {previewId === v.id && <div className="mt-3">{renderPlayer(v)}</div>}
