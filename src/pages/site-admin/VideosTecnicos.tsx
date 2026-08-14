@@ -53,7 +53,9 @@ const VideosTecnicos = () => {
   const [rows, setRows] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"todos" | "app" | "meus">("todos");
+  const [filter, setFilter] = useState<"todos" | "app" | "meus">(
+    tenant?.slug === "alphateam" ? "todos" : "meus"
+  );
   const [onlyMine, setOnlyMine] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
   const [tab, setTab] = useState<"biblioteca" | "alunos">("biblioteca");
@@ -368,7 +370,7 @@ const VideosTecnicos = () => {
       {tab === "biblioteca" ? (
         <>
           <div className="mt-5 flex flex-wrap gap-2 items-center">
-            {(["todos", "meus", "app"] as const).map((f) => (
+            {((isAppAdmin ? ["todos", "meus", "app"] : ["meus", "app"]) as ("todos" | "meus" | "app")[]).map((f) => (
               <button
                 key={f}
                 onClick={() => setFilter(f)}

@@ -25,7 +25,9 @@ const AdminVideosTecnicos = () => {
   const [videos, setVideos] = useState<VideoReferencia[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"todos" | "meus" | "app">("todos");
+  const [filter, setFilter] = useState<"todos" | "meus" | "app">(
+    tenant?.slug === "alphateam" ? "todos" : "meus"
+  );
 
   const isPlatformAdmin = tenant?.slug === "alphateam";
   const [publicarComoApp, setPublicarComoApp] = useState(false);
@@ -269,7 +271,7 @@ const AdminVideosTecnicos = () => {
       <div className="h-px bg-primary/20 mt-6" />
 
       <div className="mt-6 flex flex-wrap gap-2 items-center">
-        {(isPlatformAdmin ? (["todos", "meus", "app"] as const) : (["todos", "app"] as const)).map((f) => (
+        {(isPlatformAdmin ? (["todos", "meus", "app"] as const) : (["meus", "app"] as const)).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
