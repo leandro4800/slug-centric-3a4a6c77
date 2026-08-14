@@ -14,14 +14,15 @@ import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { useBranding } from "@/contexts/BrandingProvider";
 import FightNutritionView from "@/pages/aluno/fight/FightNutritionView";
-import imgBreakfast from "@/assets/meal-breakfast.jpg";
-import imgLunch from "@/assets/meal-lunch.jpg";
-import imgSnack from "@/assets/meal-snack.jpg";
-import imgDinner from "@/assets/meal-dinner.jpg";
-import imgPre from "@/assets/meal-pre.jpg";
-import imgPost from "@/assets/meal-post.jpg";
-import imgSupper from "@/assets/meal-supper.jpg";
-import imgSupplement from "@/assets/meal-supplement.jpg";
+import imgBreakfast from "@/assets/refeicao/desjejum.jpg";
+import imgLunch from "@/assets/refeicao/almoco.jpg";
+import imgSnack from "@/assets/refeicao/lanche-manha.jpg";
+import imgSnackTarde from "@/assets/refeicao/lanche-tarde.jpg";
+import imgDinner from "@/assets/refeicao/jantar.jpg";
+import imgJejum from "@/assets/refeicao/jejum.jpg";
+import imgPost from "@/assets/refeicao/pos-treino.jpg";
+import imgSupper from "@/assets/refeicao/ceia.jpg";
+import imgSupplement from "@/assets/refeicao/suplementacao.jpg";
 import imgMacroProtein from "@/assets/macro-protein.jpg";
 import imgMacroCarbs from "@/assets/macro-carbs.jpg";
 import imgMacroFats from "@/assets/macro-fats.jpg";
@@ -97,14 +98,17 @@ const imgFor = (r: { nome: string; horario?: string | null; descricao_ia?: strin
   );
   const all = `${n} ${conteudo}`;
 
+  const h = horaDe(r.horario);
+
   // 1) Nome da refeição
+  if (has(n, ["jejum"]) && !has(n, ["desjejum"])) return imgJejum;
   if (has(n, ["pos-treino", "pos treino", "pós"])) return imgPost;
-  if (has(n, ["pre-treino", "pre treino", "pre-workout"])) return imgPre;
+  if (has(n, ["pre-treino", "pre treino", "pre-workout"])) return imgPost;
   if (has(n, ["ceia", "antes de dormir"])) return imgSupper;
   if (has(n, ["jantar"])) return imgDinner;
   if (has(n, ["almoco"])) return imgLunch;
   if (has(n, ["cafe da manha", "desjejum"])) return imgBreakfast;
-  if (has(n, ["lanche"])) return imgSnack;
+  if (has(n, ["lanche"])) return h !== null && h >= 14 ? imgSnackTarde : imgSnack;
 
   // 2) Bloco só de suplementação / cápsulas
   const soSuplemento = has(n, supl) || (has(conteudo, supl) && !has(all, ["arroz", "frango", "carne", "ovo", "pao", "batata", "peixe", "salada"]));
@@ -113,15 +117,14 @@ const imgFor = (r: { nome: string; horario?: string | null; descricao_ia?: strin
   // 3) Conteúdo escrito dos alimentos
   if (has(all, ["arroz", "feijao", "frango", "carne", "patinho", "file", "macarrao", "batata", "peixe", "bovino"])) return imgLunch;
   if (has(all, ["ovo", "pao", "tapioca", "aveia", "leite", "cuscuz", "queijo", "cafe"])) return imgBreakfast;
-  if (has(all, ["iogurte", "fruta", "banana", "maca", "castanha", "barra", "inhame", "aipim", "shake"])) return imgSnack;
+  if (has(all, ["iogurte", "fruta", "banana", "maca", "castanha", "barra", "inhame", "aipim", "shake"])) return h !== null && h >= 14 ? imgSnackTarde : imgSnack;
   if (has(all, ["sopa", "salada", "omelete"])) return imgDinner;
 
   // 4) Horário
-  const h = horaDe(r.horario);
   if (h !== null) {
     if (h < 10) return imgBreakfast;
     if (h < 15) return imgLunch;
-    if (h < 19) return imgSnack;
+    if (h < 19) return imgSnackTarde;
     if (h < 22) return imgDinner;
     return imgSupper;
   }
