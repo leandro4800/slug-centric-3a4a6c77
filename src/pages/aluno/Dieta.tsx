@@ -199,13 +199,15 @@ const PersonalDieta = () => {
       })),
     }));
 
-    setDieta({ ...d, refeicoes } as Dieta);
+    setDieta({ ...d, refeicoes: dedupeRefeicoes(refeicoes) } as Dieta);
     setLoading(false);
   }, [user]);
 
   useEffect(() => { void carregar(); }, [carregar]);
 
+  const imgMap = buildImageMap(dieta?.refeicoes || []);
   const hasStructuredItems = !!dieta?.refeicoes.some(r => r.itens.length > 0);
+
   const totalDia = dieta
     ? hasStructuredItems
       ? dieta.refeicoes.reduce((acc, r) => {
