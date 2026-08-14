@@ -3232,6 +3232,7 @@ export type Database = {
           tagline: string | null
           theme_overrides: Json
           updated_at: string
+          usar_apenas_meus_videos: boolean
           vertical: Database["public"]["Enums"]["tenant_vertical"]
         }
         Insert: {
@@ -3262,6 +3263,7 @@ export type Database = {
           tagline?: string | null
           theme_overrides?: Json
           updated_at?: string
+          usar_apenas_meus_videos?: boolean
           vertical?: Database["public"]["Enums"]["tenant_vertical"]
         }
         Update: {
@@ -3292,6 +3294,7 @@ export type Database = {
           tagline?: string | null
           theme_overrides?: Json
           updated_at?: string
+          usar_apenas_meus_videos?: boolean
           vertical?: Database["public"]["Enums"]["tenant_vertical"]
         }
         Relationships: []

@@ -203,16 +203,38 @@ const PersonalTreino = () => {
         .filter((w) => w.length > 2 && !["com","sem","dos","das","para","pelo","pela","reto","livre","barra","halter","halteres","maquina","cabo","polia","banco","pulley"].includes(w));
 
     const loadVideoRefs = async (): Promise<{ entries: { tokens: string[]; yt: string; coach: string | null }[] }> => {
-      const { data } = await supabase
+      let onlyMine = false;
+      if (tenant?.id) {
+        const { data: t } = await supabase
+          .from("tenants")
+          .select("usar_apenas_meus_videos")
+          .eq("id", tenant.id)
+          .maybeSingle();
+        onlyMine = Boolean((t as any)?.usar_apenas_meus_videos);
+      }
+
+      let query = supabase
         .from("referencia_exercicios")
-        .select("nome_exercicio, url_video");
-      const entries = (data || []).map((r: any) => ({
+        .select("nome_exercicio, url_video, tenant_id");
+
+      if (onlyMine && tenant?.id) {
+        query = query.eq("tenant_id", tenant.id);
+      } else if (tenant?.id) {
+        query = query.or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`);
+      }
+
+      const { data } = await query;
+      const rows = (data || []) as any[];
+      // Vídeos do próprio coach têm prioridade sobre os "Do App".
+      rows.sort((a, b) => (a.tenant_id ? 0 : 1) - (b.tenant_id ? 0 : 1));
+      const entries = rows.map((r: any) => ({
         tokens: norm(r.nome_exercicio),
         yt: r.url_video as string,
         coach: null as string | null,
       })).filter((e) => e.tokens.length > 0 && e.yt);
       return { entries };
     };
+
 
     const findBest = (nome: string, refMap: any): { yt: string | null; coach: string | null } => {
       const tokens = norm(nome);
