@@ -1,0 +1,1 @@
+UPDATE public.dietas SET is_published = true WHERE id = '513b5b72-556f-47d6-85d9-3adf1d4ae3b7';
