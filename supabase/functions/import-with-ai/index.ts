@@ -686,6 +686,31 @@ Retorne exatamente:
         return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`;
       };
 
+
+      // Vincula cada item a um alimento da tabela TACO para o app conseguir contar os macros.
+      const { data: tacoAll } = await supabase
+        .from("alimentos_taco")
+        .select("id, nome")
+        .limit(5000);
+      const norm = (s: string) =>
+        s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+      const stop = new Set(["de","da","do","com","sem","em","e","ou","a","o","cru","cozido","grelhado","integral","light","zero","natural"]);
+      const tacoList = (tacoAll ?? []).map((t: any) => ({ id: t.id, tokens: norm(t.nome).split(" ").filter((w: string) => w && !stop.has(w)) }));
+
+      const matchAlimento = (nome: string): string | null => {
+        const tokens = norm(String(nome || "")).split(" ").filter((w) => w && !stop.has(w));
+        if (!tokens.length || !tacoList.length) return null;
+        let best: { id: string; score: number } | null = null;
+        for (const t of tacoList) {
+          if (!t.tokens.length) continue;
+          const hits = tokens.filter((w) => t.tokens.some((tw: string) => tw === w || tw.startsWith(w) || w.startsWith(tw))).length;
+          if (!hits) continue;
+          const score = hits / Math.max(tokens.length, t.tokens.length);
+          if (!best || score > best.score) best = { id: t.id, score };
+        }
+        return best && best.score >= 0.4 ? best.id : null;
+      };
+
       for (const [idx, ref] of result.refeicoes.entries()) {
         const { data: refeicao, error: rError } = await supabase
           .from("refeicoes")
@@ -695,13 +720,20 @@ Retorne exatamente:
         if (rError) throw rError;
 
         if (ref.itens && ref.itens.length > 0) {
-          const itemRows = ref.itens.map((item: any) => ({
-            refeicao_id: refeicao.id, substituicoes: item.nome, quantidade_g: item.quantidade_g,
-          }));
+          const itemRows = ref.itens.map((item: any) => {
+            const qtd = Number(item.quantidade_g);
+            return {
+              refeicao_id: refeicao.id,
+              substituicoes: item.nome,
+              quantidade_g: Number.isFinite(qtd) && qtd > 0 ? qtd : 100,
+              alimento_id: matchAlimento(item.nome),
+            };
+          });
           const { error: iError } = await supabase.from("itens_refeicao").insert(itemRows);
           if (iError) throw iError;
         }
       }
+
     }
 
     return new Response(JSON.stringify({ success: true, data: result, extractedData: result }), {
