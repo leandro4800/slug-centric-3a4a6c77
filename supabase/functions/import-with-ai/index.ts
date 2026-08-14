@@ -347,7 +347,7 @@ REGRAS OBRIGATÓRIAS PARA DIETA:
 - Se o documento vier de uma tabela com colunas (Refeição/Horário | Distribuição dos Alimentos | Medidas Caseiras | Substituições), associe linha a linha: cada alimento com a sua medida caseira e a sua substituição.
 - Blocos gerais que não são refeição (ex.: "EM JEJUM ... 500ml de água + 1 cápsula", "Suplementação antes de dormir 5g de creatina") também devem virar refeições com nome e descrição completa, com horario null se não houver.
 - Mantenha blocos de opções alternativas separados no campo descricao com linhas "Opção 1", "Opção 2" quando existirem.
-- Preencha "itens" com os alimentos e a quantidade em gramas quando a medida for em gramas/ml; se for "livre" ou unidades, mantenha só na descricao.
+- "itens" é OBRIGATÓRIO para TODA refeição que tenha alimento sólido/líquido: liste CADA alimento principal (o primeiro da linha, sem as substituições) com "quantidade_g" em gramas. Converta medidas caseiras para gramas aproximados (1 ovo = 50g, 1 unidade de banana = 100g, 1 fatia de queijo = 30g, 200ml de leite = 200g, 1 scoop de whey = 30g). Em faixas (ex.: "200-350g") use o valor médio. Para "Livre", use 100g quando for alimento (saladas/vegetais) e ignore quando for água/café/suplemento sem caloria.
 - O cálculo de macros será feito depois pela tabela TACO do banco.`
         : importType === "anamnese"
         ? ANAMNESE_SCHEMA
