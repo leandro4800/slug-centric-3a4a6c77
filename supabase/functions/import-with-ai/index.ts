@@ -699,19 +699,27 @@ Retorne exatamente:
       const stop = new Set(["de","da","do","com","sem","em","e","ou","a","o","cru","cozido","grelhado","integral","light","zero","natural"]);
       const tacoList = (tacoAll ?? []).map((t: any) => ({ id: t.id, tokens: norm(t.nome).split(" ").filter((w: string) => w && !stop.has(w)) }));
 
+      // Itens sem valor nutricional (água, café, chá, cápsulas) não devem virar alimento da TACO.
+      const semMacro = /(agua|cha\b|cafe|capsula|comprimido|lipodrene|termogenico|creatina|bcaa|glutamina|multivitaminico|omega|vitamina|colageno|adocante)/;
       const matchAlimento = (nome: string): string | null => {
-        const tokens = norm(String(nome || "")).split(" ").filter((w) => w && !stop.has(w));
+        const raw = norm(String(nome || ""));
+        if (!raw || semMacro.test(raw)) return null;
+        const tokens = raw.split(" ").filter((w) => w && !stop.has(w) && !/^\d+$/.test(w) && w.length > 2);
         if (!tokens.length || !tacoList.length) return null;
         let best: { id: string; score: number } | null = null;
         for (const t of tacoList) {
           if (!t.tokens.length) continue;
           const hits = tokens.filter((w) => t.tokens.some((tw: string) => tw === w || tw.startsWith(w) || w.startsWith(tw))).length;
           if (!hits) continue;
+          // exige que a maior parte do nome escrito esteja no alimento da TACO (evita casar "água" com "Atum em água")
+          const cobertura = hits / tokens.length;
+          if (cobertura < 0.6) continue;
           const score = hits / Math.max(tokens.length, t.tokens.length);
           if (!best || score > best.score) best = { id: t.id, score };
         }
-        return best && best.score >= 0.4 ? best.id : null;
+        return best && best.score >= 0.6 ? best.id : null;
       };
+
 
       for (const [idx, ref] of result.refeicoes.entries()) {
         const { data: refeicao, error: rError } = await supabase
