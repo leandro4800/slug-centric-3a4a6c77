@@ -110,6 +110,39 @@ const imgForContent = (nome: string, descricao?: string | null, itens?: Item[]) 
 const imgFor = (r: { nome: string; descricao_ia?: string | null; itens?: Item[] }) =>
   imgForContent(r.nome, r.descricao_ia, r.itens);
 
+// Remove refeições duplicadas (mesmo nome + horário + itens) vindas de importações repetidas
+const dedupeRefeicoes = <T extends { nome: string; horario?: string | null; itens?: Item[] }>(lista: T[]): T[] => {
+  const vistos = new Set<string>();
+  return (lista || []).filter((r) => {
+    const chave = [
+      norm(r.nome),
+      String(r.horario || ""),
+      (r.itens || []).map((i) => norm(`${i.substituicoes || ""}${i.alimento?.nome || ""}${i.quantidade_g ?? ""}`)).sort().join("|"),
+    ].join("::");
+    if (vistos.has(chave)) return false;
+    vistos.add(chave);
+    return true;
+  });
+};
+
+// Garante que refeições diferentes não repitam a mesma imagem no card
+const POOL = [imgBreakfast, imgLunch, imgSnack, imgDinner, imgPre, imgPost, imgSupper, imgSupplement];
+const buildImageMap = (lista: { id: string; nome: string; descricao_ia?: string | null; itens?: Item[] }[]) => {
+  const usados = new Set<string>();
+  const map: Record<string, string> = {};
+  (lista || []).forEach((r) => {
+    let img = imgFor(r);
+    if (usados.has(img)) {
+      const livre = POOL.find((p) => !usados.has(p));
+      if (livre) img = livre;
+    }
+    usados.add(img);
+    map[r.id] = img;
+  });
+  return map;
+};
+
+
 
 const Dieta = () => {
   const { tenant } = useBranding();
