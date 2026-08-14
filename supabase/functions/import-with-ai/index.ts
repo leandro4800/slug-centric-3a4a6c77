@@ -338,7 +338,7 @@ serve(async (req) => {
   "gasto_calorico_treino": "string | null",
   "agua_litros_dia": "string | null",
   "observacoes": "string (TODAS as observações, orientações, restrições, suplementação e recados do documento, uma por linha)",
-  "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "TODAS as linhas da refeição", "itens": [ { "nome": "string", "quantidade_g": number } ] } ]
+  "refeicoes": [ { "nome": "string", "horario": "string", "descricao": "TODAS as linhas da refeição", "itens": [ { "nome": "string (nome simples do alimento, sem substituições)", "quantidade_g": number } ] } ]
 }
 
 REGRAS OBRIGATÓRIAS PARA DIETA:
@@ -347,7 +347,7 @@ REGRAS OBRIGATÓRIAS PARA DIETA:
 - Se o documento vier de uma tabela com colunas (Refeição/Horário | Distribuição dos Alimentos | Medidas Caseiras | Substituições), associe linha a linha: cada alimento com a sua medida caseira e a sua substituição.
 - Blocos gerais que não são refeição (ex.: "EM JEJUM ... 500ml de água + 1 cápsula", "Suplementação antes de dormir 5g de creatina") também devem virar refeições com nome e descrição completa, com horario null se não houver.
 - Mantenha blocos de opções alternativas separados no campo descricao com linhas "Opção 1", "Opção 2" quando existirem.
-- Preencha "itens" com os alimentos e a quantidade em gramas quando a medida for em gramas/ml; se for "livre" ou unidades, mantenha só na descricao.
+- "itens" é OBRIGATÓRIO para TODA refeição que tenha alimento sólido/líquido: liste CADA alimento principal (o primeiro da linha, sem as substituições) com "quantidade_g" em gramas. Converta medidas caseiras para gramas aproximados (1 ovo = 50g, 1 unidade de banana = 100g, 1 fatia de queijo = 30g, 200ml de leite = 200g, 1 scoop de whey = 30g). Em faixas (ex.: "200-350g") use o valor médio. Para "Livre", use 100g quando for alimento (saladas/vegetais) e ignore quando for água/café/suplemento sem caloria.
 - O cálculo de macros será feito depois pela tabela TACO do banco.`
         : importType === "anamnese"
         ? ANAMNESE_SCHEMA
@@ -686,6 +686,31 @@ Retorne exatamente:
         return `${String(h).padStart(2, "0")}:${String(min).padStart(2, "0")}:00`;
       };
 
+
+      // Vincula cada item a um alimento da tabela TACO para o app conseguir contar os macros.
+      const { data: tacoAll } = await supabase
+        .from("alimentos_taco")
+        .select("id, nome")
+        .limit(5000);
+      const norm = (s: string) =>
+        s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
+      const stop = new Set(["de","da","do","com","sem","em","e","ou","a","o","cru","cozido","grelhado","integral","light","zero","natural"]);
+      const tacoList = (tacoAll ?? []).map((t: any) => ({ id: t.id, tokens: norm(t.nome).split(" ").filter((w: string) => w && !stop.has(w)) }));
+
+      const matchAlimento = (nome: string): string | null => {
+        const tokens = norm(String(nome || "")).split(" ").filter((w) => w && !stop.has(w));
+        if (!tokens.length || !tacoList.length) return null;
+        let best: { id: string; score: number } | null = null;
+        for (const t of tacoList) {
+          if (!t.tokens.length) continue;
+          const hits = tokens.filter((w) => t.tokens.some((tw: string) => tw === w || tw.startsWith(w) || w.startsWith(tw))).length;
+          if (!hits) continue;
+          const score = hits / Math.max(tokens.length, t.tokens.length);
+          if (!best || score > best.score) best = { id: t.id, score };
+        }
+        return best && best.score >= 0.4 ? best.id : null;
+      };
+
       for (const [idx, ref] of result.refeicoes.entries()) {
         const { data: refeicao, error: rError } = await supabase
           .from("refeicoes")
@@ -695,13 +720,20 @@ Retorne exatamente:
         if (rError) throw rError;
 
         if (ref.itens && ref.itens.length > 0) {
-          const itemRows = ref.itens.map((item: any) => ({
-            refeicao_id: refeicao.id, substituicoes: item.nome, quantidade_g: item.quantidade_g,
-          }));
+          const itemRows = ref.itens.map((item: any) => {
+            const qtd = Number(item.quantidade_g);
+            return {
+              refeicao_id: refeicao.id,
+              substituicoes: item.nome,
+              quantidade_g: Number.isFinite(qtd) && qtd > 0 ? qtd : 100,
+              alimento_id: matchAlimento(item.nome),
+            };
+          });
           const { error: iError } = await supabase.from("itens_refeicao").insert(itemRows);
           if (iError) throw iError;
         }
       }
+
     }
 
     return new Response(JSON.stringify({ success: true, data: result, extractedData: result }), {
