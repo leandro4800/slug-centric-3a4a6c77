@@ -1,0 +1,1 @@
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS usar_apenas_meus_videos boolean NOT NULL DEFAULT false;
