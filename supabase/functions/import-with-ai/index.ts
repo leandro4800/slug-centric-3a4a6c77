@@ -729,18 +729,23 @@ Retorne exatamente:
 
 
       // Remove refeições duplicadas retornadas pela IA (mesmo nome/horário/itens)
-      const chaveRef = (r: any) =>
-        [norm(String(r?.nome || "")), String(r?.horario || "").trim(),
+      // e também blocos com conteúdo idêntico em horários diferentes (repetição indevida).
+      const conteudoRef = (r: any) =>
+        [norm(String(r?.descricao || "")),
          (r?.itens || []).map((i: any) => norm(`${i?.nome || ""}${i?.quantidade_g ?? ""}`)).sort().join("|")].join("::");
+      const chaveRef = (r: any) =>
+        [norm(String(r?.nome || "")), String(r?.horario || "").trim(), conteudoRef(r)].join("::");
       const vistas = new Set<string>();
+      const conteudos = new Set<string>();
       const refeicoesUnicas = (result.refeicoes as any[]).filter((r) => {
         const k = chaveRef(r);
+        const c = conteudoRef(r);
         if (vistas.has(k)) return false;
+        if (c.replace(/[:|]/g, "").trim() && conteudos.has(c)) return false;
         vistas.add(k);
+        conteudos.add(c);
         return true;
       });
-
-      const totais = { kcal: 0, p: 0, c: 0, g: 0 };
 
       for (const [idx, ref] of refeicoesUnicas.entries()) {
         const { data: refeicao, error: rError } = await supabase
@@ -755,14 +760,6 @@ Retorne exatamente:
             const qtd = Number(item.quantidade_g);
             const quantidade_g = Number.isFinite(qtd) && qtd > 0 ? qtd : 0;
             const alimento_id = matchAlimento(item.nome);
-            const taco = alimento_id ? tacoById.get(alimento_id) : null;
-            if (taco && quantidade_g > 0) {
-              const f = quantidade_g / 100;
-              totais.kcal += (Number(taco.energia_kcal) || 0) * f;
-              totais.p += (Number(taco.proteina_g) || 0) * f;
-              totais.c += (Number(taco.carboidrato_g) || 0) * f;
-              totais.g += (Number(taco.lipideos_g) || 0) * f;
-            }
             return {
               refeicao_id: refeicao.id,
               substituicoes: item.nome,
@@ -775,28 +772,20 @@ Retorne exatamente:
         }
       }
 
-      // Metas de macros: usa o que estava escrito no documento; se não houver,
-      // usa a soma real dos alimentos vinculados (nada é inventado).
+      // Metas: SOMENTE o que está escrito no documento. Nada é calculado nem estimado.
       const escrito = result.macros_alvo || {};
       const num = (v: unknown) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : null);
       const macrosFinais = {
-        proteina_g: num(escrito.proteina_g) ?? (totais.p > 0 ? Math.round(totais.p) : null),
-        carboidrato_g: num(escrito.carboidrato_g) ?? (totais.c > 0 ? Math.round(totais.c) : null),
-        lipideos_g: num(escrito.lipideos_g) ?? (totais.g > 0 ? Math.round(totais.g) : null),
+        proteina_g: num(escrito.proteina_g),
+        carboidrato_g: num(escrito.carboidrato_g),
+        lipideos_g: num(escrito.lipideos_g),
       };
-      const kcalFinal =
-        Number.isFinite(Number(result.kcal_alvo)) && Number(result.kcal_alvo) > 0
-          ? Math.round(Number(result.kcal_alvo))
-          : totais.kcal > 0
-          ? Math.round(totais.kcal)
-          : null;
+      const kcalFinal = num(result.kcal_alvo);
 
-      if (macrosFinais.proteina_g || macrosFinais.carboidrato_g || macrosFinais.lipideos_g || kcalFinal) {
-        await supabase
-          .from("dietas")
-          .update({ macros_alvo: macrosFinais, kcal_alvo: kcalFinal })
-          .eq("id", dieta.id);
-      }
+      await supabase
+        .from("dietas")
+        .update({ macros_alvo: macrosFinais, kcal_alvo: kcalFinal })
+        .eq("id", dieta.id);
 
 
     }
