@@ -211,8 +211,6 @@ const PersonalDieta = () => {
 
   useEffect(() => { void carregar(); }, [carregar]);
 
-  const imgMap = buildImageMap(dieta?.refeicoes || []);
-
   const somaItens = dieta
     ? dieta.refeicoes.reduce((acc, r) => {
         const m = calcMacros(r.itens);
@@ -220,9 +218,16 @@ const PersonalDieta = () => {
       }, { kcal: 0, p: 0, c: 0, g: 0 })
     : { kcal: 0, p: 0, c: 0, g: 0 };
 
-  // Se os itens importados não têm valores nutricionais vinculados, usa as metas prescritas
+  // Só usa a soma dos itens quando TODOS os alimentos têm valor nutricional vinculado.
+  // Caso contrário, mostra exatamente as metas prescritas no documento (nada é estimado).
+  const todosItens = dieta ? dieta.refeicoes.flatMap((r) => r.itens) : [];
+  const somaConfiavel =
+    todosItens.length > 0 &&
+    todosItens.every((i) => !!i.alimento && Number(i.quantidade_g) > 0) &&
+    somaItens.kcal > 0;
+
   const totalDia = dieta
-    ? somaItens.kcal > 0
+    ? somaConfiavel
       ? somaItens
       : macrosFromTarget(dieta)
     : { kcal: 0, p: 0, c: 0, g: 0 };
@@ -235,7 +240,15 @@ const PersonalDieta = () => {
   ];
 
   const badge = dieta?.macros_alvo?.badge;
-  const selectedMacros = useMemo(() => selectedRef && selectedRef.itens.length > 0 ? calcMacros(selectedRef.itens) : null, [selectedRef]);
+  const selectedMacros = useMemo(
+    () =>
+      selectedRef &&
+      selectedRef.itens.length > 0 &&
+      selectedRef.itens.every((i) => !!i.alimento && Number(i.quantidade_g) > 0)
+        ? calcMacros(selectedRef.itens)
+        : null,
+    [selectedRef],
+  );
 
   return (
     <>
