@@ -25,7 +25,7 @@ const VideosTecnicos = () => {
   const [rows, setRows] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"todos" | "app">("todos");
+  const [filter, setFilter] = useState<"todos" | "app" | "meus">("todos");
   const [onlyMine, setOnlyMine] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
 
@@ -191,7 +191,9 @@ const VideosTecnicos = () => {
     () =>
       rows
         .filter((v) => v.nome_exercicio.toLowerCase().includes(search.toLowerCase()))
-        .filter((v) => (filter === "app" ? v.tenant_id === null : true)),
+        .filter((v) =>
+          filter === "app" ? v.tenant_id === null : filter === "meus" ? v.tenant_id !== null : true,
+        ),
     [rows, search, filter],
   );
 
@@ -232,7 +234,7 @@ const VideosTecnicos = () => {
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2 items-center">
-        {(["todos", "app"] as const).map((f) => (
+        {(["todos", "meus", "app"] as const).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -242,7 +244,7 @@ const VideosTecnicos = () => {
                 : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
             }`}
           >
-            {f === "todos" ? "Todos" : "Do App"}
+            {f === "todos" ? "Todos" : f === "meus" ? "Meus vídeos" : "Do App"}
           </button>
         ))}
         <button
@@ -254,7 +256,7 @@ const VideosTecnicos = () => {
               : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
           }`}
         >
-          Meus {onlyMine ? "(ativo)" : ""}
+          Só meus p/ alunos {onlyMine ? "(ativo)" : ""}
         </button>
         <span className="text-[11px] text-muted-foreground">
           {onlyMine
@@ -362,26 +364,27 @@ const VideosTecnicos = () => {
                     >
                       <Play className="h-4 w-4 mr-1" /> {previewId === v.id ? "Fechar" : "Ver"}
                     </Button>
-                    {!isGlobal &&
-                      (isEditing ? (
-                        <>
-                          <Button size="sm" onClick={saveEdit}>
-                            <Save className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => setEditId(null)}>
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button size="sm" variant="outline" onClick={() => startEdit(v)}>
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="destructive" onClick={() => handleDelete(v)}>
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </>
-                      ))}
+                    {isGlobal ? (
+                      <span className="text-[10px] text-muted-foreground">Vídeo do app</span>
+                    ) : isEditing ? (
+                      <>
+                        <Button size="sm" onClick={saveEdit}>
+                          <Save className="h-4 w-4 mr-1" /> Salvar
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => setEditId(null)}>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => startEdit(v)}>
+                          <Pencil className="h-4 w-4 mr-1" /> Editar
+                        </Button>
+                        <Button size="sm" variant="destructive" onClick={() => handleDelete(v)}>
+                          <Trash2 className="h-4 w-4 mr-1" /> Excluir
+                        </Button>
+                      </>
+                    )}
                   </div>
                 </div>
                 {previewId === v.id && <div className="mt-3">{renderPlayer(v)}</div>}
