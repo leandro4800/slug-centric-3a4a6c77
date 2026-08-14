@@ -110,6 +110,39 @@ const imgForContent = (nome: string, descricao?: string | null, itens?: Item[]) 
 const imgFor = (r: { nome: string; descricao_ia?: string | null; itens?: Item[] }) =>
   imgForContent(r.nome, r.descricao_ia, r.itens);
 
+// Remove refeições duplicadas (mesmo nome + horário + itens) vindas de importações repetidas
+const dedupeRefeicoes = <T extends { nome: string; horario?: string | null; itens?: Item[] }>(lista: T[]): T[] => {
+  const vistos = new Set<string>();
+  return (lista || []).filter((r) => {
+    const chave = [
+      norm(r.nome),
+      String(r.horario || ""),
+      (r.itens || []).map((i) => norm(`${i.substituicoes || ""}${i.alimento?.nome || ""}${i.quantidade_g ?? ""}`)).sort().join("|"),
+    ].join("::");
+    if (vistos.has(chave)) return false;
+    vistos.add(chave);
+    return true;
+  });
+};
+
+// Garante que refeições diferentes não repitam a mesma imagem no card
+const POOL = [imgBreakfast, imgLunch, imgSnack, imgDinner, imgPre, imgPost, imgSupper, imgSupplement];
+const buildImageMap = (lista: { id: string; nome: string; descricao_ia?: string | null; itens?: Item[] }[]) => {
+  const usados = new Set<string>();
+  const map: Record<string, string> = {};
+  (lista || []).forEach((r) => {
+    let img = imgFor(r);
+    if (usados.has(img)) {
+      const livre = POOL.find((p) => !usados.has(p));
+      if (livre) img = livre;
+    }
+    usados.add(img);
+    map[r.id] = img;
+  });
+  return map;
+};
+
+
 
 const Dieta = () => {
   const { tenant } = useBranding();
@@ -166,13 +199,15 @@ const PersonalDieta = () => {
       })),
     }));
 
-    setDieta({ ...d, refeicoes } as Dieta);
+    setDieta({ ...d, refeicoes: dedupeRefeicoes(refeicoes) } as Dieta);
     setLoading(false);
   }, [user]);
 
   useEffect(() => { void carregar(); }, [carregar]);
 
+  const imgMap = buildImageMap(dieta?.refeicoes || []);
   const hasStructuredItems = !!dieta?.refeicoes.some(r => r.itens.length > 0);
+
   const totalDia = dieta
     ? hasStructuredItems
       ? dieta.refeicoes.reduce((acc, r) => {
@@ -353,7 +388,7 @@ const PersonalDieta = () => {
                     className="group relative w-full h-36 rounded-xl overflow-hidden bg-black ring-1 ring-white/5 hover:ring-primary/60 transition-all text-left"
                   >
                     <img
-                      src={imgFor(r)}
+                      src={imgMap[r.id] || imgFor(r)}
                       alt={r.descricao_ia || r.nome}
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
@@ -419,7 +454,7 @@ const PersonalDieta = () => {
             <>
               <div className="relative h-48 -mt-px">
                 <img
-                  src={imgFor(selectedRef)}
+                  src={imgMap[selectedRef.id] || imgFor(selectedRef)}
                   alt={selectedRef.nome}
                   className="absolute inset-0 w-full h-full object-cover"
                 />

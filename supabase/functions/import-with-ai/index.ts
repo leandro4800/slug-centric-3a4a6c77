@@ -721,7 +721,19 @@ Retorne exatamente:
       };
 
 
-      for (const [idx, ref] of result.refeicoes.entries()) {
+      // Remove refeições duplicadas retornadas pela IA (mesmo nome/horário/itens)
+      const chaveRef = (r: any) =>
+        [norm(String(r?.nome || "")), String(r?.horario || "").trim(),
+         (r?.itens || []).map((i: any) => norm(`${i?.nome || ""}${i?.quantidade_g ?? ""}`)).sort().join("|")].join("::");
+      const vistas = new Set<string>();
+      const refeicoesUnicas = (result.refeicoes as any[]).filter((r) => {
+        const k = chaveRef(r);
+        if (vistas.has(k)) return false;
+        vistas.add(k);
+        return true;
+      });
+
+      for (const [idx, ref] of refeicoesUnicas.entries()) {
         const { data: refeicao, error: rError } = await supabase
           .from("refeicoes")
           .insert({ dieta_id: dieta.id, nome: ref.nome, horario: parseHorario(ref.horario), ordem: idx, descricao_ia: String(ref.descricao || "").trim() || null })
