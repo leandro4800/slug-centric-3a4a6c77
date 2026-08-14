@@ -468,24 +468,37 @@ const PersonalDieta = () => {
                   <h3 className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">ALIMENTOS</h3>
                   {selectedRef.itens.length > 0 ? (
                     <div className="divide-y divide-border/50 border border-border rounded-lg overflow-hidden">
-                      {selectedRef.itens.map(it => (
-                        <div key={it.id} className="px-3 py-2.5 flex items-center justify-between gap-3 bg-background/40">
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium truncate">{it.alimento?.nome || "—"}</p>
-                            <p className="text-[11px] text-muted-foreground">{it.quantidade_g}g {it.substituicoes ? `· ${it.substituicoes}` : ""}</p>
+                      {selectedRef.itens.map(it => {
+                        const escrito = (it.substituicoes || "").trim();
+                        const titulo = escrito || it.alimento?.nome || "—";
+                        const liquido = /(agua|água|\bml\b|leite|suco|cafe|café|chá|cha)/i.test(titulo);
+                        const unidade = liquido ? "ml" : "g";
+                        const temSub = escrito.toLowerCase().includes(" ou ");
+                        return (
+                          <div key={it.id} className="px-3 py-2.5 flex items-center justify-between gap-3 bg-background/40">
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium truncate">{titulo}</p>
+                              <p className="text-[11px] text-muted-foreground">
+                                {it.quantidade_g}{unidade}
+                                {it.alimento?.nome && escrito && it.alimento.nome.toLowerCase() !== escrito.toLowerCase()
+                                  ? ` · ${it.alimento.nome}`
+                                  : ""}
+                              </p>
+                            </div>
+                            {temSub && (
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-[10px] h-7 px-2 text-primary hover:text-primary hover:bg-primary/10"
+                                onClick={() => toast.info(escrito, { duration: 6000 })}
+                              >
+                                <RefreshCcw className="h-3 w-3 mr-1" /> Substituir
+                              </Button>
+                            )}
                           </div>
-                          {it.substituicoes && (
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-[10px] h-7 px-2 text-primary hover:text-primary hover:bg-primary/10"
-                              onClick={() => toast.info(it.substituicoes!, { duration: 6000 })}
-                            >
-                              <RefreshCcw className="h-3 w-3 mr-1" /> Substituir
-                            </Button>
-                          )}
-                        </div>
-                      ))}
+                        );
+                      })}
+
                     </div>
                   ) : (
                     <div className="rounded-lg border border-border bg-background/40 p-4 text-sm leading-relaxed whitespace-pre-line">
