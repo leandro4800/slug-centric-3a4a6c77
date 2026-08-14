@@ -335,6 +335,7 @@ serve(async (req) => {
   "objetivo": "string (objetivo/meta do plano, como escrito no documento)",
   "kcal_alvo": number | null,
   "tmb": number | null,
+  "macros_alvo": { "proteina_g": number | null, "carboidrato_g": number | null, "lipideos_g": number | null } | null,
   "gasto_calorico_treino": "string | null",
   "agua_litros_dia": "string | null",
   "observacoes": "string (TODAS as observações, orientações, restrições, suplementação e recados do documento, uma por linha)",
@@ -342,7 +343,8 @@ serve(async (req) => {
 }
 
 REGRAS OBRIGATÓRIAS PARA DIETA:
-- NÃO calcule kcal nem macros. Só preencha "kcal_alvo" e "tmb" se o documento trouxer o número escrito (ex.: "Valor do Plano Alimentar: 2400kcal/dia" -> kcal_alvo = 2400; "TMB: 1780Kcal/dia" -> tmb = 1780).
+- NÃO calcule kcal nem macros. Só preencha "kcal_alvo", "tmb" e "macros_alvo" se o documento trouxer os números escritos (ex.: "Valor do Plano Alimentar: 2400kcal/dia" -> kcal_alvo = 2400; "TMB: 1780Kcal/dia" -> tmb = 1780; "Proteínas: 180g / Carboidratos: 250g / Gorduras: 60g" -> macros_alvo). Se os totais de macros não estiverem escritos, use null.
+
 - O campo "descricao" NUNCA pode ficar vazio. Ele deve conter TODAS as linhas da refeição no formato "Alimento — medida caseira (substituições)", uma por linha, exatamente como no documento (inclusive "Livre", "200-350g", "3 unidades", "OU Ricota OU Cottage").
 - Se o documento vier de uma tabela com colunas (Refeição/Horário | Distribuição dos Alimentos | Medidas Caseiras | Substituições), associe linha a linha: cada alimento com a sua medida caseira e a sua substituição.
 - Blocos gerais que não são refeição (ex.: "EM JEJUM ... 500ml de água + 1 cápsula", "Suplementação antes de dormir 5g de creatina") também devem virar refeições com nome e descrição completa, com horario null se não houver.
