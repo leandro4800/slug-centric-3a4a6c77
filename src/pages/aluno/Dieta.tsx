@@ -21,6 +21,7 @@ import imgDinner from "@/assets/meal-dinner.jpg";
 import imgPre from "@/assets/meal-pre.jpg";
 import imgPost from "@/assets/meal-post.jpg";
 import imgSupper from "@/assets/meal-supper.jpg";
+import imgSupplement from "@/assets/meal-supplement.jpg";
 import imgMacroProtein from "@/assets/macro-protein.jpg";
 import imgMacroCarbs from "@/assets/macro-carbs.jpg";
 import imgMacroFats from "@/assets/macro-fats.jpg";
@@ -68,17 +69,47 @@ const macrosFromTarget = (dieta: Dieta | null) => ({
 });
 
 // Imagem cinematográfica por refeição (assets locais)
-const imgFor = (nome: string) => {
-  const n = (nome || "").toLowerCase();
-  if (n.includes("pós") || n.includes("pos-treino") || n.includes("pos treino")) return imgPost;
-  if (n.includes("pré") || n.includes("pre-treino") || n.includes("pre treino")) return imgPre;
-  if (n.includes("ceia") || n.includes("noite")) return imgSupper;
-  if (n.includes("jantar")) return imgDinner;
-  if (n.includes("almoço") || n.includes("almoco")) return imgLunch;
-  if (n.includes("café") || n.includes("cafe") || n.includes("manhã") || n.includes("manha")) return imgBreakfast;
-  if (n.includes("lanche")) return imgSnack;
+// Considera o NOME da refeição + descrição da IA + os alimentos listados,
+// para que "Suplementação antes de dormir - creatina" mostre suplemento, etc.
+const norm = (s: string) =>
+  (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+const has = (txt: string, words: string[]) => words.some(w => txt.includes(w));
+
+const imgForContent = (nome: string, descricao?: string | null, itens?: Item[]) => {
+  const n = norm(nome);
+  const conteudo = norm(
+    [descricao || "", ...(itens || []).map(i => `${i.alimento?.nome || ""} ${i.substituicoes || ""}`)].join(" ")
+  );
+  const all = `${n} ${conteudo}`;
+
+  // 1) Suplementos (creatina, whey, etc.) — prioridade máxima, pelo conteúdo
+  const supl = ["suplement", "creatina", "whey", "caseina", "albumina", "bcaa", "glutamina",
+    "cafein", "termogenico", "hipercalorico", "maltodextrina", "dextrose", "colageno",
+    "multivitamin", "omega 3", "omega-3", "vitamina", "capsula", "capsulas", "scoop",
+    "pre-workout", "pre workout", "beta alanina", "zma", "melatonina", "magnesio"];
+  if (has(n, supl) || has(conteudo, supl)) return imgSupplement;
+
+  // 2) Nome da refeição
+  if (has(n, ["pos-treino", "pos treino", "pós"])) return imgPost;
+  if (has(n, ["pre-treino", "pre treino", "pre-workout"])) return imgPre;
+  if (has(n, ["ceia", "antes de dormir", "noite"])) return imgSupper;
+  if (has(n, ["jantar"])) return imgDinner;
+  if (has(n, ["almoco"])) return imgLunch;
+  if (has(n, ["cafe", "manha", "desjejum"])) return imgBreakfast;
+  if (has(n, ["lanche"])) return imgSnack;
+
+  // 3) Fallback pelo conteúdo dos alimentos
+  if (has(all, ["arroz", "feijao", "frango", "carne", "patinho", "file", "macarrao", "batata"])) return imgLunch;
+  if (has(all, ["ovo", "pao", "tapioca", "aveia", "leite", "cuscuz", "cafe"])) return imgBreakfast;
+  if (has(all, ["iogurte", "fruta", "banana", "maca", "castanha", "barra"])) return imgSnack;
+  if (has(all, ["sopa", "salada", "omelete"])) return imgDinner;
   return imgBreakfast;
 };
+
+const imgFor = (r: { nome: string; descricao_ia?: string | null; itens?: Item[] }) =>
+  imgForContent(r.nome, r.descricao_ia, r.itens);
+
 
 const Dieta = () => {
   const { tenant } = useBranding();
