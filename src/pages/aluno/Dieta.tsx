@@ -353,7 +353,7 @@ const PersonalDieta = () => {
                     className="group relative w-full h-36 rounded-xl overflow-hidden bg-black ring-1 ring-white/5 hover:ring-primary/60 transition-all text-left"
                   >
                     <img
-                      src={imgFor(r.nome)}
+                      src={imgFor(r)}
                       alt={r.descricao_ia || r.nome}
                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
@@ -419,7 +419,7 @@ const PersonalDieta = () => {
             <>
               <div className="relative h-48 -mt-px">
                 <img
-                  src={imgFor(selectedRef.nome)}
+                  src={imgFor(selectedRef)}
                   alt={selectedRef.nome}
                   className="absolute inset-0 w-full h-full object-cover"
                 />
