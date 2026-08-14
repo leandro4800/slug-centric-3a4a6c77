@@ -218,19 +218,26 @@ const PersonalDieta = () => {
       }, { kcal: 0, p: 0, c: 0, g: 0 })
     : { kcal: 0, p: 0, c: 0, g: 0 };
 
-  // Só usa a soma dos itens quando TODOS os alimentos têm valor nutricional vinculado.
-  // Caso contrário, mostra exatamente as metas prescritas no documento (nada é estimado).
+  // Só usa a soma dos itens quando TODOS os alimentos têm valor nutricional vinculado
+  // E essa soma é coerente com a meta escrita no documento (>= 70% da meta).
+  // Caso contrário, mostra exatamente as metas prescritas (nada é estimado/inventado).
   const todosItens = dieta ? dieta.refeicoes.flatMap((r) => r.itens) : [];
+  const alvo = macrosFromTarget(dieta);
+  const temMetaEscrita = alvo.p > 0 || alvo.c > 0 || alvo.g > 0;
   const somaConfiavel =
     todosItens.length > 0 &&
     todosItens.every((i) => !!i.alimento && Number(i.quantidade_g) > 0) &&
-    somaItens.kcal > 0;
+    somaItens.kcal > 0 &&
+    (!alvo.kcal || somaItens.kcal >= alvo.kcal * 0.7);
 
   const totalDia = dieta
     ? somaConfiavel
       ? somaItens
-      : macrosFromTarget(dieta)
+      : temMetaEscrita
+        ? alvo
+        : { ...somaItens, kcal: alvo.kcal || somaItens.kcal }
     : { kcal: 0, p: 0, c: 0, g: 0 };
+
 
 
   const pieData = [
@@ -369,12 +376,15 @@ const PersonalDieta = () => {
                       <div className="relative px-4 py-3 flex items-center justify-between min-h-[72px]">
                         <div className="flex flex-col gap-1">
                           <span className="text-[10px] font-bold tracking-[0.2em] text-white drop-shadow-md">{m.l}</span>
-                          <span className="text-[10px] text-white/70 uppercase tracking-wider">{pct}% da meta</span>
+                          <span className="text-[10px] text-white/70 uppercase tracking-wider">
+                            {alvo ? `${pct}% da meta` : "total do dia"}
+                          </span>
                         </div>
                         <div className="flex items-baseline gap-1 drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
                           <span className="font-display text-2xl text-white">{m.v}</span>
-                          <span className="text-xs text-white/80">/ {m.alvo || "-"}g</span>
+                          <span className="text-xs text-white/80">{alvo ? `/ ${alvo}g` : "g"}</span>
                         </div>
+
                       </div>
 
                       {/* Barra de progresso na borda inferior */}
