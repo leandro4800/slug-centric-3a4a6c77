@@ -76,39 +76,46 @@ const norm = (s: string) =>
 
 const has = (txt: string, words: string[]) => words.some(w => txt.includes(w));
 
-const imgForContent = (nome: string, descricao?: string | null, itens?: Item[]) => {
+// Lista de imagens candidatas, da mais adequada para a menos adequada,
+// baseada no nome da refeição + descrição + alimentos escritos.
+const imgCandidates = (nome: string, descricao?: string | null, itens?: Item[]): string[] => {
   const n = norm(nome);
   const conteudo = norm(
-    [descricao || "", ...(itens || []).map(i => `${i.alimento?.nome || ""} ${i.substituicoes || ""}`)].join(" ")
+    [descricao || "", ...(itens || []).map(i => `${i.substituicoes || ""} ${i.alimento?.nome || ""}`)].join(" ")
   );
   const all = `${n} ${conteudo}`;
+  const out: string[] = [];
+  const push = (img: string) => { if (!out.includes(img)) out.push(img); };
 
-  // 1) Suplementos (creatina, whey, etc.) — prioridade máxima, pelo conteúdo
   const supl = ["suplement", "creatina", "whey", "caseina", "albumina", "bcaa", "glutamina",
     "cafein", "termogenico", "hipercalorico", "maltodextrina", "dextrose", "colageno",
     "multivitamin", "omega 3", "omega-3", "vitamina", "capsula", "capsulas", "scoop",
-    "pre-workout", "pre workout", "beta alanina", "zma", "melatonina", "magnesio"];
-  if (has(n, supl) || has(conteudo, supl)) return imgSupplement;
+    "pre-workout", "pre workout", "beta alanina", "zma", "melatonina", "magnesio", "lipodrene"];
 
-  // 2) Nome da refeição
-  if (has(n, ["pos-treino", "pos treino", "pós"])) return imgPost;
-  if (has(n, ["pre-treino", "pre treino", "pre-workout"])) return imgPre;
-  if (has(n, ["ceia", "antes de dormir", "noite"])) return imgSupper;
-  if (has(n, ["jantar"])) return imgDinner;
-  if (has(n, ["almoco"])) return imgLunch;
-  if (has(n, ["cafe", "manha", "desjejum"])) return imgBreakfast;
-  if (has(n, ["lanche"])) return imgSnack;
+  // 1) Nome da refeição manda primeiro (horário/refeição real)
+  if (has(n, ["pos-treino", "pos treino", "pós"])) push(imgPost);
+  if (has(n, ["pre-treino", "pre treino", "pre-workout"])) push(imgPre);
+  if (has(n, ["ceia", "antes de dormir"])) push(imgSupper);
+  if (has(n, ["jantar", "noite"])) push(imgDinner);
+  if (has(n, ["almoco"])) push(imgLunch);
+  if (has(n, ["cafe da manha", "desjejum", "manha", "jejum"])) push(imgBreakfast);
+  if (has(n, ["lanche"])) push(imgSnack);
 
-  // 3) Fallback pelo conteúdo dos alimentos
-  if (has(all, ["arroz", "feijao", "frango", "carne", "patinho", "file", "macarrao", "batata"])) return imgLunch;
-  if (has(all, ["ovo", "pao", "tapioca", "aveia", "leite", "cuscuz", "cafe"])) return imgBreakfast;
-  if (has(all, ["iogurte", "fruta", "banana", "maca", "castanha", "barra"])) return imgSnack;
-  if (has(all, ["sopa", "salada", "omelete"])) return imgDinner;
-  return imgBreakfast;
+  // 2) Suplementos / cápsulas quando o conteúdo é de suplementação
+  if (has(n, supl) || has(conteudo, supl)) push(imgSupplement);
+
+  // 3) Conteúdo escrito dos alimentos
+  if (has(all, ["arroz", "feijao", "frango", "carne", "patinho", "file", "macarrao", "batata", "peixe", "bovino"])) push(imgLunch);
+  if (has(all, ["ovo", "pao", "tapioca", "aveia", "leite", "cuscuz", "queijo", "cafe"])) push(imgBreakfast);
+  if (has(all, ["iogurte", "fruta", "banana", "maca", "castanha", "barra", "inhame", "aipim"])) push(imgSnack);
+  if (has(all, ["sopa", "salada", "omelete"])) push(imgDinner);
+
+  push(imgBreakfast);
+  return out;
 };
 
 const imgFor = (r: { nome: string; descricao_ia?: string | null; itens?: Item[] }) =>
-  imgForContent(r.nome, r.descricao_ia, r.itens);
+  imgCandidates(r.nome, r.descricao_ia, r.itens)[0];
 
 // Remove refeições duplicadas (mesmo nome + horário + itens) vindas de importações repetidas
 const dedupeRefeicoes = <T extends { nome: string; horario?: string | null; itens?: Item[] }>(lista: T[]): T[] => {
@@ -125,22 +132,19 @@ const dedupeRefeicoes = <T extends { nome: string; horario?: string | null; iten
   });
 };
 
-// Garante que refeições diferentes não repitam a mesma imagem no card
-const POOL = [imgBreakfast, imgLunch, imgSnack, imgDinner, imgPre, imgPost, imgSupper, imgSupplement];
+// Evita repetir a mesma imagem, mas sempre dentro das candidatas coerentes com a refeição
 const buildImageMap = (lista: { id: string; nome: string; descricao_ia?: string | null; itens?: Item[] }[]) => {
   const usados = new Set<string>();
   const map: Record<string, string> = {};
   (lista || []).forEach((r) => {
-    let img = imgFor(r);
-    if (usados.has(img)) {
-      const livre = POOL.find((p) => !usados.has(p));
-      if (livre) img = livre;
-    }
-    usados.add(img);
-    map[r.id] = img;
+    const cands = imgCandidates(r.nome, r.descricao_ia, r.itens);
+    const escolha = cands.find((c) => !usados.has(c)) ?? cands[0];
+    usados.add(escolha);
+    map[r.id] = escolha;
   });
   return map;
 };
+
 
 
 
