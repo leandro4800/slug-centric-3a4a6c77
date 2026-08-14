@@ -694,17 +694,20 @@ Retorne exatamente:
       // Vincula cada item a um alimento da tabela TACO para o app conseguir contar os macros.
       const { data: tacoAll } = await supabase
         .from("alimentos_taco")
-        .select("id, nome")
+        .select("id, nome, energia_kcal, proteina_g, carboidrato_g, lipideos_g")
         .limit(5000);
       const norm = (s: string) =>
         s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9 ]/g, " ").replace(/\s+/g, " ").trim();
       const stop = new Set(["de","da","do","com","sem","em","e","ou","a","o","cru","cozido","grelhado","integral","light","zero","natural"]);
       const tacoList = (tacoAll ?? []).map((t: any) => ({ id: t.id, tokens: norm(t.nome).split(" ").filter((w: string) => w && !stop.has(w)) }));
+      const tacoById = new Map<string, any>((tacoAll ?? []).map((t: any) => [t.id, t]));
 
       // Itens sem valor nutricional (água, café, chá, cápsulas) não devem virar alimento da TACO.
       const semMacro = /(agua|cha\b|cafe|capsula|comprimido|lipodrene|termogenico|creatina|bcaa|glutamina|multivitaminico|omega|vitamina|colageno|adocante)/;
       const matchAlimento = (nome: string): string | null => {
-        const raw = norm(String(nome || ""));
+        // usa só o primeiro alimento escrito da linha (antes de travessão, "OU", parênteses)
+        const principal = String(nome || "").split(/—|–|-{1,2}|\bOU\b|\bou\b|\(|,|;|\//)[0];
+        const raw = norm(principal);
         if (!raw || semMacro.test(raw)) return null;
         const tokens = raw.split(" ").filter((w) => w && !stop.has(w) && !/^\d+$/.test(w) && w.length > 2);
         if (!tokens.length || !tacoList.length) return null;
@@ -719,7 +722,7 @@ Retorne exatamente:
           const score = hits / Math.max(tokens.length, t.tokens.length);
           if (!best || score > best.score) best = { id: t.id, score };
         }
-        return best && best.score >= 0.6 ? best.id : null;
+        return best && best.score >= 0.5 ? best.id : null;
       };
 
 
@@ -735,6 +738,8 @@ Retorne exatamente:
         return true;
       });
 
+      const totais = { kcal: 0, p: 0, c: 0, g: 0 };
+
       for (const [idx, ref] of refeicoesUnicas.entries()) {
         const { data: refeicao, error: rError } = await supabase
           .from("refeicoes")
@@ -746,17 +751,51 @@ Retorne exatamente:
         if (ref.itens && ref.itens.length > 0) {
           const itemRows = ref.itens.map((item: any) => {
             const qtd = Number(item.quantidade_g);
+            const quantidade_g = Number.isFinite(qtd) && qtd > 0 ? qtd : 0;
+            const alimento_id = matchAlimento(item.nome);
+            const taco = alimento_id ? tacoById.get(alimento_id) : null;
+            if (taco && quantidade_g > 0) {
+              const f = quantidade_g / 100;
+              totais.kcal += (Number(taco.energia_kcal) || 0) * f;
+              totais.p += (Number(taco.proteina_g) || 0) * f;
+              totais.c += (Number(taco.carboidrato_g) || 0) * f;
+              totais.g += (Number(taco.lipideos_g) || 0) * f;
+            }
             return {
               refeicao_id: refeicao.id,
               substituicoes: item.nome,
-              quantidade_g: Number.isFinite(qtd) && qtd > 0 ? qtd : 0,
-              alimento_id: matchAlimento(item.nome),
+              quantidade_g,
+              alimento_id,
             };
           });
           const { error: iError } = await supabase.from("itens_refeicao").insert(itemRows);
           if (iError) throw iError;
         }
       }
+
+      // Metas de macros: usa o que estava escrito no documento; se não houver,
+      // usa a soma real dos alimentos vinculados (nada é inventado).
+      const escrito = result.macros_alvo || {};
+      const num = (v: unknown) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : null);
+      const macrosFinais = {
+        proteina_g: num(escrito.proteina_g) ?? (totais.p > 0 ? Math.round(totais.p) : null),
+        carboidrato_g: num(escrito.carboidrato_g) ?? (totais.c > 0 ? Math.round(totais.c) : null),
+        lipideos_g: num(escrito.lipideos_g) ?? (totais.g > 0 ? Math.round(totais.g) : null),
+      };
+      const kcalFinal =
+        Number.isFinite(Number(result.kcal_alvo)) && Number(result.kcal_alvo) > 0
+          ? Math.round(Number(result.kcal_alvo))
+          : totais.kcal > 0
+          ? Math.round(totais.kcal)
+          : null;
+
+      if (macrosFinais.proteina_g || macrosFinais.carboidrato_g || macrosFinais.lipideos_g || kcalFinal) {
+        await supabase
+          .from("dietas")
+          .update({ macros_alvo: macrosFinais, kcal_alvo: kcalFinal })
+          .eq("id", dieta.id);
+      }
+
 
     }
 
