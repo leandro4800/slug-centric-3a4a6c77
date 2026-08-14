@@ -234,8 +234,8 @@ const AdminVideosTecnicos = () => {
 
       <div className="h-px bg-primary/20 mt-6" />
 
-      <div className="mt-6 flex gap-2">
-        {(["todos", "meus", "app"] as const).map((f) => (
+      <div className="mt-6 flex flex-wrap gap-2 items-center">
+        {(isPlatformAdmin ? (["todos", "meus", "app"] as const) : (["todos", "app"] as const)).map((f) => (
           <button
             key={f}
             onClick={() => setFilter(f)}
@@ -248,7 +248,30 @@ const AdminVideosTecnicos = () => {
             {f === "todos" ? "Todos" : f === "meus" ? "Meus" : "Do App"}
           </button>
         ))}
+
+        {!isPlatformAdmin && (
+          <button
+            onClick={toggleOnlyMine}
+            disabled={savingPref}
+            className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
+              onlyMine
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-card/40 text-muted-foreground border-white/10 hover:border-primary/40"
+            }`}
+            title="Quando ligado, o app do aluno usa somente os seus vídeos"
+          >
+            Meus {onlyMine ? "(ativo)" : ""}
+          </button>
+        )}
       </div>
+      {!isPlatformAdmin && (
+        <p className="text-[10px] text-muted-foreground mt-2">
+          {onlyMine
+            ? "Seus alunos estão vendo somente os SEUS vídeos técnicos."
+            : "Seus alunos veem os vídeos do app + os seus (os seus têm prioridade)."}
+        </p>
+      )}
+
 
       <div className="mt-4 space-y-4">
         <div className="flex flex-wrap gap-2">
