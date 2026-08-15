@@ -359,7 +359,7 @@ var mcp_default = defineMcp({
   name: "alpha-coach-mcp",
   title: "Alpha Coach MCP",
   version: "0.2.0",
-  instructions: "Servidor MCP do Alpha Coach. Cada coach tem um `mcp_token` (obtenha em Minha Conta) que deve ser passado em todas as chamadas. Ferramentas: list_athletes, get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis, add_athlete. Use echo para testar conectividade.",
+  instructions: "Servidor MCP do Alpha Coach. O coach conecta com a pr\xF3pria conta do painel (login OAuth); as ferramentas j\xE1 operam no tenant dele. Ferramentas: list_athletes, get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis, add_athlete. Use echo para testar conectividade.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
