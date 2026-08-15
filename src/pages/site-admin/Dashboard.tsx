@@ -114,7 +114,7 @@ const Dashboard = () => {
             <Link to="/site/admin/alunos/novo" className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/90 transition">
               <Play className="h-3.5 w-3.5 fill-current" /> Cadastrar aluno
             </Link>
-            <Link to="/site/admin/planos" className="inline-flex items-center gap-2 bg-white/10 backdrop-blur border border-white/20 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition">
+            <Link to="/site/admin/planos" className="inline-flex items-center gap-2 bg-white/15 border border-white/20 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition">
               <Flame className="h-3.5 w-3.5" /> Meus planos
             </Link>
           </div>
@@ -191,7 +191,7 @@ const Dashboard = () => {
 };
 
 const HeroStat = ({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) => (
-  <div className="border border-white/10 bg-white/5 backdrop-blur-md p-3">
+  <div className="border border-white/10 bg-white/10 p-3">
     <div className="flex items-center gap-1.5 text-white/60">{icon}<span className="text-[9px] font-bold uppercase tracking-[0.2em]">{label}</span></div>
     <p className="mt-1.5 text-xl md:text-2xl font-black">{value}</p>
   </div>
@@ -216,7 +216,7 @@ const CineCard = ({ done, label, to, icon: Icon, image }: { done: boolean; label
     <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
     <div className="relative h-full flex flex-col justify-between p-3">
       <div className="flex items-center justify-between">
-        <div className="h-8 w-8 rounded-full bg-white/10 backdrop-blur flex items-center justify-center border border-white/20">
+        <div className="h-8 w-8 rounded-full bg-white/15 flex items-center justify-center border border-white/20">
           <Icon className="h-4 w-4 text-white" />
         </div>
         {done && <CheckCircle2 className="h-4 w-4 text-primary drop-shadow-[0_0_8px_hsl(var(--primary))]" />}
