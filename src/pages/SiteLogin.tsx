@@ -21,7 +21,10 @@ const SiteLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const params = new URLSearchParams(window.location.search);
-  const redirectTo = params.get("redirect");
+  const rawNext = params.get("next");
+  const redirectTo =
+    params.get("redirect") || (rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null);
+
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
