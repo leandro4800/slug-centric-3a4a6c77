@@ -99,6 +99,14 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
         alimentos_evita: form.alimentos_evita,
         modalidades_anteriores: form.modalidades_anteriores,
         tempo_recuperacao: form.tempo_recuperacao,
+        alimentos_basicos_casa: form.alimentos_basicos_casa,
+        cafe_lanche_habitual: form.cafe_lanche_habitual,
+        proteinas_consumidas: form.proteinas_consumidas,
+        frutas_vegetais_preferidos: form.frutas_vegetais_preferidos,
+        nivel_atividade_diaria: form.nivel_atividade_diaria,
+        horario_almoco: form.horario_almoco,
+        horario_jantar: form.horario_jantar,
+        horario_treino: form.horario_treino,
         updated_at: new Date().toISOString(),
       };
       const { error } = await supabase
