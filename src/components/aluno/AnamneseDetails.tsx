@@ -258,13 +258,31 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
       <Field label="Alimentos que evita">
         <Textarea value={form.alimentos_evita || ""} onChange={e => setForm({ ...form, alimentos_evita: e.target.value })} />
       </Field>
+      <Field label="Alimentos básicos em casa">
+        <Textarea value={form.alimentos_basicos_casa || ""} onChange={e => setForm({ ...form, alimentos_basicos_casa: e.target.value })} />
+      </Field>
+      <Field label="Café da manhã e lanches habituais">
+        <Textarea value={form.cafe_lanche_habitual || ""} onChange={e => setForm({ ...form, cafe_lanche_habitual: e.target.value })} />
+      </Field>
+      <Field label="Proteínas mais consumidas">
+        <Textarea value={form.proteinas_consumidas || ""} onChange={e => setForm({ ...form, proteinas_consumidas: e.target.value })} />
+      </Field>
+      <Field label="Frutas e vegetais preferidos">
+        <Textarea value={form.frutas_vegetais_preferidos || ""} onChange={e => setForm({ ...form, frutas_vegetais_preferidos: e.target.value })} />
+      </Field>
 
       <div className="grid grid-cols-2 gap-3">
-        <Field label="Anos de Treino">
-          <Input type="number" step="0.5" value={form.anos_treino ?? ""} onChange={e => setForm({ ...form, anos_treino: e.target.value === "" ? null : Number(e.target.value) })} />
+        <Field label="Horário Almoço">
+          <Input value={form.horario_almoco || ""} onChange={e => setForm({ ...form, horario_almoco: e.target.value })} placeholder="Ex: 12:30" />
         </Field>
-        <Field label="Nível Experiência">
-          <Input value={form.nivel_experiencia || ""} onChange={e => setForm({ ...form, nivel_experiencia: e.target.value })} />
+        <Field label="Horário Jantar">
+          <Input value={form.horario_jantar || ""} onChange={e => setForm({ ...form, horario_jantar: e.target.value })} placeholder="Ex: 20:00" />
+        </Field>
+        <Field label="Horário do Treino">
+          <Input value={form.horario_treino || ""} onChange={e => setForm({ ...form, horario_treino: e.target.value })} placeholder="Ex: Manhã" />
+        </Field>
+        <Field label="Nível de Atividade Diária">
+          <Input value={form.nivel_atividade_diaria || ""} onChange={e => setForm({ ...form, nivel_atividade_diaria: e.target.value })} placeholder="Ex: Sedentário / Moderado / Ativo" />
         </Field>
       </div>
       <Field label="Disponibilidade Dias">
