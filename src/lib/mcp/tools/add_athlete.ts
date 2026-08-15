@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { errorResult, extractBearerToken, getServiceClient, jsonResult, resolveTenant } from "./_shared";
+import { errorResult, getServiceClient, jsonResult, resolveTenantForRequest } from "./_shared";
 
 export default defineTool({
   name: "add_athlete",
@@ -16,8 +16,7 @@ export default defineTool({
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async ({ mcp_token, nome_completo, email, telefone, sexo }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
+    const auth = await resolveTenantForRequest(mcp_token, extra);
     if (!auth.ok) return errorResult(auth.error);
     const supa = getServiceClient();
     const normalizedEmail = email.trim().toLowerCase();

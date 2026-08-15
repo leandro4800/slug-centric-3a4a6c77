@@ -8,7 +8,7 @@ import {
   MessageSquare, Terminal, CheckCircle2, ExternalLink,
 } from "lucide-react";
 
-const MCP_URL = "https://alpha-coach.app/mcp";
+const MCP_URL = "https://iflgryuemsohurtdaawm.supabase.co/functions/v1/mcp";
 
 const TOOLS = [
   { name: "list_athletes", desc: "Lista todos os seus alunos ativos com nome, e-mail e status." },

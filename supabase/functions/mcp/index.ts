@@ -3,10 +3,10 @@
 // supabase function: mcp
 // Bundled from src/lib/mcp/index.ts by @lovable.dev/mcp-js.
 // src/lib/mcp/index.ts
-import { defineMcp } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { auth, defineMcp } from "npm:@lovable.dev/mcp-js@0.26.2";
 
 // src/lib/mcp/tools/echo.ts
-import { defineTool } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool } from "npm:@lovable.dev/mcp-js@0.26.2";
 import { z } from "npm:zod@^3.25.76";
 var echo_default = defineTool({
   name: "echo",
@@ -18,7 +18,7 @@ var echo_default = defineTool({
 });
 
 // src/lib/mcp/tools/list_athletes.ts
-import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool2 } from "npm:@lovable.dev/mcp-js@0.26.2";
 import { z as z2 } from "npm:zod@^3.25.76";
 
 // src/lib/mcp/tools/_shared.ts
@@ -91,6 +91,38 @@ async function findAthlete(tenantId, ref) {
   if (!data) return { error: "Aluno n\xE3o encontrado neste tenant." };
   return { athlete: data };
 }
+async function resolveTenantByUser(userId) {
+  const empty = { ok: false, tenantId: "", tenantSlug: "", tenantName: null, error: "" };
+  if (!userId) return { ...empty, error: "Usu\xE1rio n\xE3o identificado no token." };
+  const supa = getServiceClient();
+  const owned = await supa.from("tenants").select("id, slug, nome").eq("owner_user_id", userId).limit(1).maybeSingle();
+  if (owned.data) {
+    const t = owned.data;
+    return { ok: true, tenantId: t.id, tenantSlug: t.slug ?? "", tenantName: t.nome ?? null, error: "" };
+  }
+  const role = await supa.from("user_roles").select("tenant_id, role, tenants:tenant_id(slug, nome)").eq("user_id", userId).in("role", ["coach", "admin"]).not("tenant_id", "is", null).limit(1).maybeSingle();
+  if (role.data) {
+    const d = role.data;
+    return {
+      ok: true,
+      tenantId: d.tenant_id,
+      tenantSlug: d.tenants?.slug ?? "",
+      tenantName: d.tenants?.nome ?? null,
+      error: ""
+    };
+  }
+  return { ...empty, error: "Esta conta n\xE3o \xE9 coach de nenhum tenant." };
+}
+async function resolveTenantForRequest(mcpToken, extra) {
+  const userId = typeof extra?.getUserId === "function" ? extra.getUserId() : null;
+  if (userId) {
+    const byUser = await resolveTenantByUser(String(userId));
+    if (byUser.ok) return byUser;
+    if (!mcpToken) return byUser;
+  }
+  const token = mcpToken || extractBearerToken(extra) || "";
+  return resolveTenant(token);
+}
 
 // src/lib/mcp/tools/list_athletes.ts
 var list_athletes_default = defineTool2({
@@ -104,23 +136,22 @@ var list_athletes_default = defineTool2({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, search, limit }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
-    if (!auth.ok) return errorResult(auth.error);
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
     const supa = getServiceClient();
-    let q = supa.from("perfis").select("id, nome_completo, email, telefone, sexo, data_nascimento, onboarding_completo").eq("tenant_id", auth.tenantId).order("nome_completo", { ascending: true }).limit(limit ?? 50);
+    let q = supa.from("perfis").select("id, nome_completo, email, telefone, sexo, data_nascimento, onboarding_completo").eq("tenant_id", auth2.tenantId).order("nome_completo", { ascending: true }).limit(limit ?? 50);
     if (search && search.trim()) {
       const s = `%${search.trim()}%`;
       q = q.or(`nome_completo.ilike.${s},email.ilike.${s}`);
     }
     const { data, error } = await q;
     if (error) return errorResult(`Erro consultando alunos: ${error.message}`);
-    return jsonResult({ tenant: auth.tenantName, total: data?.length ?? 0, alunos: data ?? [] });
+    return jsonResult({ tenant: auth2.tenantName, total: data?.length ?? 0, alunos: data ?? [] });
   }
 });
 
 // src/lib/mcp/tools/get_athlete_workout.ts
-import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool3 } from "npm:@lovable.dev/mcp-js@0.26.2";
 import { z as z3 } from "npm:zod@^3.25.76";
 var DIAS = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
 var get_athlete_workout_default = defineTool3({
@@ -136,13 +167,12 @@ var get_athlete_workout_default = defineTool3({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome, dia_semana }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
-    if (!auth.ok) return errorResult(auth.error);
-    const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const found = await findAthlete(auth2.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
     const supa = getServiceClient();
-    let q = supa.from("treinos_prescritos").select("dia_semana, ordem, exercicio, series, repeticoes, cadencia, observacao, status, detalhes_execucao").eq("aluno_id", found.athlete.id).eq("tenant_id", auth.tenantId).order("dia_semana").order("ordem");
+    let q = supa.from("treinos_prescritos").select("dia_semana, ordem, exercicio, series, repeticoes, cadencia, observacao, status, detalhes_execucao").eq("aluno_id", found.athlete.id).eq("tenant_id", auth2.tenantId).order("dia_semana").order("ordem");
     if (dia_semana) q = q.eq("dia_semana", dia_semana);
     const { data, error } = await q;
     if (error) return errorResult(`Erro consultando treino: ${error.message}`);
@@ -151,7 +181,7 @@ var get_athlete_workout_default = defineTool3({
 });
 
 // src/lib/mcp/tools/get_athlete_diet.ts
-import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool4 } from "npm:@lovable.dev/mcp-js@0.26.2";
 import { z as z4 } from "npm:zod@^3.25.76";
 var get_athlete_diet_default = defineTool4({
   name: "get_athlete_diet",
@@ -165,10 +195,9 @@ var get_athlete_diet_default = defineTool4({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
-    if (!auth.ok) return errorResult(auth.error);
-    const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const found = await findAthlete(auth2.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
     const supa = getServiceClient();
     const { data: dieta, error } = await supa.from("dietas").select("id, objetivo, tmb_estimada, kcal_alvo, macros_alvo, observacoes_clinicas, is_published, created_at").eq("user_id", found.athlete.id).order("created_at", { ascending: false }).limit(1).maybeSingle();
@@ -186,7 +215,7 @@ var get_athlete_diet_default = defineTool4({
 });
 
 // src/lib/mcp/tools/get_athlete_progress.ts
-import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.26.2";
 import { z as z5 } from "npm:zod@^3.25.76";
 var get_athlete_progress_default = defineTool5({
   name: "get_athlete_progress",
@@ -201,10 +230,9 @@ var get_athlete_progress_default = defineTool5({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome, checkin_limit }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
-    if (!auth.ok) return errorResult(auth.error);
-    const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const found = await findAthlete(auth2.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
     const supa = getServiceClient();
     const limit = checkin_limit ?? 20;
@@ -212,7 +240,7 @@ var get_athlete_progress_default = defineTool5({
       supa.from("evolucao_checkins").select("data_checkin, peso_kg, bf_percentual, massa_magra_kg, massa_gorda_kg, observacoes").eq("user_id", found.athlete.id).order("data_checkin", { ascending: false }).limit(limit),
       supa.from("avaliacoes_fisicas").select(
         "data, peso_kg, altura_cm, bf_pct_calculado, imc, massa_magra_kg, massa_gorda_kg, cintura_cm, quadril_cm, pescoco_cm, perimetro_braco_contraido_dir, perimetro_coxa_media_dir, metodo"
-      ).eq("aluno_id", found.athlete.id).eq("tenant_id", auth.tenantId).order("data", { ascending: false }).limit(10),
+      ).eq("aluno_id", found.athlete.id).eq("tenant_id", auth2.tenantId).order("data", { ascending: false }).limit(10),
       supa.from("perfis_treino").select("objetivo, peso_kg, altura_cm, bf_pct, frequencia_semanal, tempo_treino").eq("aluno_id", found.athlete.id).maybeSingle()
     ]);
     const checkins = checkinsRes.data ?? [];
@@ -246,7 +274,7 @@ var get_athlete_progress_default = defineTool5({
 });
 
 // src/lib/mcp/tools/get_athlete_anamnesis.ts
-import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.26.2";
 import { z as z6 } from "npm:zod@^3.25.76";
 var get_athlete_anamnesis_default = defineTool6({
   name: "get_athlete_anamnesis",
@@ -260,10 +288,9 @@ var get_athlete_anamnesis_default = defineTool6({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
-    if (!auth.ok) return errorResult(auth.error);
-    const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const found = await findAthlete(auth2.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
     const supa = getServiceClient();
     const { data, error } = await supa.from("anamnese_aluno").select("*").eq("aluno_id", found.athlete.id).maybeSingle();
@@ -273,7 +300,7 @@ var get_athlete_anamnesis_default = defineTool6({
 });
 
 // src/lib/mcp/tools/add_athlete.ts
-import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.20.0";
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.26.2";
 import { z as z7 } from "npm:zod@^3.25.76";
 var add_athlete_default = defineTool7({
   name: "add_athlete",
@@ -288,14 +315,13 @@ var add_athlete_default = defineTool7({
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async ({ mcp_token, nome_completo, email, telefone, sexo }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
-    if (!auth.ok) return errorResult(auth.error);
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
     const supa = getServiceClient();
     const normalizedEmail = email.trim().toLowerCase();
     const { data: existing } = await supa.from("perfis").select("id, tenant_id").ilike("email", normalizedEmail).maybeSingle();
     if (existing) {
-      if (existing.tenant_id === auth.tenantId) {
+      if (existing.tenant_id === auth2.tenantId) {
         return errorResult(`Aluno ${normalizedEmail} j\xE1 est\xE1 cadastrado neste tenant (id=${existing.id}).`);
       }
       return errorResult(`E-mail j\xE1 cadastrado em outro tenant.`);
@@ -307,7 +333,7 @@ var add_athlete_default = defineTool7({
       email_confirm: true,
       user_metadata: {
         nome_completo,
-        tenant_id: auth.tenantId,
+        tenant_id: auth2.tenantId,
         sexo: sexo ?? null,
         telefone: telefone ?? null
       }
@@ -317,10 +343,10 @@ var add_athlete_default = defineTool7({
     }
     const userId = created.user.id;
     await supa.from("perfis").update({ telefone: telefone ?? null, sexo: sexo ?? null, nome_completo }).eq("id", userId);
-    await supa.from("user_roles").upsert({ user_id: userId, role: "aluno", tenant_id: auth.tenantId }, { onConflict: "user_id,role,tenant_id" });
+    await supa.from("user_roles").upsert({ user_id: userId, role: "aluno", tenant_id: auth2.tenantId }, { onConflict: "user_id,role,tenant_id" });
     return jsonResult({
       ok: true,
-      aluno: { id: userId, nome_completo, email: normalizedEmail, tenant: auth.tenantName },
+      aluno: { id: userId, nome_completo, email: normalizedEmail, tenant: auth2.tenantName },
       senha_temporaria: tempPassword,
       instrucoes: "Compartilhe a senha tempor\xE1ria com o aluno. Ele deve fazer login no app, alterar a senha e concluir o onboarding."
     });
@@ -328,11 +354,16 @@ var add_athlete_default = defineTool7({
 });
 
 // src/lib/mcp/index.ts
+var projectRef = "iflgryuemsohurtdaawm";
 var mcp_default = defineMcp({
   name: "alpha-coach-mcp",
   title: "Alpha Coach MCP",
   version: "0.2.0",
-  instructions: "Servidor MCP do Alpha Coach. Cada coach tem um `mcp_token` (obtenha em Minha Conta) que deve ser passado em todas as chamadas. Ferramentas: list_athletes, get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis, add_athlete. Use echo para testar conectividade.",
+  instructions: "Servidor MCP do Alpha Coach. O coach conecta com a pr\xF3pria conta do painel (login OAuth); as ferramentas j\xE1 operam no tenant dele. Ferramentas: list_athletes, get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis, add_athlete. Use echo para testar conectividade.",
+  auth: auth.oauth.issuer({
+    issuer: `https://${projectRef}.supabase.co/auth/v1`,
+    acceptedAudiences: "authenticated"
+  }),
   tools: [
     echo_default,
     list_athletes_default,
@@ -345,5 +376,5 @@ var mcp_default = defineMcp({
 });
 
 // lovable-mcp-supabase-entry.ts
-import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.20.0/stacks/supabase";
+import { createSupabaseHandler } from "npm:@lovable.dev/mcp-js@0.26.2/stacks/supabase";
 Deno.serve(createSupabaseHandler(mcp_default, { functionName: "mcp" }));

@@ -1,6 +1,6 @@
 import { defineTool } from "@lovable.dev/mcp-js";
 import { z } from "zod";
-import { errorResult, extractBearerToken, findAthlete, getServiceClient, jsonResult, resolveTenant } from "./_shared";
+import { errorResult, findAthlete, getServiceClient, jsonResult, resolveTenantForRequest } from "./_shared";
 
 const DIAS = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"] as const;
 
@@ -18,8 +18,7 @@ export default defineTool({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome, dia_semana }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
+    const auth = await resolveTenantForRequest(mcp_token, extra);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);

@@ -104,3 +104,59 @@ export async function findAthlete(
   if (!data) return { error: "Aluno não encontrado neste tenant." as const };
   return { athlete: data };
 }
+
+/** Resolve tenant from the verified OAuth user (token `sub`). */
+export async function resolveTenantByUser(userId: string): Promise<AuthResult> {
+  const empty: AuthResult = { ok: false, tenantId: "", tenantSlug: "", tenantName: null, error: "" };
+  if (!userId) return { ...empty, error: "Usuário não identificado no token." };
+  const supa = getServiceClient();
+  const owned = await supa
+    .from("tenants")
+    .select("id, slug, nome")
+    .eq("owner_user_id", userId)
+    .limit(1)
+    .maybeSingle();
+  if (owned.data) {
+    const t = owned.data as { id: string; slug: string; nome: string | null };
+    return { ok: true, tenantId: t.id, tenantSlug: t.slug ?? "", tenantName: t.nome ?? null, error: "" };
+  }
+  const role = await supa
+    .from("user_roles")
+    .select("tenant_id, role, tenants:tenant_id(slug, nome)")
+    .eq("user_id", userId)
+    .in("role", ["coach", "admin"])
+    .not("tenant_id", "is", null)
+    .limit(1)
+    .maybeSingle();
+  if (role.data) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const d = role.data as any;
+    return {
+      ok: true,
+      tenantId: d.tenant_id,
+      tenantSlug: d.tenants?.slug ?? "",
+      tenantName: d.tenants?.nome ?? null,
+      error: "",
+    };
+  }
+  return { ...empty, error: "Esta conta não é coach de nenhum tenant." };
+}
+
+/**
+ * Resolve o tenant da chamada: primeiro pelo usuário autenticado via OAuth,
+ * com fallback para o `mcp_token` (compatibilidade com clientes antigos).
+ */
+export async function resolveTenantForRequest(
+  mcpToken: string | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  extra: any,
+): Promise<AuthResult> {
+  const userId = typeof extra?.getUserId === "function" ? extra.getUserId() : null;
+  if (userId) {
+    const byUser = await resolveTenantByUser(String(userId));
+    if (byUser.ok) return byUser;
+    if (!mcpToken) return byUser;
+  }
+  const token = mcpToken || extractBearerToken(extra) || "";
+  return resolveTenant(token);
+}

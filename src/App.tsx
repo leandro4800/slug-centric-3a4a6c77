@@ -26,6 +26,7 @@ import SejaCoach from "./pages/SejaCoach";
 import Onboarding from "./pages/Onboarding";
 import Login from "./pages/Login";
 import SiteLogin from "./pages/SiteLogin";
+import OAuthConsent from "./pages/OAuthConsent";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AlunoLayout from "./pages/aluno/AlunoLayout";
@@ -183,6 +184,7 @@ const App = () => (
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
             <Route path="/site/login" element={<SiteLogin />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
             <Route path="/suporte" element={<Suporte />} />
             <Route path="/support" element={<Navigate to="/suporte" replace />} />
