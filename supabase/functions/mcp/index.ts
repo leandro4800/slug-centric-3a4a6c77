@@ -91,6 +91,38 @@ async function findAthlete(tenantId, ref) {
   if (!data) return { error: "Aluno n\xE3o encontrado neste tenant." };
   return { athlete: data };
 }
+async function resolveTenantByUser(userId) {
+  const empty = { ok: false, tenantId: "", tenantSlug: "", tenantName: null, error: "" };
+  if (!userId) return { ...empty, error: "Usu\xE1rio n\xE3o identificado no token." };
+  const supa = getServiceClient();
+  const owned = await supa.from("tenants").select("id, slug, nome").eq("owner_user_id", userId).limit(1).maybeSingle();
+  if (owned.data) {
+    const t = owned.data;
+    return { ok: true, tenantId: t.id, tenantSlug: t.slug ?? "", tenantName: t.nome ?? null, error: "" };
+  }
+  const role = await supa.from("user_roles").select("tenant_id, role, tenants:tenant_id(slug, nome)").eq("user_id", userId).in("role", ["coach", "admin"]).not("tenant_id", "is", null).limit(1).maybeSingle();
+  if (role.data) {
+    const d = role.data;
+    return {
+      ok: true,
+      tenantId: d.tenant_id,
+      tenantSlug: d.tenants?.slug ?? "",
+      tenantName: d.tenants?.nome ?? null,
+      error: ""
+    };
+  }
+  return { ...empty, error: "Esta conta n\xE3o \xE9 coach de nenhum tenant." };
+}
+async function resolveTenantForRequest(mcpToken, extra) {
+  const userId = typeof extra?.getUserId === "function" ? extra.getUserId() : null;
+  if (userId) {
+    const byUser = await resolveTenantByUser(String(userId));
+    if (byUser.ok) return byUser;
+    if (!mcpToken) return byUser;
+  }
+  const token = mcpToken || extractBearerToken(extra) || "";
+  return resolveTenant(token);
+}
 
 // src/lib/mcp/tools/list_athletes.ts
 var list_athletes_default = defineTool2({
@@ -104,8 +136,7 @@ var list_athletes_default = defineTool2({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, search, limit }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
+    const auth = await resolveTenantForRequest(mcp_token, extra);
     if (!auth.ok) return errorResult(auth.error);
     const supa = getServiceClient();
     let q = supa.from("perfis").select("id, nome_completo, email, telefone, sexo, data_nascimento, onboarding_completo").eq("tenant_id", auth.tenantId).order("nome_completo", { ascending: true }).limit(limit ?? 50);
@@ -136,8 +167,7 @@ var get_athlete_workout_default = defineTool3({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome, dia_semana }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
+    const auth = await resolveTenantForRequest(mcp_token, extra);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
@@ -165,8 +195,7 @@ var get_athlete_diet_default = defineTool4({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
+    const auth = await resolveTenantForRequest(mcp_token, extra);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
@@ -201,8 +230,7 @@ var get_athlete_progress_default = defineTool5({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome, checkin_limit }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
+    const auth = await resolveTenantForRequest(mcp_token, extra);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
@@ -260,8 +288,7 @@ var get_athlete_anamnesis_default = defineTool6({
   },
   annotations: { readOnlyHint: true, openWorldHint: false },
   handler: async ({ mcp_token, athlete_id, email, nome }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
+    const auth = await resolveTenantForRequest(mcp_token, extra);
     if (!auth.ok) return errorResult(auth.error);
     const found = await findAthlete(auth.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
@@ -288,8 +315,7 @@ var add_athlete_default = defineTool7({
   },
   annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
   handler: async ({ mcp_token, nome_completo, email, telefone, sexo }, extra) => {
-    const effectiveToken = mcp_token || extractBearerToken(extra) || "";
-    const auth = await resolveTenant(effectiveToken);
+    const auth = await resolveTenantForRequest(mcp_token, extra);
     if (!auth.ok) return errorResult(auth.error);
     const supa = getServiceClient();
     const normalizedEmail = email.trim().toLowerCase();
