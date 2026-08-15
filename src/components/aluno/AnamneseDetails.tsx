@@ -285,6 +285,15 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
           <Input value={form.nivel_atividade_diaria || ""} onChange={e => setForm({ ...form, nivel_atividade_diaria: e.target.value })} placeholder="Ex: Sedentário / Moderado / Ativo" />
         </Field>
       </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Anos de Treino">
+          <Input type="number" step="0.5" value={form.anos_treino ?? ""} onChange={e => setForm({ ...form, anos_treino: e.target.value === "" ? null : Number(e.target.value) })} />
+        </Field>
+        <Field label="Nível Experiência">
+          <Input value={form.nivel_experiencia || ""} onChange={e => setForm({ ...form, nivel_experiencia: e.target.value })} />
+        </Field>
+      </div>
       <Field label="Disponibilidade Dias">
         <div className="flex flex-wrap gap-2">
           {DIAS_SEMANA.map(dia => {
