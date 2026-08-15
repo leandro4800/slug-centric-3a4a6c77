@@ -1,5 +1,23 @@
 {
   "rewrites": [
+    {
+      "source": "/.well-known/oauth-protected-resource/:path*",
+      "destination": "https://iflgryuemsohurtdaawm.supabase.co/functions/v1/mcp/.well-known/oauth-protected-resource"
+    },
+    {
+      "source": "/.well-known/oauth-protected-resource",
+      "destination": "https://iflgryuemsohurtdaawm.supabase.co/functions/v1/mcp/.well-known/oauth-protected-resource"
+    },
+    {
+      "source": "/.well-known/oauth-authorization-server/:path*",
+      "destination": "https://iflgryuemsohurtdaawm.supabase.co/functions/v1/mcp/.well-known/oauth-protected-resource"
+    },
+    {
+      "source": "/.well-known/oauth-authorization-server",
+      "destination": "https://iflgryuemsohurtdaawm.supabase.co/functions/v1/mcp/.well-known/oauth-protected-resource"
+    },
+    { "source": "/mcp", "destination": "https://iflgryuemsohurtdaawm.supabase.co/functions/v1/mcp" },
+    { "source": "/mcp/:path*", "destination": "https://iflgryuemsohurtdaawm.supabase.co/functions/v1/mcp/:path*" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
