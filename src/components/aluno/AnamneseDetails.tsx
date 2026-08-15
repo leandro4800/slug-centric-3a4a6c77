@@ -32,6 +32,14 @@ interface AnamneseData {
   alimentos_evita: string | null;
   modalidades_anteriores: string[];
   tempo_recuperacao: string | null;
+  alimentos_basicos_casa: string | null;
+  cafe_lanche_habitual: string | null;
+  proteinas_consumidas: string | null;
+  frutas_vegetais_preferidos: string | null;
+  nivel_atividade_diaria: string | null;
+  horario_almoco: string | null;
+  horario_jantar: string | null;
+  horario_treino: string | null;
 }
 
 interface Props {
