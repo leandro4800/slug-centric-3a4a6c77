@@ -32,6 +32,14 @@ interface AnamneseData {
   alimentos_evita: string | null;
   modalidades_anteriores: string[];
   tempo_recuperacao: string | null;
+  alimentos_basicos_casa: string | null;
+  cafe_lanche_habitual: string | null;
+  proteinas_consumidas: string | null;
+  frutas_vegetais_preferidos: string | null;
+  nivel_atividade_diaria: string | null;
+  horario_almoco: string | null;
+  horario_jantar: string | null;
+  horario_treino: string | null;
 }
 
 interface Props {
@@ -91,6 +99,14 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
         alimentos_evita: form.alimentos_evita,
         modalidades_anteriores: form.modalidades_anteriores,
         tempo_recuperacao: form.tempo_recuperacao,
+        alimentos_basicos_casa: form.alimentos_basicos_casa,
+        cafe_lanche_habitual: form.cafe_lanche_habitual,
+        proteinas_consumidas: form.proteinas_consumidas,
+        frutas_vegetais_preferidos: form.frutas_vegetais_preferidos,
+        nivel_atividade_diaria: form.nivel_atividade_diaria,
+        horario_almoco: form.horario_almoco,
+        horario_jantar: form.horario_jantar,
+        horario_treino: form.horario_treino,
         updated_at: new Date().toISOString(),
       };
       const { error } = await supabase
@@ -143,19 +159,33 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
           <div className="grid grid-cols-2 gap-3">
             <DetailItem label="Refeições/Dia" value={data.refeicoes_dia} />
             <DetailItem label="Água/Dia" value={data.agua_litros ? `${data.agua_litros}L` : null} />
+            <DetailItem label="Horário Almoço" value={data.horario_almoco} />
+            <DetailItem label="Horário Jantar" value={data.horario_jantar} />
           </div>
           <DetailItem label="Suplementos" value={data.suplementos?.join(", ")} />
           <DetailItem label="Restrições" value={data.restricoes_alimentares?.join(", ")} />
           <DetailItem label="Ama" value={data.alimentos_ama} />
           <DetailItem label="Evita" value={data.alimentos_evita} />
+          <DetailItem label="Alimentos básicos em casa" value={data.alimentos_basicos_casa} />
+          <DetailItem label="Café da manhã e lanches habituais" value={data.cafe_lanche_habitual} />
+          <DetailItem label="Proteínas mais consumidas" value={data.proteinas_consumidas} />
+          <DetailItem label="Frutas e vegetais preferidos" value={data.frutas_vegetais_preferidos} />
+          <DetailItem label="Nível de atividade diária" value={data.nivel_atividade_diaria} />
         </section>
         <section className="space-y-3">
           <h3 className="font-display text-sm uppercase text-primary tracking-widest border-b border-primary/20 pb-1">Treino</h3>
           <div className="grid grid-cols-2 gap-3">
             <DetailItem label="Anos de Treino" value={data.anos_treino} />
             <DetailItem label="Experiência" value={data.nivel_experiencia} />
+            <DetailItem label="Horário do Treino" value={data.horario_treino} />
+            <DetailItem label="Tempo de Recuperação" value={data.tempo_recuperacao} />
           </div>
           <DetailItem label="Disponibilidade" value={data.disponibilidade_dias?.join(", ")} />
+          <DetailItem label="Modalidades Anteriores" value={data.modalidades_anteriores?.join(", ")} />
+          <div className="grid grid-cols-2 gap-3 pt-1">
+            <DetailItem label="Uso de Ergogênicos" value={data.faz_uso_ergogenicos ? "Sim" : "Não"} />
+            <DetailItem label="Detalhes Ergogênicos" value={data.detalhes_ergogenicos} />
+          </div>
         </section>
       </div>
     );
@@ -228,6 +258,33 @@ export const AnamneseDetails = ({ data, alunoId, editable, onSaved }: Props) => 
       <Field label="Alimentos que evita">
         <Textarea value={form.alimentos_evita || ""} onChange={e => setForm({ ...form, alimentos_evita: e.target.value })} />
       </Field>
+      <Field label="Alimentos básicos em casa">
+        <Textarea value={form.alimentos_basicos_casa || ""} onChange={e => setForm({ ...form, alimentos_basicos_casa: e.target.value })} />
+      </Field>
+      <Field label="Café da manhã e lanches habituais">
+        <Textarea value={form.cafe_lanche_habitual || ""} onChange={e => setForm({ ...form, cafe_lanche_habitual: e.target.value })} />
+      </Field>
+      <Field label="Proteínas mais consumidas">
+        <Textarea value={form.proteinas_consumidas || ""} onChange={e => setForm({ ...form, proteinas_consumidas: e.target.value })} />
+      </Field>
+      <Field label="Frutas e vegetais preferidos">
+        <Textarea value={form.frutas_vegetais_preferidos || ""} onChange={e => setForm({ ...form, frutas_vegetais_preferidos: e.target.value })} />
+      </Field>
+
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Horário Almoço">
+          <Input value={form.horario_almoco || ""} onChange={e => setForm({ ...form, horario_almoco: e.target.value })} placeholder="Ex: 12:30" />
+        </Field>
+        <Field label="Horário Jantar">
+          <Input value={form.horario_jantar || ""} onChange={e => setForm({ ...form, horario_jantar: e.target.value })} placeholder="Ex: 20:00" />
+        </Field>
+        <Field label="Horário do Treino">
+          <Input value={form.horario_treino || ""} onChange={e => setForm({ ...form, horario_treino: e.target.value })} placeholder="Ex: Manhã" />
+        </Field>
+        <Field label="Nível de Atividade Diária">
+          <Input value={form.nivel_atividade_diaria || ""} onChange={e => setForm({ ...form, nivel_atividade_diaria: e.target.value })} placeholder="Ex: Sedentário / Moderado / Ativo" />
+        </Field>
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Field label="Anos de Treino">
