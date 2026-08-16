@@ -594,6 +594,45 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
+      },
+      {
+        "name": "list_exercise_library",
+        "title": "Listar biblioteca de exercícios e vídeos técnicos",
+        "description": "Lista os exercícios e vídeos técnicos disponíveis para o coach (tabelas referencia_exercicios, referencia_videos e biblioteca_exercicios), incluindo vídeos globais do app. Use antes de montar treino para escolher exercícios com vídeo já cadastrado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "mcp_token": {
+              "type": "string",
+              "description": "Token MCP do coach. Opcional se enviado via Authorization: Bearer."
+            },
+            "search": {
+              "type": "string",
+              "description": "Filtro por nome do exercício."
+            },
+            "grupo_muscular": {
+              "type": "string",
+              "description": "Filtro por grupamento muscular."
+            },
+            "apenas_meus": {
+              "type": "boolean",
+              "description": "Padrão false: inclui também os vídeos globais do app."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 300,
+              "description": "Máximo por tabela (padrão 100)."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
       }
     ]
   }
