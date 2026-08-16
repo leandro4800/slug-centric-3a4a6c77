@@ -353,13 +353,273 @@ var add_athlete_default = defineTool7({
   }
 });
 
+// src/lib/mcp/tools/set_athlete_workout.ts
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.26.2";
+import { z as z8 } from "npm:zod@^3.25.76";
+var DIAS2 = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+var exercicioSchema = z8.object({
+  exercicio: z8.string().min(1).describe("Nome do exerc\xEDcio."),
+  series: z8.string().optional().describe('Ex: "4".'),
+  repeticoes: z8.string().optional().describe('Ex: "8-10".'),
+  cadencia: z8.string().optional(),
+  observacao: z8.string().optional(),
+  detalhes_execucao: z8.string().optional(),
+  video_url: z8.string().optional()
+});
+var set_athlete_workout_default = defineTool8({
+  name: "set_athlete_workout",
+  title: "Definir treino do dia",
+  description: "Substitui (sobrescreve) o treino de um dia da semana do aluno pela lista de exerc\xEDcios enviada. Use replace=false para apenas acrescentar exerc\xEDcios ao final do dia.",
+  inputSchema: {
+    mcp_token: z8.string().optional().describe("Token MCP do coach. Opcional se enviado via Authorization: Bearer."),
+    athlete_id: z8.string().uuid().optional(),
+    email: z8.string().optional(),
+    nome: z8.string().optional(),
+    dia_semana: z8.enum(DIAS2),
+    replace: z8.boolean().optional().describe("Padr\xE3o true: apaga os exerc\xEDcios existentes do dia antes de inserir."),
+    exercicios: z8.array(exercicioSchema).min(1).describe("Lista de exerc\xEDcios na ordem desejada.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+  handler: async ({ mcp_token, athlete_id, email, nome, dia_semana, replace, exercicios }, extra) => {
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const found = await findAthlete(auth2.tenantId, { athlete_id, email, nome });
+    if ("error" in found) return errorResult(found.error);
+    const supa = getServiceClient();
+    let startOrder = 0;
+    if (replace === false) {
+      const { data: last } = await supa.from("treinos_prescritos").select("ordem").eq("aluno_id", found.athlete.id).eq("tenant_id", auth2.tenantId).eq("dia_semana", dia_semana).order("ordem", { ascending: false }).limit(1).maybeSingle();
+      startOrder = Number(last?.ordem ?? 0);
+    } else {
+      const { error: delErr } = await supa.from("treinos_prescritos").delete().eq("aluno_id", found.athlete.id).eq("tenant_id", auth2.tenantId).eq("dia_semana", dia_semana);
+      if (delErr) return errorResult(`Erro limpando treino do dia: ${delErr.message}`);
+    }
+    const rows = exercicios.map((ex, i) => ({
+      tenant_id: auth2.tenantId,
+      aluno_id: found.athlete.id,
+      dia_semana,
+      ordem: startOrder + i + 1,
+      exercicio: ex.exercicio,
+      series: ex.series ?? null,
+      repeticoes: ex.repeticoes ?? null,
+      cadencia: ex.cadencia ?? null,
+      observacao: ex.observacao ?? null,
+      detalhes_execucao: ex.detalhes_execucao ?? null,
+      video_url: ex.video_url ?? null,
+      status: "ativo"
+    }));
+    const { data, error } = await supa.from("treinos_prescritos").insert(rows).select("id, ordem, exercicio");
+    if (error) return errorResult(`Erro salvando treino: ${error.message}`);
+    return jsonResult({
+      ok: true,
+      aluno: found.athlete,
+      dia_semana,
+      modo: replace === false ? "acrescentado" : "substituido",
+      total: data?.length ?? 0,
+      exercicios: data ?? []
+    });
+  }
+});
+
+// src/lib/mcp/tools/update_workout_exercise.ts
+import { defineTool as defineTool9 } from "npm:@lovable.dev/mcp-js@0.26.2";
+import { z as z9 } from "npm:zod@^3.25.76";
+var DIAS3 = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+var update_workout_exercise_default = defineTool9({
+  name: "update_workout_exercise",
+  title: "Editar exerc\xEDcio do treino",
+  description: "Edita um exerc\xEDcio j\xE1 prescrito (s\xE9ries, repeti\xE7\xF5es, cad\xEAncia, observa\xE7\xE3o, nome ou v\xEDdeo). Identifique pelo exercise_id (retornado por get_athlete_workout) ou pelo nome do exerc\xEDcio + dia da semana.",
+  inputSchema: {
+    mcp_token: z9.string().optional().describe("Token MCP do coach. Opcional se enviado via Authorization: Bearer."),
+    exercise_id: z9.string().uuid().optional().describe("ID da linha em treinos_prescritos."),
+    athlete_id: z9.string().uuid().optional(),
+    email: z9.string().optional(),
+    nome: z9.string().optional(),
+    dia_semana: z9.enum(DIAS3).optional(),
+    exercicio_atual: z9.string().optional().describe("Nome (ou parte) do exerc\xEDcio a editar, quando n\xE3o usar exercise_id."),
+    novo_exercicio: z9.string().optional(),
+    series: z9.string().optional(),
+    repeticoes: z9.string().optional(),
+    cadencia: z9.string().optional(),
+    observacao: z9.string().optional(),
+    detalhes_execucao: z9.string().optional(),
+    video_url: z9.string().optional(),
+    ordem: z9.number().int().optional()
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  handler: async (input, extra) => {
+    const auth2 = await resolveTenantForRequest(input.mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const supa = getServiceClient();
+    const patch = {};
+    if (input.novo_exercicio !== void 0) patch.exercicio = input.novo_exercicio;
+    if (input.series !== void 0) patch.series = input.series;
+    if (input.repeticoes !== void 0) patch.repeticoes = input.repeticoes;
+    if (input.cadencia !== void 0) patch.cadencia = input.cadencia;
+    if (input.observacao !== void 0) patch.observacao = input.observacao;
+    if (input.detalhes_execucao !== void 0) patch.detalhes_execucao = input.detalhes_execucao;
+    if (input.video_url !== void 0) patch.video_url = input.video_url;
+    if (input.ordem !== void 0) patch.ordem = input.ordem;
+    if (Object.keys(patch).length === 0) return errorResult("Informe ao menos um campo para alterar.");
+    patch.updated_at = (/* @__PURE__ */ new Date()).toISOString();
+    let q = supa.from("treinos_prescritos").update(patch).eq("tenant_id", auth2.tenantId);
+    if (input.exercise_id) {
+      q = q.eq("id", input.exercise_id);
+    } else {
+      const found = await findAthlete(auth2.tenantId, {
+        athlete_id: input.athlete_id,
+        email: input.email,
+        nome: input.nome
+      });
+      if ("error" in found) return errorResult(found.error);
+      if (!input.exercicio_atual) return errorResult("Informe exercise_id ou exercicio_atual.");
+      q = q.eq("aluno_id", found.athlete.id).ilike("exercicio", `%${input.exercicio_atual.trim()}%`);
+      if (input.dia_semana) q = q.eq("dia_semana", input.dia_semana);
+    }
+    const { data, error } = await q.select("id, dia_semana, ordem, exercicio, series, repeticoes, cadencia, observacao");
+    if (error) return errorResult(`Erro atualizando exerc\xEDcio: ${error.message}`);
+    if (!data || data.length === 0) return errorResult("Nenhum exerc\xEDcio encontrado com esses crit\xE9rios.");
+    return jsonResult({ ok: true, atualizados: data.length, exercicios: data });
+  }
+});
+
+// src/lib/mcp/tools/delete_workout_exercise.ts
+import { defineTool as defineTool10 } from "npm:@lovable.dev/mcp-js@0.26.2";
+import { z as z10 } from "npm:zod@^3.25.76";
+var DIAS4 = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+var delete_workout_exercise_default = defineTool10({
+  name: "delete_workout_exercise",
+  title: "Remover exerc\xEDcio do treino",
+  description: "Remove exerc\xEDcios prescritos do aluno. Use exercise_id para remover um espec\xEDfico, ou dia_semana (+ opcionalmente exercicio) para remover do dia.",
+  inputSchema: {
+    mcp_token: z10.string().optional().describe("Token MCP do coach. Opcional se enviado via Authorization: Bearer."),
+    exercise_id: z10.string().uuid().optional(),
+    athlete_id: z10.string().uuid().optional(),
+    email: z10.string().optional(),
+    nome: z10.string().optional(),
+    dia_semana: z10.enum(DIAS4).optional(),
+    exercicio: z10.string().optional().describe("Nome (ou parte) do exerc\xEDcio a remover.")
+  },
+  annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+  handler: async ({ mcp_token, exercise_id, athlete_id, email, nome, dia_semana, exercicio }, extra) => {
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const supa = getServiceClient();
+    let q = supa.from("treinos_prescritos").delete().eq("tenant_id", auth2.tenantId);
+    if (exercise_id) {
+      q = q.eq("id", exercise_id);
+    } else {
+      const found = await findAthlete(auth2.tenantId, { athlete_id, email, nome });
+      if ("error" in found) return errorResult(found.error);
+      if (!dia_semana && !exercicio) {
+        return errorResult("Informe exercise_id, ou dia_semana e/ou exercicio para evitar apagar tudo.");
+      }
+      q = q.eq("aluno_id", found.athlete.id);
+      if (dia_semana) q = q.eq("dia_semana", dia_semana);
+      if (exercicio) q = q.ilike("exercicio", `%${exercicio.trim()}%`);
+    }
+    const { data, error } = await q.select("id, dia_semana, exercicio");
+    if (error) return errorResult(`Erro removendo exerc\xEDcio: ${error.message}`);
+    return jsonResult({ ok: true, removidos: data?.length ?? 0, exercicios: data ?? [] });
+  }
+});
+
+// src/lib/mcp/tools/set_athlete_diet.ts
+import { defineTool as defineTool11 } from "npm:@lovable.dev/mcp-js@0.26.2";
+import { z as z11 } from "npm:zod@^3.25.76";
+var itemSchema = z11.object({
+  alimento: z11.string().min(1).describe("Nome do alimento (busca na base TACO; se n\xE3o achar, entra como texto na descri\xE7\xE3o)."),
+  quantidade_g: z11.number().positive().optional(),
+  substituicoes: z11.string().optional()
+});
+var refeicaoSchema = z11.object({
+  nome: z11.string().min(1).describe('Ex: "Caf\xE9 da manh\xE3".'),
+  horario: z11.string().optional().describe('Formato HH:MM, ex: "07:30".'),
+  descricao_ia: z11.string().optional().describe("Descri\xE7\xE3o livre da refei\xE7\xE3o."),
+  itens: z11.array(itemSchema).optional()
+});
+var set_athlete_diet_default = defineTool11({
+  name: "set_athlete_diet",
+  title: "Montar dieta do aluno",
+  description: "Cria e publica uma nova dieta para o aluno, com objetivo, kcal alvo, macros e refei\xE7\xF5es (com hor\xE1rios e alimentos). Substitui a dieta anterior como a mais recente.",
+  inputSchema: {
+    mcp_token: z11.string().optional().describe("Token MCP do coach. Opcional se enviado via Authorization: Bearer."),
+    athlete_id: z11.string().uuid().optional(),
+    email: z11.string().optional(),
+    nome: z11.string().optional(),
+    objetivo: z11.string().optional().describe('Ex: "emagrecimento", "hipertrofia".'),
+    kcal_alvo: z11.number().positive().optional(),
+    macros_alvo: z11.object({ proteina_g: z11.number().optional(), carbo_g: z11.number().optional(), gordura_g: z11.number().optional() }).optional(),
+    observacoes_clinicas: z11.string().optional(),
+    publicar: z11.boolean().optional().describe("Padr\xE3o true: j\xE1 publica a dieta para o aluno."),
+    refeicoes: z11.array(refeicaoSchema).min(1)
+  },
+  annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+  handler: async (input, extra) => {
+    const auth2 = await resolveTenantForRequest(input.mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const found = await findAthlete(auth2.tenantId, {
+      athlete_id: input.athlete_id,
+      email: input.email,
+      nome: input.nome
+    });
+    if ("error" in found) return errorResult(found.error);
+    const supa = getServiceClient();
+    const { data: dieta, error: dietaErr } = await supa.from("dietas").insert({
+      user_id: found.athlete.id,
+      objetivo: input.objetivo ?? null,
+      kcal_alvo: input.kcal_alvo ?? null,
+      macros_alvo: input.macros_alvo ?? null,
+      observacoes_clinicas: input.observacoes_clinicas ?? null,
+      is_published: input.publicar !== false
+    }).select("id").single();
+    if (dietaErr || !dieta) return errorResult(`Erro criando dieta: ${dietaErr?.message ?? "sem detalhes"}`);
+    const dietaId = dieta.id;
+    const criadas = [];
+    for (let i = 0; i < input.refeicoes.length; i++) {
+      const r = input.refeicoes[i];
+      const { data: ref, error: refErr } = await supa.from("refeicoes").insert({
+        dieta_id: dietaId,
+        nome: r.nome,
+        horario: r.horario ?? null,
+        ordem: i + 1,
+        descricao_ia: r.descricao_ia ?? null
+      }).select("id").single();
+      if (refErr || !ref) return errorResult(`Erro criando refei\xE7\xE3o "${r.nome}": ${refErr?.message ?? ""}`);
+      const refId = ref.id;
+      const itens = r.itens ?? [];
+      let inseridos = 0;
+      for (const it of itens) {
+        const { data: alimento } = await supa.from("alimentos_taco").select("id").ilike("nome", `%${it.alimento.trim()}%`).limit(1).maybeSingle();
+        const alimentoId = alimento?.id ?? null;
+        const sub = alimentoId ? it.substituicoes ?? null : [it.alimento, it.substituicoes].filter(Boolean).join(" \u2014 ");
+        const { error: itemErr } = await supa.from("itens_refeicao").insert({
+          refeicao_id: refId,
+          alimento_id: alimentoId,
+          quantidade_g: it.quantidade_g ?? null,
+          substituicoes: sub || null
+        });
+        if (!itemErr) inseridos++;
+      }
+      criadas.push({ id: refId, nome: r.nome, itens: inseridos });
+    }
+    return jsonResult({
+      ok: true,
+      aluno: found.athlete,
+      dieta_id: dietaId,
+      publicada: input.publicar !== false,
+      refeicoes: criadas
+    });
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "iflgryuemsohurtdaawm";
 var mcp_default = defineMcp({
   name: "alpha-coach-mcp",
   title: "Alpha Coach MCP",
-  version: "0.2.0",
-  instructions: "Servidor MCP do Alpha Coach. O coach conecta com a pr\xF3pria conta do painel (login OAuth); as ferramentas j\xE1 operam no tenant dele. Ferramentas: list_athletes, get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis, add_athlete. Use echo para testar conectividade.",
+  version: "0.3.0",
+  instructions: "Servidor MCP do Alpha Coach. O coach conecta com a pr\xF3pria conta do painel (login OAuth); as ferramentas j\xE1 operam no tenant dele. Leitura: list_athletes, get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis. Escrita: add_athlete (cadastrar aluno), set_athlete_workout (definir/substituir treino de um dia), update_workout_exercise (editar s\xE9ries/reps/observa\xE7\xE3o), delete_workout_exercise (remover exerc\xEDcio), set_athlete_diet (montar e publicar dieta). Use echo para testar conectividade.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
@@ -371,7 +631,11 @@ var mcp_default = defineMcp({
     get_athlete_diet_default,
     get_athlete_progress_default,
     get_athlete_anamnesis_default,
-    add_athlete_default
+    add_athlete_default,
+    set_athlete_workout_default,
+    update_workout_exercise_default,
+    delete_workout_exercise_default,
+    set_athlete_diet_default
   ]
 });
 

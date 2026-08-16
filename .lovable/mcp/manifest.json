@@ -12,7 +12,7 @@
   "mcp": {
     "server": {
       "name": "alpha-coach-mcp",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "title": "Alpha Coach MCP"
     },
     "tools": [
@@ -254,6 +254,341 @@
           "required": [
             "nome_completo",
             "email"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "set_athlete_workout",
+        "title": "Definir treino do dia",
+        "description": "Substitui (sobrescreve) o treino de um dia da semana do aluno pela lista de exercícios enviada. Use replace=false para apenas acrescentar exercícios ao final do dia.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "mcp_token": {
+              "type": "string",
+              "description": "Token MCP do coach. Opcional se enviado via Authorization: Bearer."
+            },
+            "athlete_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "email": {
+              "type": "string"
+            },
+            "nome": {
+              "type": "string"
+            },
+            "dia_semana": {
+              "type": "string",
+              "enum": [
+                "segunda",
+                "terca",
+                "quarta",
+                "quinta",
+                "sexta",
+                "sabado",
+                "domingo"
+              ]
+            },
+            "replace": {
+              "type": "boolean",
+              "description": "Padrão true: apaga os exercícios existentes do dia antes de inserir."
+            },
+            "exercicios": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "exercicio": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Nome do exercício."
+                  },
+                  "series": {
+                    "type": "string",
+                    "description": "Ex: \"4\"."
+                  },
+                  "repeticoes": {
+                    "type": "string",
+                    "description": "Ex: \"8-10\"."
+                  },
+                  "cadencia": {
+                    "type": "string"
+                  },
+                  "observacao": {
+                    "type": "string"
+                  },
+                  "detalhes_execucao": {
+                    "type": "string"
+                  },
+                  "video_url": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "exercicio"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1,
+              "description": "Lista de exercícios na ordem desejada."
+            }
+          },
+          "required": [
+            "dia_semana",
+            "exercicios"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "update_workout_exercise",
+        "title": "Editar exercício do treino",
+        "description": "Edita um exercício já prescrito (séries, repetições, cadência, observação, nome ou vídeo). Identifique pelo exercise_id (retornado por get_athlete_workout) ou pelo nome do exercício + dia da semana.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "mcp_token": {
+              "type": "string",
+              "description": "Token MCP do coach. Opcional se enviado via Authorization: Bearer."
+            },
+            "exercise_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID da linha em treinos_prescritos."
+            },
+            "athlete_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "email": {
+              "type": "string"
+            },
+            "nome": {
+              "type": "string"
+            },
+            "dia_semana": {
+              "type": "string",
+              "enum": [
+                "segunda",
+                "terca",
+                "quarta",
+                "quinta",
+                "sexta",
+                "sabado",
+                "domingo"
+              ]
+            },
+            "exercicio_atual": {
+              "type": "string",
+              "description": "Nome (ou parte) do exercício a editar, quando não usar exercise_id."
+            },
+            "novo_exercicio": {
+              "type": "string"
+            },
+            "series": {
+              "type": "string"
+            },
+            "repeticoes": {
+              "type": "string"
+            },
+            "cadencia": {
+              "type": "string"
+            },
+            "observacao": {
+              "type": "string"
+            },
+            "detalhes_execucao": {
+              "type": "string"
+            },
+            "video_url": {
+              "type": "string"
+            },
+            "ordem": {
+              "type": "integer"
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "delete_workout_exercise",
+        "title": "Remover exercício do treino",
+        "description": "Remove exercícios prescritos do aluno. Use exercise_id para remover um específico, ou dia_semana (+ opcionalmente exercicio) para remover do dia.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "mcp_token": {
+              "type": "string",
+              "description": "Token MCP do coach. Opcional se enviado via Authorization: Bearer."
+            },
+            "exercise_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "athlete_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "email": {
+              "type": "string"
+            },
+            "nome": {
+              "type": "string"
+            },
+            "dia_semana": {
+              "type": "string",
+              "enum": [
+                "segunda",
+                "terca",
+                "quarta",
+                "quinta",
+                "sexta",
+                "sabado",
+                "domingo"
+              ]
+            },
+            "exercicio": {
+              "type": "string",
+              "description": "Nome (ou parte) do exercício a remover."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "set_athlete_diet",
+        "title": "Montar dieta do aluno",
+        "description": "Cria e publica uma nova dieta para o aluno, com objetivo, kcal alvo, macros e refeições (com horários e alimentos). Substitui a dieta anterior como a mais recente.",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "mcp_token": {
+              "type": "string",
+              "description": "Token MCP do coach. Opcional se enviado via Authorization: Bearer."
+            },
+            "athlete_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "email": {
+              "type": "string"
+            },
+            "nome": {
+              "type": "string"
+            },
+            "objetivo": {
+              "type": "string",
+              "description": "Ex: \"emagrecimento\", \"hipertrofia\"."
+            },
+            "kcal_alvo": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "macros_alvo": {
+              "type": "object",
+              "properties": {
+                "proteina_g": {
+                  "type": "number"
+                },
+                "carbo_g": {
+                  "type": "number"
+                },
+                "gordura_g": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": false
+            },
+            "observacoes_clinicas": {
+              "type": "string"
+            },
+            "publicar": {
+              "type": "boolean",
+              "description": "Padrão true: já publica a dieta para o aluno."
+            },
+            "refeicoes": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "minLength": 1,
+                    "description": "Ex: \"Café da manhã\"."
+                  },
+                  "horario": {
+                    "type": "string",
+                    "description": "Formato HH:MM, ex: \"07:30\"."
+                  },
+                  "descricao_ia": {
+                    "type": "string",
+                    "description": "Descrição livre da refeição."
+                  },
+                  "itens": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "alimento": {
+                          "type": "string",
+                          "minLength": 1,
+                          "description": "Nome do alimento (busca na base TACO; se não achar, entra como texto na descrição)."
+                        },
+                        "quantidade_g": {
+                          "type": "number",
+                          "exclusiveMinimum": 0
+                        },
+                        "substituicoes": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "alimento"
+                      ],
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "required": [
+                  "nome"
+                ],
+                "additionalProperties": false
+              },
+              "minItems": 1
+            }
+          },
+          "required": [
+            "refeicoes"
           ],
           "additionalProperties": false,
           "$schema": "http://json-schema.org/draft-07/schema#"
