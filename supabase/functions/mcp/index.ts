@@ -675,7 +675,7 @@ var mcp_default = defineMcp({
   name: "alpha-coach-mcp",
   title: "Alpha Coach MCP",
   version: "0.3.0",
-  instructions: "Servidor MCP do Alpha Coach. O coach conecta com a pr\xF3pria conta do painel (login OAuth); as ferramentas j\xE1 operam no tenant dele. Leitura: list_athletes, list_exercise_library (biblioteca de exerc\xEDcios e v\xEDdeos t\xE9cnicos), get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis. Escrita: add_athlete (cadastrar aluno), set_athlete_workout (definir/substituir treino de um dia), update_workout_exercise (editar s\xE9ries/reps/observa\xE7\xE3o), delete_workout_exercise (remover exerc\xEDcio), set_athlete_diet (montar e publicar dieta). Use echo para testar conectividade.",
+  instructions: "Servidor MCP do Alpha Coach. O coach conecta com a pr\xF3pria conta do painel (login OAuth); as ferramentas j\xE1 operam no tenant dele. Leitura: list_athletes, list_exercise_library (biblioteca de exerc\xEDcios e v\xEDdeos t\xE9cnicos), get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis. Escrita: add_athlete (cadastrar aluno), set_athlete_workout (definir/substituir treino de um dia), update_athlete_workout (criar, editar ou remover um exerc\xEDcio individual via action upsert/delete), update_workout_exercise (editar s\xE9ries/reps/observa\xE7\xE3o), delete_workout_exercise (remover exerc\xEDcio), set_athlete_diet (montar e publicar dieta). Use echo para testar conectividade.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
