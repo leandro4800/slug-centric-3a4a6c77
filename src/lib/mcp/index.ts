@@ -11,6 +11,7 @@ import updateWorkoutExercise from "./tools/update_workout_exercise";
 import deleteWorkoutExercise from "./tools/delete_workout_exercise";
 import setAthleteDiet from "./tools/set_athlete_diet";
 import listExerciseLibrary from "./tools/list_exercise_library";
+import updateAthleteWorkout from "./tools/update_athlete_workout";
 
 const projectRef = import.meta.env.VITE_SUPABASE_PROJECT_ID ?? "project-ref-unset";
 
