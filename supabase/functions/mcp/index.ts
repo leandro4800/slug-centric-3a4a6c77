@@ -394,20 +394,30 @@ var set_athlete_workout_default = defineTool8({
       const { error: delErr } = await supa.from("treinos_prescritos").delete().eq("aluno_id", found.athlete.id).eq("tenant_id", auth2.tenantId).eq("dia_semana", dia_semana);
       if (delErr) return errorResult(`Erro limpando treino do dia: ${delErr.message}`);
     }
-    const rows = exercicios.map((ex, i) => ({
-      tenant_id: auth2.tenantId,
-      aluno_id: found.athlete.id,
-      dia_semana,
-      ordem: startOrder + i + 1,
-      exercicio: ex.exercicio,
-      series: ex.series ?? null,
-      repeticoes: ex.repeticoes ?? null,
-      cadencia: ex.cadencia ?? null,
-      observacao: ex.observacao ?? null,
-      detalhes_execucao: ex.detalhes_execucao ?? null,
-      video_url: ex.video_url ?? null,
-      status: "ativo"
-    }));
+    async function lookupVideo(nome2) {
+      const like = `%${nome2.trim()}%`;
+      const ref = await supa.from("referencia_exercicios").select("url_video, tenant_id").ilike("nome_exercicio", like).or(`tenant_id.eq.${auth2.tenantId},tenant_id.is.null`).order("tenant_id", { ascending: true, nullsFirst: false }).limit(1).maybeSingle();
+      const refUrl = ref.data?.url_video;
+      if (refUrl) return refUrl;
+      const vid = await supa.from("referencia_videos").select("url_video").ilike("nome_exercicio", like).or(`tenant_id.eq.${auth2.tenantId},tenant_id.is.null`).limit(1).maybeSingle();
+      return vid.data?.url_video ?? null;
+    }
+    const rows = await Promise.all(
+      exercicios.map(async (ex, i) => ({
+        tenant_id: auth2.tenantId,
+        aluno_id: found.athlete.id,
+        dia_semana,
+        ordem: startOrder + i + 1,
+        exercicio: ex.exercicio,
+        series: ex.series ?? null,
+        repeticoes: ex.repeticoes ?? null,
+        cadencia: ex.cadencia ?? null,
+        observacao: ex.observacao ?? null,
+        detalhes_execucao: ex.detalhes_execucao ?? null,
+        video_url: ex.video_url ?? await lookupVideo(ex.exercicio),
+        status: "ativo"
+      }))
+    );
     const { data, error } = await supa.from("treinos_prescritos").insert(rows).select("id, ordem, exercicio");
     if (error) return errorResult(`Erro salvando treino: ${error.message}`);
     return jsonResult({
@@ -613,13 +623,59 @@ var set_athlete_diet_default = defineTool11({
   }
 });
 
+// src/lib/mcp/tools/list_exercise_library.ts
+import { defineTool as defineTool12 } from "npm:@lovable.dev/mcp-js@0.26.2";
+import { z as z12 } from "npm:zod@^3.25.76";
+var list_exercise_library_default = defineTool12({
+  name: "list_exercise_library",
+  title: "Listar biblioteca de exerc\xEDcios e v\xEDdeos t\xE9cnicos",
+  description: "Lista os exerc\xEDcios e v\xEDdeos t\xE9cnicos dispon\xEDveis para o coach (tabelas referencia_exercicios, referencia_videos e biblioteca_exercicios), incluindo v\xEDdeos globais do app. Use antes de montar treino para escolher exerc\xEDcios com v\xEDdeo j\xE1 cadastrado.",
+  inputSchema: {
+    mcp_token: z12.string().optional().describe("Token MCP do coach. Opcional se enviado via Authorization: Bearer."),
+    search: z12.string().optional().describe("Filtro por nome do exerc\xEDcio."),
+    grupo_muscular: z12.string().optional().describe("Filtro por grupamento muscular."),
+    apenas_meus: z12.boolean().optional().describe("Padr\xE3o false: inclui tamb\xE9m os v\xEDdeos globais do app."),
+    limit: z12.number().int().min(1).max(300).optional().describe("M\xE1ximo por tabela (padr\xE3o 100).")
+  },
+  annotations: { readOnlyHint: true, openWorldHint: false },
+  handler: async ({ mcp_token, search, grupo_muscular, apenas_meus, limit }, extra) => {
+    const auth2 = await resolveTenantForRequest(mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const supa = getServiceClient();
+    const max = limit ?? 100;
+    const tenantFilter = (col = "tenant_id") => apenas_meus ? `${col}.eq.${auth2.tenantId}` : `${col}.eq.${auth2.tenantId},${col}.is.null`;
+    let refQ = supa.from("referencia_exercicios").select("id, nome_exercicio, url_video, thumbnail_url, grupamento_muscular, tenant_id, origem").or(tenantFilter()).order("nome_exercicio").limit(max);
+    if (search?.trim()) refQ = refQ.ilike("nome_exercicio", `%${search.trim()}%`);
+    if (grupo_muscular?.trim()) refQ = refQ.ilike("grupamento_muscular", `%${grupo_muscular.trim()}%`);
+    let vidQ = supa.from("referencia_videos").select("id, nome_exercicio, url_video, video_coach_url, tenant_id").or(tenantFilter()).order("nome_exercicio").limit(max);
+    if (search?.trim()) vidQ = vidQ.ilike("nome_exercicio", `%${search.trim()}%`);
+    let bibQ = supa.from("biblioteca_exercicios").select("id, nome, grupo_muscular, equipamento, nivel, series_trabalho, repeticoes, contraindicacoes, video_url, video_coach_url, tenant_id").or(tenantFilter()).order("nome").limit(max);
+    if (search?.trim()) bibQ = bibQ.ilike("nome", `%${search.trim()}%`);
+    if (grupo_muscular?.trim()) bibQ = bibQ.ilike("grupo_muscular", `%${grupo_muscular.trim()}%`);
+    const [ref, vid, bib] = await Promise.all([refQ, vidQ, bibQ]);
+    const erro = ref.error?.message ?? vid.error?.message ?? bib.error?.message;
+    if (erro) return errorResult(`Erro consultando biblioteca: ${erro}`);
+    return jsonResult({
+      tenant: auth2.tenantName,
+      referencia_exercicios: ref.data ?? [],
+      referencia_videos: vid.data ?? [],
+      biblioteca_exercicios: bib.data ?? [],
+      totais: {
+        referencia_exercicios: ref.data?.length ?? 0,
+        referencia_videos: vid.data?.length ?? 0,
+        biblioteca_exercicios: bib.data?.length ?? 0
+      }
+    });
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "iflgryuemsohurtdaawm";
 var mcp_default = defineMcp({
   name: "alpha-coach-mcp",
   title: "Alpha Coach MCP",
   version: "0.3.0",
-  instructions: "Servidor MCP do Alpha Coach. O coach conecta com a pr\xF3pria conta do painel (login OAuth); as ferramentas j\xE1 operam no tenant dele. Leitura: list_athletes, get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis. Escrita: add_athlete (cadastrar aluno), set_athlete_workout (definir/substituir treino de um dia), update_workout_exercise (editar s\xE9ries/reps/observa\xE7\xE3o), delete_workout_exercise (remover exerc\xEDcio), set_athlete_diet (montar e publicar dieta). Use echo para testar conectividade.",
+  instructions: "Servidor MCP do Alpha Coach. O coach conecta com a pr\xF3pria conta do painel (login OAuth); as ferramentas j\xE1 operam no tenant dele. Leitura: list_athletes, list_exercise_library (biblioteca de exerc\xEDcios e v\xEDdeos t\xE9cnicos), get_athlete_workout, get_athlete_diet, get_athlete_progress, get_athlete_anamnesis. Escrita: add_athlete (cadastrar aluno), set_athlete_workout (definir/substituir treino de um dia), update_workout_exercise (editar s\xE9ries/reps/observa\xE7\xE3o), delete_workout_exercise (remover exerc\xEDcio), set_athlete_diet (montar e publicar dieta). Use echo para testar conectividade.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
@@ -635,7 +691,8 @@ var mcp_default = defineMcp({
     set_athlete_workout_default,
     update_workout_exercise_default,
     delete_workout_exercise_default,
-    set_athlete_diet_default
+    set_athlete_diet_default,
+    list_exercise_library_default
   ]
 });
 

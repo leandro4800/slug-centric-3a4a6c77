@@ -58,20 +58,47 @@ export default defineTool({
       if (delErr) return errorResult(`Erro limpando treino do dia: ${delErr.message}`);
     }
 
-    const rows = exercicios.map((ex, i) => ({
-      tenant_id: auth.tenantId,
-      aluno_id: found.athlete.id,
-      dia_semana,
-      ordem: startOrder + i + 1,
-      exercicio: ex.exercicio,
-      series: ex.series ?? null,
-      repeticoes: ex.repeticoes ?? null,
-      cadencia: ex.cadencia ?? null,
-      observacao: ex.observacao ?? null,
-      detalhes_execucao: ex.detalhes_execucao ?? null,
-      video_url: ex.video_url ?? null,
-      status: "ativo",
-    }));
+    // Preenche o vídeo técnico automaticamente quando o coach não informar,
+    // buscando pelo nome na biblioteca do tenant (ou nos vídeos globais do app).
+    async function lookupVideo(nome: string): Promise<string | null> {
+      const like = `%${nome.trim()}%`;
+      const ref = await supa
+        .from("referencia_exercicios")
+        .select("url_video, tenant_id")
+        .ilike("nome_exercicio", like)
+        .or(`tenant_id.eq.${auth.tenantId},tenant_id.is.null`)
+        .order("tenant_id", { ascending: true, nullsFirst: false })
+        .limit(1)
+        .maybeSingle();
+      const refUrl = (ref.data as { url_video?: string } | null)?.url_video;
+      if (refUrl) return refUrl;
+      const vid = await supa
+        .from("referencia_videos")
+        .select("url_video")
+        .ilike("nome_exercicio", like)
+        .or(`tenant_id.eq.${auth.tenantId},tenant_id.is.null`)
+        .limit(1)
+        .maybeSingle();
+      return (vid.data as { url_video?: string } | null)?.url_video ?? null;
+    }
+
+    const rows = await Promise.all(
+      exercicios.map(async (ex, i) => ({
+        tenant_id: auth.tenantId,
+        aluno_id: found.athlete.id,
+        dia_semana,
+        ordem: startOrder + i + 1,
+        exercicio: ex.exercicio,
+        series: ex.series ?? null,
+        repeticoes: ex.repeticoes ?? null,
+        cadencia: ex.cadencia ?? null,
+        observacao: ex.observacao ?? null,
+        detalhes_execucao: ex.detalhes_execucao ?? null,
+        video_url: ex.video_url ?? (await lookupVideo(ex.exercicio)),
+        status: "ativo",
+      })),
+    );
+
 
     const { data, error } = await supa.from("treinos_prescritos").insert(rows).select("id, ordem, exercicio");
     if (error) return errorResult(`Erro salvando treino: ${error.message}`);
