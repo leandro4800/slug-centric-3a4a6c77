@@ -28,11 +28,27 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (!user) { setTenant(null); setLoading(false); return; }
     let cancelled = false;
+    const cacheKey = `site_tenant_${user.id}`;
+
+    const isAuthError = (err: { message?: string; code?: string } | null) => {
+      if (!err) return false;
+      const m = `${err.code ?? ""} ${err.message ?? ""}`.toLowerCase();
+      return m.includes("jwt") || m.includes("token") || m.includes("pgrst301") || m.includes("401") || m.includes("403");
+    };
+
     (async () => {
       setLoading(true);
       setError(null);
+
+      // Enquanto carrega, usa o último tenant conhecido para não mostrar "acesso restrito".
+      try {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) setTenant(JSON.parse(cached) as SiteTenant);
+      } catch { /* ignore */ }
+
       // Retry com backoff: uma falha de rede não pode virar "acesso restrito".
       const delays = [0, 700, 1500];
+      let refreshed = false;
       for (let i = 0; i < delays.length; i++) {
         if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
         const { data, error: err } = await supabase
@@ -44,11 +60,32 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
           .maybeSingle();
         if (cancelled) return;
         if (!err) {
-          setTenant((data as SiteTenant | null) ?? null);
+          const t = (data as SiteTenant | null) ?? null;
+          setTenant(t);
+          try {
+            if (t) localStorage.setItem(cacheKey, JSON.stringify(t));
+            else localStorage.removeItem(cacheKey);
+          } catch { /* ignore */ }
           setLoading(false);
           return;
         }
         console.warn("[SiteTenant] Falha ao carregar tenant do coach:", err.message);
+
+        // Sessão expirada: tenta renovar o token antes de desistir.
+        if (isAuthError(err) && !refreshed) {
+          refreshed = true;
+          const { data: refreshData } = await supabase.auth.refreshSession();
+          if (cancelled) return;
+          if (!refreshData?.session) {
+            // Não dá para renovar: manda para o login em vez de travar na tela de erro.
+            await supabase.auth.signOut().catch(() => {});
+            if (!cancelled) window.location.replace("/site/login");
+            return;
+          }
+          i = -1; // reinicia o ciclo de tentativas com o token novo
+          continue;
+        }
+
         if (i === delays.length - 1) {
           setError(err.message);
           setLoading(false);
