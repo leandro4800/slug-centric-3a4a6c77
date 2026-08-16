@@ -34,6 +34,7 @@ export default defineMcp({
     getAthleteAnamnesis,
     addAthlete,
     setAthleteWorkout,
+    updateAthleteWorkout,
     updateWorkoutExercise,
     deleteWorkoutExercise,
     setAthleteDiet,

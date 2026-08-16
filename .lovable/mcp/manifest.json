@@ -352,6 +352,89 @@
         "outputSchema": null
       },
       {
+        "name": "update_athlete_workout",
+        "title": "Criar/editar/remover exercício do treino",
+        "description": "Cria, atualiza ou remove um exercício prescrito do aluno. Use action='upsert' (com exercise_id para editar, sem ele para criar) ou action='delete' (exige exercise_id).",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "mcp_token": {
+              "type": "string",
+              "description": "Token MCP do coach. Opcional se enviado via Authorization: Bearer."
+            },
+            "athlete_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "email": {
+              "type": "string"
+            },
+            "nome": {
+              "type": "string"
+            },
+            "action": {
+              "type": "string",
+              "enum": [
+                "upsert",
+                "delete"
+              ],
+              "description": "upsert = criar/editar; delete = remover."
+            },
+            "exercise_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "ID da linha em treinos_prescritos."
+            },
+            "dia_semana": {
+              "type": "string",
+              "enum": [
+                "segunda",
+                "terca",
+                "quarta",
+                "quinta",
+                "sexta",
+                "sabado",
+                "domingo"
+              ],
+              "description": "Obrigatório ao criar um novo exercício."
+            },
+            "exercicio": {
+              "type": "string",
+              "description": "Nome do exercício. Obrigatório ao criar."
+            },
+            "series": {
+              "type": "string"
+            },
+            "repeticoes": {
+              "type": "string"
+            },
+            "observacao": {
+              "type": "string"
+            },
+            "cadencia": {
+              "type": "string"
+            },
+            "detalhes_execucao": {
+              "type": "string"
+            },
+            "ordem": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "action"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
         "name": "update_workout_exercise",
         "title": "Editar exercício do treino",
         "description": "Edita um exercício já prescrito (séries, repetições, cadência, observação, nome ou vídeo). Identifique pelo exercise_id (retornado por get_athlete_workout) ou pelo nome do exercício + dia da semana.",

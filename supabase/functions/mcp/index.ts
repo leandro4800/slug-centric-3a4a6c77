@@ -669,6 +669,92 @@ var list_exercise_library_default = defineTool12({
   }
 });
 
+// src/lib/mcp/tools/update_athlete_workout.ts
+import { defineTool as defineTool13 } from "npm:@lovable.dev/mcp-js@0.26.2";
+import { z as z13 } from "npm:zod@^3.25.76";
+var DIAS5 = ["segunda", "terca", "quarta", "quinta", "sexta", "sabado", "domingo"];
+var update_athlete_workout_default = defineTool13({
+  name: "update_athlete_workout",
+  title: "Criar/editar/remover exerc\xEDcio do treino",
+  description: "Cria, atualiza ou remove um exerc\xEDcio prescrito do aluno. Use action='upsert' (com exercise_id para editar, sem ele para criar) ou action='delete' (exige exercise_id).",
+  inputSchema: {
+    mcp_token: z13.string().optional().describe("Token MCP do coach. Opcional se enviado via Authorization: Bearer."),
+    athlete_id: z13.string().uuid().optional(),
+    email: z13.string().optional(),
+    nome: z13.string().optional(),
+    action: z13.enum(["upsert", "delete"]).describe("upsert = criar/editar; delete = remover."),
+    exercise_id: z13.string().uuid().optional().describe("ID da linha em treinos_prescritos."),
+    dia_semana: z13.enum(DIAS5).optional().describe("Obrigat\xF3rio ao criar um novo exerc\xEDcio."),
+    exercicio: z13.string().optional().describe("Nome do exerc\xEDcio. Obrigat\xF3rio ao criar."),
+    series: z13.string().optional(),
+    repeticoes: z13.string().optional(),
+    observacao: z13.string().optional(),
+    cadencia: z13.string().optional(),
+    detalhes_execucao: z13.string().optional(),
+    ordem: z13.number().int().optional()
+  },
+  annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false },
+  handler: async (input, extra) => {
+    const auth2 = await resolveTenantForRequest(input.mcp_token, extra);
+    if (!auth2.ok) return errorResult(auth2.error);
+    const found = await findAthlete(auth2.tenantId, {
+      athlete_id: input.athlete_id,
+      email: input.email,
+      nome: input.nome
+    });
+    if ("error" in found) return errorResult(found.error);
+    const supa = getServiceClient();
+    const alunoId = found.athlete.id;
+    const SELECT = "id, dia_semana, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao, status";
+    if (input.action === "delete") {
+      if (!input.exercise_id) return errorResult("Informe exercise_id para remover um exerc\xEDcio.");
+      const { data: data2, error: error2 } = await supa.from("treinos_prescritos").delete().eq("id", input.exercise_id).eq("tenant_id", auth2.tenantId).eq("aluno_id", alunoId).select(SELECT);
+      if (error2) return errorResult(`Erro removendo exerc\xEDcio: ${error2.message}`);
+      if (!data2 || data2.length === 0) return errorResult("Exerc\xEDcio n\xE3o encontrado para este aluno/tenant.");
+      return jsonResult({ ok: true, acao: "removido", aluno: found.athlete, exercicio: data2[0] });
+    }
+    if (input.exercise_id) {
+      const patch = {};
+      if (input.dia_semana !== void 0) patch.dia_semana = input.dia_semana;
+      if (input.exercicio !== void 0) patch.exercicio = input.exercicio;
+      if (input.series !== void 0) patch.series = input.series;
+      if (input.repeticoes !== void 0) patch.repeticoes = input.repeticoes;
+      if (input.observacao !== void 0) patch.observacao = input.observacao;
+      if (input.cadencia !== void 0) patch.cadencia = input.cadencia;
+      if (input.detalhes_execucao !== void 0) patch.detalhes_execucao = input.detalhes_execucao;
+      if (input.ordem !== void 0) patch.ordem = input.ordem;
+      if (Object.keys(patch).length === 0) return errorResult("Informe ao menos um campo para alterar.");
+      patch.updated_at = (/* @__PURE__ */ new Date()).toISOString();
+      const { data: data2, error: error2 } = await supa.from("treinos_prescritos").update(patch).eq("id", input.exercise_id).eq("tenant_id", auth2.tenantId).eq("aluno_id", alunoId).select(SELECT);
+      if (error2) return errorResult(`Erro atualizando exerc\xEDcio: ${error2.message}`);
+      if (!data2 || data2.length === 0) return errorResult("Exerc\xEDcio n\xE3o encontrado para este aluno/tenant.");
+      return jsonResult({ ok: true, acao: "atualizado", aluno: found.athlete, exercicio: data2[0] });
+    }
+    if (!input.dia_semana) return errorResult("Informe dia_semana para criar um exerc\xEDcio.");
+    if (!input.exercicio) return errorResult("Informe exercicio para criar um exerc\xEDcio.");
+    let ordem = input.ordem;
+    if (ordem === void 0) {
+      const { data: last } = await supa.from("treinos_prescritos").select("ordem").eq("tenant_id", auth2.tenantId).eq("aluno_id", alunoId).eq("dia_semana", input.dia_semana).order("ordem", { ascending: false }).limit(1).maybeSingle();
+      ordem = Number(last?.ordem ?? 0) + 1;
+    }
+    const { data, error } = await supa.from("treinos_prescritos").insert({
+      tenant_id: auth2.tenantId,
+      aluno_id: alunoId,
+      dia_semana: input.dia_semana,
+      exercicio: input.exercicio,
+      series: input.series ?? null,
+      repeticoes: input.repeticoes ?? null,
+      observacao: input.observacao ?? null,
+      cadencia: input.cadencia ?? null,
+      detalhes_execucao: input.detalhes_execucao ?? null,
+      ordem,
+      status: "ativo"
+    }).select(SELECT);
+    if (error) return errorResult(`Erro criando exerc\xEDcio: ${error.message}`);
+    return jsonResult({ ok: true, acao: "criado", aluno: found.athlete, exercicio: data?.[0] ?? null });
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "iflgryuemsohurtdaawm";
 var mcp_default = defineMcp({
@@ -689,6 +775,7 @@ var mcp_default = defineMcp({
     get_athlete_anamnesis_default,
     add_athlete_default,
     set_athlete_workout_default,
+    update_athlete_workout_default,
     update_workout_exercise_default,
     delete_workout_exercise_default,
     set_athlete_diet_default,
