@@ -790,22 +790,9 @@ Retorne exatamente:
     }
 
     if (!dryRun && importType === "treino" && result?.dias) {
-      await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenantId);
-      const rows: any[] = [];
-      result.dias.forEach((dia: any) => {
-        (dia.exercicios || []).forEach((ex: any, idx: number) => {
-          rows.push({
-            tenant_id: tenantId, aluno_id: alunoId, dia_semana: dia.dia, ordem: idx,
-            exercicio: ex.nome, series: ex.series, repeticoes: ex.repeticoes,
-            cadencia: ex.cadencia, detalhes_execucao: ex.detalhes_execucao, observacao: ex.observacao,
-          });
-        });
-      });
-      if (rows.length > 0) {
-        const { error } = await supabase.from("treinos_prescritos").insert(rows);
-        if (error) throw error;
-      }
+      revisaoTreino = await importarTreinoComVinculo(supabase, tenantId, alunoId, result.dias);
     } else if (!dryRun && importType === "dieta" && result?.refeicoes) {
+
       await supabase.from("dietas").delete().eq("user_id", alunoId);
       const { data: dieta, error: dError } = await supabase
         .from("dietas")
