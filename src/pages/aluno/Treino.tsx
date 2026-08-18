@@ -242,12 +242,11 @@ const PersonalTreino = () => {
       }
 
       const spotifyP = withTimeout(loadSpotify()).catch(() => null);
-      const refsP = withTimeout(loadVideoRefs()).catch(() => ({} as Record<string, VideoRef>));
       const treinosP = withTimeout(
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
             .order("dia_semana")
@@ -257,10 +256,8 @@ const PersonalTreino = () => {
       ).catch(() => null);
       const cargasP = withTimeout(loadCargas()).catch(() => null);
 
-      const [, refMapRes, treinosRes] = await Promise.all([spotifyP, refsP, treinosP]);
+      const [, treinosRes] = await Promise.all([spotifyP, treinosP]);
       void cargasP;
-
-      const refMap: any = refMapRes || { entries: [] };
 
       const WEEK_ORDER = ["segunda","terca","quarta","quinta","sexta","sabado","domingo"];
       const weekIdx = (s: string) => {
@@ -287,9 +284,11 @@ const PersonalTreino = () => {
             observacao: t.observacao,
             cadencia: t.cadencia,
             detalhes_execucao: t.detalhes_execucao,
-            video_url: t.video_url || resolveVideo(t.exercicio, refMap),
-            video_coach_url: t.video_coach_url || resolveCoach(t.exercicio, refMap),
+            // Fonte da verdade: vínculo por ID com a biblioteca. Sem matching por texto.
+            video_url: t.referencia_exercicios?.url_video || t.video_url || null,
+            video_coach_url: t.video_coach_url || null,
           }));
+
           mapped.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
           setTreinos(mapped);
           setDiaAtual((cur) => {
