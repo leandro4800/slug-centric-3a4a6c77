@@ -3425,6 +3425,7 @@ export type Database = {
           observacao: string | null
           ordem: number | null
           ordem_execucao: number | null
+          referencia_exercicio_id: string | null
           repeticoes: string | null
           series: string | null
           status: string | null
@@ -3447,6 +3448,7 @@ export type Database = {
           observacao?: string | null
           ordem?: number | null
           ordem_execucao?: number | null
+          referencia_exercicio_id?: string | null
           repeticoes?: string | null
           series?: string | null
           status?: string | null
@@ -3469,6 +3471,7 @@ export type Database = {
           observacao?: string | null
           ordem?: number | null
           ordem_execucao?: number | null
+          referencia_exercicio_id?: string | null
           repeticoes?: string | null
           series?: string | null
           status?: string | null
@@ -3481,6 +3484,13 @@ export type Database = {
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "treinos_prescritos_referencia_exercicio_id_fkey"
+            columns: ["referencia_exercicio_id"]
+            isOneToOne: false
+            referencedRelation: "referencia_exercicios"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "treinos_prescritos_tecnica_id_fkey"
             columns: ["tecnica_id"]
@@ -3920,6 +3930,17 @@ export type Database = {
         }
         Returns: boolean
       }
+      match_referencia_exercicio: {
+        Args: { _limit?: number; _nome: string; _tenant_id: string }
+        Returns: {
+          id: string
+          nome_exercicio: string
+          score: number
+          tenant_id: string
+          url_video: string
+        }[]
+      }
+      normalizar_nome_exercicio: { Args: { _nome: string }; Returns: string }
       recalcular_stats_treino: {
         Args: { _aluno_id: string }
         Returns: {

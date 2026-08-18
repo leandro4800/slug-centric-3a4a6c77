@@ -22,6 +22,147 @@ async function extractPdfText(b64: string): Promise<string> {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Vinculação de exercícios do PDF com a biblioteca (referencia_exercicios)
+// ---------------------------------------------------------------------------
+const AUTO_LINK_SCORE = 0.75;
+const REVIEW_SCORE = 0.5;
+
+const normExName = (s: string) =>
+  (s || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+
+type MatchRow = { id: string; nome_exercicio: string; url_video: string | null; tenant_id: string | null; score: number };
+
+async function matchBiblioteca(supabase: any, tenantId: string, nome: string): Promise<MatchRow | null> {
+  const { data, error } = await supabase.rpc("match_referencia_exercicio", {
+    _tenant_id: tenantId,
+    _nome: nome,
+    _limit: 1,
+  });
+  if (error) {
+    console.error("match_referencia_exercicio erro:", error.message);
+    return null;
+  }
+  const row = Array.isArray(data) ? data[0] : null;
+  return row ? { ...row, score: Number(row.score) || 0 } : null;
+}
+
+/**
+ * Mescla o treino extraído do PDF com o que já existe para o aluno.
+ * - Mantém referencia_exercicio_id / video_coach_url já revisados manualmente.
+ * - Só remove exercícios de dias que vieram no PDF (dias fora do PDF ficam intactos).
+ * - Devolve pendências de revisão (similaridade média) e itens sem vídeo.
+ */
+async function importarTreinoComVinculo(
+  supabase: any,
+  tenantId: string,
+  alunoId: string,
+  dias: any[],
+) {
+  const { data: existentesRaw } = await supabase
+    .from("treinos_prescritos")
+    .select("id, dia_semana, exercicio, referencia_exercicio_id, video_coach_url, video_url")
+    .eq("aluno_id", alunoId)
+    .eq("tenant_id", tenantId);
+  const existentes = (existentesRaw || []) as any[];
+
+  const chave = (dia: string, ex: string) => `${normExName(dia)}||${normExName(ex)}`;
+  const mapaExistentes = new Map<string, any>();
+  existentes.forEach((r) => mapaExistentes.set(chave(r.dia_semana, r.exercicio), r));
+
+  const diasImportados = new Set<string>();
+  const chavesImportadas = new Set<string>();
+  const pendentes: any[] = [];
+  const semVideo: any[] = [];
+  const vinculados: any[] = [];
+
+  for (const dia of dias || []) {
+    const nomeDia = dia?.dia ?? "";
+    diasImportados.add(normExName(nomeDia));
+    const exercicios = dia?.exercicios || [];
+
+    for (let idx = 0; idx < exercicios.length; idx++) {
+      const ex = exercicios[idx];
+      const nome = String(ex?.nome ?? "").trim();
+      if (!nome) continue;
+      const k = chave(nomeDia, nome);
+      chavesImportadas.add(k);
+      const atual = mapaExistentes.get(k);
+
+      const campos: Record<string, unknown> = {
+        dia_semana: nomeDia,
+        ordem: idx,
+        exercicio: nome,
+        series: ex?.series ?? null,
+        repeticoes: ex?.repeticoes ?? null,
+        cadencia: ex?.cadencia ?? null,
+        detalhes_execucao: ex?.detalhes_execucao ?? null,
+        observacao: ex?.observacao ?? null,
+      };
+
+      // Só busca vínculo quando ainda não existe um revisado.
+      let refId: string | null = atual?.referencia_exercicio_id ?? null;
+      if (!refId) {
+        const m = await matchBiblioteca(supabase, tenantId, nome);
+        if (m && m.score >= AUTO_LINK_SCORE) {
+          refId = m.id;
+          vinculados.push({ nome_pdf: nome, dia: nomeDia, biblioteca: m.nome_exercicio, score: m.score });
+        } else if (m && m.score >= REVIEW_SCORE) {
+          pendentes.push({
+            nome_pdf: nome,
+            dia: nomeDia,
+            score: Number(m.score.toFixed(2)),
+            sugestao: { id: m.id, nome: m.nome_exercicio, url_video: m.url_video },
+          });
+        } else {
+          semVideo.push({ nome_pdf: nome, dia: nomeDia });
+        }
+      }
+      campos.referencia_exercicio_id = refId;
+
+      if (atual) {
+        const { error } = await supabase.from("treinos_prescritos").update(campos).eq("id", atual.id);
+        if (error) throw error;
+        pendentes.filter((p) => p.nome_pdf === nome && p.dia === nomeDia).forEach((p) => (p.linha_id = atual.id));
+        semVideo.filter((p) => p.nome_pdf === nome && p.dia === nomeDia).forEach((p) => (p.linha_id = atual.id));
+      } else {
+        const { data: inserted, error } = await supabase
+          .from("treinos_prescritos")
+          .insert({ ...campos, tenant_id: tenantId, aluno_id: alunoId })
+          .select("id")
+          .maybeSingle();
+        if (error) throw error;
+        const novoId = (inserted as any)?.id ?? null;
+        pendentes.filter((p) => p.nome_pdf === nome && p.dia === nomeDia).forEach((p) => (p.linha_id = novoId));
+        semVideo.filter((p) => p.nome_pdf === nome && p.dia === nomeDia).forEach((p) => (p.linha_id = novoId));
+      }
+    }
+  }
+
+  // Remove apenas exercícios de dias que vieram no PDF e que sumiram dele.
+  const paraRemover = existentes
+    .filter((r) => diasImportados.has(normExName(r.dia_semana)))
+    .filter((r) => !chavesImportadas.has(chave(r.dia_semana, r.exercicio)))
+    .map((r) => r.id);
+  if (paraRemover.length > 0) {
+    await supabase.from("treinos_prescritos").delete().in("id", paraRemover);
+  }
+
+  return {
+    modo: "merge",
+    pendentes,
+    sem_video: semVideo,
+    vinculados_automaticamente: vinculados.length,
+    removidos: paraRemover.length,
+  };
+}
+
+
 const parseJsonContent = (content: string) => {
   try {
     return JSON.parse(content || "{}");
@@ -244,6 +385,8 @@ serve(async (req) => {
 
   try {
     const { file, fileType, importType, alunoId, tenantId, dryRun } = await req.json();
+    let revisaoTreino: any = null;
+
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -649,22 +792,9 @@ Retorne exatamente:
     }
 
     if (!dryRun && importType === "treino" && result?.dias) {
-      await supabase.from("treinos_prescritos").delete().eq("aluno_id", alunoId).eq("tenant_id", tenantId);
-      const rows: any[] = [];
-      result.dias.forEach((dia: any) => {
-        (dia.exercicios || []).forEach((ex: any, idx: number) => {
-          rows.push({
-            tenant_id: tenantId, aluno_id: alunoId, dia_semana: dia.dia, ordem: idx,
-            exercicio: ex.nome, series: ex.series, repeticoes: ex.repeticoes,
-            cadencia: ex.cadencia, detalhes_execucao: ex.detalhes_execucao, observacao: ex.observacao,
-          });
-        });
-      });
-      if (rows.length > 0) {
-        const { error } = await supabase.from("treinos_prescritos").insert(rows);
-        if (error) throw error;
-      }
+      revisaoTreino = await importarTreinoComVinculo(supabase, tenantId, alunoId, result.dias);
     } else if (!dryRun && importType === "dieta" && result?.refeicoes) {
+
       await supabase.from("dietas").delete().eq("user_id", alunoId);
       const { data: dieta, error: dError } = await supabase
         .from("dietas")
@@ -790,7 +920,7 @@ Retorne exatamente:
 
     }
 
-    return new Response(JSON.stringify({ success: true, data: result, extractedData: result }), {
+    return new Response(JSON.stringify({ success: true, data: result, extractedData: result, revisao: revisaoTreino }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

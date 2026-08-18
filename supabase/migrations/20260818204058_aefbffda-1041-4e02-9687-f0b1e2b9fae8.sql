@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.match_referencia_exercicio(uuid, text, integer) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.match_referencia_exercicio(uuid, text, integer) TO authenticated, service_role;
