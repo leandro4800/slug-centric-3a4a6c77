@@ -193,67 +193,7 @@ const PersonalTreino = () => {
   }, [activeIndex]);
 
   useEffect(() => {
-    const norm = (s: string) =>
-      (s || "")
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9\s]/g, " ")
-        .split(/\s+/)
-        .filter((w) => w.length > 2 && !["com","sem","dos","das","para","pelo","pela","reto","livre","barra","halter","halteres","maquina","cabo","polia","banco","pulley"].includes(w));
 
-    const loadVideoRefs = async (): Promise<{ entries: { tokens: string[]; yt: string; coach: string | null }[] }> => {
-      let onlyMine = false;
-      if (tenant?.id) {
-        const { data: t } = await supabase
-          .from("tenants")
-          .select("usar_apenas_meus_videos")
-          .eq("id", tenant.id)
-          .maybeSingle();
-        onlyMine = Boolean((t as any)?.usar_apenas_meus_videos);
-      }
-
-      let query = supabase
-        .from("referencia_exercicios")
-        .select("nome_exercicio, url_video, tenant_id");
-
-      if (onlyMine && tenant?.id) {
-        query = query.eq("tenant_id", tenant.id);
-      } else if (tenant?.id) {
-        query = query.or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`);
-      }
-
-      const { data } = await query;
-      const rows = (data || []) as any[];
-      // Vídeos do próprio coach têm prioridade sobre os "Do App".
-      rows.sort((a, b) => (a.tenant_id ? 0 : 1) - (b.tenant_id ? 0 : 1));
-      const entries = rows.map((r: any) => ({
-        tokens: norm(r.nome_exercicio),
-        yt: r.url_video as string,
-        coach: null as string | null,
-      })).filter((e) => e.tokens.length > 0 && e.yt);
-      return { entries };
-    };
-
-
-    const findBest = (nome: string, refMap: any): { yt: string | null; coach: string | null } => {
-      const tokens = norm(nome);
-      if (!tokens.length) return { yt: null, coach: null };
-      let best: any = null;
-      let bestScore = 0;
-      for (const e of refMap.entries || []) {
-        const overlap = e.tokens.filter((t: string) => tokens.includes(t)).length;
-        if (overlap > bestScore) {
-          bestScore = overlap;
-          best = e;
-        }
-      }
-      if (bestScore < 1) return { yt: null, coach: null };
-      return { yt: best.yt, coach: best.coach };
-    };
-
-    const resolveVideo = (nome: string, refMap: any) => findBest(nome, refMap).yt;
-    const resolveCoach = (nome: string, refMap: any) => findBest(nome, refMap).coach;
 
     const loadCargas = async () => {
       if (!user) return;
