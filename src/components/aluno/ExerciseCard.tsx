@@ -112,37 +112,12 @@ export const ExerciseCard = ({
   const [listeningIdx, setListeningIdx] = useState<number | null>(null);
   const [referenceVideoUrl, setReferenceVideoUrl] = useState<string | null>(data.video_url || null);
 
+  // O vídeo vem sempre do vínculo por ID resolvido na consulta do treino.
+  // Nenhum matching por texto aqui — era a causa de vídeos errados.
   useEffect(() => {
-    const fetchReferenceVideo = async () => {
-      if (data.video_url) {
-        setReferenceVideoUrl(data.video_url);
-        return;
-      }
+    setReferenceVideoUrl(data.video_url || null);
+  }, [data.video_url]);
 
-      setReferenceVideoUrl(null);
-
-      try {
-        const exerciseName = data.exercicio.trim();
-        // RLS já restringe a globais (tenant_id NULL) + vídeos do tenant do usuário.
-        // Ordena por tenant_id desc (NULLs por último) para priorizar o vídeo do coach sobre o global.
-        const { data: refData, error } = await supabase
-          .from('referencia_exercicios')
-          .select('url_video, tenant_id')
-          .ilike('nome_exercicio', exerciseName)
-          .not('url_video', 'is', null)
-          .order('tenant_id', { ascending: false, nullsFirst: false })
-          .limit(1);
-
-        if (!error && refData && refData.length > 0) {
-          setReferenceVideoUrl(refData[0].url_video);
-        }
-      } catch (err) {
-        console.error("Erro ao buscar vídeo de referência:", err);
-      }
-    };
-
-    fetchReferenceVideo();
-  }, [data.exercicio, data.video_url]);
 
   // index = -1 significa "preencher TODAS as séries de uma vez"
   const recognitionRef = useRef<any>(null);
