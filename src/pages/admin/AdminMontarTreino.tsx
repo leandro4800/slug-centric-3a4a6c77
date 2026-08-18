@@ -725,6 +725,8 @@ const AdminMontarTreino = () => {
         diasDisponiveis
       );
 
+      const linkMap = await resolveExercicioIds(tenant.id, exerciciosToSave.map((e) => e.exercicio));
+
       const rows = exerciciosToSave.map((e) => ({
         tenant_id: tenant.id,
         aluno_id: alunoId,
@@ -737,8 +739,10 @@ const AdminMontarTreino = () => {
         cadencia: e.cadencia,
         detalhes_execucao: e.detalhes_execucao,
         observacao: e.observacao,
+        referencia_exercicio_id: linkMap[(e.exercicio || "").trim()] ?? null,
         status: "ativo",
       }));
+
       const { error } = await supabase.from("treinos_prescritos").insert(rows);
       if (error) throw error;
       toast.success(`Prescrição salva para o aluno · ${rows.length} exercícios`);
