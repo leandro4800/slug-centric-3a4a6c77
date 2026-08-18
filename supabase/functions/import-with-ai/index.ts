@@ -918,7 +918,7 @@ Retorne exatamente:
 
     }
 
-    return new Response(JSON.stringify({ success: true, data: result, extractedData: result }), {
+    return new Response(JSON.stringify({ success: true, data: result, extractedData: result, revisao: revisaoTreino }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
