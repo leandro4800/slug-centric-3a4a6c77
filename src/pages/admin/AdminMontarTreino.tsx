@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { useSiteTenant } from "@/hooks/use-site-tenant";
+import { resolveExercicioIds } from "@/lib/exerciseLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -292,7 +294,15 @@ export function mapearDiasSemana(dias: string[], disponibilidade: string[]): Rec
 const AdminMontarTreino = () => {
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
-  const { tenant } = useBranding();
+  const { tenant: brandingTenant } = useBranding();
+  // No painel do site (/site/admin) não existe slug na URL, então o BrandingProvider
+  // pode não ter tenant resolvido. Nesse caso usamos o tenant do coach logado,
+  // senão a lista de alunos e o perfil do atleta ficam vazios.
+  const { tenant: siteTenant } = useSiteTenant();
+  const tenant = useMemo<any>(
+    () => brandingTenant ?? siteTenant ?? null,
+    [brandingTenant, siteTenant],
+  );
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
   const [isAvulso, setIsAvulso] = useState(searchParams.get("avulso") === "1");
