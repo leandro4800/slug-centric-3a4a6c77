@@ -628,7 +628,16 @@ const AdminMontarTreino = () => {
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
         body: { perfil: { ...perfil, aluno_id: alunoId, avulso: isAvulso }, biblioteca: bibliotecaParaIA, divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
       });
-      if (error) throw error;
+      if (error) {
+        // supabase-js esconde o corpo do erro ("non-2xx status code"); tenta ler a mensagem real.
+        let msg = "";
+        try {
+          const ctx: any = (error as any).context;
+          if (ctx && typeof ctx.json === "function") msg = (await ctx.json())?.error || "";
+        } catch { /* ignore */ }
+        throw new Error(msg || "Não foi possível gerar agora. Tente novamente em alguns segundos.");
+      }
+
       if ((data as any)?.error && !(data as any)?.fallback) throw new Error((data as any).error);
 
       const novos = mapearDiasParaEstrutura((data.dias || []) as DiaGeradoIA[], divisoesParaGerar);
