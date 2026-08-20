@@ -117,6 +117,7 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let reqBody: any = {};
   try {
     const SUPABASE_URL_E = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY_E = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -142,7 +143,8 @@ serve(async (req) => {
     const callerIdE = userDataE.user.id;
     const adminE = createClient(SUPABASE_URL_E, SERVICE_KEY_E);
 
-    const { perfil, biblioteca, divisoes, tenant_id, prompt: customPrompt, estimulos_extras } = await req.json();
+    reqBody = await req.json().catch(() => ({}));
+    const { perfil, biblioteca, divisoes, tenant_id, prompt: customPrompt, estimulos_extras } = reqBody;
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY not configured");
 
@@ -699,9 +701,13 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
     });
   } catch (e) {
     console.error("gerar-treino-ia error:", e);
-    return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Erro" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    // Nunca devolver 5xx para o app: entrega um rascunho técnico para o coach revisar.
+    return jsonResponse(
+      buildFallbackWorkout(
+        Array.isArray(reqBody?.divisoes) ? reqBody.divisoes : null,
+        Array.isArray(reqBody?.biblioteca) ? reqBody.biblioteca : [],
+      ),
+      200,
+    );
   }
 });
