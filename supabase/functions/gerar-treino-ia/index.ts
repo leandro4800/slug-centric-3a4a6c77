@@ -565,40 +565,60 @@ ${(biblioteca || []).map((e: any) => `- ${e.tem_video ? "✓ " : "  "}${e.nome} 
       },
     ];
 
-    const callGateway = async () =>
-      fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Lovable-API-Key": LOVABLE_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: systemPrompt },
-            { role: "user", content: userPrompt },
-          ],
-          response_format: { type: "json_object" },
-          temperature: 0.35,
-        }),
-      });
+    // Orçamento total de tempo: se estourar, devolvemos rascunho (200) em vez de
+    // deixar o worker ser morto pelo runtime (o que virava "non-2xx" no app).
+    const startedAt = Date.now();
+    const TOTAL_BUDGET_MS = 105_000;
+    const remaining = () => TOTAL_BUDGET_MS - (Date.now() - startedAt);
+
+    const callGateway = async (timeoutMs: number) => {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), Math.max(5_000, timeoutMs));
+      try {
+        return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+          method: "POST",
+          signal: ctrl.signal,
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Lovable-API-Key": LOVABLE_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+            response_format: { type: "json_object" },
+            temperature: 0.35,
+          }),
+        });
+      } finally {
+        clearTimeout(timer);
+      }
+    };
 
     let resp: Response;
     try {
-      resp = await callGateway();
+      resp = await callGateway(Math.min(60_000, remaining()));
       let attempts = 0;
-      while (!resp.ok && (resp.status === 503 || resp.status === 502 || resp.status === 504 || resp.status === 429) && attempts < 2) {
+      while (
+        !resp.ok &&
+        (resp.status === 503 || resp.status === 502 || resp.status === 504 || resp.status === 429) &&
+        attempts < 2 &&
+        remaining() > 25_000
+      ) {
         attempts++;
         const delay = 800 * attempts;
         console.warn(`AI gateway ${resp.status} — retry ${attempts} em ${delay}ms`);
         await new Promise((r) => setTimeout(r, delay));
-        resp = await callGateway();
+        resp = await callGateway(Math.min(45_000, remaining()));
       }
     } catch (gatewayErr) {
       console.error("AI gateway fetch failed:", gatewayErr);
       return jsonResponse(buildFallbackWorkout(divisoesEscolhidas, biblioteca), 200);
     }
+
 
     if (!resp.ok) {
       const t = await resp.text();
