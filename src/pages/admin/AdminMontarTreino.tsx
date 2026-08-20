@@ -292,7 +292,15 @@ export function mapearDiasSemana(dias: string[], disponibilidade: string[]): Rec
 const AdminMontarTreino = () => {
   const [searchParams] = useSearchParams();
   const { slug } = useParams<{ slug: string }>();
-  const { tenant } = useBranding();
+  const { tenant: brandingTenant } = useBranding();
+  // No painel do site (/site/admin) não existe slug na URL, então o BrandingProvider
+  // pode não ter tenant resolvido. Nesse caso usamos o tenant do coach logado,
+  // senão a lista de alunos e o perfil do atleta ficam vazios.
+  const { tenant: siteTenant } = useSiteTenant();
+  const tenant = useMemo<any>(
+    () => brandingTenant ?? siteTenant ?? null,
+    [brandingTenant, siteTenant],
+  );
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [alunoId, setAlunoId] = useState<string>(searchParams.get("aluno") || "");
   const [isAvulso, setIsAvulso] = useState(searchParams.get("avulso") === "1");
