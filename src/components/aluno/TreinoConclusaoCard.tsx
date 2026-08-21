@@ -1,10 +1,10 @@
-import { forwardRef, useRef, useState } from "react";
+import { forwardRef, useEffect, useRef, useState } from "react";
 import { Trophy, Download, Share2, X, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { useBranding } from "@/contexts/BrandingProvider";
-import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 import { useAuth } from "@/hooks/use-auth";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   open: boolean;
@@ -17,8 +17,26 @@ export const TreinoConclusaoCard = ({ open, onClose, diaTreino, totalExercicios 
   const cardRef = useRef<HTMLDivElement>(null);
   const { tenant } = useBranding();
   const { user } = useAuth();
-  const { url: avatarCelebracao } = useAvatarVariant("celebracao");
+  const [avatarCarta, setAvatarCarta] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  // Usa exatamente o mesmo avatar gerado na Carta do Atleta (camisa do time do coach)
+  useEffect(() => {
+    if (!open || !user) return;
+    let cancel = false;
+    (async () => {
+      const { data } = await supabase
+        .from("cartas_atleta")
+        .select("avatar_carta_url, foto_original_url")
+        .eq("aluno_id", user.id)
+        .maybeSingle();
+      if (cancel) return;
+      setAvatarCarta(data?.avatar_carta_url || data?.foto_original_url || null);
+    })();
+    return () => {
+      cancel = true;
+    };
+  }, [open, user]);
 
   if (!open) return null;
 
@@ -35,10 +53,17 @@ export const TreinoConclusaoCard = ({ open, onClose, diaTreino, totalExercicios 
 
   const generate = async (): Promise<string | null> => {
     if (!cardRef.current) return null;
+    // Captura o card em tamanho real (renderizado fora da tela, sem transform)
     const canvas = await html2canvas(cardRef.current, {
       useCORS: true,
       scale: 2,
       backgroundColor: "#000000",
+      width: 1080,
+      height: 1350,
+      windowWidth: 1080,
+      windowHeight: 1350,
+      scrollX: 0,
+      scrollY: 0,
     });
     return canvas.toDataURL("image/png");
   };
@@ -88,6 +113,15 @@ export const TreinoConclusaoCard = ({ open, onClose, diaTreino, totalExercicios 
     }
   };
 
+  const artProps = {
+    nome,
+    diaTreino,
+    totalExercicios,
+    dataHoje,
+    avatar: avatarCarta,
+    tenantNome: tenant?.nome || "ALPHA COACH",
+  };
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
       <button
@@ -98,18 +132,15 @@ export const TreinoConclusaoCard = ({ open, onClose, diaTreino, totalExercicios 
         <X className="h-5 w-5" />
       </button>
 
-      {/* Preview visível (escala reduzida do card real) */}
+      {/* Card real em tamanho 1080x1350 fora da tela — é o que é capturado */}
+      <div className="fixed top-0 left-0 pointer-events-none opacity-0 -z-10" aria-hidden>
+        <CardArt ref={cardRef} {...artProps} />
+      </div>
+
+      {/* Preview visível (escala reduzida, apenas visual) */}
       <div className="w-full max-w-[360px] aspect-[4/5] overflow-hidden rounded-2xl border border-primary/40 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)]">
         <div className="origin-top-left scale-[0.333] w-[1080px] h-[1350px]">
-          <CardArt
-            ref={cardRef}
-            nome={nome}
-            diaTreino={diaTreino}
-            totalExercicios={totalExercicios}
-            dataHoje={dataHoje}
-            avatar={avatarCelebracao}
-            tenantNome={tenant?.nome || "ALPHA COACH"}
-          />
+          <CardArt {...artProps} />
         </div>
       </div>
 
@@ -154,55 +185,60 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
       className="w-[1080px] h-[1350px] bg-black relative overflow-hidden flex flex-col text-white font-sans"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-black to-black" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,hsl(var(--primary)/0.4),transparent_60%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,hsl(var(--primary)/0.35),transparent_60%)]" />
 
-      <div className="relative z-10 flex items-center gap-4 p-12">
-        <div className="w-16 h-16 bg-primary flex items-center justify-center font-display text-4xl text-white rounded">
+      {/* Topo: marca */}
+      <div className="relative z-20 flex items-center gap-4 px-12 pt-10">
+        <div className="w-14 h-14 bg-primary flex items-center justify-center font-display text-3xl text-white rounded">
           {tenantNome.charAt(0)}
         </div>
-        <div className="text-xl font-bold tracking-[0.3em] uppercase">{tenantNome}</div>
+        <div className="text-xl font-bold tracking-[0.2em] uppercase">{tenantNome}</div>
       </div>
 
-      <div className="relative z-10 px-12 mt-4 text-center">
+      {/* Bloco de título — área exclusiva, sem sobreposição com o avatar */}
+      <div className="relative z-20 px-12 pt-8 text-center">
         <div className="inline-flex items-center gap-3 px-6 py-2 bg-primary/20 border border-primary rounded-full">
-          <Trophy className="h-7 w-7 text-primary" />
-          <span className="text-2xl tracking-[0.4em] uppercase font-bold">Treino Concluído</span>
+          <Trophy className="h-6 w-6 text-primary" />
+          <span className="text-xl tracking-[0.25em] uppercase font-bold leading-none">
+            Treino Concluído
+          </span>
         </div>
-        <h1 className="text-8xl font-display tracking-[0.05em] mt-8 leading-none">
+        <h1 className="text-[104px] font-display tracking-[0.02em] mt-6 leading-[0.9] whitespace-nowrap">
           MAIS UM <span className="text-primary italic">CHECK</span>
         </h1>
-        <p className="text-3xl mt-4 text-muted-foreground tracking-widest uppercase">na conta</p>
       </div>
 
-      <div className="relative z-10 flex-1 flex items-end justify-center mt-6 px-12">
+      {/* Avatar: ocupa só o espaço restante, alinhado embaixo */}
+      <div className="relative z-10 flex-1 min-h-0 flex items-end justify-center px-12 pb-2">
         {avatar ? (
           <img
             src={avatar}
             alt="Atleta"
             crossOrigin="anonymous"
-            className="h-[560px] object-contain drop-shadow-[0_0_60px_hsl(var(--primary)/0.7)]"
+            className="max-h-full w-auto object-contain drop-shadow-[0_0_60px_hsl(var(--primary)/0.7)]"
           />
         ) : (
-          <div className="h-[560px] w-[400px] rounded-3xl bg-primary/10 border-2 border-primary/40 flex items-center justify-center">
+          <div className="h-full max-h-[520px] w-[400px] rounded-3xl bg-primary/10 border-2 border-primary/40 flex items-center justify-center">
             <Trophy className="h-40 w-40 text-primary" />
           </div>
         )}
       </div>
 
-      <div className="relative z-10 mx-12 mb-12 bg-black/70 backdrop-blur border-y-4 border-primary px-8 py-6">
+      {/* Rodapé de stats */}
+      <div className="relative z-20 mx-12 mb-12 bg-black/80 backdrop-blur border-y-4 border-primary px-8 py-6">
         <div className="flex items-center justify-between">
           <div>
-            <p className="text-sm tracking-widest uppercase text-muted-foreground">Atleta</p>
-            <p className="text-5xl font-display tracking-[0.1em] mt-1">{nome}</p>
+            <p className="text-sm tracking-[0.2em] uppercase text-white/50">Atleta</p>
+            <p className="text-5xl font-display tracking-[0.04em] mt-1 leading-none">{nome}</p>
           </div>
           <div className="text-right">
-            <p className="text-sm tracking-widest uppercase text-muted-foreground">{diaTreino}</p>
-            <p className="text-5xl font-display text-primary tracking-tighter">{totalExercicios}</p>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">exercícios</p>
+            <p className="text-sm tracking-[0.2em] uppercase text-white/50">{diaTreino}</p>
+            <p className="text-5xl font-display text-primary leading-none mt-1">{totalExercicios}</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-white/50 mt-1">exercícios</p>
           </div>
         </div>
-        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-sm uppercase tracking-widest">
-          <span className="text-muted-foreground">{dataHoje}</span>
+        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-sm uppercase tracking-[0.15em]">
+          <span className="text-white/50">{dataHoje}</span>
           <span className="font-bold text-white underline decoration-primary underline-offset-4">
             #{tenantNome.replace(/\s+/g, "")}
           </span>
