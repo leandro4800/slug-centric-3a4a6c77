@@ -524,12 +524,26 @@ const PersonalTreino = () => {
     carregarStatsSessao(sessaoAndamento?.id);
   }, [sessaoAndamento?.id]);
 
-  // Banner de recordes some sozinho
+  // Banner de recordes: alterna entre os recordes batidos e some sozinho
   useEffect(() => {
     if (!recordeBanner) return;
-    const t = setTimeout(() => setRecordeBanner(null), 6000);
-    return () => clearTimeout(t);
+    setRecordeIndex(0);
+    const total = recordeBanner.records.length;
+    const cycle = total > 1
+      ? setInterval(() => setRecordeIndex((i) => (i + 1) % total), 2200)
+      : undefined;
+    const hide = setTimeout(() => setRecordeBanner(null), Math.max(6000, total * 2200));
+    return () => {
+      if (cycle) clearInterval(cycle);
+      clearTimeout(hide);
+    };
   }, [recordeBanner]);
+
+  const recordLabel = (type: string): string => ({
+    peso: "Maior peso",
+    "1rm": "Maior RM",
+    volume: "Maior volume",
+  } as Record<string, string>)[type] || "Novo recorde";
 
   // Inicia a sessão de treino (cria registro em sessoes_treino)
   const iniciarTreinoAoVivo = async () => {
