@@ -938,7 +938,7 @@ const PersonalTreino = () => {
               sessaoId={sessaoAndamento?.id || null}
               sessionActive={!!sessaoAndamento}
               onSeriesSaved={() => carregarStatsSessao()}
-              onRecords={(tipos) => setRecordeBanner(tipos.join(" e "))}
+              onRecords={(info) => setRecordeBanner(info)}
             />
           ))}
         </div>
