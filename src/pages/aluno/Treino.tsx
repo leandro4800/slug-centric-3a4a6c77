@@ -60,7 +60,8 @@ const PersonalTreino = () => {
   const [concluindo, setConcluindo] = useState(false);
   const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number } | null>(null);
   const [sessaoStats, setSessaoStats] = useState<{ volume: number; series: number }>({ volume: 0, series: 0 });
-  const [recordeBanner, setRecordeBanner] = useState<string | null>(null);
+  const [recordeBanner, setRecordeBanner] = useState<{ exercicio: string; records: Array<{ type: string; value: number }> } | null>(null);
+  const [recordeIndex, setRecordeIndex] = useState(0);
   const [agora, setAgora] = useState(() => Date.now());
 
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
@@ -523,12 +524,26 @@ const PersonalTreino = () => {
     carregarStatsSessao(sessaoAndamento?.id);
   }, [sessaoAndamento?.id]);
 
-  // Banner de recordes some sozinho
+  // Banner de recordes: alterna entre os recordes batidos e some sozinho
   useEffect(() => {
     if (!recordeBanner) return;
-    const t = setTimeout(() => setRecordeBanner(null), 6000);
-    return () => clearTimeout(t);
+    setRecordeIndex(0);
+    const total = recordeBanner.records.length;
+    const cycle = total > 1
+      ? setInterval(() => setRecordeIndex((i) => (i + 1) % total), 2200)
+      : undefined;
+    const hide = setTimeout(() => setRecordeBanner(null), Math.max(6000, total * 2200));
+    return () => {
+      if (cycle) clearInterval(cycle);
+      clearTimeout(hide);
+    };
   }, [recordeBanner]);
+
+  const recordLabel = (type: string): string => ({
+    peso: "Maior peso",
+    "1rm": "Maior RM",
+    volume: "Maior volume",
+  } as Record<string, string>)[type] || "Novo recorde";
 
   // Inicia a sessão de treino (cria registro em sessoes_treino)
   const iniciarTreinoAoVivo = async () => {
@@ -884,11 +899,26 @@ const PersonalTreino = () => {
           )
         )}
 
-        {recordeBanner && (
-          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-md rounded-xl border border-amber-400/60 bg-amber-400/95 px-4 py-3 text-center text-sm font-bold text-black shadow-2xl animate-in fade-in slide-in-from-top-4">
-            🏆 Novo recorde de {recordeBanner}!
-          </div>
-        )}
+        {recordeBanner && (() => {
+          const rec = recordeBanner.records[recordeIndex] || recordeBanner.records[0];
+          return (
+            <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-sm animate-in fade-in slide-in-from-top-4">
+              <div className="flex items-center gap-3 rounded-full border border-black/10 bg-white px-4 py-2.5 shadow-2xl">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400 text-lg shadow-inner">
+                  🏆
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <p className="truncate text-sm font-extrabold text-black">
+                    {recordeBanner.exercicio}
+                  </p>
+                  <p className="text-xs font-bold text-amber-500">
+                    {recordLabel(rec.type)} · {rec.value.toFixed(1)} kg
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
 
         <div className="space-y-3 mt-4">
@@ -908,7 +938,7 @@ const PersonalTreino = () => {
               sessaoId={sessaoAndamento?.id || null}
               sessionActive={!!sessaoAndamento}
               onSeriesSaved={() => carregarStatsSessao()}
-              onRecords={(tipos) => setRecordeBanner(tipos.join(" e "))}
+              onRecords={(info) => setRecordeBanner(info)}
             />
           ))}
         </div>
