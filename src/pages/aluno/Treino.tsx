@@ -15,6 +15,7 @@ import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 interface Treino extends ExerciseCardData {
   dia_semana: string;
+  tempo_descanso_segundos?: number | null;
 }
 
 interface CargaMap {
@@ -246,7 +247,7 @@ const PersonalTreino = () => {
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
             .order("dia_semana")
@@ -284,6 +285,7 @@ const PersonalTreino = () => {
             observacao: t.observacao,
             cadencia: t.cadencia,
             detalhes_execucao: t.detalhes_execucao,
+            tempo_descanso_segundos: t.tempo_descanso_segundos ?? 90,
             // Fonte da verdade: vínculo por ID com a biblioteca. Sem matching por texto.
             video_url: t.referencia_exercicios?.url_video || t.video_url || null,
             video_coach_url: t.video_coach_url || null,
