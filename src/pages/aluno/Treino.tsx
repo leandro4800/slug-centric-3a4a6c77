@@ -899,11 +899,26 @@ const PersonalTreino = () => {
           )
         )}
 
-        {recordeBanner && (
-          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-md rounded-xl border border-amber-400/60 bg-amber-400/95 px-4 py-3 text-center text-sm font-bold text-black shadow-2xl animate-in fade-in slide-in-from-top-4">
-            🏆 Novo recorde de {recordeBanner}!
-          </div>
-        )}
+        {recordeBanner && (() => {
+          const rec = recordeBanner.records[recordeIndex] || recordeBanner.records[0];
+          return (
+            <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-sm animate-in fade-in slide-in-from-top-4">
+              <div className="flex items-center gap-3 rounded-full border border-black/10 bg-white px-4 py-2.5 shadow-2xl">
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-amber-400 text-lg shadow-inner">
+                  🏆
+                </div>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <p className="truncate text-sm font-extrabold text-black">
+                    {recordeBanner.exercicio}
+                  </p>
+                  <p className="text-xs font-bold text-amber-500">
+                    {recordLabel(rec.type)} · {rec.value.toFixed(1)} kg
+                  </p>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
 
 
         <div className="space-y-3 mt-4">
