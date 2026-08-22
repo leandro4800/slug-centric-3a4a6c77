@@ -457,6 +457,31 @@ const PersonalTreino = () => {
     if (h < 18) return "Boa tarde";
     return "Boa noite";
   })();
+  // Inicia a sessão de treino ao vivo (cria registro em sessoes_treino)
+  const iniciarTreinoAoVivo = async () => {
+    if (!user || !tenant || !treinosDoDia.length) return;
+    setStartingSession(true);
+    try {
+      const { data, error } = await supabase
+        .from("sessoes_treino")
+        .insert({
+          aluno_id: user.id,
+          tenant_id: tenant.id,
+          dia_semana: diaAtual,
+          duracao_min: 0,
+          exercicios_total: treinosDoDia.length,
+        } as any)
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      setLiveSession({ id: (data as any)?.id || null, startedAt: Date.now() });
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível iniciar o treino.");
+    } finally {
+      setStartingSession(false);
+    }
+  };
+
   const handleCargaSaved = (nome: string, carga: number, reps: number) => {
     setCargas((prev) => ({
       ...prev,
