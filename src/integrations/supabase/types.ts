@@ -3007,6 +3007,72 @@ export type Database = {
           },
         ]
       }
+      series_executadas: {
+        Row: {
+          aluno_id: string
+          concluida_em: string | null
+          created_at: string | null
+          id: string
+          is_recorde: boolean | null
+          numero_serie: number
+          peso_kg: number | null
+          pse: number | null
+          reps: number | null
+          sessao_id: string | null
+          tenant_id: string
+          tipo_serie: string | null
+          treino_prescrito_id: string | null
+          volume_kg: number | null
+        }
+        Insert: {
+          aluno_id: string
+          concluida_em?: string | null
+          created_at?: string | null
+          id?: string
+          is_recorde?: boolean | null
+          numero_serie: number
+          peso_kg?: number | null
+          pse?: number | null
+          reps?: number | null
+          sessao_id?: string | null
+          tenant_id: string
+          tipo_serie?: string | null
+          treino_prescrito_id?: string | null
+          volume_kg?: number | null
+        }
+        Update: {
+          aluno_id?: string
+          concluida_em?: string | null
+          created_at?: string | null
+          id?: string
+          is_recorde?: boolean | null
+          numero_serie?: number
+          peso_kg?: number | null
+          pse?: number | null
+          reps?: number | null
+          sessao_id?: string | null
+          tenant_id?: string
+          tipo_serie?: string | null
+          treino_prescrito_id?: string | null
+          volume_kg?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "series_executadas_sessao_id_fkey"
+            columns: ["sessao_id"]
+            isOneToOne: false
+            referencedRelation: "sessoes_treino"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "series_executadas_treino_prescrito_id_fkey"
+            columns: ["treino_prescrito_id"]
+            isOneToOne: false
+            referencedRelation: "treinos_prescritos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessoes_luta: {
         Row: {
           aluno_id: string
@@ -3431,6 +3497,7 @@ export type Database = {
           status: string | null
           tecnica_id: string | null
           técnica_intensificacao: string | null
+          tempo_descanso_segundos: number | null
           tenant_id: string
           tipo_serie_pacho: string | null
           updated_at: string
@@ -3454,6 +3521,7 @@ export type Database = {
           status?: string | null
           tecnica_id?: string | null
           técnica_intensificacao?: string | null
+          tempo_descanso_segundos?: number | null
           tenant_id: string
           tipo_serie_pacho?: string | null
           updated_at?: string
@@ -3477,6 +3545,7 @@ export type Database = {
           status?: string | null
           tecnica_id?: string | null
           técnica_intensificacao?: string | null
+          tempo_descanso_segundos?: number | null
           tenant_id?: string
           tipo_serie_pacho?: string | null
           updated_at?: string

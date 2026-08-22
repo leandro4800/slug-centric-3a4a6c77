@@ -10,11 +10,13 @@ import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 import { TreinoConclusaoCard } from "@/components/aluno/TreinoConclusaoCard";
+import { LiveWorkout } from "@/components/aluno/LiveWorkout";
 import { filtrarPresetsParaAluno, type DivisaoPreset, type Nivel } from "@/data/divisoesPresets";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 interface Treino extends ExerciseCardData {
   dia_semana: string;
+  tempo_descanso_segundos?: number | null;
 }
 
 interface CargaMap {
@@ -54,6 +56,8 @@ const PersonalTreino = () => {
   const [generatingPresetId, setGeneratingPresetId] = useState<string | null>(null);
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
+  const [startingSession, setStartingSession] = useState(false);
+  const [liveSession, setLiveSession] = useState<{ id: string | null; startedAt: number } | null>(null);
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const isoWeekKey = (() => {
     const d = new Date();
@@ -246,7 +250,7 @@ const PersonalTreino = () => {
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
+            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
             .order("dia_semana")
@@ -284,6 +288,7 @@ const PersonalTreino = () => {
             observacao: t.observacao,
             cadencia: t.cadencia,
             detalhes_execucao: t.detalhes_execucao,
+            tempo_descanso_segundos: t.tempo_descanso_segundos ?? 90,
             // Fonte da verdade: vínculo por ID com a biblioteca. Sem matching por texto.
             video_url: t.referencia_exercicios?.url_video || t.video_url || null,
             video_coach_url: t.video_coach_url || null,
@@ -452,6 +457,31 @@ const PersonalTreino = () => {
     if (h < 18) return "Boa tarde";
     return "Boa noite";
   })();
+  // Inicia a sessão de treino ao vivo (cria registro em sessoes_treino)
+  const iniciarTreinoAoVivo = async () => {
+    if (!user || !tenant || !treinosDoDia.length) return;
+    setStartingSession(true);
+    try {
+      const { data, error } = await supabase
+        .from("sessoes_treino")
+        .insert({
+          aluno_id: user.id,
+          tenant_id: tenant.id,
+          dia_semana: diaAtual,
+          duracao_min: 0,
+          exercicios_total: treinosDoDia.length,
+        } as any)
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      setLiveSession({ id: (data as any)?.id || null, startedAt: Date.now() });
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível iniciar o treino.");
+    } finally {
+      setStartingSession(false);
+    }
+  };
+
   const handleCargaSaved = (nome: string, carga: number, reps: number) => {
     setCargas((prev) => ({
       ...prev,
@@ -701,6 +731,18 @@ const PersonalTreino = () => {
           </p>
         </div>
 
+        {treinosDoDia.length > 0 && (
+          <button
+            type="button"
+            disabled={startingSession}
+            onClick={iniciarTreinoAoVivo}
+            className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
+          >
+            {startingSession ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dumbbell className="h-5 w-5" />}
+            Iniciar Treino
+          </button>
+        )}
+
 
         <div className="space-y-3 mt-4">
           {treinosDoDia.map((t, i) => (
@@ -787,6 +829,32 @@ const PersonalTreino = () => {
               CONCLUIR TREINO E COMPARTILHAR
             </button>
           )
+        )}
+
+        {liveSession && user && tenant && (
+          <LiveWorkout
+            open
+            sessaoId={liveSession.id}
+            startedAt={liveSession.startedAt}
+            diaSemana={diaAtual}
+            exercicios={treinosDoDia.map((t) => ({
+              id: t.id,
+              exercicio: t.exercicio,
+              series: t.series,
+              repeticoes: t.repeticoes,
+              detalhes_execucao: t.detalhes_execucao,
+              tempo_descanso_segundos: t.tempo_descanso_segundos ?? 90,
+              video_url: t.video_url,
+              video_coach_url: t.video_coach_url,
+            }))}
+            alunoId={user.id}
+            tenantId={tenant.id}
+            onClose={() => setLiveSession(null)}
+            onFinished={() => {
+              setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
+              setReloadKey((k) => k + 1);
+            }}
+          />
         )}
 
         <TreinoConclusaoCard
