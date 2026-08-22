@@ -831,6 +831,32 @@ const PersonalTreino = () => {
           )
         )}
 
+        {liveSession && user && tenant && (
+          <LiveWorkout
+            open
+            sessaoId={liveSession.id}
+            startedAt={liveSession.startedAt}
+            diaSemana={diaAtual}
+            exercicios={treinosDoDia.map((t) => ({
+              id: t.id,
+              exercicio: t.exercicio,
+              series: t.series,
+              repeticoes: t.repeticoes,
+              detalhes_execucao: t.detalhes_execucao,
+              tempo_descanso_segundos: t.tempo_descanso_segundos ?? 90,
+              video_url: t.video_url,
+              video_coach_url: t.video_coach_url,
+            }))}
+            alunoId={user.id}
+            tenantId={tenant.id}
+            onClose={() => setLiveSession(null)}
+            onFinished={() => {
+              setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
+              setReloadKey((k) => k + 1);
+            }}
+          />
+        )}
+
         <TreinoConclusaoCard
           open={showConclusao}
           onClose={() => { setShowConclusao(false); resetTreinoDoDia(); }}
