@@ -10,6 +10,7 @@ import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 import { TreinoConclusaoCard } from "@/components/aluno/TreinoConclusaoCard";
+import { LiveWorkout } from "@/components/aluno/LiveWorkout";
 import { filtrarPresetsParaAluno, type DivisaoPreset, type Nivel } from "@/data/divisoesPresets";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
