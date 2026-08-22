@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic } from "lucide-react";
+import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic, Medal } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
