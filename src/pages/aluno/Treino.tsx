@@ -57,9 +57,12 @@ const PersonalTreino = () => {
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [startingSession, setStartingSession] = useState(false);
-  const [liveSession, setLiveSession] = useState<{ id: string | null; startedAt: number } | null>(null);
+  const [concluindo, setConcluindo] = useState(false);
   const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number } | null>(null);
+  const [sessaoStats, setSessaoStats] = useState<{ volume: number; series: number }>({ volume: 0, series: 0 });
+  const [recordeBanner, setRecordeBanner] = useState<string | null>(null);
   const [agora, setAgora] = useState(() => Date.now());
+
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const isoWeekKey = (() => {
     const d = new Date();
