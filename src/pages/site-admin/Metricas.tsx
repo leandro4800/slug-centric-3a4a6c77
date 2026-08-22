@@ -109,6 +109,8 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const [evolucao, setEvolucao] = useState<any[]>([]);
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [pesoDiario, setPesoDiario] = useState<any[]>([]);
+  const [prs, setPrs] = useState<any[]>([]);
+
   const [exercicio, setExercicio] = useState<string>("");
   const [analise, setAnalise] = useState<string>("");
   const [analisando, setAnalisando] = useState(false);
@@ -163,14 +165,14 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [p, c, e, av, pd] = await Promise.all([
+      const [p, se, e, av, pd, pr] = await Promise.all([
         supabase.from("perfis").select("id, nome_completo, email, avatar_url").eq("id", alunoId).maybeSingle(),
         supabase
-          .from("historico_cargas")
-          .select("exercicio_nome, carga_kg, repeticoes_feitas, data_treino")
-          .eq("user_id", alunoId)
-          .order("data_treino", { ascending: true })
-          .limit(1000),
+          .from("series_executadas")
+          .select("peso_kg, reps, volume_kg, rm_estimado, concluida_em, treino_prescrito_id, treinos_prescritos(exercicio)")
+          .eq("aluno_id", alunoId)
+          .order("concluida_em", { ascending: true })
+          .limit(2000),
         supabase
           .from("evolucao_metricas")
           .select("peso, bf, massa_magra, massa_gorda, cintura, braco, data_registro")
@@ -189,12 +191,28 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
           .eq("aluno_id", alunoId)
           .order("data", { ascending: true })
           .limit(365),
+        supabase
+          .from("prs")
+          .select("id, exercicio, tipo_recorde, valor_numerico, valor_anterior, valor, unidade, data")
+          .eq("aluno_id", alunoId)
+          .order("data", { ascending: false })
+          .limit(300),
       ]);
       setPerfil((p.data as Aluno) || null);
-      setCargas((c.data as any[]) || []);
+      setCargas(
+        ((se.data as any[]) || []).map((s) => ({
+          exercicio_nome: s.treinos_prescritos?.exercicio || "Exercício",
+          carga_kg: s.peso_kg,
+          repeticoes_feitas: s.reps,
+          volume_kg: s.volume_kg,
+          rm_estimado: s.rm_estimado,
+          data_treino: s.concluida_em,
+        })),
+      );
       setEvolucao((e.data as any[]) || []);
       setAvaliacoes((av.data as any[]) || []);
       setPesoDiario((pd.data as any[]) || []);
+      setPrs((pr.data as any[]) || []);
       setLoading(false);
     })();
   }, [alunoId]);
@@ -203,6 +221,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
     () => Array.from(new Set(cargas.map((c) => c.exercicio_nome))).sort(),
     [cargas],
   );
+
 
   useEffect(() => {
     if (!exercicio && exercicios.length) setExercicio(exercicios[0]);
@@ -238,7 +257,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const volumePorExercicio = useMemo(() => {
     const map = new Map<string, number>();
     cargas.forEach((c) => {
-      const vol = (Number(c.carga_kg) || 0) * (Number(c.repeticoes_feitas) || 0);
+      const vol = Number(c.volume_kg) || (Number(c.carga_kg) || 0) * (Number(c.repeticoes_feitas) || 0);
       map.set(c.exercicio_nome, (map.get(c.exercicio_nome) || 0) + vol);
     });
     return Array.from(map.entries())
@@ -477,7 +496,44 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
               </p>
             )}
           </Painel>
+
+          {/* Recordes pessoais */}
+          <Painel title="Recordes pessoais">
+            {prs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum recorde registrado ainda.</p>
+            ) : (
+              <ul className="max-h-[320px] space-y-2 overflow-y-auto">
+                {prs
+                  .filter((r) => !exercicio || r.exercicio === exercicio || !exercicios.includes(r.exercicio))
+                  .map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-black/20 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold">{r.exercicio}</p>
+                        <p className="text-[11px] text-muted-foreground">{fmtDate(r.data)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-300">
+                          {r.tipo_recorde === "1rm" ? "1RM" : r.tipo_recorde === "peso" ? "Peso" : "Volume"}
+                        </span>
+                        <span className="font-mono text-sm">
+                          {Number(r.valor_numerico ?? 0).toFixed(1)}
+                          {r.valor_anterior != null && (
+                            <span className="ml-1 text-[11px] text-muted-foreground line-through">
+                              {Number(r.valor_anterior).toFixed(1)}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </Painel>
         </div>
+
       )}
     </div>
   );

@@ -10,7 +10,7 @@ import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 import { TreinoConclusaoCard } from "@/components/aluno/TreinoConclusaoCard";
-import { LiveWorkout } from "@/components/aluno/LiveWorkout";
+
 import { filtrarPresetsParaAluno, type DivisaoPreset, type Nivel } from "@/data/divisoesPresets";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
@@ -57,9 +57,12 @@ const PersonalTreino = () => {
   const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [startingSession, setStartingSession] = useState(false);
-  const [liveSession, setLiveSession] = useState<{ id: string | null; startedAt: number } | null>(null);
+  const [concluindo, setConcluindo] = useState(false);
   const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number } | null>(null);
+  const [sessaoStats, setSessaoStats] = useState<{ volume: number; series: number }>({ volume: 0, series: 0 });
+  const [recordeBanner, setRecordeBanner] = useState<string | null>(null);
   const [agora, setAgora] = useState(() => Date.now());
+
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const isoWeekKey = (() => {
     const d = new Date();
@@ -485,11 +488,11 @@ const PersonalTreino = () => {
 
   // Relógio do aviso de sessão em andamento
   useEffect(() => {
-    if (!sessaoAndamento || liveSession) return;
+    if (!sessaoAndamento) return;
     setAgora(Date.now());
     const t = setInterval(() => setAgora(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [sessaoAndamento?.id, liveSession]);
+  }, [sessaoAndamento?.id]);
 
   const duracaoAndamento = (() => {
     if (!sessaoAndamento) return "00:00";
@@ -500,14 +503,36 @@ const PersonalTreino = () => {
     return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
   })();
 
-  // Inicia a sessão de treino ao vivo (cria registro em sessoes_treino)
+  // Estatísticas da sessão (volume / séries) lidas de series_executadas
+  const carregarStatsSessao = async (sessId?: string | null) => {
+    const id = sessId ?? sessaoAndamento?.id;
+    if (!id) { setSessaoStats({ volume: 0, series: 0 }); return; }
+    const { data } = await supabase
+      .from("series_executadas")
+      .select("volume_kg")
+      .eq("sessao_id", id)
+      .limit(2000);
+    const rows = (data as any[]) || [];
+    setSessaoStats({
+      volume: rows.reduce((acc, r) => acc + (Number(r.volume_kg) || 0), 0),
+      series: rows.length,
+    });
+  };
+
+  useEffect(() => {
+    carregarStatsSessao(sessaoAndamento?.id);
+  }, [sessaoAndamento?.id]);
+
+  // Banner de recordes some sozinho
+  useEffect(() => {
+    if (!recordeBanner) return;
+    const t = setTimeout(() => setRecordeBanner(null), 6000);
+    return () => clearTimeout(t);
+  }, [recordeBanner]);
+
+  // Inicia a sessão de treino (cria registro em sessoes_treino)
   const iniciarTreinoAoVivo = async () => {
-    if (!user || !tenant || !treinosDoDia.length) return;
-    // Já existe sessão em andamento: apenas retoma
-    if (sessaoAndamento) {
-      setLiveSession({ id: sessaoAndamento.id, startedAt: sessaoAndamento.startedAt });
-      return;
-    }
+    if (!user || !tenant || !treinosDoDia.length || sessaoAndamento) return;
     setStartingSession(true);
     try {
       const { data, error } = await supabase
@@ -525,13 +550,51 @@ const PersonalTreino = () => {
       const id = (data as any)?.id || null;
       const startedAt = (data as any)?.created_at ? new Date((data as any).created_at).getTime() : Date.now();
       if (id) setSessaoAndamento({ id, startedAt });
-      setLiveSession({ id, startedAt });
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível iniciar o treino.");
     } finally {
       setStartingSession(false);
     }
   };
+
+  // Conclui a sessão: fecha sessoes_treino e abre o card de compartilhar
+  const concluirTreino = async () => {
+    if (!user || !tenant) { setShowConclusao(true); return; }
+    setConcluindo(true);
+    try {
+      if (sessaoAndamento) {
+        const min = Math.min(
+          Math.max(Math.round((Date.now() - sessaoAndamento.startedAt) / 60000) || 1, 1),
+          300,
+        );
+        await supabase
+          .from("sessoes_treino")
+          .update({ duracao_min: min, exercicios_total: treinosDoDia.length } as any)
+          .eq("id", sessaoAndamento.id);
+      } else {
+        await supabase.rpc("registrar_sessao_treino" as any, {
+          _tenant_id: tenant.id,
+          _dia_semana: diaAtual,
+          _duracao_min: 60,
+          _exercicios_total: treinosDoDia.length,
+        } as any);
+      }
+      const next = new Set(completedIds);
+      treinosDoDia.forEach((t) => next.add(t.id));
+      setCompletedIds(next);
+      try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
+      try { localStorage.removeItem(sessionStartKey); } catch {}
+      setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
+      setSessaoAndamento(null);
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      console.warn("Não foi possível registrar conclusão", e);
+    } finally {
+      setConcluindo(false);
+      setShowConclusao(true);
+    }
+  };
+
 
 
   const handleCargaSaved = (nome: string, carga: number, reps: number) => {
@@ -784,24 +847,48 @@ const PersonalTreino = () => {
         </div>
 
         {treinosDoDia.length > 0 && (
-          <button
-            type="button"
-            disabled={startingSession}
-            onClick={iniciarTreinoAoVivo}
-            className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
-          >
-            {startingSession ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dumbbell className="h-5 w-5" />}
-            {sessaoAndamento ? `Continuar treino · ${duracaoAndamento}` : "Iniciar Treino"}
-          </button>
-        )}
-        {sessaoAndamento && !liveSession && (
-          <p className="mt-2 text-center text-[11px] uppercase tracking-[0.18em] text-emerald-400 flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Treino em andamento
-          </p>
+          sessaoAndamento ? (
+            <div className="mt-4 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-400 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Treino em andamento
+                </span>
+                <span className="font-mono text-lg text-primary">⏱ {duracaoAndamento}</span>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Duração</p>
+                  <p className="font-mono text-base">{duracaoAndamento}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Volume</p>
+                  <p className="font-mono text-base">{Math.round(sessaoStats.volume)} kg</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Séries</p>
+                  <p className="font-mono text-base">{sessaoStats.series}</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={startingSession}
+              onClick={iniciarTreinoAoVivo}
+              className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
+            >
+              {startingSession ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dumbbell className="h-5 w-5" />}
+              Iniciar Treino
+            </button>
+          )
         )}
 
-
+        {recordeBanner && (
+          <div className="mt-3 rounded-xl border border-amber-400/50 bg-amber-400/15 px-4 py-3 text-center text-sm font-bold text-amber-300">
+            🏆 Novo recorde de {recordeBanner}!
+          </div>
+        )}
 
         <div className="space-y-3 mt-4">
           {treinosDoDia.map((t, i) => (
@@ -817,9 +904,14 @@ const PersonalTreino = () => {
               nivelExperiencia={nivelExperiencia}
               completed={completedIds.has(t.id)}
               onCompleted={() => markCompleted(t.id)}
+              sessaoId={sessaoAndamento?.id || null}
+              sessionActive={!!sessaoAndamento}
+              onSeriesSaved={() => carregarStatsSessao()}
+              onRecords={(tipos) => setRecordeBanner(tipos.join(" e "))}
             />
           ))}
         </div>
+
 
         {treinosDoDia.length > 0 && (
           completedDaysWeek.has(diaAtual) ? (
@@ -829,93 +921,19 @@ const PersonalTreino = () => {
             </div>
           ) : (
             <button
-              onClick={async () => {
-                // Registra um marker do treino concluído (alimenta stats/evolução)
-                if (user && tenant) {
-                  try {
-                    const hoje = new Date().toISOString().split("T")[0];
-                    const { data: existe } = await supabase
-                      .from("historico_cargas")
-                      .select("id")
-                      .eq("user_id", user.id)
-                      .eq("data_treino", hoje)
-                      .eq("exercicio_nome", `__treino_concluido__:${diaAtual}`)
-                      .maybeSingle();
-                    if (!existe) {
-                      await supabase.from("historico_cargas").insert({
-                        tenant_id: tenant.id,
-                        user_id: user.id,
-                        exercicio_nome: `__treino_concluido__:${diaAtual}`,
-                        carga_kg: 0,
-                        repeticoes_feitas: treinosDoDia.length,
-                        tipo_serie: "Conclusao",
-                        serie_index: 0,
-                      });
-                    }
-                    // Registra a sessão (duração real) no banco
-                    let duracao = 60;
-                    try {
-                      const ini = Number(localStorage.getItem(sessionStartKey) || 0);
-                      if (ini > 0) duracao = Math.round((Date.now() - ini) / 60000);
-                    } catch {}
-                    duracao = Math.min(Math.max(duracao || 60, 10), 240);
-                    await supabase.rpc("registrar_sessao_treino" as any, {
-                      _tenant_id: tenant.id,
-                      _dia_semana: diaAtual,
-                      _duracao_min: duracao,
-                      _exercicios_total: treinosDoDia.length,
-                    } as any);
-                    try { localStorage.removeItem(sessionStartKey); } catch {}
-                    // marca todos como concluído na UI
-                    const next = new Set(completedIds);
-                    treinosDoDia.forEach((t) => next.add(t.id));
-                    setCompletedIds(next);
-                    try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
-                    // marca o dia como concluído na semana
-                    setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
-                    // recarrega stats
-                    setReloadKey((k) => k + 1);
-
-                  } catch (e) {
-                    console.warn("Não foi possível registrar conclusão", e);
-                  }
-                }
-                setShowConclusao(true);
-              }}
-              className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition"
+              onClick={concluirTreino}
+              disabled={concluindo}
+              className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition disabled:opacity-70"
             >
-              <Trophy className="h-5 w-5" />
-              CONCLUIR TREINO E COMPARTILHAR
+              {concluindo ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trophy className="h-5 w-5" />}
+              CONCLUIR TREINO
             </button>
           )
         )}
 
-        {liveSession && user && tenant && (
-          <LiveWorkout
-            open
-            sessaoId={liveSession.id}
-            startedAt={liveSession.startedAt}
-            diaSemana={diaAtual}
-            exercicios={treinosDoDia.map((t) => ({
-              id: t.id,
-              exercicio: t.exercicio,
-              series: t.series,
-              repeticoes: t.repeticoes,
-              detalhes_execucao: t.detalhes_execucao,
-              tempo_descanso_segundos: t.tempo_descanso_segundos ?? 90,
-              video_url: t.video_url,
-              video_coach_url: t.video_coach_url,
-            }))}
-            alunoId={user.id}
-            tenantId={tenant.id}
-            onClose={() => setLiveSession(null)}
-            onFinished={() => {
-              setSessaoAndamento(null);
-              setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
-              setReloadKey((k) => k + 1);
-            }}
-          />
-        )}
+
+
+
 
         <TreinoConclusaoCard
           open={showConclusao}

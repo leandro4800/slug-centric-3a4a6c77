@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic } from "lucide-react";
+import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic, Medal } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -40,7 +40,16 @@ interface ExerciseCardProps {
   nivelExperiencia?: string | null;
   completed?: boolean;
   onCompleted?: () => void;
+  /** Sessão de treino em andamento (sessoes_treino.id) */
+  sessaoId?: string | null;
+  /** Só é possível registrar séries com uma sessão iniciada */
+  sessionActive?: boolean;
+  /** Chamado após gravar séries (para atualizar a barra de estatísticas) */
+  onSeriesSaved?: () => void;
+  /** Recordes batidos nesta gravação (para o banner do topo) */
+  onRecords?: (tipos: string[]) => void;
 }
+
 
 
 const fmtTime = (s: number) => {
@@ -56,6 +65,9 @@ const isAvancado = (n?: string | null) => {
 };
 
 // Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
+const isUuid = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s || "");
+
 const DEFAULT_STRUCTURE = ["Aquecimento", "Ajuste", "Trabalho", "Trabalho", "Trabalho"] as const;
 
 const buildSlotTypes = (_seriesStr: string | null, _nivel?: string | null): string[] => {
@@ -73,7 +85,12 @@ export const ExerciseCard = ({
   nivelExperiencia,
   completed = false,
   onCompleted,
+  sessaoId = null,
+  sessionActive = false,
+  onSeriesSaved,
+  onRecords,
 }: ExerciseCardProps) => {
+
   const { tenant } = useBranding();
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
@@ -106,6 +123,8 @@ export const ExerciseCard = ({
     }));
   });
   const [savingAll, setSavingAll] = useState(false);
+  const [recordSlots, setRecordSlots] = useState<Set<number>>(new Set());
+
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
@@ -403,6 +422,10 @@ export const ExerciseCard = ({
       toast.error("Você precisa estar logado.");
       return;
     }
+    if (!sessionActive) {
+      toast.error("Inicie o treino primeiro.");
+      return;
+    }
     const valid = slots
       .map((s, i) => ({
         k: parseFloat(s.carga.replace(",", ".")),
@@ -416,29 +439,130 @@ export const ExerciseCard = ({
       return;
     }
     setSavingAll(true);
-    const rows = valid.map((s) => ({
-      tenant_id: tenantId,
-      user_id: userId,
-      exercicio_nome: data.exercicio,
-      carga_kg: s.k,
-      repeticoes_feitas: s.r,
-      tipo_serie: s.tipo,
-      serie_index: s.idx,
-    }));
-    const { error } = await supabase.from("historico_cargas").insert(rows);
-    setSavingAll(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const prescritoId = isUuid(data.id) ? data.id : null;
+
+      // ---- histórico do aluno neste exercício (para comparar recordes) ----
+      let maxPeso = 0;
+      let maxRm = 0;
+      const maxVolPorSerie = new Map<number, number>();
+      if (prescritoId) {
+        const { data: prescritos } = await supabase
+          .from("treinos_prescritos")
+          .select("id")
+          .eq("aluno_id", userId)
+          .eq("exercicio", data.exercicio);
+        const ids = (prescritos || []).map((p: any) => p.id);
+        if (ids.length) {
+          const { data: hist } = await supabase
+            .from("series_executadas")
+            .select("peso_kg, volume_kg, rm_estimado, numero_serie")
+            .eq("aluno_id", userId)
+            .in("treino_prescrito_id", ids)
+            .limit(2000);
+          (hist || []).forEach((h: any) => {
+            maxPeso = Math.max(maxPeso, Number(h.peso_kg) || 0);
+            maxRm = Math.max(maxRm, Number(h.rm_estimado) || 0);
+            const n = Number(h.numero_serie) || 0;
+            maxVolPorSerie.set(n, Math.max(maxVolPorSerie.get(n) || 0, Number(h.volume_kg) || 0));
+          });
+        }
+      }
+
+      const rows = valid.map((s) => ({
+        aluno_id: userId,
+        tenant_id: tenantId,
+        sessao_id: sessaoId,
+        treino_prescrito_id: prescritoId,
+        numero_serie: s.idx,
+        tipo_serie: s.tipo,
+        peso_kg: s.k,
+        reps: s.r,
+        volume_kg: s.k * s.r,
+        concluida_em: new Date().toISOString(),
+      }));
+
+      const { data: inserted, error } = await supabase
+        .from("series_executadas")
+        .insert(rows as any)
+        .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado");
+      if (error) throw error;
+
+      // ---- detecta recordes ----
+      const prsRows: any[] = [];
+      const recordIdx = new Set<number>();
+      const tipos = new Set<string>();
+      const hoje = new Date().toISOString().split("T")[0];
+
+      const ordenadas = [...(inserted || [])].sort(
+        (a: any, b: any) => (a.numero_serie || 0) - (b.numero_serie || 0),
+      );
+
+      ordenadas.forEach((row: any) => {
+        const peso = Number(row.peso_kg) || 0;
+        const reps = Number(row.reps) || 0;
+        const vol = Number(row.volume_kg) || peso * reps;
+        const rm = Number(row.rm_estimado) || peso * (1 + reps / 30);
+        const n = Number(row.numero_serie) || 0;
+        let bateu = false;
+
+        const push = (tipo: string, valor: number, anterior: number, unidade: string, label: string) => {
+          bateu = true;
+          tipos.add(label);
+          prsRows.push({
+            aluno_id: userId,
+            tenant_id: tenantId,
+            exercicio: data.exercicio,
+            tipo_recorde: tipo,
+            valor_numerico: Number(valor.toFixed(2)),
+            valor_anterior: anterior > 0 ? Number(anterior.toFixed(2)) : null,
+            valor: `${valor.toFixed(1)} ${unidade}`,
+            unidade,
+            data: hoje,
+            treino_prescrito_id: prescritoId,
+            series_executada_id: row.id,
+          });
+        };
+
+        const volAnterior = maxVolPorSerie.get(n) || 0;
+        if (vol > 0 && vol > volAnterior) {
+          push("volume", vol, volAnterior, "kg", "volume");
+          maxVolPorSerie.set(n, vol);
+        }
+        if (peso > 0 && peso > maxPeso) {
+          push("peso", peso, maxPeso, "kg", "peso");
+          maxPeso = peso;
+        }
+        if (rm > 0 && rm > maxRm) {
+          push("1rm", rm, maxRm, "kg", "1RM");
+          maxRm = rm;
+        }
+        if (bateu) recordIdx.add(n);
+      });
+
+      if (prsRows.length) {
+        await supabase.from("prs").insert(prsRows as any);
+        const ids = ordenadas.filter((r: any) => recordIdx.has(Number(r.numero_serie))).map((r: any) => r.id);
+        if (ids.length) await supabase.from("series_executadas").update({ is_recorde: true } as any).in("id", ids);
+        setRecordSlots(new Set([...recordIdx].map((n) => n - 1)));
+        onRecords?.([...tipos]);
+      }
+
+      const last = valid[valid.length - 1];
+      toast.success(`${valid.length} série(s) registrada(s)!`);
+      onCargaSaved?.(data.exercicio, last.k, last.r);
+      onSeriesSaved?.();
+      onCompleted?.();
+      setRunning(false);
+      setSeconds(0);
+      try { localStorage.removeItem(storageKey); } catch {}
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível registrar as séries.");
+    } finally {
+      setSavingAll(false);
     }
-    const last = valid[valid.length - 1];
-    toast.success(`${valid.length} série(s) registrada(s)!`);
-    onCargaSaved?.(data.exercicio, last.k, last.r);
-    onCompleted?.();
-    setRunning(false);
-    setSeconds(0);
-    try { localStorage.removeItem(storageKey); } catch {}
   };
+
 
   const currentVideoUrl = (hasCoach && (showCoach || !showYT)) ? coachUrl : referenceVideoUrl;
 
@@ -563,8 +687,10 @@ export const ExerciseCard = ({
           {/* Iniciar exercício + timer */}
           <div className="grid grid-cols-[auto_1fr] gap-2">
             <button
-              onClick={() => setRunning((r) => !r)}
-              className="px-6 py-4 rounded-xl bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95"
+              onClick={() => { if (sessionActive) setRunning((r) => !r); }}
+              disabled={!sessionActive}
+              title={sessionActive ? undefined : "Inicie o treino primeiro"}
+              className="px-6 py-4 rounded-xl bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100 disabled:cursor-not-allowed"
             >
               <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
               <Play className="h-5 w-5 fill-current relative z-10" />
@@ -581,6 +707,13 @@ export const ExerciseCard = ({
               </div>
             </div>
           </div>
+
+          {!sessionActive && (
+            <p className="text-[11px] text-amber-400 -mt-2">
+              Inicie o treino primeiro para registrar suas séries.
+            </p>
+          )}
+
 
           {/* Botão destacado: preencher TODAS as séries por voz */}
           <button
@@ -621,7 +754,16 @@ export const ExerciseCard = ({
                     <span className={getSlotType(i) !== "Aquecimento" ? "font-black" : ""}>
                       S{i + 1} - {getSlotType(i)}
                     </span>
+                    {recordSlots.has(i) && (
+                      <span
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black"
+                        title="Novo recorde"
+                      >
+                        <Medal className="h-3 w-3" /> PR
+                      </span>
+                    )}
                   </button>
+
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); startListening(i); }}
@@ -664,13 +806,15 @@ export const ExerciseCard = ({
 
           <button
             onClick={handleFinalizar}
-            disabled={savingAll}
-            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display text-lg flex items-center justify-center gap-3 relative overflow-hidden border border-white/30 shadow-[0_10px_40px_-10px_rgba(224,0,0,0.4)] transition-all active:scale-[0.98]"
+            disabled={savingAll || !sessionActive}
+            title={sessionActive ? undefined : "Inicie o treino primeiro"}
+            className="w-full py-4 rounded-xl bg-primary text-primary-foreground font-display text-lg flex items-center justify-center gap-3 relative overflow-hidden border border-white/30 shadow-[0_10px_40px_-10px_rgba(224,0,0,0.4)] transition-all active:scale-[0.98] disabled:opacity-40 disabled:active:scale-100"
           >
             <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-70" />
             {savingAll ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : null}
-            <span className="relative z-10 tracking-[0.1em]">FINALIZAR TREINO</span>
+            <span className="relative z-10 tracking-[0.1em]">FINALIZAR EXERCÍCIO</span>
           </button>
+
         </div>
       )}
     </div>
