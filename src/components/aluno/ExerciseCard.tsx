@@ -478,7 +478,6 @@ export const ExerciseCard = ({
         tipo_serie: s.tipo,
         peso_kg: s.k,
         reps: s.r,
-        volume_kg: s.k * s.r,
         concluida_em: new Date().toISOString(),
       }));
 
