@@ -855,7 +855,7 @@ export const ExerciseCard = ({
                       onChange={(e) => updateSlot(i, "carga", e.target.value)}
                       disabled={slot.done || saving}
                       placeholder="—"
-                      className="h-10 w-full border border-input bg-secondary/70 px-2 text-center text-sm outline-none focus:border-primary disabled:opacity-60"
+                      className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                     />
                     <input
                       aria-label={`Repetições da série ${i + 1}`}
@@ -866,7 +866,7 @@ export const ExerciseCard = ({
                       onChange={(e) => updateSlot(i, "reps", e.target.value)}
                       disabled={slot.done || saving}
                       placeholder="—"
-                      className="h-10 w-full border border-input bg-secondary/70 px-2 text-center text-sm outline-none focus:border-primary disabled:opacity-60"
+                      className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                     />
                     <Button
                       type="button"
@@ -875,7 +875,7 @@ export const ExerciseCard = ({
                       aria-label={`Confirmar série ${i + 1}`}
                       disabled={!sessionActive || slot.done || saving}
                       onClick={() => void confirmSeries(i)}
-                      className="h-10 w-10 rounded-none p-0 tracking-normal"
+                      className="h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4"
                     >
                       {saving ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
                     </Button>
