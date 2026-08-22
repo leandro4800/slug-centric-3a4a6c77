@@ -443,8 +443,10 @@ export const ExerciseCard = ({
       const prescritoId = isUuid(data.id) ? data.id : null;
 
       // ---- histórico do aluno neste exercício (para comparar recordes) ----
+      // Só considera séries de TRABALHO no histórico e só marca PR se já existir histórico.
       let maxPeso = 0;
       let maxRm = 0;
+      let temHistorico = false;
       const maxVolPorSerie = new Map<number, number>();
       if (prescritoId) {
         const { data: prescritos } = await supabase
@@ -456,18 +458,22 @@ export const ExerciseCard = ({
         if (ids.length) {
           const { data: hist } = await supabase
             .from("series_executadas")
-            .select("peso_kg, volume_kg, rm_estimado, numero_serie")
+            .select("peso_kg, volume_kg, rm_estimado, numero_serie, tipo_serie")
             .eq("aluno_id", userId)
             .in("treino_prescrito_id", ids)
             .limit(2000);
-          (hist || []).forEach((h: any) => {
-            maxPeso = Math.max(maxPeso, Number(h.peso_kg) || 0);
-            maxRm = Math.max(maxRm, Number(h.rm_estimado) || 0);
-            const n = Number(h.numero_serie) || 0;
-            maxVolPorSerie.set(n, Math.max(maxVolPorSerie.get(n) || 0, Number(h.volume_kg) || 0));
-          });
+          (hist || [])
+            .filter((h: any) => (h.tipo_serie || "trabalho") === "trabalho")
+            .forEach((h: any) => {
+              temHistorico = true;
+              maxPeso = Math.max(maxPeso, Number(h.peso_kg) || 0);
+              maxRm = Math.max(maxRm, Number(h.rm_estimado) || 0);
+              const n = Number(h.numero_serie) || 0;
+              maxVolPorSerie.set(n, Math.max(maxVolPorSerie.get(n) || 0, Number(h.volume_kg) || 0));
+            });
         }
       }
+
 
       const rows = valid.map((s) => ({
         aluno_id: userId,
