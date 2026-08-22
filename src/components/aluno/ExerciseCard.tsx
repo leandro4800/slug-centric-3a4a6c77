@@ -777,95 +777,82 @@ export const ExerciseCard = ({
             {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
           </button>
 
-          {/* Séries de trabalho */}
-          <div className="flex items-center justify-between pt-1 gap-2">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Séries</p>
-            <p className="text-[11px] text-accent font-bold">{totalSlots} slots</p>
-          </div>
-
-          <div className="space-y-2">
-            {slots.map((slot, i) => (
-              <div key={i} className={`border rounded-lg p-3 space-y-2 transition-all ${
-                getSlotType(i) === "Trabalho" 
-                  ? "border-primary/50 bg-primary/5 shadow-[0_0_15px_-5px_hsl(var(--primary)/0.3)]" 
-                  : getSlotType(i) === "Ajuste"
-                  ? "border-amber-500/50 bg-amber-500/5"
-                  : "border-border bg-background/40"
-              }`}>
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={() => toggleDone(i)}
-                    className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider"
+          <div className="overflow-x-auto border border-border bg-background/40">
+            <div className="min-w-[520px]">
+              <div className="grid grid-cols-[1.2fr_1.35fr_0.8fr_0.8fr_44px] items-center border-b border-border bg-secondary/60 px-2 py-2 text-[9px] font-bold uppercase text-muted-foreground">
+                <span>Série</span><span>Anterior</span><span>KG</span><span>Reps</span><span className="text-center">✓</span>
+              </div>
+              {slots.map((slot, i) => {
+                const type = getSlotType(i);
+                const previous = history.previousBySeries.get(i + 1);
+                const saving = savingSlots.has(i);
+                return (
+                  <div
+                    key={i}
+                    className={`grid grid-cols-[1.2fr_1.35fr_0.8fr_0.8fr_44px] items-center gap-2 border-b border-border/70 px-2 py-2 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
                   >
-                    <CheckCircle2 className={`h-4 w-4 ${slot.done ? "text-emerald-500" : "text-muted-foreground"}`} />
-                    <span className={getSlotType(i) !== "Aquecimento" ? "font-black" : ""}>
-                      S{i + 1} - {getSlotType(i)}
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <span className="font-mono text-sm font-bold">{i + 1}</span>
+                      <span className={`truncate text-[8px] font-bold uppercase ${type === "Trabalho" ? "text-primary" : type === "Ajuste" ? "text-amber-400" : "text-muted-foreground"}`}>
+                        {type}
+                      </span>
+                      {recordSlots.has(i) && (
+                        <svg aria-label="Novo recorde" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 drop-shadow-md">
+                          <title>Novo recorde</title>
+                          <defs>
+                            <radialGradient id={`medalGold-${data.id}-${i}`} cx="35%" cy="30%" r="75%">
+                              <stop offset="0%" stopColor="#FFF6C9" /><stop offset="45%" stopColor="#F4D03F" /><stop offset="80%" stopColor="#C99700" /><stop offset="100%" stopColor="#8E6A00" />
+                            </radialGradient>
+                            <linearGradient id={`ribbonRed-${data.id}-${i}`} x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#FF5252" /><stop offset="100%" stopColor="#B71C1C" />
+                            </linearGradient>
+                          </defs>
+                          <path d="M7 2l5 4 5-4-1.5 6h-7z" fill={`url(#ribbonRed-${data.id}-${i})`} />
+                          <circle cx="12" cy="14" r="6.5" fill={`url(#medalGold-${data.id}-${i})`} stroke="#8E6A00" strokeWidth="0.6" />
+                          <ellipse cx="10" cy="11.5" rx="2.6" ry="1.4" fill="#FFFFFF" opacity="0.55" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {previous ? `${previous.peso}kg × ${previous.reps}` : "—"}
                     </span>
-                    {recordSlots.has(i) && (
-                      <svg
-                        aria-label="Novo recorde"
-                        viewBox="0 0 24 24"
-                        className="h-4 w-4 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]"
-                      >
-                        <title>Novo recorde</title>
-                        <defs>
-                          <radialGradient id="medalGold" cx="35%" cy="30%" r="75%">
-                            <stop offset="0%" stopColor="#FFF6C9" />
-                            <stop offset="45%" stopColor="#F4D03F" />
-                            <stop offset="80%" stopColor="#C99700" />
-                            <stop offset="100%" stopColor="#8E6A00" />
-                          </radialGradient>
-                          <linearGradient id="ribbonRed" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#FF5252" />
-                            <stop offset="100%" stopColor="#B71C1C" />
-                          </linearGradient>
-                        </defs>
-                        <path d="M7 2l5 4 5-4-1.5 6h-7z" fill="url(#ribbonRed)" />
-                        <circle cx="12" cy="14" r="6.5" fill="url(#medalGold)" stroke="#8E6A00" strokeWidth="0.6" />
-                        <ellipse cx="10" cy="11.5" rx="2.6" ry="1.4" fill="#FFFFFF" opacity="0.55" />
-                        <circle cx="12" cy="14" r="6.5" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
-                      </svg>
-                    )}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); startListening(i); }}
-                    className={`p-2 rounded-full transition-all ${
-                      listeningIdx === i 
-                        ? "bg-primary text-primary-foreground animate-pulse" 
-                        : "bg-secondary text-muted-foreground hover:text-primary"
-                    }`}
-                  >
-                    <Mic className="h-4 w-4" />
-                  </button>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Carga (kg)</label>
                     <input
+                      aria-label={`Carga da série ${i + 1}`}
                       type="number"
                       inputMode="decimal"
+                      min="0"
                       value={slot.carga}
                       onChange={(e) => updateSlot(i, "carga", e.target.value)}
-                      placeholder="0"
-                      className="w-full mt-1 bg-secondary/70 border border-border rounded-lg px-3 py-2 text-sm"
+                      disabled={slot.done || saving}
+                      placeholder="—"
+                      className="h-10 w-full border border-input bg-secondary/70 px-2 text-center text-sm outline-none focus:border-primary disabled:opacity-60"
                     />
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-wider text-muted-foreground">Reps</label>
                     <input
+                      aria-label={`Repetições da série ${i + 1}`}
                       type="number"
                       inputMode="numeric"
+                      min="1"
                       value={slot.reps}
                       onChange={(e) => updateSlot(i, "reps", e.target.value)}
-                      placeholder="0"
-                      className="w-full mt-1 bg-secondary/70 border border-border rounded-lg px-3 py-2 text-sm"
+                      disabled={slot.done || saving}
+                      placeholder="—"
+                      className="h-10 w-full border border-input bg-secondary/70 px-2 text-center text-sm outline-none focus:border-primary disabled:opacity-60"
                     />
+                    <Button
+                      type="button"
+                      size="icon"
+                      variant={slot.done ? "green" : "default"}
+                      aria-label={`Confirmar série ${i + 1}`}
+                      disabled={!sessionActive || slot.done || saving}
+                      onClick={() => void confirmSeries(i)}
+                      className="h-10 w-10 rounded-none p-0 tracking-normal"
+                    >
+                      {saving ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
+                    </Button>
                   </div>
-                </div>
-              </div>
-            ))}
+                );
+              })}
+            </div>
           </div>
 
           <button
