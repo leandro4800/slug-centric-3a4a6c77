@@ -544,17 +544,21 @@ export const ExerciseCard = ({
       if (isWorkSet && history.hasWorkHistory) {
         const volume = Number(inserted.volume_kg) || 0;
         const estimatedRm = Number(inserted.rm_estimado) || 0;
-        const previousVolume = history.maxVolumeBySeries.get(i + 1) || 0;
-        if (previousVolume > 0 && volume > previousVolume) {
+        // baseline por posição de série; se não houver, usa o maior volume de trabalho já registrado
+        const allVolumes = Array.from(history.maxVolumeBySeries.values());
+        const previousVolume =
+          history.maxVolumeBySeries.get(i + 1) || (allVolumes.length ? Math.max(...allVolumes) : 0);
+        if (volume > previousVolume) {
           recordTypes.push({ type: "volume", label: "volume", value: volume, previous: previousVolume });
         }
-        if (history.maxWeight > 0 && weight > history.maxWeight) {
+        if (weight > history.maxWeight) {
           recordTypes.push({ type: "peso", label: "peso", value: weight, previous: history.maxWeight });
         }
-        if (history.maxEstimatedRm > 0 && estimatedRm > history.maxEstimatedRm) {
+        if (estimatedRm > history.maxEstimatedRm) {
           recordTypes.push({ type: "1rm", label: "1RM", value: estimatedRm, previous: history.maxEstimatedRm });
         }
       }
+
 
       if (recordTypes.length) {
         const { error: prsError } = await supabase.from("prs").insert(recordTypes.map((record) => ({
