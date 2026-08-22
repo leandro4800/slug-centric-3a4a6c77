@@ -132,6 +132,7 @@ export const ExerciseCard = ({
     maxEstimatedRm: 0,
     maxVolumeBySeries: new Map(),
     previousBySeries: new Map(),
+    legacyPrevious: null,
   });
 
   const [showCoach, setShowCoach] = useState(false);
