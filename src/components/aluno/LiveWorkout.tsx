@@ -119,6 +119,41 @@ export const LiveWorkout = ({
     });
   }, [open, exercicios, slotsPorExercicio]);
 
+  // Retoma séries já registradas nesta sessão (sessão em andamento)
+  useEffect(() => {
+    if (!open || !sessaoId) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("series_executadas")
+        .select("treino_prescrito_id, numero_serie, peso_kg, reps, is_recorde")
+        .eq("sessao_id", sessaoId)
+        .order("concluida_em", { ascending: true });
+      if (cancelled || !data?.length) return;
+      setState((prev) => {
+        const next = { ...prev };
+        data.forEach((r: any) => {
+          const exId = r.treino_prescrito_id;
+          const slots = slotsPorExercicio[exId];
+          if (!exId || !slots) return;
+          const idx = slots.findIndex((s) => s.numero === r.numero_serie);
+          if (idx < 0) return;
+          const arr = [...(next[exId] || slots.map(() => ({ peso: "", reps: "", done: false, recorde: false })))];
+          arr[idx] = {
+            peso: r.peso_kg != null ? String(r.peso_kg) : "",
+            reps: r.reps != null ? String(r.reps) : "",
+            done: true,
+            recorde: !!r.is_recorde,
+          };
+          next[exId] = arr;
+        });
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [open, sessaoId, slotsPorExercicio]);
+
+
   // Cronômetro geral
   useEffect(() => {
     if (!open) return;

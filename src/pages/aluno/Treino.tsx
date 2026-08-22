@@ -58,6 +58,8 @@ const PersonalTreino = () => {
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [startingSession, setStartingSession] = useState(false);
   const [liveSession, setLiveSession] = useState<{ id: string | null; startedAt: number } | null>(null);
+  const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number } | null>(null);
+  const [agora, setAgora] = useState(() => Date.now());
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const isoWeekKey = (() => {
     const d = new Date();
@@ -457,9 +459,55 @@ const PersonalTreino = () => {
     if (h < 18) return "Boa tarde";
     return "Boa noite";
   })();
+  // Detecta sessão em andamento (duracao_min = 0) — fonte da verdade: created_at do banco
+  useEffect(() => {
+    if (!user || !tenant) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("sessoes_treino")
+        .select("id, created_at, dia_semana")
+        .eq("aluno_id", user.id)
+        .eq("duracao_min", 0)
+        .gte("created_at", new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled) return;
+      if (data?.id) {
+        setSessaoAndamento({ id: (data as any).id, startedAt: new Date((data as any).created_at).getTime() });
+      } else {
+        setSessaoAndamento(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, tenant?.id, reloadKey]);
+
+  // Relógio do aviso de sessão em andamento
+  useEffect(() => {
+    if (!sessaoAndamento || liveSession) return;
+    setAgora(Date.now());
+    const t = setInterval(() => setAgora(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [sessaoAndamento?.id, liveSession]);
+
+  const duracaoAndamento = (() => {
+    if (!sessaoAndamento) return "00:00";
+    const total = Math.max(0, Math.floor((agora - sessaoAndamento.startedAt) / 1000));
+    const h = Math.floor(total / 3600);
+    const m = Math.floor((total % 3600) / 60).toString().padStart(2, "0");
+    const s = (total % 60).toString().padStart(2, "0");
+    return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
+  })();
+
   // Inicia a sessão de treino ao vivo (cria registro em sessoes_treino)
   const iniciarTreinoAoVivo = async () => {
     if (!user || !tenant || !treinosDoDia.length) return;
+    // Já existe sessão em andamento: apenas retoma
+    if (sessaoAndamento) {
+      setLiveSession({ id: sessaoAndamento.id, startedAt: sessaoAndamento.startedAt });
+      return;
+    }
     setStartingSession(true);
     try {
       const { data, error } = await supabase
@@ -471,16 +519,20 @@ const PersonalTreino = () => {
           duracao_min: 0,
           exercicios_total: treinosDoDia.length,
         } as any)
-        .select("id")
+        .select("id, created_at")
         .maybeSingle();
       if (error) throw error;
-      setLiveSession({ id: (data as any)?.id || null, startedAt: Date.now() });
+      const id = (data as any)?.id || null;
+      const startedAt = (data as any)?.created_at ? new Date((data as any).created_at).getTime() : Date.now();
+      if (id) setSessaoAndamento({ id, startedAt });
+      setLiveSession({ id, startedAt });
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível iniciar o treino.");
     } finally {
       setStartingSession(false);
     }
   };
+
 
   const handleCargaSaved = (nome: string, carga: number, reps: number) => {
     setCargas((prev) => ({
@@ -739,9 +791,16 @@ const PersonalTreino = () => {
             className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
           >
             {startingSession ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dumbbell className="h-5 w-5" />}
-            Iniciar Treino
+            {sessaoAndamento ? `Continuar treino · ${duracaoAndamento}` : "Iniciar Treino"}
           </button>
         )}
+        {sessaoAndamento && !liveSession && (
+          <p className="mt-2 text-center text-[11px] uppercase tracking-[0.18em] text-emerald-400 flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Treino em andamento
+          </p>
+        )}
+
 
 
         <div className="space-y-3 mt-4">
@@ -851,6 +910,7 @@ const PersonalTreino = () => {
             tenantId={tenant.id}
             onClose={() => setLiveSession(null)}
             onFinished={() => {
+              setSessaoAndamento(null);
               setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
               setReloadKey((k) => k + 1);
             }}
