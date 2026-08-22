@@ -754,7 +754,16 @@ export const ExerciseCard = ({
                     <span className={getSlotType(i) !== "Aquecimento" ? "font-black" : ""}>
                       S{i + 1} - {getSlotType(i)}
                     </span>
+                    {recordSlots.has(i) && (
+                      <span
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black"
+                        title="Novo recorde"
+                      >
+                        <Medal className="h-3 w-3" /> PR
+                      </span>
+                    )}
                   </button>
+
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); startListening(i); }}
