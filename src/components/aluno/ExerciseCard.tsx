@@ -490,7 +490,7 @@ export const ExerciseCard = ({
       const { data: inserted, error } = await supabase
         .from("series_executadas")
         .insert(rows as any)
-        .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado");
+        .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie");
       if (error) throw error;
 
       // ---- detecta recordes ----
