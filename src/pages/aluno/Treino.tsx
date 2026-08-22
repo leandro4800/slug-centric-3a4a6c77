@@ -885,10 +885,11 @@ const PersonalTreino = () => {
         )}
 
         {recordeBanner && (
-          <div className="mt-3 rounded-xl border border-amber-400/50 bg-amber-400/15 px-4 py-3 text-center text-sm font-bold text-amber-300">
+          <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[100] w-[92%] max-w-md rounded-xl border border-amber-400/60 bg-amber-400/95 px-4 py-3 text-center text-sm font-bold text-black shadow-2xl animate-in fade-in slide-in-from-top-4">
             🏆 Novo recorde de {recordeBanner}!
           </div>
         )}
+
 
         <div className="space-y-3 mt-4">
           {treinosDoDia.map((t, i) => (
