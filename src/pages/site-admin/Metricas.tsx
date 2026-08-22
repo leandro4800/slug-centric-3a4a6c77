@@ -109,6 +109,8 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const [evolucao, setEvolucao] = useState<any[]>([]);
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [pesoDiario, setPesoDiario] = useState<any[]>([]);
+  const [prs, setPrs] = useState<any[]>([]);
+
   const [exercicio, setExercicio] = useState<string>("");
   const [analise, setAnalise] = useState<string>("");
   const [analisando, setAnalisando] = useState(false);
