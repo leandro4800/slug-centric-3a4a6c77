@@ -58,6 +58,8 @@ const PersonalTreino = () => {
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [startingSession, setStartingSession] = useState(false);
   const [liveSession, setLiveSession] = useState<{ id: string | null; startedAt: number } | null>(null);
+  const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number } | null>(null);
+  const [agora, setAgora] = useState(() => Date.now());
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const isoWeekKey = (() => {
     const d = new Date();
