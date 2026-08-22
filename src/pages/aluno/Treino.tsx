@@ -488,11 +488,11 @@ const PersonalTreino = () => {
 
   // Relógio do aviso de sessão em andamento
   useEffect(() => {
-    if (!sessaoAndamento || liveSession) return;
+    if (!sessaoAndamento) return;
     setAgora(Date.now());
     const t = setInterval(() => setAgora(Date.now()), 1000);
     return () => clearInterval(t);
-  }, [sessaoAndamento?.id, liveSession]);
+  }, [sessaoAndamento?.id]);
 
   const duracaoAndamento = (() => {
     if (!sessaoAndamento) return "00:00";
@@ -503,14 +503,36 @@ const PersonalTreino = () => {
     return h > 0 ? `${h}:${m}:${s}` : `${m}:${s}`;
   })();
 
-  // Inicia a sessão de treino ao vivo (cria registro em sessoes_treino)
+  // Estatísticas da sessão (volume / séries) lidas de series_executadas
+  const carregarStatsSessao = async (sessId?: string | null) => {
+    const id = sessId ?? sessaoAndamento?.id;
+    if (!id) { setSessaoStats({ volume: 0, series: 0 }); return; }
+    const { data } = await supabase
+      .from("series_executadas")
+      .select("volume_kg")
+      .eq("sessao_id", id)
+      .limit(2000);
+    const rows = (data as any[]) || [];
+    setSessaoStats({
+      volume: rows.reduce((acc, r) => acc + (Number(r.volume_kg) || 0), 0),
+      series: rows.length,
+    });
+  };
+
+  useEffect(() => {
+    carregarStatsSessao(sessaoAndamento?.id);
+  }, [sessaoAndamento?.id]);
+
+  // Banner de recordes some sozinho
+  useEffect(() => {
+    if (!recordeBanner) return;
+    const t = setTimeout(() => setRecordeBanner(null), 6000);
+    return () => clearTimeout(t);
+  }, [recordeBanner]);
+
+  // Inicia a sessão de treino (cria registro em sessoes_treino)
   const iniciarTreinoAoVivo = async () => {
-    if (!user || !tenant || !treinosDoDia.length) return;
-    // Já existe sessão em andamento: apenas retoma
-    if (sessaoAndamento) {
-      setLiveSession({ id: sessaoAndamento.id, startedAt: sessaoAndamento.startedAt });
-      return;
-    }
+    if (!user || !tenant || !treinosDoDia.length || sessaoAndamento) return;
     setStartingSession(true);
     try {
       const { data, error } = await supabase
@@ -528,13 +550,51 @@ const PersonalTreino = () => {
       const id = (data as any)?.id || null;
       const startedAt = (data as any)?.created_at ? new Date((data as any).created_at).getTime() : Date.now();
       if (id) setSessaoAndamento({ id, startedAt });
-      setLiveSession({ id, startedAt });
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível iniciar o treino.");
     } finally {
       setStartingSession(false);
     }
   };
+
+  // Conclui a sessão: fecha sessoes_treino e abre o card de compartilhar
+  const concluirTreino = async () => {
+    if (!user || !tenant) { setShowConclusao(true); return; }
+    setConcluindo(true);
+    try {
+      if (sessaoAndamento) {
+        const min = Math.min(
+          Math.max(Math.round((Date.now() - sessaoAndamento.startedAt) / 60000) || 1, 1),
+          300,
+        );
+        await supabase
+          .from("sessoes_treino")
+          .update({ duracao_min: min, exercicios_total: treinosDoDia.length } as any)
+          .eq("id", sessaoAndamento.id);
+      } else {
+        await supabase.rpc("registrar_sessao_treino" as any, {
+          _tenant_id: tenant.id,
+          _dia_semana: diaAtual,
+          _duracao_min: 60,
+          _exercicios_total: treinosDoDia.length,
+        } as any);
+      }
+      const next = new Set(completedIds);
+      treinosDoDia.forEach((t) => next.add(t.id));
+      setCompletedIds(next);
+      try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
+      try { localStorage.removeItem(sessionStartKey); } catch {}
+      setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
+      setSessaoAndamento(null);
+      setReloadKey((k) => k + 1);
+    } catch (e) {
+      console.warn("Não foi possível registrar conclusão", e);
+    } finally {
+      setConcluindo(false);
+      setShowConclusao(true);
+    }
+  };
+
 
 
   const handleCargaSaved = (nome: string, carga: number, reps: number) => {
