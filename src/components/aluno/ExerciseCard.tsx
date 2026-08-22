@@ -123,6 +123,8 @@ export const ExerciseCard = ({
     }));
   });
   const [savingAll, setSavingAll] = useState(false);
+  const [recordSlots, setRecordSlots] = useState<Set<number>>(new Set());
+
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
