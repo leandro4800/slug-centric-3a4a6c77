@@ -469,6 +469,7 @@ const PersonalTreino = () => {
         .select("id, created_at, dia_semana")
         .eq("aluno_id", user.id)
         .eq("duracao_min", 0)
+        .gte("created_at", new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
