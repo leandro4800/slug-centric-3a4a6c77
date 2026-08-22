@@ -62,7 +62,7 @@ interface ExerciseCardProps {
   /** Chamado após gravar séries (para atualizar a barra de estatísticas) */
   onSeriesSaved?: () => void;
   /** Recordes batidos nesta gravação (para o banner do topo) */
-  onRecords?: (tipos: string[]) => void;
+  onRecords?: (info: { exercicio: string; records: Array<{ type: string; value: number }> }) => void;
 }
 
 
