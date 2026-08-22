@@ -40,7 +40,16 @@ interface ExerciseCardProps {
   nivelExperiencia?: string | null;
   completed?: boolean;
   onCompleted?: () => void;
+  /** Sessão de treino em andamento (sessoes_treino.id) */
+  sessaoId?: string | null;
+  /** Só é possível registrar séries com uma sessão iniciada */
+  sessionActive?: boolean;
+  /** Chamado após gravar séries (para atualizar a barra de estatísticas) */
+  onSeriesSaved?: () => void;
+  /** Recordes batidos nesta gravação (para o banner do topo) */
+  onRecords?: (tipos: string[]) => void;
 }
+
 
 
 const fmtTime = (s: number) => {
