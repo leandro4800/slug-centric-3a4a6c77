@@ -102,7 +102,7 @@ serve(async (req) => {
       data: data || {},
       android: {
         priority: 'high',
-        notification: { sound: 'default', channel_id: 'default', priority: 'high' },
+        notification: { sound: 'default', channel_id: 'default' },
       },
       apns: {
         payload: { aps: { contentAvailable: true, mutableContent: true, sound: 'default' } },
