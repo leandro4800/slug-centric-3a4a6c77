@@ -548,14 +548,14 @@ export const ExerciseCard = ({
         const allVolumes = Array.from(history.maxVolumeBySeries.values());
         const previousVolume =
           history.maxVolumeBySeries.get(i + 1) || (allVolumes.length ? Math.max(...allVolumes) : 0);
-        if (volume > previousVolume) {
-          recordTypes.push({ type: "volume", label: "volume", value: volume, previous: previousVolume });
-        }
         if (weight > history.maxWeight) {
           recordTypes.push({ type: "peso", label: "peso", value: weight, previous: history.maxWeight });
         }
         if (estimatedRm > history.maxEstimatedRm) {
           recordTypes.push({ type: "1rm", label: "1RM", value: estimatedRm, previous: history.maxEstimatedRm });
+        }
+        if (volume > previousVolume) {
+          recordTypes.push({ type: "volume", label: "volume", value: volume, previous: previousVolume });
         }
       }
 
