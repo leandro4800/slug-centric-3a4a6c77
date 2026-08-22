@@ -790,9 +790,16 @@ const PersonalTreino = () => {
             className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
           >
             {startingSession ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dumbbell className="h-5 w-5" />}
-            Iniciar Treino
+            {sessaoAndamento ? `Continuar treino · ${duracaoAndamento}` : "Iniciar Treino"}
           </button>
         )}
+        {sessaoAndamento && !liveSession && (
+          <p className="mt-2 text-center text-[11px] uppercase tracking-[0.18em] text-emerald-400 flex items-center justify-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            Treino em andamento
+          </p>
+        )}
+
 
 
         <div className="space-y-3 mt-4">
