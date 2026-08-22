@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic, Medal } from "lucide-react";
+import { Play, Lightbulb, Share2, Clock, CheckCircle2, Loader2, Video, Mic } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -764,12 +764,29 @@ export const ExerciseCard = ({
                       S{i + 1} - {getSlotType(i)}
                     </span>
                     {recordSlots.has(i) && (
-                      <span
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 text-[10px] font-black"
-                        title="Novo recorde"
+                      <svg
+                        aria-label="Novo recorde"
+                        viewBox="0 0 24 24"
+                        className="h-4 w-4 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]"
                       >
-                        <Medal className="h-3 w-3" /> 🏅 Recorde
-                      </span>
+                        <title>Novo recorde</title>
+                        <defs>
+                          <radialGradient id="medalGold" cx="35%" cy="30%" r="75%">
+                            <stop offset="0%" stopColor="#FFF6C9" />
+                            <stop offset="45%" stopColor="#F4D03F" />
+                            <stop offset="80%" stopColor="#C99700" />
+                            <stop offset="100%" stopColor="#8E6A00" />
+                          </radialGradient>
+                          <linearGradient id="ribbonRed" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#FF5252" />
+                            <stop offset="100%" stopColor="#B71C1C" />
+                          </linearGradient>
+                        </defs>
+                        <path d="M7 2l5 4 5-4-1.5 6h-7z" fill="url(#ribbonRed)" />
+                        <circle cx="12" cy="14" r="6.5" fill="url(#medalGold)" stroke="#8E6A00" strokeWidth="0.6" />
+                        <ellipse cx="10" cy="11.5" rx="2.6" ry="1.4" fill="#FFFFFF" opacity="0.55" />
+                        <circle cx="12" cy="14" r="6.5" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="0.7" />
+                      </svg>
                     )}
                   </button>
 
