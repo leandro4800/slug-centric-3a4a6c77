@@ -703,6 +703,18 @@ const PersonalTreino = () => {
           </p>
         </div>
 
+        {treinosDoDia.length > 0 && (
+          <button
+            type="button"
+            disabled={startingSession}
+            onClick={iniciarTreinoAoVivo}
+            className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
+          >
+            {startingSession ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dumbbell className="h-5 w-5" />}
+            Iniciar Treino
+          </button>
+        )}
+
 
         <div className="space-y-3 mt-4">
           {treinosDoDia.map((t, i) => (
