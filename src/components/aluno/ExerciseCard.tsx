@@ -577,7 +577,10 @@ export const ExerciseCard = ({
           .eq("id", inserted.id);
         if (markError) throw markError;
         setRecordSlots((current) => new Set(current).add(i));
-        onRecords?.(recordTypes.map((record) => record.label));
+        onRecords?.({
+          exercicio: data.exercicio,
+          records: recordTypes.map((record) => ({ type: record.type, value: record.value })),
+        });
       }
 
       setSlots((current) => current.map((item, index) => index === i ? { ...item, done: true } : item));
