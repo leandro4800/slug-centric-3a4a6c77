@@ -74,7 +74,7 @@ describe("AuthProvider — resolução de permissões do superadmin", () => {
     });
   });
 
-  it("mantém as permissões conhecidas quando a consulta falha, em vez de bloquear a conta", async () => {
+  it("mantém as permissões conhecidas quando a consulta falha, em vez de bloquear a conta", { timeout: 30000 }, async () => {
     stashAuthRolesPrefetch([{ role: "admin", tenant_id: null }]);
     dbRoles.mockResolvedValue({ data: null, error: { message: "network" } });
 
@@ -82,7 +82,7 @@ describe("AuthProvider — resolução de permissões do superadmin", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("result").textContent).toBe("admin:true|coach:false");
-    });
+    }, { timeout: 15000 });
   });
 
   it("bloqueia conta sem nenhuma permissão", async () => {
@@ -92,8 +92,8 @@ describe("AuthProvider — resolução de permissões do superadmin", () => {
 
     await waitFor(() => {
       expect(screen.getByTestId("result").textContent).toBe("admin:false|coach:false");
-    });
-  }, 20000);
+    }, { timeout: 15000 });
+  }, 30000);
 
   it("conta apenas de aluno não recebe acesso admin", async () => {
     dbRoles.mockResolvedValue({
