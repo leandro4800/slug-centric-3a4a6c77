@@ -416,6 +416,21 @@ export const ExerciseCard = ({
     } catch {}
   }, [seconds, running, storageKey]);
 
+  const loadLegacyPrevious = async (): Promise<PreviousSeries | null> => {
+    if (!userId || !tenantId) return null;
+    const { data: rows } = await supabase
+      .from("historico_cargas")
+      .select("carga_kg, repeticoes_feitas, data_treino")
+      .eq("user_id", userId)
+      .eq("tenant_id", tenantId)
+      .eq("exercicio_nome", data.exercicio)
+      .order("data_treino", { ascending: false })
+      .limit(1);
+    const row = (rows || [])[0];
+    if (!row) return null;
+    return { peso: Number(row.carga_kg) || 0, reps: Number(row.repeticoes_feitas) || 0 };
+  };
+
   const loadHistory = async (): Promise<HistorySnapshot> => {
     const empty: HistorySnapshot = {
       hasWorkHistory: false,
@@ -423,8 +438,11 @@ export const ExerciseCard = ({
       maxEstimatedRm: 0,
       maxVolumeBySeries: new Map(),
       previousBySeries: new Map(),
+      legacyPrevious: null,
     };
     if (!userId || !isUuid(data.id)) return empty;
+
+    empty.legacyPrevious = await loadLegacyPrevious().catch(() => null);
 
     const { data: prescribedRows, error: prescribedError } = await supabase
       .from("treinos_prescritos")
@@ -474,7 +492,7 @@ export const ExerciseCard = ({
     setRecordSlots(new Set());
     loadHistory()
       .then((snapshot) => { if (!cancelled) setHistory(snapshot); })
-      .catch(() => { if (!cancelled) setHistory({ hasWorkHistory: false, maxWeight: 0, maxEstimatedRm: 0, maxVolumeBySeries: new Map(), previousBySeries: new Map() }); });
+      .catch(() => { if (!cancelled) setHistory({ hasWorkHistory: false, maxWeight: 0, maxEstimatedRm: 0, maxVolumeBySeries: new Map(), previousBySeries: new Map(), legacyPrevious: null }); });
     return () => { cancelled = true; };
     // Inputs reset only when the exercise/session changes, never from previous values.
     // eslint-disable-next-line react-hooks/exhaustive-deps
