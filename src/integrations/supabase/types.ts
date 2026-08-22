@@ -2668,9 +2668,14 @@ export type Database = {
           data: string
           exercicio: string
           id: string
+          series_executada_id: string | null
           tenant_id: string
+          tipo_recorde: string | null
+          treino_prescrito_id: string | null
           unidade: string | null
           valor: string
+          valor_anterior: number | null
+          valor_numerico: number | null
         }
         Insert: {
           aluno_id: string
@@ -2678,9 +2683,14 @@ export type Database = {
           data?: string
           exercicio: string
           id?: string
+          series_executada_id?: string | null
           tenant_id: string
+          tipo_recorde?: string | null
+          treino_prescrito_id?: string | null
           unidade?: string | null
           valor: string
+          valor_anterior?: number | null
+          valor_numerico?: number | null
         }
         Update: {
           aluno_id?: string
@@ -2688,11 +2698,23 @@ export type Database = {
           data?: string
           exercicio?: string
           id?: string
+          series_executada_id?: string | null
           tenant_id?: string
+          tipo_recorde?: string | null
+          treino_prescrito_id?: string | null
           unidade?: string | null
           valor?: string
+          valor_anterior?: number | null
+          valor_numerico?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "prs_series_executada_id_fkey"
+            columns: ["series_executada_id"]
+            isOneToOne: false
+            referencedRelation: "series_executadas"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "prs_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -2706,6 +2728,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "v_coach_dashboard_kpis"
             referencedColumns: ["tenant_id"]
+          },
+          {
+            foreignKeyName: "prs_treino_prescrito_id_fkey"
+            columns: ["treino_prescrito_id"]
+            isOneToOne: false
+            referencedRelation: "treinos_prescritos"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -3018,6 +3047,7 @@ export type Database = {
           peso_kg: number | null
           pse: number | null
           reps: number | null
+          rm_estimado: number | null
           sessao_id: string | null
           tenant_id: string
           tipo_serie: string | null
@@ -3034,6 +3064,7 @@ export type Database = {
           peso_kg?: number | null
           pse?: number | null
           reps?: number | null
+          rm_estimado?: number | null
           sessao_id?: string | null
           tenant_id: string
           tipo_serie?: string | null
@@ -3050,6 +3081,7 @@ export type Database = {
           peso_kg?: number | null
           pse?: number | null
           reps?: number | null
+          rm_estimado?: number | null
           sessao_id?: string | null
           tenant_id?: string
           tipo_serie?: string | null
