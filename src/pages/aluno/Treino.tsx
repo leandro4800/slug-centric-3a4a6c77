@@ -909,6 +909,7 @@ const PersonalTreino = () => {
             tenantId={tenant.id}
             onClose={() => setLiveSession(null)}
             onFinished={() => {
+              setSessaoAndamento(null);
               setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
               setReloadKey((k) => k + 1);
             }}
