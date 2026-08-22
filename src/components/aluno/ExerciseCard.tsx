@@ -463,7 +463,7 @@ export const ExerciseCard = ({
             .in("treino_prescrito_id", ids)
             .limit(2000);
           (hist || [])
-            .filter((h: any) => (h.tipo_serie || "trabalho") === "trabalho")
+            .filter((h: any) => String(h.tipo_serie || "trabalho").toLowerCase() === "trabalho")
             .forEach((h: any) => {
               temHistorico = true;
               maxPeso = Math.max(maxPeso, Number(h.peso_kg) || 0);
@@ -505,7 +505,7 @@ export const ExerciseCard = ({
 
       ordenadas.forEach((row: any) => {
         // PR só existe para série de trabalho e só a partir do 2º registro do exercício
-        if ((row.tipo_serie || "trabalho") !== "trabalho") return;
+        if (String(row.tipo_serie || "trabalho").toLowerCase() !== "trabalho") return;
         if (!temHistorico) return;
         const peso = Number(row.peso_kg) || 0;
         const reps = Number(row.reps) || 0;
