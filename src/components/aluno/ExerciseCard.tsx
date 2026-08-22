@@ -504,12 +504,16 @@ export const ExerciseCard = ({
       );
 
       ordenadas.forEach((row: any) => {
+        // PR só existe para série de trabalho e só a partir do 2º registro do exercício
+        if ((row.tipo_serie || "trabalho") !== "trabalho") return;
+        if (!temHistorico) return;
         const peso = Number(row.peso_kg) || 0;
         const reps = Number(row.reps) || 0;
         const vol = Number(row.volume_kg) || peso * reps;
         const rm = Number(row.rm_estimado) || peso * (1 + reps / 30);
         const n = Number(row.numero_serie) || 0;
         let bateu = false;
+
 
         const push = (tipo: string, valor: number, anterior: number, unidade: string, label: string) => {
           bateu = true;
