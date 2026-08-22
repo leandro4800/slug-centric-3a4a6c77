@@ -1,0 +1,1 @@
+DELETE FROM public.series_executadas WHERE id = 'a7c13b3e-98e0-4a52-84e0-9ad6676c52f1';
