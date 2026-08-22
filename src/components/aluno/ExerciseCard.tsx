@@ -428,6 +428,7 @@ export const ExerciseCard = ({
       .from("treinos_prescritos")
       .select("id")
       .eq("aluno_id", userId)
+      .eq("tenant_id", tenantId)
       .eq("exercicio", data.exercicio);
     if (prescribedError) throw prescribedError;
     const prescribedIds = (prescribedRows || []).map((row) => row.id);
@@ -437,6 +438,7 @@ export const ExerciseCard = ({
       .from("series_executadas")
       .select("peso_kg, reps, volume_kg, rm_estimado, numero_serie, tipo_serie, concluida_em")
       .eq("aluno_id", userId)
+      .eq("tenant_id", tenantId)
       .in("treino_prescrito_id", prescribedIds)
       .order("concluida_em", { ascending: false })
       .limit(2000);
