@@ -115,12 +115,10 @@ const Login = () => {
     const contextSlug = getSafeAppSlug(urlSlug || tenant?.slug);
 
     if (databaseSlug) {
-      if (databaseDestination.account_role) {
-        stashAuthRolesPrefetch([{
-          role: databaseDestination.account_role as PrefetchedRole["role"],
-          tenant_id: databaseDestination.tenant_id,
-        }]);
-      }
+      // A RPC retorna apenas o papel do destino escolhido, não a lista completa
+      // de permissões. Não publicamos esse papel isolado como prefetch porque
+      // ele esconderia outras roles da conta (ex.: admin global da plataforma).
+      stashAuthRolesPrefetch([]);
 
       return {
         destination: `/${databaseSlug}/app`,
@@ -142,14 +140,14 @@ const Login = () => {
       loginClient.from("assinaturas").select("tenants:tenant_id(slug)").eq("aluno_id", userId).in("status", ["active", "trialing"]).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
+    // No fallback, publicamos somente as roles reais lidas de user_roles.
+    // Uma role sintética de dono com tenant nulo faria hasRole("coach") parecer
+    // global e não representa o schema atual (coach global não é permitido).
     const prefetchedRoles: PrefetchedRole[] = [];
-    if (ownedTenant?.slug) {
-      prefetchedRoles.push({ role: "coach", tenant_id: null });
-    }
     for (const row of roleRows ?? []) {
       prefetchedRoles.push({ role: row.role as PrefetchedRole["role"], tenant_id: row.tenant_id });
     }
-    if (prefetchedRoles.length) stashAuthRolesPrefetch(prefetchedRoles);
+    stashAuthRolesPrefetch(prefetchedRoles);
 
     // 1) Dono de tenant SEMPRE entra no próprio app — nunca no app de outro coach.
     if (ownedTenant?.slug) {
