@@ -257,7 +257,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const volumePorExercicio = useMemo(() => {
     const map = new Map<string, number>();
     cargas.forEach((c) => {
-      const vol = (Number(c.carga_kg) || 0) * (Number(c.repeticoes_feitas) || 0);
+      const vol = Number(c.volume_kg) || (Number(c.carga_kg) || 0) * (Number(c.repeticoes_feitas) || 0);
       map.set(c.exercicio_nome, (map.get(c.exercicio_nome) || 0) + vol);
     });
     return Array.from(map.entries())
