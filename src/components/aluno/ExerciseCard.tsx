@@ -687,8 +687,10 @@ export const ExerciseCard = ({
           {/* Iniciar exercício + timer */}
           <div className="grid grid-cols-[auto_1fr] gap-2">
             <button
-              onClick={() => setRunning((r) => !r)}
-              className="px-6 py-4 rounded-xl bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95"
+              onClick={() => { if (sessionActive) setRunning((r) => !r); }}
+              disabled={!sessionActive}
+              title={sessionActive ? undefined : "Inicie o treino primeiro"}
+              className="px-6 py-4 rounded-xl bg-primary text-primary-foreground font-display text-sm leading-tight flex items-center gap-3 relative overflow-hidden border border-white/20 shadow-lg transition-all active:scale-95 disabled:opacity-40 disabled:active:scale-100 disabled:cursor-not-allowed"
             >
               <div className="absolute inset-0 bg-[var(--btn-mirror)] opacity-60" />
               <Play className="h-5 w-5 fill-current relative z-10" />
@@ -705,6 +707,13 @@ export const ExerciseCard = ({
               </div>
             </div>
           </div>
+
+          {!sessionActive && (
+            <p className="text-[11px] text-amber-400 -mt-2">
+              Inicie o treino primeiro para registrar suas séries.
+            </p>
+          )}
+
 
           {/* Botão destacado: preencher TODAS as séries por voz */}
           <button
