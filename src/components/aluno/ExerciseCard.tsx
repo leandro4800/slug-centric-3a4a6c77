@@ -65,6 +65,9 @@ const isAvancado = (n?: string | null) => {
 };
 
 // Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
+const isUuid = (s: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s || "");
+
 const DEFAULT_STRUCTURE = ["Aquecimento", "Ajuste", "Trabalho", "Trabalho", "Trabalho"] as const;
 
 const buildSlotTypes = (_seriesStr: string | null, _nivel?: string | null): string[] => {
