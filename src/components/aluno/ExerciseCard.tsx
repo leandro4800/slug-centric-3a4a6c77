@@ -463,7 +463,7 @@ export const ExerciseCard = ({
             .in("treino_prescrito_id", ids)
             .limit(2000);
           (hist || [])
-            .filter((h: any) => (h.tipo_serie || "trabalho") === "trabalho")
+            .filter((h: any) => String(h.tipo_serie || "trabalho").toLowerCase() === "trabalho")
             .forEach((h: any) => {
               temHistorico = true;
               maxPeso = Math.max(maxPeso, Number(h.peso_kg) || 0);
