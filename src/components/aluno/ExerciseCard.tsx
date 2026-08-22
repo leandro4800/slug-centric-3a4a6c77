@@ -82,7 +82,12 @@ export const ExerciseCard = ({
   nivelExperiencia,
   completed = false,
   onCompleted,
+  sessaoId = null,
+  sessionActive = false,
+  onSeriesSaved,
+  onRecords,
 }: ExerciseCardProps) => {
+
   const { tenant } = useBranding();
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
