@@ -417,6 +417,10 @@ export const ExerciseCard = ({
       toast.error("Você precisa estar logado.");
       return;
     }
+    if (!sessionActive) {
+      toast.error("Inicie o treino primeiro.");
+      return;
+    }
     const valid = slots
       .map((s, i) => ({
         k: parseFloat(s.carga.replace(",", ".")),
@@ -430,29 +434,130 @@ export const ExerciseCard = ({
       return;
     }
     setSavingAll(true);
-    const rows = valid.map((s) => ({
-      tenant_id: tenantId,
-      user_id: userId,
-      exercicio_nome: data.exercicio,
-      carga_kg: s.k,
-      repeticoes_feitas: s.r,
-      tipo_serie: s.tipo,
-      serie_index: s.idx,
-    }));
-    const { error } = await supabase.from("historico_cargas").insert(rows);
-    setSavingAll(false);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      const prescritoId = isUuid(data.id) ? data.id : null;
+
+      // ---- histórico do aluno neste exercício (para comparar recordes) ----
+      let maxPeso = 0;
+      let maxRm = 0;
+      const maxVolPorSerie = new Map<number, number>();
+      if (prescritoId) {
+        const { data: prescritos } = await supabase
+          .from("treinos_prescritos")
+          .select("id")
+          .eq("aluno_id", userId)
+          .eq("exercicio", data.exercicio);
+        const ids = (prescritos || []).map((p: any) => p.id);
+        if (ids.length) {
+          const { data: hist } = await supabase
+            .from("series_executadas")
+            .select("peso_kg, volume_kg, rm_estimado, numero_serie")
+            .eq("aluno_id", userId)
+            .in("treino_prescrito_id", ids)
+            .limit(2000);
+          (hist || []).forEach((h: any) => {
+            maxPeso = Math.max(maxPeso, Number(h.peso_kg) || 0);
+            maxRm = Math.max(maxRm, Number(h.rm_estimado) || 0);
+            const n = Number(h.numero_serie) || 0;
+            maxVolPorSerie.set(n, Math.max(maxVolPorSerie.get(n) || 0, Number(h.volume_kg) || 0));
+          });
+        }
+      }
+
+      const rows = valid.map((s) => ({
+        aluno_id: userId,
+        tenant_id: tenantId,
+        sessao_id: sessaoId,
+        treino_prescrito_id: prescritoId,
+        numero_serie: s.idx,
+        tipo_serie: s.tipo,
+        peso_kg: s.k,
+        reps: s.r,
+        volume_kg: s.k * s.r,
+        concluida_em: new Date().toISOString(),
+      }));
+
+      const { data: inserted, error } = await supabase
+        .from("series_executadas")
+        .insert(rows as any)
+        .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado");
+      if (error) throw error;
+
+      // ---- detecta recordes ----
+      const prsRows: any[] = [];
+      const recordIdx = new Set<number>();
+      const tipos = new Set<string>();
+      const hoje = new Date().toISOString().split("T")[0];
+
+      const ordenadas = [...(inserted || [])].sort(
+        (a: any, b: any) => (a.numero_serie || 0) - (b.numero_serie || 0),
+      );
+
+      ordenadas.forEach((row: any) => {
+        const peso = Number(row.peso_kg) || 0;
+        const reps = Number(row.reps) || 0;
+        const vol = Number(row.volume_kg) || peso * reps;
+        const rm = Number(row.rm_estimado) || peso * (1 + reps / 30);
+        const n = Number(row.numero_serie) || 0;
+        let bateu = false;
+
+        const push = (tipo: string, valor: number, anterior: number, unidade: string, label: string) => {
+          bateu = true;
+          tipos.add(label);
+          prsRows.push({
+            aluno_id: userId,
+            tenant_id: tenantId,
+            exercicio: data.exercicio,
+            tipo_recorde: tipo,
+            valor_numerico: Number(valor.toFixed(2)),
+            valor_anterior: anterior > 0 ? Number(anterior.toFixed(2)) : null,
+            valor: `${valor.toFixed(1)} ${unidade}`,
+            unidade,
+            data: hoje,
+            treino_prescrito_id: prescritoId,
+            series_executada_id: row.id,
+          });
+        };
+
+        const volAnterior = maxVolPorSerie.get(n) || 0;
+        if (vol > 0 && vol > volAnterior) {
+          push("volume", vol, volAnterior, "kg", "volume");
+          maxVolPorSerie.set(n, vol);
+        }
+        if (peso > 0 && peso > maxPeso) {
+          push("peso", peso, maxPeso, "kg", "peso");
+          maxPeso = peso;
+        }
+        if (rm > 0 && rm > maxRm) {
+          push("1rm", rm, maxRm, "kg", "1RM");
+          maxRm = rm;
+        }
+        if (bateu) recordIdx.add(n);
+      });
+
+      if (prsRows.length) {
+        await supabase.from("prs").insert(prsRows as any);
+        const ids = ordenadas.filter((r: any) => recordIdx.has(Number(r.numero_serie))).map((r: any) => r.id);
+        if (ids.length) await supabase.from("series_executadas").update({ is_recorde: true } as any).in("id", ids);
+        setRecordSlots(new Set([...recordIdx].map((n) => n - 1)));
+        onRecords?.([...tipos]);
+      }
+
+      const last = valid[valid.length - 1];
+      toast.success(`${valid.length} série(s) registrada(s)!`);
+      onCargaSaved?.(data.exercicio, last.k, last.r);
+      onSeriesSaved?.();
+      onCompleted?.();
+      setRunning(false);
+      setSeconds(0);
+      try { localStorage.removeItem(storageKey); } catch {}
+    } catch (e: any) {
+      toast.error(e?.message || "Não foi possível registrar as séries.");
+    } finally {
+      setSavingAll(false);
     }
-    const last = valid[valid.length - 1];
-    toast.success(`${valid.length} série(s) registrada(s)!`);
-    onCargaSaved?.(data.exercicio, last.k, last.r);
-    onCompleted?.();
-    setRunning(false);
-    setSeconds(0);
-    try { localStorage.removeItem(storageKey); } catch {}
   };
+
 
   const currentVideoUrl = (hasCoach && (showCoach || !showYT)) ? coachUrl : referenceVideoUrl;
 
