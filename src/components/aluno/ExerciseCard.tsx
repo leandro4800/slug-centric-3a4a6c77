@@ -41,6 +41,7 @@ interface HistorySnapshot {
   maxEstimatedRm: number;
   maxVolumeBySeries: Map<number, number>;
   previousBySeries: Map<number, PreviousSeries>;
+  legacyPrevious: PreviousSeries | null;
 }
 
 interface ExerciseCardProps {
@@ -131,6 +132,7 @@ export const ExerciseCard = ({
     maxEstimatedRm: 0,
     maxVolumeBySeries: new Map(),
     previousBySeries: new Map(),
+    legacyPrevious: null,
   });
 
   const [showCoach, setShowCoach] = useState(false);
@@ -414,6 +416,21 @@ export const ExerciseCard = ({
     } catch {}
   }, [seconds, running, storageKey]);
 
+  const loadLegacyPrevious = async (): Promise<PreviousSeries | null> => {
+    if (!userId || !tenantId) return null;
+    const { data: rows } = await supabase
+      .from("historico_cargas")
+      .select("carga_kg, repeticoes_feitas, data_treino")
+      .eq("user_id", userId)
+      .eq("tenant_id", tenantId)
+      .eq("exercicio_nome", data.exercicio)
+      .order("data_treino", { ascending: false })
+      .limit(1);
+    const row = (rows || [])[0];
+    if (!row) return null;
+    return { peso: Number(row.carga_kg) || 0, reps: Number(row.repeticoes_feitas) || 0 };
+  };
+
   const loadHistory = async (): Promise<HistorySnapshot> => {
     const empty: HistorySnapshot = {
       hasWorkHistory: false,
@@ -421,8 +438,11 @@ export const ExerciseCard = ({
       maxEstimatedRm: 0,
       maxVolumeBySeries: new Map(),
       previousBySeries: new Map(),
+      legacyPrevious: null,
     };
     if (!userId || !isUuid(data.id)) return empty;
+
+    empty.legacyPrevious = await loadLegacyPrevious().catch(() => null);
 
     const { data: prescribedRows, error: prescribedError } = await supabase
       .from("treinos_prescritos")
@@ -472,7 +492,7 @@ export const ExerciseCard = ({
     setRecordSlots(new Set());
     loadHistory()
       .then((snapshot) => { if (!cancelled) setHistory(snapshot); })
-      .catch(() => { if (!cancelled) setHistory({ hasWorkHistory: false, maxWeight: 0, maxEstimatedRm: 0, maxVolumeBySeries: new Map(), previousBySeries: new Map() }); });
+      .catch(() => { if (!cancelled) setHistory({ hasWorkHistory: false, maxWeight: 0, maxEstimatedRm: 0, maxVolumeBySeries: new Map(), previousBySeries: new Map(), legacyPrevious: null }); });
     return () => { cancelled = true; };
     // Inputs reset only when the exercise/session changes, never from previous values.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -779,27 +799,27 @@ export const ExerciseCard = ({
             {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
           </button>
 
-          <div className="overflow-x-auto border border-border bg-background/40">
-            <div className="min-w-[520px]">
-              <div className="grid grid-cols-[1.2fr_1.35fr_0.8fr_0.8fr_44px] items-center border-b border-border bg-secondary/60 px-2 py-2 text-[9px] font-bold uppercase text-muted-foreground">
-                <span>Série</span><span>Anterior</span><span>KG</span><span>Reps</span><span className="text-center">✓</span>
+          <div className="w-full border border-border bg-background/40">
+            <div className="w-full">
+              <div className="grid grid-cols-[34px_44px_1fr_1fr_34px] items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground">
+                <span>Série</span><span>Ant.</span><span className="text-center">KG</span><span className="text-center">Reps</span><span className="text-center">✓</span>
               </div>
               {slots.map((slot, i) => {
                 const type = getSlotType(i);
                 const previous = history.previousBySeries.get(i + 1);
+                const legacy = !previous ? history.legacyPrevious : null;
+                const shown = previous || legacy;
                 const saving = savingSlots.has(i);
                 return (
                   <div
                     key={i}
-                    className={`grid grid-cols-[1.2fr_1.35fr_0.8fr_0.8fr_44px] items-center gap-2 border-b border-border/70 px-2 py-2 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
+                    className={`grid grid-cols-[34px_44px_1fr_1fr_34px] items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
                   >
-                    <div className="flex min-w-0 items-center gap-1.5">
-                      <span className="font-mono text-sm font-bold">{i + 1}</span>
-                      <span className={`truncate text-[8px] font-bold uppercase ${type === "Trabalho" ? "text-primary" : type === "Ajuste" ? "text-amber-400" : "text-muted-foreground"}`}>
-                        {type}
-                      </span>
-                      {recordSlots.has(i) && (
-                        <svg aria-label="Novo recorde" viewBox="0 0 24 24" className="h-5 w-5 shrink-0 drop-shadow-md">
+                    <div className="flex min-w-0 flex-col items-start leading-tight">
+                      <span className="flex items-center gap-0.5 font-mono text-xs font-bold">
+                        {i + 1}
+                        {recordSlots.has(i) && (
+                        <svg aria-label="Novo recorde" viewBox="0 0 24 24" className="h-3.5 w-3.5 shrink-0 drop-shadow-md">
                           <title>Novo recorde</title>
                           <defs>
                             <radialGradient id={`medalGold-${data.id}-${i}`} cx="35%" cy="30%" r="75%">
@@ -813,11 +833,19 @@ export const ExerciseCard = ({
                           <circle cx="12" cy="14" r="6.5" fill={`url(#medalGold-${data.id}-${i})`} stroke="#8E6A00" strokeWidth="0.6" />
                           <ellipse cx="10" cy="11.5" rx="2.6" ry="1.4" fill="#FFFFFF" opacity="0.55" />
                         </svg>
-                      )}
+                        )}
+                      </span>
+                      <span className={`w-full truncate text-[7px] font-bold uppercase ${type === "Trabalho" ? "text-primary" : type === "Ajuste" ? "text-amber-400" : "text-muted-foreground"}`}>
+                        {type.slice(0, 4)}
+                      </span>
                     </div>
-                    <span className="text-xs text-muted-foreground">
-                      {previous ? `${previous.peso}kg × ${previous.reps}` : "—"}
+                    <span
+                      className={`flex flex-col text-[9px] leading-tight ${legacy ? "text-muted-foreground/70 italic" : "text-muted-foreground"}`}
+                      title={legacy ? "Histórico antigo do exercício" : undefined}
+                    >
+                      {shown ? (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>) : "—"}
                     </span>
+
                     <input
                       aria-label={`Carga da série ${i + 1}`}
                       type="number"
@@ -827,7 +855,7 @@ export const ExerciseCard = ({
                       onChange={(e) => updateSlot(i, "carga", e.target.value)}
                       disabled={slot.done || saving}
                       placeholder="—"
-                      className="h-10 w-full border border-input bg-secondary/70 px-2 text-center text-sm outline-none focus:border-primary disabled:opacity-60"
+                      className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                     />
                     <input
                       aria-label={`Repetições da série ${i + 1}`}
@@ -838,7 +866,7 @@ export const ExerciseCard = ({
                       onChange={(e) => updateSlot(i, "reps", e.target.value)}
                       disabled={slot.done || saving}
                       placeholder="—"
-                      className="h-10 w-full border border-input bg-secondary/70 px-2 text-center text-sm outline-none focus:border-primary disabled:opacity-60"
+                      className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                     />
                     <Button
                       type="button"
@@ -847,7 +875,7 @@ export const ExerciseCard = ({
                       aria-label={`Confirmar série ${i + 1}`}
                       disabled={!sessionActive || slot.done || saving}
                       onClick={() => void confirmSeries(i)}
-                      className="h-10 w-10 rounded-none p-0 tracking-normal"
+                      className="h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4"
                     >
                       {saving ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
                     </Button>
