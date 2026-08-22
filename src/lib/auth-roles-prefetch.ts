@@ -9,6 +9,10 @@ export type PrefetchedRole = {
 
 export function stashAuthRolesPrefetch(roles: PrefetchedRole[]) {
   try {
+    if (!roles.length) {
+      sessionStorage.removeItem(KEY);
+      return;
+    }
     sessionStorage.setItem(KEY, JSON.stringify(roles));
   } catch {}
 }

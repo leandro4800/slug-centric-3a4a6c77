@@ -178,22 +178,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const requestId = ++roleRequestId.current;
 
     if (!session?.user) {
+      consumeAuthRolesPrefetch();
       setRoles([]);
       setRolesLoading(false);
       return;
     }
 
+    // O prefetch do login pode conter só o papel usado para escolher o destino
+    // inicial (ex.: coach do tenant próprio). Ele nunca substitui a lista
+    // completa de user_roles — senão um admin global some do guard do /admin.
     const prefetched = consumeAuthRolesPrefetch();
-    if (prefetched?.length) {
-      setRoles(prefetched);
-      setRolesLoading(false);
-      return;
+    const optimisticRoles = prefetched?.length ? prefetched : null;
+    if (optimisticRoles) {
+      setRoles(optimisticRoles);
     }
 
     setRolesLoading(true);
     void fetchRolesWithRetry(session.user.id)
       .then((userRoles) => {
-        if (requestId === roleRequestId.current) setRoles(userRoles);
+        if (requestId !== roleRequestId.current) return;
+        if (userRoles.length) {
+          setRoles(userRoles);
+          return;
+        }
+
+        // Só confirma "sem permissões" quando não havia nenhuma role conhecida.
+        // Em instabilidade temporária, mantemos o prefetch em vez de bloquear
+        // um usuário que acabou de autenticar.
+        if (!optimisticRoles) setRoles([]);
       })
       .finally(() => {
         if (requestId === roleRequestId.current) setRolesLoading(false);
