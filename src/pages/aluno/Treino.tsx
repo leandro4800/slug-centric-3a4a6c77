@@ -847,24 +847,48 @@ const PersonalTreino = () => {
         </div>
 
         {treinosDoDia.length > 0 && (
-          <button
-            type="button"
-            disabled={startingSession}
-            onClick={iniciarTreinoAoVivo}
-            className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
-          >
-            {startingSession ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dumbbell className="h-5 w-5" />}
-            {sessaoAndamento ? `Continuar treino · ${duracaoAndamento}` : "Iniciar Treino"}
-          </button>
-        )}
-        {sessaoAndamento && !liveSession && (
-          <p className="mt-2 text-center text-[11px] uppercase tracking-[0.18em] text-emerald-400 flex items-center justify-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            Treino em andamento
-          </p>
+          sessaoAndamento ? (
+            <div className="mt-4 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-400 flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  Treino em andamento
+                </span>
+                <span className="font-mono text-lg text-primary">⏱ {duracaoAndamento}</span>
+              </div>
+              <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Duração</p>
+                  <p className="font-mono text-base">{duracaoAndamento}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Volume</p>
+                  <p className="font-mono text-base">{Math.round(sessaoStats.volume)} kg</p>
+                </div>
+                <div>
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Séries</p>
+                  <p className="font-mono text-base">{sessaoStats.series}</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={startingSession}
+              onClick={iniciarTreinoAoVivo}
+              className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
+            >
+              {startingSession ? <Loader2 className="h-5 w-5 animate-spin" /> : <Dumbbell className="h-5 w-5" />}
+              Iniciar Treino
+            </button>
+          )
         )}
 
-
+        {recordeBanner && (
+          <div className="mt-3 rounded-xl border border-amber-400/50 bg-amber-400/15 px-4 py-3 text-center text-sm font-bold text-amber-300">
+            🏆 Novo recorde de {recordeBanner}!
+          </div>
+        )}
 
         <div className="space-y-3 mt-4">
           {treinosDoDia.map((t, i) => (
@@ -880,9 +904,14 @@ const PersonalTreino = () => {
               nivelExperiencia={nivelExperiencia}
               completed={completedIds.has(t.id)}
               onCompleted={() => markCompleted(t.id)}
+              sessaoId={sessaoAndamento?.id || null}
+              sessionActive={!!sessaoAndamento}
+              onSeriesSaved={() => carregarStatsSessao()}
+              onRecords={(tipos) => setRecordeBanner(tipos.join(" e "))}
             />
           ))}
         </div>
+
 
         {treinosDoDia.length > 0 && (
           completedDaysWeek.has(diaAtual) ? (
