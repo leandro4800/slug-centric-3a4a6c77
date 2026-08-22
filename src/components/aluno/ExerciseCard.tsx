@@ -505,7 +505,7 @@ export const ExerciseCard = ({
 
       ordenadas.forEach((row: any) => {
         // PR só existe para série de trabalho e só a partir do 2º registro do exercício
-        if ((row.tipo_serie || "trabalho") !== "trabalho") return;
+        if (String(row.tipo_serie || "trabalho").toLowerCase() !== "trabalho") return;
         if (!temHistorico) return;
         const peso = Number(row.peso_kg) || 0;
         const reps = Number(row.reps) || 0;
