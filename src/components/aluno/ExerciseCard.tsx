@@ -765,11 +765,11 @@ export const ExerciseCard = ({
                     </span>
                     {recordSlots.has(i) && (
                       <svg
-                        title="Novo recorde"
                         aria-label="Novo recorde"
                         viewBox="0 0 24 24"
                         className="h-4 w-4 shrink-0 drop-shadow-[0_1px_1px_rgba(0,0,0,0.6)]"
                       >
+                        <title>Novo recorde</title>
                         <defs>
                           <radialGradient id="medalGold" cx="35%" cy="30%" r="75%">
                             <stop offset="0%" stopColor="#FFF6C9" />
