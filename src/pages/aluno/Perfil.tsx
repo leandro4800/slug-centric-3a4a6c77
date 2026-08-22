@@ -491,7 +491,7 @@ const Perfil = () => {
       {/* Cada perfil toca APENAS a própria música — nunca a do tenant */}
       <ProfileMusicPlayer url={profile?.music_url ?? null} />
       {/* Hero estilo Netflix */}
-      <section className="relative h-[118vh] min-h-[760px] -mt-0">
+      <section className="relative h-[95vh] min-h-[640px] -mt-0">
         <img
           src={profileHeroSrc}
           alt=""
@@ -502,7 +502,7 @@ const Perfil = () => {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent" />
 
-        <div className="absolute inset-x-0 bottom-0 pb-1 px-5 space-y-2">
+        <div className="absolute inset-x-0 top-[54%] px-5 space-y-2 pb-6">
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">ATLETA</span>
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
