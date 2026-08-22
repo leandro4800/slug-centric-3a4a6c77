@@ -496,7 +496,44 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
               </p>
             )}
           </Painel>
+
+          {/* Recordes pessoais */}
+          <Painel title="Recordes pessoais">
+            {prs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">Nenhum recorde registrado ainda.</p>
+            ) : (
+              <ul className="max-h-[320px] space-y-2 overflow-y-auto">
+                {prs
+                  .filter((r) => !exercicio || r.exercicio === exercicio || !exercicios.includes(r.exercicio))
+                  .map((r) => (
+                    <li
+                      key={r.id}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-white/5 bg-black/20 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-bold">{r.exercicio}</p>
+                        <p className="text-[11px] text-muted-foreground">{fmtDate(r.data)}</p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="rounded-full bg-amber-400/15 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-300">
+                          {r.tipo_recorde === "1rm" ? "1RM" : r.tipo_recorde === "peso" ? "Peso" : "Volume"}
+                        </span>
+                        <span className="font-mono text-sm">
+                          {Number(r.valor_numerico ?? 0).toFixed(1)}
+                          {r.valor_anterior != null && (
+                            <span className="ml-1 text-[11px] text-muted-foreground line-through">
+                              {Number(r.valor_anterior).toFixed(1)}
+                            </span>
+                          )}
+                        </span>
+                      </div>
+                    </li>
+                  ))}
+              </ul>
+            )}
+          </Painel>
         </div>
+
       )}
     </div>
   );
