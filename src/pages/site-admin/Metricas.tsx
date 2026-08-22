@@ -163,14 +163,14 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [p, c, e, av, pd] = await Promise.all([
+      const [p, se, e, av, pd, pr] = await Promise.all([
         supabase.from("perfis").select("id, nome_completo, email, avatar_url").eq("id", alunoId).maybeSingle(),
         supabase
-          .from("historico_cargas")
-          .select("exercicio_nome, carga_kg, repeticoes_feitas, data_treino")
-          .eq("user_id", alunoId)
-          .order("data_treino", { ascending: true })
-          .limit(1000),
+          .from("series_executadas")
+          .select("peso_kg, reps, volume_kg, rm_estimado, concluida_em, treino_prescrito_id, treinos_prescritos(exercicio)")
+          .eq("aluno_id", alunoId)
+          .order("concluida_em", { ascending: true })
+          .limit(2000),
         supabase
           .from("evolucao_metricas")
           .select("peso, bf, massa_magra, massa_gorda, cintura, braco, data_registro")
@@ -189,12 +189,28 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
           .eq("aluno_id", alunoId)
           .order("data", { ascending: true })
           .limit(365),
+        supabase
+          .from("prs")
+          .select("id, exercicio, tipo_recorde, valor_numerico, valor_anterior, valor, unidade, data")
+          .eq("aluno_id", alunoId)
+          .order("data", { ascending: false })
+          .limit(300),
       ]);
       setPerfil((p.data as Aluno) || null);
-      setCargas((c.data as any[]) || []);
+      setCargas(
+        ((se.data as any[]) || []).map((s) => ({
+          exercicio_nome: s.treinos_prescritos?.exercicio || "Exercício",
+          carga_kg: s.peso_kg,
+          repeticoes_feitas: s.reps,
+          volume_kg: s.volume_kg,
+          rm_estimado: s.rm_estimado,
+          data_treino: s.concluida_em,
+        })),
+      );
       setEvolucao((e.data as any[]) || []);
       setAvaliacoes((av.data as any[]) || []);
       setPesoDiario((pd.data as any[]) || []);
+      setPrs((pr.data as any[]) || []);
       setLoading(false);
     })();
   }, [alunoId]);
@@ -203,6 +219,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
     () => Array.from(new Set(cargas.map((c) => c.exercicio_nome))).sort(),
     [cargas],
   );
+
 
   useEffect(() => {
     if (!exercicio && exercicios.length) setExercicio(exercicios[0]);
