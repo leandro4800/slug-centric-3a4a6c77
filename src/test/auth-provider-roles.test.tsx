@@ -81,7 +81,8 @@ describe("AuthProvider — resolução de permissões do superadmin", () => {
     renderProvider();
 
     await waitFor(() => {
-      expect(screen.getByTestId("result").textContent).toBe("admin:true|coach:false");
+      // Admin global responde verdadeiro para qualquer papel, por definição do hasRole.
+      expect(screen.getByTestId("result").textContent).toBe("admin:true|coach:true");
     }, { timeout: 15000 });
   });
 
