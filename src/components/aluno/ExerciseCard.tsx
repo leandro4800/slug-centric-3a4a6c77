@@ -7,6 +7,7 @@ import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import ExercisePlayer from "./ExercisePlayer";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
+import { Button } from "@/components/ui/button";
 
 export interface ExerciseCardData {
   id: string;
@@ -27,6 +28,19 @@ interface CargaAnterior {
   carga_kg: number;
   repeticoes_feitas: number;
   data_treino: string;
+}
+
+interface PreviousSeries {
+  peso: number;
+  reps: number;
+}
+
+interface HistorySnapshot {
+  hasWorkHistory: boolean;
+  maxWeight: number;
+  maxEstimatedRm: number;
+  maxVolumeBySeries: Map<number, number>;
+  previousBySeries: Map<number, PreviousSeries>;
 }
 
 interface ExerciseCardProps {
@@ -106,24 +120,18 @@ export const ExerciseCard = ({
     return `${target.getUTCFullYear()}-W${week}`;
   })();
   const storageKey = `treino-state:${userId || "anon"}:${data.id}:${isoWeekKey}`;
-  const [slots, setSlots] = useState(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed.slots) && parsed.slots.length === totalSlots) {
-          return parsed.slots;
-        }
-      }
-    } catch {}
-    return Array.from({ length: totalSlots }, () => ({
-      carga: cargaAnterior?.carga_kg ? String(cargaAnterior.carga_kg) : "",
-      reps: cargaAnterior?.repeticoes_feitas ? String(cargaAnterior.repeticoes_feitas) : "",
-      done: false,
-    }));
-  });
+  const emptySlots = () => Array.from({ length: totalSlots }, () => ({ carga: "", reps: "", done: false }));
+  const [slots, setSlots] = useState(emptySlots);
   const [savingAll, setSavingAll] = useState(false);
+  const [savingSlots, setSavingSlots] = useState<Set<number>>(new Set());
   const [recordSlots, setRecordSlots] = useState<Set<number>>(new Set());
+  const [history, setHistory] = useState<HistorySnapshot>({
+    hasWorkHistory: false,
+    maxWeight: 0,
+    maxEstimatedRm: 0,
+    maxVolumeBySeries: new Map(),
+    previousBySeries: new Map(),
+  });
 
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
@@ -392,20 +400,81 @@ export const ExerciseCard = ({
     };
   }, [running]);
 
-  // Persiste estado (slots + cronômetro) sempre que mudar
+  // Persiste somente o cronômetro. As entradas de KG/reps sempre começam vazias.
   useEffect(() => {
     try {
       localStorage.setItem(
         storageKey,
         JSON.stringify({
-          slots,
           seconds,
           running,
           startedAt: running ? Date.now() : null,
         })
       );
     } catch {}
-  }, [slots, seconds, running, storageKey]);
+  }, [seconds, running, storageKey]);
+
+  const loadHistory = async (): Promise<HistorySnapshot> => {
+    const empty: HistorySnapshot = {
+      hasWorkHistory: false,
+      maxWeight: 0,
+      maxEstimatedRm: 0,
+      maxVolumeBySeries: new Map(),
+      previousBySeries: new Map(),
+    };
+    if (!userId || !isUuid(data.id)) return empty;
+
+    const { data: prescribedRows, error: prescribedError } = await supabase
+      .from("treinos_prescritos")
+      .select("id")
+      .eq("aluno_id", userId)
+      .eq("exercicio", data.exercicio);
+    if (prescribedError) throw prescribedError;
+    const prescribedIds = (prescribedRows || []).map((row) => row.id);
+    if (!prescribedIds.length) return empty;
+
+    let query = supabase
+      .from("series_executadas")
+      .select("peso_kg, reps, volume_kg, rm_estimado, numero_serie, tipo_serie, concluida_em")
+      .eq("aluno_id", userId)
+      .in("treino_prescrito_id", prescribedIds)
+      .order("concluida_em", { ascending: false })
+      .limit(2000);
+    if (sessaoId) query = query.neq("sessao_id", sessaoId);
+    const { data: rows, error } = await query;
+    if (error) throw error;
+
+    for (const row of rows || []) {
+      const seriesNumber = Number(row.numero_serie) || 0;
+      if (!empty.previousBySeries.has(seriesNumber)) {
+        empty.previousBySeries.set(seriesNumber, {
+          peso: Number(row.peso_kg) || 0,
+          reps: Number(row.reps) || 0,
+        });
+      }
+      if (String(row.tipo_serie || "").trim().toLowerCase() !== "trabalho") continue;
+      empty.hasWorkHistory = true;
+      empty.maxWeight = Math.max(empty.maxWeight, Number(row.peso_kg) || 0);
+      empty.maxEstimatedRm = Math.max(empty.maxEstimatedRm, Number(row.rm_estimado) || 0);
+      empty.maxVolumeBySeries.set(
+        seriesNumber,
+        Math.max(empty.maxVolumeBySeries.get(seriesNumber) || 0, Number(row.volume_kg) || 0),
+      );
+    }
+    return empty;
+  };
+
+  useEffect(() => {
+    let cancelled = false;
+    setSlots(emptySlots());
+    setRecordSlots(new Set());
+    loadHistory()
+      .then((snapshot) => { if (!cancelled) setHistory(snapshot); })
+      .catch(() => { if (!cancelled) setHistory({ hasWorkHistory: false, maxWeight: 0, maxEstimatedRm: 0, maxVolumeBySeries: new Map(), previousBySeries: new Map() }); });
+    return () => { cancelled = true; };
+    // Inputs reset only when the exercise/session changes, never from previous values.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.id, userId, sessaoId]);
 
   const coachUrl = data.video_coach_url || null;
   const hasCoach = !!coachUrl;
@@ -414,8 +483,105 @@ export const ExerciseCard = ({
   const updateSlot = (i: number, field: "carga" | "reps", val: string) =>
     setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)));
 
-  const toggleDone = (i: number) =>
-    setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, done: !s.done } : s)));
+  const confirmSeries = async (i: number) => {
+    if (!userId || !tenantId || !sessaoId || !sessionActive) {
+      toast.error("Inicie o treino primeiro.");
+      return;
+    }
+    const slot = slots[i];
+    if (!slot || slot.done || savingSlots.has(i)) return;
+    const weight = Number(slot.carga.replace(",", "."));
+    const reps = Number.parseInt(slot.reps, 10);
+    if (!Number.isFinite(weight) || weight < 0 || !Number.isInteger(reps) || reps <= 0) {
+      toast.error("Informe KG e repetições válidos.");
+      return;
+    }
+
+    setSavingSlots((current) => new Set(current).add(i));
+    try {
+      const prescribedId = isUuid(data.id) ? data.id : null;
+      const { data: inserted, error } = await supabase
+        .from("series_executadas")
+        .insert({
+          aluno_id: userId,
+          tenant_id: tenantId,
+          sessao_id: sessaoId,
+          treino_prescrito_id: prescribedId,
+          numero_serie: i + 1,
+          tipo_serie: getSlotType(i),
+          peso_kg: weight,
+          reps,
+          concluida_em: new Date().toISOString(),
+        })
+        .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie")
+        .single();
+      if (error) throw error;
+
+      const isWorkSet = String(inserted.tipo_serie || "").trim().toLowerCase() === "trabalho";
+      const recordTypes: Array<{ type: string; label: string; value: number; previous: number }> = [];
+      if (isWorkSet && history.hasWorkHistory) {
+        const volume = Number(inserted.volume_kg) || 0;
+        const estimatedRm = Number(inserted.rm_estimado) || 0;
+        const previousVolume = history.maxVolumeBySeries.get(i + 1) || 0;
+        if (previousVolume > 0 && volume > previousVolume) {
+          recordTypes.push({ type: "volume", label: "volume", value: volume, previous: previousVolume });
+        }
+        if (history.maxWeight > 0 && weight > history.maxWeight) {
+          recordTypes.push({ type: "peso", label: "peso", value: weight, previous: history.maxWeight });
+        }
+        if (history.maxEstimatedRm > 0 && estimatedRm > history.maxEstimatedRm) {
+          recordTypes.push({ type: "1rm", label: "1RM", value: estimatedRm, previous: history.maxEstimatedRm });
+        }
+      }
+
+      if (recordTypes.length) {
+        const { error: prsError } = await supabase.from("prs").insert(recordTypes.map((record) => ({
+          aluno_id: userId,
+          tenant_id: tenantId,
+          exercicio: data.exercicio,
+          tipo_recorde: record.type,
+          valor_numerico: Number(record.value.toFixed(2)),
+          valor_anterior: Number(record.previous.toFixed(2)),
+          valor: `${record.value.toFixed(1)} kg`,
+          unidade: "kg",
+          data: new Date().toISOString().split("T")[0],
+          treino_prescrito_id: prescribedId,
+          series_executada_id: inserted.id,
+        })));
+        if (prsError) throw prsError;
+        const { error: markError } = await supabase
+          .from("series_executadas")
+          .update({ is_recorde: true })
+          .eq("id", inserted.id);
+        if (markError) throw markError;
+        setRecordSlots((current) => new Set(current).add(i));
+        onRecords?.(recordTypes.map((record) => record.label));
+      }
+
+      setSlots((current) => current.map((item, index) => index === i ? { ...item, done: true } : item));
+      setHistory((current) => {
+        const nextVolumes = new Map(current.maxVolumeBySeries);
+        if (isWorkSet) nextVolumes.set(i + 1, Math.max(nextVolumes.get(i + 1) || 0, Number(inserted.volume_kg) || 0));
+        return {
+          ...current,
+          maxWeight: isWorkSet ? Math.max(current.maxWeight, weight) : current.maxWeight,
+          maxEstimatedRm: isWorkSet ? Math.max(current.maxEstimatedRm, Number(inserted.rm_estimado) || 0) : current.maxEstimatedRm,
+          maxVolumeBySeries: nextVolumes,
+        };
+      });
+      onCargaSaved?.(data.exercicio, weight, reps);
+      onSeriesSaved?.();
+      toast.success(`Série ${i + 1} registrada.`);
+    } catch (error: any) {
+      toast.error(error?.message || "Não foi possível registrar a série.");
+    } finally {
+      setSavingSlots((current) => {
+        const next = new Set(current);
+        next.delete(i);
+        return next;
+      });
+    }
+  };
 
   const handleFinalizar = async () => {
     if (!userId || !tenantId) {
@@ -426,145 +592,17 @@ export const ExerciseCard = ({
       toast.error("Inicie o treino primeiro.");
       return;
     }
-    const valid = slots
-      .map((s, i) => ({
-        k: parseFloat(s.carga.replace(",", ".")),
-        r: parseInt(s.reps),
-        tipo: getSlotType(i),
-        idx: i + 1,
-      }))
-      .filter((s) => !isNaN(s.k) && !isNaN(s.r));
-    if (valid.length === 0) {
-      toast.error("Preencha pelo menos uma série.");
+    if (!slots.some((slot) => slot.done)) {
+      toast.error("Confirme pelo menos uma série no botão ✓.");
       return;
     }
     setSavingAll(true);
     try {
-      const prescritoId = isUuid(data.id) ? data.id : null;
-
-      // ---- histórico do aluno neste exercício (para comparar recordes) ----
-      // Só considera séries de TRABALHO no histórico e só marca PR se já existir histórico.
-      let maxPeso = 0;
-      let maxRm = 0;
-      let temHistorico = false;
-      const maxVolPorSerie = new Map<number, number>();
-      if (prescritoId) {
-        const { data: prescritos } = await supabase
-          .from("treinos_prescritos")
-          .select("id")
-          .eq("aluno_id", userId)
-          .eq("exercicio", data.exercicio);
-        const ids = (prescritos || []).map((p: any) => p.id);
-        if (ids.length) {
-          const { data: hist } = await supabase
-            .from("series_executadas")
-            .select("peso_kg, volume_kg, rm_estimado, numero_serie, tipo_serie")
-            .eq("aluno_id", userId)
-            .in("treino_prescrito_id", ids)
-            .limit(2000);
-          (hist || [])
-            .filter((h: any) => String(h.tipo_serie || "trabalho").toLowerCase() === "trabalho")
-            .forEach((h: any) => {
-              temHistorico = true;
-              maxPeso = Math.max(maxPeso, Number(h.peso_kg) || 0);
-              maxRm = Math.max(maxRm, Number(h.rm_estimado) || 0);
-              const n = Number(h.numero_serie) || 0;
-              maxVolPorSerie.set(n, Math.max(maxVolPorSerie.get(n) || 0, Number(h.volume_kg) || 0));
-            });
-        }
-      }
-
-
-      const rows = valid.map((s) => ({
-        aluno_id: userId,
-        tenant_id: tenantId,
-        sessao_id: sessaoId,
-        treino_prescrito_id: prescritoId,
-        numero_serie: s.idx,
-        tipo_serie: s.tipo,
-        peso_kg: s.k,
-        reps: s.r,
-        concluida_em: new Date().toISOString(),
-      }));
-
-      const { data: inserted, error } = await supabase
-        .from("series_executadas")
-        .insert(rows as any)
-        .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie");
-      if (error) throw error;
-
-      // ---- detecta recordes ----
-      const prsRows: any[] = [];
-      const recordIdx = new Set<number>();
-      const tipos = new Set<string>();
-      const hoje = new Date().toISOString().split("T")[0];
-
-      const ordenadas = [...(inserted || [])].sort(
-        (a: any, b: any) => (a.numero_serie || 0) - (b.numero_serie || 0),
-      );
-
-      ordenadas.forEach((row: any) => {
-        // PR só existe para série de trabalho e só a partir do 2º registro do exercício
-        if (String(row.tipo_serie || "trabalho").toLowerCase() !== "trabalho") return;
-        if (!temHistorico) return;
-        const peso = Number(row.peso_kg) || 0;
-        const reps = Number(row.reps) || 0;
-        const vol = Number(row.volume_kg) || peso * reps;
-        const rm = Number(row.rm_estimado) || peso * (1 + reps / 30);
-        const n = Number(row.numero_serie) || 0;
-        let bateu = false;
-
-
-        const push = (tipo: string, valor: number, anterior: number, unidade: string, label: string) => {
-          bateu = true;
-          tipos.add(label);
-          prsRows.push({
-            aluno_id: userId,
-            tenant_id: tenantId,
-            exercicio: data.exercicio,
-            tipo_recorde: tipo,
-            valor_numerico: Number(valor.toFixed(2)),
-            valor_anterior: anterior > 0 ? Number(anterior.toFixed(2)) : null,
-            valor: `${valor.toFixed(1)} ${unidade}`,
-            unidade,
-            data: hoje,
-            treino_prescrito_id: prescritoId,
-            series_executada_id: row.id,
-          });
-        };
-
-        const volAnterior = maxVolPorSerie.get(n) || 0;
-        if (vol > 0 && vol > volAnterior) {
-          push("volume", vol, volAnterior, "kg", "volume");
-          maxVolPorSerie.set(n, vol);
-        }
-        if (peso > 0 && peso > maxPeso) {
-          push("peso", peso, maxPeso, "kg", "peso");
-          maxPeso = peso;
-        }
-        if (rm > 0 && rm > maxRm) {
-          push("1rm", rm, maxRm, "kg", "1RM");
-          maxRm = rm;
-        }
-        if (bateu) recordIdx.add(n);
-      });
-
-      if (prsRows.length) {
-        await supabase.from("prs").insert(prsRows as any);
-        const ids = ordenadas.filter((r: any) => recordIdx.has(Number(r.numero_serie))).map((r: any) => r.id);
-        if (ids.length) await supabase.from("series_executadas").update({ is_recorde: true } as any).in("id", ids);
-        setRecordSlots(new Set([...recordIdx].map((n) => n - 1)));
-        onRecords?.([...tipos]);
-      }
-
-      const last = valid[valid.length - 1];
-      toast.success(`${valid.length} série(s) registrada(s)!`);
-      onCargaSaved?.(data.exercicio, last.k, last.r);
-      onSeriesSaved?.();
       onCompleted?.();
       setRunning(false);
       setSeconds(0);
       try { localStorage.removeItem(storageKey); } catch {}
+      toast.success("Exercício finalizado.");
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível registrar as séries.");
     } finally {
