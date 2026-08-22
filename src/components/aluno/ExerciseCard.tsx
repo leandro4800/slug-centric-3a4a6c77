@@ -41,6 +41,7 @@ interface HistorySnapshot {
   maxEstimatedRm: number;
   maxVolumeBySeries: Map<number, number>;
   previousBySeries: Map<number, PreviousSeries>;
+  legacyPrevious: PreviousSeries | null;
 }
 
 interface ExerciseCardProps {
