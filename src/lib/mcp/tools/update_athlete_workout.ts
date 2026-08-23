@@ -99,12 +99,25 @@ export default defineTool({
       ordem = Number((last as { ordem?: number } | null)?.ordem ?? 0) + 1;
     }
 
+    // dia_ordem: reutiliza a do dia existente; se for um dia novo, vai para o fim da sequência
+    const { data: diasExistentes } = await supa
+      .from("treinos_prescritos")
+      .select("dia_semana, dia_ordem")
+      .eq("tenant_id", auth2.tenantId)
+      .eq("aluno_id", alunoId);
+    const diasRows = (diasExistentes ?? []) as { dia_semana: string; dia_ordem: number | null }[];
+    const diaAtual = diasRows.find((r) => r.dia_semana === input.dia_semana && r.dia_ordem != null);
+    const diaOrdem = diaAtual
+      ? Number(diaAtual.dia_ordem)
+      : diasRows.reduce((m, r) => Math.max(m, Number(r.dia_ordem) || 0), 0) + 1;
+
     const { data, error } = await supa
       .from("treinos_prescritos")
       .insert({
         tenant_id: auth2.tenantId,
         aluno_id: alunoId,
         dia_semana: input.dia_semana,
+        dia_ordem: diaOrdem,
         exercicio: input.exercicio,
         series: input.series ?? null,
         repeticoes: input.repeticoes ?? null,

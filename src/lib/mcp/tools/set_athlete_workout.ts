@@ -82,11 +82,24 @@ export default defineTool({
       return (vid.data as { url_video?: string } | null)?.url_video ?? null;
     }
 
+    // dia_ordem: reutiliza a do dia existente; se for um dia novo, vai para o fim da sequência
+    const { data: diasExistentes } = await supa
+      .from("treinos_prescritos")
+      .select("dia_semana, dia_ordem")
+      .eq("aluno_id", found.athlete.id)
+      .eq("tenant_id", auth.tenantId);
+    const diasRows = (diasExistentes ?? []) as { dia_semana: string; dia_ordem: number | null }[];
+    const diaAtual = diasRows.find((r) => r.dia_semana === dia_semana && r.dia_ordem != null);
+    const diaOrdem = diaAtual
+      ? Number(diaAtual.dia_ordem)
+      : diasRows.reduce((m, r) => Math.max(m, Number(r.dia_ordem) || 0), 0) + 1;
+
     const rows = await Promise.all(
       exercicios.map(async (ex, i) => ({
         tenant_id: auth.tenantId,
         aluno_id: found.athlete.id,
         dia_semana,
+        dia_ordem: diaOrdem,
         ordem: startOrder + i + 1,
         exercicio: ex.exercicio,
         series: ex.series ?? null,

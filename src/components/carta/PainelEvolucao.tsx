@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Loader2, TrendingUp, TrendingDown, Activity, Calendar,
-  Dumbbell, Heart, Moon, Pill, Sparkles, Apple, Ruler, ListChecks,
+  Dumbbell, Heart, Moon, Pill, Sparkles, Apple, Ruler, ListChecks, Flame,
 } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -79,6 +79,7 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
   const [refeicoesCount, setRefeicoesCount] = useState(0);
   const [treinos, setTreinos] = useState<Treino[]>([]);
   const [fotosCount, setFotosCount] = useState(0);
+  const [sessoesKcal, setSessoesKcal] = useState<{ data_treino: string; gasto_calorico_kcal: number }[]>([]);
 
   const [sintese, setSintese] = useState<Sintese | null>(null);
   const [gerandoSintese, setGerandoSintese] = useState(false);
@@ -86,7 +87,7 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [c, a, h, am, d, t, f] = await Promise.all([
+      const [c, a, h, am, d, t, f, sk] = await Promise.all([
         supabase.from("evolucao_checkins").select("data_checkin,peso_kg,bf_percentual,massa_magra_kg")
           .eq("user_id", alunoId).order("data_checkin", { ascending: true }).limit(60),
         supabase.from("avaliacoes_fisicas").select("*")
@@ -97,9 +98,12 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
           .eq("aluno_id", alunoId).maybeSingle(),
         supabase.from("dietas").select("objetivo,kcal_alvo,macros_alvo,created_at,id")
           .eq("user_id", alunoId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("treinos_prescritos").select("dia_semana,exercicio,series,repeticoes")
-          .eq("aluno_id", alunoId).order("dia_semana").order("ordem").limit(200),
+        supabase.from("treinos_prescritos").select("dia_semana,dia_ordem,exercicio,series,repeticoes")
+          .eq("aluno_id", alunoId).order("dia_ordem", { nullsFirst: false }).order("ordem").limit(200),
         supabase.from("evolucao_fotos").select("id", { count: "exact", head: true }).eq("user_id", alunoId),
+        supabase.from("sessoes_treino").select("data_treino,gasto_calorico_kcal")
+          .eq("aluno_id", alunoId).not("gasto_calorico_kcal", "is", null)
+          .order("data_treino", { ascending: false }).limit(20),
       ]);
       setCheckins((c.data ?? []) as Checkin[]);
       setAvaliacoes((a.data ?? []) as Avaliacao[]);
@@ -108,6 +112,11 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
       setDieta((d.data ?? null) as DietaT | null);
       setTreinos((t.data ?? []) as Treino[]);
       setFotosCount(f.count ?? 0);
+      setSessoesKcal(
+        ((sk.data ?? []) as any[])
+          .filter((s) => s.gasto_calorico_kcal != null)
+          .map((s) => ({ data_treino: s.data_treino, gasto_calorico_kcal: Number(s.gasto_calorico_kcal) })),
+      );
 
       if (d.data?.id) {
         const { count } = await supabase.from("refeicoes")
@@ -160,6 +169,15 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
     const last = new Date(Math.max(...allDates.map((d) => new Date(d).getTime())));
     return Math.floor((Date.now() - last.getTime()) / (1000 * 60 * 60 * 24));
   })();
+
+  // Gasto calórico: último treino vs média recente
+  const ultimoGasto = sessoesKcal[0]?.gasto_calorico_kcal ?? null;
+  const mediaGasto = sessoesKcal.length
+    ? Math.round(sessoesKcal.reduce((s, x) => s + x.gasto_calorico_kcal, 0) / sessoesKcal.length)
+    : null;
+  const deltaGasto = ultimoGasto != null && mediaGasto != null && sessoesKcal.length > 1
+    ? ultimoGasto - mediaGasto
+    : NaN;
 
   // Cargas por exercício
   const cargasPorExercicio = new Map<string, { data: string; carga: number }[]>();
@@ -279,6 +297,8 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Stat label="Peso atual" value={pesoAtual ? pesoAtual.toFixed(1) : "—"} suffix={pesoAtual ? " kg" : ""} delta={isNaN(deltaPeso) ? undefined : deltaPeso} icon={Activity} />
           <Stat label="BF% atual" value={bfAtual ? bfAtual.toFixed(1) : "—"} suffix={bfAtual ? "%" : ""} delta={isNaN(deltaBf) ? undefined : deltaBf} icon={Activity} />
+          <Stat label="Gasto último treino" value={ultimoGasto ?? "—"} suffix={ultimoGasto ? " kcal" : ""} delta={isNaN(deltaGasto) ? undefined : deltaGasto} icon={Flame} />
+          <Stat label="Média kcal/treino" value={mediaGasto ?? "—"} suffix={mediaGasto ? " kcal" : ""} icon={Flame} />
           <Stat label="Último registro" value={diasDesde === null ? "—" : diasDesde === 0 ? "Hoje" : `${diasDesde}d`} icon={Calendar} />
           <Stat label="Check-ins" value={checkins.length} icon={Calendar} />
           <Stat label="Avaliações" value={avaliacoes.length} icon={Ruler} />

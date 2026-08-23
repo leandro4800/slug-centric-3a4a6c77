@@ -25,10 +25,10 @@ export default defineTool({
     const supa = getServiceClient();
     let q = supa
       .from("treinos_prescritos")
-      .select("dia_semana, ordem, exercicio, series, repeticoes, cadencia, observacao, status, detalhes_execucao")
+      .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, status, detalhes_execucao")
       .eq("aluno_id", found.athlete.id)
       .eq("tenant_id", auth.tenantId)
-      .order("dia_semana")
+      .order("dia_ordem", { nullsFirst: false })
       .order("ordem");
     if (dia_semana) q = q.eq("dia_semana", dia_semana);
     const { data, error } = await q;

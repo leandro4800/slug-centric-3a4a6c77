@@ -66,7 +66,7 @@ async function importarTreinoComVinculo(
 ) {
   const { data: existentesRaw } = await supabase
     .from("treinos_prescritos")
-    .select("id, dia_semana, exercicio, referencia_exercicio_id, video_coach_url, video_url")
+    .select("id, dia_semana, dia_ordem, exercicio, referencia_exercicio_id, video_coach_url, video_url")
     .eq("aluno_id", alunoId)
     .eq("tenant_id", tenantId);
   const existentes = (existentesRaw || []) as any[];
@@ -74,6 +74,24 @@ async function importarTreinoComVinculo(
   const chave = (dia: string, ex: string) => `${normExName(dia)}||${normExName(ex)}`;
   const mapaExistentes = new Map<string, any>();
   existentes.forEach((r) => mapaExistentes.set(chave(r.dia_semana, r.exercicio), r));
+
+  // dia_ordem: mantém a dos dias existentes; dias novos entram no fim da sequência
+  const ordensPorDia = new Map<string, number>();
+  let proximaOrdemDia = 1;
+  for (const r of existentes) {
+    const o = Number(r.dia_ordem) || 0;
+    const k = normExName(r.dia_semana || "");
+    ordensPorDia.set(k, Math.max(ordensPorDia.get(k) ?? 0, o));
+    if (o >= proximaOrdemDia) proximaOrdemDia = o + 1;
+  }
+  const ordemDoDia = (nomeDia: string): number => {
+    const k = normExName(nomeDia || "");
+    if (!ordensPorDia.has(k)) {
+      ordensPorDia.set(k, proximaOrdemDia);
+      proximaOrdemDia += 1;
+    }
+    return ordensPorDia.get(k)!;
+  };
 
   const diasImportados = new Set<string>();
   const chavesImportadas = new Set<string>();
@@ -96,6 +114,7 @@ async function importarTreinoComVinculo(
 
       const campos: Record<string, unknown> = {
         dia_semana: nomeDia,
+        dia_ordem: ordemDoDia(nomeDia),
         ordem: idx,
         exercicio: nome,
         series: ex?.series ?? null,

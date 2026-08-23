@@ -5,7 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { AtletaCard } from "@/pages/site-admin/MontarTreino";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Activity, Loader2, Sparkles, TrendingUp, Scale, Dumbbell } from "lucide-react";
+import { Activity, Loader2, Sparkles, TrendingUp, Scale, Dumbbell, Flame } from "lucide-react";
 import { toast } from "sonner";
 
 interface Aluno {
@@ -110,6 +110,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [pesoDiario, setPesoDiario] = useState<any[]>([]);
   const [prs, setPrs] = useState<any[]>([]);
+  const [sessoesKcal, setSessoesKcal] = useState<any[]>([]);
 
   const [exercicio, setExercicio] = useState<string>("");
   const [analise, setAnalise] = useState<string>("");
@@ -165,7 +166,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [p, se, e, av, pd, pr] = await Promise.all([
+      const [p, se, e, av, pd, pr, sk] = await Promise.all([
         supabase.from("perfis").select("id, nome_completo, email, avatar_url").eq("id", alunoId).maybeSingle(),
         supabase
           .from("series_executadas")
@@ -197,6 +198,13 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
           .eq("aluno_id", alunoId)
           .order("data", { ascending: false })
           .limit(300),
+        supabase
+          .from("sessoes_treino")
+          .select("data_treino, dia_semana, duracao_min, gasto_calorico_kcal")
+          .eq("aluno_id", alunoId)
+          .not("gasto_calorico_kcal", "is", null)
+          .order("data_treino", { ascending: true })
+          .limit(90),
       ]);
       setPerfil((p.data as Aluno) || null);
       setCargas(
@@ -213,6 +221,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
       setAvaliacoes((av.data as any[]) || []);
       setPesoDiario((pd.data as any[]) || []);
       setPrs((pr.data as any[]) || []);
+      setSessoesKcal((sk.data as any[]) || []);
       setLoading(false);
     })();
   }, [alunoId]);
@@ -265,6 +274,22 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
       .sort((a, b) => b.volume - a.volume)
       .slice(0, 8);
   }, [cargas]);
+
+  // Gasto calórico estimado por sessão (calculado na conclusão do treino via MET)
+  const serieKcal = useMemo(
+    () =>
+      sessoesKcal
+        .filter((s) => s.gasto_calorico_kcal != null)
+        .map((s) => ({
+          data: fmtDate(s.data_treino),
+          kcal: Number(s.gasto_calorico_kcal) || 0,
+          dia: s.dia_semana || "",
+        })),
+    [sessoesKcal],
+  );
+  const mediaKcal = serieKcal.length
+    ? Math.round(serieKcal.reduce((s, x) => s + x.kcal, 0) / serieKcal.length)
+    : null;
 
   const ultimoPeso = seriePeso.filter((s) => s.peso).slice(-1)[0]?.peso ?? null;
   const primeiroPeso = seriePeso.filter((s) => s.peso)[0]?.peso ?? null;
@@ -474,6 +499,34 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
                 <Bar dataKey="volume" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartBox>
+          </Painel>
+
+          {/* Gasto calórico por sessão */}
+          <Painel title="Gasto calórico por treino (estimado)">
+            {serieKcal.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma sessão concluída com gasto calórico calculado ainda.
+              </p>
+            ) : (
+              <>
+                <p className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Flame className="h-3.5 w-3.5 text-primary" />
+                  Média: <b className="text-foreground">{mediaKcal} kcal</b> por treino · últimas {serieKcal.length} sessões
+                </p>
+                <ChartBox>
+                  <BarChart data={serieKcal}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="data" fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                      formatter={(v: number, _n, item: any) => [`${v} kcal`, item?.payload?.dia || "Treino"]}
+                    />
+                    <Bar dataKey="kcal" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartBox>
+              </>
+            )}
           </Painel>
 
           {/* IA */}

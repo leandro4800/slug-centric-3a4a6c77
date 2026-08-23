@@ -16,6 +16,7 @@ import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 interface Treino extends ExerciseCardData {
   dia_semana: string;
+  dia_ordem?: number | null;
   tempo_descanso_segundos?: number | null;
 }
 
@@ -63,6 +64,9 @@ const PersonalTreino = () => {
   const [recordeBanner, setRecordeBanner] = useState<{ exercicio: string; records: Array<{ type: string; value: number }> } | null>(null);
   const [recordeIndex, setRecordeIndex] = useState(0);
   const [agora, setAgora] = useState(() => Date.now());
+  // Snapshot do resumo exibido no modal de conclusão (stats + gasto calórico)
+  const [resumoConclusao, setResumoConclusao] = useState<{ duracaoMin: number | null; volume: number; series: number }>({ duracaoMin: null, volume: 0, series: 0 });
+  const [resumoCalorias, setResumoCalorias] = useState<{ loading: boolean; kcal: number | null; mensagem: string | null }>({ loading: false, kcal: null, mensagem: null });
 
   const [stats, setStats] = useState<{ treinos: number; minutos: number; sequencia: number }>({ treinos: 0, minutos: 0, sequencia: 0 });
   const isoWeekKey = (() => {
@@ -256,10 +260,10 @@ const PersonalTreino = () => {
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
+            .select("id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
-            .order("dia_semana")
+            .order("dia_ordem", { nullsFirst: false })
             .order("ordem")
         ),
         15000
@@ -288,6 +292,7 @@ const PersonalTreino = () => {
           const mapped: Treino[] = filteredData.map((t: any) => ({
             id: t.id,
             dia_semana: t.dia_semana,
+            dia_ordem: t.dia_ordem ?? null,
             exercicio: t.exercicio,
             series: t.series,
             repeticoes: t.repeticoes,
@@ -300,7 +305,10 @@ const PersonalTreino = () => {
             video_coach_url: t.video_coach_url || null,
           }));
 
-          mapped.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
+          // Ordem dos dias: dia_ordem (sequência definida pelo coach). Fallback legado: ordem da semana.
+          mapped.sort((a, b) =>
+            (a.dia_ordem ?? 900 + weekIdx(a.dia_semana)) - (b.dia_ordem ?? 900 + weekIdx(b.dia_semana))
+          );
           setTreinos(mapped);
           setDiaAtual((cur) => {
             if (cur && mapped.some((t) => t.dia_semana === cur)) return cur;
@@ -401,12 +409,8 @@ const PersonalTreino = () => {
     return i >= 0 && i < 7 ? WD_SHORT[i] : null;
   };
 
-  // Chips sempre na ordem da semana (Seg → Dom)
-  const dias = [...diasRaw].sort((a, b) => {
-    const d = weekIdxForDia(a) - weekIdxForDia(b);
-    if (d !== 0) return d;
-    return diasOrdemPrescricao.indexOf(a) - diasOrdemPrescricao.indexOf(b);
-  });
+  // Chips na ordem de prescrição (dia_ordem vindo do banco — diasRaw já está ordenado)
+  const dias = diasRaw;
 
   // Quando availableDays carrega, seleciona automaticamente o dia de HOJE (se hoje for treino).
   useEffect(() => {
@@ -572,11 +576,13 @@ const PersonalTreino = () => {
     }
   };
 
-  // Conclui a sessão: fecha sessoes_treino e abre o card de compartilhar
+  // Conclui a sessão: fecha sessoes_treino, calcula gasto calórico (MET) e abre o card de compartilhar
   const concluirTreino = async () => {
     if (!user || !tenant) { setShowConclusao(true); return; }
     setConcluindo(true);
     try {
+      let sessaoId: string | null = null;
+      let durMin: number | null = null;
       if (sessaoAndamento) {
         const min = Math.min(
           Math.max(Math.round((Date.now() - sessaoAndamento.startedAt) / 60000) || 1, 1),
@@ -586,6 +592,8 @@ const PersonalTreino = () => {
           .from("sessoes_treino")
           .update({ duracao_min: min, exercicios_total: treinosDoDia.length } as any)
           .eq("id", sessaoAndamento.id);
+        sessaoId = sessaoAndamento.id;
+        durMin = min;
       } else {
         await supabase.rpc("registrar_sessao_treino" as any, {
           _tenant_id: tenant.id,
@@ -593,6 +601,37 @@ const PersonalTreino = () => {
           _duracao_min: 60,
           _exercicios_total: treinosDoDia.length,
         } as any);
+        const { data: sRow } = await supabase
+          .from("sessoes_treino")
+          .select("id")
+          .eq("aluno_id", user.id)
+          .eq("dia_semana", diaAtual)
+          .eq("data_treino", new Date().toISOString().split("T")[0])
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        sessaoId = (sRow as any)?.id ?? null;
+        durMin = 60;
+      }
+      // Snapshot dos stats antes de zerar a sessão em andamento
+      setResumoConclusao({ duracaoMin: durMin, volume: sessaoStats.volume, series: sessaoStats.series });
+      // Gasto calórico (MET determinístico + mensagem da IA) — preenche o modal em seguida
+      setResumoCalorias({ loading: !!sessaoId, kcal: null, mensagem: null });
+      if (sessaoId) {
+        supabase.functions
+          .invoke("calcular-gasto-treino", { body: { sessao_id: sessaoId } })
+          .then(({ data, error }) => {
+            if (error || !(data as any)?.ok) {
+              setResumoCalorias({ loading: false, kcal: null, mensagem: null });
+              return;
+            }
+            setResumoCalorias({
+              loading: false,
+              kcal: (data as any).gasto_calorico_kcal ?? null,
+              mensagem: (data as any).mensagem_gasto_calorico ?? null,
+            });
+          })
+          .catch(() => setResumoCalorias({ loading: false, kcal: null, mensagem: null }));
       }
       const next = new Set(completedIds);
       treinosDoDia.forEach((t) => next.add(t.id));
@@ -971,6 +1010,12 @@ const PersonalTreino = () => {
           onClose={() => { setShowConclusao(false); resetTreinoDoDia(); }}
           diaTreino={diaAtual}
           totalExercicios={treinosDoDia.length}
+          duracaoMin={resumoConclusao.duracaoMin}
+          volumeKg={resumoConclusao.volume}
+          seriesTotal={resumoConclusao.series}
+          gastoCalorico={resumoCalorias.kcal}
+          mensagemGasto={resumoCalorias.mensagem}
+          caloriasLoading={resumoCalorias.loading}
         />
 
         {observacaoClinica && (
