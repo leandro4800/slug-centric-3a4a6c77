@@ -897,7 +897,7 @@ Retorne exatamente:
       // Nunca apagar a dieta antiga sem confirmação de que a nova extração tem conteúdo válido.
       if (refeicoesUnicas.length === 0) {
         return new Response(JSON.stringify({
-          error: "Não foi possível identificar as refeições neste documento. Revise o arquivo ou cadastre a dieta manualmente. A dieta anterior do aluno (se existia) foi mantida."
+          error: "Não foi possível identificar as refeições neste documento. Revise o arquivo ou cadastre a dieta manualmente."
         }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
 
@@ -907,7 +907,7 @@ Retorne exatamente:
       // Sem texto-fonte (importação por imagem), mantém o comportamento anterior (confia na IA).
       const escrito = result.macros_alvo || {};
       const num = (v: unknown) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : null);
-      const textoFonte = isPDF ? pdfText : plainText;
+      const textoFonte = isPDF ? pdfText : "";
       const kcalBruto = num(result.kcal_alvo);
       const kcalFinal = !textoFonte || apareceNoTexto(kcalBruto, textoFonte, ["kcal", "caloria"]) ? kcalBruto : null;
       const proteinaBruta = num(escrito.proteina_g);
