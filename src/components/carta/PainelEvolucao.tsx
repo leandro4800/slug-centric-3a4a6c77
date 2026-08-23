@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Loader2, TrendingUp, TrendingDown, Activity, Calendar,
-  Dumbbell, Heart, Moon, Pill, Sparkles, Apple, Ruler, ListChecks,
+  Dumbbell, Heart, Moon, Pill, Sparkles, Apple, Ruler, ListChecks, Flame,
 } from "lucide-react";
 import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid,
@@ -79,6 +79,7 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
   const [refeicoesCount, setRefeicoesCount] = useState(0);
   const [treinos, setTreinos] = useState<Treino[]>([]);
   const [fotosCount, setFotosCount] = useState(0);
+  const [sessoesKcal, setSessoesKcal] = useState<{ data_treino: string; gasto_calorico_kcal: number }[]>([]);
 
   const [sintese, setSintese] = useState<Sintese | null>(null);
   const [gerandoSintese, setGerandoSintese] = useState(false);
@@ -86,7 +87,7 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [c, a, h, am, d, t, f] = await Promise.all([
+      const [c, a, h, am, d, t, f, sk] = await Promise.all([
         supabase.from("evolucao_checkins").select("data_checkin,peso_kg,bf_percentual,massa_magra_kg")
           .eq("user_id", alunoId).order("data_checkin", { ascending: true }).limit(60),
         supabase.from("avaliacoes_fisicas").select("*")
@@ -100,6 +101,9 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
         supabase.from("treinos_prescritos").select("dia_semana,dia_ordem,exercicio,series,repeticoes")
           .eq("aluno_id", alunoId).order("dia_ordem", { nullsFirst: false }).order("ordem").limit(200),
         supabase.from("evolucao_fotos").select("id", { count: "exact", head: true }).eq("user_id", alunoId),
+        supabase.from("sessoes_treino").select("data_treino,gasto_calorico_kcal")
+          .eq("aluno_id", alunoId).not("gasto_calorico_kcal", "is", null)
+          .order("data_treino", { ascending: false }).limit(20),
       ]);
       setCheckins((c.data ?? []) as Checkin[]);
       setAvaliacoes((a.data ?? []) as Avaliacao[]);
@@ -108,6 +112,11 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
       setDieta((d.data ?? null) as DietaT | null);
       setTreinos((t.data ?? []) as Treino[]);
       setFotosCount(f.count ?? 0);
+      setSessoesKcal(
+        ((sk.data ?? []) as any[])
+          .filter((s) => s.gasto_calorico_kcal != null)
+          .map((s) => ({ data_treino: s.data_treino, gasto_calorico_kcal: Number(s.gasto_calorico_kcal) })),
+      );
 
       if (d.data?.id) {
         const { count } = await supabase.from("refeicoes")
