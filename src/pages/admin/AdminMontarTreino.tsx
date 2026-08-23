@@ -746,21 +746,28 @@ const AdminMontarTreino = () => {
 
       const linkMap = await resolveExercicioIds(tenant.id, exerciciosToSave.map((e) => e.exercicio));
 
-      const rows = exerciciosToSave.map((e) => ({
-        tenant_id: tenant.id,
-        aluno_id: alunoId,
-        dia_semana: mapaDias[e.dia_semana] || e.dia_semana,
-        ordem: e.ordem,
-        ordem_execucao: e.ordem,
-        exercicio: e.exercicio,
-        series: e.series,
-        repeticoes: e.repeticoes,
-        cadencia: e.cadencia,
-        detalhes_execucao: e.detalhes_execucao,
-        observacao: e.observacao,
-        referencia_exercicio_id: linkMap[(e.exercicio || "").trim()] ?? null,
-        status: "ativo",
-      }));
+      // dia_ordem segue a ordem de aparição dos dias no editor (1, 2, 3...)
+      const ordemDias = new Map<string, number>();
+      const rows = exerciciosToSave.map((e) => {
+        const dia = mapaDias[e.dia_semana] || e.dia_semana;
+        if (!ordemDias.has(dia)) ordemDias.set(dia, ordemDias.size + 1);
+        return {
+          tenant_id: tenant.id,
+          aluno_id: alunoId,
+          dia_semana: dia,
+          dia_ordem: ordemDias.get(dia)!,
+          ordem: e.ordem,
+          ordem_execucao: e.ordem,
+          exercicio: e.exercicio,
+          series: e.series,
+          repeticoes: e.repeticoes,
+          cadencia: e.cadencia,
+          detalhes_execucao: e.detalhes_execucao,
+          observacao: e.observacao,
+          referencia_exercicio_id: linkMap[(e.exercicio || "").trim()] ?? null,
+          status: "ativo",
+        };
+      });
 
       const { error } = await supabase.from("treinos_prescritos").insert(rows);
       if (error) throw error;

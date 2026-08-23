@@ -990,6 +990,18 @@ const TreinoEditor = ({
     setItems((prev) => prev.filter((it) => it.dia_semana !== dia));
   };
 
+  // Move o dia inteiro para cima/baixo na sequência (reordena dia_ordem ao salvar)
+  const moveDia = (dia: string, dir: -1 | 1) => {
+    setItems((prev) => {
+      const ordemDias = [...new Set(prev.map((t) => t.dia_semana))];
+      const idx = ordemDias.indexOf(dia);
+      const alvo = idx + dir;
+      if (idx < 0 || alvo < 0 || alvo >= ordemDias.length) return prev;
+      [ordemDias[idx], ordemDias[alvo]] = [ordemDias[alvo], ordemDias[idx]];
+      return ordemDias.flatMap((d) => prev.filter((t) => t.dia_semana === d));
+    });
+  };
+
   const salvar = async () => {
     if (!tenantId) {
       toast.error("Tenant não identificado.");
@@ -1011,12 +1023,16 @@ const TreinoEditor = ({
       if (delErr) throw delErr;
 
       const porDia: Record<string, number> = {};
+      // dia_ordem segue a ordem de aparição dos dias no editor (1, 2, 3...)
+      const ordemDias = new Map<string, number>();
       const rows = validos.map((i) => {
         porDia[i.dia_semana] = (porDia[i.dia_semana] ?? -1) + 1;
+        if (!ordemDias.has(i.dia_semana)) ordemDias.set(i.dia_semana, ordemDias.size + 1);
         return {
           aluno_id: alunoId,
           tenant_id: tenantId,
           dia_semana: i.dia_semana,
+          dia_ordem: ordemDias.get(i.dia_semana)!,
           ordem: porDia[i.dia_semana],
           exercicio: i.exercicio,
           series: i.series || null,
