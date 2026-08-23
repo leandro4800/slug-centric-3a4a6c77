@@ -1,5 +1,5 @@
 import { forwardRef, useEffect, useRef, useState } from "react";
-import { Trophy, Download, Share2, X, Loader2 } from "lucide-react";
+import { Trophy, Download, Share2, X, Loader2, Clock, Dumbbell, ListChecks, Flame, Sparkles } from "lucide-react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -11,9 +11,26 @@ interface Props {
   onClose: () => void;
   diaTreino: string;
   totalExercicios: number;
+  duracaoMin?: number | null;
+  volumeKg?: number | null;
+  seriesTotal?: number | null;
+  gastoCalorico?: number | null;
+  mensagemGasto?: string | null;
+  caloriasLoading?: boolean;
 }
 
-export const TreinoConclusaoCard = ({ open, onClose, diaTreino, totalExercicios }: Props) => {
+export const TreinoConclusaoCard = ({
+  open,
+  onClose,
+  diaTreino,
+  totalExercicios,
+  duracaoMin = null,
+  volumeKg = null,
+  seriesTotal = null,
+  gastoCalorico = null,
+  mensagemGasto = null,
+  caloriasLoading = false,
+}: Props) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const { tenant } = useBranding();
   const { user } = useAuth();
@@ -144,7 +161,47 @@ export const TreinoConclusaoCard = ({ open, onClose, diaTreino, totalExercicios 
         </div>
       </div>
 
-      <div className="flex gap-3 mt-6 w-full max-w-[360px]">
+      {/* Resumo da sessão: duração, volume, séries e gasto calórico estimado */}
+      {(duracaoMin != null || volumeKg != null || seriesTotal != null || caloriasLoading || gastoCalorico != null) && (
+        <div className="w-full max-w-[360px] mt-4 space-y-2">
+          <div className="grid grid-cols-4 gap-2">
+            <div className="rounded-xl bg-background/70 border border-white/10 px-2 py-2 text-center">
+              <Clock className="h-3.5 w-3.5 mx-auto text-primary" />
+              <p className="font-display text-sm mt-1 leading-none">{duracaoMin != null ? `${duracaoMin}` : "—"}</p>
+              <p className="text-[8px] uppercase tracking-widest text-muted-foreground mt-0.5">min</p>
+            </div>
+            <div className="rounded-xl bg-background/70 border border-white/10 px-2 py-2 text-center">
+              <Dumbbell className="h-3.5 w-3.5 mx-auto text-primary" />
+              <p className="font-display text-sm mt-1 leading-none">{Math.round(volumeKg ?? 0).toLocaleString("pt-BR")}</p>
+              <p className="text-[8px] uppercase tracking-widest text-muted-foreground mt-0.5">kg vol</p>
+            </div>
+            <div className="rounded-xl bg-background/70 border border-white/10 px-2 py-2 text-center">
+              <ListChecks className="h-3.5 w-3.5 mx-auto text-primary" />
+              <p className="font-display text-sm mt-1 leading-none">{seriesTotal ?? "—"}</p>
+              <p className="text-[8px] uppercase tracking-widest text-muted-foreground mt-0.5">séries</p>
+            </div>
+            <div className="rounded-xl bg-background/70 border border-primary/30 px-2 py-2 text-center">
+              <Flame className="h-3.5 w-3.5 mx-auto text-primary" />
+              {caloriasLoading ? (
+                <Loader2 className="h-3.5 w-3.5 mx-auto mt-1 animate-spin text-muted-foreground" />
+              ) : (
+                <p className="font-display text-sm mt-1 leading-none">{gastoCalorico != null ? gastoCalorico.toLocaleString("pt-BR") : "—"}</p>
+              )}
+              <p className="text-[8px] uppercase tracking-widest text-muted-foreground mt-0.5">kcal</p>
+            </div>
+          </div>
+          {(caloriasLoading || mensagemGasto) && (
+            <div className="rounded-xl bg-primary/10 border border-primary/25 px-3 py-2 flex items-start gap-2">
+              <Sparkles className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+              <p className="text-[11px] leading-snug text-foreground/90">
+                {caloriasLoading ? "Calculando seu gasto calórico..." : mensagemGasto}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="flex gap-3 mt-4 w-full max-w-[360px]">
         <button
           onClick={handleShare}
           disabled={busy}
