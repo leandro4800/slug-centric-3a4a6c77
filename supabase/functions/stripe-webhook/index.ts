@@ -56,6 +56,67 @@ Deno.serve(async (req) => {
                 current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
               })
               .eq("user_id", meta.user_id!);
+
+            // Aprovação automática do tenant quando pagamento da plataforma é confirmado.
+            // Só promove 'pending' → 'approved'; nunca reativa tenants rejeitados/suspensos.
+            const { data: pendingTenants, error: tenantErr } = await supabase
+              .from("tenants")
+              .select("id, slug, nome")
+              .eq("owner_user_id", meta.user_id!)
+              .eq("status", "pending");
+
+            if (tenantErr) {
+              log("auto-approve tenant lookup failed", { e: String(tenantErr) });
+            } else if (pendingTenants && pendingTenants.length > 0) {
+              for (const tenant of pendingTenants) {
+                const { error: approveErr } = await supabase
+                  .from("tenants")
+                  .update({ status: "approved" })
+                  .eq("id", tenant.id)
+                  .eq("status", "pending"); // guarda dupla: só atualiza se ainda estiver pending
+
+                if (approveErr) {
+                  log("auto-approve tenant update failed", { tenantId: tenant.id, e: String(approveErr) });
+                  continue;
+                }
+
+                log("tenant auto-approved by confirmed payment", { tenantId: tenant.id, slug: tenant.slug, userId: meta.user_id });
+
+                // Dispara o mesmo e-mail de aprovação do fluxo manual.
+                try {
+                  const { data: ownerPerfil } = await supabase
+                    .from("perfis")
+                    .select("email, nome_completo")
+                    .eq("id", meta.user_id!)
+                    .maybeSingle();
+
+                  if (ownerPerfil?.email) {
+                    const { error: mailErr } = await supabase.functions.invoke("send-transactional-email", {
+                      body: {
+                        templateName: "coach-approved",
+                        recipientEmail: ownerPerfil.email,
+                        idempotencyKey: `coach-approved-${tenant.id}`,
+                        templateData: {
+                          name: ownerPerfil.nome_completo || tenant.nome,
+                          slug: tenant.slug,
+                        },
+                      },
+                    });
+                    if (mailErr) {
+                      log("auto-approve approval email failed", { tenantId: tenant.id, e: String(mailErr) });
+                    } else {
+                      log("auto-approve approval email sent", { tenantId: tenant.id, email: ownerPerfil.email });
+                    }
+                  } else {
+                    log("auto-approve owner profile/email not found", { tenantId: tenant.id, userId: meta.user_id });
+                  }
+                } catch (e) {
+                  log("auto-approve email dispatch exception", { tenantId: tenant.id, e: String(e) });
+                }
+              }
+            } else {
+              log("auto-approve: no pending tenant for user", { userId: meta.user_id });
+            }
           }
           break;
         }
