@@ -11,9 +11,11 @@ import {
   MoreHorizontal,
   ClipboardCheck,
   Sparkles,
+  Palette,
   X,
 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Sheet,
   SheetClose,
@@ -33,12 +35,25 @@ const mainItems = [
 const AlunoBottomNav = () => {
   const { slug } = useParams();
   const { tenant } = useBranding();
+  const { user, hasRole } = useAuth();
   const lastSlug =
     typeof window !== "undefined" ? localStorage.getItem("last_tenant_slug") : null;
   const tenantSlug = tenant?.slug || slug || lastSlug || "";
   const [isOpen, setIsOpen] = useState(false);
 
+  // Coach do tenant atual (dono ou role coach/admin) — mesmo critério usado
+  // pelo RequireAuth que protege a rota /:slug/admin/aparencia.
+  const isCoachOfTenant =
+    !!tenant &&
+    !!user &&
+    (hasRole("admin") ||
+      hasRole("coach", tenant.id) ||
+      tenant.owner_user_id === user.id);
+
   const moreItems = [
+    ...(isCoachOfTenant
+      ? [{ label: "Personalizar App", icon: Palette, to: `/${tenantSlug}/admin/aparencia` }]
+      : []),
     { label: "Meu Perfil", icon: User, to: "perfil" },
     { label: "Comunidade", icon: Users, to: "comunidade" },
     { label: "Presencial", icon: CalendarCheck, to: "presencial" },
@@ -116,7 +131,7 @@ const AlunoBottomNav = () => {
               {moreItems.map(({ label, icon: Icon, to }) => (
                 <NavLink
                   key={label}
-                  to={`${appBase}/${to}`}
+                  to={to.startsWith("/") ? to : `${appBase}/${to}`}
                   onClick={() => setIsOpen(false)}
                   className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all active:scale-95 group"
                 >
