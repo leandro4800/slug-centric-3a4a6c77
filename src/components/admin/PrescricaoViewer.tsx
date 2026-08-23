@@ -29,6 +29,7 @@ import {
   RefreshCw,
   ChevronDown,
   Video,
+  Link2,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
@@ -70,6 +71,101 @@ interface RefeicaoRow {
   descricao_ia: string | null;
 }
 
+interface ItemDietaRow {
+  id: string;
+  refeicao_id: string;
+  quantidade_g: number | null;
+  substituicoes: string | null;
+  alimento_id: string | null;
+  alimento?: { id: string; nome: string } | null;
+}
+
+const VincularAlimento = ({
+  item,
+  onLinked,
+}: {
+  item: ItemDietaRow;
+  onLinked: (itemId: string, alimento: { id: string; nome: string }) => void;
+}) => {
+  const [openPop, setOpenPop] = useState(false);
+  const [busca, setBusca] = useState("");
+  const [resultados, setResultados] = useState<Array<{ id: string; nome: string }>>([]);
+  const [buscando, setBuscando] = useState(false);
+  const [salvando, setSalvando] = useState(false);
+
+  useEffect(() => {
+    if (!openPop) return;
+    const q = busca.trim();
+    const t = setTimeout(async () => {
+      setBuscando(true);
+      let query = supabase.from("alimentos_taco").select("id, nome").order("nome").limit(12);
+      if (q) query = query.ilike("nome", `%${q}%`);
+      const { data } = await query;
+      setResultados((data as Array<{ id: string; nome: string }>) || []);
+      setBuscando(false);
+    }, 250);
+    return () => clearTimeout(t);
+  }, [busca, openPop]);
+
+  const vincular = async (a: { id: string; nome: string }) => {
+    setSalvando(true);
+    const { error } = await supabase.from("itens_refeicao").update({ alimento_id: a.id }).eq("id", item.id);
+    setSalvando(false);
+    if (error) {
+      toast.error("Erro ao vincular: " + error.message);
+      return;
+    }
+    onLinked(item.id, a);
+    setOpenPop(false);
+    toast.success(`Item vinculado a "${a.nome}" (TACO).`);
+  };
+
+  return (
+    <Popover open={openPop} onOpenChange={setOpenPop}>
+      <PopoverTrigger asChild>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider border-primary/40 text-primary hover:bg-primary hover:text-primary-foreground shrink-0"
+        >
+          <Link2 className="h-3 w-3 mr-1" /> Vincular alimento
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-2" align="end">
+        <Input
+          autoFocus
+          placeholder="Buscar na TACO... (ex: ovo, frango)"
+          value={busca}
+          onChange={(e) => setBusca(e.target.value)}
+          className="h-8 text-xs mb-2"
+        />
+        <div className="max-h-56 overflow-y-auto space-y-0.5">
+          {buscando ? (
+            <div className="flex justify-center py-3">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+            </div>
+          ) : resultados.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground text-center py-3">
+              Nenhum alimento encontrado.
+            </p>
+          ) : (
+            resultados.map((a) => (
+              <button
+                key={a.id}
+                onClick={() => void vincular(a)}
+                disabled={salvando}
+                className="w-full text-left px-2 py-1.5 rounded-md text-xs hover:bg-primary/10 hover:text-primary transition-colors disabled:opacity-50"
+              >
+                {a.nome}
+              </button>
+            ))
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
+
 export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Props) => {
   const { tenant } = useBranding();
   const navigate = useNavigate();
@@ -78,6 +174,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
   const [treinos, setTreinos] = useState<TreinoRow[]>([]);
   const [dieta, setDieta] = useState<DietaRow | null>(null);
   const [refeicoes, setRefeicoes] = useState<RefeicaoRow[]>([]);
+  const [itensPorRef, setItensPorRef] = useState<Record<string, ItemDietaRow[]>>({});
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -117,9 +214,25 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
         .select("id, nome, horario, ordem, descricao_ia")
         .eq("dieta_id", d.id)
         .order("ordem");
-      setRefeicoes((refs as RefeicaoRow[]) || []);
+      const refList = (refs as RefeicaoRow[]) || [];
+      setRefeicoes(refList);
+      const refIds = refList.map((r) => r.id).filter(Boolean) as string[];
+      if (refIds.length > 0) {
+        const { data: its } = await supabase
+          .from("itens_refeicao")
+          .select("id, refeicao_id, quantidade_g, substituicoes, alimento_id, alimento:alimentos_taco(id, nome)")
+          .in("refeicao_id", refIds);
+        const map: Record<string, ItemDietaRow[]> = {};
+        ((its as unknown as ItemDietaRow[]) || []).forEach((i) => {
+          (map[i.refeicao_id] ||= []).push(i);
+        });
+        setItensPorRef(map);
+      } else {
+        setItensPorRef({});
+      }
     } else {
       setRefeicoes([]);
+      setItensPorRef({});
     }
     setLoading(false);
   };
@@ -627,6 +740,36 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
                               <p className="text-xs text-foreground/90 whitespace-pre-wrap leading-relaxed">
                                 {r.descricao_ia}
                               </p>
+                            )}
+                            {(itensPorRef[r.id || ""] || []).length > 0 && (
+                              <div className="border-t border-border/50 pt-2 space-y-1.5">
+                                {(itensPorRef[r.id || ""] || []).map((it) => (
+                                  <div key={it.id} className="flex items-center justify-between gap-2">
+                                    <div className="min-w-0 flex-1">
+                                      <p className="text-xs text-foreground/90 truncate">
+                                        {it.quantidade_g ? `${it.quantidade_g}g ` : ""}
+                                        {it.substituicoes || it.alimento?.nome || "—"}
+                                      </p>
+                                      <p className="text-[10px] text-muted-foreground truncate">
+                                        {it.alimento ? `TACO: ${it.alimento.nome}` : "Sem alimento vinculado"}
+                                      </p>
+                                    </div>
+                                    {!it.alimento_id && (
+                                      <VincularAlimento
+                                        item={it}
+                                        onLinked={(itemId, al) =>
+                                          setItensPorRef((prev) => ({
+                                            ...prev,
+                                            [r.id as string]: (prev[r.id as string] || []).map((x) =>
+                                              x.id === itemId ? { ...x, alimento_id: al.id, alimento: al } : x,
+                                            ),
+                                          }))
+                                        }
+                                      />
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
                             )}
                           </>
                         )}
