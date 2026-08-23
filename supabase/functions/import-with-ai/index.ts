@@ -598,9 +598,8 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
       userContent.push({ type: "text", text: `Conteúdo do PDF:\n\n${pdfText.slice(0, 60000)}` });
     } else {
       // texto/markdown/etc — assume base64 de texto
-      let txt = "";
-      try { txt = new TextDecoder().decode(base64ToBytes(file)); } catch { txt = file; }
-      userContent.push({ type: "text", text: `Conteúdo do arquivo:\n\n${txt.slice(0, 60000)}` });
+      try { plainText = new TextDecoder().decode(base64ToBytes(file)); } catch { plainText = file; }
+      userContent.push({ type: "text", text: `Conteúdo do arquivo:\n\n${plainText.slice(0, 60000)}` });
     }
 
     const extraInstr = (importType === "7dobras" || importType === "avaliacao")
