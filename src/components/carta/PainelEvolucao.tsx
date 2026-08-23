@@ -97,8 +97,8 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
           .eq("aluno_id", alunoId).maybeSingle(),
         supabase.from("dietas").select("objetivo,kcal_alvo,macros_alvo,created_at,id")
           .eq("user_id", alunoId).order("created_at", { ascending: false }).limit(1).maybeSingle(),
-        supabase.from("treinos_prescritos").select("dia_semana,exercicio,series,repeticoes")
-          .eq("aluno_id", alunoId).order("dia_semana").order("ordem").limit(200),
+        supabase.from("treinos_prescritos").select("dia_semana,dia_ordem,exercicio,series,repeticoes")
+          .eq("aluno_id", alunoId).order("dia_ordem", { nullsFirst: false }).order("ordem").limit(200),
         supabase.from("evolucao_fotos").select("id", { count: "exact", head: true }).eq("user_id", alunoId),
       ]);
       setCheckins((c.data ?? []) as Checkin[]);

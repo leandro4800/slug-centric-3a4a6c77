@@ -131,10 +131,10 @@ const VideosTecnicos = () => {
     setLoadingPresc(true);
     const { data, error } = await supabase
       .from("treinos_prescritos")
-      .select("id, aluno_id, dia_semana, ordem, exercicio, video_url, video_coach_url")
+      .select("id, aluno_id, dia_semana, dia_ordem, ordem, exercicio, video_url, video_coach_url")
       .eq("aluno_id", id)
       .eq("tenant_id", tenant.id)
-      .order("dia_semana")
+      .order("dia_ordem", { nullsFirst: false })
       .order("ordem");
     setLoadingPresc(false);
     if (error) return toast.error("Erro ao carregar treinos: " + error.message);
