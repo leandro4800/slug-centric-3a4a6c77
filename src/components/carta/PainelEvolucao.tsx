@@ -170,6 +170,15 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
     return Math.floor((Date.now() - last.getTime()) / (1000 * 60 * 60 * 24));
   })();
 
+  // Gasto calórico: último treino vs média recente
+  const ultimoGasto = sessoesKcal[0]?.gasto_calorico_kcal ?? null;
+  const mediaGasto = sessoesKcal.length
+    ? Math.round(sessoesKcal.reduce((s, x) => s + x.gasto_calorico_kcal, 0) / sessoesKcal.length)
+    : null;
+  const deltaGasto = ultimoGasto != null && mediaGasto != null && sessoesKcal.length > 1
+    ? ultimoGasto - mediaGasto
+    : NaN;
+
   // Cargas por exercício
   const cargasPorExercicio = new Map<string, { data: string; carga: number }[]>();
   const cargasAsc = [...cargas].sort(
@@ -288,6 +297,8 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Stat label="Peso atual" value={pesoAtual ? pesoAtual.toFixed(1) : "—"} suffix={pesoAtual ? " kg" : ""} delta={isNaN(deltaPeso) ? undefined : deltaPeso} icon={Activity} />
           <Stat label="BF% atual" value={bfAtual ? bfAtual.toFixed(1) : "—"} suffix={bfAtual ? "%" : ""} delta={isNaN(deltaBf) ? undefined : deltaBf} icon={Activity} />
+          <Stat label="Gasto último treino" value={ultimoGasto ?? "—"} suffix={ultimoGasto ? " kcal" : ""} delta={isNaN(deltaGasto) ? undefined : deltaGasto} icon={Flame} />
+          <Stat label="Média kcal/treino" value={mediaGasto ?? "—"} suffix={mediaGasto ? " kcal" : ""} icon={Flame} />
           <Stat label="Último registro" value={diasDesde === null ? "—" : diasDesde === 0 ? "Hoje" : `${diasDesde}d`} icon={Calendar} />
           <Stat label="Check-ins" value={checkins.length} icon={Calendar} />
           <Stat label="Avaliações" value={avaliacoes.length} icon={Ruler} />
