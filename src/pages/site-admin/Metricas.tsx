@@ -275,6 +275,22 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
       .slice(0, 8);
   }, [cargas]);
 
+  // Gasto calórico estimado por sessão (calculado na conclusão do treino via MET)
+  const serieKcal = useMemo(
+    () =>
+      sessoesKcal
+        .filter((s) => s.gasto_calorico_kcal != null)
+        .map((s) => ({
+          data: fmtDate(s.data_treino),
+          kcal: Number(s.gasto_calorico_kcal) || 0,
+          dia: s.dia_semana || "",
+        })),
+    [sessoesKcal],
+  );
+  const mediaKcal = serieKcal.length
+    ? Math.round(serieKcal.reduce((s, x) => s + x.kcal, 0) / serieKcal.length)
+    : null;
+
   const ultimoPeso = seriePeso.filter((s) => s.peso).slice(-1)[0]?.peso ?? null;
   const primeiroPeso = seriePeso.filter((s) => s.peso)[0]?.peso ?? null;
   const ultimoBf = seriePeso.filter((s) => s.bf).slice(-1)[0]?.bf ?? null;
@@ -483,6 +499,34 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
                 <Bar dataKey="volume" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ChartBox>
+          </Painel>
+
+          {/* Gasto calórico por sessão */}
+          <Painel title="Gasto calórico por treino (estimado)">
+            {serieKcal.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nenhuma sessão concluída com gasto calórico calculado ainda.
+              </p>
+            ) : (
+              <>
+                <p className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Flame className="h-3.5 w-3.5 text-primary" />
+                  Média: <b className="text-foreground">{mediaKcal} kcal</b> por treino · últimas {serieKcal.length} sessões
+                </p>
+                <ChartBox>
+                  <BarChart data={serieKcal}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                    <XAxis dataKey="data" fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                    <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                    <Tooltip
+                      contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                      formatter={(v: number, _n, item: any) => [`${v} kcal`, item?.payload?.dia || "Treino"]}
+                    />
+                    <Bar dataKey="kcal" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ChartBox>
+              </>
+            )}
           </Painel>
 
           {/* IA */}
