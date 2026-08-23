@@ -5,7 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { AtletaCard } from "@/pages/site-admin/MontarTreino";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Activity, Loader2, Sparkles, TrendingUp, Scale, Dumbbell } from "lucide-react";
+import { Activity, Loader2, Sparkles, TrendingUp, Scale, Dumbbell, Flame } from "lucide-react";
 import { toast } from "sonner";
 
 interface Aluno {
@@ -110,6 +110,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const [avaliacoes, setAvaliacoes] = useState<any[]>([]);
   const [pesoDiario, setPesoDiario] = useState<any[]>([]);
   const [prs, setPrs] = useState<any[]>([]);
+  const [sessoesKcal, setSessoesKcal] = useState<any[]>([]);
 
   const [exercicio, setExercicio] = useState<string>("");
   const [analise, setAnalise] = useState<string>("");
