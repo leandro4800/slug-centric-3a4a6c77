@@ -551,16 +551,6 @@ const PersonalDieta = () => {
                                   : ""}
                               </p>
                             </div>
-                            {temSub && (
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-[10px] h-7 px-2 text-primary hover:text-primary hover:bg-primary/10"
-                                onClick={() => toast.info(escrito, { duration: 6000 })}
-                              >
-                                <RefreshCcw className="h-3 w-3 mr-1" /> Substituir
-                              </Button>
-                            )}
                           </div>
                         );
                       })}
