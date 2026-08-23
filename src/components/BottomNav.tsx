@@ -11,9 +11,11 @@ import {
   MoreHorizontal,
   ClipboardCheck,
   Sparkles,
+  Palette,
   X,
 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { useAuth } from "@/hooks/use-auth";
 import {
   Sheet,
   SheetClose,
