@@ -35,12 +35,25 @@ const mainItems = [
 const AlunoBottomNav = () => {
   const { slug } = useParams();
   const { tenant } = useBranding();
+  const { user, hasRole } = useAuth();
   const lastSlug =
     typeof window !== "undefined" ? localStorage.getItem("last_tenant_slug") : null;
   const tenantSlug = tenant?.slug || slug || lastSlug || "";
   const [isOpen, setIsOpen] = useState(false);
 
+  // Coach do tenant atual (dono ou role coach/admin) — mesmo critério usado
+  // pelo RequireAuth que protege a rota /:slug/admin/aparencia.
+  const isCoachOfTenant =
+    !!tenant &&
+    !!user &&
+    (hasRole("admin") ||
+      hasRole("coach", tenant.id) ||
+      tenant.owner_user_id === user.id);
+
   const moreItems = [
+    ...(isCoachOfTenant
+      ? [{ label: "Personalizar App", icon: Palette, to: `/${tenantSlug}/admin/aparencia` }]
+      : []),
     { label: "Meu Perfil", icon: User, to: "perfil" },
     { label: "Comunidade", icon: Users, to: "comunidade" },
     { label: "Presencial", icon: CalendarCheck, to: "presencial" },
