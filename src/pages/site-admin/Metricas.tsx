@@ -166,7 +166,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   useEffect(() => {
     (async () => {
       setLoading(true);
-      const [p, se, e, av, pd, pr] = await Promise.all([
+      const [p, se, e, av, pd, pr, sk] = await Promise.all([
         supabase.from("perfis").select("id, nome_completo, email, avatar_url").eq("id", alunoId).maybeSingle(),
         supabase
           .from("series_executadas")
@@ -198,6 +198,13 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
           .eq("aluno_id", alunoId)
           .order("data", { ascending: false })
           .limit(300),
+        supabase
+          .from("sessoes_treino")
+          .select("data_treino, dia_semana, duracao_min, gasto_calorico_kcal")
+          .eq("aluno_id", alunoId)
+          .not("gasto_calorico_kcal", "is", null)
+          .order("data_treino", { ascending: true })
+          .limit(90),
       ]);
       setPerfil((p.data as Aluno) || null);
       setCargas(
@@ -214,6 +221,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
       setAvaliacoes((av.data as any[]) || []);
       setPesoDiario((pd.data as any[]) || []);
       setPrs((pr.data as any[]) || []);
+      setSessoesKcal((sk.data as any[]) || []);
       setLoading(false);
     })();
   }, [alunoId]);
