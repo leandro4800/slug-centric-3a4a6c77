@@ -31,6 +31,7 @@ import {
   Video,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 import { toast } from "sonner";
 
 interface Props {
@@ -328,22 +329,21 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
         reader.readAsDataURL(file);
       });
 
-      const { data, error } = await supabase.functions.invoke("import-with-ai", {
-        body: {
-          file: base64,
-          fileType: file.type,
-          importType: "dieta",
-          alunoId,
-          tenantId: tenant.id,
-        },
+      const data = await invokeEdgeFunction<{ success?: boolean }>("import-with-ai", {
+        file: base64,
+        fileType: file.type,
+        importType: "dieta",
+        alunoId,
+        tenantId: tenant.id,
       });
-      if (error) throw error;
-      if (!data?.success) throw new Error(data?.error || "Falha ao importar");
+      if (!data?.success) throw new Error("Falha ao importar");
 
       toast.success("Dieta importada com sucesso!", { id: tId });
       await reload();
     } catch (e: any) {
-      toast.error("Erro ao importar: " + e.message, { id: tId });
+      // Erros 422 da função (ex.: nenhuma refeição identificada) chegam com a mensagem
+      // real no corpo — exibe de forma visível e NÃO avança a tela.
+      toast.error(e?.message || "Erro ao importar", { id: tId, duration: 10000 });
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = "";

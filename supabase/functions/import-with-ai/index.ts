@@ -22,6 +22,18 @@ async function extractPdfText(b64: string): Promise<string> {
   }
 }
 
+// Verifica se um valor numérico realmente aparece no texto-fonte do documento,
+// próximo a uma palavra-chave relevante (evita aceitar números "inventados" pela IA).
+function apareceNoTexto(valor: number | null, texto: string, palavrasChave: string[]): boolean {
+  if (valor === null || !texto) return false;
+  const valorStr = String(Math.round(valor));
+  const lower = texto.toLowerCase();
+  const idx = lower.indexOf(valorStr);
+  if (idx === -1) return false;
+  const janela = lower.slice(Math.max(0, idx - 60), idx + 60);
+  return palavrasChave.some((p) => janela.includes(p));
+}
+
 // ---------------------------------------------------------------------------
 // Vinculação de exercícios do PDF com a biblioteca (referencia_exercicios)
 // ---------------------------------------------------------------------------
@@ -469,6 +481,7 @@ serve(async (req) => {
     const imageMimeType = normalizedFileType.startsWith("image/") ? normalizedFileType : "image/jpeg";
 
     let pdfText = "";
+    let plainText = "";
     if (isPDF) {
       pdfText = await extractPdfText(file);
       if (!pdfText || pdfText.replace(/\s+/g, "").length < 30) {
@@ -585,9 +598,8 @@ Reconheça também abreviações comuns em fichas: PT/PEIT, AX/AM, TRI/TRIC, SUB
       userContent.push({ type: "text", text: `Conteúdo do PDF:\n\n${pdfText.slice(0, 60000)}` });
     } else {
       // texto/markdown/etc — assume base64 de texto
-      let txt = "";
-      try { txt = new TextDecoder().decode(base64ToBytes(file)); } catch { txt = file; }
-      userContent.push({ type: "text", text: `Conteúdo do arquivo:\n\n${txt.slice(0, 60000)}` });
+      try { plainText = new TextDecoder().decode(base64ToBytes(file)); } catch { plainText = file; }
+      userContent.push({ type: "text", text: `Conteúdo do arquivo:\n\n${plainText.slice(0, 60000)}` });
     }
 
     const extraInstr = (importType === "7dobras" || importType === "avaliacao")
@@ -814,21 +826,6 @@ Retorne exatamente:
       revisaoTreino = await importarTreinoComVinculo(supabase, tenantId, alunoId, result.dias);
     } else if (!dryRun && importType === "dieta" && result?.refeicoes) {
 
-      await supabase.from("dietas").delete().eq("user_id", alunoId);
-      const { data: dieta, error: dError } = await supabase
-        .from("dietas")
-        .insert({
-          user_id: alunoId,
-          objetivo: result.objetivo,
-          kcal_alvo: Number.isFinite(Number(result.kcal_alvo)) ? Number(result.kcal_alvo) : null,
-          tmb_estimada: Number.isFinite(Number(result.tmb)) ? Number(result.tmb) : null,
-          macros_alvo: result.macros_alvo,
-          observacoes_clinicas: [result.observacoes, result.agua_litros_dia ? `Água: ${result.agua_litros_dia}` : "", result.gasto_calorico_treino ? `Gasto calórico treino: ${result.gasto_calorico_treino}` : ""].filter(Boolean).join("\n") || null,
-          is_published: true,
-        })
-        .select().single();
-      if (dError) throw dError;
-
       const parseHorario = (raw: unknown): string | null => {
         if (raw == null) return null;
         const s = String(raw).trim();
@@ -879,6 +876,7 @@ Retorne exatamente:
 
       // Remove refeições duplicadas retornadas pela IA (mesmo nome/horário/itens)
       // e também blocos com conteúdo idêntico em horários diferentes (repetição indevida).
+      // IMPORTANTE: isso acontece ANTES de qualquer DELETE/INSERT no banco.
       const conteudoRef = (r: any) =>
         [norm(String(r?.descricao || "")),
          (r?.itens || []).map((i: any) => norm(`${i?.nome || ""}${i?.quantidade_g ?? ""}`)).sort().join("|")].join("::");
@@ -895,6 +893,49 @@ Retorne exatamente:
         conteudos.add(c);
         return true;
       });
+
+      // Nunca apagar a dieta antiga sem confirmação de que a nova extração tem conteúdo válido.
+      if (refeicoesUnicas.length === 0) {
+        return new Response(JSON.stringify({
+          error: "Não foi possível identificar as refeições neste documento. Revise o arquivo ou cadastre a dieta manualmente. A dieta anterior do aluno (se existia) foi mantida."
+        }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      // Metas: SOMENTE o que está escrito no documento. Nada é calculado nem estimado.
+      // Quando há texto-fonte extraído (PDF/texto), o número só é aceito se aparecer no
+      // texto próximo de uma palavra-chave relevante — evita valores "inventados" pela IA.
+      // Sem texto-fonte (importação por imagem), mantém o comportamento anterior (confia na IA).
+      const escrito = result.macros_alvo || {};
+      const num = (v: unknown) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : null);
+      const textoFonte = isPDF ? pdfText : plainText;
+      const kcalBruto = num(result.kcal_alvo);
+      const kcalFinal = !textoFonte || apareceNoTexto(kcalBruto, textoFonte, ["kcal", "caloria"]) ? kcalBruto : null;
+      const proteinaBruta = num(escrito.proteina_g);
+      const carboBruto = num(escrito.carboidrato_g);
+      const lipideoBruto = num(escrito.lipideos_g);
+      const macrosFinais = {
+        proteina_g: !textoFonte || apareceNoTexto(proteinaBruta, textoFonte, ["proteina", "proteína"]) ? proteinaBruta : null,
+        carboidrato_g: !textoFonte || apareceNoTexto(carboBruto, textoFonte, ["carboidrato", "carbo"]) ? carboBruto : null,
+        lipideos_g: !textoFonte || apareceNoTexto(lipideoBruto, textoFonte, ["lipideo", "lipídeo", "gordura"]) ? lipideoBruto : null,
+      };
+      if (textoFonte && (kcalBruto !== kcalFinal || proteinaBruta !== macrosFinais.proteina_g || carboBruto !== macrosFinais.carboidrato_g || lipideoBruto !== macrosFinais.lipideos_g)) {
+        console.log("[import-with-ai] metas descartadas (não constam no documento)", JSON.stringify({ kcalBruto, macros_alvo: escrito }));
+      }
+
+      await supabase.from("dietas").delete().eq("user_id", alunoId);
+      const { data: dieta, error: dError } = await supabase
+        .from("dietas")
+        .insert({
+          user_id: alunoId,
+          objetivo: result.objetivo,
+          kcal_alvo: kcalFinal,
+          tmb_estimada: Number.isFinite(Number(result.tmb)) ? Number(result.tmb) : null,
+          macros_alvo: macrosFinais,
+          observacoes_clinicas: [result.observacoes, result.agua_litros_dia ? `Água: ${result.agua_litros_dia}` : "", result.gasto_calorico_treino ? `Gasto calórico treino: ${result.gasto_calorico_treino}` : ""].filter(Boolean).join("\n") || null,
+          is_published: true,
+        })
+        .select().single();
+      if (dError) throw dError;
 
       for (const [idx, ref] of refeicoesUnicas.entries()) {
         const { data: refeicao, error: rError } = await supabase
@@ -920,22 +961,6 @@ Retorne exatamente:
           if (iError) throw iError;
         }
       }
-
-      // Metas: SOMENTE o que está escrito no documento. Nada é calculado nem estimado.
-      const escrito = result.macros_alvo || {};
-      const num = (v: unknown) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : null);
-      const macrosFinais = {
-        proteina_g: num(escrito.proteina_g),
-        carboidrato_g: num(escrito.carboidrato_g),
-        lipideos_g: num(escrito.lipideos_g),
-      };
-      const kcalFinal = num(result.kcal_alvo);
-
-      await supabase
-        .from("dietas")
-        .update({ macros_alvo: macrosFinais, kcal_alvo: kcalFinal })
-        .eq("id", dieta.id);
-
 
     }
 
