@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Utensils, Sparkles, Loader2, RefreshCcw, AlertCircle, Activity, Play, Clock, X } from "lucide-react";
+import { Utensils, Sparkles, Loader2, AlertCircle, Activity, Play, Clock } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { TenantSymbol } from "@/components/TenantSymbol";
-import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
-import { toast } from "sonner";
+
 import { useBranding } from "@/contexts/BrandingProvider";
 import FightNutritionView from "@/pages/aluno/fight/FightNutritionView";
 import imgBreakfast from "@/assets/refeicao/desjejum.jpg";
@@ -496,12 +496,6 @@ const PersonalDieta = () => {
                   className="absolute inset-0 w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
-                <button
-                  onClick={() => setSelectedRef(null)}
-                  className="absolute top-3 right-3 h-8 w-8 rounded-full bg-background/80 backdrop-blur flex items-center justify-center hover:bg-primary hover:text-primary-foreground transition-colors"
-                >
-                  <X className="h-4 w-4" />
-                </button>
                 <div className="absolute bottom-3 left-4 right-4">
                   <Badge className="bg-primary text-primary-foreground border-0 text-[10px] mb-2 gap-1">
                     <Clock className="h-3 w-3" /> {selectedRef.horario || "—"}
@@ -545,7 +539,7 @@ const PersonalDieta = () => {
                         const titulo = escrito || it.alimento?.nome || "—";
                         const liquido = /(agua|água|\bml\b|leite|suco|cafe|café|chá|cha)/i.test(titulo);
                         const unidade = liquido ? "ml" : "g";
-                        const temSub = escrito.toLowerCase().includes(" ou ");
+                        
                         return (
                           <div key={it.id} className="px-3 py-2.5 flex items-center justify-between gap-3 bg-background/40">
                             <div className="min-w-0 flex-1">
