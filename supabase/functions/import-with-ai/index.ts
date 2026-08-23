@@ -826,21 +826,6 @@ Retorne exatamente:
       revisaoTreino = await importarTreinoComVinculo(supabase, tenantId, alunoId, result.dias);
     } else if (!dryRun && importType === "dieta" && result?.refeicoes) {
 
-      await supabase.from("dietas").delete().eq("user_id", alunoId);
-      const { data: dieta, error: dError } = await supabase
-        .from("dietas")
-        .insert({
-          user_id: alunoId,
-          objetivo: result.objetivo,
-          kcal_alvo: Number.isFinite(Number(result.kcal_alvo)) ? Number(result.kcal_alvo) : null,
-          tmb_estimada: Number.isFinite(Number(result.tmb)) ? Number(result.tmb) : null,
-          macros_alvo: result.macros_alvo,
-          observacoes_clinicas: [result.observacoes, result.agua_litros_dia ? `Água: ${result.agua_litros_dia}` : "", result.gasto_calorico_treino ? `Gasto calórico treino: ${result.gasto_calorico_treino}` : ""].filter(Boolean).join("\n") || null,
-          is_published: true,
-        })
-        .select().single();
-      if (dError) throw dError;
-
       const parseHorario = (raw: unknown): string | null => {
         if (raw == null) return null;
         const s = String(raw).trim();
