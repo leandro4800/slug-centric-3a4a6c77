@@ -1147,11 +1147,33 @@ const TreinoEditor = ({
         </>
       ) : (
         <>
-          {dias.map((dia) => {
+          {dias.map((dia, diaIdx) => {
             const exs = items.filter((t) => t.dia_semana === dia);
             return (
               <div key={dia} className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
                 <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-5 w-6"
+                      title="Mover dia para cima"
+                      onClick={() => moveDia(dia, -1)}
+                      disabled={diaIdx === 0}
+                    >
+                      ↑
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-5 w-6"
+                      title="Mover dia para baixo"
+                      onClick={() => moveDia(dia, 1)}
+                      disabled={diaIdx === dias.length - 1}
+                    >
+                      ↓
+                    </Button>
+                  </div>
                   <Input
                     value={dia}
                     onChange={(e) => renameDia(dia, e.target.value)}
