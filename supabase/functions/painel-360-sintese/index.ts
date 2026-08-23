@@ -83,7 +83,7 @@ serve(async (req) => {
       sb.from("dietas").select("objetivo,kcal_alvo,macros_alvo,observacoes_clinicas,created_at")
         .eq("user_id", aluno_id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       sb.from("treinos_prescritos").select("dia_semana,exercicio,series,repeticoes,observacao")
-        .eq("aluno_id", aluno_id).order("dia_semana").order("ordem").limit(200),
+        .eq("aluno_id", aluno_id).order("dia_ordem", { nullsFirst: false }).order("ordem").limit(200),
       sb.from("perfis_treino").select("*").eq("aluno_id", aluno_id).maybeSingle(),
       sb.from("cartas_atleta").select("posicao,nivel,atributos,estilo_dominante,estilo_secundario")
         .eq("aluno_id", aluno_id).maybeSingle(),
