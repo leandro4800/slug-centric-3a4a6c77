@@ -387,18 +387,14 @@ const AtletaDetalhe = () => {
       
       const base64 = await base64Promise;
       
-      const { data, error } = await supabase.functions.invoke("import-with-ai", {
-        body: { 
-          file: base64, 
-          fileType: file.type || "image/jpeg",
-          importType,
-          alunoId: aluno.id,
-          tenantId: aluno.tenant_id,
-          dryRun: importType === "avaliacao",
-        },
+      const data = await invokeEdgeFunction<{ success?: boolean; extractedData?: any; data?: any; error?: string }>("import-with-ai", {
+        file: base64,
+        fileType: file.type || "image/jpeg",
+        importType,
+        alunoId: aluno.id,
+        tenantId: aluno.tenant_id,
+        dryRun: importType === "avaliacao",
       });
-
-      if (error) throw error;
       
       if (importType === "treino") {
         toast.success("Treino importado com sucesso!", { id: toastId });
@@ -466,7 +462,9 @@ const AtletaDetalhe = () => {
       }
     } catch (e: any) {
       console.error(e);
-      toast.error(`Falha ao importar: ${e.message}`, { id: toastId });
+      // Erros 422 da função (ex.: nenhuma refeição identificada na dieta) chegam com a
+      // mensagem real no corpo — exibe de forma visível e NÃO avança a tela.
+      toast.error(e?.message || "Falha ao importar", { id: toastId, duration: 10000 });
     } finally {
       setImporting(false);
     }
