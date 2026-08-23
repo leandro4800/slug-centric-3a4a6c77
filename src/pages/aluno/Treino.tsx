@@ -16,6 +16,7 @@ import { toNivelCanonico } from "@/lib/nivel-experiencia";
 
 interface Treino extends ExerciseCardData {
   dia_semana: string;
+  dia_ordem?: number | null;
   tempo_descanso_segundos?: number | null;
 }
 
@@ -256,10 +257,10 @@ const PersonalTreino = () => {
         Promise.resolve(
           supabase
             .from("treinos_prescritos")
-            .select("id, dia_semana, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
+            .select("id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
-            .order("dia_semana")
+            .order("dia_ordem", { nullsFirst: false })
             .order("ordem")
         ),
         15000
@@ -288,6 +289,7 @@ const PersonalTreino = () => {
           const mapped: Treino[] = filteredData.map((t: any) => ({
             id: t.id,
             dia_semana: t.dia_semana,
+            dia_ordem: t.dia_ordem ?? null,
             exercicio: t.exercicio,
             series: t.series,
             repeticoes: t.repeticoes,
@@ -300,7 +302,10 @@ const PersonalTreino = () => {
             video_coach_url: t.video_coach_url || null,
           }));
 
-          mapped.sort((a, b) => weekIdx(a.dia_semana) - weekIdx(b.dia_semana));
+          // Ordem dos dias: dia_ordem (sequência definida pelo coach). Fallback legado: ordem da semana.
+          mapped.sort((a, b) =>
+            (a.dia_ordem ?? 900 + weekIdx(a.dia_semana)) - (b.dia_ordem ?? 900 + weekIdx(b.dia_semana))
+          );
           setTreinos(mapped);
           setDiaAtual((cur) => {
             if (cur && mapped.some((t) => t.dia_semana === cur)) return cur;
@@ -401,12 +406,8 @@ const PersonalTreino = () => {
     return i >= 0 && i < 7 ? WD_SHORT[i] : null;
   };
 
-  // Chips sempre na ordem da semana (Seg → Dom)
-  const dias = [...diasRaw].sort((a, b) => {
-    const d = weekIdxForDia(a) - weekIdxForDia(b);
-    if (d !== 0) return d;
-    return diasOrdemPrescricao.indexOf(a) - diasOrdemPrescricao.indexOf(b);
-  });
+  // Chips na ordem de prescrição (dia_ordem vindo do banco — diasRaw já está ordenado)
+  const dias = diasRaw;
 
   // Quando availableDays carrega, seleciona automaticamente o dia de HOJE (se hoje for treino).
   useEffect(() => {
