@@ -131,7 +131,7 @@ const AlunoBottomNav = () => {
               {moreItems.map(({ label, icon: Icon, to }) => (
                 <NavLink
                   key={label}
-                  to={`${appBase}/${to}`}
+                  to={to.startsWith("/") ? to : `${appBase}/${to}`}
                   onClick={() => setIsOpen(false)}
                   className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all active:scale-95 group"
                 >
