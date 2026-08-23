@@ -3177,7 +3177,9 @@ export type Database = {
           dia_semana: string | null
           duracao_min: number
           exercicios_total: number
+          gasto_calorico_kcal: number | null
           id: string
+          mensagem_gasto_calorico: string | null
           tenant_id: string | null
           updated_at: string
         }
@@ -3188,7 +3190,9 @@ export type Database = {
           dia_semana?: string | null
           duracao_min?: number
           exercicios_total?: number
+          gasto_calorico_kcal?: number | null
           id?: string
+          mensagem_gasto_calorico?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -3199,7 +3203,9 @@ export type Database = {
           dia_semana?: string | null
           duracao_min?: number
           exercicios_total?: number
+          gasto_calorico_kcal?: number | null
           id?: string
+          mensagem_gasto_calorico?: string | null
           tenant_id?: string | null
           updated_at?: string
         }
@@ -3517,6 +3523,7 @@ export type Database = {
           cadencia: string | null
           created_at: string
           detalhes_execucao: string | null
+          dia_ordem: number | null
           dia_semana: string
           exercicio: string
           id: string
@@ -3541,6 +3548,7 @@ export type Database = {
           cadencia?: string | null
           created_at?: string
           detalhes_execucao?: string | null
+          dia_ordem?: number | null
           dia_semana: string
           exercicio: string
           id?: string
@@ -3565,6 +3573,7 @@ export type Database = {
           cadencia?: string | null
           created_at?: string
           detalhes_execucao?: string | null
+          dia_ordem?: number | null
           dia_semana?: string
           exercicio?: string
           id?: string
