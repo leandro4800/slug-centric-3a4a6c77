@@ -946,17 +946,43 @@ Retorne exatamente:
         if (rError) throw rError;
 
         if (ref.itens && ref.itens.length > 0) {
-          const itemRows = ref.itens.map((item: any) => {
+          const itemRows: Array<{
+            refeicao_id: string;
+            substituicoes: string;
+            quantidade_g: number;
+            alimento_id: string | null;
+          }> = [];
+          for (const item of ref.itens) {
             const qtd = Number(item.quantidade_g);
             const quantidade_g = Number.isFinite(qtd) && qtd > 0 ? qtd : 0;
-            const alimento_id = matchAlimento(item.nome);
-            return {
+            const nome = String(item.nome || "").trim();
+            // Itens compostos ("3 ovos inteiros + 2 claras"): tenta casar cada
+            // sub-parte separadamente com a TACO. Se ao menos uma casar, gera
+            // uma linha por sub-parte; se nenhuma casar, mantém linha única.
+            const partes = nome.includes(" + ")
+              ? nome.split(" + ").map((p: string) => p.trim()).filter(Boolean)
+              : [nome];
+            if (partes.length > 1) {
+              const matches = partes.map((p) => matchAlimento(p));
+              if (matches.some(Boolean)) {
+                partes.forEach((p, idx) => {
+                  itemRows.push({
+                    refeicao_id: refeicao.id,
+                    substituicoes: p,
+                    quantidade_g,
+                    alimento_id: matches[idx],
+                  });
+                });
+                continue;
+              }
+            }
+            itemRows.push({
               refeicao_id: refeicao.id,
-              substituicoes: item.nome,
+              substituicoes: nome,
               quantidade_g,
-              alimento_id,
-            };
-          });
+              alimento_id: matchAlimento(nome),
+            });
+          }
           const { error: iError } = await supabase.from("itens_refeicao").insert(itemRows);
           if (iError) throw iError;
         }
