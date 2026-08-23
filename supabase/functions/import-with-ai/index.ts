@@ -22,6 +22,18 @@ async function extractPdfText(b64: string): Promise<string> {
   }
 }
 
+// Verifica se um valor numérico realmente aparece no texto-fonte do documento,
+// próximo a uma palavra-chave relevante (evita aceitar números "inventados" pela IA).
+function apareceNoTexto(valor: number | null, texto: string, palavrasChave: string[]): boolean {
+  if (valor === null || !texto) return false;
+  const valorStr = String(Math.round(valor));
+  const lower = texto.toLowerCase();
+  const idx = lower.indexOf(valorStr);
+  if (idx === -1) return false;
+  const janela = lower.slice(Math.max(0, idx - 60), idx + 60);
+  return palavrasChave.some((p) => janela.includes(p));
+}
+
 // ---------------------------------------------------------------------------
 // Vinculação de exercícios do PDF com a biblioteca (referencia_exercicios)
 // ---------------------------------------------------------------------------
@@ -469,6 +481,7 @@ serve(async (req) => {
     const imageMimeType = normalizedFileType.startsWith("image/") ? normalizedFileType : "image/jpeg";
 
     let pdfText = "";
+    let plainText = "";
     if (isPDF) {
       pdfText = await extractPdfText(file);
       if (!pdfText || pdfText.replace(/\s+/g, "").length < 30) {
