@@ -962,22 +962,6 @@ Retorne exatamente:
         }
       }
 
-      // Metas: SOMENTE o que está escrito no documento. Nada é calculado nem estimado.
-      const escrito = result.macros_alvo || {};
-      const num = (v: unknown) => (Number.isFinite(Number(v)) && Number(v) > 0 ? Math.round(Number(v)) : null);
-      const macrosFinais = {
-        proteina_g: num(escrito.proteina_g),
-        carboidrato_g: num(escrito.carboidrato_g),
-        lipideos_g: num(escrito.lipideos_g),
-      };
-      const kcalFinal = num(result.kcal_alvo);
-
-      await supabase
-        .from("dietas")
-        .update({ macros_alvo: macrosFinais, kcal_alvo: kcalFinal })
-        .eq("id", dieta.id);
-
-
     }
 
     return new Response(JSON.stringify({ success: true, data: result, extractedData: result, revisao: revisaoTreino }), {
