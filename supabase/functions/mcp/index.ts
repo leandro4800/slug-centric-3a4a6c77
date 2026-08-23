@@ -172,7 +172,7 @@ var get_athlete_workout_default = defineTool3({
     const found = await findAthlete(auth2.tenantId, { athlete_id, email, nome });
     if ("error" in found) return errorResult(found.error);
     const supa = getServiceClient();
-    let q = supa.from("treinos_prescritos").select("dia_semana, ordem, exercicio, series, repeticoes, cadencia, observacao, status, detalhes_execucao").eq("aluno_id", found.athlete.id).eq("tenant_id", auth2.tenantId).order("dia_semana").order("ordem");
+    let q = supa.from("treinos_prescritos").select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, status, detalhes_execucao").eq("aluno_id", found.athlete.id).eq("tenant_id", auth2.tenantId).order("dia_ordem", { nullsFirst: false }).order("ordem");
     if (dia_semana) q = q.eq("dia_semana", dia_semana);
     const { data, error } = await q;
     if (error) return errorResult(`Erro consultando treino: ${error.message}`);
@@ -402,11 +402,16 @@ var set_athlete_workout_default = defineTool8({
       const vid = await supa.from("referencia_videos").select("url_video").ilike("nome_exercicio", like).or(`tenant_id.eq.${auth2.tenantId},tenant_id.is.null`).limit(1).maybeSingle();
       return vid.data?.url_video ?? null;
     }
+    const { data: diasExistentes } = await supa.from("treinos_prescritos").select("dia_semana, dia_ordem").eq("aluno_id", found.athlete.id).eq("tenant_id", auth2.tenantId);
+    const diasRows = diasExistentes ?? [];
+    const diaAtual = diasRows.find((r) => r.dia_semana === dia_semana && r.dia_ordem != null);
+    const diaOrdem = diaAtual ? Number(diaAtual.dia_ordem) : diasRows.reduce((m, r) => Math.max(m, Number(r.dia_ordem) || 0), 0) + 1;
     const rows = await Promise.all(
       exercicios.map(async (ex, i) => ({
         tenant_id: auth2.tenantId,
         aluno_id: found.athlete.id,
         dia_semana,
+        dia_ordem: diaOrdem,
         ordem: startOrder + i + 1,
         exercicio: ex.exercicio,
         series: ex.series ?? null,
@@ -737,10 +742,15 @@ var update_athlete_workout_default = defineTool13({
       const { data: last } = await supa.from("treinos_prescritos").select("ordem").eq("tenant_id", auth2.tenantId).eq("aluno_id", alunoId).eq("dia_semana", input.dia_semana).order("ordem", { ascending: false }).limit(1).maybeSingle();
       ordem = Number(last?.ordem ?? 0) + 1;
     }
+    const { data: diasExistentes } = await supa.from("treinos_prescritos").select("dia_semana, dia_ordem").eq("tenant_id", auth2.tenantId).eq("aluno_id", alunoId);
+    const diasRows = diasExistentes ?? [];
+    const diaAtual = diasRows.find((r) => r.dia_semana === input.dia_semana && r.dia_ordem != null);
+    const diaOrdem = diaAtual ? Number(diaAtual.dia_ordem) : diasRows.reduce((m, r) => Math.max(m, Number(r.dia_ordem) || 0), 0) + 1;
     const { data, error } = await supa.from("treinos_prescritos").insert({
       tenant_id: auth2.tenantId,
       aluno_id: alunoId,
       dia_semana: input.dia_semana,
+      dia_ordem: diaOrdem,
       exercicio: input.exercicio,
       series: input.series ?? null,
       repeticoes: input.repeticoes ?? null,
