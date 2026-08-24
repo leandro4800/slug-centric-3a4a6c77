@@ -137,8 +137,9 @@ const Login = () => {
       // ele esconderia outras roles da conta (ex.: admin global da plataforma).
       stashAuthRolesPrefetch([]);
 
+      const isStudent = databaseDestination?.account_role === "aluno";
       return {
-        destination: `/${databaseSlug}/app`,
+        destination: isStudent ? await resolveStudentEntry(databaseSlug) : `/${databaseSlug}/app`,
         ownerRedirect: Boolean(contextSlug && contextSlug !== databaseSlug),
       };
     }
