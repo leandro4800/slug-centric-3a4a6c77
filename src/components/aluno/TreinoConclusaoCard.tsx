@@ -443,12 +443,16 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
       >
         {bgUrl ? (
           <>
-            {/* ===== CAMADA IA: cenário cinematográfico (+ atleta no modo full) ===== */}
+            {/* Fundo preto sólido: garante que barras do object-contain fiquem invisíveis */}
+            <div className="absolute inset-0 bg-black" />
+            {/* ===== CAMADA IA: cenário cinematográfico (+ atleta no modo full) =====
+                object-contain: a imagem INTEIRA sempre aparece — sem cortar cabeça/pés,
+                independente da proporção exata devolvida pela IA */}
             <img
               src={bgUrl}
               alt=""
               crossOrigin="anonymous"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
             />
 
             {/* Modo scenario (fallback de identidade): compõe o avatar original por cima do cenário */}
@@ -546,13 +550,32 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
           </div>
         </div>
 
-        {/* Título cinematográfico */}
+        {/* Título cinematográfico — Anton (condensada esportiva), "MAIS UM" metálico,
+            "CHECK" na cor do tenant com itálico rasgado */}
         <div className="relative z-20 px-14 pt-10 text-center leading-none">
-          <h1 className="font-display whitespace-nowrap">
-            <span className="text-[120px] tracking-[0.02em] text-white">MAIS UM </span>
+          <h1
+            className="whitespace-nowrap uppercase"
+            style={{ fontFamily: "'Anton', 'Bebas Neue', sans-serif", fontWeight: 400 }}
+          >
             <span
-              className="text-[120px] italic tracking-[0.02em]"
-              style={{ color: colors.primary, textShadow: `0 0 60px ${colors.primarySoft}` }}
+              className="text-[120px] tracking-[0.02em]"
+              style={{
+                background:
+                  "linear-gradient(180deg, #ffffff 0%, #dcdcdc 42%, #8c8c8c 58%, #f4f4f4 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              MAIS UM{" "}
+            </span>
+            <span
+              className="text-[120px] italic tracking-[0.02em] inline-block"
+              style={{
+                color: colors.primary,
+                textShadow: `0 0 60px ${colors.primarySoft}, 0 0 24px ${colors.primarySoft}`,
+                transform: "skewX(-8deg)",
+              }}
             >
               CHECK
             </span>
@@ -600,8 +623,14 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             {["DISCIPLINA", "FOCO", "RESULTADOS"].map((palavra, i) => (
               <p
                 key={palavra}
-                className="text-3xl font-bold tracking-[0.25em] uppercase leading-none"
-                style={{ color: i === 1 ? colors.primary : "rgba(255,255,255,0.9)" }}
+                className="text-4xl tracking-[0.18em] uppercase leading-none"
+                style={{
+                  fontFamily: "'Anton', 'Bebas Neue', sans-serif",
+                  fontWeight: 400,
+                  color: i === 1 ? colors.primary : "rgba(255,255,255,0.92)",
+                  textShadow:
+                    i === 1 ? `0 0 30px ${colors.primarySoft}` : "0 2px 12px rgba(0,0,0,0.6)",
+                }}
               >
                 {palavra}
               </p>
@@ -633,10 +662,16 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             ))}
         </div>
 
-        {/* Barra de informações: atleta / treino / exercícios */}
+        {/* Barra de informações: atleta / treino / exercícios
+            Gradiente semi-transparente (não opaco): deixa entrever a imagem de fundo */}
         <div
-          className="relative z-20 mx-14 mt-6 px-10 py-7 bg-black/80 backdrop-blur flex items-center justify-between"
-          style={{ borderTop: `4px solid ${colors.primary}`, borderBottom: `4px solid ${colors.primary}` }}
+          className="relative z-20 mx-14 mt-6 px-10 py-7 backdrop-blur-sm flex items-center justify-between"
+          style={{
+            borderTop: `4px solid ${colors.primary}`,
+            borderBottom: `4px solid ${colors.primary}`,
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.70) 55%, rgba(0,0,0,0.92) 100%)",
+          }}
         >
           <div className="min-w-0">
             <p className="text-lg tracking-[0.3em] uppercase text-white/50">Atleta</p>
@@ -665,10 +700,12 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
           {stats.map(({ icon: Icon, value, label }) => (
             <div
               key={label}
-              className="rounded-2xl px-4 py-6 text-center bg-black/70"
+              className="rounded-2xl px-4 py-6 text-center"
               style={{
                 border: `2px solid ${colors.primarySoft}`,
                 boxShadow: `inset 0 0 30px ${colors.primaryFaint}`,
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.70) 55%, rgba(0,0,0,0.92) 100%)",
               }}
             >
               <Icon className="h-9 w-9 mx-auto" style={{ color: colors.primary }} />

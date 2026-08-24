@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     if (
       !force &&
       perfil?.card_bg_url &&
-      meta?.v === 2 &&
+      meta?.v === 3 &&
       meta?.mode === mode &&
       meta?.tenant_id === tenantId &&
       meta?.primary === primary &&
@@ -122,10 +122,12 @@ Deno.serve(async (req) => {
       ? `The ${mode === "full" ? "SECOND" : "FIRST"} reference image is ONLY art direction: use it to guide composition, framing, lighting, depth, atmosphere and visual hierarchy. Do NOT copy its text, typography, logos, numbers, or the person in it.`
       : "";
 
+    // Zona segura vertical: o atleta inteiro fica entre 15% e 75% da altura,
+    // com respiro acima da cabeça e abaixo dos pés — nunca encostado nas bordas.
     const subjectPart =
       mode === "full"
-        ? "Place the athlete as the central protagonist, full body visible from head to feet, occupying roughly 55–65% of the frame height, perfectly centered, standing in a confident powerful pose, looking at the camera."
-        : "Compose the scene WITHOUT any person: an empty protagonist spot in the vertical center where the light converges (a person will be composited there later).";
+        ? "Place the athlete as the central protagonist, FULL BODY visible from head to feet, perfectly centered horizontally, standing in a confident powerful pose, looking at the camera. SAFE ZONE (critical): the entire body must fit between 15% and 75% of the image height — the top of the head below the 15% line and the soles of the feet above the 75% line, with clear breathing room above the head and below the feet. NEVER crop or cut the head, hair, hands or feet; never let any body part touch the top or bottom edge of the frame. Keep the surrounding space dark and clean because a UI overlay will be rendered over the top and bottom areas."
+        : "Compose the scene WITHOUT any person: an empty protagonist spot in the vertical center (between 15% and 75% of the image height) where the light converges — a person will be composited there later. Keep the top 15% and bottom 25% dark and clean.";
 
     const prompt = `Cinematic premium fitness campaign photograph, vertical 9:16 composition. ${identityPart} ${stylePart} ${subjectPart} Setting: a dark premium professional gym at night, equipment blurred deep in the background, shallow depth of field. Behind the central subject, a large glowing geometric hexagonal portal structure made of light in the brand color ${primary}, with depth, inner glow and volumetric light rays. Strong rim light using the brand color ${primary}, dramatic studio lighting, volumetric lighting, subtle atmospheric smoke, floating dust particles catching the light, realistic wet reflective floor with light reflections, deep shadows, high cinematic contrast. CRITICAL: absolutely NO text, NO letters, NO numbers, NO typography, NO logos, NO watermarks anywhere in the image. Keep the top 22% and the bottom 32% of the frame darker and clean (soft vignette) because a UI overlay will be rendered there. High-end fitness advertising aesthetic, professional commercial photography, realistic skin texture, natural anatomy, extremely detailed, photorealistic, sharp focus.${tenantNome ? ` Brand context: team/gym "${tenantNome}".` : ""}`;
 
@@ -157,7 +159,7 @@ Deno.serve(async (req) => {
       .update({
         card_bg_url: cardUrl,
         card_bg_meta: {
-          v: 2,
+          v: 3,
           mode,
           tenant_id: tenantId,
           primary,
