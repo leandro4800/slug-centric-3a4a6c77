@@ -550,13 +550,32 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
           </div>
         </div>
 
-        {/* Título cinematográfico */}
+        {/* Título cinematográfico — Anton (condensada esportiva), "MAIS UM" metálico,
+            "CHECK" na cor do tenant com itálico rasgado */}
         <div className="relative z-20 px-14 pt-10 text-center leading-none">
-          <h1 className="font-display whitespace-nowrap">
-            <span className="text-[120px] tracking-[0.02em] text-white">MAIS UM </span>
+          <h1
+            className="whitespace-nowrap uppercase"
+            style={{ fontFamily: "'Anton', 'Bebas Neue', sans-serif", fontWeight: 400 }}
+          >
             <span
-              className="text-[120px] italic tracking-[0.02em]"
-              style={{ color: colors.primary, textShadow: `0 0 60px ${colors.primarySoft}` }}
+              className="text-[120px] tracking-[0.02em]"
+              style={{
+                background:
+                  "linear-gradient(180deg, #ffffff 0%, #dcdcdc 42%, #8c8c8c 58%, #f4f4f4 100%)",
+                WebkitBackgroundClip: "text",
+                backgroundClip: "text",
+                color: "transparent",
+              }}
+            >
+              MAIS UM{" "}
+            </span>
+            <span
+              className="text-[120px] italic tracking-[0.02em] inline-block"
+              style={{
+                color: colors.primary,
+                textShadow: `0 0 60px ${colors.primarySoft}, 0 0 24px ${colors.primarySoft}`,
+                transform: "skewX(-8deg)",
+              }}
             >
               CHECK
             </span>
@@ -675,10 +694,12 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
           {stats.map(({ icon: Icon, value, label }) => (
             <div
               key={label}
-              className="rounded-2xl px-4 py-6 text-center bg-black/70"
+              className="rounded-2xl px-4 py-6 text-center"
               style={{
                 border: `2px solid ${colors.primarySoft}`,
                 boxShadow: `inset 0 0 30px ${colors.primaryFaint}`,
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.70) 55%, rgba(0,0,0,0.92) 100%)",
               }}
             >
               <Icon className="h-9 w-9 mx-auto" style={{ color: colors.primary }} />
