@@ -72,3 +72,13 @@ additional_redirect_urls = [
     verify_jwt = true
   [functions.site-create-aluno-avulso]
     verify_jwt = true
+  [functions.fcm-notifications]
+    verify_jwt = true
+  [functions.resend-landing-credentials]
+    verify_jwt = true
+  [functions.ia-lesoes]
+    verify_jwt = true
+  [functions.parse-aluno-ia]
+    verify_jwt = true
+  [functions.analisar-metricas-aluno]
+    verify_jwt = true
