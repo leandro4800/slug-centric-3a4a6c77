@@ -42,6 +42,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [perfilNome, setPerfilNome] = useState<string>("");
   const [perfilSexo, setPerfilSexo] = useState<string>("");
+  const [perfilAvatarUrl, setPerfilAvatarUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cardContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
         .maybeSingle();
       setPerfilNome(perfil?.nome_completo ?? "Atleta");
       setPerfilSexo(perfil?.sexo ?? "");
+      setPerfilAvatarUrl(perfil?.avatar_url ?? null);
       setTenantId(perfil?.tenant_id ?? null);
 
       const { data: c } = await supabase
