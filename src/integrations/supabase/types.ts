@@ -4057,6 +4057,7 @@ export type Database = {
         }[]
       }
       normalizar_nome_exercicio: { Args: { _nome: string }; Returns: string }
+      perfis_stored_tenant: { Args: { _user_id: string }; Returns: string }
       recalcular_stats_treino: {
         Args: { _aluno_id: string }
         Returns: {
