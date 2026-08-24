@@ -194,7 +194,7 @@ const Login = () => {
     if (alunoSlugs.size >= 1) {
       const first = Array.from(alunoSlugs)[0];
       return {
-        destination: `/${first}/app`,
+        destination: await resolveStudentEntry(first),
         ownerRedirect: Boolean(contextSlug && contextSlug !== first),
       };
     }
