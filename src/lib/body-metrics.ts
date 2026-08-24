@@ -25,6 +25,31 @@ export function calcBodyFatUSNavy(opts: {
   }
 }
 
+// Converte altura digitada pelo usuário para centímetros.
+// Aceita "178", "178cm", "1,78", "1.78", "1,78m", "1.78 m" etc.
+// Retorna null quando o valor não é uma altura plausível (100–250 cm).
+export function parseAlturaCm(input: string | number | null | undefined): number | null {
+  if (input == null) return null;
+  let n: number;
+  if (typeof input === "number") {
+    n = input;
+  } else {
+    const cleaned = String(input)
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/cm$/, "")
+      .replace(/m$/, "")
+      .replace(",", ".");
+    if (!cleaned) return null;
+    n = parseFloat(cleaned);
+  }
+  if (!Number.isFinite(n) || n <= 0) return null;
+  const cm = n < 3 ? n * 100 : n; // valor em metros (ex: 1,78) → centímetros
+  if (cm < 100 || cm > 250) return null;
+  return Math.round(cm * 10) / 10;
+}
+
 export function calcIMC(peso_kg: number, altura_cm: number): number | null {
   if (!peso_kg || !altura_cm) return null;
   const m = altura_cm / 100;

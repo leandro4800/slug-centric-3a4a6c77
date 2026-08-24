@@ -15,7 +15,7 @@ import { Logo } from "@/components/Logo";
 import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
-import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
+import { calcBodyFatUSNavy, calcIMC, parseAlturaCm } from "@/lib/body-metrics";
 import heroDefault from "@/assets/hero-default.jpg";
 
 type Sexo = "M" | "F";
@@ -157,7 +157,12 @@ export default function Onboarding() {
     setBusy(true);
     try {
       const peso = Number(pesoKg);
-      const alt = Number(alturaCm);
+      const alt = parseAlturaCm(alturaCm);
+      if (!alt) {
+        toast({ title: "Altura inválida", description: "Informe a altura em centímetros (ex: 178) ou em metros (ex: 1,78).", variant: "destructive" });
+        setBusy(false);
+        return;
+      }
       const bfVal = calcBodyFatUSNavy({
         sexo,
         altura_cm: alt,
@@ -223,8 +228,9 @@ export default function Onboarding() {
     }
   };
 
-  const bf = pesoKg && alturaCm && pescocoCm && cinturaCm ? calcBodyFatUSNavy({ sexo, altura_cm: Number(alturaCm), pescoco_cm: Number(pescocoCm), cintura_cm: Number(cinturaCm), quadril_cm: quadrilCm ? Number(quadrilCm) : undefined }) : null;
-  const imc = pesoKg && alturaCm ? calcIMC(Number(pesoKg), Number(alturaCm)) : null;
+  const alturaParsed = parseAlturaCm(alturaCm);
+  const bf = pesoKg && alturaParsed && pescocoCm && cinturaCm ? calcBodyFatUSNavy({ sexo, altura_cm: alturaParsed, pescoco_cm: Number(pescocoCm), cintura_cm: Number(cinturaCm), quadril_cm: quadrilCm ? Number(quadrilCm) : undefined }) : null;
+  const imc = pesoKg && alturaParsed ? calcIMC(Number(pesoKg), alturaParsed) : null;
 
   if (isLoading) return <div className="flex h-screen items-center justify-center bg-black text-white">Carregando...</div>;
 
@@ -350,7 +356,7 @@ export default function Onboarding() {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div><Label>Peso (kg)</Label><Input type="number" step={0.1} value={pesoKg} onChange={e => setPesoKg(e.target.value)} required /></div>
-                <div><Label>Altura (cm)</Label><Input type="number" step={0.1} value={alturaCm} onChange={e => setAlturaCm(e.target.value)} required /></div>
+                <div><Label>Altura (cm ou m)</Label><Input type="text" inputMode="decimal" value={alturaCm} onChange={e => setAlturaCm(e.target.value)} placeholder="1,78 ou 178" required /></div>
                 <div><Label>Pescoço (cm)</Label><Input type="number" step={0.1} value={pescocoCm} onChange={e => setPescocoCm(e.target.value)} required /></div>
                 <div><Label>Cintura (cm)</Label><Input type="number" step={0.1} value={cinturaCm} onChange={e => setCinturaCm(e.target.value)} required /></div>
                 {sexo === "F" && <div className="col-span-2"><Label>Quadril (cm)</Label><Input type="number" step={0.1} value={quadrilCm} onChange={e => setQuadrilCm(e.target.value)} required /></div>}
