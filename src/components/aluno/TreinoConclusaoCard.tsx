@@ -298,6 +298,10 @@ export const TreinoConclusaoCard = ({
 
   const previewScale = PREVIEW_W / CARD_W;
 
+  // Só monta o card quando a geração terminar: sucesso (cardBg) ou falha real
+  // (bgLoading false + cardBg null → cai no fallback DOM como card final)
+  const artReady = cardBg !== null || !bgLoading;
+
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto">
       <button
@@ -308,32 +312,38 @@ export const TreinoConclusaoCard = ({
         <X className="h-5 w-5" />
       </button>
 
-      {/* Card real em tamanho 1080x1920 fora da tela — é o que é capturado */}
-      <div className="fixed top-0 left-0 pointer-events-none opacity-0 -z-10" aria-hidden>
-        <CardArt ref={cardRef} {...artProps} />
-      </div>
+      {/* Card real em tamanho 1080x1920 fora da tela — é o que é capturado.
+          Só existe quando a geração terminou (sucesso ou falha real → fallback DOM). */}
+      {artReady && (
+        <div className="fixed top-0 left-0 pointer-events-none opacity-0 -z-10" aria-hidden>
+          <CardArt ref={cardRef} {...artProps} />
+        </div>
+      )}
 
       {/* Preview visível (escala reduzida, apenas visual) */}
       <div
         className="relative overflow-hidden rounded-2xl border border-primary/40 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)] shrink-0"
         style={{ width: PREVIEW_W, height: CARD_H * previewScale }}
       >
-        <div
-          style={{
-            transform: `scale(${previewScale})`,
-            transformOrigin: "top left",
-            width: CARD_W,
-            height: CARD_H,
-          }}
-        >
-          <CardArt {...artProps} />
-        </div>
-
-        {/* Banner de progresso enquanto a IA gera a arte cinematográfica */}
-        {bgLoading && !cardBg && (
-          <div className="absolute inset-x-3 bottom-3 z-30 rounded-xl bg-black/80 backdrop-blur border border-primary/30 px-3 py-2 flex items-center gap-2">
-            <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0 text-primary" />
-            <p className="text-[10px] leading-snug text-foreground/90">{LOAD_MESSAGES[loadMsgIdx]}</p>
+        {artReady ? (
+          <div
+            style={{
+              transform: `scale(${previewScale})`,
+              transformOrigin: "top left",
+              width: CARD_W,
+              height: CARD_H,
+            }}
+          >
+            <CardArt {...artProps} />
+          </div>
+        ) : (
+          /* Carregamento limpo enquanto a IA gera a arte — sem hexágono/avatar/cenário,
+             para não parecer um "card errado" antes da versão final */
+          <div className="absolute inset-0 bg-black flex flex-col items-center justify-center gap-4 px-6">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="text-xs text-center leading-snug text-foreground/80">
+              {LOAD_MESSAGES[loadMsgIdx]}
+            </p>
           </div>
         )}
       </div>
@@ -354,7 +364,7 @@ export const TreinoConclusaoCard = ({
       <div className="flex gap-3 mt-4" style={{ width: PREVIEW_W }}>
         <button
           onClick={handleShare}
-          disabled={busy}
+          disabled={busy || !artReady}
           className="flex-1 h-12 rounded-xl bg-primary text-primary-foreground font-display tracking-widest flex items-center justify-center gap-2 disabled:opacity-50"
         >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Share2 className="h-5 w-5" />}
@@ -362,7 +372,7 @@ export const TreinoConclusaoCard = ({
         </button>
         <button
           onClick={handleDownload}
-          disabled={busy}
+          disabled={busy || !artReady}
           className="h-12 px-4 rounded-xl bg-secondary text-foreground flex items-center justify-center gap-2 disabled:opacity-50"
         >
           <Download className="h-5 w-5" />
@@ -557,15 +567,11 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             className="whitespace-nowrap uppercase"
             style={{ fontFamily: "'Anton', 'Bebas Neue', sans-serif", fontWeight: 400 }}
           >
+            {/* "MAIS UM" em branco sólido: html2canvas não suporta background-clip: text
+                (renderizaria o retângulo do gradiente por cima da imagem) */}
             <span
-              className="text-[120px] tracking-[0.02em]"
-              style={{
-                background:
-                  "linear-gradient(180deg, #ffffff 0%, #dcdcdc 42%, #8c8c8c 58%, #f4f4f4 100%)",
-                WebkitBackgroundClip: "text",
-                backgroundClip: "text",
-                color: "transparent",
-              }}
+              className="text-[120px] tracking-[0.02em] text-white"
+              style={{ textShadow: "0 2px 18px rgba(0,0,0,0.55)" }}
             >
               MAIS UM{" "}
             </span>
