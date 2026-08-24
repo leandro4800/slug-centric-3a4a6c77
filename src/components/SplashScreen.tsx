@@ -27,6 +27,7 @@ export const SplashScreen = () => {
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
   const startedForTenantRef = useRef<string | null>(null);
 
   const tenantKey = tenant?.slug ?? "_neutral";
@@ -113,21 +114,64 @@ export const SplashScreen = () => {
       )}
     >
       {tenant?.splash_video_url ? (
-        <video
-          src={tenant.splash_video_url}
-          autoPlay
-          muted
-          playsInline
-          onLoadedData={() => {
-            // Vídeo carregou, o timer acima cuidará de fechar
-          }}
-          onError={() => {
-            console.error("Erro ao carregar vídeo de splash");
-            setIsVisible(false);
-            setTimeout(() => setShouldRender(false), 300);
-          }}
-          className="absolute inset-0 w-full h-full object-cover"
-        />
+        <>
+          <video
+            src={tenant.splash_video_url}
+            autoPlay
+            muted
+            playsInline
+            onPlaying={() => setVideoPlaying(true)}
+            onLoadedData={() => {
+              // Vídeo carregou, o timer acima cuidará de fechar
+            }}
+            onError={() => {
+              console.error("Erro ao carregar vídeo de splash");
+              setIsVisible(false);
+              setTimeout(() => setShouldRender(false), 300);
+            }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          {/* Overlay de loading que cobre o vídeo até o primeiro frame real ser exibido.
+              Evita o flash do ícone de play padrão do WebView Android. */}
+          <div
+            className={cn(
+              "absolute inset-0 z-10 flex flex-col items-center justify-center bg-background transition-opacity duration-200 ease-in-out",
+              videoPlaying && "opacity-0 pointer-events-none"
+            )}
+          >
+              <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-1000">
+                {tenant?.logo_url ? (
+                  <div className="flex flex-col items-center gap-6">
+                    <img
+                      src={tenant.logo_url}
+                      alt={tenant.nome}
+                      className="w-40 h-40 object-contain animate-pulse shadow-2xl rounded-xl"
+                    />
+                    <h1 className="text-3xl font-display tracking-[0.2em] uppercase text-foreground text-center px-4">
+                      {tenant.nome}
+                    </h1>
+                  </div>
+                ) : (
+                  <div className="scale-[2] mb-12">
+                    <img
+                      src="/icons/icon-192.webp"
+                      alt={tenant?.nome || "AlphaCoach"}
+                      className="w-24 h-24 object-contain"
+                    />
+                  </div>
+                )}
+
+                <div className="mt-12 flex flex-col items-center gap-4">
+                  <div className="w-56 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+                    <div className="h-full bg-primary animate-progress-loading shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
+                  </div>
+                  <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground animate-pulse">
+                    Carregando Ecossistema
+                  </span>
+                </div>
+              </div>
+          </div>
+        </>
       ) : (
         <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-1000">
           {tenant?.logo_url ? (
