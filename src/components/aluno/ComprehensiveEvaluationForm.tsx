@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
+import { parseAlturaCm } from "@/lib/body-metrics";
 
 interface Props {
   open: boolean;
@@ -98,6 +99,62 @@ export const ComprehensiveEvaluationForm = ({
       fileInputRef.current.click();
     }
   }, [open, triggerImportOnInit]);
+
+  // Pré-preenche com a última avaliação salva para o usuário poder EDITAR
+  // os valores em vez de começar do zero a cada nova avaliação.
+  useEffect(() => {
+    if (!open || !alunoId || initialData) return;
+    let cancelled = false;
+    (async () => {
+      const { data: last } = await supabase
+        .from("avaliacoes_fisicas")
+        .select("*")
+        .eq("aluno_id", alunoId)
+        .order("data", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !last) return;
+      const s = (v: any) => (v == null ? "" : String(v));
+      setForm({
+        peso: s(last.peso_kg),
+        altura: s(last.altura_cm),
+        idade: s(last.idade),
+        dobras: {
+          peitoral: s(last.dobra_peitoral),
+          axilar_media: s(last.dobra_axilar_media),
+          triceps: s(last.dobra_triceps),
+          subescapular: s(last.dobra_subescapular),
+          abdominal: s(last.dobra_abdominal),
+          suprailiaca: s(last.dobra_suprailiaca),
+          coxa: s(last.dobra_coxa),
+          panturrilha: s(last.dobra_panturrilha),
+        },
+        perimetros: {
+          pescoco: s(last.pescoco_cm),
+          ombro: s(last.perimetro_ombro),
+          torax: s(last.perimetro_torax),
+          cintura: s(last.cintura_cm),
+          abdomen: s(last.perimetro_abdomen),
+          quadril: s(last.quadril_cm),
+          braco_relaxado_dir: s(last.perimetro_braco_relaxado_dir),
+          braco_relaxado_esq: s(last.perimetro_braco_relaxado_esq),
+          braco_contraido_dir: s(last.perimetro_braco_contraido_dir),
+          braco_contraido_esq: s(last.perimetro_braco_contraido_esq),
+          antebraco_dir: s(last.perimetro_antebraco_dir),
+          antebraco_esq: s(last.perimetro_antebraco_esq),
+          coxa_proximal_dir: s(last.perimetro_coxa_proximal_dir),
+          coxa_proximal_esq: s(last.perimetro_coxa_proximal_esq),
+          coxa_media_dir: s(last.perimetro_coxa_media_dir),
+          coxa_media_esq: s(last.perimetro_coxa_media_esq),
+          coxa_distal_dir: s(last.perimetro_coxa_distal_dir),
+          coxa_distal_esq: s(last.perimetro_coxa_distal_esq),
+          panturrilha_dir: s(last.perimetro_panturrilha_dir),
+          panturrilha_esq: s(last.perimetro_panturrilha_esq),
+        },
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [open, alunoId, initialData]);
 
   const num = (v: any) => {
     if (typeof v === "number") return v;
