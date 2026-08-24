@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import heroDefault from "@/assets/hero-default.jpg";
-import { calcBodyFatUSNavy, calcIMC } from "@/lib/body-metrics";
+import { calcBodyFatUSNavy, calcIMC, parseAlturaCm } from "@/lib/body-metrics";
 import ProfileMusicPlayer from "@/components/aluno/ProfileMusicPlayer";
 import { PhysicalEvaluationSelection } from "@/components/aluno/PhysicalEvaluationSelection";
 import { ComprehensiveEvaluationForm } from "@/components/aluno/ComprehensiveEvaluationForm";
@@ -438,7 +438,11 @@ const Perfil = () => {
     setSaving(true);
     
     const peso = Number(formEval.peso_kg);
-    const alt = Number(formEval.altura_cm);
+    const alt = parseAlturaCm(formEval.altura_cm);
+    if (!alt) {
+      setSaving(false);
+      return toast.error("Altura inválida. Use centímetros (ex: 178) ou metros (ex: 1,78).");
+    }
     const bf = calcBodyFatUSNavy({
       sexo: formProfile.sexo,
       altura_cm: alt,
@@ -765,8 +769,8 @@ const Perfil = () => {
                 <Input id="peso" type="number" step="0.1" value={formEval.peso_kg} onChange={(e) => setFormEval({...formEval, peso_kg: e.target.value})} required />
               </div>
               <div>
-                <Label htmlFor="altura">Altura (cm)</Label>
-                <Input id="altura" type="number" value={formEval.altura_cm} onChange={(e) => setFormEval({...formEval, altura_cm: e.target.value})} required />
+                <Label htmlFor="altura">Altura (cm ou m)</Label>
+                <Input id="altura" type="text" inputMode="decimal" value={formEval.altura_cm} onChange={(e) => setFormEval({...formEval, altura_cm: e.target.value})} placeholder="1,78 ou 178" required />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
