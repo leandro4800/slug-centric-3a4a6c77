@@ -2355,6 +2355,8 @@ export type Database = {
           avatar_pos_y: number | null
           avatar_treinando_url: string | null
           avatar_url: string | null
+          card_bg_meta: Json | null
+          card_bg_url: string | null
           created_at: string
           data_nascimento: string | null
           email: string | null
@@ -2373,6 +2375,8 @@ export type Database = {
           avatar_pos_y?: number | null
           avatar_treinando_url?: string | null
           avatar_url?: string | null
+          card_bg_meta?: Json | null
+          card_bg_url?: string | null
           created_at?: string
           data_nascimento?: string | null
           email?: string | null
@@ -2391,6 +2395,8 @@ export type Database = {
           avatar_pos_y?: number | null
           avatar_treinando_url?: string | null
           avatar_url?: string | null
+          card_bg_meta?: Json | null
+          card_bg_url?: string | null
           created_at?: string
           data_nascimento?: string | null
           email?: string | null
