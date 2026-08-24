@@ -170,8 +170,7 @@ export const SplashScreen = () => {
                   </span>
                 </div>
               </div>
-            </div>
-          )}
+          </div>
         </>
       ) : (
         <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-1000">
