@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     if (
       !force &&
       perfil?.card_bg_url &&
-      meta?.v === 3 &&
+      meta?.v === 4 &&
       meta?.mode === mode &&
       meta?.tenant_id === tenantId &&
       meta?.primary === primary &&
@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
       .update({
         card_bg_url: cardUrl,
         card_bg_meta: {
-          v: 3,
+          v: 4,
           mode,
           tenant_id: tenantId,
           primary,
