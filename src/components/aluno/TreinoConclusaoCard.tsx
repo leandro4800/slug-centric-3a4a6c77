@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
+import designRefAsset from "@/assets/card-design-ref.png.asset.json";
 
 interface Props {
   open: boolean;
@@ -26,6 +27,11 @@ interface BrandColors {
   accent: string;
 }
 
+interface CardBg {
+  url: string;
+  mode: "full" | "scenario";
+}
+
 const FALLBACK_COLORS: BrandColors = {
   primary: "hsl(357 92% 47%)",
   primarySoft: "hsl(357 92% 47% / 0.35)",
@@ -36,6 +42,59 @@ const FALLBACK_COLORS: BrandColors = {
 const CARD_W = 1080;
 const CARD_H = 1920;
 const PREVIEW_W = 300;
+
+const LOAD_MESSAGES = [
+  "Criando sua arte cinematográfica…",
+  "Aplicando iluminação de estúdio…",
+  "Renderizando fumaça e partículas…",
+  "Toques finais de pós-produção…",
+];
+
+/** Converte "357 92% 47%" (CSS var HSL) para hex — o prompt da IA entende melhor hex. */
+function hslStringToHex(hslRaw: string): string | null {
+  const m = hslRaw.match(/([\d.]+)\s+([\d.]+)%\s+([\d.]+)%/);
+  if (!m) return null;
+  const h = parseFloat(m[1]) / 360;
+  const s = parseFloat(m[2]) / 100;
+  const l = parseFloat(m[3]) / 100;
+  const a = s * Math.min(l, 1 - l);
+  const f = (n: number) => {
+    const k = (n + h * 12) % 12;
+    const c = l - a * Math.max(-1, Math.min(k - 3, Math.min(9 - k, 1)));
+    return Math.round(c * 255).toString(16).padStart(2, "0");
+  };
+  return `#${f(8)}${f(4)}${f(0)}`;
+}
+
+/**
+ * Carrega a imagem de referência cinematográfica (direção de arte) como base64.
+ * Tenta origem atual (web) e fallback para o domínio publicado (app nativo Capacitor).
+ */
+async function loadDesignRefBase64(): Promise<string | null> {
+  const rel = designRefAsset.url;
+  const candidates = [
+    rel,
+    `https://alpha-coach.app${rel}`,
+    `https://slug-centric.lovable.app${rel}`,
+  ];
+  for (const url of candidates) {
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) continue;
+      const blob = await resp.blob();
+      if (!blob.type.startsWith("image")) continue;
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      /* tenta o próximo */
+    }
+  }
+  return null;
+}
 
 export const TreinoConclusaoCard = ({
   open,
@@ -55,6 +114,13 @@ export const TreinoConclusaoCard = ({
   const [avatarCarta, setAvatarCarta] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [colors, setColors] = useState<BrandColors>(FALLBACK_COLORS);
+  const [primaryHex, setPrimaryHex] = useState<string | null>(null);
+
+  // Arquitetura híbrida: IA gera cenário+atleta; React renderiza textos/dados por cima
+  const [cardBg, setCardBg] = useState<CardBg | null>(null);
+  const [bgLoading, setBgLoading] = useState(false);
+  const [loadMsgIdx, setLoadMsgIdx] = useState(0);
+  const genStartedRef = useRef(false);
 
   // Usa exatamente o mesmo avatar gerado na Carta do Atleta (camisa do time do coach)
   useEffect(() => {
@@ -87,8 +153,55 @@ export const TreinoConclusaoCard = ({
         primaryFaint: `hsl(${primaryRaw} / 0.15)`,
         accent: accentRaw ? `hsl(${accentRaw})` : `hsl(${primaryRaw})`,
       });
+      setPrimaryHex(hslStringToHex(primaryRaw));
     }
   }, [open, tenant?.id]);
+
+  // Gera (ou reutiliza do cache) o background cinematográfico via edge function.
+  // Roda UMA vez por abertura do modal; o cache no servidor torna repetições instantâneas.
+  useEffect(() => {
+    if (!open || !user || genStartedRef.current) return;
+    genStartedRef.current = true;
+    let cancel = false;
+
+    (async () => {
+      setBgLoading(true);
+      try {
+        const designRef = await loadDesignRefBase64();
+        const { data, error } = await supabase.functions.invoke("gerar-card-treino", {
+          body: {
+            tenant_id: tenant?.id ?? null,
+            tenant_nome: tenant?.nome ?? "",
+            primary: colors.primary,
+            primary_hex: primaryHex,
+            design_ref: designRef,
+          },
+        });
+        if (cancel) return;
+        if (!error && (data as any)?.card_url) {
+          setCardBg({ url: (data as any).card_url, mode: (data as any).mode === "scenario" ? "scenario" : "full" });
+        } else {
+          console.warn("gerar-card-treino falhou, usando card padrão:", error ?? data);
+        }
+      } catch (e) {
+        console.warn("gerar-card-treino erro, usando card padrão:", e);
+      } finally {
+        if (!cancel) setBgLoading(false);
+      }
+    })();
+
+    return () => {
+      cancel = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, user, tenant?.id]);
+
+  // Mensagens de progresso enquanto a IA trabalha
+  useEffect(() => {
+    if (!bgLoading || cardBg) return;
+    const t = setInterval(() => setLoadMsgIdx((i) => (i + 1) % LOAD_MESSAGES.length), 6000);
+    return () => clearInterval(t);
+  }, [bgLoading, cardBg]);
 
   if (!open) return null;
 
@@ -179,6 +292,8 @@ export const TreinoConclusaoCard = ({
     gastoCalorico,
     caloriasLoading,
     colors,
+    bgUrl: cardBg?.url ?? null,
+    bgMode: cardBg?.mode ?? null,
   };
 
   const previewScale = PREVIEW_W / CARD_W;
@@ -200,7 +315,7 @@ export const TreinoConclusaoCard = ({
 
       {/* Preview visível (escala reduzida, apenas visual) */}
       <div
-        className="overflow-hidden rounded-2xl border border-primary/40 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)] shrink-0"
+        className="relative overflow-hidden rounded-2xl border border-primary/40 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)] shrink-0"
         style={{ width: PREVIEW_W, height: CARD_H * previewScale }}
       >
         <div
@@ -213,6 +328,14 @@ export const TreinoConclusaoCard = ({
         >
           <CardArt {...artProps} />
         </div>
+
+        {/* Banner de progresso enquanto a IA gera a arte cinematográfica */}
+        {bgLoading && !cardBg && (
+          <div className="absolute inset-x-3 bottom-3 z-30 rounded-xl bg-black/80 backdrop-blur border border-primary/30 px-3 py-2 flex items-center gap-2">
+            <Loader2 className="h-3.5 w-3.5 animate-spin shrink-0 text-primary" />
+            <p className="text-[10px] leading-snug text-foreground/90">{LOAD_MESSAGES[loadMsgIdx]}</p>
+          </div>
+        )}
       </div>
 
       {/* Mensagem da IA (gasto calórico) — as estatísticas já estão dentro do card */}
@@ -267,6 +390,10 @@ interface CardArtProps {
   gastoCalorico: number | null;
   caloriasLoading: boolean;
   colors: BrandColors;
+  /** Background cinematográfico gerado por IA (null = fallback DOM) */
+  bgUrl: string | null;
+  /** full = atleta já está na imagem; scenario = compor avatar original por cima */
+  bgMode: "full" | "scenario" | null;
 }
 
 const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
@@ -285,6 +412,8 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
       gastoCalorico,
       caloriasLoading,
       colors,
+      bgUrl,
+      bgMode,
     },
     ref
   ) => {
@@ -312,33 +441,73 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
         className="relative overflow-hidden flex flex-col text-white font-sans"
         style={{ width: CARD_W, height: CARD_H, backgroundColor: "#000000" }}
       >
-        {/* Fundo cinematográfico: gradiente, fumaça e vinheta na cor do tenant */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `linear-gradient(160deg, ${colors.primarySoft} 0%, #000000 45%, #000000 100%)`,
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(circle at 50% 30%, ${colors.primarySoft} 0%, transparent 55%)`,
-          }}
-        />
-        <div
-          className="absolute inset-0"
-          style={{
-            background: `radial-gradient(ellipse at 50% 100%, ${colors.primaryFaint} 0%, transparent 50%)`,
-          }}
-        />
-        {/* Vinheta forte */}
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%)",
-          }}
-        />
+        {bgUrl ? (
+          <>
+            {/* ===== CAMADA IA: cenário cinematográfico (+ atleta no modo full) ===== */}
+            <img
+              src={bgUrl}
+              alt=""
+              crossOrigin="anonymous"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+
+            {/* Modo scenario (fallback de identidade): compõe o avatar original por cima do cenário */}
+            {bgMode === "scenario" && avatar ? (
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-[26%] h-[46%] flex items-end justify-center z-10">
+                <img
+                  src={avatar}
+                  alt="Atleta"
+                  crossOrigin="anonymous"
+                  className="max-h-full w-auto object-contain"
+                  style={{
+                    filter: `drop-shadow(0 0 60px ${colors.primarySoft}) drop-shadow(0 30px 40px rgba(0,0,0,0.65))`,
+                  }}
+                />
+              </div>
+            ) : null}
+
+            {/* Gradientes de legibilidade para a camada de UI (topo e rodapé) */}
+            <div
+              className="absolute inset-0 z-10"
+              style={{
+                background:
+                  "linear-gradient(180deg, rgba(0,0,0,0.68) 0%, rgba(0,0,0,0.18) 24%, transparent 42%, transparent 52%, rgba(0,0,0,0.55) 70%, rgba(0,0,0,0.94) 100%)",
+              }}
+            />
+          </>
+        ) : (
+          <>
+            {/* ===== FALLBACK DOM (sem IA): fundo cinematográfico em gradientes ===== */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `linear-gradient(160deg, ${colors.primarySoft} 0%, #000000 45%, #000000 100%)`,
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `radial-gradient(circle at 50% 30%, ${colors.primarySoft} 0%, transparent 55%)`,
+              }}
+            />
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `radial-gradient(ellipse at 50% 100%, ${colors.primaryFaint} 0%, transparent 50%)`,
+              }}
+            />
+            {/* Vinheta forte */}
+            <div
+              className="absolute inset-0"
+              style={{
+                background:
+                  "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%)",
+              }}
+            />
+          </>
+        )}
+
+        {/* ===== CAMADA UI (React): todos os textos e dados — sempre corretos ===== */}
 
         {/* Header: marca do coach */}
         <div className="relative z-20 flex items-center gap-5 px-14 pt-14">
@@ -396,33 +565,37 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
 
         {/* Cena do atleta: protagonista com halo geométrico + frases motivacionais */}
         <div className="relative z-10 flex-1 min-h-0 flex items-end justify-center px-14">
-          {/* Halo hexagonal */}
-          <svg
-            viewBox="0 0 600 700"
-            className="absolute left-1/2 -translate-x-1/2 bottom-0 h-[92%] w-auto"
-            style={{ opacity: 0.75, filter: `drop-shadow(0 0 25px ${colors.primarySoft})` }}
-          >
-            <polygon
-              points="300,30 555,165 555,535 300,670 45,535 45,165"
-              fill="none"
-              stroke={colors.primary}
-              strokeWidth="5"
-            />
-            <polygon
-              points="300,60 532,182 532,518 300,640 68,518 68,182"
-              fill="none"
-              stroke={colors.primarySoft}
-              strokeWidth="2"
-            />
-          </svg>
+          {!bgUrl && (
+            <>
+              {/* Halo hexagonal (apenas no fallback DOM — no modo IA o portal já está na imagem) */}
+              <svg
+                viewBox="0 0 600 700"
+                className="absolute left-1/2 -translate-x-1/2 bottom-0 h-[92%] w-auto"
+                style={{ opacity: 0.75, filter: `drop-shadow(0 0 25px ${colors.primarySoft})` }}
+              >
+                <polygon
+                  points="300,30 555,165 555,535 300,670 45,535 45,165"
+                  fill="none"
+                  stroke={colors.primary}
+                  strokeWidth="5"
+                />
+                <polygon
+                  points="300,60 532,182 532,518 300,640 68,518 68,182"
+                  fill="none"
+                  stroke={colors.primarySoft}
+                  strokeWidth="2"
+                />
+              </svg>
 
-          {/* Rim light atrás do atleta */}
-          <div
-            className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[720px] h-[720px] rounded-full"
-            style={{ background: `radial-gradient(circle, ${colors.primarySoft} 0%, transparent 65%)` }}
-          />
+              {/* Rim light atrás do atleta */}
+              <div
+                className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[720px] h-[720px] rounded-full"
+                style={{ background: `radial-gradient(circle, ${colors.primarySoft} 0%, transparent 65%)` }}
+              />
+            </>
+          )}
 
-          {/* Motivação lateral direita */}
+          {/* Motivação lateral direita (texto — sempre React) */}
           <div className="absolute right-12 top-6 text-right z-20 space-y-3">
             {["DISCIPLINA", "FOCO", "RESULTADOS"].map((palavra, i) => (
               <p
@@ -439,22 +612,25 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             />
           </div>
 
-          {avatar ? (
-            <img
-              src={avatar}
-              alt="Atleta"
-              crossOrigin="anonymous"
-              className="relative z-10 max-h-full w-auto object-contain"
-              style={{ filter: `drop-shadow(0 0 70px ${colors.primarySoft})` }}
-            />
-          ) : (
-            <div
-              className="relative z-10 h-full max-h-[620px] w-[440px] rounded-3xl flex items-center justify-center"
-              style={{ backgroundColor: colors.primaryFaint, border: `3px solid ${colors.primarySoft}` }}
-            >
-              <Trophy className="h-44 w-44" style={{ color: colors.primary }} />
-            </div>
-          )}
+          {/* Avatar DOM apenas no fallback (no modo IA full o atleta já está na imagem;
+              no modo scenario o avatar é composto na camada IA acima) */}
+          {!bgUrl &&
+            (avatar ? (
+              <img
+                src={avatar}
+                alt="Atleta"
+                crossOrigin="anonymous"
+                className="relative z-10 max-h-full w-auto object-contain"
+                style={{ filter: `drop-shadow(0 0 70px ${colors.primarySoft})` }}
+              />
+            ) : (
+              <div
+                className="relative z-10 h-full max-h-[620px] w-[440px] rounded-3xl flex items-center justify-center"
+                style={{ backgroundColor: colors.primaryFaint, border: `3px solid ${colors.primarySoft}` }}
+              >
+                <Trophy className="h-44 w-44" style={{ color: colors.primary }} />
+              </div>
+            ))}
         </div>
 
         {/* Barra de informações: atleta / treino / exercícios */}
