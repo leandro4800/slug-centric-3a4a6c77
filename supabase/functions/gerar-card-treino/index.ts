@@ -98,7 +98,7 @@ Deno.serve(async (req) => {
     if (
       !force &&
       perfil?.card_bg_url &&
-      meta?.v === 2 &&
+      meta?.v === 3 &&
       meta?.mode === mode &&
       meta?.tenant_id === tenantId &&
       meta?.primary === primary &&
