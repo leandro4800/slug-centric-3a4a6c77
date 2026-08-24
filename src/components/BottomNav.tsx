@@ -51,10 +51,10 @@ const AlunoBottomNav = () => {
       tenant.owner_user_id === user.id);
 
   const moreItems = [
+    { label: "Meu Perfil", icon: User, to: "perfil" },
     ...(isCoachOfTenant
       ? [{ label: "Personalizar App", icon: Palette, to: `/${tenantSlug}/admin/aparencia` }]
       : []),
-    { label: "Meu Perfil", icon: User, to: "perfil" },
     { label: "Comunidade", icon: Users, to: "comunidade" },
     { label: "Presencial", icon: CalendarCheck, to: "presencial" },
     { label: "Minha Carta", icon: Sparkles, to: "carta" },
