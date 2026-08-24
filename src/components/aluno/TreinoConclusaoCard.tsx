@@ -443,12 +443,16 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
       >
         {bgUrl ? (
           <>
-            {/* ===== CAMADA IA: cenário cinematográfico (+ atleta no modo full) ===== */}
+            {/* Fundo preto sólido: garante que barras do object-contain fiquem invisíveis */}
+            <div className="absolute inset-0 bg-black" />
+            {/* ===== CAMADA IA: cenário cinematográfico (+ atleta no modo full) =====
+                object-contain: a imagem INTEIRA sempre aparece — sem cortar cabeça/pés,
+                independente da proporção exata devolvida pela IA */}
             <img
               src={bgUrl}
               alt=""
               crossOrigin="anonymous"
-              className="absolute inset-0 w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-contain"
             />
 
             {/* Modo scenario (fallback de identidade): compõe o avatar original por cima do cenário */}
@@ -633,10 +637,16 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             ))}
         </div>
 
-        {/* Barra de informações: atleta / treino / exercícios */}
+        {/* Barra de informações: atleta / treino / exercícios
+            Gradiente semi-transparente (não opaco): deixa entrever a imagem de fundo */}
         <div
-          className="relative z-20 mx-14 mt-6 px-10 py-7 bg-black/80 backdrop-blur flex items-center justify-between"
-          style={{ borderTop: `4px solid ${colors.primary}`, borderBottom: `4px solid ${colors.primary}` }}
+          className="relative z-20 mx-14 mt-6 px-10 py-7 backdrop-blur-sm flex items-center justify-between"
+          style={{
+            borderTop: `4px solid ${colors.primary}`,
+            borderBottom: `4px solid ${colors.primary}`,
+            background:
+              "linear-gradient(180deg, rgba(0,0,0,0.40) 0%, rgba(0,0,0,0.70) 55%, rgba(0,0,0,0.92) 100%)",
+          }}
         >
           <div className="min-w-0">
             <p className="text-lg tracking-[0.3em] uppercase text-white/50">Atleta</p>
