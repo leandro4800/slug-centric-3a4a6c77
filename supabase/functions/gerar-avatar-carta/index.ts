@@ -206,18 +206,15 @@ Deno.serve(async (req) => {
     const { data: pub } = admin.storage.from("avatars").getPublicUrl(path);
     const publicUrl = pub.publicUrl;
 
-    // Cacheia no perfil (campo correspondente à variante) ou na carta
+    // Cacheia no perfil (campo correspondente à variante) ou na carta.
+    // NUNCA altera perfis.avatar_url — a foto de perfil escolhida pelo usuário
+    // é intocável; o avatar IA vive apenas em cartas_atleta.avatar_carta_url
+    // (ou nos campos de variante avatar_treinando_url / avatar_celebracao_url).
     if (variant === "carta") {
       await admin
         .from("cartas_atleta")
         .update({ avatar_carta_url: publicUrl })
         .eq("aluno_id", finalUserId);
-      
-      // Também atualiza o avatar_url do perfil para mostrar o novo avatar por padrão no app
-      await admin
-        .from("perfis")
-        .update({ avatar_url: publicUrl })
-        .eq("id", finalUserId);
     } else {
       const field = VARIANT_FIELD[variant];
       await admin

@@ -225,9 +225,11 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
   };
 
   const gerarAvatarIA = async () => {
-    const fotoUrl = (editing ? draft : carta)?.foto_original_url;
+    // Sem foto enviada, usa a foto de perfil como base — sem alterar a foto de perfil
+    const fotoOriginal = (editing ? draft : carta)?.foto_original_url;
+    const fotoUrl = fotoOriginal || perfilAvatarUrl;
     if (!fotoUrl) {
-      toast.error("Envie uma foto primeiro");
+      toast.error("Envie uma foto ou defina uma foto de perfil primeiro");
       return;
     }
     setGenerating(true);
@@ -244,10 +246,15 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
     else {
       setCarta((c) => (c ? { ...c, avatar_carta_url: url } : c));
       if (tenantId) {
-        await supabase.from("cartas_atleta").upsert(
-          { aluno_id: alunoId, tenant_id: tenantId, avatar_carta_url: url, foto_original_url: fotoUrl },
-          { onConflict: "aluno_id" }
-        );
+        // Só grava foto_original_url se ela já existia (foto enviada na carta) —
+        // se veio do perfil, não sobrescreve a imagem da carta
+        const payload: Record<string, unknown> = {
+          aluno_id: alunoId,
+          tenant_id: tenantId,
+          avatar_carta_url: url,
+        };
+        if (fotoOriginal) payload.foto_original_url = fotoOriginal;
+        await supabase.from("cartas_atleta").upsert(payload, { onConflict: "aluno_id" });
       }
     }
     toast.success("Avatar gerado!");
