@@ -111,19 +111,22 @@ const PersonalTreino = () => {
     return { startDate: fmt(monday), endDate: fmt(sunday) };
   })();
 
-  // Carrega dias da semana atual já concluídos a partir do banco (historico_cargas)
+  // Carrega dias da semana atual já concluídos a partir do banco (sessoes_treino).
+  // Sinal de conclusão: duracao_min > 0 (sessão em andamento fica com 0; só vira >0
+  // ao concluir de verdade em concluirTreino()). Filtra por aluno + semana atual
+  // (seg→dom) e mapeia cada linha ao seu dia_semana, que é o mesmo valor usado em diaAtual.
   const loadCompletedDaysWeek = async () => {
     if (!user) return;
     const { data } = await supabase
-      .from("historico_cargas")
-      .select("exercicio_nome, data_treino")
-      .eq("user_id", user.id)
+      .from("sessoes_treino")
+      .select("dia_semana, data_treino")
+      .eq("aluno_id", user.id)
+      .gt("duracao_min", 0)
       .gte("data_treino", weekRange.startDate)
-      .lte("data_treino", weekRange.endDate)
-      .like("exercicio_nome", "__treino_concluido__:%");
+      .lte("data_treino", weekRange.endDate);
     const dias = new Set<string>();
     (data || []).forEach((r: any) => {
-      const dia = (r.exercicio_nome as string).split("__treino_concluido__:")[1];
+      const dia = r.dia_semana as string | null;
       if (dia) dias.add(dia);
     });
     setCompletedDaysWeek(dias);
