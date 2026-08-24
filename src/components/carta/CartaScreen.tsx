@@ -399,7 +399,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
                 </Button>
               </div>
               <p className="font-body-fut text-xs text-muted-foreground">
-                A IA gera uma réplica 3D estilo EA FC mantendo seu rosto, com uniforme preto padrão.
+                A IA gera uma réplica 3D estilo EA FC mantendo seu rosto, com uniforme preto padrão. Sem foto enviada, usa sua foto de perfil como base — sem alterar sua foto de perfil nem a imagem da carta.
               </p>
 
               {/* Avatar IA gerado — corpo inteiro, com animação ao tocar */}
