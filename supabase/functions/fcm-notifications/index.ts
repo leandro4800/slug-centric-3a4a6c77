@@ -79,6 +79,52 @@ serve(async (req) => {
     payload = await req.json()
     const { user_id, token, title, body, data } = payload!
 
+    // --- Autorização (chamadas de usuário, não service) ---
+    if (!isServiceCall && callerId) {
+      const { data: isAdmin } = await supabaseClient.rpc('has_role', {
+        _user_id: callerId,
+        _role: 'admin',
+      })
+
+      if (!isAdmin) {
+        if (user_id && user_id !== callerId) {
+          // Coach só pode notificar alunos do próprio tenant.
+          const { data: target } = await supabaseClient
+            .from('perfis')
+            .select('tenant_id')
+            .eq('id', user_id)
+            .maybeSingle()
+          const { data: owned } = target?.tenant_id
+            ? await supabaseClient
+                .from('tenants')
+                .select('id')
+                .eq('id', target.tenant_id)
+                .eq('owner_user_id', callerId)
+                .maybeSingle()
+            : { data: null }
+          if (!owned) {
+            return new Response(
+              JSON.stringify({ error: 'Sem permissão para notificar este usuário' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+            )
+          }
+        } else if (!user_id && token) {
+          // Token cru: só se pertencer ao próprio caller.
+          const { data: owner } = await supabaseClient
+            .from('perfis')
+            .select('id')
+            .eq('push_token', token)
+            .maybeSingle()
+          if (owner?.id !== callerId) {
+            return new Response(
+              JSON.stringify({ error: 'Sem permissão para notificar este dispositivo' }),
+              { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
+            )
+          }
+        }
+      }
+    }
+
     let targetToken = token
 
     if (user_id && !targetToken) {

@@ -29,6 +29,20 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
+    // --- Autenticação: exige usuário logado ---
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace("Bearer ", "");
+    const userClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_ANON_KEY")!,
+      { global: { headers: { Authorization: `Bearer ${token}` } } },
+    );
+    const { data: userData, error: userErr } = await userClient.auth.getUser();
+    if (userErr || !userData.user) {
+      return json({ error: "Não autenticado" }, 401);
+    }
+    const callerId = userData.user.id;
+
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
@@ -50,6 +64,15 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (!tenant || !tenant.free_access || tenant.status !== "approved") {
       return json({ error: "tenant inválido ou sem acesso gratuito" }, 400);
+    }
+
+    // --- Autorização: só o dono do tenant ou admin pode resetar senhas ---
+    const { data: isAdmin } = await admin.rpc("has_role", {
+      _user_id: callerId,
+      _role: "admin",
+    });
+    if (!isAdmin && tenant.owner_user_id !== callerId) {
+      return json({ error: "Sem permissão para este tenant" }, 403);
     }
 
     let query = admin
