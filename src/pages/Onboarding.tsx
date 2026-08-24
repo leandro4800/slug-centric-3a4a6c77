@@ -78,23 +78,50 @@ export default function Onboarding() {
     console.log("[Onboarding] Carregando perfil do usuário:", user.id);
 
     try {
+      // A sessão precisa estar válida de verdade. Com token expirado todas as
+      // consultas abaixo falham e a tela mostraria o formulário como se o
+      // cadastro do aluno/coach tivesse sumido — em vez disso, volta ao login.
+      const { error: sessionError } = await supabase.auth.getUser();
+      if (sessionError) {
+        console.warn("[Onboarding] Sessão inválida/expirada; voltando para o login.");
+        await supabase.auth.signOut().catch(() => {});
+        navigate(slug ? `/${slug}/login` : "/login", { replace: true });
+        return;
+      }
+
       const isCoachSignup = (user.user_metadata as any)?.is_coach === true;
-      const { data: ownedTenant } = await supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle();
-      const { data: roles } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      const { data: ownedTenant, error: ownerError } = await supabase.from("tenants").select("slug, id").eq("owner_user_id", user.id).maybeSingle();
+      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("role").eq("user_id", user.id);
+      if (ownerError || rolesError) {
+        console.warn("[Onboarding] Falha ao verificar vínculos:", ownerError?.message || rolesError?.message);
+        setLoadError(true);
+        return;
+      }
       const isCoach = isCoachSignup || !!ownedTenant || roles?.some((r) => r.role === "coach");
+      const isGlobalAdmin = roles?.some((r) => r.role === "admin") ?? false;
 
       // Coach (owner de tenant) NÃO preenche perfil/anamnese/avaliação no mobile.
       // Esse fluxo fica exclusivamente no painel do site (/site/admin/meu-perfil).
-      if (isCoach) {
-        const target = ownedTenant?.slug ? `/${ownedTenant.slug}/admin` : "/seja-coach";
-        console.log("[Onboarding] Coach detectado, redirecionando para o painel:", target);
+      // Admin global da plataforma também nunca passa por onboarding.
+      if (isCoach || isGlobalAdmin) {
+        const target = ownedTenant?.slug
+          ? `/${ownedTenant.slug}/admin`
+          : isGlobalAdmin && slug
+            ? `/${slug}/app`
+            : "/seja-coach";
+        console.log("[Onboarding] Coach/admin detectado, redirecionando:", target);
         navigate(target, { replace: true });
         return;
       }
 
-      const { data: perfil } = await supabase.from("perfis").select("nome_completo, tenant_id, onboarding_completo").eq("id", user.id).maybeSingle();
-      const { count: anamneseCount } = await supabase.from("anamnese_aluno").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
-      const { count: avaliacaoCount } = await supabase.from("avaliacoes_fisicas").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
+      const { data: perfil, error: perfilError } = await supabase.from("perfis").select("nome_completo, tenant_id, onboarding_completo").eq("id", user.id).maybeSingle();
+      const { count: anamneseCount, error: anamneseError } = await supabase.from("anamnese_aluno").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
+      const { count: avaliacaoCount, error: avaliacaoError } = await supabase.from("avaliacoes_fisicas").select("id", { count: 'exact', head: true }).eq("aluno_id", user.id);
+      if (perfilError || anamneseError || avaliacaoError) {
+        console.warn("[Onboarding] Falha ao carregar cadastro:", perfilError?.message || anamneseError?.message || avaliacaoError?.message);
+        setLoadError(true);
+        return;
+      }
 
       const isDifferentTenant = tenant?.id && perfil?.tenant_id && tenant.id !== perfil.tenant_id;
       const isSpecialTestEmail = ["48mineiro@gmail.com", "executionmode48@gmail.com"].includes(user.email?.toLowerCase() || "");
@@ -200,6 +227,37 @@ export default function Onboarding() {
   const imc = pesoKg && alturaCm ? calcIMC(Number(pesoKg), Number(alturaCm)) : null;
 
   if (isLoading) return <div className="flex h-screen items-center justify-center bg-black text-white">Carregando...</div>;
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-black p-6 text-center">
+        <div className="max-w-sm space-y-4">
+          <p className="text-sm uppercase tracking-widest text-primary font-bold">Falha ao carregar</p>
+          <p className="text-sm text-muted-foreground">
+            Não conseguimos carregar seu cadastro agora. Verifique sua conexão e tente novamente.
+          </p>
+          <div className="flex flex-col gap-2">
+            <Button
+              onClick={() => {
+                setLoadError(false);
+                loadingRef.current = false;
+                void loadProfile();
+              }}
+            >
+              Tentar novamente
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-white"
+              onClick={() => navigate(slug ? `/${slug}/login` : "/login", { replace: true })}
+            >
+              Voltar para o login
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const bgImage = tenant?.hero_url || heroDefault;
   const isVideo = isDirectVideo(bgImage) || extractYouTubeId(bgImage);
