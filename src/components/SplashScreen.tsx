@@ -27,6 +27,7 @@ export const SplashScreen = () => {
 
   const [shouldRender, setShouldRender] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
+  const [videoPlaying, setVideoPlaying] = useState(false);
   const startedForTenantRef = useRef<string | null>(null);
 
   const tenantKey = tenant?.slug ?? "_neutral";
