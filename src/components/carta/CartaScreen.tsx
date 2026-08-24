@@ -42,6 +42,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [perfilNome, setPerfilNome] = useState<string>("");
   const [perfilSexo, setPerfilSexo] = useState<string>("");
+  const [perfilAvatarUrl, setPerfilAvatarUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cardContainerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
@@ -56,6 +57,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
         .maybeSingle();
       setPerfilNome(perfil?.nome_completo ?? "Atleta");
       setPerfilSexo(perfil?.sexo ?? "");
+      setPerfilAvatarUrl(perfil?.avatar_url ?? null);
       setTenantId(perfil?.tenant_id ?? null);
 
       const { data: c } = await supabase
@@ -223,9 +225,11 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
   };
 
   const gerarAvatarIA = async () => {
-    const fotoUrl = (editing ? draft : carta)?.foto_original_url;
+    // Sem foto enviada, usa a foto de perfil como base — sem alterar a foto de perfil
+    const fotoOriginal = (editing ? draft : carta)?.foto_original_url;
+    const fotoUrl = fotoOriginal || perfilAvatarUrl;
     if (!fotoUrl) {
-      toast.error("Envie uma foto primeiro");
+      toast.error("Envie uma foto ou defina uma foto de perfil primeiro");
       return;
     }
     setGenerating(true);
@@ -242,10 +246,15 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
     else {
       setCarta((c) => (c ? { ...c, avatar_carta_url: url } : c));
       if (tenantId) {
-        await supabase.from("cartas_atleta").upsert(
-          { aluno_id: alunoId, tenant_id: tenantId, avatar_carta_url: url, foto_original_url: fotoUrl },
-          { onConflict: "aluno_id" }
-        );
+        // Só grava foto_original_url se ela já existia (foto enviada na carta) —
+        // se veio do perfil, não sobrescreve a imagem da carta
+        const payload = {
+          aluno_id: alunoId,
+          tenant_id: tenantId,
+          avatar_carta_url: url,
+          ...(fotoOriginal ? { foto_original_url: fotoOriginal } : {}),
+        };
+        await supabase.from("cartas_atleta").upsert(payload, { onConflict: "aluno_id" });
       }
     }
     toast.success("Avatar gerado!");
@@ -390,7 +399,7 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
                 </Button>
               </div>
               <p className="font-body-fut text-xs text-muted-foreground">
-                A IA gera uma réplica 3D estilo EA FC mantendo seu rosto, com uniforme preto padrão.
+                A IA gera uma réplica 3D estilo EA FC mantendo seu rosto, com uniforme preto padrão. Sem foto enviada, usa sua foto de perfil como base — sem alterar sua foto de perfil nem a imagem da carta.
               </p>
 
               {/* Avatar IA gerado — corpo inteiro, com animação ao tocar */}
