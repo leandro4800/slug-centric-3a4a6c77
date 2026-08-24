@@ -15,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
+import { parseAlturaCm } from "@/lib/body-metrics";
 
 interface Props {
   open: boolean;
@@ -98,6 +99,62 @@ export const ComprehensiveEvaluationForm = ({
       fileInputRef.current.click();
     }
   }, [open, triggerImportOnInit]);
+
+  // Pré-preenche com a última avaliação salva para o usuário poder EDITAR
+  // os valores em vez de começar do zero a cada nova avaliação.
+  useEffect(() => {
+    if (!open || !alunoId || initialData) return;
+    let cancelled = false;
+    (async () => {
+      const { data: last } = await supabase
+        .from("avaliacoes_fisicas")
+        .select("*")
+        .eq("aluno_id", alunoId)
+        .order("data", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (cancelled || !last) return;
+      const s = (v: any) => (v == null ? "" : String(v));
+      setForm({
+        peso: s(last.peso_kg),
+        altura: s(last.altura_cm),
+        idade: s(last.idade),
+        dobras: {
+          peitoral: s(last.dobra_peitoral),
+          axilar_media: s(last.dobra_axilar_media),
+          triceps: s(last.dobra_triceps),
+          subescapular: s(last.dobra_subescapular),
+          abdominal: s(last.dobra_abdominal),
+          suprailiaca: s(last.dobra_suprailiaca),
+          coxa: s(last.dobra_coxa),
+          panturrilha: s(last.dobra_panturrilha),
+        },
+        perimetros: {
+          pescoco: s(last.pescoco_cm),
+          ombro: s(last.perimetro_ombro),
+          torax: s(last.perimetro_torax),
+          cintura: s(last.cintura_cm),
+          abdomen: s(last.perimetro_abdomen),
+          quadril: s(last.quadril_cm),
+          braco_relaxado_dir: s(last.perimetro_braco_relaxado_dir),
+          braco_relaxado_esq: s(last.perimetro_braco_relaxado_esq),
+          braco_contraido_dir: s(last.perimetro_braco_contraido_dir),
+          braco_contraido_esq: s(last.perimetro_braco_contraido_esq),
+          antebraco_dir: s(last.perimetro_antebraco_dir),
+          antebraco_esq: s(last.perimetro_antebraco_esq),
+          coxa_proximal_dir: s(last.perimetro_coxa_proximal_dir),
+          coxa_proximal_esq: s(last.perimetro_coxa_proximal_esq),
+          coxa_media_dir: s(last.perimetro_coxa_media_dir),
+          coxa_media_esq: s(last.perimetro_coxa_media_esq),
+          coxa_distal_dir: s(last.perimetro_coxa_distal_dir),
+          coxa_distal_esq: s(last.perimetro_coxa_distal_esq),
+          panturrilha_dir: s(last.perimetro_panturrilha_dir),
+          panturrilha_esq: s(last.perimetro_panturrilha_esq),
+        },
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [open, alunoId, initialData]);
 
   const num = (v: any) => {
     if (typeof v === "number") return v;
@@ -190,6 +247,12 @@ export const ComprehensiveEvaluationForm = ({
       const soma = Object.values(form.dobras).reduce((acc, v) => acc + (num(v) || 0), 0);
       const idadeN = num(form.idade) || 0;
       const pesoN = num(form.peso) || 0;
+      const alturaParsed = form.altura ? parseAlturaCm(form.altura) : null;
+      if (form.altura && !alturaParsed) {
+        toast.error("Altura inválida. Use centímetros (ex: 178) ou metros (ex: 1,78).");
+        setSaving(false);
+        return;
+      }
       const sexoN = sexo?.toUpperCase().startsWith("F") ? "F" : "M";
 
       let bf = null;
@@ -204,7 +267,7 @@ export const ComprehensiveEvaluationForm = ({
         aluno_id: alunoId,
         tenant_id: tenantId || null,
         peso_kg: num(form.peso),
-        altura_cm: num(form.altura),
+        altura_cm: alturaParsed,
         idade: idadeN,
         sexo: sexoN,
         data: new Date().toISOString(),
@@ -251,7 +314,7 @@ export const ComprehensiveEvaluationForm = ({
           tenant_id: tenantId || null,
           sexo: sexoN,
           peso_kg: num(form.peso),
-          altura_cm: num(form.altura),
+          altura_cm: alturaParsed,
           idade: idadeN || null,
           bf_pct: bf ? Number(bf.toFixed(2)) : null,
           pescoco_cm: num(form.perimetros.pescoco),
@@ -284,8 +347,8 @@ export const ComprehensiveEvaluationForm = ({
           <Input type="number" step="0.1" value={form.peso} onChange={e => setForm({...form, peso: e.target.value})} />
         </div>
         <div className="space-y-2">
-          <Label>Altura (cm)</Label>
-          <Input type="number" value={form.altura} onChange={e => setForm({...form, altura: e.target.value})} />
+          <Label>Altura (cm ou m)</Label>
+          <Input type="text" inputMode="decimal" value={form.altura} onChange={e => setForm({...form, altura: e.target.value})} placeholder="1,78 ou 178" />
         </div>
         <div className="space-y-2">
           <Label>Idade</Label>

@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { parseAlturaCm } from "@/lib/body-metrics";
 
 interface Props {
   open: boolean;
@@ -23,6 +24,7 @@ interface Props {
 
 const NUM_FIELDS: { key: string; label: string; suffix?: string }[] = [
   { key: "peso_kg", label: "Peso", suffix: "kg" },
+  { key: "altura_cm", label: "Altura", suffix: "cm" },
   { key: "bf_pct_calculado", label: "BF", suffix: "%" },
   { key: "massa_magra_kg", label: "M. Magra", suffix: "kg" },
   { key: "massa_gorda_kg", label: "M. Gorda", suffix: "kg" },
@@ -87,7 +89,14 @@ export const AthleteEvaluationsViewer = ({ open, onOpenChange, alunoId }: Props)
       const payload: Record<string, any> = {};
       NUM_FIELDS.forEach(({ key }) => {
         const v = editForm[key];
-        payload[key] = v === "" || v == null ? null : Number(v);
+        if (v === "" || v == null) {
+          payload[key] = null;
+        } else if (key === "altura_cm") {
+          // Aceita "1,78", "1.78m" ou "178" — converte sempre para cm
+          payload[key] = parseAlturaCm(v);
+        } else {
+          payload[key] = Number(String(v).replace(",", "."));
+        }
       });
       const { error } = await supabase
         .from("avaliacoes_fisicas")
@@ -190,8 +199,10 @@ export const AthleteEvaluationsViewer = ({ open, onOpenChange, alunoId }: Props)
                           <div key={key} className="space-y-1">
                             <Label className="text-[9px] uppercase tracking-widest text-muted-foreground">{label} ({suffix})</Label>
                             <Input
-                              type="number"
+                              type={key === "altura_cm" ? "text" : "number"}
+                              inputMode="decimal"
                               step="0.1"
+                              placeholder={key === "altura_cm" ? "1,78 ou 178" : undefined}
                               value={editForm[key] ?? ""}
                               onChange={e => setEditForm({ ...editForm, [key]: e.target.value })}
                               className="h-8 text-xs"
