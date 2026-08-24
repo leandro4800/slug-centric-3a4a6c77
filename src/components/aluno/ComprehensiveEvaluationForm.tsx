@@ -247,6 +247,12 @@ export const ComprehensiveEvaluationForm = ({
       const soma = Object.values(form.dobras).reduce((acc, v) => acc + (num(v) || 0), 0);
       const idadeN = num(form.idade) || 0;
       const pesoN = num(form.peso) || 0;
+      const alturaParsed = form.altura ? parseAlturaCm(form.altura) : null;
+      if (form.altura && !alturaParsed) {
+        toast.error("Altura inválida. Use centímetros (ex: 178) ou metros (ex: 1,78).");
+        setSaving(false);
+        return;
+      }
       const sexoN = sexo?.toUpperCase().startsWith("F") ? "F" : "M";
 
       let bf = null;
@@ -261,7 +267,7 @@ export const ComprehensiveEvaluationForm = ({
         aluno_id: alunoId,
         tenant_id: tenantId || null,
         peso_kg: num(form.peso),
-        altura_cm: num(form.altura),
+        altura_cm: alturaParsed,
         idade: idadeN,
         sexo: sexoN,
         data: new Date().toISOString(),
@@ -308,7 +314,7 @@ export const ComprehensiveEvaluationForm = ({
           tenant_id: tenantId || null,
           sexo: sexoN,
           peso_kg: num(form.peso),
-          altura_cm: num(form.altura),
+          altura_cm: alturaParsed,
           idade: idadeN || null,
           bf_pct: bf ? Number(bf.toFixed(2)) : null,
           pescoco_cm: num(form.perimetros.pescoco),
@@ -341,8 +347,8 @@ export const ComprehensiveEvaluationForm = ({
           <Input type="number" step="0.1" value={form.peso} onChange={e => setForm({...form, peso: e.target.value})} />
         </div>
         <div className="space-y-2">
-          <Label>Altura (cm)</Label>
-          <Input type="number" value={form.altura} onChange={e => setForm({...form, altura: e.target.value})} />
+          <Label>Altura (cm ou m)</Label>
+          <Input type="text" inputMode="decimal" value={form.altura} onChange={e => setForm({...form, altura: e.target.value})} placeholder="1,78 ou 178" />
         </div>
         <div className="space-y-2">
           <Label>Idade</Label>
