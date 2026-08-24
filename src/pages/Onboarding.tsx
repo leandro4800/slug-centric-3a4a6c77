@@ -32,6 +32,7 @@ export default function Onboarding() {
   const [busy, setBusy] = useState(false);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenantSlug, setTenantSlug] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   // Form states
   const [nome, setNome] = useState("");
