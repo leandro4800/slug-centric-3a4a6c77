@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
       .update({
         card_bg_url: cardUrl,
         card_bg_meta: {
-          v: 2,
+          v: 3,
           mode,
           tenant_id: tenantId,
           primary,
