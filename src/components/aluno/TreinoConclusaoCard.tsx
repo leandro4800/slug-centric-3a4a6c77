@@ -19,6 +19,24 @@ interface Props {
   caloriasLoading?: boolean;
 }
 
+interface BrandColors {
+  primary: string;
+  primarySoft: string;
+  primaryFaint: string;
+  accent: string;
+}
+
+const FALLBACK_COLORS: BrandColors = {
+  primary: "hsl(357 92% 47%)",
+  primarySoft: "hsl(357 92% 47% / 0.35)",
+  primaryFaint: "hsl(357 92% 47% / 0.15)",
+  accent: "hsl(357 92% 60%)",
+};
+
+const CARD_W = 1080;
+const CARD_H = 1920;
+const PREVIEW_W = 300;
+
 export const TreinoConclusaoCard = ({
   open,
   onClose,
@@ -36,6 +54,7 @@ export const TreinoConclusaoCard = ({
   const { user } = useAuth();
   const [avatarCarta, setAvatarCarta] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [colors, setColors] = useState<BrandColors>(FALLBACK_COLORS);
 
   // Usa exatamente o mesmo avatar gerado na Carta do Atleta (camisa do time do coach)
   useEffect(() => {
@@ -55,6 +74,22 @@ export const TreinoConclusaoCard = ({
     };
   }, [open, user]);
 
+  // Resolve as cores reais do tenant (CSS vars) para usar em SVG/glows — nunca hardcoded
+  useEffect(() => {
+    if (!open) return;
+    const cs = getComputedStyle(document.documentElement);
+    const primaryRaw = cs.getPropertyValue("--primary").trim();
+    const accentRaw = cs.getPropertyValue("--accent").trim();
+    if (primaryRaw) {
+      setColors({
+        primary: `hsl(${primaryRaw})`,
+        primarySoft: `hsl(${primaryRaw} / 0.35)`,
+        primaryFaint: `hsl(${primaryRaw} / 0.15)`,
+        accent: accentRaw ? `hsl(${accentRaw})` : `hsl(${primaryRaw})`,
+      });
+    }
+  }, [open, tenant?.id]);
+
   if (!open) return null;
 
   const nome = (user?.user_metadata?.nome_completo || user?.email || "Atleta")
@@ -70,15 +105,15 @@ export const TreinoConclusaoCard = ({
 
   const generate = async (): Promise<string | null> => {
     if (!cardRef.current) return null;
-    // Captura o card em tamanho real (renderizado fora da tela, sem transform)
+    // Captura o card em tamanho real 1080x1920 (renderizado fora da tela, sem transform)
     const canvas = await html2canvas(cardRef.current, {
       useCORS: true,
       scale: 2,
       backgroundColor: "#000000",
-      width: 1080,
-      height: 1350,
-      windowWidth: 1080,
-      windowHeight: 1350,
+      width: CARD_W,
+      height: CARD_H,
+      windowWidth: CARD_W,
+      windowHeight: CARD_H,
       scrollX: 0,
       scrollY: 0,
     });
@@ -130,17 +165,26 @@ export const TreinoConclusaoCard = ({
     }
   };
 
-  const artProps = {
+  const artProps: CardArtProps = {
     nome,
     diaTreino,
     totalExercicios,
     dataHoje,
     avatar: avatarCarta,
     tenantNome: tenant?.nome || "ALPHA COACH",
+    tenantLogo: tenant?.logo_url || null,
+    duracaoMin,
+    volumeKg,
+    seriesTotal,
+    gastoCalorico,
+    caloriasLoading,
+    colors,
   };
 
+  const previewScale = PREVIEW_W / CARD_W;
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center p-4 animate-in fade-in duration-300 overflow-y-auto">
       <button
         onClick={onClose}
         className="absolute top-4 right-4 w-10 h-10 rounded-full bg-background/80 flex items-center justify-center"
@@ -149,59 +193,42 @@ export const TreinoConclusaoCard = ({
         <X className="h-5 w-5" />
       </button>
 
-      {/* Card real em tamanho 1080x1350 fora da tela — é o que é capturado */}
+      {/* Card real em tamanho 1080x1920 fora da tela — é o que é capturado */}
       <div className="fixed top-0 left-0 pointer-events-none opacity-0 -z-10" aria-hidden>
         <CardArt ref={cardRef} {...artProps} />
       </div>
 
       {/* Preview visível (escala reduzida, apenas visual) */}
-      <div className="w-full max-w-[360px] aspect-[4/5] overflow-hidden rounded-2xl border border-primary/40 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)]">
-        <div className="origin-top-left scale-[0.333] w-[1080px] h-[1350px]">
+      <div
+        className="overflow-hidden rounded-2xl border border-primary/40 shadow-[0_0_60px_-10px_hsl(var(--primary)/0.6)] shrink-0"
+        style={{ width: PREVIEW_W, height: CARD_H * previewScale }}
+      >
+        <div
+          style={{
+            transform: `scale(${previewScale})`,
+            transformOrigin: "top left",
+            width: CARD_W,
+            height: CARD_H,
+          }}
+        >
           <CardArt {...artProps} />
         </div>
       </div>
 
-      {/* Resumo da sessão: duração, volume, séries e gasto calórico estimado */}
-      {(duracaoMin != null || volumeKg != null || seriesTotal != null || caloriasLoading || gastoCalorico != null) && (
-        <div className="w-full max-w-[360px] mt-4 space-y-2">
-          <div className="grid grid-cols-4 gap-2">
-            <div className="rounded-xl bg-background/70 border border-white/10 px-2 py-2 text-center">
-              <Clock className="h-3.5 w-3.5 mx-auto text-primary" />
-              <p className="font-display text-sm mt-1 leading-none">{duracaoMin != null ? `${duracaoMin}` : "—"}</p>
-              <p className="text-[8px] uppercase tracking-widest text-muted-foreground mt-0.5">min</p>
-            </div>
-            <div className="rounded-xl bg-background/70 border border-white/10 px-2 py-2 text-center">
-              <Dumbbell className="h-3.5 w-3.5 mx-auto text-primary" />
-              <p className="font-display text-sm mt-1 leading-none">{Math.round(volumeKg ?? 0).toLocaleString("pt-BR")}</p>
-              <p className="text-[8px] uppercase tracking-widest text-muted-foreground mt-0.5">kg vol</p>
-            </div>
-            <div className="rounded-xl bg-background/70 border border-white/10 px-2 py-2 text-center">
-              <ListChecks className="h-3.5 w-3.5 mx-auto text-primary" />
-              <p className="font-display text-sm mt-1 leading-none">{seriesTotal ?? "—"}</p>
-              <p className="text-[8px] uppercase tracking-widest text-muted-foreground mt-0.5">séries</p>
-            </div>
-            <div className="rounded-xl bg-background/70 border border-primary/30 px-2 py-2 text-center">
-              <Flame className="h-3.5 w-3.5 mx-auto text-primary" />
-              {caloriasLoading ? (
-                <Loader2 className="h-3.5 w-3.5 mx-auto mt-1 animate-spin text-muted-foreground" />
-              ) : (
-                <p className="font-display text-sm mt-1 leading-none">{gastoCalorico != null ? gastoCalorico.toLocaleString("pt-BR") : "—"}</p>
-              )}
-              <p className="text-[8px] uppercase tracking-widest text-muted-foreground mt-0.5">kcal</p>
-            </div>
-          </div>
-          {(caloriasLoading || mensagemGasto) && (
-            <div className="rounded-xl bg-primary/10 border border-primary/25 px-3 py-2 flex items-start gap-2">
-              <Sparkles className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
-              <p className="text-[11px] leading-snug text-foreground/90">
-                {caloriasLoading ? "Calculando seu gasto calórico..." : mensagemGasto}
-              </p>
-            </div>
-          )}
+      {/* Mensagem da IA (gasto calórico) — as estatísticas já estão dentro do card */}
+      {(caloriasLoading || mensagemGasto) && (
+        <div
+          className="mt-3 rounded-xl bg-primary/10 border border-primary/25 px-3 py-2 flex items-start gap-2"
+          style={{ width: PREVIEW_W }}
+        >
+          <Sparkles className="h-3.5 w-3.5 mt-0.5 shrink-0 text-primary" />
+          <p className="text-[11px] leading-snug text-foreground/90">
+            {caloriasLoading ? "Calculando seu gasto calórico..." : mensagemGasto}
+          </p>
         </div>
       )}
 
-      <div className="flex gap-3 mt-4 w-full max-w-[360px]">
+      <div className="flex gap-3 mt-4" style={{ width: PREVIEW_W }}>
         <button
           onClick={handleShare}
           disabled={busy}
@@ -219,7 +246,7 @@ export const TreinoConclusaoCard = ({
         </button>
       </div>
 
-      <p className="text-xs text-muted-foreground mt-4 text-center max-w-[360px]">
+      <p className="text-xs text-muted-foreground mt-3 text-center" style={{ maxWidth: PREVIEW_W }}>
         Marque o coach nos stories e leve o time junto. 💪
       </p>
     </div>
@@ -233,78 +260,263 @@ interface CardArtProps {
   dataHoje: string;
   avatar: string | null;
   tenantNome: string;
+  tenantLogo: string | null;
+  duracaoMin: number | null;
+  volumeKg: number | null;
+  seriesTotal: number | null;
+  gastoCalorico: number | null;
+  caloriasLoading: boolean;
+  colors: BrandColors;
 }
 
 const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
-  ({ nome, diaTreino, totalExercicios, dataHoje, avatar, tenantNome }, ref) => (
-    <div
-      ref={ref}
-      className="w-[1080px] h-[1350px] bg-black relative overflow-hidden flex flex-col text-white font-sans"
-    >
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-black to-black" />
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_18%,hsl(var(--primary)/0.35),transparent_60%)]" />
+  (
+    {
+      nome,
+      diaTreino,
+      totalExercicios,
+      dataHoje,
+      avatar,
+      tenantNome,
+      tenantLogo,
+      duracaoMin,
+      volumeKg,
+      seriesTotal,
+      gastoCalorico,
+      caloriasLoading,
+      colors,
+    },
+    ref
+  ) => {
+    const nomeSize = nome.length > 12 ? "text-5xl" : nome.length > 8 ? "text-6xl" : "text-7xl";
+    const treinoSize = diaTreino.length > 26 ? "text-xl" : diaTreino.length > 16 ? "text-2xl" : "text-3xl";
 
-      {/* Topo: marca */}
-      <div className="relative z-20 flex items-center gap-4 px-12 pt-10">
-        <div className="w-14 h-14 bg-primary flex items-center justify-center font-display text-3xl text-white rounded">
-          {tenantNome.charAt(0)}
+    const stats: { icon: typeof Clock; value: string; label: string }[] = [
+      { icon: Clock, value: duracaoMin != null ? `${duracaoMin}` : "—", label: "MIN" },
+      {
+        icon: Dumbbell,
+        value: volumeKg != null ? Math.round(volumeKg).toLocaleString("pt-BR") : "—",
+        label: "KG VOL",
+      },
+      { icon: ListChecks, value: seriesTotal != null ? `${seriesTotal}` : "—", label: "SÉRIES" },
+      {
+        icon: Flame,
+        value: caloriasLoading ? "…" : gastoCalorico != null ? gastoCalorico.toLocaleString("pt-BR") : "—",
+        label: "KCAL",
+      },
+    ];
+
+    return (
+      <div
+        ref={ref}
+        className="relative overflow-hidden flex flex-col text-white font-sans"
+        style={{ width: CARD_W, height: CARD_H, backgroundColor: "#000000" }}
+      >
+        {/* Fundo cinematográfico: gradiente, fumaça e vinheta na cor do tenant */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `linear-gradient(160deg, ${colors.primarySoft} 0%, #000000 45%, #000000 100%)`,
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(circle at 50% 30%, ${colors.primarySoft} 0%, transparent 55%)`,
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: `radial-gradient(ellipse at 50% 100%, ${colors.primaryFaint} 0%, transparent 50%)`,
+          }}
+        />
+        {/* Vinheta forte */}
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.85) 100%)",
+          }}
+        />
+
+        {/* Header: marca do coach */}
+        <div className="relative z-20 flex items-center gap-5 px-14 pt-14">
+          {tenantLogo ? (
+            <img
+              src={tenantLogo}
+              alt={tenantNome}
+              crossOrigin="anonymous"
+              className="w-16 h-16 object-contain rounded"
+            />
+          ) : (
+            <div
+              className="w-16 h-16 flex items-center justify-center font-display text-4xl text-white rounded"
+              style={{ backgroundColor: colors.primary, boxShadow: `0 0 40px ${colors.primarySoft}` }}
+            >
+              {tenantNome.charAt(0)}
+            </div>
+          )}
+          <div className="text-2xl font-bold tracking-[0.35em] uppercase">{tenantNome}</div>
         </div>
-        <div className="text-xl font-bold tracking-[0.2em] uppercase">{tenantNome}</div>
-      </div>
 
-      {/* Bloco de título — área exclusiva, sem sobreposição com o avatar */}
-      <div className="relative z-20 px-12 pt-8 text-center">
-        <div className="inline-flex items-center gap-3 px-6 py-2 bg-primary/20 border border-primary rounded-full">
-          <Trophy className="h-6 w-6 text-primary" />
-          <span className="text-xl tracking-[0.25em] uppercase font-bold leading-none">
-            Treino Concluído
-          </span>
+        {/* Badge de conclusão */}
+        <div className="relative z-20 flex justify-center pt-12">
+          <div
+            className="inline-flex items-center gap-4 px-10 py-4 rounded-full"
+            style={{
+              border: `3px solid ${colors.primary}`,
+              backgroundColor: colors.primaryFaint,
+              boxShadow: `0 0 50px ${colors.primarySoft}, inset 0 0 30px ${colors.primaryFaint}`,
+            }}
+          >
+            <Trophy className="h-8 w-8" style={{ color: colors.primary }} />
+            <span className="text-3xl tracking-[0.3em] uppercase font-bold leading-none">
+              Treino Concluído
+            </span>
+          </div>
         </div>
-        <h1 className="text-[104px] font-display tracking-[0.02em] mt-6 leading-[0.9] whitespace-nowrap">
-          MAIS UM <span className="text-primary italic">CHECK</span>
-        </h1>
-      </div>
 
-      {/* Avatar: ocupa só o espaço restante, alinhado embaixo */}
-      <div className="relative z-10 flex-1 min-h-0 flex items-end justify-center px-12 pb-2">
-        {avatar ? (
-          <img
-            src={avatar}
-            alt="Atleta"
-            crossOrigin="anonymous"
-            className="max-h-full w-auto object-contain drop-shadow-[0_0_60px_hsl(var(--primary)/0.7)]"
+        {/* Título cinematográfico */}
+        <div className="relative z-20 px-14 pt-10 text-center leading-none">
+          <h1 className="font-display whitespace-nowrap">
+            <span className="text-[120px] tracking-[0.02em] text-white">MAIS UM </span>
+            <span
+              className="text-[120px] italic tracking-[0.02em]"
+              style={{ color: colors.primary, textShadow: `0 0 60px ${colors.primarySoft}` }}
+            >
+              CHECK
+            </span>
+          </h1>
+          <div
+            className="mx-auto mt-6 h-[3px] w-[420px]"
+            style={{ background: `linear-gradient(90deg, transparent, ${colors.primary}, transparent)` }}
           />
-        ) : (
-          <div className="h-full max-h-[520px] w-[400px] rounded-3xl bg-primary/10 border-2 border-primary/40 flex items-center justify-center">
-            <Trophy className="h-40 w-40 text-primary" />
-          </div>
-        )}
-      </div>
+        </div>
 
-      {/* Rodapé de stats */}
-      <div className="relative z-20 mx-12 mb-12 bg-black/80 backdrop-blur border-y-4 border-primary px-8 py-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm tracking-[0.2em] uppercase text-white/50">Atleta</p>
-            <p className="text-5xl font-display tracking-[0.04em] mt-1 leading-none">{nome}</p>
+        {/* Cena do atleta: protagonista com halo geométrico + frases motivacionais */}
+        <div className="relative z-10 flex-1 min-h-0 flex items-end justify-center px-14">
+          {/* Halo hexagonal */}
+          <svg
+            viewBox="0 0 600 700"
+            className="absolute left-1/2 -translate-x-1/2 bottom-0 h-[92%] w-auto"
+            style={{ opacity: 0.75, filter: `drop-shadow(0 0 25px ${colors.primarySoft})` }}
+          >
+            <polygon
+              points="300,30 555,165 555,535 300,670 45,535 45,165"
+              fill="none"
+              stroke={colors.primary}
+              strokeWidth="5"
+            />
+            <polygon
+              points="300,60 532,182 532,518 300,640 68,518 68,182"
+              fill="none"
+              stroke={colors.primarySoft}
+              strokeWidth="2"
+            />
+          </svg>
+
+          {/* Rim light atrás do atleta */}
+          <div
+            className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[720px] h-[720px] rounded-full"
+            style={{ background: `radial-gradient(circle, ${colors.primarySoft} 0%, transparent 65%)` }}
+          />
+
+          {/* Motivação lateral direita */}
+          <div className="absolute right-12 top-6 text-right z-20 space-y-3">
+            {["DISCIPLINA", "FOCO", "RESULTADOS"].map((palavra, i) => (
+              <p
+                key={palavra}
+                className="text-3xl font-bold tracking-[0.25em] uppercase leading-none"
+                style={{ color: i === 1 ? colors.primary : "rgba(255,255,255,0.9)" }}
+              >
+                {palavra}
+              </p>
+            ))}
+            <div
+              className="ml-auto h-[3px] w-24"
+              style={{ background: `linear-gradient(90deg, transparent, ${colors.primary})` }}
+            />
           </div>
-          <div className="text-right">
-            <p className="text-sm tracking-[0.2em] uppercase text-white/50">{diaTreino}</p>
-            <p className="text-5xl font-display text-primary leading-none mt-1">{totalExercicios}</p>
-            <p className="text-xs uppercase tracking-[0.2em] text-white/50 mt-1">exercícios</p>
+
+          {avatar ? (
+            <img
+              src={avatar}
+              alt="Atleta"
+              crossOrigin="anonymous"
+              className="relative z-10 max-h-full w-auto object-contain"
+              style={{ filter: `drop-shadow(0 0 70px ${colors.primarySoft})` }}
+            />
+          ) : (
+            <div
+              className="relative z-10 h-full max-h-[620px] w-[440px] rounded-3xl flex items-center justify-center"
+              style={{ backgroundColor: colors.primaryFaint, border: `3px solid ${colors.primarySoft}` }}
+            >
+              <Trophy className="h-44 w-44" style={{ color: colors.primary }} />
+            </div>
+          )}
+        </div>
+
+        {/* Barra de informações: atleta / treino / exercícios */}
+        <div
+          className="relative z-20 mx-14 mt-6 px-10 py-7 bg-black/80 backdrop-blur flex items-center justify-between"
+          style={{ borderTop: `4px solid ${colors.primary}`, borderBottom: `4px solid ${colors.primary}` }}
+        >
+          <div className="min-w-0">
+            <p className="text-lg tracking-[0.3em] uppercase text-white/50">Atleta</p>
+            <p className={`${nomeSize} font-display tracking-[0.03em] mt-1 leading-none truncate`}>{nome}</p>
+            <p className="text-lg uppercase tracking-[0.15em] text-white/50 mt-3">{dataHoje}</p>
+          </div>
+          <div className="text-right shrink-0 pl-8">
+            <p className={`${treinoSize} font-bold uppercase tracking-[0.08em] text-white/80 max-w-[380px]`}>
+              {diaTreino}
+            </p>
+            <div className="flex items-end justify-end gap-3 mt-2">
+              <Dumbbell className="h-10 w-10 mb-2" style={{ color: colors.primary }} />
+              <p
+                className="text-8xl font-display leading-none"
+                style={{ color: colors.primary, textShadow: `0 0 40px ${colors.primarySoft}` }}
+              >
+                {totalExercicios}
+              </p>
+            </div>
+            <p className="text-base uppercase tracking-[0.3em] text-white/50 mt-2">exercícios</p>
           </div>
         </div>
-        <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between text-sm uppercase tracking-[0.15em]">
-          <span className="text-white/50">{dataHoje}</span>
-          <span className="font-bold text-white underline decoration-primary underline-offset-4">
+
+        {/* Estatísticas da sessão */}
+        <div className="relative z-20 mx-14 mt-6 grid grid-cols-4 gap-5">
+          {stats.map(({ icon: Icon, value, label }) => (
+            <div
+              key={label}
+              className="rounded-2xl px-4 py-6 text-center bg-black/70"
+              style={{
+                border: `2px solid ${colors.primarySoft}`,
+                boxShadow: `inset 0 0 30px ${colors.primaryFaint}`,
+              }}
+            >
+              <Icon className="h-9 w-9 mx-auto" style={{ color: colors.primary }} />
+              <p className="font-display text-5xl mt-3 leading-none">{value}</p>
+              <p className="text-base uppercase tracking-[0.25em] text-white/50 mt-2">{label}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Rodapé */}
+        <div className="relative z-20 mt-auto pt-8 pb-10 text-center">
+          <p className="text-xl tracking-[0.4em] uppercase text-white/70">Evoluindo todos os dias</p>
+          <p className="text-lg font-bold uppercase tracking-[0.2em] mt-2" style={{ color: colors.primary }}>
             #{tenantNome.replace(/\s+/g, "")}
-          </span>
+          </p>
         </div>
-      </div>
 
-      <div className="absolute bottom-0 left-0 w-full h-2 bg-primary shadow-[0_0_30px_hsl(var(--primary))]" />
-    </div>
-  )
+        <div
+          className="absolute bottom-0 left-0 w-full h-2"
+          style={{ backgroundColor: colors.primary, boxShadow: `0 0 30px ${colors.primary}` }}
+        />
+      </div>
+    );
+  }
 );
 CardArt.displayName = "CardArt";
 
