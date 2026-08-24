@@ -363,7 +363,23 @@ export default function Onboarding() {
         </div>
 
         <div className="mt-8 flex items-center justify-between px-4 md:px-0">
-          <Button variant="ghost" onClick={() => setStep(s => Math.max(1, s - 1))} disabled={step === 1 || busy} className="text-white"><ArrowLeft className="mr-2 h-5 w-5" /> Voltar</Button>
+          <Button
+            variant="ghost"
+            onClick={() => {
+              // Na etapa 1 o Voltar sempre sai para a tela de login do tenant;
+              // nas demais etapas ele apenas retrocede no formulário.
+              if (step === 1) {
+                const loginSlug = tenantSlug ?? slug;
+                navigate(loginSlug ? `/${loginSlug}/login` : "/login");
+                return;
+              }
+              setStep(s => Math.max(1, s - 1));
+            }}
+            disabled={busy}
+            className="text-white"
+          >
+            <ArrowLeft className="mr-2 h-5 w-5" /> Voltar
+          </Button>
           {step < 3 ? (
             <Button onClick={() => setStep(s => s + 1)} className="bg-gradient-primary h-12 px-8 font-bold uppercase tracking-wider">Continuar <ArrowRight className="ml-2 h-5 w-5" /></Button>
           ) : (

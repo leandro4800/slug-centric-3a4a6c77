@@ -88,6 +88,23 @@ const Login = () => {
       },
     });
 
+    // Aluno com cadastro incompleto (perfil/anamnese) volta para o onboarding
+    // no próximo login, em vez de cair direto no app. Em erro de rede, deixa o
+    // app decidir pelo guard interno para não bloquear o acesso indevidamente.
+    const resolveStudentEntry = async (slug: string): Promise<string> => {
+      try {
+        const [perfilRes, anamRes] = await Promise.all([
+          loginClient.from("perfis").select("onboarding_completo").eq("id", userId).maybeSingle(),
+          loginClient.from("anamnese_aluno").select("id", { count: "exact", head: true }).eq("aluno_id", userId),
+        ]);
+        if (perfilRes.error || anamRes.error) return `/${slug}/app`;
+        const done = !!perfilRes.data?.onboarding_completo && (anamRes.count ?? 0) > 0;
+        return done ? `/${slug}/app` : `/${slug}/onboarding`;
+      } catch {
+        return `/${slug}/app`;
+      }
+    };
+
     // Fonte autoritativa: o banco resolve o tenant da conta autenticada sem
     // depender do slug que ficou salvo/aberto no app nativo.
     let destinationRows: Awaited<ReturnType<typeof supabase.rpc<"get_my_app_destination">>>["data"] = null;
