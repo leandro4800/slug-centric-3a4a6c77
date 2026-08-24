@@ -248,12 +248,12 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
       if (tenantId) {
         // Só grava foto_original_url se ela já existia (foto enviada na carta) —
         // se veio do perfil, não sobrescreve a imagem da carta
-        const payload: Record<string, unknown> = {
+        const payload = {
           aluno_id: alunoId,
           tenant_id: tenantId,
           avatar_carta_url: url,
+          ...(fotoOriginal ? { foto_original_url: fotoOriginal } : {}),
         };
-        if (fotoOriginal) payload.foto_original_url = fotoOriginal;
         await supabase.from("cartas_atleta").upsert(payload, { onConflict: "aluno_id" });
       }
     }
