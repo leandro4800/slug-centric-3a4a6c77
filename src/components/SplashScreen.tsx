@@ -133,13 +133,12 @@ export const SplashScreen = () => {
           />
           {/* Overlay de loading que cobre o vídeo até o primeiro frame real ser exibido.
               Evita o flash do ícone de play padrão do WebView Android. */}
-          {!videoPlaying && (
-            <div
-              className={cn(
-                "absolute inset-0 z-10 flex flex-col items-center justify-center bg-background transition-opacity duration-200 ease-in-out",
-                videoPlaying && "opacity-0 pointer-events-none"
-              )}
-            >
+          <div
+            className={cn(
+              "absolute inset-0 z-10 flex flex-col items-center justify-center bg-background transition-opacity duration-200 ease-in-out",
+              videoPlaying && "opacity-0 pointer-events-none"
+            )}
+          >
               <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-1000">
                 {tenant?.logo_url ? (
                   <div className="flex flex-col items-center gap-6">
