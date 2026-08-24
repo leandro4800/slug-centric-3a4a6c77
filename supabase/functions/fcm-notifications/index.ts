@@ -24,6 +24,31 @@ serve(async (req) => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
   )
 
+  // --- Autenticação ---
+  // 1) Chamadas server-to-server (cron de lembretes) usam a service_role key.
+  // 2) Demais chamadas exigem JWT de usuário autenticado + autorização abaixo.
+  const authHeader = req.headers.get('Authorization') ?? ''
+  const bearer = authHeader.replace('Bearer ', '')
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+  const isServiceCall = !!bearer && !!serviceKey && bearer === serviceKey
+
+  let callerId: string | null = null
+  if (!isServiceCall) {
+    const userClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+      { global: { headers: { Authorization: `Bearer ${bearer}` } } }
+    )
+    const { data: userData, error: userErr } = await userClient.auth.getUser()
+    if (userErr || !userData.user) {
+      return new Response(JSON.stringify({ error: 'Não autenticado' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 401,
+      })
+    }
+    callerId = userData.user.id
+  }
+
   const logSend = async (entry: {
     user_id?: string | null
     has_token: boolean
