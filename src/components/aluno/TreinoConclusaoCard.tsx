@@ -623,8 +623,14 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             {["DISCIPLINA", "FOCO", "RESULTADOS"].map((palavra, i) => (
               <p
                 key={palavra}
-                className="text-3xl font-bold tracking-[0.25em] uppercase leading-none"
-                style={{ color: i === 1 ? colors.primary : "rgba(255,255,255,0.9)" }}
+                className="text-4xl tracking-[0.18em] uppercase leading-none"
+                style={{
+                  fontFamily: "'Anton', 'Bebas Neue', sans-serif",
+                  fontWeight: 400,
+                  color: i === 1 ? colors.primary : "rgba(255,255,255,0.92)",
+                  textShadow:
+                    i === 1 ? `0 0 30px ${colors.primarySoft}` : "0 2px 12px rgba(0,0,0,0.6)",
+                }}
               >
                 {palavra}
               </p>
