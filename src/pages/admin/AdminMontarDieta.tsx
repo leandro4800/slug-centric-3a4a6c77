@@ -590,6 +590,9 @@ const AdminMontarDieta = () => {
           carboidrato_g: Math.round(r.carboidrato_g || 0),
           lipideos_g: Math.round(r.lipideos_g || 0),
         })));
+        setRefeicoes((prev) =>
+          prev.map((r, i) => ({ ...r, descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia }))
+        );
       }
       toast.success("Macros recalculados com sucesso!", { id: toastId });
     } catch (e: any) {
