@@ -318,6 +318,11 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
           toast.success(`Recalculado: ${Math.round(data.totais.kcal || 0)} kcal`, { id: tId });
         }
       }
+      if (Array.isArray(data?.refeicoes)) {
+        setRefeicoes((prev) =>
+          prev.map((r, i) => ({ ...r, descricao_ia: data.refeicoes[i]?.descricao_ia || r.descricao_ia })),
+        );
+      }
       return data;
     } catch (e: any) {
       if (showToast) toast.error("Erro ao recalcular: " + e.message, { id: tId });

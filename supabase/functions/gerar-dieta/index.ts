@@ -399,6 +399,73 @@ serve(async (req) => {
       const parsed = calculateDietFromTaco(refeicoesIn, (tacoRows || []) as TacoFood[]);
       const totais = parsed.totais || { kcal: 0, proteina_g: 0, carboidrato_g: 0, lipideos_g: 0 };
 
+      // Regera a PARTE 2 (parágrafo explicativo) de cada refeição para acompanhar
+      // os alimentos que o coach acabou de trocar. A lista (PARTE 1) é preservada.
+      const splitDescricao = (desc: string) => {
+        const lines = String(desc || "").split(/\n/);
+        const bullets: string[] = [];
+        const prosa: string[] = [];
+        for (const raw of lines) {
+          const l = raw.trim();
+          if (!l) continue;
+          if (/^[•\-–—*]/.test(l) || /^op[cç][aã]o\s*[0-9a-z]*/i.test(l) || /\d+\s*(g|ml|fatias?|unidades?|colher|colheres|copos?|ovos?)\b/i.test(l)) {
+            bullets.push(l);
+          } else {
+            prosa.push(l);
+          }
+        }
+        return { bullets, prosa: prosa.join("\n").trim() };
+      };
+
+      const partes = refeicoesIn.map((r) => ({ nome: r.nome, ...splitDescricao(r.descricao || "") }));
+      const precisaProsa = partes.some((p) => p.prosa && p.bullets.length);
+      let descricoesFinais = refeicoesIn.map((r) => r.descricao || "");
+
+      if (precisaProsa && LOVABLE_API_KEY) {
+        try {
+          const macroPorRef = (parsed.refeicoes || []) as any[];
+          const userPrompt = partes
+            .map((p, i) => {
+              const m = macroPorRef[i] || {};
+              return `Refeição ${i + 1} — ${p.nome}\nAlimentos atuais:\n${p.bullets.join("\n") || "(sem itens)"}\nMacros: ${Math.round(m.kcal || 0)} kcal | P ${Math.round(m.proteina_g || 0)}g | C ${Math.round(m.carboidrato_g || 0)}g | G ${Math.round(m.lipideos_g || 0)}g\nTexto antigo (desatualizado): ${p.prosa || "(vazio)"}`;
+            })
+            .join("\n\n");
+
+          const aiResp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+            method: "POST",
+            headers: { "Authorization": `Bearer ${LOVABLE_API_KEY}`, "Lovable-API-Key": LOVABLE_API_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({
+              model: "google/gemini-2.5-flash",
+              messages: [
+                {
+                  role: "system",
+                  content:
+                    'Você é nutricionista esportivo. Reescreva o parágrafo explicativo de cada refeição para descrever EXATAMENTE os alimentos atuais listados. NUNCA cite alimento que não está na lista atual. 2 a 3 frases, tom direto e prático, em português do Brasil, falando com o aluno. Retorne JSON: {"refeicoes":[{"detalhe":"..."}]} na MESMA ORDEM recebida.',
+                },
+                { role: "user", content: userPrompt },
+              ],
+              response_format: { type: "json_object" },
+              temperature: 0.3,
+            }),
+          });
+          if (aiResp.ok) {
+            const aiData = await aiResp.json();
+            const plano = parseJsonContent(aiData.choices?.[0]?.message?.content || "{}");
+            const novos = Array.isArray(plano.refeicoes) ? plano.refeicoes : [];
+            descricoesFinais = partes.map((p, i) => {
+              const detalhe = String(novos[i]?.detalhe || "").trim();
+              if (!p.bullets.length) return refeicoesIn[i].descricao || "";
+              if (!detalhe) return [p.bullets.join("\n"), p.prosa].filter(Boolean).join("\n\n");
+              return `${p.bullets.join("\n")}\n\n${detalhe}`;
+            });
+          } else {
+            console.error("[gerar-dieta recalc] AI prosa error", aiResp.status, await aiResp.text());
+          }
+        } catch (e) {
+          console.error("[gerar-dieta recalc] prosa fallback", e);
+        }
+      }
+
       if (body.dieta_id) {
         await supabase.from("dietas").update({
           kcal_alvo: Math.round(Number(totais.kcal) || 0),
@@ -409,11 +476,26 @@ serve(async (req) => {
             badge: "Calculado pela TACO",
           },
         }).eq("id", body.dieta_id);
+
+        // Persiste as descrições atualizadas (ordem = índice usado pelo editor)
+        const { data: refRows } = await supabase
+          .from("refeicoes")
+          .select("id, ordem")
+          .eq("dieta_id", body.dieta_id)
+          .order("ordem");
+        const rows = (refRows || []) as Array<{ id: string; ordem: number | null }>;
+        await Promise.all(
+          rows.map((row, i) =>
+            descricoesFinais[i] && descricoesFinais[i] !== (refeicoesIn[i]?.descricao || "")
+              ? supabase.from("refeicoes").update({ descricao_ia: descricoesFinais[i] }).eq("id", row.id)
+              : Promise.resolve(null),
+          ),
+        );
       }
 
       return new Response(JSON.stringify({
         success: true,
-        refeicoes: parsed.refeicoes || [],
+        refeicoes: (parsed.refeicoes || []).map((r: any, i: number) => ({ ...r, descricao_ia: descricoesFinais[i] })),
         totais,
         kcal_alvo: Math.round(Number(totais.kcal) || 0),
         macros_alvo: {
@@ -426,6 +508,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     if (mode === "refine") {
       const kcalAlvo = body.kcal_alvo || 2500;
