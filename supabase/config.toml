@@ -19,7 +19,9 @@ additional_redirect_urls = [
   [functions.auth-email-hook]
     verify_jwt = false
   [functions.gerar-dieta]
-    verify_jwt = true
+    # JWT is validated inside the function with auth.getUser(). Keeping gateway
+    # verification off supports the project's current signing-key tokens.
+    verify_jwt = false
   [functions.gerar-treino-ia]
     verify_jwt = true
   [functions.gerar-planilha-treino]
