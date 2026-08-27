@@ -2364,6 +2364,7 @@ export type Database = {
           music_url: string | null
           nome_completo: string | null
           onboarding_completo: boolean
+          primeiro_acesso_em: string | null
           push_token: string | null
           sexo: string | null
           telefone: string | null
@@ -2384,6 +2385,7 @@ export type Database = {
           music_url?: string | null
           nome_completo?: string | null
           onboarding_completo?: boolean
+          primeiro_acesso_em?: string | null
           push_token?: string | null
           sexo?: string | null
           telefone?: string | null
@@ -2404,6 +2406,7 @@ export type Database = {
           music_url?: string | null
           nome_completo?: string | null
           onboarding_completo?: boolean
+          primeiro_acesso_em?: string | null
           push_token?: string | null
           sexo?: string | null
           telefone?: string | null

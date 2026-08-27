@@ -1,0 +1,1 @@
+ALTER TABLE public.perfis ADD COLUMN IF NOT EXISTS primeiro_acesso_em TIMESTAMPTZ;

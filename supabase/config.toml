@@ -84,3 +84,6 @@ additional_redirect_urls = [
     verify_jwt = true
   [functions.analisar-metricas-aluno]
     verify_jwt = true
+
+  [functions.notify-first-access]
+    verify_jwt = false
