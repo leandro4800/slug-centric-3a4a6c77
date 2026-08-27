@@ -31,6 +31,10 @@ const AlunoLayout = () => {
         return;
       }
 
+      // Marca o primeiro acesso e avisa o admin da plataforma (idempotente no backend).
+      supabase.functions.invoke("notify-first-access").catch(() => {});
+
+
       // Coaches (owners de tenant) e admins globais da plataforma NÃO passam
       // por onboarding no mobile — preenchimento de perfil/anamnese/avaliação
       // fica no painel do site.
