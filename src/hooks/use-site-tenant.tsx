@@ -7,26 +7,34 @@ interface SiteTenant {
   slug: string;
   nome: string;
   logo_url?: string | null;
+  is_partner?: boolean | null;
+  status?: string | null;
 }
+
+export type BlockReason = "no_subscription" | null;
 
 interface Ctx {
   tenant: SiteTenant | null;
   loading: boolean;
   error: string | null;
+  accessBlocked: boolean;
+  blockReason: BlockReason;
   reload: () => void;
 }
 
-const SiteTenantContext = createContext<Ctx>({ tenant: null, loading: true, error: null, reload: () => {} });
+const SiteTenantContext = createContext<Ctx>({ tenant: null, loading: true, error: null, accessBlocked: false, blockReason: null, reload: () => {} });
 
 export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [tenant, setTenant] = useState<SiteTenant | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [accessBlocked, setAccessBlocked] = useState(false);
+  const [blockReason, setBlockReason] = useState<BlockReason>(null);
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
-    if (!user) { setTenant(null); setLoading(false); return; }
+    if (!user) { setTenant(null); setAccessBlocked(false); setBlockReason(null); setLoading(false); return; }
     let cancelled = false;
     const cacheKey = `site_tenant_${user.id}`;
 
@@ -34,6 +42,24 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
       if (!err) return false;
       const m = `${err.code ?? ""} ${err.message ?? ""}`.toLowerCase();
       return m.includes("jwt") || m.includes("token") || m.includes("pgrst301") || m.includes("401") || m.includes("403");
+    };
+
+    // Verifica se o coach pode acessar o painel:
+    // parceiro sempre libera; caso contrário exige assinatura da plataforma ativa/trial.
+    const checkAccess = async (t: SiteTenant) => {
+      if (t.is_partner) return { blocked: false, reason: null as BlockReason };
+      const { data, error: subErr } = await supabase
+        .from("coach_platform_subscriptions")
+        .select("status")
+        .eq("tenant_id", t.id)
+        .in("status", ["active", "trialing"])
+        .limit(1);
+      if (subErr) {
+        console.warn("[SiteTenant] Falha ao checar assinatura da plataforma:", subErr.message);
+        return { blocked: false, reason: null as BlockReason }; // fail-open em erro de rede
+      }
+      if (data && data.length > 0) return { blocked: false, reason: null as BlockReason };
+      return { blocked: true, reason: "no_subscription" as BlockReason };
     };
 
     (async () => {
@@ -53,7 +79,7 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
         if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
         const { data, error: err } = await supabase
           .from("tenants")
-          .select("id, slug, nome, logo_url")
+          .select("id, slug, nome, logo_url, is_partner, status")
           .eq("owner_user_id", user.id)
           .order("created_at", { ascending: true })
           .limit(1)
@@ -66,6 +92,15 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
             if (t) localStorage.setItem(cacheKey, JSON.stringify(t));
             else localStorage.removeItem(cacheKey);
           } catch { /* ignore */ }
+          if (t) {
+            const { blocked, reason } = await checkAccess(t);
+            if (cancelled) return;
+            setAccessBlocked(blocked);
+            setBlockReason(reason);
+          } else {
+            setAccessBlocked(false);
+            setBlockReason(null);
+          }
           setLoading(false);
           return;
         }
@@ -96,7 +131,7 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
   }, [user?.id, tick]);
 
   return (
-    <SiteTenantContext.Provider value={{ tenant, loading, error, reload: () => setTick((t) => t + 1) }}>
+    <SiteTenantContext.Provider value={{ tenant, loading, error, accessBlocked, blockReason, reload: () => setTick((t) => t + 1) }}>
       {children}
     </SiteTenantContext.Provider>
   );
