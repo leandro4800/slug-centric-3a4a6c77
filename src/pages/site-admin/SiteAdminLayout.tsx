@@ -24,7 +24,7 @@ const mobileItems = [
 ];
 
 const Inner = () => {
-  const { tenant, loading, error, reload } = useSiteTenant();
+  const { tenant, loading, error, accessBlocked, reload } = useSiteTenant();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
 
@@ -66,6 +66,27 @@ const Inner = () => {
     );
   }
 
+  if (accessBlocked) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-6 text-center">
+        <div className="max-w-sm space-y-3">
+          <p className="text-sm uppercase tracking-widest text-primary font-bold">Assinatura necessária</p>
+          <p className="text-sm text-muted-foreground">
+            Seu painel de coach está bloqueado porque não encontramos uma assinatura ativa da plataforma Alpha Coach Pro.
+            Ative sua assinatura para voltar a gerenciar seus alunos.
+          </p>
+          <div className="flex flex-col gap-2">
+            <a href="/seja-coach" className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-bold text-primary-foreground">
+              Assinar a plataforma
+            </a>
+            <button onClick={reload} className="inline-flex h-10 items-center justify-center rounded-md border border-white/20 px-4 text-sm font-bold">
+              Já assinei, atualizar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-background">

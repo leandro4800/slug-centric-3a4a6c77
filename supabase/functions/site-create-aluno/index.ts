@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
 
     // Find the tenant owned by the caller
     const { data: tenant, error: tenantErr } = await admin
-      .from("tenants").select("id, slug, nome").eq("owner_user_id", callerId).maybeSingle();
+      .from("tenants").select("id, slug, nome, is_partner").eq("owner_user_id", callerId).maybeSingle();
     if (tenantErr || !tenant) {
       return new Response(JSON.stringify({ error: "Você não é dono de nenhum tenant" }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -127,6 +127,15 @@ Deno.serve(async (req) => {
       effectivePlanoId = anyPlan?.id ?? null;
     }
 
+    // Só tenants PARCEIROS liberam assinatura ativa automática ao selecionar plano.
+    // Nos demais, o aluno é criado sem assinatura e só ganha acesso ao pagar via Stripe.
+    const isPartner = !!(tenant as { is_partner?: boolean }).is_partner;
+    let aguardandoPagamento = false;
+    if (effectivePlanoId && !isPartner && !isVip) {
+      aguardandoPagamento = true;
+      effectivePlanoId = null;
+    }
+
     if (effectivePlanoId) {
       const periodEnd = isVip
         ? new Date(Date.now() + 100 * 365 * 24 * 60 * 60 * 1000).toISOString()
@@ -205,7 +214,7 @@ Deno.serve(async (req) => {
       throw new Error(String((e as Error).message || e));
     }
 
-    return new Response(JSON.stringify({ ok: true, user_id: newUserId }), {
+    return new Response(JSON.stringify({ ok: true, user_id: newUserId, aguardando_pagamento: aguardandoPagamento }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {

@@ -141,7 +141,7 @@ const NovoAluno = () => {
         if (!serverError) serverError = error.message;
       }
       if (serverError) throw new Error(serverError);
-      setSuccess({ email: email.trim().toLowerCase() });
+      setSuccess({ email: email.trim().toLowerCase(), aguardandoPagamento: !!(data as any)?.aguardando_pagamento });
       toast.success("Aluno cadastrado! Email com credenciais enviado.");
     } catch (err: any) {
       toast.error(err.message || "Erro ao cadastrar aluno");
@@ -162,6 +162,11 @@ const NovoAluno = () => {
             Enviamos um email para <strong className="text-white">{success.email}</strong> com
             o usuário, senha temporária e instruções de acesso ao app.
           </p>
+          {success.aguardandoPagamento && (
+            <p className="text-sm text-amber-400 relative">
+              Atenção: o acesso do aluno só será liberado após o pagamento do plano pelo checkout (Stripe).
+            </p>
+          )}
           <div className="flex gap-3 justify-center pt-2 relative">
             <Button variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => { setSuccess(null); setNome(""); setEmail(""); setTelefone(""); setPlanoId(""); }}>
               Cadastrar outro
