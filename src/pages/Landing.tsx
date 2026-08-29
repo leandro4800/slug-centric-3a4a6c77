@@ -830,6 +830,10 @@ const LandingContent = () => {
 
       {/* Footer Minimalista */}
       <footer className="py-12 border-t border-white/5 bg-black">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 mb-10 flex flex-col items-center gap-4 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Baixe o app</p>
+          <StoreBadges className="justify-center" />
+        </div>
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-8">
           <Logo />
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-gray-500">
