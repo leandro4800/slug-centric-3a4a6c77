@@ -40,6 +40,15 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       msg.includes("chunkloaderror") ||
       msg.includes("unexpected token '<'");
 
+    // Erros de manipulação de DOM causados por extensões/tradutor automático
+    // (Google Tradutor no Chrome/WebView) — o tradutor troca os nós de texto e
+    // o React quebra ao remover o nó antigo. Recupera remontando a árvore.
+    const isDomMismatch =
+      msg.includes("removechild") ||
+      msg.includes("insertbefore") ||
+      msg.includes("not a child of this node") ||
+      msg.includes("não é filho deste nó");
+
     let recentlyRecovered = false;
     try {
       const last = Number(sessionStorage.getItem(RECOVER_KEY) || 0);
@@ -56,6 +65,17 @@ export class GlobalErrorBoundary extends Component<Props, State> {
       }
       this.setState({ recovering: true });
       void hardResetAndReload();
+      return;
+    }
+
+    if (isDomMismatch && !recentlyRecovered) {
+      try {
+        sessionStorage.setItem(RECOVER_KEY, String(Date.now()));
+      } catch {
+        /* ignore */
+      }
+      // Remonta a aplicação no lugar, sem perder a sessão do usuário.
+      setTimeout(() => this.setState({ hasError: false, errorMessage: null, recovering: false }), 50);
     }
   }
 
