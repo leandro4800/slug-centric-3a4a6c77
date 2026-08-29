@@ -471,16 +471,7 @@ function TenantLandingContent() {
             >
               <KeyRound className="mr-1 h-4 w-4" /> Tenho código
             </Button>
-            {!user && (
-              <Link to={`/${slug}/login`}>
-                <Button
-                  variant="ghost"
-                  className="text-white hover:bg-white/10 font-bold uppercase tracking-wider"
-                >
-                  Entrar
-                </Button>
-              </Link>
-            )}
+            <StoreBadges size="sm" className="gap-2" />
           </div>
         </div>
 
@@ -1024,8 +1015,10 @@ function TenantLandingContent() {
         </div>
       </section>
 
-      <footer className="border-t border-border py-8 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} {tenant.nome}. Todos os direitos reservados.
+      <footer className="border-t border-border py-10 text-center text-xs text-muted-foreground">
+        <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Baixe o app</p>
+        <StoreBadges className="justify-center" />
+        <p className="mt-6">© {new Date().getFullYear()} {tenant.nome}. Todos os direitos reservados.</p>
       </footer>
 
       <Dialog open={voucherOpen} onOpenChange={setVoucherOpen}>
