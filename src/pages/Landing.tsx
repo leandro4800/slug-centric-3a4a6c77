@@ -2,6 +2,7 @@ import { Link, useNavigate, Navigate } from "react-router-dom";
 import { isNativeApp } from "@/lib/native-platform";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { StoreBadges } from "@/components/StoreBadges";
 import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon, KeyRound, Dumbbell, Apple, Sword, Zap, FileText, Ruler, Camera, LineChart, MessagesSquare, Sparkles } from "lucide-react";
 import cardTreinoImg from "@/assets/card-treino.jpg";
 import cardDietaImg from "@/assets/card-dieta.jpg";
