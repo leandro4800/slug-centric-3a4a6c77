@@ -22,7 +22,7 @@ const NovoAluno = () => {
   const [telefone, setTelefone] = useState("");
   const [planoId, setPlanoId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState<{ email: string } | null>(null);
+  const [success, setSuccess] = useState<{ email: string; aguardandoPagamento?: boolean } | null>(null);
 
   // IA
   const [iaOpen, setIaOpen] = useState(false);
