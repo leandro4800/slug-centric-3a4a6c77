@@ -2,6 +2,7 @@ import { Link, useNavigate, Navigate } from "react-router-dom";
 import { isNativeApp } from "@/lib/native-platform";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { StoreBadges } from "@/components/StoreBadges";
 import { ArrowRight, Play, CheckCircle2, Mail, Lock, X, Video, Wallet, Palette, TrendingUp, Smartphone, Users, UserRound, MapPin, Search as SearchIcon, KeyRound, Dumbbell, Apple, Sword, Zap, FileText, Ruler, Camera, LineChart, MessagesSquare, Sparkles } from "lucide-react";
 import cardTreinoImg from "@/assets/card-treino.jpg";
 import cardDietaImg from "@/assets/card-dieta.jpg";
@@ -829,6 +830,10 @@ const LandingContent = () => {
 
       {/* Footer Minimalista */}
       <footer className="py-12 border-t border-white/5 bg-black">
+        <div className="max-w-7xl mx-auto px-6 md:px-12 mb-10 flex flex-col items-center gap-4 text-center">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary">Baixe o app</p>
+          <StoreBadges className="justify-center" />
+        </div>
         <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-8">
           <Logo />
           <div className="flex gap-8 text-[10px] font-bold uppercase tracking-widest text-gray-500">
