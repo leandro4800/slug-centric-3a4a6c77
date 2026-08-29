@@ -435,8 +435,8 @@ function TenantLandingContent() {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-background text-center">
         <h1 className="font-display text-4xl uppercase">Coach indisponível</h1>
-        <Link to="/">
-          <Button>Ver marketplace</Button>
+        <Link to="/site">
+          <Button>Voltar para o site</Button>
         </Link>
       </div>
     );
