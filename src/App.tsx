@@ -10,7 +10,6 @@ import { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
 import { RequireAuth } from "@/components/RequireAuth";
 import { SubscriptionGuard } from "@/components/SubscriptionGuard";
 import { SplashScreen } from "@/components/SplashScreen";
-import InstallPwaPrompt from "@/components/InstallPwaPrompt";
 import { GlobalErrorBoundary } from "@/components/GlobalErrorBoundary";
 import { supabase } from "@/integrations/supabase/client";
 import { buildTenantLoginPath, readFallbackTenantSlug } from "@/lib/tenant-slug";
