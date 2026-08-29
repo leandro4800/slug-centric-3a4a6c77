@@ -173,7 +173,7 @@ const App = () => (
         <AuthProvider>
           <BrandingProvider>
             <SplashScreen />
-            <InstallPwaPrompt />
+            
             <PushNotificationManager />
             <Routes>
             {/* Redirecionamentos de Raiz */}
