@@ -471,14 +471,16 @@ function TenantLandingContent() {
             >
               <KeyRound className="mr-1 h-4 w-4" /> Tenho código
             </Button>
-            <Link to={`/${slug}/login`}>
-              <Button
-                variant="ghost"
-                className="text-white hover:bg-white/10 font-bold uppercase tracking-wider"
-              >
-                {user ? "Acessar App" : "Entrar"}
-              </Button>
-            </Link>
+            {!user && (
+              <Link to={`/${slug}/login`}>
+                <Button
+                  variant="ghost"
+                  className="text-white hover:bg-white/10 font-bold uppercase tracking-wider"
+                >
+                  Entrar
+                </Button>
+              </Link>
+            )}
           </div>
         </div>
 
