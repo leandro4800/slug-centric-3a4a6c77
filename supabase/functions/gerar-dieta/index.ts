@@ -624,6 +624,12 @@ ${amaR ? `Ama (priorize): ${amaR}` : ""}
 ${evitaR ? `Evita / NÃO usar (REMOVA se aparecer): ${evitaR}` : ""}
 ${restR ? `Restrições: ${restR}` : ""}
 
+${REGRAS_REFEICAO_LIVRE}
+
+${REGRAS_LANCHE_TARDE}
+
+${REGRAS_DUAS_OPCOES}
+
 REGRAS:
 1. Aplique o COMANDO DO COACH literalmente. Se ele pediu trocar X por Y, troque. Se pediu adicionar legumes, adicione. Se pediu alinhar à anamnese, substitua os itens conflitantes por equivalentes que o aluno aceita.
 2. Bate os macros alvo. Se houve redução de kcal, ENTREGUE refeições com menos kcal.
