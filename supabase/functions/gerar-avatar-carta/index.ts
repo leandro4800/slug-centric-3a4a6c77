@@ -149,7 +149,7 @@ Deno.serve(async (req) => {
       ? ` A frente da rash guard preta deve ter APENAS o texto "${teamName}" estampado em letras grandes, centralizadas, em branco com leve relevo, tipografia esportiva moderna sans-serif (estilo jersey de time), bem legível e nítido, sem distorções, sem outros símbolos, sem erros ortográficos.`
       : "";
 
-    const prompt = `Gere um avatar 3D realista de CORPO INTEIRO estilo EA FC / FIFA Ultimate Team da pessoa nesta foto, mantendo fielmente o rosto, traços e tom de pele. A pessoa deve estar ${uniforme}, ${pose}. Fundo neutro escuro com leve glow dourado/prata cinematográfico. Iluminação AAA PS5, enquadramento vertical 3:5, corpo inteiro centralizado, sem cortes nas pernas ou cabeça.${extraMood}${estampa}`;
+    const prompt = `Gere um avatar 3D realista de CORPO INTEIRO estilo EA FC / FIFA Ultimate Team da pessoa nesta foto, mantendo fielmente o rosto, traços e tom de pele. A pessoa deve estar ${uniforme}, ${pose}. Fundo neutro escuro com leve glow dourado/prata cinematográfico. Iluminação AAA PS5, enquadramento vertical 3:5, corpo inteiro centralizado, sem cortes nas pernas ou cabeça. OBRIGATÓRIO: mesmo que a foto de referência mostre apenas da cintura para cima, complete o corpo inteiro de forma coerente e SEMPRE calce um tênis esportivo PRETO padrão nos dois pés — nunca descalço, nunca com pés nus, chinelos ou sandálias.${extraMood}${estampa}`;
 
     const aiResp = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
