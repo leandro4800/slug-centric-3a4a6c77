@@ -676,7 +676,11 @@ export const ExerciseCard = ({
       setRunning(false);
       setSeconds(0);
       try { localStorage.removeItem(storageKey); } catch {}
-      toast.success("Exercício finalizado.");
+      // Libera o exercício para ser refeito no mesmo dia: séries voltam vazias
+      // e o card continua aberto (basta preencher e confirmar de novo).
+      setSlots(emptySlots());
+      setRecordSlots(new Set());
+      toast.success("Exercício finalizado. Você pode refazê-lo se quiser.");
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível registrar as séries.");
     } finally {
