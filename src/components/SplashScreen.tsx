@@ -155,7 +155,7 @@ export const SplashScreen = () => {
                 ) : (
                   <div className="scale-[2] mb-12">
                     <img
-                      src=defaultLogoAsset.url
+                      src={defaultLogoAsset.url}
                       alt={tenant?.nome || "AlphaCoach"}
                       className="w-24 h-24 object-contain"
                     />
@@ -189,7 +189,7 @@ export const SplashScreen = () => {
             ) : (
               <div className="scale-[2] mb-12">
                 <img
-                  src=defaultLogoAsset.url
+                  src={defaultLogoAsset.url}
                   alt={tenant?.nome || "AlphaCoach"}
                   className="w-24 h-24 object-contain"
                 />

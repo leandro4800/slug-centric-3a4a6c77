@@ -150,7 +150,7 @@ const NativeStartupRedirect = () => {
             ) : null}
           </>
         ) : (
-          <img src=defaultLogoAsset.url alt="AlphaCoach" className="h-20 w-20 object-contain" />
+          <img src={defaultLogoAsset.url} alt="AlphaCoach" className="h-20 w-20 object-contain" />
         )}
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="sr-only">Carregando...</span>
