@@ -213,7 +213,8 @@ async function downloadPdf(plan: PlanoIA) {
     y = (doc as any).lastAutoTable.finalY + 8;
   });
 
-  doc.save(`planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.pdf`);
+  const filename = `planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.pdf`;
+  await saveOrShareBlob(doc.output("blob"), filename);
 }
 
 export const WorkoutSpreadsheetGenerator = () => {
