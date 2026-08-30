@@ -461,10 +461,22 @@ const PersonalDieta = () => {
                           )}
                       </div>
                       <div>
-                        <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-                          {r.nome.toUpperCase()}
-                        </h3>
-                          <p className="text-[10px] text-white/70 line-clamp-2 mt-1 font-medium">{r.descricao_ia || "Toque para ver a prescrição."}</p>
+                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                          <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                            {r.nome.toUpperCase()}
+                          </h3>
+                          {isRefeicaoLivre(r.descricao_ia) && (
+                            <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold tracking-wider">
+                              REFEIÇÃO LIVRE · 1x/SEMANA
+                            </span>
+                          )}
+                          {parseOpcoesCardapio(r.descricao_ia).length > 1 && (
+                            <span className="px-2 py-0.5 rounded-full bg-white/15 backdrop-blur text-white text-[9px] font-bold tracking-wider ring-1 ring-white/20">
+                              {parseOpcoesCardapio(r.descricao_ia).length} OPÇÕES
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-white/70 line-clamp-2 font-medium">{r.descricao_ia || "Toque para ver a prescrição."}</p>
                       </div>
                     </div>
                     {/* Play cinza no canto inferior direito */}
