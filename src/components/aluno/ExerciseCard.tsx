@@ -321,39 +321,84 @@ export const ExerciseCard = ({
     const recognition = new SR();
     recognitionRef.current = recognition;
     recognition.lang = "pt-BR";
-    recognition.interimResults = false;
+    // continuous + interim: a fala longa ("1 aquecimento..., 1 ajuste..., 3 de
+    // trabalho...") tem pausas naturais que antes encerravam o reconhecimento
+    // logo na primeira pausa, sem preencher nada.
+    recognition.continuous = true;
+    recognition.interimResults = true;
     recognition.maxAlternatives = 1;
+
+    let finalText = "";
+    let finished = false;
+    let silenceTimer: number | null = null;
+    let hardStopTimer: number | null = null;
+
+    const clearTimers = () => {
+      if (silenceTimer) window.clearTimeout(silenceTimer);
+      if (hardStopTimer) window.clearTimeout(hardStopTimer);
+      silenceTimer = null;
+      hardStopTimer = null;
+    };
+    const stopSoon = () => {
+      if (silenceTimer) window.clearTimeout(silenceTimer);
+      // encerra só após ~2,5s sem nenhuma fala nova
+      silenceTimer = window.setTimeout(() => {
+        try { recognition.stop(); } catch {}
+      }, 2500);
+    };
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      clearTimers();
+      setListeningIdx(null);
+      recognitionRef.current = null;
+      const text = finalText.trim();
+      if (text) processTranscript(text, index);
+      else toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
+    };
 
     recognition.onstart = () => {
       setListeningIdx(index);
-      toast.info(index === -1 ? "Ouvindo (todas as séries)..." : "Ouvindo...", { id: "voice-toast" });
+      toast.info(index === -1 ? "Ouvindo (todas as séries)... fale e pause no final" : "Ouvindo...", { id: "voice-toast" });
+      stopSoon();
+      // limite máximo de segurança
+      hardStopTimer = window.setTimeout(() => {
+        try { recognition.stop(); } catch {}
+      }, 30000);
     };
     recognition.onresult = (event: any) => {
-      const transcript = event.results[0][0].transcript;
-      processTranscript(transcript, index);
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        const res = event.results[i];
+        if (res.isFinal) finalText += " " + res[0].transcript;
+      }
+      stopSoon();
     };
+    recognition.onspeechstart = () => stopSoon();
     recognition.onerror = (e: any) => {
       const err = e?.error || "";
+      // "no-speech" pode chegar no meio de uma fala longa — só encerra de fato
+      // se ainda não capturamos nada.
+      if (err === "no-speech" && finalText.trim()) return;
       if (err === "not-allowed" || err === "service-not-allowed") {
         toast.error("Permissão de microfone negada. Habilite nas configurações do navegador/app.", { id: "voice-toast" });
       } else if (err === "no-speech") {
         toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
       } else if (err === "audio-capture") {
         toast.error("Microfone indisponível.", { id: "voice-toast" });
-      } else {
+      } else if (err !== "aborted") {
         toast.error(`Erro ao ouvir (${err || "desconhecido"}). Tente novamente.`, { id: "voice-toast" });
       }
+      finished = true;
+      clearTimers();
       setListeningIdx(null);
       recognitionRef.current = null;
     };
-    recognition.onend = () => {
-      setListeningIdx(null);
-      recognitionRef.current = null;
-    };
+    recognition.onend = () => finish();
     try {
       recognition.start();
     } catch (err: any) {
       toast.error(`Não consegui iniciar o microfone: ${err?.message || err}`, { id: "voice-toast" });
+      clearTimers();
       setListeningIdx(null);
       recognitionRef.current = null;
     }
