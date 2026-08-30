@@ -448,10 +448,17 @@ export const WorkoutSpreadsheetGenerator = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => downloadPdf(plano)} className="gap-2 rounded-xl">
+              <Button
+                onClick={() => { void downloadPdf(plano).catch((e) => toast.error("Erro ao gerar PDF: " + (e?.message || ""))); }}
+                className="gap-2 rounded-xl"
+              >
                 <Download className="h-4 w-4" /> PDF
               </Button>
-              <Button onClick={() => downloadCsv(plano)} variant="outline" className="gap-2 rounded-xl">
+              <Button
+                onClick={() => { void downloadCsv(plano).catch((e) => toast.error("Erro ao gerar CSV: " + (e?.message || ""))); }}
+                variant="outline"
+                className="gap-2 rounded-xl"
+              >
                 <FileSpreadsheet className="h-4 w-4" /> CSV
               </Button>
             </div>
