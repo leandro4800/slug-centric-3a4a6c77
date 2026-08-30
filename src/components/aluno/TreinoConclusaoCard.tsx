@@ -456,13 +456,15 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             {/* Fundo preto sólido: garante que barras do object-contain fiquem invisíveis */}
             <div className="absolute inset-0 bg-black" />
             {/* ===== CAMADA IA: cenário cinematográfico (+ atleta no modo full) =====
-                object-contain: a imagem INTEIRA sempre aparece — sem cortar cabeça/pés,
-                independente da proporção exata devolvida pela IA */}
+                object-contain: a imagem INTEIRA sempre aparece — sem cortar cabeça/pés.
+                object-bottom: quando a proporção do card é mais alta que a da imagem,
+                a sobra vertical fica TODA no topo (zona do título), garantindo que
+                "MAIS UM CHECK" nunca caia sobre a cabeça do avatar (bug do iPhone). */}
             <img
               src={bgUrl}
               alt=""
               crossOrigin="anonymous"
-              className="absolute inset-0 w-full h-full object-contain"
+              className="absolute inset-0 w-full h-full object-contain object-bottom"
             />
 
             {/* Modo scenario (fallback de identidade): compõe o avatar original por cima do cenário */}

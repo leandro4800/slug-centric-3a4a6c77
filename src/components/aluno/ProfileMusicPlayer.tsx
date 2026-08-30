@@ -100,37 +100,33 @@ const ProfileMusicPlayer = ({ url }: { url: string | null | undefined }) => {
 
   if (!source) return null;
 
+  const postYT = (func: string) => {
+    ytRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func, args: [] }),
+      "*"
+    );
+  };
+
+  // Efeitos colaterais FORA do updater do setState (StrictMode chama o updater
+  // duas vezes, o que anulava o play/pause e o mute).
   const togglePlay = () => {
-    setPlaying((p) => {
-      const next = !p;
-      if (source.kind === "audio" && audioRef.current) {
-        if (next) audioRef.current.play().catch(() => {});
-        else audioRef.current.pause();
-      }
-      if (source.kind === "youtube" && ytRef.current) {
-        const cmd = next ? "playVideo" : "pauseVideo";
-        ytRef.current.contentWindow?.postMessage(
-          JSON.stringify({ event: "command", func: cmd, args: [] }),
-          "*"
-        );
-      }
-      return next;
-    });
+    const next = !playing;
+    if (source.kind === "audio" && audioRef.current) {
+      if (next) audioRef.current.play().catch(() => {});
+      else audioRef.current.pause();
+    }
+    if (source.kind === "youtube") postYT(next ? "playVideo" : "pauseVideo");
+    if ((source.kind === "spotify" || source.kind === "soundcloud") && ytRef.current === null) {
+      // players de embed externos não expõem controle; apenas reflete o estado
+    }
+    setPlaying(next);
   };
 
   const toggleMute = () => {
-    setMuted((m) => {
-      const next = !m;
-      if (source.kind === "audio" && audioRef.current) audioRef.current.muted = next;
-      if (source.kind === "youtube" && ytRef.current) {
-        const cmd = next ? "mute" : "unMute";
-        ytRef.current.contentWindow?.postMessage(
-          JSON.stringify({ event: "command", func: cmd, args: [] }),
-          "*"
-        );
-      }
-      return next;
-    });
+    const next = !muted;
+    if (source.kind === "audio" && audioRef.current) audioRef.current.muted = next;
+    if (source.kind === "youtube") postYT(next ? "mute" : "unMute");
+    setMuted(next);
   };
 
   return (
