@@ -969,14 +969,19 @@ const PersonalTreino = () => {
               key={t.id}
               data={t}
               isOpen={activeIndex === i}
-              onToggle={() => setActiveIndex(activeIndex === i ? null : i)}
+              onToggle={() => {
+                if (!completedIds.has(t.id)) setActiveIndex(activeIndex === i ? null : i);
+              }}
               cargaAnterior={cargas[t.exercicio]}
               userId={user?.id || null}
               tenantId={tenant?.id || null}
               onCargaSaved={handleCargaSaved}
               nivelExperiencia={nivelExperiencia}
               completed={completedIds.has(t.id)}
-              onCompleted={() => markCompleted(t.id)}
+              onCompleted={() => {
+                markCompleted(t.id);
+                setActiveIndex(null);
+              }}
               sessaoId={sessaoAndamento?.id || null}
               sessionActive={!!sessaoAndamento}
               onSeriesSaved={() => carregarStatsSessao()}

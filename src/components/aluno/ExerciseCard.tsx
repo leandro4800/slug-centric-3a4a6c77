@@ -676,11 +676,7 @@ export const ExerciseCard = ({
       setRunning(false);
       setSeconds(0);
       try { localStorage.removeItem(storageKey); } catch {}
-      // Libera o exercício para ser refeito no mesmo dia: séries voltam vazias
-      // e o card continua aberto (basta preencher e confirmar de novo).
-      setSlots(emptySlots());
-      setRecordSlots(new Set());
-      toast.success("Exercício finalizado. Você pode refazê-lo se quiser.");
+      toast.success("Exercício finalizado.");
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível registrar as séries.");
     } finally {
@@ -699,7 +695,11 @@ export const ExerciseCard = ({
     }`}>
       {/* Header com nome + ícone de vídeo lateral + toggle de séries */}
       <div className="flex items-stretch min-h-[90px]">
-        <button onClick={onToggle} className="flex-1 p-4 text-left min-w-0">
+        <button
+          onClick={completed ? undefined : onToggle}
+          disabled={completed}
+          className="flex-1 p-4 text-left min-w-0 disabled:cursor-not-allowed"
+        >
           <div className="flex items-start justify-between gap-3">
             <p className={`text-base font-semibold leading-tight truncate ${completed ? "line-through text-muted-foreground" : ""}`}>
               {data.exercicio}
