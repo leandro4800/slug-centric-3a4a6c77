@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { isRefeicaoLivre, parseOpcoesCardapio } from "@/lib/diet-text";
 import { Utensils, Sparkles, Loader2, AlertCircle, Activity, Play, Clock } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { PageHeader } from "@/components/aluno/PageHeader";
