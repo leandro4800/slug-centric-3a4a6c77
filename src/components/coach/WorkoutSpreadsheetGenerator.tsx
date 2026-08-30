@@ -126,17 +126,11 @@ function buildCsv(plan: PlanoIA) {
   return lines.join("\n");
 }
 
-function downloadCsv(plan: PlanoIA) {
+async function downloadCsv(plan: PlanoIA) {
   const csv = buildCsv(plan);
+  const filename = `planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.csv`;
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  await saveOrShareBlob(blob, filename);
 }
 
 async function downloadPdf(plan: PlanoIA) {
