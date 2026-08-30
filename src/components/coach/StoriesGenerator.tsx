@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { saveOrShareDataUrl } from "@/lib/native-download";
+import { isNativeApp } from "@/lib/native-platform";
 import {
   Camera,
   Loader2,
