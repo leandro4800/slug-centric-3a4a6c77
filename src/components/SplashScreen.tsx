@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
+import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
 
 // Chave por tenant e sessão — assim cada coach tem seu próprio splash garantido
 const sessionKeyFor = (slug: string | null | undefined) =>
@@ -154,7 +155,7 @@ export const SplashScreen = () => {
                 ) : (
                   <div className="scale-[2] mb-12">
                     <img
-                      src="/icons/icon-192.webp"
+                      src={defaultLogoAsset.url}
                       alt={tenant?.nome || "AlphaCoach"}
                       className="w-24 h-24 object-contain"
                     />
@@ -188,7 +189,7 @@ export const SplashScreen = () => {
             ) : (
               <div className="scale-[2] mb-12">
                 <img
-                  src="/icons/icon-192.webp"
+                  src={defaultLogoAsset.url}
                   alt={tenant?.nome || "AlphaCoach"}
                   className="w-24 h-24 object-contain"
                 />

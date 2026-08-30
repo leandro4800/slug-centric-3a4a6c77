@@ -86,6 +86,7 @@ import { Calendar as CalendarIcon, Palette, Wallet } from "lucide-react";
 import SiteAdminCtCamps from "./pages/site-admin/ct/Camps";
 import SiteAdminCtNutricao from "./pages/site-admin/ct/NutricaoCombate";
 import AlunoCtHome from "./pages/aluno/ct/CtHome";
+import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
 
 const queryClient = new QueryClient();
 
@@ -149,7 +150,7 @@ const NativeStartupRedirect = () => {
             ) : null}
           </>
         ) : (
-          <img src="/icons/icon-192.webp" alt="AlphaCoach" className="h-20 w-20 object-contain" />
+          <img src={defaultLogoAsset.url} alt="AlphaCoach" className="h-20 w-20 object-contain" />
         )}
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="sr-only">Carregando...</span>

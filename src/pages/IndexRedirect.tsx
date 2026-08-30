@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { buildTenantLoginPath, readFallbackTenantSlug } from "@/lib/tenant-slug";
 import { readStartupBranding } from "@/lib/startup-branding";
 import { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
+import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
 
 const NAVIGATION_MEMORY_KEY = "startup_navigation_memory_v1";
 
@@ -209,7 +210,7 @@ const IndexRedirect = () => {
   const startupSlug = safeSlug || readFallbackTenantSlug();
   const startupBranding = readStartupBranding();
   const startupTenant = startupSlug ? readTenantBrandingCache(startupSlug) : null;
-  const startupLogo = startupTenant?.logo_url ?? startupBranding?.logo_url ?? "/icons/icon-192.webp";
+  const startupLogo = startupTenant?.logo_url ?? startupBranding?.logo_url ?? defaultLogoAsset.url;
   const startupName = startupTenant?.nome ?? startupBranding?.nome;
 
   return (
