@@ -523,7 +523,16 @@ REGRAS OBRIGATÓRIAS PARA DIETA:
 - O campo "descricao" NUNCA pode ficar vazio. Ele deve conter TODAS as linhas da refeição no formato "Alimento — medida caseira (substituições)", uma por linha, exatamente como no documento (inclusive "Livre", "200-350g", "3 unidades", "OU Ricota OU Cottage").
 - Se o documento vier de uma tabela com colunas (Refeição/Horário | Distribuição dos Alimentos | Medidas Caseiras | Substituições), associe linha a linha: cada alimento com a sua medida caseira e a sua substituição.
 - Blocos gerais que não são refeição (ex.: "EM JEJUM ... 500ml de água + 1 cápsula", "Suplementação antes de dormir 5g de creatina") também devem virar refeições com nome e descrição completa, com horario null se não houver.
-- Mantenha blocos de opções alternativas separados no campo descricao com linhas "Opção 1", "Opção 2" quando existirem.
+- OPÇÕES DE CARDÁPIO (MUITO IMPORTANTE): quando a nutricionista oferecer mais de uma opção para a MESMA refeição (ex.: "Opção 1 / Opção 2", "OU", "Alternativa", "2ª opção"), transcreva TODAS as opções no campo "descricao" usando EXATAMENTE este formato, com linha em branco entre elas:
+OPÇÃO 1:
+• linha do alimento 1
+• linha do alimento 2
+
+OPÇÃO 2:
+• linha do alimento 1
+• linha do alimento 2
+  Nunca descarte a segunda opção nem misture as opções numa lista só. Se houver apenas um cardápio, NÃO use o rótulo "OPÇÃO".
+- Em "itens" liste apenas os alimentos da OPÇÃO 1 (as demais opções ficam registradas no texto da descricao).
 - PROIBIDO INVENTAR: transcreva SOMENTE o que está escrito no documento. Nunca acrescente alimentos, quantidades, marcas ou substituições que não estejam no texto. Se algo não estiver escrito, deixe fora (null / lista vazia). Copie os nomes exatamente como aparecem (ex.: "500ml de água", "1 cápsula de Lipodrene amarelo").
 - PROIBIDO REPETIR: cada bloco de horário tem SEU PRÓPRIO conteúdo. Nunca copie as linhas de uma refeição para outra. Duas refeições NUNCA podem ter a mesma lista de alimentos.
 - Quando aparecer um horário sozinho, sem nome de refeição (ex.: "( 10:00 h )" logo abaixo de "Desjejum ( 06:30 h )"), isso é OUTRA refeição: use como nome o título escrito dentro do bloco (ex.: "Shake Proteico") ou o horário, e transcreva APENAS as linhas daquele bloco (no exemplo: Leite Integral Zero Lactose 200ml / Banana Prata 1 Unidade / Albumina S/ Sabor 30g / Canela Livre).
