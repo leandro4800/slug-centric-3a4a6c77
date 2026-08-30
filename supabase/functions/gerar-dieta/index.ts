@@ -19,6 +19,43 @@ const parseJsonContent = (content: string) => {
   }
 };
 
+// ===== Regras de prompt compartilhadas entre os modos generate/refine =====
+
+const REGRAS_REFEICAO_LIVRE = `==== REFEIÇÃO LIVRE (OBRIGATÓRIO) ====
+Os "alimentos que o aluno AMA" NÃO devem ser distribuídos todos os dias quando forem itens calóricos/indulgentes
+(ex.: açaí, sorvete, pizza, hambúrguer, chocolate, doces, salgados fritos, refrigerante, cerveja, pão de queijo).
+Regra:
+- Alimentos de rotina que ele ama (frango, ovo, banana, arroz, batata-doce, iogurte natural etc.) podem entrar no dia a dia normalmente.
+- Alimentos indulgentes que ele ama entram APENAS 1 (uma) vez por semana, marcados como REFEIÇÃO LIVRE.
+- Ao usar essa opção, escreva no início da linha do alimento o marcador "(refeição livre)" e informe a frequência:
+  "• 200g de açaí com banana (refeição livre — 1x por semana)".
+- A refeição livre CONTA NOS MACROS: calcule as gramas de forma que kcal/proteína/carbo/gordura daquela refeição continuem
+  dentro da meta diária. Nunca trate como "extra sem contar".
+- No máximo UMA refeição livre em toda a semana e em UMA única refeição do dia (de preferência a que o aluno citou).`;
+
+const REGRAS_LANCHE_TARDE = `==== LANCHE DA TARDE / LANCHES INTERMEDIÁRIOS (OBRIGATÓRIO) ====
+Nos lanches (lanche da manhã, lanche da tarde, ceia) é PROIBIDO usar alimentos de refeição principal:
+aipim/mandioca, batata (inglesa, doce ou baroa), inhame, arroz, feijão, macarrão, frango, carne vermelha, peixe, bife, ovo frito, farofa.
+Use SEMPRE alternativas de lanche: pão integral, tapioca, torrada/biscoito integral, frutas (banana, maçã, mamão, morango, laranja),
+iogurte natural/grego, queijo branco/cottage/ricota, ovos cozidos, whey protein, pasta de amendoim (controlada), aveia, granola sem açúcar.
+Se o alimento pedido pelo aluno ou pelo coach for de refeição principal, coloque-o no almoço/jantar e escolha o equivalente de lanche aqui.`;
+
+const REGRAS_DUAS_OPCOES = `==== OPÇÕES DE CARDÁPIO POR REFEIÇÃO ====
+Quando fizer sentido oferecer alternativa (ou quando o documento/coach pedir duas opções), estruture a refeição em opções
+usando EXATAMENTE este formato dentro de "descricao_ia":
+
+OPÇÃO 1:
+• 50g de pão integral
+• 2 ovos mexidos
+
+OPÇÃO 2:
+• 1 iogurte grego (170g)
+• 1 banana média
+
+As opções devem ser EQUIVALENTES em kcal e macros (variação máxima de 10%). Se houver só um cardápio, não use "OPÇÃO".`;
+
+
+
 type TacoFood = {
   nome: string;
   energia_kcal: number | null;
