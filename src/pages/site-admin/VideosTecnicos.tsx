@@ -53,9 +53,21 @@ const VideosTecnicos = () => {
   const [rows, setRows] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState<"todos" | "app" | "meus">(
-    tenant?.slug === "alphateam" ? "todos" : "meus"
-  );
+  const filterStorageKey = `videos-tecnicos-filtro:${tenant?.id ?? "sem-tenant"}`;
+  const [filter, setFilter] = useState<"todos" | "app" | "meus">(() => {
+    const fallback: "todos" | "meus" = tenant?.slug === "alphateam" ? "todos" : "meus";
+    if (typeof window === "undefined") return fallback;
+    try {
+      const saved = window.localStorage.getItem(filterStorageKey);
+      if (saved === "todos" || saved === "app" || saved === "meus") return saved;
+    } catch {}
+    return fallback;
+  });
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(filterStorageKey, filter);
+    } catch {}
+  }, [filter, filterStorageKey]);
   const [onlyMine, setOnlyMine] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
   const [tab, setTab] = useState<"biblioteca" | "alunos">("biblioteca");
