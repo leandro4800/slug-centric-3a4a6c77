@@ -346,6 +346,19 @@ export default function Anamnese() {
               />
             </div>
             <div className="space-y-2">
+              <Label>Lesões atuais ou limitações</Label>
+              <Textarea
+                placeholder="Ex: hérnia de disco L5-S1, dor no manguito rotador direito, condromalácia patelar..."
+                value={form.lesoes_atuais}
+                onChange={e => setForm({ ...form, lesoes_atuais: e.target.value })}
+                className="bg-secondary/40 border-border"
+              />
+              <p className="text-[11px] text-muted-foreground">
+                Tudo que você descrever aqui vai direto para o painel do seu coach (Saúde &amp; Lesões) e a IA
+                adapta os exercícios do seu treino para proteger essa região.
+              </p>
+            </div>
+            <div className="space-y-2">
               <Label>Histórico Familiar Relevante</Label>
               <Textarea
                 value={form.historico_familiar}

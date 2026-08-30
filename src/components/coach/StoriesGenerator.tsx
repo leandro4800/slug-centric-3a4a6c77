@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef } from "react";
+import { saveOrShareDataUrl } from "@/lib/native-download";
+import { isNativeApp } from "@/lib/native-platform";
 import {
   Camera,
   Loader2,
@@ -229,13 +231,8 @@ export const StoriesGenerator = ({ onEnterFullScreen, onExitFullScreen, isFullSc
         skipFonts: false,
       });
 
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `story-${template}-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      toast.success("Template baixado!");
+      await saveOrShareDataUrl(dataUrl, `story-${template}-${Date.now()}.png`);
+      toast.success(isNativeApp() ? "Template pronto! Escolha onde salvar." : "Template baixado!");
     } catch (e: any) {
       console.error(e);
       toast.error("Erro ao baixar: " + (e?.message || "tente novamente"));

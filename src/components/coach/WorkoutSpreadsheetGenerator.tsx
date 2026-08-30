@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { saveOrShareBlob } from "@/lib/native-download";
 import {
   FileSpreadsheet,
   Download,
@@ -126,17 +127,11 @@ function buildCsv(plan: PlanoIA) {
   return lines.join("\n");
 }
 
-function downloadCsv(plan: PlanoIA) {
+async function downloadCsv(plan: PlanoIA) {
   const csv = buildCsv(plan);
+  const filename = `planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.csv`;
   const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = `planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  await saveOrShareBlob(blob, filename);
 }
 
 async function downloadPdf(plan: PlanoIA) {
@@ -218,7 +213,8 @@ async function downloadPdf(plan: PlanoIA) {
     y = (doc as any).lastAutoTable.finalY + 8;
   });
 
-  doc.save(`planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.pdf`);
+  const filename = `planilha_${plan.title.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}.pdf`;
+  await saveOrShareBlob(doc.output("blob"), filename);
 }
 
 export const WorkoutSpreadsheetGenerator = () => {
@@ -452,10 +448,17 @@ export const WorkoutSpreadsheetGenerator = () => {
               </div>
             </div>
             <div className="flex gap-2">
-              <Button onClick={() => downloadPdf(plano)} className="gap-2 rounded-xl">
+              <Button
+                onClick={() => { void downloadPdf(plano).catch((e) => toast.error("Erro ao gerar PDF: " + (e?.message || ""))); }}
+                className="gap-2 rounded-xl"
+              >
                 <Download className="h-4 w-4" /> PDF
               </Button>
-              <Button onClick={() => downloadCsv(plano)} variant="outline" className="gap-2 rounded-xl">
+              <Button
+                onClick={() => { void downloadCsv(plano).catch((e) => toast.error("Erro ao gerar CSV: " + (e?.message || ""))); }}
+                variant="outline"
+                className="gap-2 rounded-xl"
+              >
                 <FileSpreadsheet className="h-4 w-4" /> CSV
               </Button>
             </div>

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { isRefeicaoLivre, parseOpcoesCardapio } from "@/lib/diet-text";
 import { Utensils, Sparkles, Loader2, AlertCircle, Activity, Play, Clock } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { PageHeader } from "@/components/aluno/PageHeader";
@@ -461,10 +462,22 @@ const PersonalDieta = () => {
                           )}
                       </div>
                       <div>
-                        <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
-                          {r.nome.toUpperCase()}
-                        </h3>
-                          <p className="text-[10px] text-white/70 line-clamp-2 mt-1 font-medium">{r.descricao_ia || "Toque para ver a prescrição."}</p>
+                        <div className="flex flex-wrap items-center gap-1.5 mb-1">
+                          <h3 className="font-display italic text-2xl tracking-wide text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                            {r.nome.toUpperCase()}
+                          </h3>
+                          {isRefeicaoLivre(r.descricao_ia) && (
+                            <span className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold tracking-wider">
+                              REFEIÇÃO LIVRE · 1x/SEMANA
+                            </span>
+                          )}
+                          {parseOpcoesCardapio(r.descricao_ia).length > 1 && (
+                            <span className="px-2 py-0.5 rounded-full bg-white/15 backdrop-blur text-white text-[9px] font-bold tracking-wider ring-1 ring-white/20">
+                              {parseOpcoesCardapio(r.descricao_ia).length} OPÇÕES
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-white/70 line-clamp-2 font-medium">{r.descricao_ia || "Toque para ver a prescrição."}</p>
                       </div>
                     </div>
                     {/* Play cinza no canto inferior direito */}
@@ -530,6 +543,32 @@ const PersonalDieta = () => {
                   </div>
                 )}
 
+                {isRefeicaoLivre(selectedRef.descricao_ia) && (
+                  <div className="rounded-lg border border-primary/40 bg-primary/10 p-3">
+                    <p className="text-[11px] font-bold tracking-wider text-primary">REFEIÇÃO LIVRE · 1x POR SEMANA</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Esta opção já está contabilizada nos seus macros. Use apenas uma vez na semana; nos outros dias siga a prescrição padrão.
+                    </p>
+                  </div>
+                )}
+
+                {parseOpcoesCardapio(selectedRef.descricao_ia).length > 1 && (
+                  <div className="space-y-2">
+                    <h3 className="text-[11px] font-bold tracking-wider text-muted-foreground">OPÇÕES DE CARDÁPIO</h3>
+                    <div className="grid gap-2">
+                      {parseOpcoesCardapio(selectedRef.descricao_ia).map((op, i) => (
+                        <div key={i} className="rounded-lg border border-border bg-background/40 overflow-hidden">
+                          <div className="px-3 py-1.5 bg-primary/10 border-b border-border">
+                            <span className="text-[10px] font-bold tracking-wider text-primary">{op.titulo.toUpperCase()}</span>
+                          </div>
+                          <div className="p-3 text-sm leading-relaxed whitespace-pre-line">{op.linhas.join("\n")}</div>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Escolha UMA das opções por refeição — elas são equivalentes em calorias e macros.</p>
+                  </div>
+                )}
+
                 <div>
                   <h3 className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">ALIMENTOS</h3>
                   {selectedRef.itens.length > 0 ? (
@@ -539,7 +578,7 @@ const PersonalDieta = () => {
                         const titulo = escrito || it.alimento?.nome || "—";
                         const liquido = /(agua|água|\bml\b|leite|suco|cafe|café|chá|cha)/i.test(titulo);
                         const unidade = liquido ? "ml" : "g";
-                        
+
                         return (
                           <div key={it.id} className="px-3 py-2.5 flex items-center justify-between gap-3 bg-background/40">
                             <div className="min-w-0 flex-1">
@@ -562,6 +601,15 @@ const PersonalDieta = () => {
                     </div>
                   )}
                 </div>
+
+                {selectedRef.itens.length > 0 && selectedRef.descricao_ia && parseOpcoesCardapio(selectedRef.descricao_ia).length <= 1 && (
+                  <div>
+                    <h3 className="text-[11px] font-bold tracking-wider text-muted-foreground mb-2">PRESCRIÇÃO</h3>
+                    <div className="rounded-lg border border-border bg-background/40 p-4 text-sm leading-relaxed whitespace-pre-line">
+                      {selectedRef.descricao_ia}
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
