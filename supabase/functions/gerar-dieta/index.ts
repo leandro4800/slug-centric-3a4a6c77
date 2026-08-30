@@ -841,6 +841,13 @@ ${suplementos ? `SUPLEMENTOS QUE USA: ${suplementos} (use whey/creatina nas refe
 
 Se o aluno declarou um alimento favorito para uma refeição específica (ex.: "no café da manhã gosto de tapioca com ovo"), MONTE essa refeição com esses alimentos. Só substitua se houver restrição de saúde ou inviabilidade nutricional gritante — e justifique no texto.
 
+${REGRAS_REFEICAO_LIVRE}
+
+${REGRAS_LANCHE_TARDE}
+
+${REGRAS_DUAS_OPCOES}
+
+
 ==== PRIORIDADE 2 — VARIEDADE / MODELOS DE REFERÊNCIA ====
 Use estes modelos do nível "${nivelTemplate}" como inspiração de VARIEDADE de cardápio (NÃO copie literalmente — combine com a anamnese):
 ${templatesTxt}
