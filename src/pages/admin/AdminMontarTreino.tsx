@@ -2168,6 +2168,7 @@ const AdminMontarTreino = () => {
                     })}
                   </div>
                 </div>
+                </React.Fragment>
               ))}
 
               {dias.length === 0 && (
