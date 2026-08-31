@@ -810,11 +810,30 @@ const AdminMontarTreino = () => {
       return prev.map((e) => (e.dia_semana === oldName ? { ...e, dia_semana: trimmed } : e));
     });
   };
+  const reindexOrdem = (list: ExercicioPrescrito[]) => {
+    const counters: Record<string, number> = {};
+    return list.map((e) => {
+      const ord = counters[e.dia_semana] ?? 0;
+      counters[e.dia_semana] = ord + 1;
+      return { ...e, ordem: ord };
+    });
+  };
   const addEx = (dia: string) => {
-    setExercicios((prev) => [
-      ...prev,
-      { dia_semana: dia, ordem: prev.filter((e) => e.dia_semana === dia).length, exercicio: "", series: "3", repeticoes: "10-12", observacao: "" },
-    ]);
+    setExercicios((prev) => {
+      const novo: ExercicioPrescrito = {
+        dia_semana: dia,
+        ordem: 0,
+        exercicio: "",
+        series: "3",
+        repeticoes: "10-12",
+        observacao: "",
+      };
+      const firstIdx = prev.findIndex((e) => e.dia_semana === dia);
+      const next = [...prev];
+      if (firstIdx === -1) next.push(novo);
+      else next.splice(firstIdx, 0, novo);
+      return reindexOrdem(next);
+    });
   };
   const moveEx = (globalIdx: number, dir: -1 | 1) => {
     setExercicios((prev) => {
@@ -830,15 +849,34 @@ const AdminMontarTreino = () => {
       const swapWith = sameDayIdx[targetPos];
       const next = [...prev];
       [next[globalIdx], next[swapWith]] = [next[swapWith], next[globalIdx]];
-      // recompute ordem per day
-      const counters: Record<string, number> = {};
-      return next.map((e) => {
-        const ord = counters[e.dia_semana] ?? 0;
-        counters[e.dia_semana] = ord + 1;
-        return { ...e, ordem: ord };
-      });
+      return reindexOrdem(next);
     });
   };
+  // Move direto para uma posição (1-based) dentro do mesmo dia
+  const moveExToPos = (globalIdx: number, novaPos1: number) => {
+    setExercicios((prev) => {
+      const item = prev[globalIdx];
+      if (!item) return prev;
+      const sameDayIdx = prev
+        .map((e, i) => ({ e, i }))
+        .filter(({ e }) => e.dia_semana === item.dia_semana)
+        .map(({ i }) => i);
+      const total = sameDayIdx.length;
+      const target = Math.min(Math.max(novaPos1, 1), total) - 1;
+      const pos = sameDayIdx.indexOf(globalIdx);
+      if (target === pos) return prev;
+      // reordena apenas os itens do dia, mantendo as posições globais ocupadas
+      const dayItems = sameDayIdx.map((i) => prev[i]);
+      const [moved] = dayItems.splice(pos, 1);
+      dayItems.splice(target, 0, moved);
+      const next = [...prev];
+      sameDayIdx.forEach((globalPos, k) => {
+        next[globalPos] = dayItems[k];
+      });
+      return reindexOrdem(next);
+    });
+  };
+
 
   const suggestionsForDia = (dia: string) => {
     const tokens = tokensMusculares(dia);
