@@ -2161,6 +2161,7 @@ const AdminMontarTreino = () => {
                       </div>
                       );
                     })}
+                  </div>
                 </div>
               ))}
 
