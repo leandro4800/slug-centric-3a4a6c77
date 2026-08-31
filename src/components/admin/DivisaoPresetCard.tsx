@@ -75,22 +75,31 @@ export const DivisaoPresetCard = ({
           : "border border-white/10 hover:border-primary/70 hover:shadow-[0_0_28px_-12px_hsl(var(--primary)/0.45)]"
       }`}
     >
-      {/* Foto cinematográfica de fundo */}
+      {/* Foto cinematográfica de fundo — mais visível/espelhada */}
       <img
         src={cardTreino}
         alt=""
         aria-hidden
         loading="lazy"
-        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-70"
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-100"
       />
+      {/* Reflexo espelhado no terço direito */}
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            "linear-gradient(100deg, #080b10 0%, rgba(8,11,16,0.92) 45%, rgba(8,11,16,0.35) 100%)",
+            "linear-gradient(100deg, rgba(8,11,16,0.92) 0%, rgba(8,11,16,0.55) 38%, rgba(8,11,16,0.15) 62%, rgba(8,11,16,0.35) 100%)",
         }}
       />
-      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080b10] via-[#080b10]/50 to-transparent" />
+      {/* Brilho diagonal tipo vidro/capa de filme */}
+      <div
+        className="pointer-events-none absolute inset-0 opacity-40"
+        style={{
+          background:
+            "linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.10) 48%, rgba(255,255,255,0.04) 52%, transparent 100%)",
+        }}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080b10] via-[#080b10]/25 to-transparent" />
 
       <div className="relative p-3.5 sm:p-4">
         {/* Badge topo */}
