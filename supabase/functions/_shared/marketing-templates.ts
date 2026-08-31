@@ -160,6 +160,45 @@ const REFERENCE_URLS: Record<string, string | null> = {
   "treino-dieta-teal-prato": `${CDN}/6940874e-7bac-4f61-9b91-1fdc9570f157/treino-dieta-teal-prato.jpg`,
 };
 
+// ---------------------------------------------------------------------------
+// Variações de subheadline / CTA por template. A variação A é sempre a original.
+// Sorteada a cada geração NOVA (o cache mantém a arte já gerada).
+// ---------------------------------------------------------------------------
+export const TEMPLATE_VARIATIONS: Record<string, string[]> = {
+  "treino-dieta-cyan": [
+    `TEXT VARIATION (use these instead of the default subheadline/CTA wording): subheadline "PLANOS PERSONALIZADOS" / "PARA RESULTADOS REAIS!"; CTA banner "SEU CORPO, SUA ESCOLHA." / "EU TE AJUDO A TRANSFORMAR!"`,
+    `TEXT VARIATION (use these instead of the default subheadline/CTA wording): subheadline "PROTOCOLO ÚNICO, FEITO PARA VOCÊ."; CTA banner "SUA EVOLUÇÃO HOJE!"`,
+    `TEXT VARIATION (use these instead of the default subheadline/CTA wording): subheadline "RESULTADOS REAIS, ONDE VOCÊ ESTIVER!"; CTA banner "SUA TRANSFORMAÇÃO!"`,
+  ],
+  "transformacao-lime": [
+    `TEXT VARIATION: subheadline "TREINO INTELIGENTE." / "DIETA ESTRATÉGICA." / "RESULTADOS REAIS!"; CTA "FALE COMIGO AGORA!"`,
+    `TEXT VARIATION: subheadline "DISCIPLINA DE FERRO, RESULTADO DE OURO."; CTA "SEM DESCULPAS!"`,
+  ],
+  "consultoria-ouro-coach": [
+    `TEXT VARIATION: subheadline "PERSONALIZADOS DO SEU JEITO" / "PARA O SEU MELHOR RESULTADO!"; CTA "NÃO É SOBRE DICAS DE TREINO. ENTREGO RESULTADO."`,
+    `TEXT VARIATION: subheadline "ALTO NÍVEL, SEM ATALHOS."; CTA "DOS QUE FAZEM ACONTECER!"`,
+  ],
+  "treino-dieta-mono-amarelo": [
+    `TEXT VARIATION: keep the fixed headline "TREINO E DIETA ON-LINE"; CTA "VAMOS TRANSFORMAR SEU CORPO E SUA VIDA!"`,
+    `TEXT VARIATION: subheadline "PROMESSA HONESTA, ENTREGA COMPROVADA."; CTA "BORA PRO RESULTADO!"`,
+  ],
+  "consultoria-dourada-mono": [
+    `TEXT VARIATION: subheadline "RESULTADOS REAIS," / "ONDE VOCÊ ESTIVER."; CTA "VAMOS JUNTOS ALCANÇAR SEUS OBJETIVOS!"`,
+    `TEXT VARIATION: subheadline "VOCÊ NO COMANDO, DO INÍCIO AO FIM."; CTA "DE SE TRANSFORMAR!"`,
+    `TEXT VARIATION: subheadline "RESULTADOS REAIS, ONDE VOCÊ ESTIVER."; CTA "ALCANÇAR SEUS OBJETIVOS!"`,
+  ],
+  "treino-dieta-teal-prato": [
+    `TEXT VARIATION: subheadline "RESULTADOS REAIS," / "ONDE VOCÊ ESTIVER!"; CTA "COMECE HOJE SUA TRANSFORMAÇÃO!"`,
+    `TEXT VARIATION: subheadline "MAIS RÁPIDO, MAIS LONGE."; CTA "SUA TRANSFORMAÇÃO!"`,
+  ],
+};
+
+export function pickVariation(templateId: string): string {
+  const list = TEMPLATE_VARIATIONS[templateId] ?? [];
+  if (list.length === 0) return "";
+  return list[Math.floor(Math.random() * list.length)];
+}
+
 export const MARKETING_TEMPLATES: Record<string, MarketingTemplate> = Object.fromEntries(
   Object.entries(COMPOSITIONS).map(([id, { label, text }]) => [
     id,
@@ -171,12 +210,14 @@ export interface PromptVars {
   coach_nome: string;
   telefone: string;
   instagram: string;
+  variation?: string;
 }
 
 export function buildTemplatePrompt(templateId: string, vars: PromptVars): string {
   const tpl = MARKETING_TEMPLATES[templateId];
   if (!tpl) throw new Error(`template desconhecido: ${templateId}`);
   return MASTER.replace("{{COMPOSITION}}", tpl.composition)
+    .replace("{{VARIATION}}", vars.variation ?? pickVariation(templateId))
     .replaceAll("{{coach_nome}}", vars.coach_nome)
     .replaceAll("{{telefone}}", vars.telefone)
     .replaceAll("{{instagram}}", vars.instagram);
