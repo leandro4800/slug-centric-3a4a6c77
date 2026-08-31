@@ -2073,7 +2073,7 @@ const AdminMontarTreino = () => {
               )}
 
               {dias.map((dia, diaIdx) => (
-                <React.Fragment key={dia}>
+                <>
                   {diaIdx > 0 && (
                     <div className="flex justify-center my-5 sm:my-6" aria-hidden>
                       <div className="h-1.5 w-full rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
