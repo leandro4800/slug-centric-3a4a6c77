@@ -2150,7 +2150,7 @@ const AdminMontarTreino = () => {
                     </div>
                   </div>
                   {/* Conteúdo: exercícios do dia */}
-                  <div className="p-3 sm:p-4 space-y-3">
+                  <div className="relative p-3 sm:p-4 space-y-3 border-t border-white/5 bg-black/40">
                   {exercicios
                     .map((e, globalIdx) => ({ e, globalIdx }))
                     .filter(({ e }) => e.dia_semana === dia)
