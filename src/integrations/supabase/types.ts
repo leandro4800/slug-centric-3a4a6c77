@@ -1340,6 +1340,42 @@ export type Database = {
         }
         Relationships: []
       }
+      coach_marketing_cards: {
+        Row: {
+          created_at: string
+          generated_at: string | null
+          id: string
+          image_url: string | null
+          source_photo_url: string | null
+          status: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          image_url?: string | null
+          source_photo_url?: string | null
+          status?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          generated_at?: string | null
+          id?: string
+          image_url?: string | null
+          source_photo_url?: string | null
+          status?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       coach_marketing_config: {
         Row: {
           accent_secondary: string | null
@@ -1351,6 +1387,7 @@ export type Database = {
           id: string
           instagram_handle: string | null
           location_text: string | null
+          phone: string | null
           photo_url: string | null
           subheadline: string | null
           tagline: string | null
@@ -1381,6 +1418,7 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           location_text?: string | null
+          phone?: string | null
           photo_url?: string | null
           subheadline?: string | null
           tagline?: string | null
@@ -1411,6 +1449,7 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           location_text?: string | null
+          phone?: string | null
           photo_url?: string | null
           subheadline?: string | null
           tagline?: string | null
@@ -1430,6 +1469,27 @@ export type Database = {
           updated_at?: string
           user_id?: string
           website_url?: string | null
+        }
+        Relationships: []
+      }
+      coach_marketing_generation_log: {
+        Row: {
+          created_at: string
+          id: string
+          template_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          template_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          template_id?: string
+          user_id?: string
         }
         Relationships: []
       }
