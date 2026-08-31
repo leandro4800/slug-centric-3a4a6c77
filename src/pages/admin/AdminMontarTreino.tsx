@@ -2072,10 +2072,16 @@ const AdminMontarTreino = () => {
                 <p className="text-sm text-muted-foreground">Sem exercícios. Gere com IA ou adicione manualmente.</p>
               )}
 
-              {dias.map((dia) => (
+              {dias.map((dia, diaIdx) => (
+                <>
+                  {diaIdx > 0 && (
+                    <div className="flex justify-center my-5 sm:my-6" aria-hidden>
+                      <div className="h-1.5 w-full rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                    </div>
+                  )}
                 <div
                   key={dia}
-                  className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-primary/60 transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.5)] mb-5 sm:mb-6"
+                  className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-primary/60 transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.5)]"
                 >
                   {/* Capa estilo pôster Netflix */}
                   <div className="relative overflow-hidden">
@@ -2163,6 +2169,7 @@ const AdminMontarTreino = () => {
                     })}
                   </div>
                 </div>
+                </>
               ))}
 
               {dias.length === 0 && (
