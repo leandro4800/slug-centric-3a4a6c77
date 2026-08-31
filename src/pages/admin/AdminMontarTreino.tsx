@@ -2075,7 +2075,7 @@ const AdminMontarTreino = () => {
               {dias.map((dia) => (
                 <div
                   key={dia}
-                  className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-primary/60 transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.5)]"
+                  className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-primary/60 transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.5)] mb-5 sm:mb-6"
                 >
                   {/* Capa estilo pôster Netflix */}
                   <div className="relative overflow-hidden">
@@ -2086,7 +2086,7 @@ const AdminMontarTreino = () => {
                         defaultValue={dia}
                         onBlur={(ev) => renameDia(dia, ev.target.value)}
                         onKeyDown={(ev) => { if (ev.key === "Enter") (ev.target as HTMLInputElement).blur(); }}
-                        className="flex-1 min-w-0 font-display text-base sm:text-xl uppercase italic tracking-tight text-white bg-transparent border-dashed border-white/20 focus:border-primary/60 placeholder:text-white/40"
+                        className="flex-1 min-w-0 font-bold text-sm sm:text-base tracking-normal text-white bg-transparent border-dashed border-white/20 focus:border-primary/60 placeholder:text-white/40"
                         title="Edite o nome do treino do dia (ex: Peito e Tríceps)"
                       />
                       <Button size="sm" variant="ghost" onClick={() => addEx(dia)} className="shrink-0 h-8 px-2 text-xs text-white/80 hover:text-primary hover:bg-primary/10">
