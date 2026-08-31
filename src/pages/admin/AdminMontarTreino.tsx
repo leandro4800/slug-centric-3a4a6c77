@@ -1734,29 +1734,19 @@ const AdminMontarTreino = () => {
                 Ou escolha uma divisão pronta abaixo ({presetsDisponiveis.length} opções específicas para {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {perfil.frequencia_semanal}x · {nivel}). Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
               </p>
 
-              <div className="grid md:grid-cols-2 gap-2">
+              <div className="grid gap-4 xl:grid-cols-2">
                 {presetsDisponiveis.map((p) => (
-                  <button
+                  <DivisaoPresetCard
                     key={p.id}
-                    type="button"
-                    onClick={() => prepararGeracaoDaDivisao(p)}
+                    preset={p}
+                    selecionado={divisaoSelecionadaId === p.id}
+                    gerando={generating && divisaoSelecionadaId === p.id}
                     disabled={generating || perfilLoading}
-                    className={`text-left p-3 rounded-xl border transition-all ${
-                      divisaoSelecionadaId === p.id
-                        ? "bg-primary/15 border-primary shadow-[0_0_15px_rgba(220,38,38,0.25)]"
-                        : "bg-secondary/40 border-border hover:border-primary/40"
-                    }`}
-                  >
-                    <div className="text-sm font-bold mb-1">{p.label}</div>
-                    <div className="text-[11px] text-muted-foreground leading-relaxed">
-                      {p.dias.map((d, i) => <div key={i}>• {d}</div>)}
-                    </div>
-                    <div className="text-[10px] text-primary uppercase font-bold tracking-widest mt-2">
-                      {generating && divisaoSelecionadaId === p.id ? "Gerando..." : "Tocar para gerar e revisar"}
-                    </div>
-                  </button>
+                    onGerar={() => prepararGeracaoDaDivisao(p)}
+                  />
                 ))}
               </div>
+
 
               {divisaoCustom.length > 0 && (
                 <div className="space-y-2 pt-2 border-t border-border/40">
