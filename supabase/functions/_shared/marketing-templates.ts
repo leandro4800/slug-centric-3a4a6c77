@@ -16,17 +16,13 @@ export interface MarketingTemplate {
   composition: string;
 }
 
-const MASTER = `ABSOLUTE FACE PRESERVATION (HIGHEST PRIORITY — DO NOT VIOLATE):
-- The face of the person in the input image MUST be preserved with PHOTOGRAPHIC IDENTITY ACCURACY. Treat the input face as a locked reference.
-- DO NOT alter, reshape, slim, widen, smooth, beautify, age, de-age, or stylize the face in any way.
-- Preserve EXACTLY: nose shape and width, nostrils, mouth shape, lip thickness, philtrum, jawline, chin, cheekbones, eye shape and spacing, eyebrows, ears, skin tone, freckles, moles, scars, facial hair pattern and density, hairline.
-- Keep the same head proportions and the same facial expression as the input.
-- Only the surrounding scene (pose, background, lighting, framing, outfit) and overlaid graphics/text may be generated. The face pixels must read as the SAME person as the input photo.
-- If in doubt, copy the face from the input rather than re-imagining it.
+const MASTER = `ABSOLUTE FACE PRESERVATION (HIGHEST PRIORITY — DO NOT VIOLATE): The face of the person in the FIRST reference image MUST be preserved with PHOTOGRAPHIC IDENTITY ACCURACY. Treat that face as a locked reference. DO NOT alter, reshape, slim, widen, smooth, beautify, age, de-age, or stylize the face in any way. Preserve EXACTLY: nose shape and width, nostrils, mouth shape, lip thickness, philtrum, jawline, chin, cheekbones, eye shape and spacing, eyebrows, ears, skin tone, freckles, moles, scars, facial hair pattern and density, hairline. Use the FIRST reference image as the coach/athlete identity: preserve their exact face, and use their actual body type, current clothing and general appearance as the visual starting point — if they are wearing a shirt in their photo, keep them wearing a shirt (or a fitted training top appropriate to the scene); do not strip or change clothing just because the style reference shows a different outfit. The SECOND reference image is ONLY an art-direction / style reference: use it strictly to guide composition, layout, typography positions, color palette, icons, borders and decorative elements. Do NOT copy the pose, exact camera framing, clothing, jewelry, watch, or any other accessory from this second image, and do NOT reuse the identity of the person shown in it. This must be a completely NEW original photograph composed specifically for this coach — never reproduce the second reference image's photographic content, exact pose or framing verbatim, even partially.
 
-Create a VERTICAL 9:16 fitness coaching social poster that CLONES the attached reference layout EXACTLY, rebranded for {{coach_nome}}. Do not invent a new concept.
+Create a VERTICAL 9:16 fitness coaching social poster inspired by the SECOND reference image's layout style, rebranded for {{coach_nome}}, using the coach from the FIRST reference image. Do not invent a new layout concept — follow the composition below.
 
 {{COMPOSITION}}
+
+{{VARIATION}}
 
 CONTACT BLOCK (variable per coach — render exactly these values):
 - Coach name: {{coach_nome}}
@@ -34,8 +30,9 @@ CONTACT BLOCK (variable per coach — render exactly these values):
 - Instagram handle: {{instagram}}
 
 STYLE LOCK:
-- LOCKED LAYOUT: composition, colors, typography, decorative elements and positions are FIXED. Only the coach name, phone, and @instagram handle change between coaches.
-- Keep every fixed headline/CTA text exactly as specified, in Portuguese (Brazil), with correct accents.`;
+- LOCKED LAYOUT: composition, colors, typography, decorative elements and positions are FIXED. Only the coach name, phone, @instagram handle, subheadline and CTA text vary between coaches.
+- Keep every fixed headline/label/icon text exactly as specified, in Portuguese (Brazil), with correct accents.
+- The coach's pose, exact framing and accessories must be freshly composed for this photo — inspired by the athletic energy of the reference but NOT a copy of it.`;
 
 const COMPOSITIONS: Record<string, { label: string; text: string }> = {
   "treino-dieta-cyan": {
