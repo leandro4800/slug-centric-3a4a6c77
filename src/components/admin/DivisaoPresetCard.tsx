@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { Calendar, Target, Dumbbell, Play, Eye, TrendingUp, Loader2 } from "lucide-react";
+import { Calendar, Target, Play, TrendingUp, Loader2 } from "lucide-react";
 import cardTreino from "@/assets/card-divisao-cine.jpg";
 
 export type PresetLike = {
@@ -8,37 +7,6 @@ export type PresetLike = {
   freq: number;
   nivel: string[];
   dias: string[];
-};
-
-const GRUPOS_MAP: Record<string, string> = {
-  quadr: "QUADRÍCEPS",
-  posterior: "POSTERIOR",
-  glúte: "GLÚTEOS",
-  glute: "GLÚTEOS",
-  panturr: "PANTURRILHAS",
-  peito: "PEITO",
-  costas: "COSTAS",
-  ombro: "OMBROS",
-  bíceps: "BÍCEPS",
-  biceps: "BÍCEPS",
-  tríceps: "TRÍCEPS",
-  triceps: "TRÍCEPS",
-  trapézio: "TRAPÉZIO",
-  trapezio: "TRAPÉZIO",
-  perna: "PERNAS",
-  core: "CORE",
-  braço: "BRAÇOS",
-  braco: "BRAÇOS",
-  "full body": "CORPO TODO",
-};
-
-const extrairGrupos = (dias: string[]) => {
-  const texto = dias.join(" ").toLowerCase();
-  const out: string[] = [];
-  for (const [k, v] of Object.entries(GRUPOS_MAP)) {
-    if (texto.includes(k) && !out.includes(v)) out.push(v);
-  }
-  return out.slice(0, 4);
 };
 
 // "ABCDE 5x — Ênfase Inferiores" -> título / subtítulo
@@ -62,9 +30,7 @@ export const DivisaoPresetCard = ({
   disabled?: boolean;
   onGerar: () => void;
 }) => {
-  const [previa, setPrevia] = useState(false);
   const { titulo, sub } = partirLabel(preset.label);
-  const grupos = extrairGrupos(preset.dias);
   const nivelTxt = (preset.nivel?.[0] || "").toUpperCase();
 
   return (
@@ -128,30 +94,20 @@ export const DivisaoPresetCard = ({
           </p>
         )}
 
-        {/* Stats compactos */}
+        {/* Stats compactos — fonte legível (sans), sem o stat Grupos */}
         <div className="mt-3 flex divide-x divide-white/10">
           <Stat icon={<Calendar className="h-3.5 w-3.5 text-primary" />} value={`${preset.freq}x`} label="Dias" />
           <Stat icon={<Target className="h-3.5 w-3.5 text-primary" />} value="Hipertrofia" label="Foco" />
-          <Stat
-            icon={<Dumbbell className="h-3.5 w-3.5 text-primary" />}
-            value={String(grupos.length || preset.dias.length)}
-            label="Grupos"
-          />
         </div>
 
-        {/* Grupos trabalhados */}
-        {grupos.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-1.5">
-            {grupos.map((g) => (
-              <span
-                key={g}
-                className="rounded-md border border-white/10 bg-white/5 px-2 py-1 text-[9px] font-semibold uppercase tracking-widest text-foreground/90"
-              >
-                {g}
-              </span>
-            ))}
-          </div>
-        )}
+        {/* Divisão semanal — sempre visível (sem botão Prévia) */}
+        <div className="mt-3 space-y-1 rounded-lg border border-white/10 bg-black/60 p-2.5">
+          {preset.dias.map((d, i) => (
+            <p key={i} className="text-[11px] leading-snug text-foreground/80">
+              • {d}
+            </p>
+          ))}
+        </div>
 
         {/* Ações */}
         <div className="mt-3 flex flex-wrap gap-2">
@@ -164,25 +120,7 @@ export const DivisaoPresetCard = ({
             {gerando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-current" />}
             {gerando ? "Gerando..." : "Gerar e revisar"}
           </button>
-          <button
-            type="button"
-            onClick={() => setPrevia((v) => !v)}
-            className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/5 px-3.5 py-2 text-[11px] font-bold uppercase tracking-widest text-foreground/90 transition-colors hover:border-white/40"
-          >
-            <Eye className="h-3.5 w-3.5" />
-            Prévia
-          </button>
         </div>
-
-        {previa && (
-          <div className="mt-3 space-y-1 rounded-lg border border-white/10 bg-black/60 p-2.5">
-            {preset.dias.map((d, i) => (
-              <p key={i} className="text-[11px] leading-snug text-muted-foreground">
-                • {d}
-              </p>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );
@@ -192,7 +130,7 @@ const Stat = ({ icon, value, label }: { icon: React.ReactNode; value: string; la
   <div className="flex-1 px-2 first:pl-0">
     <div className="flex items-center gap-1.5">
       {icon}
-      <p className="font-display text-xs leading-none tracking-tight text-foreground truncate">{value}</p>
+      <p className="text-xs font-semibold leading-none text-foreground truncate">{value}</p>
     </div>
     <p className="mt-1 text-[8px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
   </div>
