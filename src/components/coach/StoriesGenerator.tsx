@@ -10,6 +10,13 @@ import {
   Share2,
   RefreshCw,
   ImageIcon,
+  Dumbbell,
+  Flame,
+  Crown,
+  Zap,
+  Trophy,
+  Salad,
+  type LucideIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,12 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import refCyan from "@/assets/marketing-templates/treino-dieta-cyan.jpg.asset.json";
-import refLime from "@/assets/marketing-templates/transformacao-lime.jpg.asset.json";
-import refOuro from "@/assets/marketing-templates/consultoria-ouro-coach.jpg.asset.json";
-import refMonoAmarelo from "@/assets/marketing-templates/treino-dieta-mono-amarelo.jpg.asset.json";
-import refDouradaMono from "@/assets/marketing-templates/consultoria-dourada-mono.jpg.asset.json";
-import refTealPrato from "@/assets/marketing-templates/treino-dieta-teal-prato.jpg.asset.json";
+
 
 /* ============================================================================
    STUDIO DE DIVULGAÇÃO — geração de arte 100% por IA.
@@ -41,13 +43,13 @@ type TemplateId =
   | "consultoria-dourada-mono"
   | "treino-dieta-teal-prato";
 
-const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; ref: string }[] = [
-  { id: "treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#22D3EE", ref: refCyan.url },
-  { id: "transformacao-lime", label: "Transforme seu Corpo", desc: "Verde lima neon", accent: "#CCFF00", ref: refLime.url },
-  { id: "consultoria-ouro-coach", label: "Consultoria Ouro", desc: "Dourado premium", accent: "#D4A24A", ref: refOuro.url },
-  { id: "treino-dieta-mono-amarelo", label: "Treino & Dieta Mono", desc: "P&B + amarelo", accent: "#FACC15", ref: refMonoAmarelo.url },
-  { id: "consultoria-dourada-mono", label: "Consultoria Dourada", desc: "P&B + ouro", accent: "#E0B457", ref: refDouradaMono.url },
-  { id: "treino-dieta-teal-prato", label: "Treino & Dieta Prato", desc: "Teal + refeição", accent: "#14B8A6", ref: refTealPrato.url },
+const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; Icon: LucideIcon }[] = [
+  { id: "treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#22D3EE", Icon: Dumbbell },
+  { id: "transformacao-lime", label: "Transforme seu Corpo", desc: "Verde lima neon", accent: "#CCFF00", Icon: Flame },
+  { id: "consultoria-ouro-coach", label: "Consultoria Ouro", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown },
+  { id: "treino-dieta-mono-amarelo", label: "Treino & Dieta Mono", desc: "P&B + amarelo", accent: "#FACC15", Icon: Zap },
+  { id: "consultoria-dourada-mono", label: "Consultoria Dourada", desc: "P&B + ouro", accent: "#E0B457", Icon: Trophy },
+  { id: "treino-dieta-teal-prato", label: "Treino & Dieta Prato", desc: "Teal + refeição", accent: "#14B8A6", Icon: Salad },
 ];
 
 interface Props {
@@ -358,16 +360,25 @@ export const StoriesGenerator = ({ isFullScreen, onExitFullScreen }: Props) => {
                 style={{ background: `radial-gradient(circle at top right, ${t.accent}, transparent 60%)` }}
               />
               <div className="relative">
-                <img
-                  src={cards[t.id] || t.ref}
-                  alt={t.label}
-                  loading="lazy"
-                  className="mb-2 aspect-[9/16] w-full rounded-lg object-cover"
-                />
-                {cards[t.id] && (
-                  <span className="absolute left-1 top-1 rounded bg-black/70 px-1 text-[8px] font-bold uppercase text-white">
-                    Gerado
-                  </span>
+                {cards[t.id] ? (
+                  <div className="relative">
+                    <img
+                      src={cards[t.id]}
+                      alt={t.label}
+                      loading="lazy"
+                      className="mb-2 aspect-[9/16] w-full rounded-lg object-cover"
+                    />
+                    <span className="absolute left-1 top-1 rounded bg-black/70 px-1 text-[8px] font-bold uppercase text-white">
+                      Gerado
+                    </span>
+                  </div>
+                ) : (
+                  <div
+                    className="mb-2 flex aspect-[9/16] w-full items-center justify-center rounded-lg border border-white/10"
+                    style={{ background: `linear-gradient(160deg, ${t.accent}33, #09090b 65%)` }}
+                  >
+                    <t.Icon className="h-8 w-8" style={{ color: t.accent }} />
+                  </div>
                 )}
                 <div className="text-xs font-black uppercase tracking-wider">{t.label}</div>
                 <div className="text-[10px] opacity-70">{t.desc}</div>
