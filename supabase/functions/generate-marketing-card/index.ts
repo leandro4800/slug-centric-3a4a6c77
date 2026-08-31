@@ -113,13 +113,15 @@ Deno.serve(async (req) => {
       coach_nome: (perfil?.nome_completo || "COACH").toString().toUpperCase(),
       telefone: (cfg?.phone || "").toString(),
       instagram: (cfg?.instagram_handle || "").toString(),
+      variation: pickVariation(templateId),
     });
 
+    // Ordem obrigatória: 1ª = identidade do coach, 2ª = referência de estilo.
     const refs: ReferenceImage[] = [];
+    if (fotoCoach) refs.push({ url: fotoCoach, role: "identity" });
     if (template.referenceImageUrl) {
       refs.push({ url: template.referenceImageUrl, role: "style" });
     }
-    if (fotoCoach) refs.push({ url: fotoCoach, role: "identity" });
 
     await admin.from("coach_marketing_cards").upsert(
       {
