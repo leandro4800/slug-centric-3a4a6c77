@@ -2159,6 +2159,24 @@ const AdminMontarTreino = () => {
                             )}
                           </div>
                           <div className="flex items-center gap-0.5">
+                            <input
+                              type="number"
+                              min={1}
+                              max={arr.length}
+                              defaultValue={localIdx + 1}
+                              key={`pos-${globalIdx}-${localIdx}`}
+                              title="Posição — digite e pressione Enter para mover"
+                              className="h-7 w-10 rounded-md border border-border/60 bg-background/60 text-center text-xs"
+                              onKeyDown={(ev) => {
+                                if (ev.key === "Enter") (ev.target as HTMLInputElement).blur();
+                              }}
+                              onBlur={(ev) => {
+                                const v = parseInt(ev.target.value, 10);
+                                if (!Number.isNaN(v) && v !== localIdx + 1) moveExToPos(globalIdx, v);
+                                else ev.target.value = String(localIdx + 1);
+                              }}
+                            />
+
                             <Button size="icon" variant="ghost" className="h-7 w-7" disabled={localIdx === 0} onClick={() => moveEx(globalIdx, -1)} title="Mover para cima">
                               <ArrowUp className="h-3.5 w-3.5" />
                             </Button>
