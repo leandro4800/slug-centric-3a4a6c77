@@ -2080,6 +2080,7 @@ const AdminMontarTreino = () => {
                     </div>
                   )}
                 <div
+                  key={dia}
                   className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-primary/60 transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.5)]"
                 >
                   {/* Capa estilo pôster Netflix */}
