@@ -15,6 +15,7 @@ import {
 import {
   MARKETING_TEMPLATES,
   buildTemplatePrompt,
+  pickVariation,
 } from "../_shared/marketing-templates.ts";
 
 // Limite de gerações NOVAS por coach por mês.
