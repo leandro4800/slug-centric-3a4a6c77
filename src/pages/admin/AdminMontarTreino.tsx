@@ -19,6 +19,8 @@ import autoTable from "jspdf-autotable";
 import { loadImageDataUrl, renderPdfHeader, getTenantPrimaryRgb } from "@/lib/pdf-branding";
 import { extractYouTubeId } from "@/lib/utils";
 import platformLogo from "@/assets/alphacoach-logo.jpeg";
+import { DivisaoPresetCard } from "@/components/admin/DivisaoPresetCard";
+
 
 interface Aluno {
   id: string;
