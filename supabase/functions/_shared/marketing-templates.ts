@@ -150,15 +150,17 @@ FIXED TEXT verbatim as above. PALETTE: black background, white text, teal/cyan a
   },
 };
 
-// URLs públicas das imagens de referência (bucket "avatars",
-// path template-references/{template_id}.png). PENDENTE: enviar as artes.
+// URLs públicas (CDN Lovable Assets) das artes de referência de layout.
+// São as mesmas imagens usadas como miniatura no Studio de Divulgação.
+const CDN = "https://alpha-coach.app/__l5e/assets-v1";
+
 const REFERENCE_URLS: Record<string, string | null> = {
-  "treino-dieta-cyan": null,
-  "transformacao-lime": null,
-  "consultoria-ouro-coach": null,
-  "treino-dieta-mono-amarelo": null,
-  "consultoria-dourada-mono": null,
-  "treino-dieta-teal-prato": null,
+  "treino-dieta-cyan": `${CDN}/73849259-deca-4521-a7a1-d91ca397ed43/treino-dieta-cyan.jpg`,
+  "transformacao-lime": `${CDN}/5b6c9b61-84bc-4d77-a4d6-1d7f4beb979f/transformacao-lime.jpg`,
+  "consultoria-ouro-coach": `${CDN}/2e0779a2-1004-4f00-b41f-20ed80f18457/consultoria-ouro-coach.jpg`,
+  "treino-dieta-mono-amarelo": `${CDN}/11c5d14f-537e-49a6-bf94-6f8239af6e61/treino-dieta-mono-amarelo.jpg`,
+  "consultoria-dourada-mono": `${CDN}/29f64758-bfb5-42b2-aa71-d90914a718de/consultoria-dourada-mono.jpg`,
+  "treino-dieta-teal-prato": `${CDN}/6940874e-7bac-4f61-9b91-1fdc9570f157/treino-dieta-teal-prato.jpg`,
 };
 
 export const MARKETING_TEMPLATES: Record<string, MarketingTemplate> = Object.fromEntries(
