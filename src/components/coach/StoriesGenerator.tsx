@@ -43,13 +43,13 @@ type TemplateId =
   | "consultoria-dourada-mono"
   | "treino-dieta-teal-prato";
 
-const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; ref: string }[] = [
-  { id: "treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#22D3EE", ref: refCyan.url },
-  { id: "transformacao-lime", label: "Transforme seu Corpo", desc: "Verde lima neon", accent: "#CCFF00", ref: refLime.url },
-  { id: "consultoria-ouro-coach", label: "Consultoria Ouro", desc: "Dourado premium", accent: "#D4A24A", ref: refOuro.url },
-  { id: "treino-dieta-mono-amarelo", label: "Treino & Dieta Mono", desc: "P&B + amarelo", accent: "#FACC15", ref: refMonoAmarelo.url },
-  { id: "consultoria-dourada-mono", label: "Consultoria Dourada", desc: "P&B + ouro", accent: "#E0B457", ref: refDouradaMono.url },
-  { id: "treino-dieta-teal-prato", label: "Treino & Dieta Prato", desc: "Teal + refeição", accent: "#14B8A6", ref: refTealPrato.url },
+const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; Icon: LucideIcon }[] = [
+  { id: "treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#22D3EE", Icon: Dumbbell },
+  { id: "transformacao-lime", label: "Transforme seu Corpo", desc: "Verde lima neon", accent: "#CCFF00", Icon: Flame },
+  { id: "consultoria-ouro-coach", label: "Consultoria Ouro", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown },
+  { id: "treino-dieta-mono-amarelo", label: "Treino & Dieta Mono", desc: "P&B + amarelo", accent: "#FACC15", Icon: Zap },
+  { id: "consultoria-dourada-mono", label: "Consultoria Dourada", desc: "P&B + ouro", accent: "#E0B457", Icon: Trophy },
+  { id: "treino-dieta-teal-prato", label: "Treino & Dieta Prato", desc: "Teal + refeição", accent: "#14B8A6", Icon: Salad },
 ];
 
 interface Props {
