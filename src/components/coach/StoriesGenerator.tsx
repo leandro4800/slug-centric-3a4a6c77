@@ -18,6 +18,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import refCyan from "@/assets/marketing-templates/treino-dieta-cyan.jpg.asset.json";
+import refLime from "@/assets/marketing-templates/transformacao-lime.jpg.asset.json";
+import refOuro from "@/assets/marketing-templates/consultoria-ouro-coach.jpg.asset.json";
+import refMonoAmarelo from "@/assets/marketing-templates/treino-dieta-mono-amarelo.jpg.asset.json";
+import refDouradaMono from "@/assets/marketing-templates/consultoria-dourada-mono.jpg.asset.json";
+import refTealPrato from "@/assets/marketing-templates/treino-dieta-teal-prato.jpg.asset.json";
 
 /* ============================================================================
    STUDIO DE DIVULGAÇÃO — geração de arte 100% por IA.
