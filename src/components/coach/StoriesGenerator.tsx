@@ -358,10 +358,16 @@ export const StoriesGenerator = ({ isFullScreen, onExitFullScreen }: Props) => {
                 style={{ background: `radial-gradient(circle at top right, ${t.accent}, transparent 60%)` }}
               />
               <div className="relative">
-                {cards[t.id] ? (
-                  <img src={cards[t.id]} alt="" className="mb-2 h-14 w-10 rounded object-cover" />
-                ) : (
-                  <div className="mb-2 h-6 w-6 rounded-full" style={{ background: t.accent, boxShadow: `0 0 12px ${t.accent}` }} />
+                <img
+                  src={cards[t.id] || t.ref}
+                  alt={t.label}
+                  loading="lazy"
+                  className="mb-2 aspect-[9/16] w-full rounded-lg object-cover"
+                />
+                {cards[t.id] && (
+                  <span className="absolute left-1 top-1 rounded bg-black/70 px-1 text-[8px] font-bold uppercase text-white">
+                    Gerado
+                  </span>
                 )}
                 <div className="text-xs font-black uppercase tracking-wider">{t.label}</div>
                 <div className="text-[10px] opacity-70">{t.desc}</div>
