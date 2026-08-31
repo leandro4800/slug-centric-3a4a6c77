@@ -2119,20 +2119,31 @@ const AdminMontarTreino = () => {
                   )}
                 <div
                   key={dia}
-                  className="group relative overflow-hidden rounded-2xl bg-zinc-900 border border-white/5 hover:border-primary/60 transition-all duration-300 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.5)]"
+                  className="group relative overflow-hidden rounded-xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-white/10 hover:border-primary/70 transition-all duration-500 hover:scale-[1.015] hover:shadow-[0_25px_70px_-18px_hsl(var(--primary)/0.6)]"
                 >
+                  {/* Aura vermelha no hover */}
+                  <div className="pointer-events-none absolute -inset-px rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.22),transparent_65%)]" />
+                  {/* Varredura de luz (shine) ao passar o mouse */}
+                  <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
+                    <div className="absolute inset-y-0 -left-1/2 w-1/2 translate-x-[-200%] group-hover:translate-x-[400%] transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg]" />
+                  </div>
                   {/* Capa estilo pôster Netflix */}
                   <div className="relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-800 to-zinc-950" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-                    <div className="relative flex items-center justify-between gap-2 px-4 pt-4 pb-3">
-                      <Input
-                        defaultValue={dia}
-                        onBlur={(ev) => renameDia(dia, ev.target.value)}
-                        onKeyDown={(ev) => { if (ev.key === "Enter") (ev.target as HTMLInputElement).blur(); }}
-                        className="flex-1 min-w-0 font-bold text-sm sm:text-base tracking-normal text-white bg-transparent border-dashed border-white/20 focus:border-primary/60 placeholder:text-white/40"
-                        title="Edite o nome do treino do dia (ex: Peito e Tríceps)"
-                      />
+                    <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/70 via-zinc-950 to-black" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/55 to-transparent" />
+                    {/* Faixa de banner superior */}
+                    <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-90" />
+                    <div className="relative flex items-center justify-between gap-2 px-4 pt-5 pb-3">
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <span className="font-display text-[10px] tracking-[0.3em] text-primary/90 uppercase shrink-0 select-none">Treino</span>
+                        <Input
+                          defaultValue={dia}
+                          onBlur={(ev) => renameDia(dia, ev.target.value)}
+                          onKeyDown={(ev) => { if (ev.key === "Enter") (ev.target as HTMLInputElement).blur(); }}
+                          className="flex-1 min-w-0 font-bold text-sm sm:text-base tracking-normal text-white bg-transparent border-dashed border-white/20 focus:border-primary/60 placeholder:text-white/40"
+                          title="Edite o nome do treino do dia (ex: Peito e Tríceps)"
+                        />
+                      </div>
                       <Button size="sm" variant="ghost" onClick={() => addEx(dia)} className="shrink-0 h-8 px-2 text-xs text-white/80 hover:text-primary hover:bg-primary/10">
                         <Plus className="h-3.5 w-3.5 mr-1" /> Adicionar
                       </Button>
