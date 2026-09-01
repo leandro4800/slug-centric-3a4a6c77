@@ -1799,25 +1799,7 @@ const AdminMontarTreino = () => {
                 </span>
               </div>
 
-              {/* Modo Avançado — botão vermelho no topo, substitui o antigo "Treino em branco" */}
-              <button
-                type="button"
-                onClick={() => {
-                  const next = !modoAvancado;
-                  setModoAvancado(next);
-                  if (next && diasAvancado.length === 0) {
-                    const base = divisaoCustom.length > 0
-                      ? divisaoCustom
-                      : sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
-                    setDiasAvancado(base.map((d) => ({ label: d, qtd: 5 })));
-                  }
-                }}
-                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-white font-sans font-bold text-sm uppercase tracking-wide shadow-[0_0_25px_-5px_hsl(var(--primary)/0.7)] hover:brightness-110 active:scale-[0.99] transition-all"
-                style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
-              >
-                <Sparkles className="h-5 w-5" />
-                {modoAvancado ? "Fechar Modo Avançado" : "Modo Avançado — Editar divisão livremente"}
-              </button>
+
 
               {isFight ? (
                 <>
