@@ -1298,8 +1298,20 @@ const TreinoEditor = ({
           {dias.map((dia, diaIdx) => {
             const exs = items.filter((t) => t.dia_semana === dia);
             return (
-              <div key={dia} className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+              <div key={dia}>
+                {diaIdx > 0 && (
+                  <div className="flex justify-center my-5 sm:my-6" aria-hidden>
+                    <div className="h-1.5 w-full rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                  </div>
+                )}
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
                 <div className="flex items-center gap-2">
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary font-display text-sm font-bold text-primary-foreground select-none"
+                    title={`Dia ${diaIdx + 1}`}
+                  >
+                    {diaIdx + 1}
+                  </span>
                   <div className="flex flex-col gap-0.5">
                     <Button
                       size="icon"
