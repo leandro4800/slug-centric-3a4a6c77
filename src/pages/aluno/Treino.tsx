@@ -26,15 +26,7 @@ interface CargaMap {
 
 type VideoRef = { yt: string | null; coach: string | null };
 
-import FightTrainingView from "@/pages/aluno/fight/FightTrainingView";
-
-const Treino = () => {
-  const { tenant } = useBranding();
-  if (tenant?.vertical === "fight") return <FightTrainingView />;
-  return <PersonalTreino />;
-};
-
-const PersonalTreino = () => {
+export const PersonalTreino = () => {
   const { user } = useAuth();
   const { tenant } = useBranding();
   const { slug } = useParams();
