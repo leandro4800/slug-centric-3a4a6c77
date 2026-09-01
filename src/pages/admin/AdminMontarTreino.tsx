@@ -1900,7 +1900,10 @@ const AdminMontarTreino = () => {
               {/* === MODO AVANÇADO: conteúdo do editor livre (toggle controlado pelo botão no topo) === */}
               <div className="space-y-3 pt-3 border-t border-primary/30">
                 {modoAvancado && (
-                  <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                  <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                    <p className="text-sm text-foreground/80" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                      Reordene, adicione ou remova dias e defina quantos exercícios por dia. A IA vai gerar respeitando sua montagem.
+                    </p>
                     {diasAvancado.map((d, i) => (
                       <div key={i} className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center bg-background/40 border border-border/50 rounded-lg p-2">
                         <span className="text-xs font-bold text-primary w-6 shrink-0 text-center">
