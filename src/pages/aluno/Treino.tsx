@@ -1039,4 +1039,4 @@ export const PersonalTreino = () => {
   );
 };
 
-export default Treino;
+export default PersonalTreino;

@@ -30,7 +30,7 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import AlunoLayout from "./pages/aluno/AlunoLayout";
 import AlunoHome from "./pages/aluno/AlunoHome";
-import Treino from "./pages/aluno/Treino";
+import Treino from "./pages/aluno/TreinoScreen";
 import Dieta from "./pages/aluno/Dieta";
 import Evolucao from "./pages/aluno/Evolucao";
 import CompararEvolucao from "./pages/aluno/CompararEvolucao";
