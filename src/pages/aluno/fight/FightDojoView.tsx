@@ -20,6 +20,7 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
   const [rows, setRows] = useState<Conteudo[]>([]);
   const [loading, setLoading] = useState(true);
   const [video, setVideo] = useState<{ url: string; nome: string } | null>(null);
+  const [nivelFiltro, setNivelFiltro] = useState<string>("todos");
 
   useEffect(() => {
     (async () => {
@@ -34,6 +35,10 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
     })();
   }, [modalidade]);
 
+  const niveis = Array.from(new Set(rows.map((r) => r.nivel).filter(Boolean) as string[]));
+  const visiveis =
+    nivelFiltro === "todos" ? rows : rows.filter((r) => (r.nivel ?? "") === nivelFiltro || !r.nivel);
+
   return (
     <div className="space-y-3">
       <div className="px-1">
@@ -46,11 +51,29 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
         </p>
       </div>
 
+      {niveis.length > 0 && (
+        <div className="flex flex-wrap gap-2 px-1">
+          {["todos", ...niveis].map((n) => (
+            <button
+              key={n}
+              onClick={() => setNivelFiltro(n)}
+              className={`rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                nivelFiltro === n
+                  ? "border-primary bg-primary/20 text-primary"
+                  : "border-white/10 bg-black/40 text-muted-foreground"
+              }`}
+            >
+              {n === "todos" ? "Todos os níveis" : n}
+            </button>
+          ))}
+        </div>
+      )}
+
       {loading ? (
         <div className="flex justify-center py-10">
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
-      ) : rows.length === 0 ? (
+      ) : visiveis.length === 0 ? (
         <Card className="p-8 text-center bg-card/60 backdrop-blur border-white/5">
           <GraduationCap className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
@@ -60,7 +83,8 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
         </Card>
       ) : (
         <div className="space-y-2">
-          {rows.map((c) => (
+          {visiveis.map((c) => (
+
             <button
               key={c.id}
               onClick={() => setVideo({ url: c.video_url, nome: c.titulo })}

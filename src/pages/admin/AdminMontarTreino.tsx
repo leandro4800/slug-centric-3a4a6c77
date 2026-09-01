@@ -21,6 +21,8 @@ import { extractYouTubeId } from "@/lib/utils";
 import platformLogo from "@/assets/alphacoach-logo.jpeg";
 import { DivisaoPresetCard } from "@/components/admin/DivisaoPresetCard";
 import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
+import { filtrarFightPresets, fightVideoFor, type FightDivisaoPreset } from "@/data/fightDivisoesPresets";
+import { FIGHT_MODALIDADES, modalidadeLabel, toModalidadeSlug } from "@/lib/fightModalidades";
 
 
 interface Aluno {
@@ -330,6 +332,10 @@ const AdminMontarTreino = () => {
   // === MODO AVANÇADO (edição livre da divisão antes de gerar com IA) ===
   const [modoAvancado, setModoAvancado] = useState(false);
   const [diasAvancado, setDiasAvancado] = useState<Array<{ label: string; qtd: number }>>([]);
+  // === SEGMENTO LUTA (CT) — divisões por modalidade + nível ===
+  const isFight = String((tenant as any)?.vertical || "") === "fight";
+  const [modalidadeLuta, setModalidadeLuta] = useState<string>("bjj");
+
 
   useEffect(() => {
     if (!tenant) return;
@@ -551,10 +557,40 @@ const AdminMontarTreino = () => {
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
 
+  // Modalidade do atleta (CT de luta) — carrega o que já está salvo no perfil
+  useEffect(() => {
+    if (!isFight || !alunoId || isAvulso) return;
+    void (async () => {
+      const { data } = await supabase
+        .from("perfis")
+        .select("modalidade_luta")
+        .eq("id", alunoId)
+        .maybeSingle();
+      const slug = toModalidadeSlug((data as any)?.modalidade_luta);
+      if (slug) setModalidadeLuta(slug);
+    })();
+  }, [isFight, alunoId, isAvulso]);
+
+  // Presets de luta (modalidade + nível) — substituem os de musculação em tenants 'fight'
+  const fightPresets = useMemo(
+    () => (isFight ? filtrarFightPresets(modalidadeLuta, nivel, perfil.frequencia_semanal || 4) : []),
+    [isFight, modalidadeLuta, nivel, perfil.frequencia_semanal],
+  );
+
   // Presets aplicáveis ao perfil atual (freq + sexo + nível)
   const presetsDisponiveis = useMemo(() => {
+    if (isFight) {
+      return fightPresets.map((p) => ({
+        id: p.id,
+        label: p.label,
+        freq: p.freq,
+        publico: "unisex" as const,
+        nivel: [p.nivel] as DivisaoPreset["nivel"],
+        dias: p.dias.map((d) => d.label),
+      }));
+    }
     return filtrarPresets(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
-  }, [perfil.frequencia_semanal, perfil.sexo, nivel]);
+  }, [isFight, fightPresets, perfil.frequencia_semanal, perfil.sexo, nivel]);
 
   // Auto-seleciona primeiro preset quando muda contexto
   useEffect(() => {
@@ -563,6 +599,7 @@ const AdminMontarTreino = () => {
       setDivisaoCustom(presetsDisponiveis[0].dias);
     }
   }, [presetsDisponiveis, divisaoSelecionadaId]);
+
 
   const divisoes = divisaoCustom.length > 0
     ? divisaoCustom
@@ -584,7 +621,61 @@ const AdminMontarTreino = () => {
     }
   };
 
+  /** CT de luta: aplica a divisão pronta (modalidade + nível) já com exercícios e vídeos. */
+  const aplicarFightPreset = async (preset: FightDivisaoPreset) => {
+    setPendingReview(true);
+    setCardio("");
+    setDivisaoSelecionadaId(preset.id);
+    setDivisaoCustom(preset.dias.map((d) => d.label));
+
+    const novos: ExercicioPrescrito[] = [];
+    preset.dias.forEach((dia) => {
+      dia.exercicios.forEach((e, i) => {
+        novos.push({
+          dia_semana: dia.label,
+          ordem: i,
+          exercicio: e.nome,
+          series: e.series,
+          repeticoes: e.repeticoes,
+          observacao: e.obs || "",
+        });
+      });
+    });
+    setExercicios(novos);
+
+    // Garante que cada exercício tenha vídeo de referência na biblioteca do CT
+    if (tenant?.id) {
+      try {
+        const existentes = new Set(
+          biblioteca.map((b) => b.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()),
+        );
+        const novosRefs = novos
+          .map((e) => ({ nome: e.exercicio, video: fightVideoFor(e.exercicio) }))
+          .filter((r) => r.video)
+          .filter((r, idx, arr) => arr.findIndex((x) => x.nome === r.nome) === idx)
+          .filter(
+            (r) =>
+              !existentes.has(r.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()),
+          )
+          .map((r) => ({
+            tenant_id: tenant.id,
+            nome_exercicio: r.nome,
+            url_video: r.video as string,
+            modalidade: preset.modalidade,
+          }));
+        if (novosRefs.length > 0) {
+          await (supabase as any).from("referencia_exercicios").insert(novosRefs);
+        }
+      } catch {
+        /* vídeo é complementar — não bloqueia a prescrição */
+      }
+    }
+
+    toast.success(`${preset.label} aplicada · ${novos.length} exercícios — revise e salve.`);
+  };
+
   const prepararGeracaoDaDivisao = (preset?: DivisaoPreset) => {
+
     setPendingReview(false);
     setCardio("");
     setExercicios([]);
@@ -1733,9 +1824,40 @@ const AdminMontarTreino = () => {
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Ou escolha uma divisão pronta abaixo ({presetsDisponiveis.length} opções específicas para {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {perfil.frequencia_semanal}x · {nivel}). Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
-              </p>
+              {isFight ? (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Modalidade do atleta
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {FIGHT_MODALIDADES.map((m) => (
+                        <button
+                          key={m.slug}
+                          type="button"
+                          onClick={() => setModalidadeLuta(m.slug)}
+                          className={`rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+                            modalidadeLuta === m.slug
+                              ? "border-primary bg-primary/20 text-primary"
+                              : "border-white/10 bg-black/40 text-muted-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Divisões de preparação física para <strong className="text-foreground">{modalidadeLabel(modalidadeLuta)}</strong> · nível{" "}
+                    <strong className="text-foreground">{nivel}</strong> ({presetsDisponiveis.length} opções). Ao escolher, os exercícios já vêm
+                    prescritos com séries, repetições e <strong className="text-foreground">vídeo de referência</strong> — revise e salve.
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Ou escolha uma divisão pronta abaixo ({presetsDisponiveis.length} opções específicas para {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {perfil.frequencia_semanal}x · {nivel}). Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
+                </p>
+              )}
 
               <div className="grid gap-4 xl:grid-cols-2">
                 {presetsDisponiveis.map((p) => (
@@ -1745,10 +1867,17 @@ const AdminMontarTreino = () => {
                     selecionado={divisaoSelecionadaId === p.id}
                     gerando={generating && divisaoSelecionadaId === p.id}
                     disabled={generating || perfilLoading}
-                    onGerar={() => prepararGeracaoDaDivisao(p)}
+                    onGerar={() => {
+                      if (isFight) {
+                        const fp = fightPresets.find((f) => f.id === p.id);
+                        if (fp) return void aplicarFightPreset(fp);
+                      }
+                      prepararGeracaoDaDivisao(p as DivisaoPreset);
+                    }}
                   />
                 ))}
               </div>
+
 
 
               {divisaoCustom.length > 0 && (
