@@ -495,7 +495,9 @@ const Perfil = () => {
       {/* Cada perfil toca APENAS a própria música — nunca a do tenant */}
       <ProfileMusicPlayer url={profile?.music_url ?? null} />
       {/* Hero estilo Netflix */}
-      <section className="relative h-[95vh] min-h-[640px] -mt-0">
+      <section className="relative min-h-[95vh] -mt-0">
+        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] overflow-hidden">
+        <div className="relative w-full h-full">
         <img
           src={profileHeroSrc}
           alt=""
