@@ -1353,15 +1353,26 @@ const TreinoEditor = ({
                 </div>
 
                 <div className="space-y-3">
-                  {exs.map((e, i) => (
+                  {exs.map((e, i) => {
+                    const match = biblioteca.find(
+                      (b) => normalizarBusca(b.nome || "") === normalizarBusca(e.exercicio || ""),
+                    );
+                    return (
                     <div
                       key={e._key}
                       className="rounded-lg border border-border bg-background p-3 space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
-                          Exercício {i + 1}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
+                            Exercício {i + 1}
+                          </span>
+                          <ExerciseVideoButton
+                            videoCoachUrl={match?.video_coach_url}
+                            videoUrl={match?.video_url}
+                            exerciseName={e.exercicio || `Exercício ${i + 1}`}
+                          />
+                        </div>
                         <div className="flex gap-1">
                           <Button
                             size="icon"
