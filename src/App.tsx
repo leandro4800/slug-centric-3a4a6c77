@@ -84,7 +84,9 @@ import SiteAdminCoaches from "./pages/site-admin/Coaches";
 import SiteAdminVips from "./pages/site-admin/Vips";
 import { Calendar as CalendarIcon, Palette, Wallet } from "lucide-react";
 import SiteAdminCtCamps from "./pages/site-admin/ct/Camps";
+import SiteAdminCtDojo from "./pages/site-admin/ct/DojoVirtual";
 import SiteAdminCtNutricao from "./pages/site-admin/ct/NutricaoCombate";
+
 import AlunoCtHome from "./pages/aluno/ct/CtHome";
 import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
 
