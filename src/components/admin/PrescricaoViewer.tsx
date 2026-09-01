@@ -1455,6 +1455,7 @@ const TreinoEditor = ({
                   ))}
                 </div>
               </div>
+              </div>
             );
           })}
 
