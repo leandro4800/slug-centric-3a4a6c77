@@ -155,6 +155,22 @@ const ControleCentral = () => {
           <span className="text-primary">→</span>
         </Link>
 
+        {(tenant as any)?.vertical === "fight" && (
+          <Link
+            to="/site/admin/ct/dojo"
+            className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
+          >
+            <div className="w-12 h-12 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
+              <GraduationCap className="h-5 w-5 text-primary" />
+            </div>
+            <div className="flex-1">
+              <p className="font-display text-lg text-white group-hover:text-primary transition-all">DOJO VIRTUAL</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Postar aulas em vídeo por modalidade e nível</p>
+            </div>
+            <span className="text-primary">→</span>
+          </Link>
+        )}
+
         <Link
           to={`/${slug}/admin/agenda-presencial`}
           className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
