@@ -332,6 +332,10 @@ const AdminMontarTreino = () => {
   // === MODO AVANÇADO (edição livre da divisão antes de gerar com IA) ===
   const [modoAvancado, setModoAvancado] = useState(false);
   const [diasAvancado, setDiasAvancado] = useState<Array<{ label: string; qtd: number }>>([]);
+  // === SEGMENTO LUTA (CT) — divisões por modalidade + nível ===
+  const isFight = String((tenant as any)?.vertical || "") === "fight";
+  const [modalidadeLuta, setModalidadeLuta] = useState<string>("bjj");
+
 
   useEffect(() => {
     if (!tenant) return;
