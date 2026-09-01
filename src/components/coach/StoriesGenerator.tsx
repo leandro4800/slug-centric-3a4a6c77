@@ -66,7 +66,7 @@ export const StoriesGenerator = ({ isFullScreen, onExitFullScreen }: Props) => {
   const [uploading, setUploading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [sharing, setSharing] = useState(false);
-  const [template, setTemplate] = useState<TemplateId>("treino-dieta-cyan");
+  const [template, setTemplate] = useState<TemplateId>("alpha-mente-vida-lima");
   const [profileData, setProfileData] = useState<any>(null);
   const [cards, setCards] = useState<Record<string, string>>({});
   const [quotaUsed, setQuotaUsed] = useState(0);
