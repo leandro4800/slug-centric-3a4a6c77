@@ -621,7 +621,61 @@ const AdminMontarTreino = () => {
     }
   };
 
+  /** CT de luta: aplica a divisão pronta (modalidade + nível) já com exercícios e vídeos. */
+  const aplicarFightPreset = async (preset: FightDivisaoPreset) => {
+    setPendingReview(true);
+    setCardio("");
+    setDivisaoSelecionadaId(preset.id);
+    setDivisaoCustom(preset.dias.map((d) => d.label));
+
+    const novos: ExercicioPrescrito[] = [];
+    preset.dias.forEach((dia) => {
+      dia.exercicios.forEach((e, i) => {
+        novos.push({
+          dia_semana: dia.label,
+          ordem: i,
+          exercicio: e.nome,
+          series: e.series,
+          repeticoes: e.repeticoes,
+          observacao: e.obs || "",
+        });
+      });
+    });
+    setExercicios(novos);
+
+    // Garante que cada exercício tenha vídeo de referência na biblioteca do CT
+    if (tenant?.id) {
+      try {
+        const existentes = new Set(
+          biblioteca.map((b) => b.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()),
+        );
+        const novosRefs = novos
+          .map((e) => ({ nome: e.exercicio, video: fightVideoFor(e.exercicio) }))
+          .filter((r) => r.video)
+          .filter((r, idx, arr) => arr.findIndex((x) => x.nome === r.nome) === idx)
+          .filter(
+            (r) =>
+              !existentes.has(r.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()),
+          )
+          .map((r) => ({
+            tenant_id: tenant.id,
+            nome_exercicio: r.nome,
+            url_video: r.video as string,
+            modalidade: preset.modalidade,
+          }));
+        if (novosRefs.length > 0) {
+          await (supabase as any).from("referencia_exercicios").insert(novosRefs);
+        }
+      } catch {
+        /* vídeo é complementar — não bloqueia a prescrição */
+      }
+    }
+
+    toast.success(`${preset.label} aplicada · ${novos.length} exercícios — revise e salve.`);
+  };
+
   const prepararGeracaoDaDivisao = (preset?: DivisaoPreset) => {
+
     setPendingReview(false);
     setCardio("");
     setExercicios([]);
