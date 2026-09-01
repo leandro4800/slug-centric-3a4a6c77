@@ -390,6 +390,80 @@ serve(async (req) => {
     const divisoesEscolhidas = Array.isArray(divisoes) && divisoes.length > 0
       ? divisoes
       : null;
+    // === BLOCO DE MODALIDADE DE LUTA (tenants vertical = 'fight') ===
+    let modalidadeBlock = "";
+    try {
+      const { data: perfilLuta } = await adminE
+        .from("perfis")
+        .select("tenant_id, modalidade_luta")
+        .eq("id", resolvedUserId)
+        .maybeSingle();
+      const tenantAlvo = tenant_id || perfilLuta?.tenant_id || null;
+      let vertical: string | null = null;
+      if (tenantAlvo) {
+        const { data: t } = await adminE.from("tenants").select("vertical").eq("id", tenantAlvo).maybeSingle();
+        vertical = (t as any)?.vertical ?? null;
+      }
+      const modalidade = String(perfilLuta?.modalidade_luta || perfil?.modalidade_luta || "").toLowerCase();
+
+      if (vertical === "fight" && modalidade) {
+        const REGRAS: Record<string, { nome: string; regras: string }> = {
+          bjj: {
+            nome: "Jiu-Jitsu Brasileiro (BJJ)",
+            regras:
+              "Prioridade absoluta: (1) FORÇA DE PEGADA E ANTEBRAÇO (suspensões em barra/lapela, farmer's walk, pinch grip) em TODA sessão de puxada; (2) ISOMETRIA DE CORE anti-extensão e anti-rotação (canivete em suspensão, prancha com carga, hollow hold) 3-4x/semana; (3) POTÊNCIA DE QUADRIL (terra, hip thrust, ponte com carga) para raspagens, passagens e recomposição de guarda. Puxada > empurrada na proporção 2:1. Evite volume alto de peito.",
+          },
+          muay_thai: {
+            nome: "Muay Thai",
+            regras:
+              "Prioridade absoluta: (1) POTÊNCIA ROTACIONAL DE TRONCO (arremesso rotacional de medicine ball, landmine rotation) 3x/semana em caráter explosivo; (2) CADEIA POSTERIOR e potência de pernas (jump squat, stiff, terra) para chutes rodados e deslocamento; (3) RESISTÊNCIA DE OMBRO E CLINCH (overhead press, remada alta, isometrias de guarda alta). Séries explosivas de baixa repetição (4-6) para potência + blocos metabólicos curtos.",
+          },
+          boxe: {
+            nome: "Boxe",
+            regras:
+              "Prioridade absoluta: (1) POTÊNCIA DE ROTAÇÃO DE TRONCO (transferência quadril→ombro: medicine ball rotacional, landmine); (2) RESISTÊNCIA DE OMBRO E BRAÇO para sustentar guarda alta em rounds longos (overhead press, elevações, isometrias); (3) EXPLOSÃO DE PERNAS para deslocamento no ringue (jump squat, pliometria leve). Volume de peito reduzido; nada que engesse a mobilidade escapular.",
+          },
+          mma: {
+            nome: "MMA",
+            regras:
+              "Combine as três matrizes: (1) TRANSFERÊNCIA DE FORÇA/triple extension (power clean, arranco, plyo push-up) para quedas e ground and pound; (2) WRESTLING DRILLS de força-resistência (sled/sprawl, farmer's walk, clinch isométrico); (3) POTÊNCIA ROTACIONAL e força de pegada. Sessões mistas força+potência, evitando fadiga excessiva que comprometa o treino técnico do dia.",
+          },
+        };
+        const cfg = REGRAS[modalidade];
+
+        // Biblioteca do CT (fonte de verdade dos exercícios sugeridos)
+        let bibliotecaLuta = "";
+        const filtroTenant = tenantAlvo ? `&or=(tenant_id.is.null,tenant_id.eq.${tenantAlvo})` : "&tenant_id=is.null";
+        const bibResp = await fetch(
+          `${SUPABASE_URL}/rest/v1/referencia_exercicios?modalidade=eq.${modalidade}${filtroTenant}&select=nome_exercicio,valencia,descricao,tenant_id&limit=120`,
+          { headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${SERVICE_KEY}` } },
+        );
+        if (bibResp.ok) {
+          const libAll: any[] = await bibResp.json();
+          const doTenant = libAll.filter((r) => r.tenant_id);
+          const lib = doTenant.length > 0 ? doTenant : libAll;
+          if (lib.length > 0) {
+            bibliotecaLuta =
+              `\n\nBIBLIOTECA OFICIAL DO CT (FONTE DE VERDADE — use PREFERENCIALMENTE estes exercícios, não invente livremente):\n` +
+              lib
+                .map((e) => `- [${e.valencia || "GERAL"}] ${e.nome_exercicio}${e.descricao ? ` — ${e.descricao}` : ""}`)
+                .join("\n");
+          }
+        }
+
+        if (cfg) {
+          modalidadeBlock =
+            `\n\n═══════════════════════════════════════════════\n0-LUTA. PROTOCOLO ESPECÍFICO DE MODALIDADE — ${cfg.nome.toUpperCase()} (PRIORIDADE MÁXIMA — INVIOLÁVEL)\n═══════════════════════════════════════════════\n` +
+            `O aluno é atleta de ${cfg.nome}. O treino é PREPARAÇÃO FÍSICA PARA A LUTA, não musculação estética.\n\n${cfg.regras}\n\n` +
+            `REGRAS GERAIS DO SEGMENTO LUTA:\n- Nunca prescreva volume que comprometa o treino técnico/sparring do atleta (deixe margem de recuperação).\n- Priorize movimentos multiarticulares, potência e força-resistência sobre isolados de estética.\n- Inclua mobilidade de quadril e ombro em todo aquecimento.\n- Nomeie os exercícios EXATAMENTE como aparecem na biblioteca oficial abaixo quando existirem.` +
+            bibliotecaLuta +
+            `\n`;
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao montar bloco de modalidade de luta:", err);
+    }
+
     const sexoStr = String(perfil?.sexo || "").toLowerCase();
     const isFeminino = sexoStr.startsWith("f") || sexoStr.includes("mulher") || sexoStr.includes("femin");
     const femininoBlock = isFeminino
@@ -400,7 +474,7 @@ serve(async (req) => {
       ? `\n\n═══════════════════════════════════════════════\n0. DIVISÃO OBRIGATÓRIA (DEFINIDA PELO COACH) — INVIOLÁVEL — PRIORIDADE MÁXIMA\n═══════════════════════════════════════════════\nO Coach já escolheu EXATAMENTE como o aluno vai dividir a semana. Você DEVE retornar um dia para cada item abaixo, com o nome IDÊNTICO ao informado, na MESMA ORDEM, e os exercícios DEVEM corresponder aos grupos musculares descritos no nome de cada dia.\n\n⛔ PROIBIDO ABSOLUTAMENTE: Gerar Full Body, juntar grupos não listados, ou trocar a divisão por outra que você ache melhor. Se a divisão diz "Peito + Tríceps", o dia tem APENAS peito e tríceps — NUNCA full body, NUNCA pernas/costas no mesmo dia.\n⛔ Esta regra SOBRESCREVE qualquer regra de "Estrutura por Nível" abaixo. Mesmo que o nível seja Iniciante, se o coach passou divisão dividida, RESPEITE a divisão dividida.\n\nDIVISÃO ESCOLHIDA (${divisoesEscolhidas.length} dias de treino, nível do aluno = ${nivelLabel}):\n${divisoesEscolhidas.map((d: string, i: number) => `${i + 1}. "${d}"`).join("\n")}\n\nREGRAS DE INTERPRETAÇÃO:\n- "Peito + Tríceps" = treine SOMENTE peito e tríceps nesse dia (e ombro anterior se mencionado).\n- "Peito + Bíceps" = treine SOMENTE peito e bíceps (combinação alternativa, válida).\n- "Costas + Bíceps" / "Costas + Tríceps" — siga literalmente.\n- "Pernas Completas" = quadríceps + posterior + glúteo + panturrilha.\n- "Push" = peito/ombro/tríceps. "Pull" = costas/bíceps. "Legs" = pernas.\n- "Full Body" = todos os grandes grupos no mesmo dia (USE APENAS se o nome do dia contiver "Full Body").\n- NÃO adicione grupos musculares que não estejam no nome do dia.\n- Complete a semana (7 entradas) com OFFs estratégicos nos dias restantes.\n`
       : "";
 
-    const systemPrompt = `${knowledgeContext}${restricoes.blocoPrompt}${femininoBlock}${divisaoBlock}
+    const systemPrompt = `${knowledgeContext}${restricoes.blocoPrompt}${modalidadeBlock}${femininoBlock}${divisaoBlock}
 
 Você é a Dr. IA, a mente estratégica por trás da metodologia Alpha Coach. Sua missão é gerar prescrições de treino com precisão cirúrgica, seguindo a Base de Conhecimento Pacholok (acima como Fonte de Verdade Absoluta) e as Regras de Estrutura de Elite abaixo.
 
