@@ -557,10 +557,40 @@ const AdminMontarTreino = () => {
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
 
+  // Modalidade do atleta (CT de luta) — carrega o que já está salvo no perfil
+  useEffect(() => {
+    if (!isFight || !alunoId || isAvulso) return;
+    void (async () => {
+      const { data } = await supabase
+        .from("perfis")
+        .select("modalidade_luta")
+        .eq("id", alunoId)
+        .maybeSingle();
+      const slug = toModalidadeSlug((data as any)?.modalidade_luta);
+      if (slug) setModalidadeLuta(slug);
+    })();
+  }, [isFight, alunoId, isAvulso]);
+
+  // Presets de luta (modalidade + nível) — substituem os de musculação em tenants 'fight'
+  const fightPresets = useMemo(
+    () => (isFight ? filtrarFightPresets(modalidadeLuta, nivel, perfil.frequencia_semanal || 4) : []),
+    [isFight, modalidadeLuta, nivel, perfil.frequencia_semanal],
+  );
+
   // Presets aplicáveis ao perfil atual (freq + sexo + nível)
   const presetsDisponiveis = useMemo(() => {
+    if (isFight) {
+      return fightPresets.map((p) => ({
+        id: p.id,
+        label: p.label,
+        freq: p.freq,
+        publico: "unisex" as const,
+        nivel: [p.nivel] as DivisaoPreset["nivel"],
+        dias: p.dias.map((d) => d.label),
+      }));
+    }
     return filtrarPresets(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
-  }, [perfil.frequencia_semanal, perfil.sexo, nivel]);
+  }, [isFight, fightPresets, perfil.frequencia_semanal, perfil.sexo, nivel]);
 
   // Auto-seleciona primeiro preset quando muda contexto
   useEffect(() => {
@@ -569,6 +599,7 @@ const AdminMontarTreino = () => {
       setDivisaoCustom(presetsDisponiveis[0].dias);
     }
   }, [presetsDisponiveis, divisaoSelecionadaId]);
+
 
   const divisoes = divisaoCustom.length > 0
     ? divisaoCustom
