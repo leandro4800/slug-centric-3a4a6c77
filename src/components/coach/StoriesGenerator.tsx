@@ -36,21 +36,22 @@ import { cn } from "@/lib/utils";
 const MONTHLY_LIMIT = 8;
 
 type TemplateId =
-  | "treino-dieta-cyan"
-  | "transformacao-lime"
-  | "consultoria-ouro-coach"
-  | "treino-dieta-mono-amarelo"
-  | "consultoria-dourada-mono"
-  | "treino-dieta-teal-prato";
+  | "alpha-mente-vida-lima"
+  | "alpha-nova-versao-lima"
+  | "alpha-treino-dieta-cyan"
+  | "alpha-modo-alpha-vermelho"
+  | "alpha-foco-dias-lima"
+  | "alpha-disciplina-serie-dourado";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; Icon: LucideIcon }[] = [
-  { id: "treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#22D3EE", Icon: Dumbbell },
-  { id: "transformacao-lime", label: "Transforme seu Corpo", desc: "Verde lima neon", accent: "#CCFF00", Icon: Flame },
-  { id: "consultoria-ouro-coach", label: "Consultoria Ouro", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown },
-  { id: "treino-dieta-mono-amarelo", label: "Treino & Dieta Mono", desc: "P&B + amarelo", accent: "#FACC15", Icon: Zap },
-  { id: "consultoria-dourada-mono", label: "Consultoria Dourada", desc: "P&B + ouro", accent: "#E0B457", Icon: Trophy },
-  { id: "treino-dieta-teal-prato", label: "Treino & Dieta Prato", desc: "Teal + refeição", accent: "#14B8A6", Icon: Salad },
+  { id: "alpha-mente-vida-lima", label: "Corpo, Mente e Vida", desc: "Verde lima", accent: "#8BC53F", Icon: Salad },
+  { id: "alpha-nova-versao-lima", label: "Nova Versão", desc: "Verde lima", accent: "#8BC53F", Icon: Flame },
+  { id: "alpha-treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#2DD4CE", Icon: Dumbbell },
+  { id: "alpha-modo-alpha-vermelho", label: "Modo Alpha", desc: "Vermelho intenso", accent: "#C0272D", Icon: Zap },
+  { id: "alpha-foco-dias-lima", label: "Foco Todos os Dias", desc: "Verde lima", accent: "#8BC53F", Icon: Trophy },
+  { id: "alpha-disciplina-serie-dourado", label: "Disciplina — A Série", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown },
 ];
+
 
 interface Props {
   onEnterFullScreen?: () => void;
