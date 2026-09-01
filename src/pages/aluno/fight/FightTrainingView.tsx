@@ -323,7 +323,7 @@ const FightTrainingView = () => {
           <div className="py-8 text-center">
             <Swords className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">
-              Nenhuma sessão programada para {modalidade}.
+              Nenhuma sessão programada para {modalidadeLabel(modalidade)}.
             </p>
             <p className="text-xs text-muted-foreground/70 mt-1">
               Seu técnico programará sua rotina de manutenção e performance.
