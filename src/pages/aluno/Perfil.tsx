@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Play, Camera, LogOut, KeyRound, Loader2, ClipboardCheck, User, Ruler, Upload, Settings, Move, Sparkles, Music, Bell, BellOff, Rocket, Users, CalendarCheck, Trash2, X } from "lucide-react";
+import { Play, Camera, LogOut, KeyRound, Loader2, User, Ruler, Upload, Move, Music, Bell, BellOff, Rocket, Users, CalendarCheck, Trash2, X } from "lucide-react";
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
@@ -521,75 +521,38 @@ const Perfil = () => {
             {user?.email}. {profile?.telefone ? `Contato: ${profile.telefone}.` : ""} Próximo passo: manter a constância e evoluir.
           </p>
 
-          <div className="flex gap-2 pt-1">
+          <div className="space-y-2 pt-2">
             <Button 
               onClick={() => setProfileOpen(true)}
               variant="default"
-              className="flex-1"
+              className="w-full h-12 font-bold"
             >
               <User className="h-4 w-4" /> Editar Perfil
             </Button>
-            <Button 
-              onClick={() => setSelectionOpen(true)}
-              variant="default"
-              className="flex-1"
-            >
-              <Ruler className="h-4 w-4" /> Nova Avaliação
-            </Button>
-          </div>
-          
-          {isCoach && (
-            <div className="pt-2">
+
+            {isCoach && (
               <Button 
                 onClick={() => navigate(`/${slug}/admin/hub`)}
                 variant="outline"
                 className="w-full bg-primary/20 border-primary/40 hover:bg-primary/30 text-primary font-bold gap-2 rounded-xl h-12"
               >
-                <Rocket className="h-5 w-5" /> HUB DO COACH
+                <Rocket className="h-5 w-5" /> Hub do Coach
               </Button>
-            </div>
-          )}
-          
-          <div className="flex gap-2 pt-1">
-            <Button
-              onClick={() => navigate(`/${slug}/app/anamnese`)}
-              variant="default"
-              className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight shadow-glow"
-            >
-              <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
-            </Button>
-            <Button
-              onClick={() => navigate(`/${slug}/app/carta`)}
-              className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black hover:brightness-110 font-bold"
-            >
-              <Sparkles className="h-4 w-4" /> Minha Carta
-            </Button>
+            )}
           </div>
 
-          {isCoach && (
-            <div className="flex gap-2 pt-1">
-              <Button
-                onClick={() => navigate(`/${slug}/app/controle`)}
-                variant="outline"
-                className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight border-primary/40 text-primary hover:bg-primary/10"
-              >
-                <Settings className="h-4 w-4" /> Painel do Coach
-              </Button>
-            </div>
-          )}
-          
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2 pt-2">
             <Button
               onClick={() => setPwOpen(true)}
               variant="secondary"
-              className="flex-1 min-w-0 h-11 px-2 text-[11px] whitespace-normal leading-tight tracking-normal"
+              className="flex-1 h-11"
             >
               <KeyRound className="h-4 w-4 shrink-0" /> Trocar senha
             </Button>
             <Button
               onClick={() => setDeleteOpen(true)}
               variant="destructive"
-              className="flex-1 min-w-0 h-11 px-2 text-[11px] whitespace-normal leading-tight tracking-normal bg-red-600/20 border border-red-500/30 text-red-500 hover:bg-red-600/30"
+              className="flex-1 h-11 bg-red-600/20 border border-red-500/30 text-red-500 hover:bg-red-600/30"
             >
               <Trash2 className="h-4 w-4 shrink-0" /> Excluir Conta
             </Button>
@@ -602,7 +565,6 @@ const Perfil = () => {
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
-
 
           <NotificationToggle />
         </div>
