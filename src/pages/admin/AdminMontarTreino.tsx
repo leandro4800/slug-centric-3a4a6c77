@@ -1799,30 +1799,25 @@ const AdminMontarTreino = () => {
                 </span>
               </div>
 
-              {/* Começar do zero — sempre no topo, para o coach montar seu próprio treino */}
-              <div className="rounded-xl border border-dashed border-primary/40 bg-primary/5 p-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                <div>
-                  <p className="text-sm font-bold">Começar do zero</p>
-                  <p className="text-[11px] text-muted-foreground">Monte um treino em branco e adicione cada exercício manualmente.</p>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    setPendingReview(false);
-                    setCardio("");
-                    setExercicios([]);
-                    setDivisaoSelecionadaId("custom");
-                    const novosDias = Array.from({ length: perfil.frequencia_semanal || 4 }, (_, i) => `Treino ${String.fromCharCode(65 + i)}`);
-                    setDivisaoCustom(novosDias);
-                    novosDias.forEach((d) => addEx(d));
-                    toast.success("Treino em branco criado. Edite os dias e adicione exercícios.");
-                  }}
-                  className="border-primary/50 text-primary hover:bg-primary/10 shrink-0"
-                >
-                  <Plus className="h-4 w-4 mr-1" /> Treino em branco
-                </Button>
-              </div>
+              {/* Modo Avançado — botão vermelho no topo, substitui o antigo "Treino em branco" */}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !modoAvancado;
+                  setModoAvancado(next);
+                  if (next && diasAvancado.length === 0) {
+                    const base = divisaoCustom.length > 0
+                      ? divisaoCustom
+                      : sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
+                    setDiasAvancado(base.map((d) => ({ label: d, qtd: 5 })));
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-white font-sans font-bold text-sm uppercase tracking-wide shadow-[0_0_25px_-5px_hsl(var(--primary)/0.7)] hover:brightness-110 active:scale-[0.99] transition-all"
+                style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+              >
+                <Sparkles className="h-5 w-5" />
+                {modoAvancado ? "Fechar Modo Avançado" : "Modo Avançado — Editar divisão livremente"}
+              </button>
 
               {isFight ? (
                 <>
