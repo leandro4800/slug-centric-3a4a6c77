@@ -1928,6 +1928,137 @@ const AdminMontarTreino = () => {
                   </p>
                 )}
               </div>
+
+              {/* === MODO AVANÇADO — botão abaixo dos Estímulos Extras === */}
+              <button
+                type="button"
+                onClick={() => {
+                  const next = !modoAvancado;
+                  setModoAvancado(next);
+                  if (next && diasAvancado.length === 0) {
+                    const base = divisaoCustom.length > 0
+                      ? divisaoCustom
+                      : sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
+                    setDiasAvancado(base.map((d) => ({ label: d, qtd: 5 })));
+                  }
+                }}
+                className="w-full flex items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-white font-sans font-bold text-sm uppercase tracking-wide shadow-[0_0_25px_-5px_hsl(var(--primary)/0.7)] hover:brightness-110 active:scale-[0.99] transition-all"
+                style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
+              >
+                <Sparkles className="h-5 w-5" />
+                {modoAvancado ? "Fechar Modo Avançado" : "Modo Avançado — Editar divisão livremente"}
+              </button>
+
+              {modoAvancado && (
+                <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                  <p className="text-sm text-foreground/80" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                    Reordene, adicione ou remova dias e defina quantos exercícios por dia. A IA vai gerar respeitando sua montagem.
+                  </p>
+                  {diasAvancado.map((d, i) => (
+                    <div key={i} className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center bg-background/40 border border-border/50 rounded-lg p-2">
+                      <span className="text-xs font-bold text-primary w-6 shrink-0 text-center">
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      <Input
+                        value={d.label}
+                        onChange={(e) => {
+                          const novo = [...diasAvancado];
+                          novo[i] = { ...novo[i], label: e.target.value };
+                          setDiasAvancado(novo);
+                        }}
+                        placeholder="Ex: A — Glúteo/Posterior/Quadríceps"
+                        className="text-sm flex-1"
+                      />
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Label className="text-[10px] uppercase text-muted-foreground">Qtd</Label>
+                        <Input
+                          type="number"
+                          min={1}
+                          max={12}
+                          value={d.qtd}
+                          onChange={(e) => {
+                            const novo = [...diasAvancado];
+                            novo[i] = { ...novo[i], qtd: Math.max(1, Math.min(12, Number(e.target.value) || 1)) };
+                            setDiasAvancado(novo);
+                          }}
+                          className="w-16 text-sm text-center"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={i === 0}
+                          onClick={() => {
+                            const novo = [...diasAvancado];
+                            [novo[i - 1], novo[i]] = [novo[i], novo[i - 1]];
+                            setDiasAvancado(novo);
+                          }}
+                        >
+                          <ArrowUp className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          disabled={i === diasAvancado.length - 1}
+                          onClick={() => {
+                            const novo = [...diasAvancado];
+                            [novo[i + 1], novo[i]] = [novo[i], novo[i + 1]];
+                            setDiasAvancado(novo);
+                          }}
+                        >
+                          <ArrowDown className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive hover:text-destructive"
+                          onClick={() => setDiasAvancado(diasAvancado.filter((_, idx) => idx !== i))}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <div className="flex flex-col sm:flex-row gap-2 pt-1">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const proximaLetra = String.fromCharCode(65 + diasAvancado.length);
+                        setDiasAvancado([...diasAvancado, { label: `${proximaLetra} — `, qtd: 5 }]);
+                      }}
+                      className="flex-1"
+                    >
+                      <Plus className="h-4 w-4 mr-1" /> Adicionar dia
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={generating || perfilLoading || diasAvancado.length === 0}
+                      onClick={() => {
+                        const labels = diasAvancado.map((d) => d.label.trim()).filter(Boolean);
+                        if (labels.length === 0) { toast.error("Adicione pelo menos um dia."); return; }
+                        const prompt = "MODO AVANÇADO — quantidade de exercícios EXATA por dia:\n" +
+                          diasAvancado.map((d) => `• ${d.label.trim()} → ${d.qtd} exercícios`).join("\n") +
+                          "\nRespeite EXATAMENTE a ordem, os músculos e a quantidade de exercícios por dia.";
+                        setDivisaoCustom(labels);
+                        setDivisaoSelecionadaId("custom-avancado");
+                        void gerarComIA(labels, prompt);
+                      }}
+                      className="flex-1 bg-primary hover:bg-primary/90"
+                    >
+                      {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                      Gerar com IA (Avançado)
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div className="bg-black/40 border border-white/10 rounded-2xl p-3 sm:p-5 shadow-2xl backdrop-blur-sm">
