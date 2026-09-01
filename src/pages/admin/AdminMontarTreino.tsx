@@ -1897,37 +1897,8 @@ const AdminMontarTreino = () => {
                 </div>
               )}
 
-              {/* === MODO AVANÇADO: editor livre da divisão + IA dedicada === */}
+              {/* === MODO AVANÇADO: conteúdo do editor livre (toggle controlado pelo botão no topo) === */}
               <div className="space-y-3 pt-3 border-t border-primary/30">
-                <div className="flex items-center justify-between gap-2">
-                  <div>
-                    <Label className="text-xs uppercase tracking-wider text-primary font-bold">
-                      ✨ Modo Avançado — Editar divisão livremente
-                    </Label>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      Reordene, adicione/remova dias e defina quantos exercícios por dia. IA dedicada (separada da geração padrão).
-                    </p>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      const next = !modoAvancado;
-                      setModoAvancado(next);
-                      if (next && diasAvancado.length === 0) {
-                        const base = divisaoCustom.length > 0
-                          ? divisaoCustom
-                          : sugerirDivisoes(perfil.frequencia_semanal || 4, perfil.sexo, nivel);
-                        setDiasAvancado(base.map((d) => ({ label: d, qtd: 5 })));
-                      }
-                    }}
-                    className="shrink-0"
-                  >
-                    {modoAvancado ? "Fechar" : "Editar"}
-                  </Button>
-                </div>
-
                 {modoAvancado && (
                   <div className="space-y-2 rounded-xl border border-primary/30 bg-primary/5 p-3">
                     {diasAvancado.map((d, i) => (
