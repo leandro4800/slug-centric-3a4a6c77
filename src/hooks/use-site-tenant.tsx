@@ -9,6 +9,7 @@ interface SiteTenant {
   logo_url?: string | null;
   is_partner?: boolean | null;
   status?: string | null;
+  vertical?: string | null;
 }
 
 export type BlockReason = "no_subscription" | null;
@@ -79,7 +80,7 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
         if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
         const { data, error: err } = await supabase
           .from("tenants")
-          .select("id, slug, nome, logo_url, is_partner, status")
+          .select("id, slug, nome, logo_url, is_partner, status, vertical")
           .eq("owner_user_id", user.id)
           .order("created_at", { ascending: true })
           .limit(1)
