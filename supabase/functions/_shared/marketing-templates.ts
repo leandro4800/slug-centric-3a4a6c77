@@ -126,14 +126,23 @@ FIXED TEXT verbatim as above. PALETTE: black background, white text, gold/amber 
   },
 };
 
-// URLs públicas das artes de referência de layout (bucket avatars).
+// URLs públicas das artes de referência de layout (CDN de assets do projeto).
 // NUNCA expor no frontend.
-const REF_BASE =
-  "https://iflgryuemsohurtdaawm.supabase.co/storage/v1/object/public/avatars/template-references";
+const REFERENCE_URLS: Record<string, string | null> = {
+  "alpha-mente-vida-lima":
+    "https://alpha-coach.app/__l5e/assets-v1/07b26857-21af-4f80-82fd-b221535139fe/alpha-mente-vida-lima.png",
+  "alpha-nova-versao-lima":
+    "https://alpha-coach.app/__l5e/assets-v1/bf50ddb6-ae94-4701-90eb-8bdb99d26667/alpha-nova-versao-lima.png",
+  "alpha-treino-dieta-cyan":
+    "https://alpha-coach.app/__l5e/assets-v1/dce3546e-295b-48e5-868b-6b987cc04d86/alpha-treino-dieta-cyan.png",
+  "alpha-modo-alpha-vermelho":
+    "https://alpha-coach.app/__l5e/assets-v1/93336d01-301e-4fce-a691-0d373798be44/alpha-modo-alpha-vermelho.png",
+  "alpha-foco-dias-lima":
+    "https://alpha-coach.app/__l5e/assets-v1/bed642ce-f1da-4152-a8f6-297b3ddf9770/alpha-foco-dias-lima.png",
+  "alpha-disciplina-serie-dourado":
+    "https://alpha-coach.app/__l5e/assets-v1/c921ce55-edaf-4f84-bee1-f90c1e90c533/alpha-disciplina-serie-dourado.png",
+};
 
-const REFERENCE_URLS: Record<string, string | null> = Object.fromEntries(
-  Object.keys(COMPOSITIONS).map((id) => [id, `${REF_BASE}/${id}.png`]),
-);
 
 // ---------------------------------------------------------------------------
 // Variações de subheadline / CTA por template. A variação A é sempre a original.
