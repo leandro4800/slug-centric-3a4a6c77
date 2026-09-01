@@ -1087,6 +1087,28 @@ const TreinoEditor = ({
     });
   };
 
+  // Move o exercício direto para uma posição (1-based) dentro do mesmo dia
+  const moveExToPos = (key: string, pos1: number) => {
+    setItems((prev) => {
+      const dia = prev.find((i) => i._key === key)?.dia_semana;
+      if (!dia) return prev;
+      const arr = [...prev];
+      const dayIdxs = arr.map((it, i) => ({ it, i })).filter((x) => x.it.dia_semana === dia);
+      const total = dayIdxs.length;
+      const from = dayIdxs.findIndex((x) => x.it._key === key);
+      if (from < 0) return prev;
+      const to = Math.min(Math.max(pos1, 1), total) - 1;
+      if (to === from) return prev;
+      const dayItems = dayIdxs.map((x) => x.it);
+      const [moved] = dayItems.splice(from, 1);
+      dayItems.splice(to, 0, moved);
+      dayIdxs.forEach((x, k) => {
+        arr[x.i] = dayItems[k];
+      });
+      return arr;
+    });
+  };
+
   const addExercicio = (dia: string) => {
     setItems((prev) => {
       const indices = prev.map((i, idx) => (i.dia_semana === dia ? idx : -1)).filter((x) => x >= 0);
@@ -1374,7 +1396,7 @@ const TreinoEditor = ({
                             exerciseName={e.exercicio || `Exercício ${i + 1}`}
                           />
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex items-center gap-1">
                           <Button
                             size="icon"
                             variant="ghost"
@@ -1393,6 +1415,26 @@ const TreinoEditor = ({
                           >
                             ↓
                           </Button>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={exs.length}
+                            defaultValue={i + 1}
+                            key={`pos-${e._key}-${i}`}
+                            title="Posição do exercício no dia"
+                            className="h-7 w-12 px-1 text-center text-xs"
+                            onKeyDown={(ev) => {
+                              if (ev.key === "Enter") {
+                                ev.preventDefault();
+                                (ev.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onBlur={(ev) => {
+                              const n = parseInt(ev.target.value, 10);
+                              if (!Number.isNaN(n)) moveExToPos(e._key, n);
+                            }}
+                          />
+
                           <Button
                             size="icon"
                             variant="ghost"
