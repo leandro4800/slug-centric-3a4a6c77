@@ -2128,6 +2128,9 @@ const AdminMontarTreino = () => {
                     <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-90" />
                     <div className="relative flex items-center justify-between gap-2 px-4 pt-5 pb-3">
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary font-display text-sm font-bold text-primary-foreground select-none" title={`Dia ${diaIdx + 1}`}>
+                          {diaIdx + 1}
+                        </span>
                         <span className="font-display text-[10px] tracking-[0.3em] text-primary/90 uppercase shrink-0 select-none">Treino</span>
                         <Input
                           defaultValue={dia}
