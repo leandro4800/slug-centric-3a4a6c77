@@ -553,13 +553,13 @@ const Perfil = () => {
             <Button
               onClick={() => navigate(`/${slug}/app/anamnese`)}
               variant="default"
-              className="flex-1 shadow-glow"
+              className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight shadow-glow"
             >
               <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
             </Button>
             <Button
               onClick={() => navigate(`/${slug}/app/carta`)}
-              className="flex-1 bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black hover:brightness-110 font-bold"
+              className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black hover:brightness-110 font-bold"
             >
               <Sparkles className="h-4 w-4" /> Minha Carta
             </Button>
@@ -570,7 +570,7 @@ const Perfil = () => {
               <Button
                 onClick={() => navigate(`/${slug}/app/controle`)}
                 variant="outline"
-                className="flex-1 border-primary/40 text-primary hover:bg-primary/10"
+                className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight border-primary/40 text-primary hover:bg-primary/10"
               >
                 <Settings className="h-4 w-4" /> Painel do Coach
               </Button>
@@ -617,8 +617,8 @@ const Perfil = () => {
             <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
               <Users className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <p className="font-display text-sm uppercase leading-tight group-hover:text-primary transition-colors">Comunidade</p>
+            <div className="min-w-0">
+              <p className="font-display text-sm uppercase leading-tight break-words group-hover:text-primary transition-colors">Comunidade</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Feed do time</p>
             </div>
           </Link>
@@ -630,8 +630,8 @@ const Perfil = () => {
             <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
               <CalendarCheck className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <p className="font-display text-sm uppercase leading-tight group-hover:text-primary transition-colors">Presencial</p>
+            <div className="min-w-0">
+              <p className="font-display text-sm uppercase leading-tight break-words group-hover:text-primary transition-colors">Presencial</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Sessões com coach</p>
             </div>
           </Link>

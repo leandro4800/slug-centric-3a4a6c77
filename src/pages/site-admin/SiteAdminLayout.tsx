@@ -1,5 +1,5 @@
 import { Outlet, Navigate, useLocation, NavLink } from "react-router-dom";
-import { Loader2, Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Menu, Wrench, UserCog, LifeBuoy, Calendar, Activity } from "lucide-react";
+import { Loader2, Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Menu, Wrench, UserCog, LifeBuoy, Calendar, Activity, Swords, GraduationCap, Utensils } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { SiteTenantProvider, useSiteTenant } from "@/hooks/use-site-tenant";
 import { SiteAdminSidebar } from "@/components/site-admin/SiteAdminSidebar";
@@ -21,6 +21,12 @@ const mobileItems = [
   { to: "/site/admin/meu-perfil", label: "Meu perfil", icon: UserCog },
   { to: "/site/admin/minha-conta", label: "Minha conta", icon: UserCog },
   { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy },
+];
+
+const fightMobileItems = [
+  { to: "/site/admin/ct/camps", label: "Camps", icon: Swords },
+  { to: "/site/admin/ct/dojo", label: "Dojo Virtual", icon: GraduationCap },
+  { to: "/site/admin/ct/nutricao", label: "Nutri. combate", icon: Utensils },
 ];
 
 const Inner = () => {
@@ -106,7 +112,7 @@ const Inner = () => {
         {mobileOpen && (
           <div className="md:hidden border-b border-white/10 bg-black/95 backdrop-blur">
             <nav className="grid grid-cols-2 gap-1 p-2">
-              {mobileItems.map((item) => {
+              {[...mobileItems, ...((tenant as any)?.vertical === "fight" ? fightMobileItems : [])].map((item) => {
                 const active = location.pathname === item.to || (item.to !== "/site/admin/alunos/novo" && location.pathname.startsWith(item.to));
                 const Icon = item.icon;
                 return (
