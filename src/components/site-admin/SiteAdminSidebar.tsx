@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
-  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag,
+  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag, GraduationCap,
   ChevronLeft, ChevronRight, Video, ShieldCheck, Crown, HeartPulse,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
