@@ -21,6 +21,8 @@ import { extractYouTubeId } from "@/lib/utils";
 import platformLogo from "@/assets/alphacoach-logo.jpeg";
 import { DivisaoPresetCard } from "@/components/admin/DivisaoPresetCard";
 import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
+import { filtrarFightPresets, fightVideoFor, type FightDivisaoPreset } from "@/data/fightDivisoesPresets";
+import { FIGHT_MODALIDADES, modalidadeLabel, toModalidadeSlug } from "@/lib/fightModalidades";
 
 
 interface Aluno {
