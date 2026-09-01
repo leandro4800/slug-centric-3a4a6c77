@@ -553,13 +553,13 @@ const Perfil = () => {
             <Button
               onClick={() => navigate(`/${slug}/app/anamnese`)}
               variant="default"
-              className="flex-1 shadow-glow"
+              className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight shadow-glow"
             >
               <ClipboardCheck className="h-4 w-4" /> Minha Anamnese
             </Button>
             <Button
               onClick={() => navigate(`/${slug}/app/carta`)}
-              className="flex-1 bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black hover:brightness-110 font-bold"
+              className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight bg-gradient-to-r from-[hsl(180_100%_45%)] to-[hsl(150_100%_45%)] text-black hover:brightness-110 font-bold"
             >
               <Sparkles className="h-4 w-4" /> Minha Carta
             </Button>
@@ -570,7 +570,7 @@ const Perfil = () => {
               <Button
                 onClick={() => navigate(`/${slug}/app/controle`)}
                 variant="outline"
-                className="flex-1 border-primary/40 text-primary hover:bg-primary/10"
+                className="flex-1 min-w-0 px-2 text-[11px] whitespace-normal leading-tight border-primary/40 text-primary hover:bg-primary/10"
               >
                 <Settings className="h-4 w-4" /> Painel do Coach
               </Button>
