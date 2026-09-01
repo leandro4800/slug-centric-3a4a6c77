@@ -1087,6 +1087,28 @@ const TreinoEditor = ({
     });
   };
 
+  // Move o exercício direto para uma posição (1-based) dentro do mesmo dia
+  const moveExToPos = (key: string, pos1: number) => {
+    setItems((prev) => {
+      const dia = prev.find((i) => i._key === key)?.dia_semana;
+      if (!dia) return prev;
+      const arr = [...prev];
+      const dayIdxs = arr.map((it, i) => ({ it, i })).filter((x) => x.it.dia_semana === dia);
+      const total = dayIdxs.length;
+      const from = dayIdxs.findIndex((x) => x.it._key === key);
+      if (from < 0) return prev;
+      const to = Math.min(Math.max(pos1, 1), total) - 1;
+      if (to === from) return prev;
+      const dayItems = dayIdxs.map((x) => x.it);
+      const [moved] = dayItems.splice(from, 1);
+      dayItems.splice(to, 0, moved);
+      dayIdxs.forEach((x, k) => {
+        arr[x.i] = dayItems[k];
+      });
+      return arr;
+    });
+  };
+
   const addExercicio = (dia: string) => {
     setItems((prev) => {
       const indices = prev.map((i, idx) => (i.dia_semana === dia ? idx : -1)).filter((x) => x >= 0);
