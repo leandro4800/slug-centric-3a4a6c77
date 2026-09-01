@@ -1836,7 +1836,7 @@ const AdminMontarTreino = () => {
                 </p>
               )}
 
-              <div className="grid gap-4 xl:grid-cols-2">
+              <div className="grid gap-2.5 sm:grid-cols-2 xl:grid-cols-3">
                 {presetsDisponiveis.map((p) => (
                   <DivisaoPresetCard
                     key={p.id}
