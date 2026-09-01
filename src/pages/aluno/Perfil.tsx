@@ -582,26 +582,27 @@ const Perfil = () => {
             <Button
               onClick={() => setPwOpen(true)}
               variant="secondary"
-              className="flex-1 h-11"
+              className="flex-1 min-w-0 h-11 px-2 text-[11px] whitespace-normal leading-tight tracking-normal"
             >
-              <KeyRound className="h-4 w-4" /> Trocar senha
+              <KeyRound className="h-4 w-4 shrink-0" /> Trocar senha
             </Button>
             <Button
               onClick={() => setDeleteOpen(true)}
               variant="destructive"
-              className="flex-1 h-11 bg-red-600/20 border border-red-500/30 text-red-500 hover:bg-red-600/30"
+              className="flex-1 min-w-0 h-11 px-2 text-[11px] whitespace-normal leading-tight tracking-normal bg-red-600/20 border border-red-500/30 text-red-500 hover:bg-red-600/30"
             >
-              <Trash2 className="h-4 w-4" /> Excluir Conta
+              <Trash2 className="h-4 w-4 shrink-0" /> Excluir Conta
             </Button>
             <Button
               onClick={handleLogout}
               variant="secondary"
-              className="w-11 h-11 p-0"
+              className="w-11 h-11 p-0 shrink-0"
               aria-label="Sair"
             >
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
+
 
           <NotificationToggle />
         </div>
