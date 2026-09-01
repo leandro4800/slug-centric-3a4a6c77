@@ -84,7 +84,9 @@ import SiteAdminCoaches from "./pages/site-admin/Coaches";
 import SiteAdminVips from "./pages/site-admin/Vips";
 import { Calendar as CalendarIcon, Palette, Wallet } from "lucide-react";
 import SiteAdminCtCamps from "./pages/site-admin/ct/Camps";
+import SiteAdminCtDojo from "./pages/site-admin/ct/DojoVirtual";
 import SiteAdminCtNutricao from "./pages/site-admin/ct/NutricaoCombate";
+
 import AlunoCtHome from "./pages/aluno/ct/CtHome";
 import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
 
@@ -217,7 +219,9 @@ const App = () => (
 
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="ct/camps" element={<SiteAdminCtCamps />} />
+              <Route path="ct/dojo" element={<SiteAdminCtDojo />} />
               <Route path="ct/nutricao" element={<SiteAdminCtNutricao />} />
+
               <Route path="resumo" element={<Navigate to="/site/admin/dashboard" replace />} />
             </Route>
             <Route path="/:slug/login" element={<Login />} />

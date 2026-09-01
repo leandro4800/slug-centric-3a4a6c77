@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { buildVlogEmbedUrl, normalizeVideoUrl } from "@/lib/video-embed";
 import { isDirectVideo } from "@/lib/utils";
+import { FIGHT_MODALIDADES, modalidadeLabel } from "@/lib/fightModalidades";
 
 interface VideoRow {
   id: string;
@@ -15,6 +16,8 @@ interface VideoRow {
   tenant_id: string | null;
   origem: string | null;
   storage_path: string | null;
+  modalidade: string | null;
+  valencia: string | null;
 }
 
 interface PrescritoRow {
@@ -77,6 +80,10 @@ const VideosTecnicos = () => {
   const [novoNome, setNovoNome] = useState("");
   const [novoUrl, setNovoUrl] = useState("");
   const [novoArquivo, setNovoArquivo] = useState<File | null>(null);
+  const [novaModalidade, setNovaModalidade] = useState<string>("");
+  const [novaValencia, setNovaValencia] = useState<string>("");
+  const [vertical, setVertical] = useState<string>("personal");
+  const [filtroModalidade, setFiltroModalidade] = useState<string>("todas");
   const [uploading, setUploading] = useState(false);
 
   const [editId, setEditId] = useState<string | null>(null);
@@ -103,14 +110,15 @@ const VideosTecnicos = () => {
       setLoading(true);
       const { data: t } = await supabase
         .from("tenants")
-        .select("usar_apenas_meus_videos")
+        .select("usar_apenas_meus_videos, vertical")
         .eq("id", tenant.id)
         .maybeSingle();
       setOnlyMine(Boolean((t as any)?.usar_apenas_meus_videos));
+      setVertical(String((t as any)?.vertical || "personal"));
 
       const { data, error } = await supabase
         .from("referencia_exercicios")
-        .select("id, nome_exercicio, url_video, tenant_id, origem, storage_path")
+        .select("id, nome_exercicio, url_video, tenant_id, origem, storage_path, modalidade, valencia")
         .or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`)
         .order("nome_exercicio", { ascending: true });
       if (error) throw error;
@@ -247,12 +255,16 @@ const VideosTecnicos = () => {
         profissional_id: userId,
         origem,
         storage_path: storagePath,
+        modalidade: isFight ? novaModalidade || null : null,
+        valencia: isFight ? novaValencia.trim() || null : null,
       } as any);
       if (error) throw error;
       toast.success("Vídeo adicionado!");
       setNovoNome("");
       setNovoUrl("");
       setNovoArquivo(null);
+      setNovaModalidade("");
+      setNovaValencia("");
       setIsAdding(false);
       load();
     } catch (e: any) {
@@ -317,14 +329,23 @@ const VideosTecnicos = () => {
     }
   };
 
+  const isFight = vertical === "fight";
+
   const filtered = useMemo(
     () =>
       rows
         .filter((v) => v.nome_exercicio.toLowerCase().includes(search.toLowerCase()))
         .filter((v) =>
           filter === "app" ? v.tenant_id === null : filter === "meus" ? v.tenant_id !== null : true,
+        )
+        .filter((v) =>
+          !isFight || filtroModalidade === "todas"
+            ? true
+            : filtroModalidade === "musculacao"
+              ? !v.modalidade
+              : v.modalidade === filtroModalidade,
         ),
-    [rows, search, filter],
+    [rows, search, filter, isFight, filtroModalidade],
   );
 
   const renderVideo = (rawUrl: string | null | undefined, title: string) => {
@@ -413,6 +434,24 @@ const VideosTecnicos = () => {
             </span>
           </div>
 
+          {isFight && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {(["todas", "musculacao", ...FIGHT_MODALIDADES.map((m) => m.slug)] as string[]).map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setFiltroModalidade(m)}
+                  className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
+                    filtroModalidade === m
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
+                  }`}
+                >
+                  {m === "todas" ? "Todas" : m === "musculacao" ? "Musculação" : modalidadeLabel(m)}
+                </button>
+              ))}
+            </div>
+          )}
+
           <div className="mt-5 flex flex-wrap gap-2">
             <div className="relative flex-1 min-w-[220px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -439,6 +478,25 @@ const VideosTecnicos = () => {
                 </Button>
               </div>
               <Input placeholder="Nome do exercício" value={novoNome} onChange={(e) => setNovoNome(e.target.value)} />
+              {isFight && (
+                <div className="grid md:grid-cols-2 gap-2">
+                  <select
+                    value={novaModalidade}
+                    onChange={(e) => setNovaModalidade(e.target.value)}
+                    className="bg-card border border-border px-3 py-2 text-sm"
+                  >
+                    <option value="">Musculação / geral (sem modalidade)</option>
+                    {FIGHT_MODALIDADES.map((m) => (
+                      <option key={m.slug} value={m.slug}>{m.label}</option>
+                    ))}
+                  </select>
+                  <Input
+                    placeholder="Valência (ex: POTÊNCIA DE QUADRIL)"
+                    value={novaValencia}
+                    onChange={(e) => setNovaValencia(e.target.value)}
+                  />
+                </div>
+              )}
               {modo === "link" ? (
                 <Input
                   placeholder="https://youtube.com/... ou https://drive.google.com/..."
@@ -500,6 +558,11 @@ const VideosTecnicos = () => {
                           </div>
                         ) : (
                           <>
+                            {v.modalidade && (
+                              <span className="ml-2 text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold border text-primary border-primary/40">
+                                {modalidadeLabel(v.modalidade)}{v.valencia ? ` · ${v.valencia}` : ""}
+                              </span>
+                            )}
                             <h3 className="font-semibold mt-1 truncate">{v.nome_exercicio}</h3>
                             <p className="text-[11px] text-muted-foreground truncate">{v.url_video}</p>
                           </>

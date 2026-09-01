@@ -1,7 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
-  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag,
+  LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag, GraduationCap,
   ChevronLeft, ChevronRight, Video, ShieldCheck, Crown, HeartPulse,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -65,8 +65,10 @@ export const SiteAdminSidebar = () => {
     ] : []),
     ...(vertical === "fight" ? [
       { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
+      { to: "/site/admin/ct/dojo", label: "Dojo Virtual", icon: GraduationCap, section: "Luta" },
       { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
     ] : []),
+
   ];
 
   const signOut = async () => {

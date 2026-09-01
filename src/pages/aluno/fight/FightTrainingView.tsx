@@ -5,11 +5,13 @@ import { PageHeader } from "@/components/aluno/PageHeader";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Swords, Loader2, Flame, Zap, ChevronRight, ChevronDown, Video, Play } from "lucide-react";
+import { Swords, Loader2, Flame, Zap, ChevronRight, ChevronDown, Video, Play, GraduationCap } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import FightCampView from "./FightCampView";
+import FightDojoView from "./FightDojoView";
 import { getFightBlock } from "@/data/fightPerformanceCatalog";
+import { FIGHT_MODALIDADES, modalidadeLabel, toModalidadeSlug } from "@/lib/fightModalidades";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import ExercisePlayer from "@/components/aluno/ExercisePlayer";
 
@@ -26,7 +28,16 @@ type Sessao = {
 
 type Camp = { id: string; modalidade: string | null; data_luta: string };
 
-const DEFAULT_MODALIDADES = ["BJJ", "Muay Thai", "Boxe", "MMA"];
+type ExRow = {
+  id: string;
+  nome_exercicio: string;
+  descricao: string | null;
+  valencia: string | null;
+  url_video: string | null;
+  tenant_id: string | null;
+};
+
+const DEFAULT_MODALIDADES = FIGHT_MODALIDADES.map((m) => m.slug);
 
 const tipoIcon: Record<string, string> = {
   sparring: "🥊", tecnica: "🎯", fisico: "💪", cardio: "🏃", mobilidade: "🧘", estrategia: "🧠",
@@ -42,37 +53,81 @@ const rpeColor = (rpe: number | null) => {
 
 const FightTrainingView = () => {
   const { user } = useAuth();
-  const [mode, setMode] = useState<"performance" | "camp">("performance");
+  const [mode, setMode] = useState<"performance" | "camp" | "dojo">("performance");
   const [loading, setLoading] = useState(true);
   const [sessoes, setSessoes] = useState<Sessao[]>([]);
   const [camps, setCamps] = useState<Camp[]>([]);
-  const [modalidade, setModalidade] = useState<string>("BJJ");
+  const [modalidade, setModalidade] = useState<string>("bjj");
+  const [exercicios, setExercicios] = useState<ExRow[]>([]);
   const [openExercise, setOpenExercise] = useState<string | null>(null);
   const [videoUrl, setVideoUrl] = useState<{ url: string; nome: string } | null>(null);
+
+
+  const [tenantId, setTenantId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
     (async () => {
       setLoading(true);
-      const [s, c] = await Promise.all([
+      const [s, c, p] = await Promise.all([
         supabase.from("sessoes_luta").select("*").eq("aluno_id", user.id).order("data", { ascending: true }).limit(60),
         supabase.from("camps_luta").select("id, modalidade, data_luta").eq("aluno_id", user.id),
+        supabase.from("perfis").select("tenant_id, modalidade_luta").eq("id", user.id).maybeSingle(),
       ]);
       setSessoes((s.data as Sessao[]) ?? []);
       setCamps((c.data as Camp[]) ?? []);
+      setTenantId((p.data as any)?.tenant_id ?? null);
+      const saved = toModalidadeSlug((p.data as any)?.modalidade_luta);
+      const doCamp = toModalidadeSlug((c.data as Camp[])?.find((x) => x.modalidade)?.modalidade ?? null);
+      setModalidade(saved ?? doCamp ?? "bjj");
       setLoading(false);
     })();
   }, [user?.id]);
 
   const modalidades = useMemo(() => {
     const set = new Set<string>(DEFAULT_MODALIDADES);
-    camps.forEach((c) => c.modalidade && set.add(c.modalidade));
+    camps.forEach((c) => {
+      const slug = toModalidadeSlug(c.modalidade);
+      if (slug) set.add(slug);
+    });
     return Array.from(set);
   }, [camps]);
 
   useEffect(() => {
-    if (!modalidades.includes(modalidade)) setModalidade(modalidades[0] ?? "BJJ");
+    if (!modalidades.includes(modalidade)) setModalidade(modalidades[0] ?? "bjj");
   }, [modalidades]);
+
+  /** Persiste a modalidade do aluno — é a fonte usada pela IA de treino. */
+  const selecionarModalidade = async (slug: string) => {
+    setModalidade(slug);
+    if (!user) return;
+    await supabase.from("perfis").update({ modalidade_luta: slug }).eq("id", user.id);
+  };
+
+  // Biblioteca de exercícios de luta: customizada do CT tem prioridade sobre a global.
+  useEffect(() => {
+    (async () => {
+      let q = supabase
+        .from("referencia_exercicios")
+        .select("id, nome_exercicio, descricao, valencia, url_video, tenant_id")
+        .eq("modalidade", modalidade);
+      q = tenantId ? q.or(`tenant_id.is.null,tenant_id.eq.${tenantId}`) : q.is("tenant_id", null);
+      const { data } = await q.order("nome_exercicio");
+      const rows = (data as ExRow[]) ?? [];
+      const doTenant = rows.filter((r) => r.tenant_id);
+      setExercicios(doTenant.length > 0 ? doTenant : rows);
+    })();
+  }, [modalidade, tenantId]);
+
+  const valencias = useMemo(() => {
+    const map = new Map<string, ExRow[]>();
+    exercicios.forEach((e) => {
+      const key = e.valencia || "PREPARAÇÃO FÍSICA";
+      if (!map.has(key)) map.set(key, []);
+      map.get(key)!.push(e);
+    });
+    return Array.from(map.entries());
+  }, [exercicios]);
 
   const hasActiveCamp = useMemo(
     () => camps.some((c) => new Date(c.data_luta) >= new Date()),
@@ -85,7 +140,7 @@ const FightTrainingView = () => {
       .filter((s) => new Date(s.data) >= now)
       .filter((s) => {
         if (!s.modalidade) return true; // mostra sessões sem modalidade em todas
-        return s.modalidade.toLowerCase() === modalidade.toLowerCase();
+        return toModalidadeSlug(s.modalidade) === modalidade;
       })
       .slice(0, 10);
   }, [sessoes, modalidade]);
@@ -103,6 +158,18 @@ const FightTrainingView = () => {
     );
   }
 
+  if (mode === "dojo") {
+    return (
+      <div className="p-4 space-y-3 max-w-2xl mx-auto">
+        <Button variant="ghost" size="sm" onClick={() => setMode("performance")} className="text-xs uppercase tracking-widest">
+          ← Voltar aos treinos
+        </Button>
+        <FightDojoView modalidade={modalidade} />
+      </div>
+    );
+  }
+
+
   if (loading) {
     return <div className="flex justify-center pt-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
@@ -119,17 +186,18 @@ const FightTrainingView = () => {
             return (
               <button
                 key={m}
-                onClick={() => setModalidade(m)}
+                onClick={() => selecionarModalidade(m)}
                 className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
                   active
                     ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.5)]"
                     : "bg-black/40 text-muted-foreground border border-white/10 hover:border-primary/40"
                 }`}
               >
-                {m}
+                {modalidadeLabel(m)}
               </button>
             );
           })}
+
         </div>
       </div>
 
@@ -158,80 +226,104 @@ const FightTrainingView = () => {
         </div>
       </button>
 
-      {/* Preparação física de alta performance por modalidade */}
-      {(() => {
-        const block = getFightBlock(modalidade);
-        if (!block) return null;
-        return (
-          <div className="space-y-3">
-            <div className="px-1">
-              <h2 className="font-display text-lg uppercase italic tracking-tight flex items-center gap-2">
-                <Play className="h-4 w-4 text-orange-500 fill-orange-500" />
-                Preparação · {modalidade}
-              </h2>
-              <p className="text-xs text-muted-foreground mt-1">{block.subtitulo}</p>
-            </div>
+      {/* Card premium: Dojo Virtual */}
+      <button
+        onClick={() => setMode("dojo")}
+        className="w-full relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-black via-zinc-900/60 to-black p-5 text-left hover:border-primary/40 transition-colors"
+      >
+        <div className="relative flex items-center gap-4">
+          <div className="rounded-xl bg-primary/15 border border-primary/30 p-3">
+            <GraduationCap className="h-6 w-6 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">Dojo Virtual</p>
+            <h3 className="font-display text-xl uppercase italic tracking-tight leading-tight mt-0.5">
+              Vídeo-aulas do seu CT 🥋
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1">
+              Técnica e metodologia em {modalidadeLabel(modalidade)}.
+            </p>
+          </div>
+          <ChevronRight className="h-5 w-5 text-primary" />
+        </div>
+      </button>
 
-            {block.valencias.map((val) => (
-              <Card key={val.titulo} className="p-4 bg-card/60 backdrop-blur border-white/5">
-                <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 mb-3">
-                  <Play className="h-3.5 w-3.5 text-orange-500 fill-orange-500" />
-                  {val.titulo}
-                </h3>
-                <div className="space-y-2">
-                  {val.exercicios.map((ex) => {
-                    const key = `${val.titulo}-${ex.nome}`;
-                    const isOpen = openExercise === key;
-                    return (
-                      <div key={key} className="rounded-xl border border-white/5 bg-black/40 overflow-hidden">
-                        <div className="flex items-stretch">
+      {/* Preparação física por modalidade — biblioteca editável do CT (fallback: global) */}
+      {valencias.length > 0 && (
+        <div className="space-y-3">
+          <div className="px-1">
+            <h2 className="font-display text-lg uppercase italic tracking-tight flex items-center gap-2">
+              <Play className="h-4 w-4 text-orange-500 fill-orange-500" />
+              Preparação · {modalidadeLabel(modalidade)}
+            </h2>
+            <p className="text-xs text-muted-foreground mt-1">
+              {getFightBlock(modalidadeLabel(modalidade))?.subtitulo ??
+                `${valencias.length} valências • preparação física específica da modalidade`}
+            </p>
+          </div>
+
+          {valencias.map(([titulo, exs]) => (
+            <Card key={titulo} className="p-4 bg-card/60 backdrop-blur border-white/5">
+              <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2 mb-3">
+                <Play className="h-3.5 w-3.5 text-orange-500 fill-orange-500" />
+                {titulo}
+              </h3>
+              <div className="space-y-2">
+                {exs.map((ex) => {
+                  const key = ex.id;
+                  const isOpen = openExercise === key;
+                  return (
+                    <div key={key} className="rounded-xl border border-white/5 bg-black/40 overflow-hidden">
+                      <div className="flex items-stretch">
+                        <button
+                          onClick={() => setOpenExercise(isOpen ? null : key)}
+                          className="flex-1 min-w-0 p-3 flex items-center gap-3 text-left hover:bg-white/[0.02]"
+                        >
+                          <ChevronDown
+                            className={`h-4 w-4 text-primary shrink-0 transition-transform ${isOpen ? "rotate-180" : "-rotate-90"}`}
+                          />
+                          <span className="text-sm font-bold uppercase tracking-wider truncate">
+                            {ex.nome_exercicio}
+                          </span>
+                        </button>
+                        {ex.url_video && (
                           <button
-                            onClick={() => setOpenExercise(isOpen ? null : key)}
-                            className="flex-1 min-w-0 p-3 flex items-center gap-3 text-left hover:bg-white/[0.02]"
+                            onClick={() => setVideoUrl({ url: ex.url_video!, nome: ex.nome_exercicio })}
+                            className="px-3 flex items-center gap-1.5 border-l border-white/5 hover:bg-primary/10 text-primary"
                           >
-                            <ChevronDown
-                              className={`h-4 w-4 text-primary shrink-0 transition-transform ${isOpen ? "rotate-180" : "-rotate-90"}`}
-                            />
-                            <span className="text-sm font-bold uppercase tracking-wider truncate">{ex.nome}</span>
+                            <Video className="h-3.5 w-3.5" />
+                            <span className="text-[10px] uppercase tracking-widest font-bold">Ver vídeo</span>
                           </button>
-                          {ex.video_url && (
-                            <button
-                              onClick={() => setVideoUrl({ url: ex.video_url!, nome: ex.nome })}
-                              className="px-3 flex items-center gap-1.5 border-l border-white/5 hover:bg-primary/10 text-primary"
-                            >
-                              <Video className="h-3.5 w-3.5" />
-                              <span className="text-[10px] uppercase tracking-widest font-bold">Ver vídeo</span>
-                            </button>
-                          )}
-                        </div>
-                        {isOpen && (
-                          <div className="px-3 pb-3 pt-1 text-xs text-muted-foreground leading-relaxed border-t border-white/5">
-                            {ex.descricao}
-                          </div>
                         )}
                       </div>
-                    );
-                  })}
-                </div>
-              </Card>
-            ))}
-          </div>
-        );
-      })()}
+                      {isOpen && ex.descricao && (
+                        <div className="px-3 pb-3 pt-1 text-xs text-muted-foreground leading-relaxed border-t border-white/5">
+                          {ex.descricao}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
 
       {/* Sessões da modalidade */}
       <Card className="p-4 bg-card/60 backdrop-blur border-white/5">
 
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-bold uppercase tracking-widest text-xs flex items-center gap-2">
-            <Zap className="h-4 w-4 text-primary" />Próximas sessões · {modalidade}
+            <Zap className="h-4 w-4 text-primary" />Próximas sessões · {modalidadeLabel(modalidade)}
           </h3>
+
         </div>
         {sessoesFiltradas.length === 0 ? (
           <div className="py-8 text-center">
             <Swords className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
             <p className="text-sm text-muted-foreground">
-              Nenhuma sessão programada para {modalidade}.
+              Nenhuma sessão programada para {modalidadeLabel(modalidade)}.
             </p>
             <p className="text-xs text-muted-foreground/70 mt-1">
               Seu técnico programará sua rotina de manutenção e performance.
