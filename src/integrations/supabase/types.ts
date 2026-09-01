@@ -1845,6 +1845,63 @@ export type Database = {
           },
         ]
       }
+      dojo_conteudos: {
+        Row: {
+          created_at: string
+          created_by: string
+          descricao: string | null
+          id: string
+          modalidade: string
+          nivel: string | null
+          ordem: number
+          tenant_id: string
+          titulo: string
+          updated_at: string
+          video_url: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          descricao?: string | null
+          id?: string
+          modalidade: string
+          nivel?: string | null
+          ordem?: number
+          tenant_id: string
+          titulo: string
+          updated_at?: string
+          video_url: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          descricao?: string | null
+          id?: string
+          modalidade?: string
+          nivel?: string | null
+          ordem?: number
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string
+          video_url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dojo_conteudos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dojo_conteudos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       evolucao_checkins: {
         Row: {
           bf_percentual: number | null
@@ -2421,6 +2478,7 @@ export type Database = {
           data_nascimento: string | null
           email: string | null
           id: string
+          modalidade_luta: string | null
           music_url: string | null
           nome_completo: string | null
           onboarding_completo: boolean
@@ -2442,6 +2500,7 @@ export type Database = {
           data_nascimento?: string | null
           email?: string | null
           id: string
+          modalidade_luta?: string | null
           music_url?: string | null
           nome_completo?: string | null
           onboarding_completo?: boolean
@@ -2463,6 +2522,7 @@ export type Database = {
           data_nascimento?: string | null
           email?: string | null
           id?: string
+          modalidade_luta?: string | null
           music_url?: string | null
           nome_completo?: string | null
           onboarding_completo?: boolean
@@ -2881,8 +2941,10 @@ export type Database = {
       referencia_exercicios: {
         Row: {
           created_at: string | null
+          descricao: string | null
           grupamento_muscular: string | null
           id: string
+          modalidade: string | null
           nome_exercicio: string
           origem: string
           profissional_id: string | null
@@ -2890,11 +2952,14 @@ export type Database = {
           tenant_id: string | null
           thumbnail_url: string | null
           url_video: string | null
+          valencia: string | null
         }
         Insert: {
           created_at?: string | null
+          descricao?: string | null
           grupamento_muscular?: string | null
           id?: string
+          modalidade?: string | null
           nome_exercicio: string
           origem?: string
           profissional_id?: string | null
@@ -2902,11 +2967,14 @@ export type Database = {
           tenant_id?: string | null
           thumbnail_url?: string | null
           url_video?: string | null
+          valencia?: string | null
         }
         Update: {
           created_at?: string | null
+          descricao?: string | null
           grupamento_muscular?: string | null
           id?: string
+          modalidade?: string | null
           nome_exercicio?: string
           origem?: string
           profissional_id?: string | null
@@ -2914,6 +2982,7 @@ export type Database = {
           tenant_id?: string | null
           thumbnail_url?: string | null
           url_video?: string | null
+          valencia?: string | null
         }
         Relationships: [
           {
