@@ -9,9 +9,9 @@ import {
   User,
   CalendarCheck,
   MoreHorizontal,
-  ClipboardCheck,
   Sparkles,
   Palette,
+  Settings,
   X,
 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -53,12 +53,14 @@ const AlunoBottomNav = () => {
   const moreItems = [
     { label: "Meu Perfil", icon: User, to: "perfil" },
     ...(isCoachOfTenant
-      ? [{ label: "Personalizar App", icon: Palette, to: `/${tenantSlug}/admin/aparencia` }]
+      ? [
+          { label: "Personalizar App", icon: Palette, to: `/${tenantSlug}/admin/aparencia` },
+          { label: "Painel do Coach", icon: Settings, to: `/${tenantSlug}/app/controle` },
+        ]
       : []),
     { label: "Comunidade", icon: Users, to: "comunidade" },
     { label: "Presencial", icon: CalendarCheck, to: "presencial" },
     { label: "Minha Carta", icon: Sparkles, to: "carta" },
-    { label: "Anamnese", icon: ClipboardCheck, to: "anamnese" },
   ];
 
   const appBase = tenantSlug ? `/${tenantSlug}/app` : "/app";
