@@ -32,6 +32,7 @@ import {
   Link2,
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 import { toast } from "sonner";
 
@@ -1298,8 +1299,20 @@ const TreinoEditor = ({
           {dias.map((dia, diaIdx) => {
             const exs = items.filter((t) => t.dia_semana === dia);
             return (
-              <div key={dia} className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
+              <div key={dia}>
+                {diaIdx > 0 && (
+                  <div className="flex justify-center my-5 sm:my-6" aria-hidden>
+                    <div className="h-1.5 w-full rounded-full bg-white/80 shadow-[0_0_8px_rgba(255,255,255,0.4)]" />
+                  </div>
+                )}
+              <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
                 <div className="flex items-center gap-2">
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary font-display text-sm font-bold text-primary-foreground select-none"
+                    title={`Dia ${diaIdx + 1}`}
+                  >
+                    {diaIdx + 1}
+                  </span>
                   <div className="flex flex-col gap-0.5">
                     <Button
                       size="icon"
@@ -1341,15 +1354,26 @@ const TreinoEditor = ({
                 </div>
 
                 <div className="space-y-3">
-                  {exs.map((e, i) => (
+                  {exs.map((e, i) => {
+                    const match = biblioteca.find(
+                      (b) => normalizarBusca(b.nome || "") === normalizarBusca(e.exercicio || ""),
+                    );
+                    return (
                     <div
                       key={e._key}
                       className="rounded-lg border border-border bg-background p-3 space-y-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
-                          Exercício {i + 1}
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
+                            Exercício {i + 1}
+                          </span>
+                          <ExerciseVideoButton
+                            videoCoachUrl={match?.video_coach_url}
+                            videoUrl={match?.video_url}
+                            exerciseName={e.exercicio || `Exercício ${i + 1}`}
+                          />
+                        </div>
                         <div className="flex gap-1">
                           <Button
                             size="icon"
@@ -1440,8 +1464,10 @@ const TreinoEditor = ({
                         />
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
+              </div>
               </div>
             );
           })}
