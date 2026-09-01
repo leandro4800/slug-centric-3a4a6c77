@@ -617,8 +617,8 @@ const Perfil = () => {
             <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
               <Users className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <p className="font-display text-sm uppercase leading-tight group-hover:text-primary transition-colors">Comunidade</p>
+            <div className="min-w-0">
+              <p className="font-display text-sm uppercase leading-tight break-words group-hover:text-primary transition-colors">Comunidade</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Feed do time</p>
             </div>
           </Link>
@@ -630,8 +630,8 @@ const Perfil = () => {
             <div className="w-10 h-10 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
               <CalendarCheck className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <p className="font-display text-sm uppercase leading-tight group-hover:text-primary transition-colors">Presencial</p>
+            <div className="min-w-0">
+              <p className="font-display text-sm uppercase leading-tight break-words group-hover:text-primary transition-colors">Presencial</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Sessões com coach</p>
             </div>
           </Link>
