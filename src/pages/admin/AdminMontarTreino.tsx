@@ -1849,8 +1849,8 @@ const AdminMontarTreino = () => {
                   </p>
                 </>
               ) : (
-                <p className="text-xs text-muted-foreground">
-                  Ou escolha uma divisão pronta abaixo ({presetsDisponiveis.length} opções específicas para {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {perfil.frequencia_semanal}x · {nivel}). Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
+                <p className="text-sm text-foreground/80 leading-relaxed" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                  <strong className="text-foreground">Escolha uma divisão abaixo</strong> ({presetsDisponiveis.length} opções · {perfil.frequencia_semanal}x · {nivel}). A IA gera os exercícios respeitando a divisão escolhida. Você pode renomear os dias depois.
                 </p>
               )}
 
