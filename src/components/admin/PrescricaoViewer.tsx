@@ -1463,7 +1463,8 @@ const TreinoEditor = ({
                         />
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
               </div>
