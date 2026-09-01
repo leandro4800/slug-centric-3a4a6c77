@@ -496,19 +496,18 @@ const Perfil = () => {
       <ProfileMusicPlayer url={profile?.music_url ?? null} />
       {/* Hero estilo Netflix */}
       <section className="relative min-h-[95vh] -mt-0">
-        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] overflow-hidden">
-        <div className="relative w-full h-full">
         <img
           src={profileHeroSrc}
           alt=""
-          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-300 ease-in-out"
+          className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] w-full object-cover transition-[object-position] duration-300 ease-in-out"
           style={{ objectPosition: `center ${imgPosY}%` }}
           onError={() => setProfileImageFailed(true)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-t from-background via-background/40 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-r from-background/20 via-transparent to-transparent" />
 
-        <div className="absolute inset-x-0 top-[54%] px-5 space-y-2 pb-6">
+        <div className="relative pt-[52vh] px-5 space-y-2 pb-8">
+
           <div className="flex items-center gap-2">
             <span className="bg-primary text-primary-foreground text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded">ATLETA</span>
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Meu Perfil</span>
