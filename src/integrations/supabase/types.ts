@@ -1847,6 +1847,8 @@ export type Database = {
       }
       dojo_conteudos: {
         Row: {
+          capa_url: string | null
+          categoria: string | null
           created_at: string
           created_by: string
           descricao: string | null
@@ -1860,6 +1862,8 @@ export type Database = {
           video_url: string
         }
         Insert: {
+          capa_url?: string | null
+          categoria?: string | null
           created_at?: string
           created_by: string
           descricao?: string | null
@@ -1873,6 +1877,8 @@ export type Database = {
           video_url: string
         }
         Update: {
+          capa_url?: string | null
+          categoria?: string | null
           created_at?: string
           created_by?: string
           descricao?: string | null
