@@ -2156,9 +2156,11 @@ const AdminMontarTreino = () => {
                           <div className="flex items-center gap-1.5">
                             <span className="text-[10px] uppercase tracking-wider text-primary font-bold">Exercício {localIdx + 1}</span>
                             {temVideo && (
-                              <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider text-emerald-400 font-bold">
-                                <Video className="h-3 w-3" /> vídeo
-                              </span>
+                              <ExerciseVideoButton
+                                videoCoachUrl={match?.video_coach_url}
+                                videoUrl={match?.video_url}
+                                exerciseName={e.exercicio || `Exercício ${localIdx + 1}`}
+                              />
                             )}
                           </div>
                           <div className="flex items-center gap-0.5">
