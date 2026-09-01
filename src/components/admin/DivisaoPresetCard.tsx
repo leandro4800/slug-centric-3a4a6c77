@@ -35,13 +35,13 @@ export const DivisaoPresetCard = ({
 
   return (
     <div
-      className={`relative overflow-hidden rounded-2xl bg-[#080b10] transition-all duration-300 ${
+      className={`relative overflow-hidden rounded-xl bg-[#080b10] transition-all duration-300 ${
         selecionado
           ? "border border-primary shadow-[0_0_28px_-10px_hsl(var(--primary)/0.55)]"
           : "border border-white/10 hover:border-primary/70 hover:shadow-[0_0_28px_-12px_hsl(var(--primary)/0.45)]"
       }`}
     >
-      {/* Foto cinematográfica de fundo — mais visível/espelhada */}
+      {/* Foto cinematográfica de fundo */}
       <img
         src={cardTreino}
         alt=""
@@ -67,57 +67,48 @@ export const DivisaoPresetCard = ({
       />
       <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#080b10] via-[#080b10]/25 to-transparent" />
 
-      <div className="relative p-3.5 sm:p-4">
+      <div className="relative p-2.5 sm:p-3">
         {/* Badge topo */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-1.5">
-            <span className="font-display text-base leading-none text-primary">N</span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-foreground/80">
+            <span className="font-display text-sm leading-none text-primary">N</span>
+            <span className="text-[8px] font-bold uppercase tracking-[0.22em] text-foreground/80">
               AlphaCoach Original
             </span>
           </div>
           {nivelTxt && (
-            <span className="flex items-center gap-1 rounded-full border border-primary/50 bg-black/50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-foreground">
-              <TrendingUp className="h-2.5 w-2.5 text-primary" />
+            <span className="flex items-center gap-1 rounded-full border border-primary/50 bg-black/50 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest text-foreground">
+              <TrendingUp className="h-2 w-2 text-primary" />
               {nivelTxt}
             </span>
           )}
         </div>
 
         {/* Título */}
-        <h3 className="mt-2.5 font-display text-2xl sm:text-3xl leading-none tracking-tight text-foreground">
+        <h3 className="mt-1.5 font-display text-lg sm:text-xl leading-none tracking-tight text-foreground">
           {titulo}
         </h3>
         {sub && (
-          <p className="mt-0.5 font-display text-base sm:text-lg leading-none tracking-tight text-primary">
+          <p className="mt-0.5 font-display text-xs sm:text-sm leading-none tracking-tight text-primary">
             {sub}
           </p>
         )}
 
-        {/* Stats compactos — fonte legível (sans), sem o stat Grupos */}
-        <div className="mt-3 flex divide-x divide-white/10">
-          <Stat icon={<Calendar className="h-3.5 w-3.5 text-primary" />} value={`${preset.freq}x`} label="Dias" />
-          <Stat icon={<Target className="h-3.5 w-3.5 text-primary" />} value="Hipertrofia" label="Foco" />
-        </div>
-
-        {/* Divisão semanal — sempre visível (sem botão Prévia) */}
-        <div className="mt-3 space-y-1 rounded-lg border border-white/10 bg-black/60 p-2.5">
-          {preset.dias.map((d, i) => (
-            <p key={i} className="text-[11px] leading-snug text-foreground/80">
-              • {d}
-            </p>
-          ))}
+        {/* Stats compactos */}
+        <div className="mt-2 flex divide-x divide-white/10">
+          <Stat icon={<Calendar className="h-3 w-3 text-primary" />} value={`${preset.freq}x`} label="Dias" />
+          <Stat icon={<Target className="h-3 w-3 text-primary" />} value="Hipertrofia" label="Foco" />
         </div>
 
         {/* Ações */}
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="mt-2 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={onGerar}
             disabled={disabled}
-            className="flex items-center gap-1.5 rounded-lg bg-primary px-3.5 py-2 text-[11px] font-bold uppercase tracking-widest text-primary-foreground transition-all hover:brightness-110 disabled:opacity-60"
+            className="flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-[10px] font-bold uppercase tracking-widest text-primary-foreground transition-all hover:brightness-110 disabled:opacity-60"
           >
-            {gerando ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-current" />}
+            {gerando ? <Loader2 className="h-3 w-3 animate-spin" /> : <Play className="h-3 w-3 fill-current" />}
             {gerando ? "Gerando..." : "Gerar e revisar"}
           </button>
         </div>
@@ -127,12 +118,12 @@ export const DivisaoPresetCard = ({
 };
 
 const Stat = ({ icon, value, label }: { icon: React.ReactNode; value: string; label: string }) => (
-  <div className="flex-1 px-2 first:pl-0">
+  <div className="flex-1 px-1.5 first:pl-0">
     <div className="flex items-center gap-1.5">
       {icon}
-      <p className="text-xs font-semibold leading-none text-foreground truncate">{value}</p>
+      <p className="text-[11px] font-semibold leading-none text-foreground truncate">{value}</p>
     </div>
-    <p className="mt-1 text-[8px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
+    <p className="mt-0.5 text-[7px] font-semibold uppercase tracking-widest text-muted-foreground">{label}</p>
   </div>
 );
 
