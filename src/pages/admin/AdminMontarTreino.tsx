@@ -1824,9 +1824,40 @@ const AdminMontarTreino = () => {
                 </Button>
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                Ou escolha uma divisão pronta abaixo ({presetsDisponiveis.length} opções específicas para {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {perfil.frequencia_semanal}x · {nivel}). Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
-              </p>
+              {isFight ? (
+                <>
+                  <div className="space-y-2">
+                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">
+                      Modalidade do atleta
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {FIGHT_MODALIDADES.map((m) => (
+                        <button
+                          key={m.slug}
+                          type="button"
+                          onClick={() => setModalidadeLuta(m.slug)}
+                          className={`rounded-full border px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors ${
+                            modalidadeLuta === m.slug
+                              ? "border-primary bg-primary/20 text-primary"
+                              : "border-white/10 bg-black/40 text-muted-foreground hover:border-primary/50"
+                          }`}
+                        >
+                          {m.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Divisões de preparação física para <strong className="text-foreground">{modalidadeLabel(modalidadeLuta)}</strong> · nível{" "}
+                    <strong className="text-foreground">{nivel}</strong> ({presetsDisponiveis.length} opções). Ao escolher, os exercícios já vêm
+                    prescritos com séries, repetições e <strong className="text-foreground">vídeo de referência</strong> — revise e salve.
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Ou escolha uma divisão pronta abaixo ({presetsDisponiveis.length} opções específicas para {perfil.sexo?.toLowerCase().startsWith("f") ? "mulher" : "homem"} · {perfil.frequencia_semanal}x · {nivel}). Você pode editar o nome de cada dia depois — a IA vai gerar os exercícios <strong className="text-foreground">respeitando exatamente essa divisão</strong>.
+                </p>
+              )}
 
               <div className="grid gap-4 xl:grid-cols-2">
                 {presetsDisponiveis.map((p) => (
@@ -1836,10 +1867,17 @@ const AdminMontarTreino = () => {
                     selecionado={divisaoSelecionadaId === p.id}
                     gerando={generating && divisaoSelecionadaId === p.id}
                     disabled={generating || perfilLoading}
-                    onGerar={() => prepararGeracaoDaDivisao(p)}
+                    onGerar={() => {
+                      if (isFight) {
+                        const fp = fightPresets.find((f) => f.id === p.id);
+                        if (fp) return void aplicarFightPreset(fp);
+                      }
+                      prepararGeracaoDaDivisao(p as DivisaoPreset);
+                    }}
                   />
                 ))}
               </div>
+
 
 
               {divisaoCustom.length > 0 && (
