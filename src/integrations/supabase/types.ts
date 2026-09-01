@@ -3661,6 +3661,74 @@ export type Database = {
         }
         Relationships: []
       }
+      treinos_casa_presets: {
+        Row: {
+          ativo: boolean
+          cadencia: string | null
+          created_at: string
+          created_by: string | null
+          detalhes_execucao: string | null
+          exercicio: string
+          grupo_muscular: string
+          id: string
+          nivel: string
+          observacao: string | null
+          ordem: number
+          referencia_exercicio_id: string | null
+          repeticoes: string | null
+          series: string | null
+          titulo: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          cadencia?: string | null
+          created_at?: string
+          created_by?: string | null
+          detalhes_execucao?: string | null
+          exercicio: string
+          grupo_muscular: string
+          id?: string
+          nivel: string
+          observacao?: string | null
+          ordem?: number
+          referencia_exercicio_id?: string | null
+          repeticoes?: string | null
+          series?: string | null
+          titulo: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          cadencia?: string | null
+          created_at?: string
+          created_by?: string | null
+          detalhes_execucao?: string | null
+          exercicio?: string
+          grupo_muscular?: string
+          id?: string
+          nivel?: string
+          observacao?: string | null
+          ordem?: number
+          referencia_exercicio_id?: string | null
+          repeticoes?: string | null
+          series?: string | null
+          titulo?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "treinos_casa_presets_referencia_exercicio_id_fkey"
+            columns: ["referencia_exercicio_id"]
+            isOneToOne: false
+            referencedRelation: "referencia_exercicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       treinos_prescritos: {
         Row: {
           aluno_id: string
@@ -3674,6 +3742,7 @@ export type Database = {
           observacao: string | null
           ordem: number | null
           ordem_execucao: number | null
+          preset_casa_id: string | null
           referencia_exercicio_id: string | null
           repeticoes: string | null
           series: string | null
@@ -3684,6 +3753,7 @@ export type Database = {
           tenant_id: string
           tipo_serie_pacho: string | null
           updated_at: string
+          variante: string
           video_coach_url: string | null
           video_url: string | null
         }
@@ -3699,6 +3769,7 @@ export type Database = {
           observacao?: string | null
           ordem?: number | null
           ordem_execucao?: number | null
+          preset_casa_id?: string | null
           referencia_exercicio_id?: string | null
           repeticoes?: string | null
           series?: string | null
@@ -3709,6 +3780,7 @@ export type Database = {
           tenant_id: string
           tipo_serie_pacho?: string | null
           updated_at?: string
+          variante?: string
           video_coach_url?: string | null
           video_url?: string | null
         }
@@ -3724,6 +3796,7 @@ export type Database = {
           observacao?: string | null
           ordem?: number | null
           ordem_execucao?: number | null
+          preset_casa_id?: string | null
           referencia_exercicio_id?: string | null
           repeticoes?: string | null
           series?: string | null
@@ -3734,10 +3807,18 @@ export type Database = {
           tenant_id?: string
           tipo_serie_pacho?: string | null
           updated_at?: string
+          variante?: string
           video_coach_url?: string | null
           video_url?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "treinos_prescritos_preset_casa_id_fkey"
+            columns: ["preset_casa_id"]
+            isOneToOne: false
+            referencedRelation: "treinos_casa_presets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "treinos_prescritos_referencia_exercicio_id_fkey"
             columns: ["referencia_exercicio_id"]
