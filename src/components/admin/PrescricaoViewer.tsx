@@ -1396,7 +1396,7 @@ const TreinoEditor = ({
                             exerciseName={e.exercicio || `Exercício ${i + 1}`}
                           />
                         </div>
-                        <div className="flex gap-1">
+                        <div className="flex items-center gap-1">
                           <Button
                             size="icon"
                             variant="ghost"
@@ -1415,6 +1415,26 @@ const TreinoEditor = ({
                           >
                             ↓
                           </Button>
+                          <Input
+                            type="number"
+                            min={1}
+                            max={exs.length}
+                            defaultValue={i + 1}
+                            key={`pos-${e._key}-${i}`}
+                            title="Posição do exercício no dia"
+                            className="h-7 w-12 px-1 text-center text-xs"
+                            onKeyDown={(ev) => {
+                              if (ev.key === "Enter") {
+                                ev.preventDefault();
+                                (ev.target as HTMLInputElement).blur();
+                              }
+                            }}
+                            onBlur={(ev) => {
+                              const n = parseInt(ev.target.value, 10);
+                              if (!Number.isNaN(n)) moveExToPos(e._key, n);
+                            }}
+                          />
+
                           <Button
                             size="icon"
                             variant="ghost"
