@@ -20,6 +20,7 @@ import { loadImageDataUrl, renderPdfHeader, getTenantPrimaryRgb } from "@/lib/pd
 import { extractYouTubeId } from "@/lib/utils";
 import platformLogo from "@/assets/alphacoach-logo.jpeg";
 import { DivisaoPresetCard } from "@/components/admin/DivisaoPresetCard";
+import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
 
 
 interface Aluno {
