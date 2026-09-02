@@ -747,7 +747,7 @@ export const ExerciseCard = ({
           <div className="flex flex-wrap items-center gap-2 mt-2">
             {cargaAnterior && (
               <span className="px-3 py-1 rounded-full bg-primary/15 text-primary text-xs">
-                Última: {cargaAnterior.carga_kg}kg × {cargaAnterior.repeticoes_feitas}
+                Última: {semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
               </span>
             )}
           </div>
