@@ -115,22 +115,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ---- Dados do coach ----
-    const [{ data: cfg }, { data: perfil }] = await Promise.all([
-      admin
-        .from("coach_marketing_config")
-        .select("photo_url, instagram_handle, phone")
-        .eq("user_id", userId)
-        .maybeSingle(),
-      admin
-        .from("perfis")
-        .select("nome_completo, avatar_url, tenant_id")
-        .eq("id", userId)
-        .maybeSingle(),
-    ]);
 
-    const fotoCoach: string | null = cfg?.photo_url || perfil?.avatar_url || null;
-    const tenantId: string | null = (perfil as { tenant_id?: string } | null)?.tenant_id ?? null;
+
 
     const prompt = buildTemplatePrompt(templateId, {
       coach_nome: (perfil?.nome_completo || "COACH").toString().toUpperCase(),
