@@ -43,19 +43,21 @@ export const PhysicalEvaluationSelection = ({ open, onOpenChange, onSelect, hide
             </div>
           </Button>
 
-          <Button
-            variant="outline"
-            className="h-20 flex flex-col items-center justify-center gap-1 border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all group"
-            onClick={() => onSelect("7dobras")}
-          >
-            <div className="relative">
-              <Ruler className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
-            </div>
-            <div className="text-center">
-              <p className="text-xs font-bold uppercase tracking-wider">Protocolo 7 Dobras</p>
-              <p className="text-[9px] text-muted-foreground uppercase tracking-widest">Manual Completo</p>
-            </div>
-          </Button>
+          {!hideSevenDobras && (
+            <Button
+              variant="outline"
+              className="h-20 flex flex-col items-center justify-center gap-1 border-primary/20 hover:bg-primary/5 hover:border-primary/40 transition-all group"
+              onClick={() => onSelect("7dobras")}
+            >
+              <div className="relative">
+                <Ruler className="h-5 w-5 text-primary group-hover:scale-110 transition-transform" />
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-bold uppercase tracking-wider">Protocolo 7 Dobras</p>
+                <p className="text-[9px] text-muted-foreground uppercase tracking-widest">Manual Completo</p>
+              </div>
+            </Button>
+          )}
 
           <Button
             variant="outline"
