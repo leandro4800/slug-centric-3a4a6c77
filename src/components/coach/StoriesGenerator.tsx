@@ -49,13 +49,13 @@ type TemplateId =
   | "alpha-foco-dias-lima"
   | "alpha-disciplina-serie-dourado";
 
-const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; Icon: LucideIcon }[] = [
-  { id: "alpha-mente-vida-lima", label: "Corpo, Mente e Vida", desc: "Verde lima", accent: "#8BC53F", Icon: Salad },
-  { id: "alpha-nova-versao-lima", label: "Nova Versão", desc: "Verde lima", accent: "#8BC53F", Icon: Flame },
-  { id: "alpha-treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#2DD4CE", Icon: Dumbbell },
-  { id: "alpha-modo-alpha-vermelho", label: "Modo Alpha", desc: "Vermelho intenso", accent: "#C0272D", Icon: Zap },
-  { id: "alpha-foco-dias-lima", label: "Foco Todos os Dias", desc: "Verde lima", accent: "#8BC53F", Icon: Trophy },
-  { id: "alpha-disciplina-serie-dourado", label: "Disciplina — A Série", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown },
+const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; Icon: LucideIcon; ref: string }[] = [
+  { id: "alpha-mente-vida-lima", label: "Corpo, Mente e Vida", desc: "Verde lima", accent: "#8BC53F", Icon: Salad, ref: refMenteVida.url },
+  { id: "alpha-nova-versao-lima", label: "Nova Versão", desc: "Verde lima", accent: "#8BC53F", Icon: Flame, ref: refNovaVersao.url },
+  { id: "alpha-treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#2DD4CE", Icon: Dumbbell, ref: refTreinoDieta.url },
+  { id: "alpha-modo-alpha-vermelho", label: "Modo Alpha", desc: "Vermelho intenso", accent: "#C0272D", Icon: Zap, ref: refModoAlpha.url },
+  { id: "alpha-foco-dias-lima", label: "Foco Todos os Dias", desc: "Verde lima", accent: "#8BC53F", Icon: Trophy, ref: refFocoDias.url },
+  { id: "alpha-disciplina-serie-dourado", label: "Disciplina — A Série", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown, ref: refDisciplina.url },
 ];
 
 
