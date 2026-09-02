@@ -299,6 +299,23 @@ Deno.serve(async (req) => {
         if (resolvedAlunoId) {
           await supabase.from("perfis").update({ tenant_id }).eq("id", resolvedAlunoId);
         }
+
+        // Marca o lead pendente como convertido (isolado — nunca quebra o webhook)
+        if (pendingLead) {
+          try {
+            await supabase
+              .from("alunos_pendentes")
+              .update({
+                status: "convertido",
+                convertido_em: new Date().toISOString(),
+                user_id: resolvedAlunoId,
+              })
+              .eq("id", pendingLead.id);
+          } catch (e) {
+            log("lead conversion update failed", { e: String(e) });
+          }
+        }
+
         break;
       }
 
