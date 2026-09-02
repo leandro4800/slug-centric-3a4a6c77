@@ -2158,17 +2158,11 @@ const AdminMontarTreino = () => {
               <div className="bg-primary/10 border border-primary/40 rounded-2xl p-4 sm:p-5 shadow-[0_0_25px_-8px_hsl(var(--primary)/0.6)] animate-in fade-in slide-in-from-top-2">
                 <p className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold mb-1">Revisão necessária</p>
                 <h3 className="font-display text-base sm:text-lg leading-tight">A IA gerou {exercicios.length} exercícios. Confira tudo antes de enviar ao aluno.</h3>
-                <p className="text-xs text-muted-foreground mt-2">Edite o que precisar abaixo. O treino só vai para o aluno quando você clicar em <strong className="text-foreground">Confirmar e enviar</strong>.</p>
-                <div className="flex flex-col sm:flex-row gap-2 mt-3">
-                  <Button onClick={() => salvarPrescricao()} disabled={saving} className="flex-1">
-                    {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
-                    {isAvulso ? "Salvar treino avulso" : "Confirmar e enviar ao aluno"}
-                  </Button>
-                  <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating} variant="outline" className="flex-1">
-                    {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
-                    Refazer com IA
-                  </Button>
-                </div>
+                <p className="text-xs text-muted-foreground mt-2">Edite o que precisar abaixo. O treino só vai para o aluno quando você clicar em <strong className="text-foreground">Confirmar e enviar</strong> no cabeçalho da prescrição.</p>
+                <Button onClick={() => prepararGeracaoDaDivisao()} disabled={generating} variant="outline" className="mt-3">
+                  {generating ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+                  Refazer com IA
+                </Button>
               </div>
             )}
 
