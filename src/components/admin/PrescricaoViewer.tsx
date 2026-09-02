@@ -1415,25 +1415,22 @@ const TreinoEditor = ({
                           >
                             ↓
                           </Button>
-                          <Input
-                            type="number"
-                            min={1}
-                            max={exs.length}
-                            defaultValue={i + 1}
-                            key={`pos-${e._key}-${i}`}
+                          <select
+                            value={i + 1}
                             title="Posição do exercício no dia"
-                            className="h-7 w-12 px-1 text-center text-xs"
-                            onKeyDown={(ev) => {
-                              if (ev.key === "Enter") {
-                                ev.preventDefault();
-                                (ev.target as HTMLInputElement).blur();
-                              }
-                            }}
-                            onBlur={(ev) => {
+                            className="h-7 w-12 px-1 text-center text-xs rounded-md border border-input bg-background"
+                            onChange={(ev) => {
                               const n = parseInt(ev.target.value, 10);
-                              if (!Number.isNaN(n)) moveExToPos(e._key, n);
+                              if (!Number.isNaN(n) && n !== i + 1) moveExToPos(e._key, n);
                             }}
-                          />
+                          >
+                            {exs.map((_, idx) => (
+                              <option key={idx} value={idx + 1}>
+                                {idx + 1}
+                              </option>
+                            ))}
+                          </select>
+
 
                           <Button
                             size="icon"
