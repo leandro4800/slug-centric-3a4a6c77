@@ -423,42 +423,91 @@ const Comunidade = () => {
 
       {/* Stories */}
       <div className="flex gap-4 overflow-x-auto scrollbar-hide px-5 mt-4 pb-2 border-b border-border">
-        {stories.map((profile) => {
-          const hasStory = storyItems.some((s) => s.user_id === profile.id);
-          const streak = streakOf(profile.id);
-          return (
-            <button
-              key={profile.id}
-              onClick={() => hasStory && setOpenStoryUser(profile.id)}
-              className="flex-shrink-0 flex flex-col items-center gap-1 relative"
+        {/* Seu story */}
+        <div className="flex-shrink-0 flex flex-col items-center gap-1 relative">
+          <button
+            onClick={() => {
+              const idx = groupIndexOf(user?.id || "");
+              if (idx >= 0) setViewerStart(idx);
+              else setComposerOpen(true);
+            }}
+            className="relative"
+          >
+            <div
+              className={`w-[72px] h-[72px] rounded-full p-[3px] ${
+                groupIndexOf(user?.id || "") >= 0
+                  ? "bg-gradient-to-tr from-primary to-primary/60"
+                  : "bg-border"
+              }`}
             >
-              <div
-                className={`w-[72px] h-[72px] rounded-full p-[3px] ${
-                  hasStory ? "bg-gradient-to-tr from-primary to-primary/60" : "bg-border"
-                }`}
-              >
-                <div className="w-full h-full rounded-full bg-background p-[2px]">
-                  <Avatar className={`w-full h-full ${hasStory ? "" : "opacity-60"}`}>
-                    <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
-                    <AvatarFallback className="bg-zinc-800 text-zinc-400">
-                      {profile.nome_completo ? profile.nome_completo.substring(0, 2).toUpperCase() : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
+              <div className="w-full h-full rounded-full bg-background p-[2px]">
+                <Avatar className="w-full h-full">
+                  <AvatarImage
+                    src={stories.find((s) => s.id === user?.id)?.avatar_url || ""}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-zinc-800 text-zinc-400">EU</AvatarFallback>
+                </Avatar>
               </div>
-              {streak > 1 && (
-                <span className="absolute -top-1 -right-1 flex items-center gap-0.5 rounded-full bg-background border border-primary/50 px-1.5 py-[1px] text-[10px] font-bold text-primary">
-                  <Flame className="h-3 w-3" />
-                  {streak}
-                </span>
-              )}
-              <p className="text-[11px] font-medium max-w-[72px] truncate opacity-80">
-                {profile.nome_completo?.split(" ")[0]}
-              </p>
-            </button>
-          );
-        })}
+            </div>
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                setComposerOpen(true);
+              }}
+              className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </span>
+          </button>
+          <p className="text-[11px] font-medium max-w-[72px] truncate opacity-80">Seu story</p>
+        </div>
+
+        {stories
+          .filter((profile) => profile.id !== user?.id)
+          .map((profile) => {
+            const gIdx = groupIndexOf(profile.id);
+            const hasStory = gIdx >= 0;
+            const naoVisto = hasStory && !storyGroups[gIdx].todosVistos;
+            const streak = streakOf(profile.id);
+            return (
+              <button
+                key={profile.id}
+                onClick={() => hasStory && setViewerStart(gIdx)}
+                className="flex-shrink-0 flex flex-col items-center gap-1 relative"
+              >
+                <div
+                  className={`w-[72px] h-[72px] rounded-full p-[3px] ${
+                    naoVisto
+                      ? "bg-gradient-to-tr from-primary to-primary/60"
+                      : hasStory
+                        ? "bg-border"
+                        : "bg-border"
+                  }`}
+                >
+                  <div className="w-full h-full rounded-full bg-background p-[2px]">
+                    <Avatar className={`w-full h-full ${hasStory ? "" : "opacity-60"}`}>
+                      <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
+                      <AvatarFallback className="bg-zinc-800 text-zinc-400">
+                        {profile.nome_completo ? profile.nome_completo.substring(0, 2).toUpperCase() : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+                {streak > 1 && (
+                  <span className="absolute -top-1 -right-1 flex items-center gap-0.5 rounded-full bg-background border border-primary/50 px-1.5 py-[1px] text-[10px] font-bold text-primary">
+                    <Flame className="h-3 w-3" />
+                    {streak}
+                  </span>
+                )}
+                <p className="text-[11px] font-medium max-w-[72px] truncate opacity-80">
+                  {profile.nome_completo?.split(" ")[0]}
+                </p>
+              </button>
+            );
+          })}
       </div>
+
 
       {/* Feed */}
       <div className="mt-6 flex flex-col gap-8">
