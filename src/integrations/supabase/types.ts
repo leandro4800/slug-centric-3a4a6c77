@@ -1720,18 +1720,21 @@ export type Database = {
           id: string
           post_id: string | null
           profissional_id: string
+          tipo_reacao: string
           usuario_id: string | null
         }
         Insert: {
           id?: string
           post_id?: string | null
           profissional_id: string
+          tipo_reacao?: string
           usuario_id?: string | null
         }
         Update: {
           id?: string
           post_id?: string | null
           profissional_id?: string
+          tipo_reacao?: string
           usuario_id?: string | null
         }
         Relationships: [
@@ -4346,6 +4349,26 @@ export type Database = {
           avatar_url: string
           id: string
           nome_completo: string
+        }[]
+      }
+      get_community_members_meta: {
+        Args: { _tenant_id: string }
+        Returns: {
+          is_coach: boolean
+          sequencia_atual: number
+          user_id: string
+        }[]
+      }
+      get_community_stories: {
+        Args: { _tenant_id: string }
+        Returns: {
+          avatar_url: string
+          criado_em: string
+          detalhe: string
+          nome_completo: string
+          tipo: string
+          titulo: string
+          user_id: string
         }[]
       }
       get_my_app_destination: {
