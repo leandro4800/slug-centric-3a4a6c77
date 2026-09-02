@@ -211,8 +211,9 @@ const NovoAluno = () => {
             <UserPlus className="h-8 w-8 md:h-10 md:w-10 text-primary" /> Cadastrar aluno
           </h1>
           <p className="text-sm text-white/60 mt-3 max-w-xl">
-            Ao cadastrar, enviaremos um email para o aluno com o usuário, senha temporária e
-            instruções para entrar no app.
+            Enviaremos um convite por e-mail com o link dos seus planos. A conta e o acesso do
+            aluno são criados automaticamente assim que o pagamento for confirmado.
+
           </p>
         </div>
       </div>
