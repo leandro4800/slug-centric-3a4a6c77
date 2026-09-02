@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, ArrowLeft, Camera, Send, X, Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Flame, Trophy, Dumbbell, Camera as CameraIcon } from "lucide-react";
+import { Plus, ArrowLeft, Camera, Send, X, Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Flame } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -67,26 +67,11 @@ interface Post {
   comentarios_count: number;
 }
 
-interface StoryItem {
-  user_id: string;
-  nome_completo: string | null;
-  avatar_url: string | null;
-  tipo: string;
-  titulo: string;
-  detalhe: string | null;
-  criado_em: string;
-}
-
 interface MemberMeta {
   sequencia_atual: number;
   is_coach: boolean;
 }
 
-const storyIcon = (tipo: string) => {
-  if (tipo === "pr") return <Trophy className="h-5 w-5 text-primary" />;
-  if (tipo === "checkin") return <CameraIcon className="h-5 w-5 text-primary" />;
-  return <Dumbbell className="h-5 w-5 text-primary" />;
-};
 
 const Comunidade = () => {
   const navigate = useNavigate();
