@@ -28,17 +28,29 @@ interface Aluno {
   avatar_url: string | null;
 }
 
+interface LeadPendente {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string | null;
+  plano_id: string | null;
+  convite_enviado_em: string | null;
+}
+
 const Alunos = () => {
   const { tenant } = useSiteTenant();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [leads, setLeads] = useState<LeadPendente[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [toDelete, setToDelete] = useState<Aluno | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [resending, setResending] = useState<string | null>(null);
   const [anamneseAluno, setAnamneseAluno] = useState<Aluno | null>(null);
   const [anamneseData, setAnamneseData] = useState<any | null>(null);
   const [anamneseLoading, setAnamneseLoading] = useState(false);
+
 
   const openAnamnese = async (a: Aluno) => {
     setAnamneseAluno(a);
