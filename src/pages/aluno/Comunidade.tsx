@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, ArrowLeft, Camera, Send, X, Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Flame, Trophy, Dumbbell, Camera as CameraIcon } from "lucide-react";
+import { Plus, ArrowLeft, Camera, Send, X, Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Flame } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,6 +24,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { sharePostLink } from "@/lib/share";
+import StoriesViewer from "@/components/aluno/comunidade/StoriesViewer";
+import StoryComposer from "@/components/aluno/comunidade/StoryComposer";
+import { groupStories, type StoryGroup, type StoryRow } from "@/components/aluno/comunidade/story-types";
 
 interface Perfil {
   id: string;
@@ -64,26 +67,11 @@ interface Post {
   comentarios_count: number;
 }
 
-interface StoryItem {
-  user_id: string;
-  nome_completo: string | null;
-  avatar_url: string | null;
-  tipo: string;
-  titulo: string;
-  detalhe: string | null;
-  criado_em: string;
-}
-
 interface MemberMeta {
   sequencia_atual: number;
   is_coach: boolean;
 }
 
-const storyIcon = (tipo: string) => {
-  if (tipo === "pr") return <Trophy className="h-5 w-5 text-primary" />;
-  if (tipo === "checkin") return <CameraIcon className="h-5 w-5 text-primary" />;
-  return <Dumbbell className="h-5 w-5 text-primary" />;
-};
 
 const Comunidade = () => {
   const navigate = useNavigate();
@@ -94,9 +82,10 @@ const Comunidade = () => {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Perfil[]>([]);
-  const [storyItems, setStoryItems] = useState<StoryItem[]>([]);
+  const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [meta, setMeta] = useState<Record<string, MemberMeta>>({});
-  const [openStoryUser, setOpenStoryUser] = useState<string | null>(null);
+  const [viewerStart, setViewerStart] = useState<number | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPostText, setNewPostText] = useState("");
@@ -127,12 +116,15 @@ const Comunidade = () => {
 
       // Stories automáticos (conquistas das últimas 24h) + metadados (streak / coach)
       const [{ data: storiesData }, { data: metaData }] = await Promise.all([
-        supabase.rpc("get_community_stories" as any, { _tenant_id: tenant.id }),
+        supabase.rpc("get_community_stories_v2" as any, { _tenant_id: tenant.id }),
         supabase.rpc("get_community_members_meta" as any, { _tenant_id: tenant.id }),
       ]);
 
-      const items = ((storiesData as any as StoryItem[]) || []);
-      setStoryItems(items);
+      const rows = ((storiesData as any as StoryRow[]) || []);
+      const groups = groupStories(rows).sort(
+        (a, b) => Number(a.todosVistos) - Number(b.todosVistos)
+      );
+      setStoryGroups(groups);
 
       const metaMap: Record<string, MemberMeta> = {};
       ((metaData as any[]) || []).forEach((m) => {
@@ -140,8 +132,8 @@ const Comunidade = () => {
       });
       setMeta(metaMap);
 
-      // Ordena o carrossel: quem tem conquista nas últimas 24h vem primeiro
-      const withStory = new Set(items.map((i) => i.user_id));
+      // Ordena o carrossel: quem tem story ativo vem primeiro
+      const withStory = new Set(groups.map((g) => g.user_id));
       setStories(
         [...communityProfiles].sort(
           (a, b) => Number(withStory.has(b.id)) - Number(withStory.has(a.id))
@@ -354,8 +346,46 @@ const Comunidade = () => {
     }
   };
 
-  const openStories = storyItems.filter((s) => s.user_id === openStoryUser);
-  const openStoryProfile = stories.find((s) => s.id === openStoryUser);
+  const groupIndexOf = (uid: string) => storyGroups.findIndex((g) => g.user_id === uid);
+
+  const markStoryViewed = async (story: StoryRow) => {
+    if (!user) return;
+    setStoryGroups((prev) =>
+      prev.map((g) => ({
+        ...g,
+        items: g.items.map((i) => (i.id === story.id ? { ...i, visto: true } : i)),
+      }))
+    );
+    await supabase
+      .from("comunidade_story_views" as any)
+      .insert({ story_id: story.id, user_id: user.id } as any);
+  };
+
+  const reactStory = async (story: StoryRow, emoji: string | null, resposta: string | null) => {
+    if (!user) return;
+    const { error } = await supabase.from("comunidade_story_reacoes" as any).insert({
+      story_id: story.id,
+      user_id: user.id,
+      emoji,
+      resposta,
+    } as any);
+    if (error) {
+      toast({ title: "Erro ao reagir", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: resposta ? "Resposta enviada!" : "Reação enviada!" });
+    }
+  };
+
+  const deleteStory = async (story: StoryRow) => {
+    const { error } = await supabase.from("comunidade_stories" as any).delete().eq("id", story.id);
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      return;
+    }
+    setViewerStart(null);
+    toast({ title: "Story excluído" });
+    fetchData();
+  };
 
   return (
     <div className="min-h-screen bg-transparent text-foreground pb-24">
@@ -378,42 +408,91 @@ const Comunidade = () => {
 
       {/* Stories */}
       <div className="flex gap-4 overflow-x-auto scrollbar-hide px-5 mt-4 pb-2 border-b border-border">
-        {stories.map((profile) => {
-          const hasStory = storyItems.some((s) => s.user_id === profile.id);
-          const streak = streakOf(profile.id);
-          return (
-            <button
-              key={profile.id}
-              onClick={() => hasStory && setOpenStoryUser(profile.id)}
-              className="flex-shrink-0 flex flex-col items-center gap-1 relative"
+        {/* Seu story */}
+        <div className="flex-shrink-0 flex flex-col items-center gap-1 relative">
+          <button
+            onClick={() => {
+              const idx = groupIndexOf(user?.id || "");
+              if (idx >= 0) setViewerStart(idx);
+              else setComposerOpen(true);
+            }}
+            className="relative"
+          >
+            <div
+              className={`w-[72px] h-[72px] rounded-full p-[3px] ${
+                groupIndexOf(user?.id || "") >= 0
+                  ? "bg-gradient-to-tr from-primary to-primary/60"
+                  : "bg-border"
+              }`}
             >
-              <div
-                className={`w-[72px] h-[72px] rounded-full p-[3px] ${
-                  hasStory ? "bg-gradient-to-tr from-primary to-primary/60" : "bg-border"
-                }`}
-              >
-                <div className="w-full h-full rounded-full bg-background p-[2px]">
-                  <Avatar className={`w-full h-full ${hasStory ? "" : "opacity-60"}`}>
-                    <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
-                    <AvatarFallback className="bg-zinc-800 text-zinc-400">
-                      {profile.nome_completo ? profile.nome_completo.substring(0, 2).toUpperCase() : "U"}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
+              <div className="w-full h-full rounded-full bg-background p-[2px]">
+                <Avatar className="w-full h-full">
+                  <AvatarImage
+                    src={stories.find((s) => s.id === user?.id)?.avatar_url || ""}
+                    className="object-cover"
+                  />
+                  <AvatarFallback className="bg-zinc-800 text-zinc-400">EU</AvatarFallback>
+                </Avatar>
               </div>
-              {streak > 1 && (
-                <span className="absolute -top-1 -right-1 flex items-center gap-0.5 rounded-full bg-background border border-primary/50 px-1.5 py-[1px] text-[10px] font-bold text-primary">
-                  <Flame className="h-3 w-3" />
-                  {streak}
-                </span>
-              )}
-              <p className="text-[11px] font-medium max-w-[72px] truncate opacity-80">
-                {profile.nome_completo?.split(" ")[0]}
-              </p>
-            </button>
-          );
-        })}
+            </div>
+            <span
+              onClick={(e) => {
+                e.stopPropagation();
+                setComposerOpen(true);
+              }}
+              className="absolute -bottom-0.5 -right-0.5 flex h-6 w-6 items-center justify-center rounded-full border-2 border-background bg-primary text-primary-foreground"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </span>
+          </button>
+          <p className="text-[11px] font-medium max-w-[72px] truncate opacity-80">Seu story</p>
+        </div>
+
+        {stories
+          .filter((profile) => profile.id !== user?.id)
+          .map((profile) => {
+            const gIdx = groupIndexOf(profile.id);
+            const hasStory = gIdx >= 0;
+            const naoVisto = hasStory && !storyGroups[gIdx].todosVistos;
+            const streak = streakOf(profile.id);
+            return (
+              <button
+                key={profile.id}
+                onClick={() => hasStory && setViewerStart(gIdx)}
+                className="flex-shrink-0 flex flex-col items-center gap-1 relative"
+              >
+                <div
+                  className={`w-[72px] h-[72px] rounded-full p-[3px] ${
+                    naoVisto
+                      ? "bg-gradient-to-tr from-primary to-primary/60"
+                      : hasStory
+                        ? "bg-border"
+                        : "bg-border"
+                  }`}
+                >
+                  <div className="w-full h-full rounded-full bg-background p-[2px]">
+                    <Avatar className={`w-full h-full ${hasStory ? "" : "opacity-60"}`}>
+                      <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
+                      <AvatarFallback className="bg-zinc-800 text-zinc-400">
+                        {profile.nome_completo ? profile.nome_completo.substring(0, 2).toUpperCase() : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                  </div>
+                </div>
+                {streak > 1 && (
+                  <span className="absolute -top-1 -right-1 flex items-center gap-0.5 rounded-full bg-background border border-primary/50 px-1.5 py-[1px] text-[10px] font-bold text-primary">
+                    <Flame className="h-3 w-3" />
+                    {streak}
+                  </span>
+                )}
+                <p className="text-[11px] font-medium max-w-[72px] truncate opacity-80">
+                  {profile.nome_completo?.split(" ")[0]}
+                </p>
+              </button>
+            );
+          })}
       </div>
+
 
       {/* Feed */}
       <div className="mt-6 flex flex-col gap-8">
@@ -635,48 +714,30 @@ const Comunidade = () => {
         )}
       </div>
 
-      {/* Story de conquista */}
-      <Dialog open={!!openStoryUser} onOpenChange={(o) => !o && setOpenStoryUser(null)}>
-        <DialogContent className="bg-background/95 backdrop-blur-xl border-border text-foreground max-w-sm w-[92%] rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-left">
-              <Avatar className="w-10 h-10 border border-primary">
-                <AvatarImage src={openStoryProfile?.avatar_url || ""} />
-                <AvatarFallback className="bg-zinc-800 text-xs">
-                  {openStoryProfile?.nome_completo?.substring(0, 2).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-base font-semibold">{openStoryProfile?.nome_completo || "Atleta"}</p>
-                <p className="text-[11px] uppercase tracking-widest text-primary">Conquistas de hoje</p>
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-3">
-            {streakOf(openStoryUser) > 1 && (
-              <div className="flex items-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3">
-                <Flame className="h-5 w-5 text-primary" />
-                <p className="text-sm font-bold">{streakOf(openStoryUser)} dias seguidos treinando</p>
-              </div>
-            )}
-            {openStories.map((s, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card/40 px-4 py-3">
-                {storyIcon(s.tipo)}
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">{s.titulo}</p>
-                  {s.detalhe && <p className="text-xs text-zinc-400">{s.detalhe}</p>}
-                </div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">
-                  {formatDistanceToNow(new Date(s.criado_em), { addSuffix: true, locale: ptBR })}
-                </span>
-              </div>
-            ))}
-            {openStories.length === 0 && (
-              <p className="py-6 text-center text-sm text-zinc-500">Nenhuma conquista nas últimas 24h.</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Visualizador de stories (estilo Instagram) */}
+      {viewerStart !== null && storyGroups[viewerStart] && user && (
+        <StoriesViewer
+          groups={storyGroups}
+          startGroup={viewerStart}
+          currentUserId={user.id}
+          onClose={() => setViewerStart(null)}
+          onViewed={markStoryViewed}
+          onReact={reactStory}
+          onDelete={deleteStory}
+        />
+      )}
+
+      {/* Publicar story */}
+      {user && tenant?.id && (
+        <StoryComposer
+          open={composerOpen}
+          onOpenChange={setComposerOpen}
+          userId={user.id}
+          tenantId={tenant.id}
+          onPublished={fetchData}
+        />
+      )}
+
 
       {/* FAB */}
       <Button
