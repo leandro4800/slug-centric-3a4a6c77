@@ -130,21 +130,31 @@ export const DirectDrawer = ({
     [mensagens, peerId, currentUserId]
   );
 
-  // marca como lidas ao abrir a conversa
+  // marca como lidas: ao abrir o Direct (todas) e ao abrir uma conversa
   useEffect(() => {
-    if (!open || !peerId) return;
-    const ids = thread
-      .filter((m) => m.destinatario_id === currentUserId && !m.lida_em)
+    if (!open) return;
+    const ids = mensagens
+      .filter(
+        (m) =>
+          m.destinatario_id === currentUserId &&
+          !m.lida_em &&
+          (!peerId || m.remetente_id === peerId)
+      )
       .map((m) => m.id);
     if (!ids.length) return;
+    const agora = new Date().toISOString();
     setMensagens((prev) =>
-      prev.map((m) => (ids.includes(m.id) ? { ...m, lida_em: new Date().toISOString() } : m))
+      prev.map((m) => (ids.includes(m.id) ? { ...m, lida_em: agora } : m))
     );
     void supabase
       .from("comunidade_mensagens" as any)
-      .update({ lida_em: new Date().toISOString() } as any)
-      .in("id", ids);
-  }, [open, peerId, thread, currentUserId]);
+      .update({ lida_em: agora } as any)
+      .in("id", ids)
+      .then(({ error }) => {
+        if (error) void load();
+      });
+  }, [open, peerId, mensagens, currentUserId, load]);
+
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
