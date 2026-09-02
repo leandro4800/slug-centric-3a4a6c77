@@ -762,6 +762,21 @@ const Comunidade = () => {
         />
       )}
 
+      {/* Direct (mensagens) */}
+      {user && tenant?.id && (
+        <DirectDrawer
+          open={directOpen}
+          onClose={() => setDirectOpen(false)}
+          currentUserId={user.id}
+          tenantId={tenant.id}
+          membros={stories}
+          initialPeerId={directPeer}
+          onUnreadChange={setUnread}
+        />
+      )}
+
+
+
 
       {/* FAB */}
       <Button
