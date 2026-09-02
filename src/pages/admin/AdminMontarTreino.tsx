@@ -1945,8 +1945,13 @@ const AdminMontarTreino = () => {
                 style={{ fontFamily: "'Inter', system-ui, sans-serif" }}
               >
                 <Sparkles className="h-5 w-5" />
-                {modoAvancado ? "Fechar Modo Avançado" : "Modo Avançado — Editar divisão livremente"}
+                {modoAvancado ? "Fechar edição livre" : "Editar divisão livremente"}
               </button>
+              {!modoAvancado && (
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed" style={{ fontFamily: "'Inter', system-ui, sans-serif" }}>
+                  Use este modo para montar a divisão de treino manualmente: defina os dias da semana (ex.: A, B, C) e quantos exercícios cada dia terá. A IA respeitará sua montagem ao gerar o treino.
+                </p>
+              )}
 
               {modoAvancado && (
                 <div className="space-y-3 rounded-xl border border-primary/30 bg-primary/5 p-3">
