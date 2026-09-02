@@ -5,7 +5,7 @@ import { Play, Camera, LogOut, KeyRound, Loader2, User, Ruler, Upload, Move, Mus
 import { usePushNotifications } from "@/hooks/use-push-notifications";
 import { Slider } from "@/components/ui/slider";
 import { useAuth } from "@/hooks/use-auth";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams, Link, useSearchParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -81,6 +81,17 @@ const Perfil = () => {
   const [comprehensiveOpen, setComprehensiveOpen] = useState(false);
   const [triggerImport, setTriggerImport] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Abre direto o seletor de avaliação física quando vier do menu (?avaliacao=1)
+  useEffect(() => {
+    if (searchParams.get("avaliacao") === "1") {
+      setSelectionOpen(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete("avaliacao");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   // Form states
   const [newPw, setNewPw] = useState("");
@@ -836,6 +847,7 @@ const Perfil = () => {
 
       {/* Physical Evaluation Selection */}
       <PhysicalEvaluationSelection
+        hideSevenDobras={!isCoach}
         open={selectionOpen}
         onOpenChange={setSelectionOpen}
         onSelect={(type) => {
