@@ -848,7 +848,8 @@ function TenantLandingContent() {
             ) : (
               <div className="mt-14 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {planos.map((p, idx) => {
-                  const destacado = idx === 1 || planos.length === 1;
+                  const sugerido = searchParams.get("plano") === p.id;
+                  const destacado = sugerido || ((idx === 1 || planos.length === 1) && !searchParams.get("plano"));
                   return (
                     <div
                       key={p.id}
@@ -860,9 +861,10 @@ function TenantLandingContent() {
                     >
                       {destacado && (
                         <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground shadow-lg">
-                          ⭐ Mais popular
+                          {sugerido ? "Indicado pelo seu coach" : "⭐ Mais popular"}
                         </Badge>
                       )}
+
                       <h3 className="font-display text-2xl uppercase">{p.nome}</h3>
                       {p.descricao && (
                         <p className="mt-2 text-sm text-muted-foreground">{p.descricao}</p>
