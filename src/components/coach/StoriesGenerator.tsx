@@ -25,6 +25,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import refMenteVida from "@/assets/marketing-refs/alpha-mente-vida-lima.png.asset.json";
+import refNovaVersao from "@/assets/marketing-refs/alpha-nova-versao-lima.png.asset.json";
+import refTreinoDieta from "@/assets/marketing-refs/alpha-treino-dieta-cyan.png.asset.json";
+import refModoAlpha from "@/assets/marketing-refs/alpha-modo-alpha-vermelho.png.asset.json";
+import refFocoDias from "@/assets/marketing-refs/alpha-foco-dias-lima.png.asset.json";
+import refDisciplina from "@/assets/marketing-refs/alpha-disciplina-serie-dourado.png.asset.json";
 
 
 /* ============================================================================
