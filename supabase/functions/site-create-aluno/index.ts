@@ -233,9 +233,7 @@ Deno.serve(async (req) => {
     );
 
     // VIP emails: sem plano selecionado, ativar assinatura de 100 anos usando o primeiro plano ativo do tenant
-    const VIP_EMAILS = ["48mineiro@gmail.com", "vozesdamitologia1@gmail.com"];
     let effectivePlanoId: string | null = planoId;
-    const isVip = VIP_EMAILS.includes(email);
     if (!effectivePlanoId && isVip) {
       const { data: anyPlan } = await admin
         .from("planos").select("id").eq("tenant_id", tenant.id).eq("ativo", true)
@@ -243,14 +241,9 @@ Deno.serve(async (req) => {
       effectivePlanoId = anyPlan?.id ?? null;
     }
 
-    // Só tenants PARCEIROS liberam assinatura ativa automática ao selecionar plano.
-    // Nos demais, o aluno é criado sem assinatura e só ganha acesso ao pagar via Stripe.
-    const isPartner = !!(tenant as { is_partner?: boolean }).is_partner;
-    let aguardandoPagamento = false;
-    if (effectivePlanoId && !isPartner && !isVip) {
-      aguardandoPagamento = true;
-      effectivePlanoId = null;
-    }
+    // Aqui só chegam tenants PARCEIROS ou e-mails VIP — assinatura ativa liberada.
+    const aguardandoPagamento = false;
+
 
     if (effectivePlanoId) {
       const periodEnd = isVip
