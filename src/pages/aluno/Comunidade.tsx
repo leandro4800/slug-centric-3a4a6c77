@@ -24,6 +24,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { sharePostLink } from "@/lib/share";
+import StoriesViewer from "@/components/aluno/comunidade/StoriesViewer";
+import StoryComposer from "@/components/aluno/comunidade/StoryComposer";
+import { groupStories, type StoryGroup, type StoryRow } from "@/components/aluno/comunidade/story-types";
 
 interface Perfil {
   id: string;
