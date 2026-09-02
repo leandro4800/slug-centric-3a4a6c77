@@ -86,12 +86,21 @@ const Alunos = () => {
   const load = async () => {
     if (!tenant?.id) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("perfis")
-      .select("id, nome_completo, email, telefone, avatar_url")
-      .eq("tenant_id", tenant.id)
-      .order("nome_completo", { ascending: true });
+    const [{ data }, { data: leadRows }] = await Promise.all([
+      supabase
+        .from("perfis")
+        .select("id, nome_completo, email, telefone, avatar_url")
+        .eq("tenant_id", tenant.id)
+        .order("nome_completo", { ascending: true }),
+      supabase
+        .from("alunos_pendentes")
+        .select("id, nome, email, telefone, plano_id, convite_enviado_em")
+        .eq("tenant_id", tenant.id)
+        .eq("status", "convidado")
+        .order("created_at", { ascending: false }),
+    ]);
     setAlunos((data as Aluno[]) || []);
+    setLeads((leadRows as LeadPendente[]) || []);
     setLoading(false);
   };
 
@@ -100,10 +109,43 @@ const Alunos = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant?.id]);
 
+  const resendInvite = async (lead: LeadPendente) => {
+    setResending(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("site-create-aluno", {
+        body: { nome: lead.nome, email: lead.email, telefone: lead.telefone, plano_id: lead.plano_id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "Convite reenviado", description: `Enviado para ${lead.email}` });
+    } catch (e) {
+      toast({ title: "Erro ao reenviar", description: String((e as Error).message || e), variant: "destructive" });
+    } finally {
+      setResending(null);
+    }
+  };
+
+  const removeLead = async (lead: LeadPendente) => {
+    const { error } = await supabase.from("alunos_pendentes").delete().eq("id", lead.id);
+    if (error) {
+      toast({ title: "Erro ao remover convite", description: error.message, variant: "destructive" });
+      return;
+    }
+    setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+    toast({ title: "Convite removido" });
+  };
+
+  const filteredLeads = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return leads;
+    return leads.filter((l) => l.nome.toLowerCase().includes(t) || l.email.toLowerCase().includes(t));
+  }, [leads, q]);
+
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
     if (!t) return alunos;
     return alunos.filter((a) => (a.nome_completo || "").toLowerCase().includes(t) || (a.email || "").toLowerCase().includes(t));
+
   }, [alunos, q]);
 
   const handleDelete = async () => {
