@@ -361,8 +361,46 @@ const Comunidade = () => {
     }
   };
 
-  const openStories = storyItems.filter((s) => s.user_id === openStoryUser);
-  const openStoryProfile = stories.find((s) => s.id === openStoryUser);
+  const groupIndexOf = (uid: string) => storyGroups.findIndex((g) => g.user_id === uid);
+
+  const markStoryViewed = async (story: StoryRow) => {
+    if (!user) return;
+    setStoryGroups((prev) =>
+      prev.map((g) => ({
+        ...g,
+        items: g.items.map((i) => (i.id === story.id ? { ...i, visto: true } : i)),
+      }))
+    );
+    await supabase
+      .from("comunidade_story_views" as any)
+      .insert({ story_id: story.id, user_id: user.id } as any);
+  };
+
+  const reactStory = async (story: StoryRow, emoji: string | null, resposta: string | null) => {
+    if (!user) return;
+    const { error } = await supabase.from("comunidade_story_reacoes" as any).insert({
+      story_id: story.id,
+      user_id: user.id,
+      emoji,
+      resposta,
+    } as any);
+    if (error) {
+      toast({ title: "Erro ao reagir", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: resposta ? "Resposta enviada!" : "Reação enviada!" });
+    }
+  };
+
+  const deleteStory = async (story: StoryRow) => {
+    const { error } = await supabase.from("comunidade_stories" as any).delete().eq("id", story.id);
+    if (error) {
+      toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
+      return;
+    }
+    setViewerStart(null);
+    toast({ title: "Story excluído" });
+    fetchData();
+  };
 
   return (
     <div className="min-h-screen bg-transparent text-foreground pb-24">
