@@ -228,7 +228,13 @@ export const StoriesViewer = ({
       </div>
 
       {/* rodapé: reações e resposta */}
-      <div className="z-20 border-t border-white/10 bg-black px-4 pb-6 pt-3">
+      <div
+        className="z-20 border-t border-white/10 bg-black px-4 pb-6 pt-3"
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         {isMine ? (
           <div className="flex items-center justify-center gap-2 text-xs text-white/60">
             <Eye className="h-4 w-4" /> Seu story fica visível por 24h
@@ -249,8 +255,8 @@ export const StoriesViewer = ({
             <div className="flex items-center gap-2">
               <Input
                 value={resposta}
-                onFocus={() => setPaused(true)}
-                onBlur={() => setPaused(false)}
+                onFocus={() => setComposing(true)}
+                onBlur={() => setComposing(false)}
                 onChange={(e) => setResposta(e.target.value)}
                 placeholder="Responder…"
                 className="h-11 rounded-full border-white/20 bg-white/10 text-white placeholder:text-white/40"
@@ -259,9 +265,11 @@ export const StoriesViewer = ({
                 size="icon"
                 className="h-11 w-11 shrink-0 rounded-full"
                 disabled={!resposta.trim()}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   onReact(story, null, resposta.trim());
                   setResposta("");
+                  setComposing(false);
                 }}
               >
                 <Send className="h-4 w-4" />
@@ -270,6 +278,7 @@ export const StoriesViewer = ({
           </>
         )}
       </div>
+
     </div>
   );
 };
