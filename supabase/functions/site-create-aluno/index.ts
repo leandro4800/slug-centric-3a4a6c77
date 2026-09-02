@@ -129,6 +129,11 @@ Deno.serve(async (req) => {
               <p style="font-size:10px;letter-spacing:2px;color:#E50914;font-weight:bold;margin:0 0 8px;">PRÓXIMO PASSO</p>
               <p style="margin:4px 0;">Escolha seu plano e finalize seu cadastro. Assim que o pagamento for confirmado, seu acesso ao app é liberado automaticamente e você recebe um e-mail para definir sua senha.</p>
             </div>
+            <p style="font-size:14px;color:#333;">
+              O <strong>Alpha Coach Pro</strong> é o aplicativo onde seu coach acompanha toda a sua evolução.
+              Pelo app você terá acesso aos seus treinos personalizados, plano alimentar, avaliações físicas,
+              acompanhamento de progresso e comunicação direta com seu coach — tudo em um só lugar.
+            </p>
             <p style="text-align:center;margin:32px 0;">
               <a href="${landingUrl}" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">ESCOLHER MEU PLANO</a>
             </p>
@@ -289,6 +294,11 @@ Deno.serve(async (req) => {
           <h1 style="color:#000;">Olá, ${nome}! 💪</h1>
           <p>Seu cadastro foi feito por <strong>${tenant.nome || "seu coach"}</strong>. Agora você tem acesso ao aplicativo.</p>
           ${credenciaisBlock}
+          <p style="font-size:14px;color:#333;">
+            Pelo <strong>app Alpha Coach Pro</strong> você acompanha todo o seu acompanhamento com seu coach:
+            treinos personalizados com vídeos de cada exercício, plano alimentar diário, avaliações físicas,
+            gráficos de evolução e contato direto com seu coach. Tudo na palma da mão.
+          </p>
           <p style="text-align:center;margin:32px 0;">
             <a href="${loginUrl}" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">ENTRAR NO APP</a>
           </p>
