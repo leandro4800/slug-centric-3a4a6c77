@@ -884,11 +884,18 @@ export const ExerciseCard = ({
             {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
           </button>
 
+          {semCarga && (
+            <p className="text-[11px] text-muted-foreground -mt-2">
+              Exercício sem carga — registre apenas as repetições. O tempo do cronômetro é salvo junto.
+            </p>
+          )}
+
           <div className="w-full border border-border bg-background/40">
             <div className="w-full">
-              <div className="grid grid-cols-[34px_44px_1fr_1fr_34px] items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground">
-                <span>Série</span><span>Ant.</span><span className="text-center">KG</span><span className="text-center">Reps</span><span className="text-center">✓</span>
+              <div className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground`}>
+                <span>Série</span><span>Ant.</span>{!semCarga && <span className="text-center">KG</span>}<span className="text-center">Reps</span><span className="text-center">✓</span>
               </div>
+
               {slots.map((slot, i) => {
                 const type = getSlotType(i);
                 const previous = history.previousBySeries.get(i + 1);
