@@ -1802,6 +1802,109 @@ export type Database = {
           },
         ]
       }
+      comunidade_stories: {
+        Row: {
+          criado_em: string
+          duracao_seg: number
+          expira_em: string
+          id: string
+          media_url: string | null
+          tenant_id: string
+          texto: string | null
+          thumb_url: string | null
+          tipo: string
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          duracao_seg?: number
+          expira_em?: string
+          id?: string
+          media_url?: string | null
+          tenant_id: string
+          texto?: string | null
+          thumb_url?: string | null
+          tipo?: string
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          duracao_seg?: number
+          expira_em?: string
+          id?: string
+          media_url?: string | null
+          tenant_id?: string
+          texto?: string | null
+          thumb_url?: string | null
+          tipo?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      comunidade_story_reacoes: {
+        Row: {
+          criado_em: string
+          emoji: string | null
+          id: string
+          resposta: string | null
+          story_id: string
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          emoji?: string | null
+          id?: string
+          resposta?: string | null
+          story_id: string
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          emoji?: string | null
+          id?: string
+          resposta?: string | null
+          story_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunidade_story_reacoes_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "comunidade_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunidade_story_views: {
+        Row: {
+          criado_em: string
+          id: string
+          story_id: string
+          user_id: string
+        }
+        Insert: {
+          criado_em?: string
+          id?: string
+          story_id: string
+          user_id: string
+        }
+        Update: {
+          criado_em?: string
+          id?: string
+          story_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunidade_story_views_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "comunidade_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       configuracoes_tenant: {
         Row: {
           chave: string
@@ -4369,6 +4472,24 @@ export type Database = {
           tipo: string
           titulo: string
           user_id: string
+        }[]
+      }
+      get_community_stories_v2: {
+        Args: { _tenant_id: string }
+        Returns: {
+          avatar_url: string
+          criado_em: string
+          detalhe: string
+          duracao_seg: number
+          id: string
+          media_url: string
+          nome_completo: string
+          origem: string
+          texto: string
+          thumb_url: string
+          tipo: string
+          user_id: string
+          visto: boolean
         }[]
       }
       get_my_app_destination: {
