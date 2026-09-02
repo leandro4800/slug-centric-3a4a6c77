@@ -79,6 +79,26 @@ const isAvancado = (n?: string | null) => {
   return s.includes("avanc");
 };
 
+const normalize = (s: string) =>
+  (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+/** Exercícios sem carga externa: só repetições + tempo. */
+const BODYWEIGHT_PATTERNS = [
+  "prancha", "plank", "alongamento", "mobilidade", "abdominal", "abdominais",
+  "supra", "infra", "obliquo", "elevacao de perna", "elevacao de pernas",
+  "barra fixa", "barra livre", "cardio", "esteira", "bike", "bicicleta",
+  "eliptico", "corrida", "caminhada", "pular corda", "corda naval",
+  "burpee", "polichinelo", "flexao de braco", "apoio de solo", "isometria",
+  "ponte", "glute bridge", "escalador", "mountain climber", "aquecimento articular",
+];
+
+const isBodyweightExercise = (nome: string) => {
+  const s = normalize(nome);
+  if (/(maquina|smith|halter|barra guiada|polia|cabo|caneleira|anilha|peso)/.test(s)) return false;
+  return BODYWEIGHT_PATTERNS.some((p) => s.includes(p));
+};
+
+
 // Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s || "");
