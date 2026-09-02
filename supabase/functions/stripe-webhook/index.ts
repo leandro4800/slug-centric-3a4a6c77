@@ -130,14 +130,126 @@ Deno.serve(async (req) => {
 
         // Resolve aluno_id pelo email se não estava logado no checkout
         let resolvedAlunoId = aluno_id;
-        if (!resolvedAlunoId && customerEmail) {
+        const normalizedEmail = (customerEmail || "").trim().toLowerCase();
+        if (!resolvedAlunoId && normalizedEmail) {
           const { data: perfil } = await supabase
             .from("perfis")
             .select("id")
-            .eq("email", customerEmail)
+            .ilike("email", normalizedEmail)
             .maybeSingle();
           if (perfil) resolvedAlunoId = perfil.id;
         }
+
+        // Lead pendente (aluno convidado pelo coach, ainda sem conta Auth)
+        let pendingLead: { id: string; nome: string | null } | null = null;
+        if (normalizedEmail) {
+          try {
+            const { data: lead } = await supabase
+              .from("alunos_pendentes")
+              .select("id, nome")
+              .eq("tenant_id", tenant_id)
+              .ilike("email", normalizedEmail)
+              .maybeSingle();
+            pendingLead = lead ?? null;
+          } catch (e) {
+            log("pending lead lookup failed", { e: String(e) });
+          }
+        }
+
+        // Se ainda não existe conta Auth para esse e-mail, cria agora (isolado:
+        // nunca pode derrubar a gravação da assinatura nem o 200 pro Stripe).
+        if (!resolvedAlunoId && normalizedEmail) {
+          try {
+            const randomPassword = crypto.randomUUID() + crypto.randomUUID();
+            const nomeAluno =
+              pendingLead?.nome || s.customer_details?.name || normalizedEmail.split("@")[0];
+
+            const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+              email: normalizedEmail,
+              password: randomPassword,
+              email_confirm: true,
+              user_metadata: { nome_completo: nomeAluno, tenant_id },
+            });
+
+            if (created?.user) {
+              resolvedAlunoId = created.user.id;
+              log("auth user created from checkout", { userId: resolvedAlunoId });
+            } else {
+              log("createUser failed, retrying lookup", { e: String(createErr?.message) });
+              const { data: perfilRetry } = await supabase
+                .from("perfis").select("id").ilike("email", normalizedEmail).maybeSingle();
+              if (perfilRetry) resolvedAlunoId = perfilRetry.id;
+            }
+
+            if (resolvedAlunoId) {
+              // Preserva perfis.tenant_id se o usuário é dono de outro tenant
+              const { data: ownedTenant } = await supabase
+                .from("tenants").select("id").eq("owner_user_id", resolvedAlunoId).maybeSingle();
+              const perfilPayload: Record<string, unknown> = {
+                id: resolvedAlunoId,
+                email: normalizedEmail,
+                nome_completo: nomeAluno,
+              };
+              if (!ownedTenant) perfilPayload.tenant_id = tenant_id;
+              await supabase.from("perfis").upsert(perfilPayload, { onConflict: "id" });
+              await supabase.from("user_roles").upsert(
+                { user_id: resolvedAlunoId, role: "aluno", tenant_id },
+                { onConflict: "user_id,role,tenant_id" }
+              );
+
+              // E-mail de boas-vindas com link para DEFINIR SENHA (sem senha em texto puro)
+              try {
+                const { data: tenantRow } = await supabase
+                  .from("tenants").select("nome, slug").eq("id", tenant_id).maybeSingle();
+                const { data: linkData } = await supabase.auth.admin.generateLink({
+                  type: "recovery",
+                  email: normalizedEmail,
+                });
+                // @ts-ignore
+                const actionLink = linkData?.properties?.action_link as string | undefined;
+                const fallbackUrl = tenantRow?.slug
+                  ? `https://alpha-coach.app/${tenantRow.slug}/app`
+                  : "https://alpha-coach.app/login";
+                const ctaUrl = actionLink || "https://alpha-coach.app/forgot-password";
+                const resendKey = Deno.env.get("RESEND_API_KEY");
+                if (resendKey) {
+                  const html = `
+                    <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px;">
+                      <h1 style="color:#000;">Bem-vindo(a), ${nomeAluno}! 💪</h1>
+                      <p>Seu pagamento foi confirmado e seu acesso à <strong>${tenantRow?.nome || "Alpha Coach Pro"}</strong> está liberado.</p>
+                      <div style="background:#f5f5f5;padding:16px;border-left:4px solid #E50914;margin:20px 0;">
+                        <p style="font-size:10px;letter-spacing:2px;color:#E50914;font-weight:bold;margin:0 0 8px;">SEU ACESSO</p>
+                        <p style="margin:4px 0;"><strong>Usuário:</strong> ${normalizedEmail}</p>
+                        <p style="margin:8px 0 0;">Clique no botão abaixo para <strong>definir sua senha</strong> e entrar no app.</p>
+                      </div>
+                      <p style="text-align:center;margin:32px 0;">
+                        <a href="${ctaUrl}" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">DEFINIR MINHA SENHA</a>
+                      </p>
+                      <p style="font-size:12px;color:#999;">Depois é só entrar em ${fallbackUrl}</p>
+                    </div>`;
+                  const r = await fetch("https://api.resend.com/emails", {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      from: "Alpha Coach Pro <suporte@alpha-coach.app>",
+                      to: [normalizedEmail],
+                      subject: `Acesso liberado — ${tenantRow?.nome || "Alpha Coach Pro"}`,
+                      html,
+                    }),
+                  });
+                  if (!r.ok) log("welcome email failed", { status: r.status, body: await r.text() });
+                } else {
+                  log("RESEND_API_KEY missing, skipping welcome email");
+                }
+              } catch (e) {
+                log("welcome email exception", { e: String(e) });
+              }
+            }
+          } catch (e) {
+            log("auth user provisioning failed (assinatura segue normalmente)", { e: String(e) });
+          }
+        }
+
 
         // Aula avulsa: registra na tabela aulas_avulsas + marca agendamento como pago
         if (meta.type === 'aula_avulsa') {
@@ -187,6 +299,23 @@ Deno.serve(async (req) => {
         if (resolvedAlunoId) {
           await supabase.from("perfis").update({ tenant_id }).eq("id", resolvedAlunoId);
         }
+
+        // Marca o lead pendente como convertido (isolado — nunca quebra o webhook)
+        if (pendingLead) {
+          try {
+            await supabase
+              .from("alunos_pendentes")
+              .update({
+                status: "convertido",
+                convertido_em: new Date().toISOString(),
+                user_id: resolvedAlunoId,
+              })
+              .eq("id", pendingLead.id);
+          } catch (e) {
+            log("lead conversion update failed", { e: String(e) });
+          }
+        }
+
         break;
       }
 

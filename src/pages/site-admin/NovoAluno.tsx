@@ -22,7 +22,7 @@ const NovoAluno = () => {
   const [telefone, setTelefone] = useState("");
   const [planoId, setPlanoId] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
-  const [success, setSuccess] = useState<{ email: string; aguardandoPagamento?: boolean } | null>(null);
+  const [success, setSuccess] = useState<{ email: string; aguardandoPagamento?: boolean; convite?: boolean } | null>(null);
 
   // IA
   const [iaOpen, setIaOpen] = useState(false);
@@ -141,8 +141,10 @@ const NovoAluno = () => {
         if (!serverError) serverError = error.message;
       }
       if (serverError) throw new Error(serverError);
-      setSuccess({ email: email.trim().toLowerCase(), aguardandoPagamento: !!(data as any)?.aguardando_pagamento });
-      toast.success("Aluno cadastrado! Email com credenciais enviado.");
+      const modoConvite = (data as any)?.modo === "convite";
+      setSuccess({ email: email.trim().toLowerCase(), aguardandoPagamento: !!(data as any)?.aguardando_pagamento, convite: modoConvite });
+      toast.success(modoConvite ? "Convite enviado ao aluno!" : "Aluno cadastrado! Email com credenciais enviado.");
+
     } catch (err: any) {
       toast.error(err.message || "Erro ao cadastrar aluno");
     } finally {
@@ -157,16 +159,26 @@ const NovoAluno = () => {
           <div className="absolute inset-0 rounded-3xl opacity-30 pointer-events-none" style={{ background: "radial-gradient(ellipse at top, hsl(var(--primary) / 0.4), transparent 60%)" }} />
           <CheckCircle2 className="h-14 w-14 text-primary mx-auto relative" />
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-primary relative">Sucesso</p>
-          <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter text-white relative">Aluno cadastrado!</h1>
-          <p className="text-sm text-white/70 relative">
-            Enviamos um email para <strong className="text-white">{success.email}</strong> com
-            o usuário, senha temporária e instruções de acesso ao app.
-          </p>
-          {success.aguardandoPagamento && (
-            <p className="text-sm text-amber-400 relative">
-              Atenção: o acesso do aluno só será liberado após o pagamento do plano pelo checkout (Stripe).
+          <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter text-white relative">
+            {success.convite ? "Convite enviado!" : "Aluno cadastrado!"}
+          </h1>
+          {success.convite ? (
+            <>
+              <p className="text-sm text-white/70 relative">
+                Enviamos um convite para <strong className="text-white">{success.email}</strong> com o link
+                da sua página de planos. A conta dele será criada automaticamente assim que o pagamento for confirmado.
+              </p>
+              <p className="text-sm text-amber-400 relative">
+                Ele aparecerá na sua lista como <strong>Aguardando pagamento</strong> até assinar.
+              </p>
+            </>
+          ) : (
+            <p className="text-sm text-white/70 relative">
+              Enviamos um email para <strong className="text-white">{success.email}</strong> com
+              o usuário, senha temporária e instruções de acesso ao app.
             </p>
           )}
+
           <div className="flex gap-3 justify-center pt-2 relative">
             <Button variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white" onClick={() => { setSuccess(null); setNome(""); setEmail(""); setTelefone(""); setPlanoId(""); }}>
               Cadastrar outro
@@ -199,8 +211,9 @@ const NovoAluno = () => {
             <UserPlus className="h-8 w-8 md:h-10 md:w-10 text-primary" /> Cadastrar aluno
           </h1>
           <p className="text-sm text-white/60 mt-3 max-w-xl">
-            Ao cadastrar, enviaremos um email para o aluno com o usuário, senha temporária e
-            instruções para entrar no app.
+            Enviaremos um convite por e-mail com o link dos seus planos. A conta e o acesso do
+            aluno são criados automaticamente assim que o pagamento for confirmado.
+
           </p>
         </div>
       </div>

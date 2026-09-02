@@ -5,7 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
-import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2, Link as LinkIcon, Copy, Check, ClipboardList } from "lucide-react";
+import { Loader2, Search, Mail, UserPlus, User, Dumbbell, Apple, Trash2, Link as LinkIcon, Copy, Check, ClipboardList, Clock, Send } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,17 +28,29 @@ interface Aluno {
   avatar_url: string | null;
 }
 
+interface LeadPendente {
+  id: string;
+  nome: string;
+  email: string;
+  telefone: string | null;
+  plano_id: string | null;
+  convite_enviado_em: string | null;
+}
+
 const Alunos = () => {
   const { tenant } = useSiteTenant();
   const [alunos, setAlunos] = useState<Aluno[]>([]);
+  const [leads, setLeads] = useState<LeadPendente[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
   const [toDelete, setToDelete] = useState<Aluno | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [resending, setResending] = useState<string | null>(null);
   const [anamneseAluno, setAnamneseAluno] = useState<Aluno | null>(null);
   const [anamneseData, setAnamneseData] = useState<any | null>(null);
   const [anamneseLoading, setAnamneseLoading] = useState(false);
+
 
   const openAnamnese = async (a: Aluno) => {
     setAnamneseAluno(a);
@@ -74,12 +86,21 @@ const Alunos = () => {
   const load = async () => {
     if (!tenant?.id) return;
     setLoading(true);
-    const { data } = await supabase
-      .from("perfis")
-      .select("id, nome_completo, email, telefone, avatar_url")
-      .eq("tenant_id", tenant.id)
-      .order("nome_completo", { ascending: true });
+    const [{ data }, { data: leadRows }] = await Promise.all([
+      supabase
+        .from("perfis")
+        .select("id, nome_completo, email, telefone, avatar_url")
+        .eq("tenant_id", tenant.id)
+        .order("nome_completo", { ascending: true }),
+      supabase
+        .from("alunos_pendentes")
+        .select("id, nome, email, telefone, plano_id, convite_enviado_em")
+        .eq("tenant_id", tenant.id)
+        .eq("status", "convidado")
+        .order("created_at", { ascending: false }),
+    ]);
     setAlunos((data as Aluno[]) || []);
+    setLeads((leadRows as LeadPendente[]) || []);
     setLoading(false);
   };
 
@@ -88,10 +109,43 @@ const Alunos = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tenant?.id]);
 
+  const resendInvite = async (lead: LeadPendente) => {
+    setResending(lead.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("site-create-aluno", {
+        body: { nome: lead.nome, email: lead.email, telefone: lead.telefone, plano_id: lead.plano_id },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast({ title: "Convite reenviado", description: `Enviado para ${lead.email}` });
+    } catch (e) {
+      toast({ title: "Erro ao reenviar", description: String((e as Error).message || e), variant: "destructive" });
+    } finally {
+      setResending(null);
+    }
+  };
+
+  const removeLead = async (lead: LeadPendente) => {
+    const { error } = await supabase.from("alunos_pendentes").delete().eq("id", lead.id);
+    if (error) {
+      toast({ title: "Erro ao remover convite", description: error.message, variant: "destructive" });
+      return;
+    }
+    setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+    toast({ title: "Convite removido" });
+  };
+
+  const filteredLeads = useMemo(() => {
+    const t = q.trim().toLowerCase();
+    if (!t) return leads;
+    return leads.filter((l) => l.nome.toLowerCase().includes(t) || l.email.toLowerCase().includes(t));
+  }, [leads, q]);
+
   const filtered = useMemo(() => {
     const t = q.trim().toLowerCase();
     if (!t) return alunos;
     return alunos.filter((a) => (a.nome_completo || "").toLowerCase().includes(t) || (a.email || "").toLowerCase().includes(t));
+
   }, [alunos, q]);
 
   const handleDelete = async () => {
@@ -162,6 +216,59 @@ const Alunos = () => {
         <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input placeholder="Buscar por nome ou email..." value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
       </div>
+
+      {filteredLeads.length > 0 && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 overflow-hidden">
+          <div className="px-4 py-3 border-b border-amber-500/20">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" /> Convidados — aguardando pagamento ({filteredLeads.length})
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Ainda não têm conta no app. O acesso é criado automaticamente quando assinarem um plano.
+            </p>
+          </div>
+          <div className="divide-y divide-amber-500/10">
+            {filteredLeads.map((l) => (
+              <div key={l.id} className="px-4 py-3 flex items-center gap-3 flex-wrap">
+                <div className="h-9 w-9 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xs font-bold shrink-0">
+                  {(l.nome || l.email).slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate text-sm">{l.nome}</p>
+                  <p className="text-xs text-muted-foreground truncate inline-flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" />{l.email}
+                  </p>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 border border-amber-500/40 rounded-full px-2.5 py-1 shrink-0">
+                  Aguardando pagamento
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1.5"
+                    disabled={resending === l.id}
+                    onClick={() => resendInvite(l)}
+                  >
+                    {resending === l.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                    Reenviar
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                    title="Remover convite"
+                    onClick={() => removeLead(l)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
