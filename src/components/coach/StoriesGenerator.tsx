@@ -298,19 +298,27 @@ export const StoriesGenerator = ({ isFullScreen, onExitFullScreen }: Props) => {
       {cardUrl ? (
         <img src={cardUrl} alt="Arte de divulgação gerada por IA" className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center text-muted-foreground">
-          {generating ? (
-            <>
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-semibold">Gerando sua arte...</p>
-              <p className="text-xs opacity-70">Isso leva alguns segundos.</p>
-            </>
-          ) : (
-            <>
-              <ImageIcon className="h-8 w-8 opacity-40" />
-              <p className="text-sm">Nenhuma arte gerada para este template.</p>
-            </>
-          )}
+        <div className="relative h-full w-full">
+          <img
+            src={TEMPLATES.find((t) => t.id === template)?.ref}
+            alt="Modelo do template"
+            className="h-full w-full object-cover opacity-70"
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 text-center text-white">
+            {generating ? (
+              <>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm font-semibold">Gerando sua arte...</p>
+                <p className="text-xs opacity-70">Isso leva alguns segundos.</p>
+              </>
+            ) : (
+              <>
+                <ImageIcon className="h-8 w-8 opacity-60" />
+                <p className="text-sm font-semibold">Modelo do template</p>
+                <p className="text-xs opacity-70">Envie sua foto e gere sua versão.</p>
+              </>
+            )}
+          </div>
         </div>
       )}
       {cardUrl && generating && (
