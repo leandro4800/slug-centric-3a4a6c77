@@ -23,3 +23,21 @@ dist-ssr
 *.sln
 *.sw?
 .dyad/
+
+# Signing keys — nunca commitar
+*.jks
+*.keystore
+*.pem
+keystore.properties
+
+# Build nativo
+ios/DerivedData/
+ios/apns-config.local
+ios/App/CapApp-SPM/symlinks/
+AuthKey_*.p8
+# Cópias locais do Firebase (usar android/app e ios/App/App)
+android/google-services*.json
+!android/app/google-services.json
+ios/GoogleService-Info*.plist
+!ios/App/App/GoogleService-Info.plist
+supabase/.temp/

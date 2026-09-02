@@ -115,6 +115,20 @@
     font-family: 'Bebas Neue', 'Inter', sans-serif;
     letter-spacing: 0.05em;
   }
+
+  /* Vídeos de fundo: esconde overlay de play nativo do WebView Android/Chromium */
+  video.bg-video {
+    pointer-events: none;
+  }
+  video.bg-video::-webkit-media-controls {
+    display: none !important;
+  }
+  video.bg-video::-webkit-media-controls-start-playback-button {
+    display: none !important;
+  }
+  video.bg-video::-webkit-media-controls-overlay-play-button {
+    display: none !important;
+  }
 }
 
 @layer utilities {

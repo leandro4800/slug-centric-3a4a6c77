@@ -28,6 +28,17 @@ const config: CapacitorConfig = {
   ios: {
     contentInset: 'always',
   },
+  experimental: {
+    ios: {
+      spm: {
+        packageOptions: {
+          '@capacitor-firebase/messaging': {
+            symlink: true,
+          },
+        },
+      },
+    },
+  },
   plugins: {
     SplashScreen: {
       // Splash NATIVO neutro (AlphaCoach) — some rapidamente
@@ -40,6 +51,9 @@ const config: CapacitorConfig = {
       showSpinner: false,
       splashFullScreen: true,
       splashImmersive: true,
+    },
+    FirebaseMessaging: {
+      presentationOptions: ['alert', 'badge', 'sound'],
     },
   },
 };

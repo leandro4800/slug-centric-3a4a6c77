@@ -2,6 +2,6 @@
 <resources>
     <string name="app_name">AlphaCoach</string>
     <string name="title_activity_main">AlphaCoach</string>
-    <string name="package_name">app.leandro.alphacoach</string>
-    <string name="custom_url_scheme">app.leandro.alphacoach</string>
+    <string name="package_name">com.alphacoachpro.app</string>
+    <string name="custom_url_scheme">com.alphacoachpro.app</string>
 </resources>

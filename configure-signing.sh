@@ -16,8 +16,8 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
-KEYSTORE_NAME="alphacoach-release.keystore"
-KEYSTORE_ALIAS="alphacoach"
+KEYSTORE_NAME="upload-keystore.jks"
+KEYSTORE_ALIAS="upload"
 KEYSTORE_PATH="android/app/$KEYSTORE_NAME"
 KEYSTORE_PROPERTIES="android/keystore.properties"
 BUILD_GRADLE="android/app/build.gradle"

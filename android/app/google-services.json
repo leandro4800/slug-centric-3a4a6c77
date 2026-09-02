@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "82597349006",
+    "project_id": "alpha-coach-a3811",
+    "storage_bucket": "alpha-coach-a3811.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:82597349006:android:7ac967f3609a8c51752bdf",
+        "android_client_info": {
+          "package_name": "com.alphacoachpro.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "82597349006-pdg4aclmaa2cb4kusiipgpu5c1f7k8ta.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDlwLuuQva-NK9DqzGRrMIzqOPTNVHAWFo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "82597349006-pdg4aclmaa2cb4kusiipgpu5c1f7k8ta.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 import { Logo } from "@/components/Logo";
+import { BackgroundVideo } from "@/components/BackgroundVideo";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
@@ -299,15 +300,11 @@ const Login = () => {
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-background">
       {displayTenant?.login_video_url ? (
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          className="absolute inset-0 w-full h-full object-cover scale-110 lg:block hidden"
-        >
-          <source src={displayTenant.login_video_url} type="video/mp4" />
-        </video>
+        <BackgroundVideo
+          src={displayTenant.login_video_url}
+          posterUrl={displayTenant?.hero_url || loginBg}
+          className="absolute inset-0 scale-110 lg:block hidden"
+        />
       ) : (
         <div
           className="absolute inset-0 bg-cover bg-center scale-110 lg:block hidden"
@@ -348,15 +345,11 @@ const Login = () => {
           {/* Responsive Video Container for Mobile/Tablet */}
           {displayTenant?.login_video_url && (
             <div className="lg:hidden absolute inset-0 z-0">
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              >
-                <source src={displayTenant.login_video_url} type="video/mp4" />
-              </video>
+              <BackgroundVideo
+                src={displayTenant.login_video_url}
+                posterUrl={displayTenant?.hero_url || loginBg}
+                className="h-full w-full"
+              />
               <div className="absolute inset-0 bg-black/40" />
             </div>
           )}

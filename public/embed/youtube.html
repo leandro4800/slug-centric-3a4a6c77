@@ -47,6 +47,22 @@
           "?" +
           params.toString();
         document.getElementById("player").src = embedUrl;
+
+        // Encaminha comandos do app (play/pause/mute) para o player interno do YouTube.
+        window.addEventListener("message", function (event) {
+          var inner = document.getElementById("player");
+          if (!inner || !inner.contentWindow) return;
+          try {
+            var data = event.data;
+            if (typeof data !== "string") return;
+            var parsed = JSON.parse(data);
+            if (parsed && parsed.event === "command" && parsed.func) {
+              inner.contentWindow.postMessage(data, "*");
+            }
+          } catch (_err) {
+            /* ignore non-JSON messages */
+          }
+        });
       })();
     </script>
   </body>

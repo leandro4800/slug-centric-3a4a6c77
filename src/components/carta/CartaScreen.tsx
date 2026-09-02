@@ -5,9 +5,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft, Download } from "lucide-react";
+import { Loader2, Upload, Sparkles, Pencil, Save, X, ArrowLeft, Download, Share2 } from "lucide-react";
 import heic2any from "heic2any";
 import html2canvas from "html2canvas";
+import { saveOrShareBlob, saveOrShareDataUrl } from "@/lib/native-download";
 import { AthleteCard, type CartaData, type AtributosCarta } from "./AthleteCard";
 import { HolographicCard } from "./HolographicCard";
 import { PainelEvolucao } from "./PainelEvolucao";
@@ -260,21 +261,37 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
     toast.success("Avatar gerado!");
   };
 
+  const fetchImageBlob = async (url: string) => {
+    const res = await fetch(url, { mode: "cors" });
+    if (!res.ok) throw new Error(`Não foi possível baixar a imagem (${res.status})`);
+    return res.blob();
+  };
+
   const downloadImage = async (url: string, filename: string) => {
+    const tid = toast.loading("Preparando imagem...");
     try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      const blobUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(blobUrl);
-    } catch (error) {
+      const blob = await fetchImageBlob(url);
+      await saveOrShareBlob(blob, filename, "Avatar Alpha Coach");
+      toast.success("Pronto! Salve ou compartilhe na folha que abriu.", { id: tid });
+    } catch (error: any) {
       console.error("Error downloading image:", error);
-      toast.error("Erro ao baixar imagem. Tente abrir em uma nova aba e salvar.");
+      toast.error(error?.message || "Erro ao baixar imagem.", { id: tid });
+    }
+  };
+
+  const shareImage = async (url: string, filename: string) => {
+    const tid = toast.loading("Preparando para compartilhar...");
+    try {
+      const blob = await fetchImageBlob(url);
+      await saveOrShareBlob(blob, filename, "Avatar Alpha Coach");
+      toast.success("Compartilhe pelo app que preferir.", { id: tid });
+    } catch (error: any) {
+      if (!/cancel/i.test(String(error?.message || ""))) {
+        console.error("Error sharing image:", error);
+        toast.error(error?.message || "Não foi possível compartilhar.", { id: tid });
+      } else {
+        toast.dismiss(tid);
+      }
     }
   };
 
@@ -282,22 +299,41 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
     if (!cardContainerRef.current) return;
     const tid = toast.loading("Gerando imagem da carta...");
     try {
-      // Capturamos a carta. useCORS é essencial para imagens do Supabase
       const canvas = await html2canvas(cardContainerRef.current, {
         useCORS: true,
         backgroundColor: null,
-        scale: 2, // Melhor qualidade
+        scale: 2,
         logging: false,
       });
-      const dataUrl = canvas.toDataURL("image/png");
-      const link = document.createElement("a");
-      link.href = dataUrl;
-      link.download = `carta-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`;
-      link.click();
-      toast.success("Carta baixada!", { id: tid });
-    } catch (err) {
+      const filename = `carta-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`;
+      await saveOrShareDataUrl(canvas.toDataURL("image/png"), filename);
+      toast.success("Pronto! Salve ou compartilhe na folha que abriu.", { id: tid });
+    } catch (err: any) {
       console.error(err);
-      toast.error("Erro ao gerar imagem da carta", { id: tid });
+      toast.error(err?.message || "Erro ao gerar imagem da carta", { id: tid });
+    }
+  };
+
+  const handleShareCard = async () => {
+    if (!cardContainerRef.current) return;
+    const tid = toast.loading("Gerando carta para compartilhar...");
+    try {
+      const canvas = await html2canvas(cardContainerRef.current, {
+        useCORS: true,
+        backgroundColor: null,
+        scale: 2,
+        logging: false,
+      });
+      const filename = `carta-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`;
+      await saveOrShareDataUrl(canvas.toDataURL("image/png"), filename);
+      toast.success("Compartilhe pelo app que preferir.", { id: tid });
+    } catch (err: any) {
+      if (!/cancel/i.test(String(err?.message || ""))) {
+        console.error(err);
+        toast.error(err?.message || "Não foi possível compartilhar a carta.", { id: tid });
+      } else {
+        toast.dismiss(tid);
+      }
     }
   };
 
@@ -336,13 +372,22 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
             </div>
           </HolographicCard>
 
-          <Button 
-            variant="outline"
-            onClick={handleDownloadCard} 
-            className="font-gaming w-full max-w-sm border-[hsl(180_100%_50%/0.4)] hover:bg-[hsl(180_100%_50%/0.1)] text-white"
-          >
-            <Download className="w-4 h-4 mr-2" /> Baixar Carta para Postar
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 w-full max-w-sm">
+            <Button
+              variant="outline"
+              onClick={handleDownloadCard}
+              className="font-gaming flex-1 border-[hsl(180_100%_50%/0.4)] hover:bg-[hsl(180_100%_50%/0.1)] text-white"
+            >
+              <Download className="w-4 h-4 mr-2" /> Baixar Carta
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleShareCard}
+              className="font-gaming flex-1 border-[hsl(180_100%_50%/0.4)] hover:bg-[hsl(180_100%_50%/0.1)] text-white"
+            >
+              <Share2 className="w-4 h-4 mr-2" /> Compartilhar
+            </Button>
+          </div>
         </motion.div>
 
         {/* Painel de info / edição */}
@@ -429,19 +474,6 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
                         alt="Avatar IA corpo inteiro"
                         className="w-full h-full object-contain drop-shadow-[0_8px_30px_hsla(42_70%_62%_/_0.5)]"
                       />
-                      <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 hover:opacity-100">
-                        <Button 
-                          size="sm" 
-                          variant="secondary"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            if (view.avatar_carta_url) downloadImage(view.avatar_carta_url, `avatar-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`);
-                          }}
-                          className="font-gaming text-[10px]"
-                        >
-                          <Download className="w-3 h-3 mr-2" /> Baixar Avatar
-                        </Button>
-                      </div>
                       <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/80 to-transparent pointer-events-none" />
                     </>
                   ) : (
@@ -450,6 +482,36 @@ export const CartaScreen = ({ alunoId, canEdit }: Props) => {
                     </span>
                   )}
                 </motion.div>
+                {view.avatar_carta_url && (
+                  <div className="mt-3 flex gap-2 max-w-[260px]">
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        downloadImage(
+                          view.avatar_carta_url!,
+                          `avatar-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`
+                        )
+                      }
+                      className="font-gaming text-[10px] flex-1"
+                    >
+                      <Download className="w-3 h-3 mr-1" /> Baixar
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() =>
+                        shareImage(
+                          view.avatar_carta_url!,
+                          `avatar-${perfilNome.toLowerCase().replace(/\s+/g, "-")}.png`
+                        )
+                      }
+                      className="font-gaming text-[10px] flex-1"
+                    >
+                      <Share2 className="w-3 h-3 mr-1" /> Compartilhar
+                    </Button>
+                  </div>
+                )}
               </div>
             </div>
           )}

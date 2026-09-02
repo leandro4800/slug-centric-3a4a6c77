@@ -1,4 +1,4 @@
-package app.leandro.alphacoach;
+package com.alphacoachpro.app;
 
 import android.os.Bundle;
 import com.getcapacitor.BridgeActivity;

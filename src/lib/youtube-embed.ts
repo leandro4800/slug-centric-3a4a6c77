@@ -13,6 +13,8 @@ export type YouTubeEmbedOptions = {
   disablekb?: boolean;
   iv_load_policy?: number;
   enablejsapi?: boolean;
+  /** Override YouTube JS API origin (must match window.location.origin for postMessage control). */
+  origin?: string;
 };
 
 const YOUTUBE_PROXY_PATH = "/embed/youtube.html";
@@ -33,7 +35,7 @@ const appendParams = (params: URLSearchParams, videoId: string, opts: YouTubeEmb
   if (opts.disablekb) params.set("disablekb", "1");
   if (opts.iv_load_policy !== undefined) params.set("iv_load_policy", String(opts.iv_load_policy));
   if (opts.enablejsapi) params.set("enablejsapi", "1");
-  params.set("origin", PRODUCTION_APP_ORIGIN);
+  params.set("origin", opts.origin ?? PRODUCTION_APP_ORIGIN);
 };
 
 /** Builds a YouTube embed URL that works in Safari and Capacitor iOS (Error 153). */
