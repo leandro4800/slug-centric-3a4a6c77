@@ -26,6 +26,7 @@ import { ptBR } from "date-fns/locale";
 import { sharePostLink } from "@/lib/share";
 import StoriesViewer from "@/components/aluno/comunidade/StoriesViewer";
 import StoryComposer from "@/components/aluno/comunidade/StoryComposer";
+import DirectDrawer from "@/components/aluno/comunidade/DirectDrawer";
 import { groupStories, type StoryGroup, type StoryRow } from "@/components/aluno/comunidade/story-types";
 
 interface Perfil {
@@ -96,6 +97,9 @@ const Comunidade = () => {
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [postingComment, setPostingComment] = useState<Record<string, boolean>>({});
   const [openReactions, setOpenReactions] = useState<Record<string, boolean>>({});
+  const [directOpen, setDirectOpen] = useState(false);
+  const [directPeer, setDirectPeer] = useState<string | null>(null);
+  const [unread, setUnread] = useState(0);
 
   useEffect(() => {
     if (tenant?.id && user?.id) {
@@ -372,7 +376,10 @@ const Comunidade = () => {
     if (error) {
       toast({ title: "Erro ao reagir", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: resposta ? "Resposta enviada!" : "Reação enviada!" });
+      toast({
+        title: resposta ? "Resposta enviada!" : "Reação enviada!",
+        description: "A conversa continua no Direct da comunidade.",
+      });
     }
   };
 
@@ -401,8 +408,25 @@ const Comunidade = () => {
           </Button>
           <h1 className="font-display text-2xl mt-1 tracking-tight">COMUNIDADE</h1>
         </div>
-        <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden">
-          <img src={tenant?.logo_url || ""} alt="" className="w-full h-full rounded-full object-cover" />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => {
+              setDirectPeer(null);
+              setDirectOpen(true);
+            }}
+            className="relative rounded-full border border-border p-2"
+            aria-label="Mensagens diretas"
+          >
+            <MessageCircle className="h-5 w-5" />
+            {unread > 0 && (
+              <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
+                {unread}
+              </span>
+            )}
+          </button>
+          <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden">
+            <img src={tenant?.logo_url || ""} alt="" className="w-full h-full rounded-full object-cover" />
+          </div>
         </div>
       </div>
 
@@ -737,6 +761,21 @@ const Comunidade = () => {
           onPublished={fetchData}
         />
       )}
+
+      {/* Direct (mensagens) */}
+      {user && tenant?.id && (
+        <DirectDrawer
+          open={directOpen}
+          onClose={() => setDirectOpen(false)}
+          currentUserId={user.id}
+          tenantId={tenant.id}
+          membros={stories}
+          initialPeerId={directPeer}
+          onUnreadChange={setUnread}
+        />
+      )}
+
+
 
 
       {/* FAB */}

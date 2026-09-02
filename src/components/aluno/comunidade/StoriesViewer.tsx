@@ -32,6 +32,7 @@ export const StoriesViewer = ({
   const [ii, setIi] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [composing, setComposing] = useState(false);
   const [resposta, setResposta] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressRef = useRef(0);
@@ -74,7 +75,7 @@ export const StoriesViewer = ({
 
   // barra de progresso / auto-avanço
   useEffect(() => {
-    if (!story || paused) return;
+    if (!story || paused || composing) return;
     const isVideo = story.tipo === "video" && !!story.media_url;
     if (isVideo) return; // vídeo controla pelo timeupdate
     const total = (story.duracao_seg || DEFAULT_DURATION) * 1000;
@@ -91,11 +92,20 @@ export const StoriesViewer = ({
     }, step);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story?.id, paused]);
+  }, [story?.id, paused, composing]);
 
   useEffect(() => {
     progressRef.current = progress;
   }, [progress]);
+
+  // pausa/retoma o vídeo junto com o timer
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (paused || composing) v.pause();
+    else void v.play().catch(() => {});
+  }, [paused, composing, story?.id]);
+
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -126,6 +136,7 @@ export const StoriesViewer = ({
         if (!s) return;
         const dx = e.changedTouches[0].clientX - s.x;
         const dy = e.changedTouches[0].clientY - s.y;
+        if (composing) return;
         if (dy > 90 && Math.abs(dy) > Math.abs(dx)) return onClose();
         if (dx < -60) {
           setGi((g) => Math.min(groups.length - 1, g + 1));
@@ -219,7 +230,13 @@ export const StoriesViewer = ({
       </div>
 
       {/* rodapé: reações e resposta */}
-      <div className="z-20 border-t border-white/10 bg-black px-4 pb-6 pt-3">
+      <div
+        className="z-20 border-t border-white/10 bg-black px-4 pb-6 pt-3"
+        onTouchStart={(e) => e.stopPropagation()}
+        onTouchEnd={(e) => e.stopPropagation()}
+        onTouchMove={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         {isMine ? (
           <div className="flex items-center justify-center gap-2 text-xs text-white/60">
             <Eye className="h-4 w-4" /> Seu story fica visível por 24h
@@ -240,8 +257,8 @@ export const StoriesViewer = ({
             <div className="flex items-center gap-2">
               <Input
                 value={resposta}
-                onFocus={() => setPaused(true)}
-                onBlur={() => setPaused(false)}
+                onFocus={() => setComposing(true)}
+                onBlur={() => setComposing(false)}
                 onChange={(e) => setResposta(e.target.value)}
                 placeholder="Responder…"
                 className="h-11 rounded-full border-white/20 bg-white/10 text-white placeholder:text-white/40"
@@ -250,9 +267,11 @@ export const StoriesViewer = ({
                 size="icon"
                 className="h-11 w-11 shrink-0 rounded-full"
                 disabled={!resposta.trim()}
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => {
                   onReact(story, null, resposta.trim());
                   setResposta("");
+                  setComposing(false);
                 }}
               >
                 <Send className="h-4 w-4" />
@@ -261,6 +280,7 @@ export const StoriesViewer = ({
           </>
         )}
       </div>
+
     </div>
   );
 };
