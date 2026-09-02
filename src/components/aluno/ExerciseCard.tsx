@@ -935,20 +935,22 @@ export const ExerciseCard = ({
                       className={`flex flex-col text-[9px] leading-tight ${legacy ? "text-muted-foreground/70 italic" : "text-muted-foreground"}`}
                       title={legacy ? "Histórico antigo do exercício" : undefined}
                     >
-                      {shown ? (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>) : "—"}
+                      {shown ? (semCarga ? <span>×{shown.reps}</span> : (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>)) : "—"}
                     </span>
 
-                    <input
-                      aria-label={`Carga da série ${i + 1}`}
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      value={slot.carga}
-                      onChange={(e) => updateSlot(i, "carga", e.target.value)}
-                      disabled={slot.done || saving}
-                      placeholder="—"
-                      className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
-                    />
+                    {!semCarga && (
+                      <input
+                        aria-label={`Carga da série ${i + 1}`}
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        value={slot.carga}
+                        onChange={(e) => updateSlot(i, "carga", e.target.value)}
+                        disabled={slot.done || saving}
+                        placeholder="—"
+                        className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
+                      />
+                    )}
                     <input
                       aria-label={`Repetições da série ${i + 1}`}
                       type="number"
