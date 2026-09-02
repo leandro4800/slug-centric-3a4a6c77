@@ -25,6 +25,12 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import refMenteVida from "@/assets/marketing-refs/alpha-mente-vida-lima.png.asset.json";
+import refNovaVersao from "@/assets/marketing-refs/alpha-nova-versao-lima.png.asset.json";
+import refTreinoDieta from "@/assets/marketing-refs/alpha-treino-dieta-cyan.png.asset.json";
+import refModoAlpha from "@/assets/marketing-refs/alpha-modo-alpha-vermelho.png.asset.json";
+import refFocoDias from "@/assets/marketing-refs/alpha-foco-dias-lima.png.asset.json";
+import refDisciplina from "@/assets/marketing-refs/alpha-disciplina-serie-dourado.png.asset.json";
 
 
 /* ============================================================================
@@ -43,13 +49,13 @@ type TemplateId =
   | "alpha-foco-dias-lima"
   | "alpha-disciplina-serie-dourado";
 
-const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; Icon: LucideIcon }[] = [
-  { id: "alpha-mente-vida-lima", label: "Corpo, Mente e Vida", desc: "Verde lima", accent: "#8BC53F", Icon: Salad },
-  { id: "alpha-nova-versao-lima", label: "Nova Versão", desc: "Verde lima", accent: "#8BC53F", Icon: Flame },
-  { id: "alpha-treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#2DD4CE", Icon: Dumbbell },
-  { id: "alpha-modo-alpha-vermelho", label: "Modo Alpha", desc: "Vermelho intenso", accent: "#C0272D", Icon: Zap },
-  { id: "alpha-foco-dias-lima", label: "Foco Todos os Dias", desc: "Verde lima", accent: "#8BC53F", Icon: Trophy },
-  { id: "alpha-disciplina-serie-dourado", label: "Disciplina — A Série", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown },
+const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; Icon: LucideIcon; ref: string }[] = [
+  { id: "alpha-mente-vida-lima", label: "Corpo, Mente e Vida", desc: "Verde lima", accent: "#8BC53F", Icon: Salad, ref: refMenteVida.url },
+  { id: "alpha-nova-versao-lima", label: "Nova Versão", desc: "Verde lima", accent: "#8BC53F", Icon: Flame, ref: refNovaVersao.url },
+  { id: "alpha-treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#2DD4CE", Icon: Dumbbell, ref: refTreinoDieta.url },
+  { id: "alpha-modo-alpha-vermelho", label: "Modo Alpha", desc: "Vermelho intenso", accent: "#C0272D", Icon: Zap, ref: refModoAlpha.url },
+  { id: "alpha-foco-dias-lima", label: "Foco Todos os Dias", desc: "Verde lima", accent: "#8BC53F", Icon: Trophy, ref: refFocoDias.url },
+  { id: "alpha-disciplina-serie-dourado", label: "Disciplina — A Série", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown, ref: refDisciplina.url },
 ];
 
 
@@ -292,19 +298,27 @@ export const StoriesGenerator = ({ isFullScreen, onExitFullScreen }: Props) => {
       {cardUrl ? (
         <img src={cardUrl} alt="Arte de divulgação gerada por IA" className="h-full w-full object-cover" />
       ) : (
-        <div className="flex h-full w-full flex-col items-center justify-center gap-3 text-center text-muted-foreground">
-          {generating ? (
-            <>
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm font-semibold">Gerando sua arte...</p>
-              <p className="text-xs opacity-70">Isso leva alguns segundos.</p>
-            </>
-          ) : (
-            <>
-              <ImageIcon className="h-8 w-8 opacity-40" />
-              <p className="text-sm">Nenhuma arte gerada para este template.</p>
-            </>
-          )}
+        <div className="relative h-full w-full">
+          <img
+            src={TEMPLATES.find((t) => t.id === template)?.ref}
+            alt="Modelo do template"
+            className="h-full w-full object-cover opacity-70"
+          />
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-black/55 text-center text-white">
+            {generating ? (
+              <>
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <p className="text-sm font-semibold">Gerando sua arte...</p>
+                <p className="text-xs opacity-70">Isso leva alguns segundos.</p>
+              </>
+            ) : (
+              <>
+                <ImageIcon className="h-8 w-8 opacity-60" />
+                <p className="text-sm font-semibold">Modelo do template</p>
+                <p className="text-xs opacity-70">Envie sua foto e gere sua versão.</p>
+              </>
+            )}
+          </div>
         </div>
       )}
       {cardUrl && generating && (
@@ -374,11 +388,16 @@ export const StoriesGenerator = ({ isFullScreen, onExitFullScreen }: Props) => {
                     </span>
                   </div>
                 ) : (
-                  <div
-                    className="mb-2 flex aspect-[9/16] w-full items-center justify-center rounded-lg border border-white/10"
-                    style={{ background: `linear-gradient(160deg, ${t.accent}33, #09090b 65%)` }}
-                  >
-                    <t.Icon className="h-8 w-8" style={{ color: t.accent }} />
+                  <div className="relative mb-2 overflow-hidden rounded-lg border border-white/10">
+                    <img
+                      src={t.ref}
+                      alt={`Modelo ${t.label}`}
+                      loading="lazy"
+                      className="aspect-[9/16] w-full object-cover"
+                    />
+                    <span className="absolute left-1 top-1 rounded bg-black/70 px-1 text-[8px] font-bold uppercase text-white">
+                      Modelo
+                    </span>
                   </div>
                 )}
                 <div className="text-xs font-black uppercase tracking-wider">{t.label}</div>
