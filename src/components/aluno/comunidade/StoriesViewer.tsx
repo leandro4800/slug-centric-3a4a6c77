@@ -34,6 +34,7 @@ export const StoriesViewer = ({
   const [paused, setPaused] = useState(false);
   const [resposta, setResposta] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  const progressRef = useRef(0);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
 
   const group = groups[gi];
@@ -92,7 +93,6 @@ export const StoriesViewer = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story?.id, paused]);
 
-  const progressRef = useRef(0);
   useEffect(() => {
     progressRef.current = progress;
   }, [progress]);
