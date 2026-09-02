@@ -57,7 +57,10 @@ const AlunoBottomNav = () => {
           { label: "Personalizar App", icon: Palette, to: `/${tenantSlug}/admin/aparencia` },
           { label: "Painel do Coach", icon: Settings, to: `/${tenantSlug}/app/controle` },
         ]
-      : []),
+      : [
+          { label: "Anamnese", icon: ClipboardList, to: "anamnese" },
+          { label: "Avaliação Física", icon: Ruler, to: "perfil?avaliacao=1" },
+        ]),
     { label: "Comunidade", icon: Users, to: "comunidade" },
     { label: "Presencial", icon: CalendarCheck, to: "presencial" },
     { label: "Minha Carta", icon: Sparkles, to: "carta" },
