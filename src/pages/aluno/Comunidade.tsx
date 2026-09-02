@@ -97,9 +97,10 @@ const Comunidade = () => {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Perfil[]>([]);
-  const [storyItems, setStoryItems] = useState<StoryItem[]>([]);
+  const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [meta, setMeta] = useState<Record<string, MemberMeta>>({});
-  const [openStoryUser, setOpenStoryUser] = useState<string | null>(null);
+  const [viewerStart, setViewerStart] = useState<number | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPostText, setNewPostText] = useState("");
