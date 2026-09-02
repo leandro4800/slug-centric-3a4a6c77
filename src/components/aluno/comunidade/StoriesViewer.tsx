@@ -97,6 +97,15 @@ export const StoriesViewer = ({
     progressRef.current = progress;
   }, [progress]);
 
+  // pausa/retoma o vídeo junto com o timer
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (paused) v.pause();
+    else void v.play().catch(() => {});
+  }, [paused, story?.id]);
+
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
