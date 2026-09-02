@@ -162,7 +162,7 @@ Deno.serve(async (req) => {
     // ---- Upload ----
     const base64 = dataUrl.split(",")[1];
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const path = `marketing-cards/${tenantId ?? "global"}/${userId}-${templateId}.png`;
+    const path = `marketing-cards/${tenantId ?? "global"}/${userId}-${templateId}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
       .upload(path, bytes, { contentType: "image/png", upsert: true });
