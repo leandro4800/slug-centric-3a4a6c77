@@ -380,11 +380,16 @@ export const StoriesGenerator = ({ isFullScreen, onExitFullScreen }: Props) => {
                     </span>
                   </div>
                 ) : (
-                  <div
-                    className="mb-2 flex aspect-[9/16] w-full items-center justify-center rounded-lg border border-white/10"
-                    style={{ background: `linear-gradient(160deg, ${t.accent}33, #09090b 65%)` }}
-                  >
-                    <t.Icon className="h-8 w-8" style={{ color: t.accent }} />
+                  <div className="relative mb-2 overflow-hidden rounded-lg border border-white/10">
+                    <img
+                      src={t.ref}
+                      alt={`Modelo ${t.label}`}
+                      loading="lazy"
+                      className="aspect-[9/16] w-full object-cover"
+                    />
+                    <span className="absolute left-1 top-1 rounded bg-black/70 px-1 text-[8px] font-bold uppercase text-white">
+                      Modelo
+                    </span>
                   </div>
                 )}
                 <div className="text-xs font-black uppercase tracking-wider">{t.label}</div>
