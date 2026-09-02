@@ -836,6 +836,7 @@ const Perfil = () => {
 
       {/* Physical Evaluation Selection */}
       <PhysicalEvaluationSelection
+        hideSevenDobras={!isCoach}
         open={selectionOpen}
         onOpenChange={setSelectionOpen}
         onSelect={(type) => {
