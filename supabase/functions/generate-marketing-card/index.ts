@@ -57,6 +57,23 @@ Deno.serve(async (req) => {
 
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
+    // ---- Dados do coach (antes do cache: a foto define a validade do cache) ----
+    const [{ data: cfg }, { data: perfil }] = await Promise.all([
+      admin
+        .from("coach_marketing_config")
+        .select("photo_url, instagram_handle, phone")
+        .eq("user_id", userId)
+        .maybeSingle(),
+      admin
+        .from("perfis")
+        .select("nome_completo, avatar_url, tenant_id")
+        .eq("id", userId)
+        .maybeSingle(),
+    ]);
+
+    const fotoCoach: string | null = cfg?.photo_url || perfil?.avatar_url || null;
+    const tenantId: string | null = (perfil as { tenant_id?: string } | null)?.tenant_id ?? null;
+
     // ---- Cache ----
     const { data: cached } = await admin
       .from("coach_marketing_cards")
@@ -65,9 +82,14 @@ Deno.serve(async (req) => {
       .eq("template_id", templateId)
       .maybeSingle();
 
-    if (!force && cached?.image_url && cached.status === "ready") {
+    // Só reaproveita o card se a foto de origem for exatamente a mesma.
+    const mesmaFoto =
+      (cached?.source_photo_url ?? null) === (fotoCoach ?? null);
+
+    if (!force && mesmaFoto && cached?.image_url && cached.status === "ready") {
       return json({ card_url: cached.image_url, cached: true });
     }
+
 
     // ---- Quota mensal ----
     const monthStart = new Date();
@@ -93,22 +115,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    // ---- Dados do coach ----
-    const [{ data: cfg }, { data: perfil }] = await Promise.all([
-      admin
-        .from("coach_marketing_config")
-        .select("photo_url, instagram_handle, phone")
-        .eq("user_id", userId)
-        .maybeSingle(),
-      admin
-        .from("perfis")
-        .select("nome_completo, avatar_url, tenant_id")
-        .eq("id", userId)
-        .maybeSingle(),
-    ]);
 
-    const fotoCoach: string | null = cfg?.photo_url || perfil?.avatar_url || null;
-    const tenantId: string | null = (perfil as { tenant_id?: string } | null)?.tenant_id ?? null;
+
 
     const prompt = buildTemplatePrompt(templateId, {
       coach_nome: (perfil?.nome_completo || "COACH").toString().toUpperCase(),
@@ -154,7 +162,7 @@ Deno.serve(async (req) => {
     // ---- Upload ----
     const base64 = dataUrl.split(",")[1];
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const path = `marketing-cards/${tenantId ?? "global"}/${userId}-${templateId}.png`;
+    const path = `marketing-cards/${tenantId ?? "global"}/${userId}-${templateId}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
       .upload(path, bytes, { contentType: "image/png", upsert: true });
