@@ -718,6 +718,19 @@ export const ExerciseCard = ({
 
   const hasAnyVideo = hasCoach || hasReference;
 
+  const shareExercise = async () => {
+    await sharePostLink({
+      url: currentVideoUrl || window.location.href,
+      title: data.exercicio,
+      text: `${data.exercicio} — ${tenant?.nome || "Alpha Coach Pro"}`,
+      mediaUrl: isDirectVideo(currentVideoUrl) ? currentVideoUrl : null,
+      onCopied: () => toast.success("Link do vídeo copiado!"),
+      onError: (m) => toast.error(m),
+    });
+  };
+
+
+
   return (
     <div className={`bg-card/50 border rounded-xl overflow-hidden transition-all ${
       completed ? "border-emerald-500/60 bg-emerald-500/5 opacity-90" : "border-primary/30"
