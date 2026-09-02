@@ -729,48 +729,30 @@ const Comunidade = () => {
         )}
       </div>
 
-      {/* Story de conquista */}
-      <Dialog open={!!openStoryUser} onOpenChange={(o) => !o && setOpenStoryUser(null)}>
-        <DialogContent className="bg-background/95 backdrop-blur-xl border-border text-foreground max-w-sm w-[92%] rounded-3xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-3 text-left">
-              <Avatar className="w-10 h-10 border border-primary">
-                <AvatarImage src={openStoryProfile?.avatar_url || ""} />
-                <AvatarFallback className="bg-zinc-800 text-xs">
-                  {openStoryProfile?.nome_completo?.substring(0, 2).toUpperCase() || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <p className="text-base font-semibold">{openStoryProfile?.nome_completo || "Atleta"}</p>
-                <p className="text-[11px] uppercase tracking-widest text-primary">Conquistas de hoje</p>
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="flex flex-col gap-3">
-            {streakOf(openStoryUser) > 1 && (
-              <div className="flex items-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3">
-                <Flame className="h-5 w-5 text-primary" />
-                <p className="text-sm font-bold">{streakOf(openStoryUser)} dias seguidos treinando</p>
-              </div>
-            )}
-            {openStories.map((s, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card/40 px-4 py-3">
-                {storyIcon(s.tipo)}
-                <div className="flex-1">
-                  <p className="text-sm font-semibold">{s.titulo}</p>
-                  {s.detalhe && <p className="text-xs text-zinc-400">{s.detalhe}</p>}
-                </div>
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500">
-                  {formatDistanceToNow(new Date(s.criado_em), { addSuffix: true, locale: ptBR })}
-                </span>
-              </div>
-            ))}
-            {openStories.length === 0 && (
-              <p className="py-6 text-center text-sm text-zinc-500">Nenhuma conquista nas últimas 24h.</p>
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Visualizador de stories (estilo Instagram) */}
+      {viewerStart !== null && storyGroups[viewerStart] && user && (
+        <StoriesViewer
+          groups={storyGroups}
+          startGroup={viewerStart}
+          currentUserId={user.id}
+          onClose={() => setViewerStart(null)}
+          onViewed={markStoryViewed}
+          onReact={reactStory}
+          onDelete={deleteStory}
+        />
+      )}
+
+      {/* Publicar story */}
+      {user && tenant?.id && (
+        <StoryComposer
+          open={composerOpen}
+          onOpenChange={setComposerOpen}
+          userId={user.id}
+          tenantId={tenant.id}
+          onPublished={fetchData}
+        />
+      )}
+
 
       {/* FAB */}
       <Button
