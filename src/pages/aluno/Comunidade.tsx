@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, ArrowLeft, Camera, Send, X, Heart, MessageCircle, Share2, MoreHorizontal, Trash2 } from "lucide-react";
+import { Plus, ArrowLeft, Camera, Send, X, Heart, MessageCircle, Share2, MoreHorizontal, Trash2, Flame, Trophy, Dumbbell, Camera as CameraIcon } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { sharePostLink } from "@/lib/share";
 
 interface Perfil {
   id: string;
@@ -38,6 +39,14 @@ interface Comentario {
   perfil?: Perfil | null;
 }
 
+type Reacao = "like" | "forca" | "fogo" | "palmas";
+
+const REACOES: { tipo: Reacao; emoji: string; label: string }[] = [
+  { tipo: "forca", emoji: "💪", label: "Força" },
+  { tipo: "fogo", emoji: "🔥", label: "Fogo" },
+  { tipo: "palmas", emoji: "👏", label: "Palmas" },
+];
+
 interface Post {
   id: string;
   usuario_id: string;
@@ -49,9 +58,32 @@ interface Post {
   perfil?: Perfil | null;
   curtidas_count: number;
   liked_by_me: boolean;
+  minha_reacao: Reacao | null;
+  reacoes: Record<string, number>;
   comentarios: Comentario[];
   comentarios_count: number;
 }
+
+interface StoryItem {
+  user_id: string;
+  nome_completo: string | null;
+  avatar_url: string | null;
+  tipo: string;
+  titulo: string;
+  detalhe: string | null;
+  criado_em: string;
+}
+
+interface MemberMeta {
+  sequencia_atual: number;
+  is_coach: boolean;
+}
+
+const storyIcon = (tipo: string) => {
+  if (tipo === "pr") return <Trophy className="h-5 w-5 text-primary" />;
+  if (tipo === "checkin") return <CameraIcon className="h-5 w-5 text-primary" />;
+  return <Dumbbell className="h-5 w-5 text-primary" />;
+};
 
 const Comunidade = () => {
   const navigate = useNavigate();
@@ -62,6 +94,9 @@ const Comunidade = () => {
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Perfil[]>([]);
+  const [storyItems, setStoryItems] = useState<StoryItem[]>([]);
+  const [meta, setMeta] = useState<Record<string, MemberMeta>>({});
+  const [openStoryUser, setOpenStoryUser] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newPostText, setNewPostText] = useState("");
@@ -71,6 +106,7 @@ const Comunidade = () => {
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [postingComment, setPostingComment] = useState<Record<string, boolean>>({});
+  const [openReactions, setOpenReactions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (tenant?.id && user?.id) {
@@ -88,7 +124,29 @@ const Comunidade = () => {
       if (profilesError) throw profilesError;
       const communityProfiles = ((profilesData as Perfil[]) || []);
       const profilesById = new Map(communityProfiles.map((profile) => [profile.id, profile]));
-      setStories(communityProfiles);
+
+      // Stories automáticos (conquistas das últimas 24h) + metadados (streak / coach)
+      const [{ data: storiesData }, { data: metaData }] = await Promise.all([
+        supabase.rpc("get_community_stories" as any, { _tenant_id: tenant.id }),
+        supabase.rpc("get_community_members_meta" as any, { _tenant_id: tenant.id }),
+      ]);
+
+      const items = ((storiesData as any as StoryItem[]) || []);
+      setStoryItems(items);
+
+      const metaMap: Record<string, MemberMeta> = {};
+      ((metaData as any[]) || []).forEach((m) => {
+        metaMap[m.user_id] = { sequencia_atual: m.sequencia_atual || 0, is_coach: !!m.is_coach };
+      });
+      setMeta(metaMap);
+
+      // Ordena o carrossel: quem tem conquista nas últimas 24h vem primeiro
+      const withStory = new Set(items.map((i) => i.user_id));
+      setStories(
+        [...communityProfiles].sort(
+          (a, b) => Number(withStory.has(b.id)) - Number(withStory.has(a.id))
+        )
+      );
 
       const { data: postsData, error: postsError } = await supabase
         .from("comunidade_posts")
@@ -101,7 +159,7 @@ const Comunidade = () => {
 
       const [{ data: curtidas }, { data: comentarios }] = await Promise.all([
         postIds.length
-          ? supabase.from("comunidade_curtidas").select("post_id, usuario_id").in("post_id", postIds)
+          ? supabase.from("comunidade_curtidas").select("post_id, usuario_id, tipo_reacao").in("post_id", postIds)
           : Promise.resolve({ data: [] as any[] }),
         postIds.length
           ? supabase
@@ -115,11 +173,19 @@ const Comunidade = () => {
       const enriched: Post[] = (postsData || []).map((p: any) => {
         const cs = (curtidas || []).filter((c: any) => c.post_id === p.id);
         const cms = (comentarios || []).filter((c: any) => c.post_id === p.id);
+        const mine = cs.find((c: any) => c.usuario_id === user.id);
+        const reacoes: Record<string, number> = {};
+        cs.forEach((c: any) => {
+          const t = c.tipo_reacao || "like";
+          reacoes[t] = (reacoes[t] || 0) + 1;
+        });
         return {
           ...p,
           perfil: profilesById.get(p.usuario_id) || null,
           curtidas_count: cs.length,
-          liked_by_me: cs.some((c: any) => c.usuario_id === user.id),
+          liked_by_me: (mine?.tipo_reacao || (mine ? "like" : null)) === "like",
+          minha_reacao: (mine?.tipo_reacao as Reacao) || (mine ? "like" : null),
+          reacoes,
           comentarios: cms.map((c: any) => ({ ...c, perfil: profilesById.get(c.usuario_id) || null })),
           comentarios_count: cms.length,
         };
@@ -133,74 +199,80 @@ const Comunidade = () => {
     }
   };
 
-  const toggleLike = async (post: Post) => {
+  /** Aplica/alterna uma reação (inclui "like"). Uma reação por usuário por post. */
+  const setReacao = async (post: Post, tipo: Reacao) => {
     if (!user || !tenant) return;
-    const liked = post.liked_by_me;
+    const atual = post.minha_reacao;
+    const remove = atual === tipo;
+    const nova: Reacao | null = remove ? null : tipo;
+
     setPosts((prev) =>
-      prev.map((p) =>
-        p.id === post.id
-          ? { ...p, liked_by_me: !liked, curtidas_count: p.curtidas_count + (liked ? -1 : 1) }
-          : p
-      )
+      prev.map((p) => {
+        if (p.id !== post.id) return p;
+        const reacoes = { ...p.reacoes };
+        if (atual) reacoes[atual] = Math.max(0, (reacoes[atual] || 0) - 1);
+        if (nova) reacoes[nova] = (reacoes[nova] || 0) + 1;
+        return {
+          ...p,
+          reacoes,
+          minha_reacao: nova,
+          liked_by_me: nova === "like",
+          curtidas_count: p.curtidas_count + (atual ? 0 : 1) + (remove ? -1 : 0),
+        };
+      })
     );
+    setOpenReactions((s) => ({ ...s, [post.id]: false }));
+
     try {
-      if (liked) {
-        await supabase.from("comunidade_curtidas").delete().eq("post_id", post.id).eq("usuario_id", user.id);
+      if (remove) {
+        const { error } = await supabase
+          .from("comunidade_curtidas")
+          .delete()
+          .eq("post_id", post.id)
+          .eq("usuario_id", user.id);
+        if (error) throw error;
+      } else if (atual) {
+        const { error } = await supabase
+          .from("comunidade_curtidas")
+          .update({ tipo_reacao: tipo } as any)
+          .eq("post_id", post.id)
+          .eq("usuario_id", user.id);
+        if (error) throw error;
       } else {
-        await supabase.from("comunidade_curtidas").insert({
+        const { error } = await supabase.from("comunidade_curtidas").insert({
           post_id: post.id,
           usuario_id: user.id,
           profissional_id: tenant.id,
-        });
+          tipo_reacao: tipo,
+        } as any);
+        if (error) throw error;
       }
     } catch (e: any) {
-      // revert
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === post.id
-            ? { ...p, liked_by_me: liked, curtidas_count: p.curtidas_count + (liked ? 1 : -1) }
-            : p
-        )
-      );
       toast({ title: "Erro", description: e.message, variant: "destructive" });
+      fetchData();
     }
   };
 
-  const submitComment = async (post: Post) => {
-    if (!user || !tenant) return;
-    const text = (commentDrafts[post.id] || "").trim();
-    if (!text) return;
-    setPostingComment((p) => ({ ...p, [post.id]: true }));
-    try {
-      const { data, error } = await supabase
-        .from("comunidade_comentarios")
-        .insert({
-          post_id: post.id,
-          usuario_id: user.id,
-          comentario: text,
-          profissional_id: tenant.id,
-        })
-        .select(`id, comentario, usuario_id, criado_em, perfil:perfis!usuario_id(id, nome_completo, avatar_url)`)
-        .single();
-      if (error) throw error;
-      setPosts((prev) =>
-        prev.map((p) =>
-          p.id === post.id
-            ? { ...p, comentarios: [...p.comentarios, data as any], comentarios_count: p.comentarios_count + 1 }
-            : p
-        )
-      );
-      setCommentDrafts((d) => ({ ...d, [post.id]: "" }));
-    } catch (e: any) {
-      toast({ title: "Erro ao comentar", description: e.message, variant: "destructive" });
-    } finally {
-      setPostingComment((p) => ({ ...p, [post.id]: false }));
-    }
+  const sharePost = async (post: Post) => {
+    const url = `${window.location.origin}/${slug}/app/comunidade?post=${post.id}`;
+    const text = post.conteudo
+      ? `${post.perfil?.nome_completo || "Comunidade"}: ${post.conteudo}`
+      : `Confira essa publicação na comunidade ${tenant?.nome || "Alpha Coach"}`;
+    await sharePostLink({
+      url,
+      title: tenant?.nome || "Alpha Coach Pro",
+      text,
+      mediaUrl: post.imagem_url || post.video_url,
+      onCopied: () => toast({ title: "Link copiado!", description: "Cole onde quiser compartilhar." }),
+      onError: (msg) => toast({ title: "Não foi possível compartilhar", description: msg, variant: "destructive" }),
+    });
   };
 
   const isOwner = !!user && !!tenant?.owner_user_id && user.id === tenant.owner_user_id;
   const canDeletePost = (p: Post) => !!user && (p.usuario_id === user.id || isOwner);
   const canDeleteComment = (c: Comentario) => !!user && (c.usuario_id === user.id || isOwner);
+  const isCoach = (uid?: string | null) => !!uid && (!!meta[uid]?.is_coach || uid === tenant?.owner_user_id);
+  const streakOf = (uid?: string | null) => (uid ? meta[uid]?.sequencia_atual || 0 : 0);
 
   const deletePost = async (post: Post) => {
     const prev = posts;
@@ -282,6 +354,9 @@ const Comunidade = () => {
     }
   };
 
+  const openStories = storyItems.filter((s) => s.user_id === openStoryUser);
+  const openStoryProfile = stories.find((s) => s.id === openStoryUser);
+
   return (
     <div className="min-h-screen bg-transparent text-foreground pb-24">
       {/* Header */}
@@ -303,23 +378,41 @@ const Comunidade = () => {
 
       {/* Stories */}
       <div className="flex gap-4 overflow-x-auto scrollbar-hide px-5 mt-4 pb-2 border-b border-border">
-        {stories.map((profile) => (
-          <div key={profile.id} className="flex-shrink-0 flex flex-col items-center gap-1">
-            <div className="w-[72px] h-[72px] rounded-full p-[3px] bg-gradient-to-tr from-primary to-primary/60">
-              <div className="w-full h-full rounded-full bg-background p-[2px]">
-                <Avatar className="w-full h-full">
-                  <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
-                  <AvatarFallback className="bg-zinc-800 text-zinc-400">
-                    {profile.nome_completo ? profile.nome_completo.substring(0, 2).toUpperCase() : "U"}
-                  </AvatarFallback>
-                </Avatar>
+        {stories.map((profile) => {
+          const hasStory = storyItems.some((s) => s.user_id === profile.id);
+          const streak = streakOf(profile.id);
+          return (
+            <button
+              key={profile.id}
+              onClick={() => hasStory && setOpenStoryUser(profile.id)}
+              className="flex-shrink-0 flex flex-col items-center gap-1 relative"
+            >
+              <div
+                className={`w-[72px] h-[72px] rounded-full p-[3px] ${
+                  hasStory ? "bg-gradient-to-tr from-primary to-primary/60" : "bg-border"
+                }`}
+              >
+                <div className="w-full h-full rounded-full bg-background p-[2px]">
+                  <Avatar className={`w-full h-full ${hasStory ? "" : "opacity-60"}`}>
+                    <AvatarImage src={profile.avatar_url || ""} className="object-cover" />
+                    <AvatarFallback className="bg-zinc-800 text-zinc-400">
+                      {profile.nome_completo ? profile.nome_completo.substring(0, 2).toUpperCase() : "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
               </div>
-            </div>
-            <p className="text-[11px] font-medium max-w-[72px] truncate opacity-80">
-              {profile.nome_completo?.split(" ")[0]}
-            </p>
-          </div>
-        ))}
+              {streak > 1 && (
+                <span className="absolute -top-1 -right-1 flex items-center gap-0.5 rounded-full bg-background border border-primary/50 px-1.5 py-[1px] text-[10px] font-bold text-primary">
+                  <Flame className="h-3 w-3" />
+                  {streak}
+                </span>
+              )}
+              <p className="text-[11px] font-medium max-w-[72px] truncate opacity-80">
+                {profile.nome_completo?.split(" ")[0]}
+              </p>
+            </button>
+          );
+        })}
       </div>
 
       {/* Feed */}
@@ -336,6 +429,7 @@ const Comunidade = () => {
         ) : (
           posts.map((post) => {
             const showComments = !!openComments[post.id];
+            const streak = streakOf(post.usuario_id);
             return (
               <div key={post.id} className="flex flex-col bg-card/30">
                 <div className="flex items-center justify-between px-4 py-3">
@@ -347,7 +441,19 @@ const Comunidade = () => {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <p className="text-sm font-semibold">{post.perfil?.nome_completo || "Usuário"}</p>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold">{post.perfil?.nome_completo || "Usuário"}</p>
+                        {isCoach(post.usuario_id) && (
+                          <span className="rounded-full bg-primary px-2 py-[1px] text-[9px] font-bold uppercase tracking-wider text-primary-foreground">
+                            Coach
+                          </span>
+                        )}
+                        {streak > 1 && (
+                          <span className="flex items-center gap-0.5 rounded-full border border-primary/40 px-1.5 py-[1px] text-[10px] font-bold text-primary">
+                            <Flame className="h-3 w-3" /> {streak} dias
+                          </span>
+                        )}
+                      </div>
                       <p className="text-[11px] text-zinc-500 uppercase tracking-wider">
                         {formatDistanceToNow(new Date(post.criado_em), { addSuffix: true, locale: ptBR })}
                       </p>
@@ -401,16 +507,38 @@ const Comunidade = () => {
 
                 <div className="px-4 pt-4 pb-2">
                   <div className="flex items-center gap-5">
-                    <button onClick={() => toggleLike(post)} className="flex items-center gap-1.5">
+                    <button onClick={() => setReacao(post, "like")} className="flex items-center gap-1.5">
                       <Heart
                         className={`h-6 w-6 transition-colors ${
                           post.liked_by_me ? "fill-primary text-primary" : "text-foreground hover:text-primary"
                         }`}
                       />
-                      {post.curtidas_count > 0 && (
-                        <span className="text-sm font-semibold">{post.curtidas_count}</span>
+                      {(post.reacoes["like"] || 0) > 0 && (
+                        <span className="text-sm font-semibold">{post.reacoes["like"]}</span>
                       )}
                     </button>
+
+                    {/* Reações rápidas */}
+                    {REACOES.map((r) => {
+                      const count = post.reacoes[r.tipo] || 0;
+                      const active = post.minha_reacao === r.tipo;
+                      return (
+                        <button
+                          key={r.tipo}
+                          onClick={() => setReacao(post, r.tipo)}
+                          aria-label={r.label}
+                          className={`flex items-center gap-1 text-lg leading-none transition-transform active:scale-90 ${
+                            active ? "scale-110" : "opacity-70 hover:opacity-100"
+                          }`}
+                        >
+                          <span>{r.emoji}</span>
+                          {count > 0 && (
+                            <span className={`text-sm font-semibold ${active ? "text-primary" : ""}`}>{count}</span>
+                          )}
+                        </button>
+                      );
+                    })}
+
                     <button
                       onClick={() => setOpenComments((s) => ({ ...s, [post.id]: !s[post.id] }))}
                       className="flex items-center gap-1.5"
@@ -420,7 +548,10 @@ const Comunidade = () => {
                         <span className="text-sm font-semibold">{post.comentarios_count}</span>
                       )}
                     </button>
-                    <Share2 className="h-6 w-6 cursor-pointer hover:text-foreground transition-colors text-zinc-300" />
+
+                    <button onClick={() => sharePost(post)} aria-label="Compartilhar" className="ml-auto">
+                      <Share2 className="h-6 w-6 cursor-pointer hover:text-foreground transition-colors text-zinc-300" />
+                    </button>
                   </div>
                 </div>
 
@@ -452,7 +583,12 @@ const Comunidade = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 text-sm leading-snug">
-                            <span className="font-semibold mr-2">{c.perfil?.nome_completo || "Usuário"}</span>
+                            <span className="font-semibold mr-1">{c.perfil?.nome_completo || "Usuário"}</span>
+                            {isCoach(c.usuario_id) && (
+                              <span className="mr-2 rounded-full bg-primary px-1.5 py-[1px] text-[9px] font-bold uppercase tracking-wider text-primary-foreground align-middle">
+                                Coach
+                              </span>
+                            )}
                             <span className="text-zinc-300">{c.comentario}</span>
                           </div>
                           {canDeleteComment(c) && (
@@ -498,6 +634,49 @@ const Comunidade = () => {
           })
         )}
       </div>
+
+      {/* Story de conquista */}
+      <Dialog open={!!openStoryUser} onOpenChange={(o) => !o && setOpenStoryUser(null)}>
+        <DialogContent className="bg-background/95 backdrop-blur-xl border-border text-foreground max-w-sm w-[92%] rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-left">
+              <Avatar className="w-10 h-10 border border-primary">
+                <AvatarImage src={openStoryProfile?.avatar_url || ""} />
+                <AvatarFallback className="bg-zinc-800 text-xs">
+                  {openStoryProfile?.nome_completo?.substring(0, 2).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="text-base font-semibold">{openStoryProfile?.nome_completo || "Atleta"}</p>
+                <p className="text-[11px] uppercase tracking-widest text-primary">Conquistas de hoje</p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          <div className="flex flex-col gap-3">
+            {streakOf(openStoryUser) > 1 && (
+              <div className="flex items-center gap-2 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3">
+                <Flame className="h-5 w-5 text-primary" />
+                <p className="text-sm font-bold">{streakOf(openStoryUser)} dias seguidos treinando</p>
+              </div>
+            )}
+            {openStories.map((s, i) => (
+              <div key={i} className="flex items-center gap-3 rounded-2xl border border-border bg-card/40 px-4 py-3">
+                {storyIcon(s.tipo)}
+                <div className="flex-1">
+                  <p className="text-sm font-semibold">{s.titulo}</p>
+                  {s.detalhe && <p className="text-xs text-zinc-400">{s.detalhe}</p>}
+                </div>
+                <span className="text-[10px] uppercase tracking-wider text-zinc-500">
+                  {formatDistanceToNow(new Date(s.criado_em), { addSuffix: true, locale: ptBR })}
+                </span>
+              </div>
+            ))}
+            {openStories.length === 0 && (
+              <p className="py-6 text-center text-sm text-zinc-500">Nenhuma conquista nas últimas 24h.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* FAB */}
       <Button
@@ -587,6 +766,40 @@ const Comunidade = () => {
       </Dialog>
     </div>
   );
+
+  function submitComment(post: Post) {
+    return (async () => {
+      if (!user || !tenant) return;
+      const text = (commentDrafts[post.id] || "").trim();
+      if (!text) return;
+      setPostingComment((p) => ({ ...p, [post.id]: true }));
+      try {
+        const { data, error } = await supabase
+          .from("comunidade_comentarios")
+          .insert({
+            post_id: post.id,
+            usuario_id: user.id,
+            comentario: text,
+            profissional_id: tenant.id,
+          })
+          .select(`id, comentario, usuario_id, criado_em, perfil:perfis!usuario_id(id, nome_completo, avatar_url)`)
+          .single();
+        if (error) throw error;
+        setPosts((prev) =>
+          prev.map((p) =>
+            p.id === post.id
+              ? { ...p, comentarios: [...p.comentarios, data as any], comentarios_count: p.comentarios_count + 1 }
+              : p
+          )
+        );
+        setCommentDrafts((d) => ({ ...d, [post.id]: "" }));
+      } catch (e: any) {
+        toast({ title: "Erro ao comentar", description: e.message, variant: "destructive" });
+      } finally {
+        setPostingComment((p) => ({ ...p, [post.id]: false }));
+      }
+    })();
+  }
 };
 
 export default Comunidade;

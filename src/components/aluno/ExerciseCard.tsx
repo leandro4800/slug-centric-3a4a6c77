@@ -4,6 +4,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
+import { sharePostLink } from "@/lib/share";
 import ExercisePlayer from "./ExercisePlayer";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
@@ -718,6 +719,19 @@ export const ExerciseCard = ({
 
   const hasAnyVideo = hasCoach || hasReference;
 
+  const shareExercise = async () => {
+    await sharePostLink({
+      url: currentVideoUrl || window.location.href,
+      title: data.exercicio,
+      text: `${data.exercicio} — ${tenant?.nome || "Alpha Coach Pro"}`,
+      mediaUrl: isDirectVideo(currentVideoUrl) ? currentVideoUrl : null,
+      onCopied: () => toast.success("Link do vídeo copiado!"),
+      onError: (m) => toast.error(m),
+    });
+  };
+
+
+
   return (
     <div className={`bg-card/50 border rounded-xl overflow-hidden transition-all ${
       completed ? "border-emerald-500/60 bg-emerald-500/5 opacity-90" : "border-primary/30"
@@ -776,7 +790,11 @@ export const ExerciseCard = ({
           />
 
           <div className="absolute bottom-2 left-2 flex gap-2 z-10">
-            <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
+            <button
+              onClick={shareExercise}
+              aria-label="Compartilhar exercício"
+              className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
+            >
               <Share2 className="h-4 w-4 text-white" />
             </button>
             <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
