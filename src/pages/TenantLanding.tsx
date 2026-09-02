@@ -420,6 +420,15 @@ function TenantLandingContent() {
         .eq("ativo", true)
         .order("ordem");
       setPlanos((p as Plano[]) ?? []);
+
+      // Convite do coach: ?plano=<id> destaca e rola até o plano indicado
+      const planoParam = searchParams.get("plano");
+      if (planoParam && (p as Plano[] | null)?.some((pl) => pl.id === planoParam)) {
+        setTimeout(() => {
+          document.getElementById("planos")?.scrollIntoView({ behavior: "smooth" });
+        }, 400);
+      }
+
     }
     setLoading(false);
   };
