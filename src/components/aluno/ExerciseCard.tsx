@@ -130,6 +130,9 @@ export const ExerciseCard = ({
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
   const getSlotType = (i: number) => slotTypes[i] || "Trabalho";
+  /** Exercício sem carga: esconde a coluna KG e grava o tempo do cronômetro. */
+  const semCarga = isBodyweightExercise(data.exercicio);
+
   // ISO week key — garante que cada semana começa com os campos em branco
   const isoWeekKey = (() => {
     const d = new Date();
