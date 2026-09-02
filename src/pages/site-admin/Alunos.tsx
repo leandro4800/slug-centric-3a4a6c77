@@ -217,6 +217,59 @@ const Alunos = () => {
         <Input placeholder="Buscar por nome ou email..." value={q} onChange={(e) => setQ(e.target.value)} className="pl-9" />
       </div>
 
+      {filteredLeads.length > 0 && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 overflow-hidden">
+          <div className="px-4 py-3 border-b border-amber-500/20">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400 flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5" /> Convidados — aguardando pagamento ({filteredLeads.length})
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Ainda não têm conta no app. O acesso é criado automaticamente quando assinarem um plano.
+            </p>
+          </div>
+          <div className="divide-y divide-amber-500/10">
+            {filteredLeads.map((l) => (
+              <div key={l.id} className="px-4 py-3 flex items-center gap-3 flex-wrap">
+                <div className="h-9 w-9 rounded-full bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-amber-400 text-xs font-bold shrink-0">
+                  {(l.nome || l.email).slice(0, 2).toUpperCase()}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="font-medium truncate text-sm">{l.nome}</p>
+                  <p className="text-xs text-muted-foreground truncate inline-flex items-center gap-1.5">
+                    <Mail className="h-3 w-3" />{l.email}
+                  </p>
+                </div>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400 border border-amber-500/40 rounded-full px-2.5 py-1 shrink-0">
+                  Aguardando pagamento
+                </span>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1.5"
+                    disabled={resending === l.id}
+                    onClick={() => resendInvite(l)}
+                  >
+                    {resending === l.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                    Reenviar
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="outline"
+                    className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30"
+                    title="Remover convite"
+                    onClick={() => removeLead(l)}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
       ) : filtered.length === 0 ? (
