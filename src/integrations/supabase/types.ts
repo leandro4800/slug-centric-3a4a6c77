@@ -3458,6 +3458,42 @@ export type Database = {
         }
         Relationships: []
       }
+      suporte_tutoriais: {
+        Row: {
+          ativo: boolean
+          conteudo: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          ordem: number
+          titulo: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          ativo?: boolean
+          conteudo?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          ativo?: boolean
+          conteudo?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          titulo?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       templates_treino: {
         Row: {
           ativo: boolean
