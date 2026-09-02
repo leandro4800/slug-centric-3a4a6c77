@@ -131,8 +131,15 @@ Deno.serve(async (req) => {
             <div style="background:#f5f5f5;padding:16px;border-left:4px solid #E50914;margin:20px 0;">
               <p style="font-family:monospace;margin:4px 0;"><strong>Usuário:</strong> ${email}</p>
               <p style="font-family:monospace;margin:4px 0;"><strong>Senha:</strong> ${password}</p>
-              <p style="font-family:monospace;margin:4px 0;"><strong>Seu link:</strong> https://alpha-coach.app/${tenantSlug}</p>
+              <p style="font-family:monospace;margin:4px 0;"><strong>Painel do coach:</strong> https://alpha-coach.app/site/admin</p>
+              <p style="font-family:monospace;margin:4px 0;"><strong>Seu link p/ alunos:</strong> https://alpha-coach.app/${tenantSlug}</p>
             </div>
+            <p style="font-size:14px;color:#333;">
+              No <strong>painel do coach</strong> (https://alpha-coach.app/site/admin) você gerencia toda a sua operação:
+              cadastra e acompanha alunos, monta treinos e dietas (com apoio de IA), registra avaliações físicas,
+              acompanha métricas de evolução e o financeiro, personaliza a aparência da sua marca e copia o link
+              de captação para enviar aos seus alunos.
+            </p>
             <p style="text-align:center;margin:32px 0;">
               <a href="${painelUrl}" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">ACESSAR PAINEL</a>
             </p>

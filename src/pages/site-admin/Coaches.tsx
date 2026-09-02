@@ -112,18 +112,41 @@ const Coaches = () => {
           </Button>
 
           {lastCreated && (
-            <div className="border border-primary/30 bg-primary/5 rounded-xl p-4 space-y-1 text-sm">
-              <p className="text-[10px] uppercase tracking-widest text-primary font-bold">Credenciais geradas</p>
-              <p className="font-mono">{lastCreated.email}</p>
-              <p className="font-mono">{lastCreated.password}</p>
+            <div className="border border-primary/30 bg-primary/5 rounded-xl p-4 space-y-3 text-sm">
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-widest text-primary font-bold">Credenciais geradas</p>
+                <p className="font-mono">{lastCreated.email}</p>
+                <p className="font-mono">{lastCreated.password}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-widest text-primary font-bold">Painel do coach</p>
+                <p className="font-mono break-all">https://alpha-coach.app/site/admin</p>
+                <p className="text-xs text-muted-foreground">
+                  É onde o coach gerencia tudo: cadastra e acompanha alunos, monta treinos e dietas,
+                  lança avaliações físicas, vê métricas e financeiro, personaliza a aparência da marca
+                  e envia o link de captação para novos alunos.
+                </p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-[10px] uppercase tracking-widest text-primary font-bold">Link para alunos</p>
+                <p className="font-mono break-all">https://alpha-coach.app/{lastCreated.slug}</p>
+                <p className="text-xs text-muted-foreground">
+                  Página pública do coach — é esse link que ele envia para os alunos se cadastrarem.
+                </p>
+              </div>
+
               <button
                 className="text-xs text-primary flex items-center gap-1"
                 onClick={() => {
-                  navigator.clipboard.writeText(`Login: ${lastCreated.email}\nSenha: ${lastCreated.password}\nLink: https://alpha-coach.app/${lastCreated.slug}`);
+                  navigator.clipboard.writeText(
+                    `Login: ${lastCreated.email}\nSenha: ${lastCreated.password}\n\nPainel do coach: https://alpha-coach.app/site/admin\n(Gerencie alunos, treinos, dietas, avaliações físicas, métricas, financeiro e a aparência da sua marca.)\n\nLink para enviar aos alunos: https://alpha-coach.app/${lastCreated.slug}`,
+                  );
                   toast.success("Copiado");
                 }}
               >
-                <Copy className="h-3 w-3" /> Copiar credenciais e link
+                <Copy className="h-3 w-3" /> Copiar credenciais e links
               </button>
             </div>
           )}
