@@ -32,6 +32,7 @@ export const StoriesViewer = ({
   const [ii, setIi] = useState(0);
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
+  const [composing, setComposing] = useState(false);
   const [resposta, setResposta] = useState("");
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const progressRef = useRef(0);
@@ -74,7 +75,7 @@ export const StoriesViewer = ({
 
   // barra de progresso / auto-avanço
   useEffect(() => {
-    if (!story || paused) return;
+    if (!story || paused || composing) return;
     const isVideo = story.tipo === "video" && !!story.media_url;
     if (isVideo) return; // vídeo controla pelo timeupdate
     const total = (story.duracao_seg || DEFAULT_DURATION) * 1000;
@@ -91,7 +92,7 @@ export const StoriesViewer = ({
     }, step);
     return () => clearInterval(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [story?.id, paused]);
+  }, [story?.id, paused, composing]);
 
   useEffect(() => {
     progressRef.current = progress;
@@ -101,9 +102,9 @@ export const StoriesViewer = ({
   useEffect(() => {
     const v = videoRef.current;
     if (!v) return;
-    if (paused) v.pause();
+    if (paused || composing) v.pause();
     else void v.play().catch(() => {});
-  }, [paused, story?.id]);
+  }, [paused, composing, story?.id]);
 
 
   useEffect(() => {
@@ -135,6 +136,7 @@ export const StoriesViewer = ({
         if (!s) return;
         const dx = e.changedTouches[0].clientX - s.x;
         const dy = e.changedTouches[0].clientY - s.y;
+        if (composing) return;
         if (dy > 90 && Math.abs(dy) > Math.abs(dx)) return onClose();
         if (dx < -60) {
           setGi((g) => Math.min(groups.length - 1, g + 1));
