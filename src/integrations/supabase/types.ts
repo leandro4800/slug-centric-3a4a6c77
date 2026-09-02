@@ -1747,6 +1747,56 @@ export type Database = {
           },
         ]
       }
+      comunidade_mensagens: {
+        Row: {
+          created_at: string
+          criado_em: string
+          destinatario_id: string
+          emoji: string | null
+          id: string
+          lida_em: string | null
+          remetente_id: string
+          story_id: string | null
+          tenant_id: string
+          texto: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          criado_em?: string
+          destinatario_id: string
+          emoji?: string | null
+          id?: string
+          lida_em?: string | null
+          remetente_id: string
+          story_id?: string | null
+          tenant_id: string
+          texto?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          criado_em?: string
+          destinatario_id?: string
+          emoji?: string | null
+          id?: string
+          lida_em?: string | null
+          remetente_id?: string
+          story_id?: string | null
+          tenant_id?: string
+          texto?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunidade_mensagens_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "comunidade_stories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       comunidade_posts: {
         Row: {
           conteudo: string | null
