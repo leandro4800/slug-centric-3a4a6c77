@@ -79,6 +79,26 @@ const isAvancado = (n?: string | null) => {
   return s.includes("avanc");
 };
 
+const normalize = (s: string) =>
+  (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+/** Exercícios sem carga externa: só repetições + tempo. */
+const BODYWEIGHT_PATTERNS = [
+  "prancha", "plank", "alongamento", "mobilidade", "abdominal", "abdominais",
+  "supra", "infra", "obliquo", "elevacao de perna", "elevacao de pernas",
+  "barra fixa", "barra livre", "cardio", "esteira", "bike", "bicicleta",
+  "eliptico", "corrida", "caminhada", "pular corda", "corda naval",
+  "burpee", "polichinelo", "flexao de braco", "apoio de solo", "isometria",
+  "ponte", "glute bridge", "escalador", "mountain climber", "aquecimento articular",
+];
+
+const isBodyweightExercise = (nome: string) => {
+  const s = normalize(nome);
+  if (/(maquina|smith|halter|barra guiada|polia|cabo|caneleira|anilha|peso)/.test(s)) return false;
+  return BODYWEIGHT_PATTERNS.some((p) => s.includes(p));
+};
+
+
 // Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
 const isUuid = (s: string) =>
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s || "");
@@ -110,6 +130,9 @@ export const ExerciseCard = ({
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
   const getSlotType = (i: number) => slotTypes[i] || "Trabalho";
+  /** Exercício sem carga: esconde a coluna KG e grava o tempo do cronômetro. */
+  const semCarga = isBodyweightExercise(data.exercicio);
+
   // ISO week key — garante que cada semana começa com os campos em branco
   const isoWeekKey = (() => {
     const d = new Date();
@@ -557,9 +580,13 @@ export const ExerciseCard = ({
     }
     const slot = slots[i];
     if (!slot || slot.done || savingSlots.has(i)) return;
-    const weight = Number(slot.carga.replace(",", "."));
+    const weight = semCarga ? 0 : Number(slot.carga.replace(",", "."));
     const reps = Number.parseInt(slot.reps, 10);
-    if (!Number.isFinite(weight) || weight < 0 || !Number.isInteger(reps) || reps <= 0) {
+    if (!Number.isInteger(reps) || reps <= 0) {
+      toast.error("Informe as repetições.");
+      return;
+    }
+    if (!semCarga && (!Number.isFinite(weight) || weight < 0)) {
       toast.error("Informe KG e repetições válidos.");
       return;
     }
@@ -578,11 +605,13 @@ export const ExerciseCard = ({
           tipo_serie: getSlotType(i),
           peso_kg: weight,
           reps,
+          tempo_seg: semCarga ? seconds : null,
           concluida_em: new Date().toISOString(),
-        })
+        } as any)
         .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie")
         .single();
       if (error) throw error;
+
 
       const isWorkSet = String(inserted.tipo_serie || "").trim().toLowerCase() === "trabalho";
       const recordTypes: Array<{ type: string; label: string; value: number; previous: number }> = [];
@@ -718,7 +747,7 @@ export const ExerciseCard = ({
           <div className="flex flex-wrap items-center gap-2 mt-2">
             {cargaAnterior && (
               <span className="px-3 py-1 rounded-full bg-primary/15 text-primary text-xs">
-                Última: {cargaAnterior.carga_kg}kg × {cargaAnterior.repeticoes_feitas}
+                Última: {semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
               </span>
             )}
           </div>
@@ -855,11 +884,18 @@ export const ExerciseCard = ({
             {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
           </button>
 
+          {semCarga && (
+            <p className="text-[11px] text-muted-foreground -mt-2">
+              Exercício sem carga — registre apenas as repetições. O tempo do cronômetro é salvo junto.
+            </p>
+          )}
+
           <div className="w-full border border-border bg-background/40">
             <div className="w-full">
-              <div className="grid grid-cols-[34px_44px_1fr_1fr_34px] items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground">
-                <span>Série</span><span>Ant.</span><span className="text-center">KG</span><span className="text-center">Reps</span><span className="text-center">✓</span>
+              <div className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground`}>
+                <span>Série</span><span>Ant.</span>{!semCarga && <span className="text-center">KG</span>}<span className="text-center">Reps</span><span className="text-center">✓</span>
               </div>
+
               {slots.map((slot, i) => {
                 const type = getSlotType(i);
                 const previous = history.previousBySeries.get(i + 1);
@@ -869,7 +905,7 @@ export const ExerciseCard = ({
                 return (
                   <div
                     key={i}
-                    className={`grid grid-cols-[34px_44px_1fr_1fr_34px] items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
+                    className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
                   >
                     <div className="flex min-w-0 flex-col items-start leading-tight">
                       <span className="flex items-center gap-0.5 font-mono text-xs font-bold">
@@ -899,20 +935,22 @@ export const ExerciseCard = ({
                       className={`flex flex-col text-[9px] leading-tight ${legacy ? "text-muted-foreground/70 italic" : "text-muted-foreground"}`}
                       title={legacy ? "Histórico antigo do exercício" : undefined}
                     >
-                      {shown ? (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>) : "—"}
+                      {shown ? (semCarga ? <span>×{shown.reps}</span> : (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>)) : "—"}
                     </span>
 
-                    <input
-                      aria-label={`Carga da série ${i + 1}`}
-                      type="number"
-                      inputMode="decimal"
-                      min="0"
-                      value={slot.carga}
-                      onChange={(e) => updateSlot(i, "carga", e.target.value)}
-                      disabled={slot.done || saving}
-                      placeholder="—"
-                      className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
-                    />
+                    {!semCarga && (
+                      <input
+                        aria-label={`Carga da série ${i + 1}`}
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        value={slot.carga}
+                        onChange={(e) => updateSlot(i, "carga", e.target.value)}
+                        disabled={slot.done || saving}
+                        placeholder="—"
+                        className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
+                      />
+                    )}
                     <input
                       aria-label={`Repetições da série ${i + 1}`}
                       type="number"

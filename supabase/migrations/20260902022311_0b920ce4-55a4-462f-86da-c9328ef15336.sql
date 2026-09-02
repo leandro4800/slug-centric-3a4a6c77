@@ -1,0 +1,1 @@
+ALTER TABLE public.series_executadas ADD COLUMN IF NOT EXISTS tempo_seg integer;
