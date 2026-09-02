@@ -905,7 +905,7 @@ export const ExerciseCard = ({
                 return (
                   <div
                     key={i}
-                    className={`grid grid-cols-[34px_44px_1fr_1fr_34px] items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
+                    className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
                   >
                     <div className="flex min-w-0 flex-col items-start leading-tight">
                       <span className="flex items-center gap-0.5 font-mono text-xs font-bold">
