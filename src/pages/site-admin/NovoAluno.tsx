@@ -141,8 +141,10 @@ const NovoAluno = () => {
         if (!serverError) serverError = error.message;
       }
       if (serverError) throw new Error(serverError);
-      setSuccess({ email: email.trim().toLowerCase(), aguardandoPagamento: !!(data as any)?.aguardando_pagamento });
-      toast.success("Aluno cadastrado! Email com credenciais enviado.");
+      const modoConvite = (data as any)?.modo === "convite";
+      setSuccess({ email: email.trim().toLowerCase(), aguardandoPagamento: !!(data as any)?.aguardando_pagamento, convite: modoConvite });
+      toast.success(modoConvite ? "Convite enviado ao aluno!" : "Aluno cadastrado! Email com credenciais enviado.");
+
     } catch (err: any) {
       toast.error(err.message || "Erro ao cadastrar aluno");
     } finally {
