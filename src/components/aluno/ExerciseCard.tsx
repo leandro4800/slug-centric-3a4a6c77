@@ -776,7 +776,11 @@ export const ExerciseCard = ({
           />
 
           <div className="absolute bottom-2 left-2 flex gap-2 z-10">
-            <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
+            <button
+              onClick={shareExercise}
+              aria-label="Compartilhar exercício"
+              className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center"
+            >
               <Share2 className="h-4 w-4 text-white" />
             </button>
             <button className="w-9 h-9 rounded-full bg-background/70 backdrop-blur flex items-center justify-center">
