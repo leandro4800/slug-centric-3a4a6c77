@@ -580,9 +580,13 @@ export const ExerciseCard = ({
     }
     const slot = slots[i];
     if (!slot || slot.done || savingSlots.has(i)) return;
-    const weight = Number(slot.carga.replace(",", "."));
+    const weight = semCarga ? 0 : Number(slot.carga.replace(",", "."));
     const reps = Number.parseInt(slot.reps, 10);
-    if (!Number.isFinite(weight) || weight < 0 || !Number.isInteger(reps) || reps <= 0) {
+    if (!Number.isInteger(reps) || reps <= 0) {
+      toast.error("Informe as repetições.");
+      return;
+    }
+    if (!semCarga && (!Number.isFinite(weight) || weight < 0)) {
       toast.error("Informe KG e repetições válidos.");
       return;
     }
@@ -601,11 +605,13 @@ export const ExerciseCard = ({
           tipo_serie: getSlotType(i),
           peso_kg: weight,
           reps,
+          tempo_seg: semCarga ? seconds : null,
           concluida_em: new Date().toISOString(),
-        })
+        } as any)
         .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie")
         .single();
       if (error) throw error;
+
 
       const isWorkSet = String(inserted.tipo_serie || "").trim().toLowerCase() === "trabalho";
       const recordTypes: Array<{ type: string; label: string; value: number; previous: number }> = [];
