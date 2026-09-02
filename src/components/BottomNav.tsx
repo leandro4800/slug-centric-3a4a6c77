@@ -12,6 +12,8 @@ import {
   Sparkles,
   Palette,
   Settings,
+  ClipboardList,
+  Ruler,
   X,
 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
