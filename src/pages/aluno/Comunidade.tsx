@@ -131,12 +131,15 @@ const Comunidade = () => {
 
       // Stories automáticos (conquistas das últimas 24h) + metadados (streak / coach)
       const [{ data: storiesData }, { data: metaData }] = await Promise.all([
-        supabase.rpc("get_community_stories" as any, { _tenant_id: tenant.id }),
+        supabase.rpc("get_community_stories_v2" as any, { _tenant_id: tenant.id }),
         supabase.rpc("get_community_members_meta" as any, { _tenant_id: tenant.id }),
       ]);
 
-      const items = ((storiesData as any as StoryItem[]) || []);
-      setStoryItems(items);
+      const rows = ((storiesData as any as StoryRow[]) || []);
+      const groups = groupStories(rows).sort(
+        (a, b) => Number(a.todosVistos) - Number(b.todosVistos)
+      );
+      setStoryGroups(groups);
 
       const metaMap: Record<string, MemberMeta> = {};
       ((metaData as any[]) || []).forEach((m) => {
@@ -144,8 +147,8 @@ const Comunidade = () => {
       });
       setMeta(metaMap);
 
-      // Ordena o carrossel: quem tem conquista nas últimas 24h vem primeiro
-      const withStory = new Set(items.map((i) => i.user_id));
+      // Ordena o carrossel: quem tem story ativo vem primeiro
+      const withStory = new Set(groups.map((g) => g.user_id));
       setStories(
         [...communityProfiles].sort(
           (a, b) => Number(withStory.has(b.id)) - Number(withStory.has(a.id))
