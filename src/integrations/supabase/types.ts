@@ -339,6 +339,73 @@ export type Database = {
           },
         ]
       }
+      alunos_pendentes: {
+        Row: {
+          convertido_em: string | null
+          convite_enviado_em: string | null
+          created_at: string
+          email: string
+          id: string
+          nome: string
+          plano_id: string | null
+          status: string
+          telefone: string | null
+          tenant_id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          convertido_em?: string | null
+          convite_enviado_em?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          nome: string
+          plano_id?: string | null
+          status?: string
+          telefone?: string | null
+          tenant_id: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          convertido_em?: string | null
+          convite_enviado_em?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          nome?: string
+          plano_id?: string | null
+          status?: string
+          telefone?: string | null
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alunos_pendentes_plano_id_fkey"
+            columns: ["plano_id"]
+            isOneToOne: false
+            referencedRelation: "planos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alunos_pendentes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alunos_pendentes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       analises_clinicas: {
         Row: {
           alerta_critico: boolean | null
