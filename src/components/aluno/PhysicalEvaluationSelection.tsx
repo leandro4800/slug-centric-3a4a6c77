@@ -13,9 +13,11 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSelect: (type: "navy" | "7dobras" | "import") => void;
+  /** Oculta o protocolo de 7 dobras (uso exclusivo do coach). */
+  hideSevenDobras?: boolean;
 }
 
-export const PhysicalEvaluationSelection = ({ open, onOpenChange, onSelect }: Props) => {
+export const PhysicalEvaluationSelection = ({ open, onOpenChange, onSelect, hideSevenDobras = false }: Props) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md bg-card border-border shadow-2xl">
