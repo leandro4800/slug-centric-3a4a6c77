@@ -3260,6 +3260,7 @@ export type Database = {
           reps: number | null
           rm_estimado: number | null
           sessao_id: string | null
+          tempo_seg: number | null
           tenant_id: string
           tipo_serie: string | null
           treino_prescrito_id: string | null
@@ -3277,6 +3278,7 @@ export type Database = {
           reps?: number | null
           rm_estimado?: number | null
           sessao_id?: string | null
+          tempo_seg?: number | null
           tenant_id: string
           tipo_serie?: string | null
           treino_prescrito_id?: string | null
@@ -3294,6 +3296,7 @@ export type Database = {
           reps?: number | null
           rm_estimado?: number | null
           sessao_id?: string | null
+          tempo_seg?: number | null
           tenant_id?: string
           tipo_serie?: string | null
           treino_prescrito_id?: string | null
