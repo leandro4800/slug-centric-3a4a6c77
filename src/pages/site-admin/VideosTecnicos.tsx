@@ -58,7 +58,8 @@ const VideosTecnicos = () => {
   const [search, setSearch] = useState("");
   const filterStorageKey = `videos-tecnicos-filtro:${tenant?.id ?? "sem-tenant"}`;
   const [filter, setFilter] = useState<"todos" | "app" | "meus">(() => {
-    const fallback: "todos" | "meus" = tenant?.slug === "alphateam" ? "todos" : "meus";
+    // Padrão do app: mostrar a biblioteca da plataforma ("Do App").
+    const fallback: "todos" | "app" = tenant?.slug === "alphateam" ? "todos" : "app";
     if (typeof window === "undefined") return fallback;
     try {
       const saved = window.localStorage.getItem(filterStorageKey);
