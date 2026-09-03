@@ -3744,6 +3744,7 @@ export type Database = {
           updated_at: string
           usar_apenas_meus_videos: boolean
           vertical: Database["public"]["Enums"]["tenant_vertical"]
+          videos_fonte_alunos: string
         }
         Insert: {
           accent_hsl?: string
@@ -3775,6 +3776,7 @@ export type Database = {
           updated_at?: string
           usar_apenas_meus_videos?: boolean
           vertical?: Database["public"]["Enums"]["tenant_vertical"]
+          videos_fonte_alunos?: string
         }
         Update: {
           accent_hsl?: string
@@ -3806,6 +3808,7 @@ export type Database = {
           updated_at?: string
           usar_apenas_meus_videos?: boolean
           vertical?: Database["public"]["Enums"]["tenant_vertical"]
+          videos_fonte_alunos?: string
         }
         Relationships: []
       }
