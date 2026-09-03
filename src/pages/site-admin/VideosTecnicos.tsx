@@ -56,8 +56,8 @@ const VideosTecnicos = () => {
   const [rows, setRows] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  // O filtro visível e a fonte usada pelos alunos são uma única escolha.
-  // Começa sempre no padrão da plataforma e depois recebe o valor persistido do tenant.
+  // Administradores podem filtrar livremente. Para coaches, o filtro visível é
+  // sempre derivado de `fonteAlunos`, evitando dois estados divergentes.
   const [filter, setFilter] = useState<"todos" | "app" | "meus">("app");
   // Fonte de vídeos que os ALUNOS enxergam (travada no tenant, persiste até
   // o coach trocar manualmente): ambos | meus | app.
@@ -108,9 +108,9 @@ const VideosTecnicos = () => {
       // Padrão travado do app: "app" (só vídeos da plataforma). "meus"/"ambos"
       // só quando o coach escolheu explicitamente.
       const fontePersistida: "meus" | "app" =
-        fonte === "meus" || (t as any)?.usar_apenas_meus_videos ? "meus" : "app";
+        fonte === "meus" ? "meus" : "app";
       setFonteAlunos(fontePersistida);
-      setFilter(isAppAdmin ? "todos" : fontePersistida);
+      if (isAppAdmin) setFilter("todos");
       setVertical(String((t as any)?.vertical || "personal"));
 
       const { data, error } = await supabase
@@ -201,19 +201,24 @@ const VideosTecnicos = () => {
   // Trava a fonte de vídeos dos alunos no tenant. Persiste até troca manual.
   const salvarFonteAlunos = async (next: "ambos" | "meus" | "app") => {
     if (!tenant?.id) return;
-    if (next === "app" || next === "meus") setFilter(next);
     if (next === fonteAlunos) return;
+    const anterior = fonteAlunos;
+    setFonteAlunos(next);
     try {
       setSavingPref(true);
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("tenants")
         .update({
           videos_fonte_alunos: next,
           usar_apenas_meus_videos: next === "meus",
         } as any)
-        .eq("id", tenant.id);
+        .eq("id", tenant.id)
+        .select("videos_fonte_alunos, usar_apenas_meus_videos")
+        .single();
       if (error) throw error;
-      setFonteAlunos(next);
+      if ((data as any)?.videos_fonte_alunos !== next) {
+        throw new Error("A preferência não foi confirmada pelo servidor");
+      }
       toast.success(
         next === "meus"
           ? "Seus alunos verão apenas os SEUS vídeos"
@@ -222,6 +227,7 @@ const VideosTecnicos = () => {
             : "Seus alunos verão os vídeos do app + os seus",
       );
     } catch (e: any) {
+      setFonteAlunos(anterior);
       toast.error("Erro ao salvar: " + e.message);
     } finally {
       setSavingPref(false);
@@ -344,13 +350,14 @@ const VideosTecnicos = () => {
   };
 
   const isFight = vertical === "fight";
+  const activeFilter: "todos" | "app" | "meus" = isAppAdmin ? filter : fonteAlunos === "meus" ? "meus" : "app";
 
   const filtered = useMemo(
     () =>
       rows
         .filter((v) => v.nome_exercicio.toLowerCase().includes(search.toLowerCase()))
         .filter((v) =>
-          filter === "app" ? v.tenant_id === null : filter === "meus" ? v.tenant_id !== null : true,
+          activeFilter === "app" ? v.tenant_id === null : activeFilter === "meus" ? v.tenant_id === tenant?.id : true,
         )
         .filter((v) =>
           !isFight || filtroModalidade === "todas"
@@ -359,7 +366,7 @@ const VideosTecnicos = () => {
               ? !v.modalidade
               : v.modalidade === filtroModalidade,
         ),
-    [rows, search, filter, isFight, filtroModalidade],
+    [rows, search, activeFilter, tenant?.id, isFight, filtroModalidade],
   );
 
   const renderVideo = (rawUrl: string | null | undefined, title: string) => {
@@ -419,6 +426,7 @@ const VideosTecnicos = () => {
           <div className="mt-5 flex flex-wrap gap-2 items-center">
             {((isAppAdmin ? ["todos", "meus", "app"] : ["meus", "app"]) as ("todos" | "meus" | "app")[]).map((f) => (
               <button
+                type="button"
                 key={f}
                 onClick={() => {
                   if (isAppAdmin || f === "todos") setFilter(f);
@@ -426,7 +434,7 @@ const VideosTecnicos = () => {
                 }}
                 disabled={savingPref}
                 className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
-                  filter === f
+                  activeFilter === f
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
                 }`}
