@@ -113,10 +113,17 @@ const VideosTecnicos = () => {
       setLoading(true);
       const { data: t } = await supabase
         .from("tenants")
-        .select("usar_apenas_meus_videos, vertical")
+        .select("usar_apenas_meus_videos, videos_fonte_alunos, vertical")
         .eq("id", tenant.id)
         .maybeSingle();
-      setOnlyMine(Boolean((t as any)?.usar_apenas_meus_videos));
+      const fonte = (t as any)?.videos_fonte_alunos as string | undefined;
+      setFonteAlunos(
+        fonte === "meus" || fonte === "app"
+          ? fonte
+          : (t as any)?.usar_apenas_meus_videos
+            ? "meus"
+            : "ambos",
+      );
       setVertical(String((t as any)?.vertical || "personal"));
 
       const { data, error } = await supabase
