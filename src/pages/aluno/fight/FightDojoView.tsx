@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { GraduationCap, Loader2, Play, Search } from "lucide-react";
 import ExercisePlayer from "@/components/aluno/ExercisePlayer";
-import { modalidadeLabel } from "@/lib/fightModalidades";
+import { FIGHT_MODALIDADES, modalidadeLabel, toModalidadeSlug } from "@/lib/fightModalidades";
 import { dojoThumb } from "@/lib/dojo-thumb";
 
 type Conteudo = {
@@ -25,6 +25,12 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
   const [video, setVideo] = useState<Conteudo | null>(null);
   const [nivelFiltro, setNivelFiltro] = useState<string>("todos");
   const [busca, setBusca] = useState("");
+  // Modalidade escolhida na própria tela (default = modalidade do aluno).
+  const [modAtiva, setModAtiva] = useState<string>(toModalidadeSlug(modalidade) ?? "bjj");
+
+  useEffect(() => {
+    setModAtiva(toModalidadeSlug(modalidade) ?? "bjj");
+  }, [modalidade]);
 
   useEffect(() => {
     (async () => {
@@ -32,13 +38,14 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
       const { data } = await supabase
         .from("dojo_conteudos")
         .select("id, titulo, descricao, video_url, capa_url, categoria, nivel, ordem")
-        .eq("modalidade", modalidade)
+        .eq("modalidade", modAtiva)
         .order("ordem", { ascending: true })
         .order("titulo");
       setRows((data as Conteudo[]) ?? []);
+      setNivelFiltro("todos");
       setLoading(false);
     })();
-  }, [modalidade]);
+  }, [modAtiva]);
 
   const niveis = useMemo(
     () => Array.from(new Set(rows.map((r) => r.nivel).filter(Boolean) as string[])),
@@ -77,12 +84,32 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
       <div className="px-1">
         <h2 className="font-display text-lg uppercase italic tracking-tight flex items-center gap-2">
           <GraduationCap className="h-4 w-4 text-primary" />
-          Dojo Virtual · {modalidadeLabel(modalidade)}
+          Dojo Virtual · {modalidadeLabel(modAtiva)}
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
           Sua área de membros: técnica e metodologia do seu CT, por posição e nível.
         </p>
       </div>
+
+      {/* Seletor de modalidade */}
+      <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+        <div className="flex gap-2 min-w-max pb-1">
+          {FIGHT_MODALIDADES.map((m) => (
+            <button
+              key={m.slug}
+              onClick={() => setModAtiva(m.slug)}
+              className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
+                modAtiva === m.slug
+                  ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)]"
+                  : "border border-white/10 bg-black/40 text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
 
       {/* Destaque */}
       {destaque && (
@@ -151,7 +178,7 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
         <Card className="p-8 text-center bg-card/60 backdrop-blur border-white/5">
           <GraduationCap className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
-            Nenhuma aula publicada para {modalidadeLabel(modalidade)} ainda.
+            Nenhuma aula publicada para {modalidadeLabel(modAtiva)} ainda.
           </p>
           <p className="text-xs text-muted-foreground/70 mt-1">Seu técnico logo publicará conteúdo aqui.</p>
         </Card>
