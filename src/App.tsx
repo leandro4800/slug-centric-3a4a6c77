@@ -88,6 +88,7 @@ import SiteAdminCtDojo from "./pages/site-admin/ct/DojoVirtual";
 import SiteAdminCtNutricao from "./pages/site-admin/ct/NutricaoCombate";
 
 import AlunoCtHome from "./pages/aluno/ct/CtHome";
+import CtDojoAdmin from "./pages/aluno/ct/CtDojoAdmin";
 import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
 
 const queryClient = new QueryClient();
@@ -299,6 +300,7 @@ const App = () => (
             <Route path="/:slug/admin/faturamento" element={<RequireAuth requireRole="coach" checkTenant><AdminFaturamento /></RequireAuth>} />
             <Route path="/:slug/admin/hub" element={<RequireAuth requireRole="coach" checkTenant><Hub /></RequireAuth>} />
             <Route path="/:slug/admin/dashboard" element={<RequireAuth requireRole="coach" checkTenant><CoachDashboard /></RequireAuth>} />
+            <Route path="/:slug/app/ct/dojo-admin" element={<RequireAuth requireRole="coach" checkTenant><CtDojoAdmin /></RequireAuth>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
