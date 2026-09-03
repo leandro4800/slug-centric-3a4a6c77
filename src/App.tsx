@@ -168,6 +168,20 @@ const NativeStartupRedirect = () => {
   return <Navigate to={buildTenantLoginPath(search)} replace />;
 };
 
+/**
+ * O app já está publicado nas lojas (App Store + Google Play).
+ * Suprime o prompt nativo de instalação PWA do Chrome/Edge para não
+ * confundir o usuário com uma opção de "instalar" concorrente.
+ */
+const SuppressPwaInstallPrompt = () => {
+  useEffect(() => {
+    const onBIP = (e: Event) => e.preventDefault();
+    window.addEventListener("beforeinstallprompt", onBIP);
+    return () => window.removeEventListener("beforeinstallprompt", onBIP);
+  }, []);
+  return null;
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <GlobalErrorBoundary>
@@ -178,6 +192,7 @@ const App = () => (
         <AuthProvider>
           <BrandingProvider>
             <SplashScreen />
+            <SuppressPwaInstallPrompt />
             
             <PushNotificationManager />
             <Routes>
