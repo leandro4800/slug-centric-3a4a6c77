@@ -122,23 +122,35 @@ export const TreinoConclusaoCard = ({
   const [loadMsgIdx, setLoadMsgIdx] = useState(0);
   const genStartedRef = useRef(false);
 
-  // Usa exatamente o mesmo avatar gerado na Carta do Atleta (camisa do time do coach)
+  // Avatar SEMPRE do aluno logado e do tenant atual (nunca de outro tenant/cache).
   useEffect(() => {
     if (!open || !user) return;
     let cancel = false;
+    setAvatarCarta(null);
     (async () => {
-      const { data } = await supabase
+      let query = supabase
         .from("cartas_atleta")
         .select("avatar_carta_url, foto_original_url")
-        .eq("aluno_id", user.id)
-        .maybeSingle();
+        .eq("aluno_id", user.id);
+      if (tenant?.id) query = query.eq("tenant_id", tenant.id);
+      const { data } = await query.maybeSingle();
       if (cancel) return;
-      setAvatarCarta(data?.avatar_carta_url || data?.foto_original_url || null);
+      let url = data?.avatar_carta_url || data?.foto_original_url || null;
+      if (!url) {
+        const { data: perfil } = await supabase
+          .from("perfis")
+          .select("avatar_url")
+          .eq("id", user.id)
+          .maybeSingle();
+        if (cancel) return;
+        url = perfil?.avatar_url || null;
+      }
+      setAvatarCarta(url);
     })();
     return () => {
       cancel = true;
     };
-  }, [open, user]);
+  }, [open, user, tenant?.id]);
 
   // Resolve as cores reais do tenant (CSS vars) para usar em SVG/glows — nunca hardcoded
   useEffect(() => {

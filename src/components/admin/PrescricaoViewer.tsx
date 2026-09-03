@@ -34,6 +34,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
+import { resolveExercicioIds } from "@/lib/exerciseLink";
 import { toast } from "sonner";
 
 interface Props {
@@ -1196,6 +1197,11 @@ const TreinoEditor = ({
       const porDia: Record<string, number> = {};
       // dia_ordem segue a ordem de aparição dos dias no editor (1, 2, 3...)
       const ordemDias = new Map<string, number>();
+      // Vincula cada exercício à biblioteca de vídeos (tenant + globais)
+      const linkMap = await resolveExercicioIds(
+        tenantId,
+        validos.map((i) => i.exercicio),
+      );
       const rows = validos.map((i) => {
         porDia[i.dia_semana] = (porDia[i.dia_semana] ?? -1) + 1;
         if (!ordemDias.has(i.dia_semana)) ordemDias.set(i.dia_semana, ordemDias.size + 1);
@@ -1211,6 +1217,7 @@ const TreinoEditor = ({
           cadencia: i.cadencia || null,
           detalhes_execucao: i.detalhes_execucao || null,
           observacao: i.observacao || null,
+          referencia_exercicio_id: linkMap[(i.exercicio || "").trim()] ?? null,
         };
       });
 
