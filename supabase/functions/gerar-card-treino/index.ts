@@ -74,12 +74,16 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_KEY);
 
     // ---- Resolve avatar (identidade) + sexo (uniforme) + cache ----
+    // A carta é sempre escopada ao tenant atual: uma carta gerada em outro
+    // tenant traz o uniforme/identidade visual daquele time (bug do avatar errado).
+    let cartaQuery = admin
+      .from("cartas_atleta")
+      .select("avatar_carta_url, foto_original_url")
+      .eq("aluno_id", userId);
+    if (tenantId) cartaQuery = cartaQuery.eq("tenant_id", tenantId);
+
     const [{ data: carta }, { data: perfil }] = await Promise.all([
-      admin
-        .from("cartas_atleta")
-        .select("avatar_carta_url, foto_original_url")
-        .eq("aluno_id", userId)
-        .maybeSingle(),
+      cartaQuery.maybeSingle(),
       admin
         .from("perfis")
         .select("sexo, avatar_url, card_bg_url, card_bg_meta")
