@@ -3740,6 +3740,7 @@ export type Database = {
           status: Database["public"]["Enums"]["tenant_status"]
           symbol_url: string | null
           tagline: string | null
+          theme_mode: string
           theme_overrides: Json
           updated_at: string
           usar_apenas_meus_videos: boolean
@@ -3772,6 +3773,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["tenant_status"]
           symbol_url?: string | null
           tagline?: string | null
+          theme_mode?: string
           theme_overrides?: Json
           updated_at?: string
           usar_apenas_meus_videos?: boolean
@@ -3804,6 +3806,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["tenant_status"]
           symbol_url?: string | null
           tagline?: string | null
+          theme_mode?: string
           theme_overrides?: Json
           updated_at?: string
           usar_apenas_meus_videos?: boolean
