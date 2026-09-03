@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { buildVlogEmbedUrl, normalizeVideoUrl } from "@/lib/video-embed";
 import { isDirectVideo } from "@/lib/utils";
 import { FIGHT_MODALIDADES, FIGHT_NIVEIS, modalidadeLabel } from "@/lib/fightModalidades";
+import { dojoThumb } from "@/lib/dojo-thumb";
 
 type Conteudo = {
   id: string;
@@ -100,6 +101,8 @@ const DojoVirtual = () => {
       if (!map.has(k)) map.set(k, []);
       map.get(k)!.push(r);
     });
+    for (const [, itens] of map)
+      itens.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.titulo.localeCompare(b.titulo));
     return Array.from(map.entries());
   }, [filtrados]);
 
@@ -295,7 +298,7 @@ const DojoVirtual = () => {
                 onChange={(e) => setForm((f) => ({ ...f, nivel: e.target.value }))}
                 className="w-full bg-card border border-border px-3 py-2 text-sm mt-1"
               >
-                <option value="">Todos os níveis</option>
+                <option value="">Visível para todos os níveis</option>
                 {FIGHT_NIVEIS.map((n) => (
                   <option key={n} value={n}>
                     {n}
@@ -381,9 +384,16 @@ const DojoVirtual = () => {
                 className="text-xs"
               />
             </div>
-            {form.capa_url && (
-              <img src={form.capa_url} alt="Prévia da capa" className="mt-2 h-24 w-40 object-cover border border-border" />
+            {dojoThumb(form.capa_url, form.video_url) && (
+              <img
+                src={dojoThumb(form.capa_url, form.video_url)!}
+                alt="Prévia da capa"
+                className="mt-2 h-24 w-40 object-cover border border-border"
+              />
             )}
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Deixe em branco para usar automaticamente a miniatura do YouTube do vídeo.
+            </p>
           </div>
 
           <div className="flex gap-2">
@@ -438,8 +448,13 @@ const DojoVirtual = () => {
                 {itens.map((c) => (
                   <div key={c.id} className="border border-border bg-card/30 p-4">
                     <div className="flex flex-col md:flex-row md:items-center gap-3">
-                      {c.capa_url && (
-                        <img src={c.capa_url} alt={c.titulo} className="h-16 w-28 object-cover border border-border shrink-0" />
+                      {dojoThumb(c.capa_url, c.video_url) && (
+                        <img
+                          src={dojoThumb(c.capa_url, c.video_url)!}
+                          alt={c.titulo}
+                          loading="lazy"
+                          className="h-16 w-28 object-cover border border-border shrink-0"
+                        />
                       )}
                       <div className="flex-1 min-w-0">
                         <div className="flex flex-wrap gap-2 items-center">

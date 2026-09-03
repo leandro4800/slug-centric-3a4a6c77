@@ -5,6 +5,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { GraduationCap, Loader2, Play, Search } from "lucide-react";
 import ExercisePlayer from "@/components/aluno/ExercisePlayer";
 import { modalidadeLabel } from "@/lib/fightModalidades";
+import { dojoThumb } from "@/lib/dojo-thumb";
 
 type Conteudo = {
   id: string;
@@ -32,7 +33,8 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
         .from("dojo_conteudos")
         .select("id, titulo, descricao, video_url, capa_url, categoria, nivel, ordem")
         .eq("modalidade", modalidade)
-        .order("ordem");
+        .order("ordem", { ascending: true })
+        .order("titulo");
       setRows((data as Conteudo[]) ?? []);
       setLoading(false);
     })();
@@ -46,7 +48,9 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
   const visiveis = useMemo(() => {
     const q = busca.trim().toLowerCase();
     return rows
-      .filter((r) => (nivelFiltro === "todos" ? true : (r.nivel ?? "") === nivelFiltro || !r.nivel))
+      // Nível é TRAVADO: ao filtrar, só aparecem as aulas marcadas exatamente
+      // com aquele nível. Aulas sem nível ficam apenas em "Todos os níveis".
+      .filter((r) => (nivelFiltro === "todos" ? true : (r.nivel ?? "") === nivelFiltro))
       .filter((r) =>
         !q
           ? true
@@ -61,6 +65,8 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
       if (!map.has(k)) map.set(k, []);
       map.get(k)!.push(r);
     });
+    for (const [, itens] of map)
+      itens.sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || a.titulo.localeCompare(b.titulo));
     return Array.from(map.entries());
   }, [visiveis]);
 
@@ -85,9 +91,9 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
           className="w-full relative overflow-hidden rounded-2xl border border-white/10 text-left group"
         >
           <div className="aspect-[16/9] w-full bg-gradient-to-br from-zinc-900 via-black to-red-950/40">
-            {destaque.capa_url && (
+            {dojoThumb(destaque.capa_url, destaque.video_url) && (
               <img
-                src={destaque.capa_url}
+                src={dojoThumb(destaque.capa_url, destaque.video_url)!}
                 alt={destaque.titulo}
                 loading="lazy"
                 className="h-full w-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
@@ -165,9 +171,9 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
                       className="w-40 shrink-0 text-left group"
                     >
                       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl border border-white/10 bg-gradient-to-br from-zinc-900 to-black">
-                        {c.capa_url ? (
+                        {dojoThumb(c.capa_url, c.video_url) ? (
                           <img
-                            src={c.capa_url}
+                            src={dojoThumb(c.capa_url, c.video_url)!}
                             alt={c.titulo}
                             loading="lazy"
                             className="h-full w-full object-cover transition-transform group-hover:scale-105"
