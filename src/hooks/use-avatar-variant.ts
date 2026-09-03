@@ -30,7 +30,7 @@ export function useAvatarVariant(variant: Variant, opts: { enabled?: boolean } =
       try {
         const { data: perfil } = await supabase
           .from("perfis")
-          .select(`${field}, avatar_url, sexo`)
+          .select(`${field}, avatar_url, sexo, tenant_id`)
           .eq("id", user.id)
           .maybeSingle<any>();
 
@@ -43,12 +43,13 @@ export function useAvatarVariant(variant: Variant, opts: { enabled?: boolean } =
           return;
         }
 
-        // Tenta usar a foto original da carta (mais fiel ao rosto); fallback avatar_url
-        const { data: carta } = await supabase
+        // Foto original da carta DO TENANT ATUAL (nunca de outro tenant); fallback avatar_url
+        let cartaQuery = supabase
           .from("cartas_atleta")
           .select("foto_original_url, avatar_carta_url")
-          .eq("aluno_id", user.id)
-          .maybeSingle();
+          .eq("aluno_id", user.id);
+        if (perfil?.tenant_id) cartaQuery = cartaQuery.eq("tenant_id", perfil.tenant_id);
+        const { data: carta } = await cartaQuery.maybeSingle();
 
         const foto =
           carta?.foto_original_url ||
