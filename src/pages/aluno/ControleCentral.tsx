@@ -157,7 +157,7 @@ const ControleCentral = () => {
 
         {(tenant as any)?.vertical === "fight" && (
           <Link
-            to="/site/admin/ct/dojo"
+            to={`/${slug}/app/ct/dojo-admin`}
             className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"
           >
             <div className="w-12 h-12 rounded-none bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-all">
