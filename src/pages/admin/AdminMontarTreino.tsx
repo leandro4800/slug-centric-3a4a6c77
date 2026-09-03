@@ -1649,29 +1649,17 @@ const AdminMontarTreino = () => {
       y += 22;
     }
 
-    // Rodapé em todas as páginas
+    // Rodapé discreto (marca d'água da plataforma) em todas as páginas
     const pageH = doc.internal.pageSize.getHeight();
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(0, pageH - 12, pageW, 12, "F");
-      if (platLogo) {
-        try {
-          const targetH = 8;
-          const ratio = platLogo.w / platLogo.h || 1;
-          const targetW = Math.min(targetH * ratio, 22);
-          const fmt = platLogo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
-          doc.addImage(platLogo.dataUrl, fmt, 5, pageH - 10, targetW, targetH);
-        } catch {}
-      }
       doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 6.5, { align: "center" });
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.text("METODOLOGIA PREMIUM • TREINO • DIETA • EVOLUÇÃO", pageW / 2, pageH - 2.5, { align: "center" });
+      doc.setFontSize(6);
+      doc.text("Gerado via Alpha Coach Pro", 5, pageH - 4.5);
       doc.setFontSize(7.5);
       doc.setFont("helvetica", "bold");
       doc.text(`${p}/${totalPages}`, pageW - 5, pageH - 4.5, { align: "right" });
