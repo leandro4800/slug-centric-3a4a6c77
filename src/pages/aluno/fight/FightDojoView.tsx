@@ -25,6 +25,12 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
   const [video, setVideo] = useState<Conteudo | null>(null);
   const [nivelFiltro, setNivelFiltro] = useState<string>("todos");
   const [busca, setBusca] = useState("");
+  // Modalidade escolhida na própria tela (default = modalidade do aluno).
+  const [modAtiva, setModAtiva] = useState<string>(toModalidadeSlug(modalidade) ?? "bjj");
+
+  useEffect(() => {
+    setModAtiva(toModalidadeSlug(modalidade) ?? "bjj");
+  }, [modalidade]);
 
   useEffect(() => {
     (async () => {
@@ -32,13 +38,14 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
       const { data } = await supabase
         .from("dojo_conteudos")
         .select("id, titulo, descricao, video_url, capa_url, categoria, nivel, ordem")
-        .eq("modalidade", modalidade)
+        .eq("modalidade", modAtiva)
         .order("ordem", { ascending: true })
         .order("titulo");
       setRows((data as Conteudo[]) ?? []);
+      setNivelFiltro("todos");
       setLoading(false);
     })();
-  }, [modalidade]);
+  }, [modAtiva]);
 
   const niveis = useMemo(
     () => Array.from(new Set(rows.map((r) => r.nivel).filter(Boolean) as string[])),
