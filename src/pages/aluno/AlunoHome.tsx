@@ -276,8 +276,8 @@ const AlunoHome = () => {
           )}
         </div>
 
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-transparent" />
 
         <div className="absolute inset-x-0 top-0 h-6 bg-background/10" />
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-5 z-10">
@@ -382,7 +382,7 @@ const AlunoHome = () => {
                 loading="lazy"
                 className="absolute inset-0 w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/30 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
               <div
                 className="pointer-events-none absolute inset-0 opacity-0 hover:opacity-100 transition-opacity"
                 style={{
