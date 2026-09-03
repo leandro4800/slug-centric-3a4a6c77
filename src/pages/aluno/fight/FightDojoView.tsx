@@ -178,7 +178,7 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
         <Card className="p-8 text-center bg-card/60 backdrop-blur border-white/5">
           <GraduationCap className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
           <p className="text-sm text-muted-foreground">
-            Nenhuma aula publicada para {modalidadeLabel(modalidade)} ainda.
+            Nenhuma aula publicada para {modalidadeLabel(modAtiva)} ainda.
           </p>
           <p className="text-xs text-muted-foreground/70 mt-1">Seu técnico logo publicará conteúdo aqui.</p>
         </Card>
