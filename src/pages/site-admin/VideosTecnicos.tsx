@@ -186,7 +186,7 @@ const VideosTecnicos = () => {
       .sort((a, b) => (a.tenant_id ? 0 : 1) - (b.tenant_id ? 0 : 1))
       .map((r) => ({ tokens: normTokens(r.nome_exercicio), row: r }))
       .filter((e) => e.tokens.length > 0);
-  }, [rows, onlyMine, tenant?.id]);
+  }, [rows, fonteAlunos, tenant?.id]);
 
   const matchLibrary = (nome: string): VideoRow | null => {
     const tokens = normTokens(nome);
