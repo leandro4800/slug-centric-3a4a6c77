@@ -33,6 +33,7 @@ const Inner = () => {
   const { tenant, loading, error, accessBlocked, reload } = useSiteTenant();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
