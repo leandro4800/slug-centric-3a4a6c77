@@ -211,18 +211,27 @@ const VideosTecnicos = () => {
     return { url: null as string | null, fonte: "Nenhum vídeo encontrado" };
   };
 
-  const toggleOnlyMine = async () => {
-    if (!tenant?.id) return;
-    const next = !onlyMine;
+  // Trava a fonte de vídeos dos alunos no tenant. Persiste até troca manual.
+  const salvarFonteAlunos = async (next: "ambos" | "meus" | "app") => {
+    if (!tenant?.id || next === fonteAlunos) return;
     try {
       setSavingPref(true);
       const { error } = await supabase
         .from("tenants")
-        .update({ usar_apenas_meus_videos: next } as any)
+        .update({
+          videos_fonte_alunos: next,
+          usar_apenas_meus_videos: next === "meus",
+        } as any)
         .eq("id", tenant.id);
       if (error) throw error;
-      setOnlyMine(next);
-      toast.success(next ? "Seus alunos verão apenas os SEUS vídeos" : "Vídeos do app reativados para seus alunos");
+      setFonteAlunos(next);
+      toast.success(
+        next === "meus"
+          ? "Seus alunos verão apenas os SEUS vídeos"
+          : next === "app"
+            ? "Seus alunos verão apenas os vídeos DO APP"
+            : "Seus alunos verão os vídeos do app + os seus",
+      );
     } catch (e: any) {
       toast.error("Erro ao salvar: " + e.message);
     } finally {
