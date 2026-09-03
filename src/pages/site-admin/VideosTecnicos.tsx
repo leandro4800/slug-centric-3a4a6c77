@@ -469,7 +469,7 @@ const VideosTecnicos = () => {
               {fonteAlunos === "meus"
                 ? "Alunos veem somente os seus vídeos."
                 : fonteAlunos === "app"
-                  ? "Alunos veem somente os vídeos do app."
+                  ? "Padrão travado: seus alunos verão somente os vídeos da plataforma."
                   : "Alunos veem vídeos do app + os seus (os seus têm prioridade)."}
             </span>
           </div>
