@@ -251,6 +251,41 @@ export const IdentidadeVisual = () => {
 
         <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
           <div className="flex items-center gap-2">
+            <Contrast className="h-4 w-4 text-primary" />
+            <h3 className="font-display text-base">FUNDO DO APP</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Escolha entre o preto absoluto e o cinza-grafite (mais suave para os olhos). Vale para o seu painel e para o app dos seus alunos. As cores da sua marca não mudam.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              { id: "escuro", label: "ESCURO", desc: "Preto absoluto", bg: "#000000" },
+              { id: "suave", label: "SUAVE", desc: "Cinza-grafite", bg: "#1F1F1F" },
+            ] as const).map((m) => (
+              <button
+                key={m.id}
+                onClick={() => saveMode(m.id)}
+                disabled={savingMode}
+                className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                  themeMode === m.id ? "border-primary shadow-glow" : "border-border hover:border-primary/60"
+                }`}
+                style={{ background: m.bg }}
+              >
+                {themeMode === m.id && (
+                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                    <Check className="h-3 w-3" />
+                  </div>
+                )}
+                <p className="font-display text-sm font-bold tracking-wide text-white">{m.label}</p>
+                <p className="text-[10px] text-white/60">{m.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
+
+          <div className="flex items-center gap-2">
             <Music className="h-4 w-4 text-primary" />
             <h3 className="font-display text-base">MÚSICA DE FUNDO DO PERFIL</h3>
           </div>
