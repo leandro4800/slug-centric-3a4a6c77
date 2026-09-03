@@ -192,6 +192,7 @@ const App = () => (
         <AuthProvider>
           <BrandingProvider>
             <SplashScreen />
+            <SuppressPwaInstallPrompt />
             
             <PushNotificationManager />
             <Routes>
