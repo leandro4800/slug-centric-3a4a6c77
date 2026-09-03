@@ -175,7 +175,13 @@ const VideosTecnicos = () => {
   const libEntries = useMemo(() => {
     const usable = rows
       .filter((r) => r.url_video)
-      .filter((r) => (onlyMine ? r.tenant_id === tenant?.id : true));
+      .filter((r) =>
+        fonteAlunos === "meus"
+          ? r.tenant_id === tenant?.id
+          : fonteAlunos === "app"
+            ? r.tenant_id === null
+            : true,
+      );
     return [...usable]
       .sort((a, b) => (a.tenant_id ? 0 : 1) - (b.tenant_id ? 0 : 1))
       .map((r) => ({ tokens: normTokens(r.nome_exercicio), row: r }))
