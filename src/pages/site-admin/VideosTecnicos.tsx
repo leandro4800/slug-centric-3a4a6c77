@@ -71,7 +71,10 @@ const VideosTecnicos = () => {
       window.localStorage.setItem(filterStorageKey, filter);
     } catch {}
   }, [filter, filterStorageKey]);
-  const [onlyMine, setOnlyMine] = useState(false);
+  // Fonte de vídeos que os ALUNOS enxergam (travada no tenant, persiste até
+  // o coach trocar manualmente): ambos | meus | app.
+  const [fonteAlunos, setFonteAlunos] = useState<"ambos" | "meus" | "app">("ambos");
+  const onlyMine = fonteAlunos === "meus";
   const [savingPref, setSavingPref] = useState(false);
   const [tab, setTab] = useState<"biblioteca" | "alunos">("biblioteca");
 
@@ -110,10 +113,17 @@ const VideosTecnicos = () => {
       setLoading(true);
       const { data: t } = await supabase
         .from("tenants")
-        .select("usar_apenas_meus_videos, vertical")
+        .select("usar_apenas_meus_videos, videos_fonte_alunos, vertical")
         .eq("id", tenant.id)
         .maybeSingle();
-      setOnlyMine(Boolean((t as any)?.usar_apenas_meus_videos));
+      const fonte = (t as any)?.videos_fonte_alunos as string | undefined;
+      setFonteAlunos(
+        fonte === "meus" || fonte === "app"
+          ? fonte
+          : (t as any)?.usar_apenas_meus_videos
+            ? "meus"
+            : "ambos",
+      );
       setVertical(String((t as any)?.vertical || "personal"));
 
       const { data, error } = await supabase
@@ -165,12 +175,18 @@ const VideosTecnicos = () => {
   const libEntries = useMemo(() => {
     const usable = rows
       .filter((r) => r.url_video)
-      .filter((r) => (onlyMine ? r.tenant_id === tenant?.id : true));
+      .filter((r) =>
+        fonteAlunos === "meus"
+          ? r.tenant_id === tenant?.id
+          : fonteAlunos === "app"
+            ? r.tenant_id === null
+            : true,
+      );
     return [...usable]
       .sort((a, b) => (a.tenant_id ? 0 : 1) - (b.tenant_id ? 0 : 1))
       .map((r) => ({ tokens: normTokens(r.nome_exercicio), row: r }))
       .filter((e) => e.tokens.length > 0);
-  }, [rows, onlyMine, tenant?.id]);
+  }, [rows, fonteAlunos, tenant?.id]);
 
   const matchLibrary = (nome: string): VideoRow | null => {
     const tokens = normTokens(nome);
@@ -195,18 +211,27 @@ const VideosTecnicos = () => {
     return { url: null as string | null, fonte: "Nenhum vídeo encontrado" };
   };
 
-  const toggleOnlyMine = async () => {
-    if (!tenant?.id) return;
-    const next = !onlyMine;
+  // Trava a fonte de vídeos dos alunos no tenant. Persiste até troca manual.
+  const salvarFonteAlunos = async (next: "ambos" | "meus" | "app") => {
+    if (!tenant?.id || next === fonteAlunos) return;
     try {
       setSavingPref(true);
       const { error } = await supabase
         .from("tenants")
-        .update({ usar_apenas_meus_videos: next } as any)
+        .update({
+          videos_fonte_alunos: next,
+          usar_apenas_meus_videos: next === "meus",
+        } as any)
         .eq("id", tenant.id);
       if (error) throw error;
-      setOnlyMine(next);
-      toast.success(next ? "Seus alunos verão apenas os SEUS vídeos" : "Vídeos do app reativados para seus alunos");
+      setFonteAlunos(next);
+      toast.success(
+        next === "meus"
+          ? "Seus alunos verão apenas os SEUS vídeos"
+          : next === "app"
+            ? "Seus alunos verão apenas os vídeos DO APP"
+            : "Seus alunos verão os vídeos do app + os seus",
+      );
     } catch (e: any) {
       toast.error("Erro ao salvar: " + e.message);
     } finally {
@@ -416,21 +441,33 @@ const VideosTecnicos = () => {
                 {f === "todos" ? "Todos" : f === "meus" ? "Meus vídeos" : "Do App"}
               </button>
             ))}
-            <button
-              onClick={toggleOnlyMine}
-              disabled={savingPref}
-              className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
-                onlyMine
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
-              }`}
-            >
-              Só meus p/ alunos {onlyMine ? "(ativo)" : ""}
-            </button>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2 items-center border border-border/60 bg-card/30 p-2">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+              Alunos veem:
+            </span>
+            {(["ambos", "meus", "app"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => salvarFonteAlunos(f)}
+                disabled={savingPref}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
+                  fonteAlunos === f
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
+                }`}
+              >
+                {f === "ambos" ? "App + meus" : f === "meus" ? "Só meus" : "Só do app"}
+                {fonteAlunos === f ? " (ativo)" : ""}
+              </button>
+            ))}
             <span className="text-[11px] text-muted-foreground">
-              {onlyMine
+              {fonteAlunos === "meus"
                 ? "Alunos veem somente os seus vídeos."
-                : "Alunos veem vídeos do app + os seus (os seus têm prioridade)."}
+                : fonteAlunos === "app"
+                  ? "Alunos veem somente os vídeos do app."
+                  : "Alunos veem vídeos do app + os seus (os seus têm prioridade)."}
             </span>
           </div>
 
