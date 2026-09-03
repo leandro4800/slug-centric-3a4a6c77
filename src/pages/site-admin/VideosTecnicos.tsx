@@ -118,12 +118,14 @@ const VideosTecnicos = () => {
         .eq("id", tenant.id)
         .maybeSingle();
       const fonte = (t as any)?.videos_fonte_alunos as string | undefined;
+      // Padrão travado do app: "app" (só vídeos da plataforma). "meus"/"ambos"
+      // só quando o coach escolheu explicitamente.
       setFonteAlunos(
-        fonte === "meus" || fonte === "app"
-          ? fonte
+        fonte === "meus" || fonte === "app" || fonte === "ambos"
+          ? (fonte as "meus" | "app" | "ambos")
           : (t as any)?.usar_apenas_meus_videos
             ? "meus"
-            : "ambos",
+            : "app",
       );
       setVertical(String((t as any)?.vertical || "personal"));
 
