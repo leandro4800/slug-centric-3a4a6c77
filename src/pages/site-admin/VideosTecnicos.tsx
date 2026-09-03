@@ -74,7 +74,7 @@ const VideosTecnicos = () => {
   }, [filter, filterStorageKey]);
   // Fonte de vídeos que os ALUNOS enxergam (travada no tenant, persiste até
   // o coach trocar manualmente): ambos | meus | app.
-  const [fonteAlunos, setFonteAlunos] = useState<"ambos" | "meus" | "app">("ambos");
+  const [fonteAlunos, setFonteAlunos] = useState<"ambos" | "meus" | "app">("app");
   const onlyMine = fonteAlunos === "meus";
   const [savingPref, setSavingPref] = useState(false);
   const [tab, setTab] = useState<"biblioteca" | "alunos">("biblioteca");
