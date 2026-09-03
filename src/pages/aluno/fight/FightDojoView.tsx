@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { GraduationCap, Loader2, Play, Search } from "lucide-react";
 import ExercisePlayer from "@/components/aluno/ExercisePlayer";
-import { modalidadeLabel } from "@/lib/fightModalidades";
+import { FIGHT_MODALIDADES, modalidadeLabel, toModalidadeSlug } from "@/lib/fightModalidades";
 import { dojoThumb } from "@/lib/dojo-thumb";
 
 type Conteudo = {
