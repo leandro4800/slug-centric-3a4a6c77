@@ -20,6 +20,20 @@ export type ThemeOverrides = Partial<{
   bg_texture: string; // ex: url('/blackflow-bg.jpg')
 }>;
 
+export type ThemeMode = "escuro" | "suave";
+
+/** Modo Suave: apenas fundo/superfícies/texto. NUNCA toca em cores de marca. */
+export const SOFT_MODE_TOKENS: Record<string, string> = {
+  "--background": "0 0% 12%",
+  "--card": "0 0% 16%",
+  "--popover": "0 0% 16%",
+  "--sidebar-background": "0 0% 16%",
+  "--foreground": "0 0% 94%",
+  "--card-foreground": "0 0% 94%",
+  "--popover-foreground": "0 0% 94%",
+  "--input": "0 0% 22%",
+};
+
 export type TenantVertical = "personal" | "crossfit" | "fight";
 
 export interface Tenant {
@@ -43,6 +57,7 @@ export interface Tenant {
   music_url: string | null;
   owner_user_id?: string | null;
   vertical?: TenantVertical | null;
+  theme_mode?: ThemeMode | null;
 }
 
 interface BrandingContextValue {
@@ -101,12 +116,29 @@ const clearTokens = (root: HTMLElement) => {
 // Referência global para evitar re-aplicar o mesmo tema e causar flicker
 let lastAppliedKey = "";
 
-export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl?: string | null, force = false) => {
+const applyThemeMode = (root: HTMLElement, mode: ThemeMode | null | undefined) => {
+  if (mode === "suave") {
+    Object.entries(SOFT_MODE_TOKENS).forEach(([v, value]) => {
+      if (root.style.getPropertyValue(v) !== value) root.style.setProperty(v, value);
+    });
+  } else {
+    Object.keys(SOFT_MODE_TOKENS).forEach((v) => root.style.removeProperty(v));
+  }
+};
+
+export const applyTheme = (
+  overrides: ThemeOverrides | null | undefined,
+  heroUrl?: string | null,
+  force = false,
+  mode?: ThemeMode | null,
+) => {
   const root = document.documentElement;
-  const currentKey = JSON.stringify({ overrides, heroUrl });
-  
+  const currentKey = JSON.stringify({ overrides, heroUrl, mode });
+
   if (!force && currentKey === lastAppliedKey) return;
   lastAppliedKey = currentKey;
+
+  applyThemeMode(root, mode);
 
   if (!overrides && !heroUrl) {
     clearTokens(root);
@@ -140,7 +172,7 @@ export const applyTheme = (overrides: ThemeOverrides | null | undefined, heroUrl
 };
 
 const TENANT_PUBLIC_COLUMNS =
-  "id, slug, nome, tagline, logo_url, foto_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, login_video_url, splash_video_url, music_url, owner_user_id, vertical";
+  "id, slug, nome, tagline, logo_url, foto_url, hero_url, symbol_url, primary_hsl, accent_hsl, theme_overrides, cidade, estado, permite_aula_avulsa, preco_aula_avulsa, login_video_url, splash_video_url, music_url, owner_user_id, vertical, theme_mode";
 
 export const BrandingProvider = ({ children }: { children: ReactNode }) => {
   const params = useParams<{ slug: string }>();
@@ -164,7 +196,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     // Ao trocar de conta/slug, nunca mantenha o tenant anterior enquanto a
     // busca atualiza. O guard de acesso precisa receber branding do mesmo slug.
     setTenant((cached as unknown) as Tenant);
-    applyTheme((cached.theme_overrides as ThemeOverrides | null) ?? null, cached.hero_url);
+    applyTheme((cached.theme_overrides as ThemeOverrides | null) ?? null, cached.hero_url, false, (cached as any).theme_mode);
   }, [slug]);
 
   useEffect(() => {
@@ -226,7 +258,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
               hero_url: t.hero_url,
             });
           }
-          applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force);
+          applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force, t?.theme_mode);
           setLoading(false); // Garante que o loading termina aqui
         }
         lastLoadedSlug.current = null;
@@ -273,7 +305,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
         });
       }
       const overrides = (t?.theme_overrides as ThemeOverrides | null) ?? null;
-      applyTheme(overrides, t?.hero_url, force);
+      applyTheme(overrides, t?.hero_url, force, t?.theme_mode);
       if (t) lastLoadedTenantId.current = t.id;
     } catch (err) {
       console.error("[Branding] Erro inesperado:", err);
@@ -286,10 +318,10 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
   const applyPreview = (overrides: ThemeOverrides) => {
     const merged = { ...(tenant?.theme_overrides || {}), ...overrides };
-    applyTheme(merged, tenant?.hero_url, true);
+    applyTheme(merged, tenant?.hero_url, true, tenant?.theme_mode);
   };
   
-  const clearPreview = () => applyTheme(tenant?.theme_overrides as ThemeOverrides | null, tenant?.hero_url, true);
+  const clearPreview = () => applyTheme(tenant?.theme_overrides as ThemeOverrides | null, tenant?.hero_url, true, tenant?.theme_mode);
 
   // Effect 1: carrega tenant ao mudar slug + ouve mudanças de auth (apenas uma vez)
   useEffect(() => {
@@ -334,7 +366,7 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
         (payload) => {
           const t = payload.new as Tenant;
           setTenant(t);
-          applyTheme(t.theme_overrides as ThemeOverrides, t.hero_url, true);
+          applyTheme(t.theme_overrides as ThemeOverrides, t.hero_url, true, t.theme_mode);
         }
       )
       .subscribe();
