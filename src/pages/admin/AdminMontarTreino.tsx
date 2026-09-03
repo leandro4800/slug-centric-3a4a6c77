@@ -646,6 +646,9 @@ const AdminMontarTreino = () => {
     // Garante que cada exercício tenha vídeo de referência na biblioteca do CT
     if (tenant?.id) {
       try {
+        const { data: authData } = await supabase.auth.getUser();
+        const uid = authData?.user?.id;
+        if (!uid) throw new Error("Sessão expirada — faça login novamente.");
         const existentes = new Set(
           biblioteca.map((b) => b.nome.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()),
         );
@@ -659,15 +662,18 @@ const AdminMontarTreino = () => {
           )
           .map((r) => ({
             tenant_id: tenant.id,
+            profissional_id: uid,
             nome_exercicio: r.nome,
             url_video: r.video as string,
             modalidade: preset.modalidade,
           }));
         if (novosRefs.length > 0) {
-          await (supabase as any).from("referencia_exercicios").insert(novosRefs);
+          const { error } = await (supabase as any).from("referencia_exercicios").insert(novosRefs);
+          if (error) throw error;
         }
-      } catch {
-        /* vídeo é complementar — não bloqueia a prescrição */
+      } catch (e: any) {
+        console.error("[referencia_exercicios] falha ao salvar vídeos de referência:", e);
+        toast.error(`Vídeos de referência não foram salvos: ${e?.message || "erro desconhecido"}`);
       }
     }
 
