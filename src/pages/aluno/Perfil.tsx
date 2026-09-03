@@ -514,8 +514,8 @@ const Perfil = () => {
           style={{ objectPosition: `center ${imgPosY}%` }}
           onError={() => setProfileImageFailed(true)}
         />
-        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-t from-background via-background/40 to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-r from-background/20 via-transparent to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-t from-black via-black/40 to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-r from-black/20 via-transparent to-transparent" />
 
         <div className="relative pt-[52vh] px-5 space-y-2 pb-8">
 
