@@ -101,9 +101,15 @@ const Inner = () => {
       <div className="flex-1 flex flex-col min-w-0">
         {/* Mobile header */}
         <header className="md:hidden sticky top-0 z-40 flex items-center justify-between border-b border-white/10 bg-black/80 backdrop-blur px-4 py-3">
-          <button onClick={() => setMobileOpen((v) => !v)} aria-label="Abrir menu" className="p-2">
-            <Menu className="h-5 w-5" />
-          </button>
+          {location.pathname.startsWith("/site/admin/ct/dojo") ? (
+            <button onClick={() => navigate("/site/admin")} aria-label="Voltar" className="p-2">
+              <ArrowLeft className="h-5 w-5" />
+            </button>
+          ) : (
+            <button onClick={() => setMobileOpen((v) => !v)} aria-label="Abrir menu" className="p-2">
+              <Menu className="h-5 w-5" />
+            </button>
+          )}
           <p className="font-display text-sm tracking-widest">ALPHA<span className="text-primary">COACH</span> PRO</p>
           <div className="w-9" />
         </header>
