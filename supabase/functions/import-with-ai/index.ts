@@ -140,7 +140,8 @@ async function importarTreinoComVinculo(
       let refId: string | null = atual?.referencia_exercicio_id ?? null;
       if (!refId) {
         const m = await matchBiblioteca(supabase, tenantId, nome);
-        if (m && m.score >= AUTO_LINK_SCORE) {
+        const exato = !!m && normExName(m.nome_exercicio) === normExName(nome);
+        if (m && (exato || m.score >= AUTO_LINK_SCORE)) {
           refId = m.id;
           vinculados.push({ nome_pdf: nome, dia: nomeDia, biblioteca: m.nome_exercicio, score: m.score });
         } else if (m && m.score >= REVIEW_SCORE) {

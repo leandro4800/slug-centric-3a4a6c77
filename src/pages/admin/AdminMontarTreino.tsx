@@ -3,7 +3,7 @@ import { useSearchParams, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
-import { resolveExercicioIds } from "@/lib/exerciseLink";
+import { resolveExercicioIds, linkIdPara } from "@/lib/exerciseLink";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -858,7 +858,7 @@ const AdminMontarTreino = () => {
           cadencia: e.cadencia,
           detalhes_execucao: e.detalhes_execucao,
           observacao: e.observacao,
-          referencia_exercicio_id: linkMap[(e.exercicio || "").trim()] ?? null,
+          referencia_exercicio_id: linkIdPara(linkMap, e.exercicio),
           status: "ativo",
         };
       });
