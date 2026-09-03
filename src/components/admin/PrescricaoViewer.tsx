@@ -34,6 +34,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
+import { resolveExercicioIds } from "@/lib/exerciseLink";
 import { toast } from "sonner";
 
 interface Props {
