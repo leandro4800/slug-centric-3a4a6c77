@@ -34,10 +34,12 @@ import Treino from "./pages/aluno/TreinoScreen";
 import Dieta from "./pages/aluno/Dieta";
 import Evolucao from "./pages/aluno/Evolucao";
 import CompararEvolucao from "./pages/aluno/CompararEvolucao";
+import Clinica from "./pages/aluno/Clinica";
 import Comunidade from "./pages/aluno/Comunidade";
 const Perfil = lazy(() => import("./pages/aluno/Perfil"));
 import ControleCentral from "./pages/aluno/ControleCentral";
 import Parceiros from "./pages/aluno/Parceiros";
+import DrIA from "./pages/aluno/DrIA";
 import Anamnese from "./pages/aluno/Anamnese";
 import AdminPanel from "./pages/admin/AdminPanel";
 import AdminVlogs from "./pages/admin/AdminVlogs";
@@ -265,6 +267,8 @@ const App = () => (
               <Route path="dieta" element={<Dieta />} />
               <Route path="evolucao" element={<Evolucao />} />
               <Route path="evolucao/comparar" element={<CompararEvolucao />} />
+              <Route path="clinica" element={<Clinica />} />
+              <Route path="dr-ia" element={<DrIA />} />
               <Route path="comunidade" element={<Comunidade />} />
               <Route path="perfil" element={
                 <Suspense fallback={

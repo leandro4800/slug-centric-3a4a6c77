@@ -110,15 +110,17 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
         // Sessão expirada: tenta renovar o token antes de desistir.
         if (isAuthError(err) && !refreshed) {
           refreshed = true;
-          const { data: refreshData } = await supabase.auth.refreshSession();
+          const { data: refreshData, error: refreshErr } = await supabase.auth.refreshSession();
           if (cancelled) return;
-          if (!refreshData?.session) {
-            // Não dá para renovar: manda para o login em vez de travar na tela de erro.
-            await supabase.auth.signOut().catch(() => {});
-            if (!cancelled) window.location.replace("/site/login");
-            return;
+          if (refreshData?.session) {
+            i = -1;
+            continue;
           }
-          i = -1; // reinicia o ciclo de tentativas com o token novo
+          console.warn("[SiteTenant] Refresh falhou; mantém cache e não desloga.", refreshErr?.message);
+          if (i === delays.length - 1) {
+            setError(err.message);
+            setLoading(false);
+          }
           continue;
         }
 

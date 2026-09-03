@@ -14,6 +14,7 @@ import {
   Settings,
   ClipboardList,
   Ruler,
+  Stethoscope,
   X,
 } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -64,6 +65,7 @@ const AlunoBottomNav = () => {
           { label: "Avaliação Física", icon: Ruler, to: "perfil?avaliacao=1" },
         ]),
     { label: "Comunidade", icon: Users, to: "comunidade" },
+    { label: "Clínica", icon: Stethoscope, to: "clinica" },
     { label: "Presencial", icon: CalendarCheck, to: "presencial" },
     { label: "Minha Carta", icon: Sparkles, to: "carta" },
   ];

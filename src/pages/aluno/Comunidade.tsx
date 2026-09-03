@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { sharePostLink } from "@/lib/share";
+import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
 import StoriesViewer from "@/components/aluno/comunidade/StoriesViewer";
 import StoryComposer from "@/components/aluno/comunidade/StoryComposer";
 import DirectDrawer from "@/components/aluno/comunidade/DirectDrawer";
@@ -591,10 +592,11 @@ const Comunidade = () => {
 
                 {post.video_url ? (
                   <div className="relative w-full bg-background flex items-center justify-center overflow-hidden">
-                    <video
+                    <DirectVideoPlayer
                       src={post.video_url}
                       controls
                       playsInline
+                      wrapperClassName="max-h-[80vh] max-w-full"
                       className="max-h-[80vh] max-w-full h-auto w-auto object-contain"
                     />
                   </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/use-auth";
+import { recoverSession } from "@/lib/auth-session";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,14 +78,16 @@ export default function Onboarding() {
     console.log("[Onboarding] Carregando perfil do usuário:", user.id);
 
     try {
-      // A sessão precisa estar válida de verdade. Com token expirado todas as
-      // consultas abaixo falham e a tela mostraria o formulário como se o
-      // cadastro do aluno/coach tivesse sumido — em vez disso, volta ao login.
-      const { error: sessionError } = await supabase.auth.getUser();
-      if (sessionError) {
-        console.warn("[Onboarding] Sessão inválida/expirada; voltando para o login.");
-        await supabase.auth.signOut().catch(() => {});
-        navigate(slug ? `/${slug}/login` : "/login", { replace: true });
+      const { session: fresh, fatal } = await recoverSession();
+      if (!fresh) {
+        if (fatal) {
+          console.warn("[Onboarding] Refresh token inválido; voltando para o login.");
+          await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+          navigate(slug ? `/${slug}/login` : "/login", { replace: true });
+          return;
+        }
+        console.warn("[Onboarding] Sessão indisponível no momento; não desloga.");
+        setLoadError(true);
         return;
       }
 

@@ -5,6 +5,7 @@ import BackHandler from "@/components/BackHandler";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { recoverSession } from "@/lib/auth-session";
 
 const AlunoLayout = () => {
   const { user } = useAuth();
@@ -21,13 +22,17 @@ const AlunoLayout = () => {
       if (!user) { setChecking(false); return; }
 
       // A sessão precisa estar válida de verdade antes de qualquer decisão.
-      // Com token expirado todas as consultas abaixo falham e o dono do
-      // tenant cairia no onboarding como se o cadastro tivesse sumido.
-      const { error: sessionError } = await supabase.auth.getUser();
-      if (sessionError) {
-        console.warn("[AlunoLayout] Sessão inválida/expirada; voltando para o login.");
-        await supabase.auth.signOut().catch(() => {});
-        if (!cancelled) { setSessionInvalid(true); setChecking(false); }
+      // Falha de rede / token ainda renovando NÃO pode virar signOut.
+      const { session: fresh, fatal } = await recoverSession();
+      if (!fresh) {
+        if (fatal) {
+          console.warn("[AlunoLayout] Refresh token inválido; voltando para o login.");
+          await supabase.auth.signOut({ scope: "local" }).catch(() => {});
+          if (!cancelled) { setSessionInvalid(true); setChecking(false); }
+          return;
+        }
+        console.warn("[AlunoLayout] Sessão indisponível no momento; não desloga.");
+        if (!cancelled) { setLoadError(true); setChecking(false); }
         return;
       }
 

@@ -6,12 +6,14 @@ import heroDefault from "@/assets/hero-default.jpg";
 import cardTreino from "@/assets/card-treino.jpg";
 import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
+import cardClinica from "@/assets/card-clinica.jpg";
 import macroProtein from "@/assets/macro-protein.jpg";
 import macroCarbs from "@/assets/macro-carbs.jpg";
 import macroFats from "@/assets/macro-fats.jpg";
 import mealBreakfast from "@/assets/meal-breakfast.jpg";
 import mealLunch from "@/assets/meal-lunch.jpg";
 import mealDinner from "@/assets/meal-dinner.jpg";
+import { coachVideoOrDefault } from "@/lib/default-coach-video";
 
 interface Props {
   onPick: (target: EditableTarget) => void;
@@ -165,6 +167,7 @@ export const PhonePreview = ({ onPick, pickedTarget, initialScreen = "home" }: P
                       { t: "TREINO", img: cardTreino },
                       { t: "DIETA", img: cardDieta },
                       { t: "EVOLUÇÃO", img: cardEvolucao },
+                      { t: "CLÍNICA", img: cardClinica },
                     ].map((s) => (
                       <HotZone key={s.t} label="Cartões" active={isActive("card")} onClick={pick("card")} className="rounded-md flex-1 block">
                         <div className="relative w-full h-20 rounded-md overflow-hidden" style={{ border: "1px solid hsl(var(--border))" }}>
@@ -433,19 +436,17 @@ export const PhonePreview = ({ onPick, pickedTarget, initialScreen = "home" }: P
                   </div>
 
                   <div className="bg-black/40 border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[400px] flex flex-col relative">
-                    {tenant?.login_video_url && (
-                      <div className="absolute inset-0 z-0">
-                        <video 
-                          src={tenant.login_video_url} 
-                          autoPlay 
-                          loop 
-                          muted 
-                          playsInline 
-                          className="w-full h-full object-cover" 
-                        />
-                        <div className="absolute inset-0 bg-black/40" />
-                      </div>
-                    )}
+                    <div className="absolute inset-0 z-0">
+                      <video
+                        src={coachVideoOrDefault(tenant?.login_video_url)}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/40" />
+                    </div>
                     <div className="p-4 space-y-3 relative z-10 flex-1 flex flex-col justify-center">
                       <div className="space-y-1">
                         <div className="h-1.5 w-8 bg-foreground/20 rounded" />

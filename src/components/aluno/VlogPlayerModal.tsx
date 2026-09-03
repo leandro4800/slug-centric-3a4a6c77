@@ -1,7 +1,9 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { ExternalLink } from "lucide-react";
+import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
 import { Button } from "@/components/ui/button";
 import { isIOSNativeApp } from "@/lib/native-platform";
+import { startLandscapePlayback, unlockLandscapeVideo } from "@/lib/video-orientation";
 import { openVideoExternally, resolveVideoPlayback } from "@/lib/video-embed";
 import {
   INSTAGRAM_IFRAME_ALLOW,
@@ -32,6 +34,13 @@ export const VlogPlayerModal = ({ url, title, thumbnailUrl, onClose }: VlogPlaye
   const posterUrl =
     thumbnailUrl || (playback.ytId ? buildYouTubeThumbnailUrl(playback.ytId) : null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    void startLandscapePlayback();
+    return () => {
+      void unlockLandscapeVideo();
+    };
+  }, []);
 
   const handleIframeLoad = () => {
     if (!playback.isYouTube) return;
@@ -107,7 +116,14 @@ export const VlogPlayerModal = ({ url, title, thumbnailUrl, onClose }: VlogPlaye
               />
             </>
           ) : playback.isDirect ? (
-            <video src={playback.url} controls autoPlay playsInline className="w-full h-full" />
+            <DirectVideoPlayer
+              src={playback.url}
+              controls
+              autoPlay
+              playsInline
+              wrapperClassName="h-full w-full"
+              className="h-full w-full"
+            />
           ) : (
             <div className="w-full h-full flex flex-col items-center justify-center gap-3 p-6 text-center">
               <p className="text-sm text-muted-foreground">

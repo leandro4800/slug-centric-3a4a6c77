@@ -1,54 +1,109 @@
 import { ScreenOrientation } from "@capacitor/screen-orientation";
-import { isNativeApp } from "@/lib/native-platform";
+import { isIOSNativeApp, isNativeApp } from "@/lib/native-platform";
 
 let landscapeActive = false;
 
-/** Trava em paisagem ao iniciar vídeo uploadado (MP4/MOV). YouTube não usa isso. */
-export async function lockLandscapeForVideo(video?: HTMLVideoElement | null) {
-  if (typeof window === "undefined") return;
-  landscapeActive = true;
+type VideoEl = HTMLVideoElement & {
+  webkitEnterFullscreen?: () => void;
+  webkitExitFullscreen?: () => void;
+  webkitDisplayingFullscreen?: boolean;
+};
 
-  if (isNativeApp()) {
+const asVideo = (video?: HTMLVideoElement | null): VideoEl | undefined =>
+  video ? (video as VideoEl) : undefined;
+
+const isPortrait = () =>
+  typeof window !== "undefined" && window.innerHeight > window.innerWidth;
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/** iOS WKWebView: fullscreen nativo no gesto do usuário. */
+export function enterNativeFullscreen(video?: HTMLVideoElement | null): boolean {
+  const el = asVideo(video);
+  if (!el) return false;
+
+  if (el.webkitEnterFullscreen && (isIOSNativeApp() || /iPhone|iPad|iPod/i.test(navigator.userAgent))) {
     try {
-      await ScreenOrientation.lock({ orientation: "landscape" });
-      return;
+      el.webkitEnterFullscreen();
+      return true;
     } catch {
-      /* fallback web abaixo */
+      /* Fullscreen API */
     }
   }
 
-  const el = video as (HTMLVideoElement & { webkitEnterFullscreen?: () => void }) | undefined;
-  if (el?.webkitEnterFullscreen && /iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+  if (!document.fullscreenElement && el.requestFullscreen) {
+    void el.requestFullscreen().catch(() => {});
+    return true;
+  }
+
+  return false;
+}
+
+async function lockNativeLandscape(): Promise<boolean> {
+  if (!isNativeApp()) {
     try {
-      el.webkitEnterFullscreen();
-      return;
+      await screen.orientation?.lock?.("landscape");
+      return true;
     } catch {
-      /* continua */
+      return false;
     }
   }
 
   try {
-    if (el && !document.fullscreenElement && el.requestFullscreen) {
-      await el.requestFullscreen();
+    await ScreenOrientation.lock({ orientation: "landscape-primary" });
+    return true;
+  } catch {
+    try {
+      await ScreenOrientation.lock({ orientation: "landscape" });
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/**
+ * Trava paisagem + tenta fullscreen nativo.
+ * Se o OS continuar em retrato, o caller deve usar o overlay CSS (rotate 90°).
+ */
+export async function startLandscapePlayback(
+  video?: HTMLVideoElement | null,
+): Promise<"native" | "css"> {
+  if (typeof window === "undefined") return "css";
+  landscapeActive = true;
+
+  enterNativeFullscreen(video);
+  await lockNativeLandscape();
+  await sleep(180);
+
+  const el = asVideo(video);
+  if (el?.webkitDisplayingFullscreen) return "native";
+  if (document.fullscreenElement) return "native";
+  if (!isPortrait()) return "native";
+  return "css";
+}
+
+export async function lockLandscapeForVideo(video?: HTMLVideoElement | null) {
+  await startLandscapePlayback(video);
+}
+
+export async function unlockLandscapeVideo(video?: HTMLVideoElement | null) {
+  if (!landscapeActive) return;
+  landscapeActive = false;
+
+  const el = asVideo(video);
+  try {
+    if (el?.webkitDisplayingFullscreen && el.webkitExitFullscreen) {
+      el.webkitExitFullscreen();
     }
   } catch {
     /* ok */
   }
 
-  try {
-    await screen.orientation?.lock?.("landscape");
-  } catch {
-    /* navegador pode exigir fullscreen ou gesto — já tentamos */
-  }
-}
-
-/** Restaura orientação ao pausar, terminar ou fechar o player. */
-export async function unlockLandscapeVideo() {
-  if (!landscapeActive) return;
-  landscapeActive = false;
-
   if (isNativeApp()) {
     try {
+      await ScreenOrientation.unlock();
+      await ScreenOrientation.lock({ orientation: "portrait-primary" });
       await ScreenOrientation.unlock();
     } catch {
       /* ok */

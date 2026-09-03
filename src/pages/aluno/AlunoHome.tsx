@@ -9,12 +9,14 @@ import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POL
 import { buildYouTubeThumbnailUrl, isVlogVideoPageUrl } from "@/lib/vlog-url";
 import { VlogPlayerModal } from "@/components/aluno/VlogPlayerModal";
 import { normalizeVideoUrl } from "@/lib/video-embed";
+import { DEFAULT_COACH_VIDEO } from "@/lib/default-coach-video";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import heroDefault from "@/assets/hero-default.jpg";
 import cardTreino from "@/assets/card-treino.jpg";
 import cardDieta from "@/assets/card-dieta.jpg";
 import cardEvolucao from "@/assets/card-evolucao.jpg";
+import cardClinica from "@/assets/card-clinica.jpg";
 import { TenantSymbol } from "@/components/TenantSymbol";
 import EnablePushBanner from "@/components/EnablePushBanner";
 
@@ -30,6 +32,7 @@ const sections = [
   { title: "Meu Treino", to: "treino", img: cardTreino },
   { title: "Minha Dieta", to: "dieta", img: cardDieta },
   { title: "Minha Evolução", to: "evolucao", img: cardEvolucao },
+  { title: "Clínica", to: "clinica", img: cardClinica },
 ];
 
 const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) => {
@@ -188,15 +191,13 @@ const AlunoHome = () => {
       return;
     }
     
-    if (tenant?.hero_url) {
-      setPlaying({
-        id: "hero",
-        url: normalizeVideoUrl(tenant.hero_url),
-        title: tenant.tagline || tenant.nome || "Apresentação",
-        thumbnail_url: null,
-        platform: "hero"
-      });
-    }
+    setPlaying({
+      id: "hero",
+      url: tenant?.hero_url ? normalizeVideoUrl(tenant.hero_url) : DEFAULT_COACH_VIDEO,
+      title: tenant?.tagline || tenant?.nome || "Apresentação",
+      thumbnail_url: null,
+      platform: "hero"
+    });
   };
 
   // Auto-play silencioso de fundo (YouTube) — usa featured se houver, senão hero do tenant
@@ -227,7 +228,7 @@ const AlunoHome = () => {
       })
     : null;
   const heroEmbedSrc = ytAutoSrc || tenantHeroEmbedSrc;
-  const heroVideoSrc = featuredDirectUrl || tenantHeroDirectUrl;
+  const heroVideoSrc = featuredDirectUrl || tenantHeroDirectUrl || (!heroEmbedSrc ? DEFAULT_COACH_VIDEO : null);
 
   return (
     <>
@@ -297,7 +298,7 @@ const AlunoHome = () => {
           </div>
           <Button
             onClick={handlePlay}
-            disabled={!featuredUrl && !tenant?.hero_url}
+            disabled={false}
             className="inline-flex items-center gap-2 font-bold px-8 py-4 rounded-md tracking-widest shadow-xl transition-all active:scale-95 bg-white text-black hover:bg-white/90"
           >
             <Play className="h-5 w-5 fill-current" /> ASSISTIR

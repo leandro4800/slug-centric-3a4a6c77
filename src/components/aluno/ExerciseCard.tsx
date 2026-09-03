@@ -808,47 +808,53 @@ export const ExerciseCard = ({
     <div className={`bg-card/50 border rounded-xl overflow-hidden transition-all ${
       completed ? "border-emerald-500/60 bg-emerald-500/5 opacity-90" : "border-primary/30"
     }`}>
-      {/* Header com nome + ícone de vídeo lateral + toggle de séries */}
-      <div className="flex items-stretch min-h-[90px]">
+      {/* Header: grid trava a coluna do vídeo — fonte grande no Android não empurra ela pra fora */}
+      <div
+        className={`grid items-stretch min-h-[90px] overflow-hidden ${
+          hasAnyVideo ? "grid-cols-[minmax(0,1fr)_72px]" : "grid-cols-1"
+        }`}
+      >
         <button
           onClick={completed ? undefined : onToggle}
           disabled={completed}
-          className="flex-1 p-4 text-left min-w-0 disabled:cursor-not-allowed"
+          className="min-w-0 max-w-full p-4 text-left disabled:cursor-not-allowed"
         >
-          <div className="flex items-start justify-between gap-3">
-            <p className={`text-base font-semibold leading-tight truncate ${completed ? "line-through text-muted-foreground" : ""}`}>
+          <div className="flex min-w-0 items-start gap-2">
+            <p className={`min-w-0 flex-1 text-base font-semibold leading-tight break-words ${completed ? "line-through text-muted-foreground" : ""}`}>
               {data.exercicio}
             </p>
             {completed && (
-              <span className="flex items-center gap-1 text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-500 shrink-0">
-                <CheckCircle2 className="h-3 w-3" /> Concluído
+              <span className="flex shrink-0 items-center gap-1 rounded bg-emerald-500/20 px-1.5 py-0.5 text-[10px] font-bold uppercase text-emerald-500">
+                <CheckCircle2 className="h-3 w-3 shrink-0" />
               </span>
             )}
             {data.is_extra && !completed && (
-              <span className="text-[9px] uppercase px-2 py-0.5 rounded bg-accent/20 text-accent shrink-0">
-                Extra IA
+              <span className="shrink-0 rounded bg-accent/20 px-1.5 py-0.5 text-[9px] uppercase text-accent">
+                Extra
               </span>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            {cargaAnterior && (
-              <span className="px-3 py-1 rounded-full bg-primary/15 text-primary text-xs">
+          {cargaAnterior && (
+            <div className="mt-2 min-w-0">
+              <span className="inline-block max-w-full truncate rounded-full bg-primary/15 px-3 py-1 text-xs text-primary">
                 Última: {semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </button>
 
         {hasAnyVideo && (
           <button
             onClick={(e) => { e.stopPropagation(); setShowVideo((v) => !v); }}
-            className={`shrink-0 w-24 flex flex-col items-center justify-center gap-1 border-l border-primary/20 transition-colors ${
+            className={`flex w-full min-w-0 flex-col items-center justify-center gap-1 overflow-hidden border-l border-primary/20 px-1 transition-colors ${
               showVideo ? "bg-primary text-primary-foreground" : "bg-secondary/40 text-foreground hover:bg-secondary"
             }`}
-            aria-label="Abrir vídeo"
+            aria-label="Ver vídeo"
           >
-            <Video className="h-6 w-6" />
-            <span className="text-[10px] uppercase tracking-wider font-bold">Ver vídeo</span>
+            <Video className="h-5 w-5 shrink-0" />
+            <span className="max-w-full text-center text-[9px] font-bold uppercase leading-tight tracking-wide [overflow-wrap:anywhere]">
+              Ver vídeo
+            </span>
           </button>
         )}
       </div>

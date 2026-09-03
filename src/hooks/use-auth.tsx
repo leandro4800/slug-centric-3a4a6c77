@@ -152,12 +152,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     void App.addListener("appStateChange", ({ isActive }) => {
       if (isActive) {
         void supabase.auth.startAutoRefresh();
-        void supabase.auth.getSession().then(({ data, error }) => {
-          if (error) {
-            console.warn("[Auth] Falha ao restaurar sessão ao voltar ao app:", error);
+        void supabase.auth.refreshSession().then(({ data, error }) => {
+          if (data.session) {
+            setSession(data.session);
             return;
           }
-          if (data.session) setSession(data.session);
+          if (error) {
+            console.warn("[Auth] Refresh ao voltar ao app falhou; sessão local mantida.", error.message);
+          }
         });
         return;
       }
