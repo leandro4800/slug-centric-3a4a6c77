@@ -777,6 +777,7 @@ export const ExerciseCard = ({
       setRunning(false);
       setSeconds(0);
       try { localStorage.removeItem(storageKey); } catch {}
+      try { localStorage.removeItem(draftKey); } catch {}
       toast.success("Exercício finalizado.");
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível registrar as séries.");
