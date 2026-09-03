@@ -1001,7 +1001,6 @@ const AdminMontarTreino = () => {
 
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || null;
     const logo = await loadImageDataUrl(tenant?.logo_url);
-    const platLogo = await loadImageDataUrl(platformLogo);
 
     // Fundo claro (legível) com faixa vermelha lateral em todas as páginas
     const paintPageBackground = () => {
@@ -1355,7 +1354,6 @@ const AdminMontarTreino = () => {
 
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || null;
     const logo = await loadImageDataUrl(tenant?.logo_url);
-    const platLogo = await loadImageDataUrl(platformLogo);
 
     // Pinta fundo preto + faixa vermelha lateral (chamado ANTES de qualquer conteúdo em cada página)
     const paintDarkBg = () => {
