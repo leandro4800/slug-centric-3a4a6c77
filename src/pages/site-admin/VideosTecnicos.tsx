@@ -441,21 +441,33 @@ const VideosTecnicos = () => {
                 {f === "todos" ? "Todos" : f === "meus" ? "Meus vídeos" : "Do App"}
               </button>
             ))}
-            <button
-              onClick={toggleOnlyMine}
-              disabled={savingPref}
-              className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
-                onlyMine
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
-              }`}
-            >
-              Só meus p/ alunos {onlyMine ? "(ativo)" : ""}
-            </button>
+          </div>
+
+          <div className="mt-3 flex flex-wrap gap-2 items-center border border-border/60 bg-card/30 p-2">
+            <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
+              Alunos veem:
+            </span>
+            {(["ambos", "meus", "app"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => salvarFonteAlunos(f)}
+                disabled={savingPref}
+                className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
+                  fonteAlunos === f
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
+                }`}
+              >
+                {f === "ambos" ? "App + meus" : f === "meus" ? "Só meus" : "Só do app"}
+                {fonteAlunos === f ? " (ativo)" : ""}
+              </button>
+            ))}
             <span className="text-[11px] text-muted-foreground">
-              {onlyMine
+              {fonteAlunos === "meus"
                 ? "Alunos veem somente os seus vídeos."
-                : "Alunos veem vídeos do app + os seus (os seus têm prioridade)."}
+                : fonteAlunos === "app"
+                  ? "Alunos veem somente os vídeos do app."
+                  : "Alunos veem vídeos do app + os seus (os seus têm prioridade)."}
             </span>
           </div>
 
