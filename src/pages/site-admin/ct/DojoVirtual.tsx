@@ -32,6 +32,7 @@ const STORAGE_BUCKET = "comunidade_uploads";
 const CATEGORIAS_SUGERIDAS: Record<string, string[]> = {
   bjj: ["Guarda fechada", "Guarda aberta", "Passagem de guarda", "Raspagens", "Finalizações", "Montada", "Costas", "Defesa pessoal"],
   muay_thai: ["Socos", "Chutes", "Joelhos", "Cotoveladas", "Clinch", "Esquivas & defesas", "Combinações"],
+  kickboxing: ["Jab & cruz", "Chutes (front/circular/low kick)", "Combinações mão + pé", "Footwork & ângulos", "Defesa & bloqueio", "Clinch & joelhada", "Sparring"],
   boxe: ["Jab & direto", "Ganchos & uppercuts", "Footwork", "Defesa & esquiva", "Combinações", "Sparring"],
   mma: ["Trocação", "Wrestling / quedas", "Ground and pound", "Jogo de grade", "Finalizações", "Defesa de quedas"],
 };

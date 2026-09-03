@@ -7,6 +7,7 @@
 export const FIGHT_MODALIDADES = [
   { slug: "bjj", label: "BJJ" },
   { slug: "muay_thai", label: "Muay Thai" },
+  { slug: "kickboxing", label: "Kickboxing" },
   { slug: "boxe", label: "Boxe" },
   { slug: "mma", label: "MMA" },
 ] as const;
