@@ -232,7 +232,7 @@ const VideosTecnicos = () => {
         next === "meus"
           ? "Seus alunos verão apenas os SEUS vídeos"
           : next === "app"
-            ? "Seus alunos verão apenas os vídeos DO APP"
+            ? "Travado no padrão: seus alunos verão SOMENTE os vídeos da plataforma"
             : "Seus alunos verão os vídeos do app + os seus",
       );
     } catch (e: any) {
