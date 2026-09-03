@@ -56,22 +56,9 @@ const VideosTecnicos = () => {
   const [rows, setRows] = useState<VideoRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const filterStorageKey = `videos-tecnicos-filtro:${tenant?.id ?? "sem-tenant"}`;
-  const [filter, setFilter] = useState<"todos" | "app" | "meus">(() => {
-    // Padrão do app: mostrar a biblioteca da plataforma ("Do App").
-    const fallback: "todos" | "app" = tenant?.slug === "alphateam" ? "todos" : "app";
-    if (typeof window === "undefined") return fallback;
-    try {
-      const saved = window.localStorage.getItem(filterStorageKey);
-      if (saved === "todos" || saved === "app" || saved === "meus") return saved;
-    } catch {}
-    return fallback;
-  });
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(filterStorageKey, filter);
-    } catch {}
-  }, [filter, filterStorageKey]);
+  // O filtro visível e a fonte usada pelos alunos são uma única escolha.
+  // Começa sempre no padrão da plataforma e depois recebe o valor persistido do tenant.
+  const [filter, setFilter] = useState<"todos" | "app" | "meus">("app");
   // Fonte de vídeos que os ALUNOS enxergam (travada no tenant, persiste até
   // o coach trocar manualmente): ambos | meus | app.
   const [fonteAlunos, setFonteAlunos] = useState<"ambos" | "meus" | "app">("app");
@@ -120,13 +107,10 @@ const VideosTecnicos = () => {
       const fonte = (t as any)?.videos_fonte_alunos as string | undefined;
       // Padrão travado do app: "app" (só vídeos da plataforma). "meus"/"ambos"
       // só quando o coach escolheu explicitamente.
-      setFonteAlunos(
-        fonte === "meus" || fonte === "app" || fonte === "ambos"
-          ? (fonte as "meus" | "app" | "ambos")
-          : (t as any)?.usar_apenas_meus_videos
-            ? "meus"
-            : "app",
-      );
+      const fontePersistida: "meus" | "app" =
+        fonte === "meus" || (t as any)?.usar_apenas_meus_videos ? "meus" : "app";
+      setFonteAlunos(fontePersistida);
+      setFilter(isAppAdmin ? "todos" : fontePersistida);
       setVertical(String((t as any)?.vertical || "personal"));
 
       const { data, error } = await supabase
@@ -216,7 +200,9 @@ const VideosTecnicos = () => {
 
   // Trava a fonte de vídeos dos alunos no tenant. Persiste até troca manual.
   const salvarFonteAlunos = async (next: "ambos" | "meus" | "app") => {
-    if (!tenant?.id || next === fonteAlunos) return;
+    if (!tenant?.id) return;
+    if (next === "app" || next === "meus") setFilter(next);
+    if (next === fonteAlunos) return;
     try {
       setSavingPref(true);
       const { error } = await supabase
@@ -434,7 +420,11 @@ const VideosTecnicos = () => {
             {((isAppAdmin ? ["todos", "meus", "app"] : ["meus", "app"]) as ("todos" | "meus" | "app")[]).map((f) => (
               <button
                 key={f}
-                onClick={() => setFilter(f)}
+                onClick={() => {
+                  if (isAppAdmin || f === "todos") setFilter(f);
+                  else void salvarFonteAlunos(f);
+                }}
+                disabled={savingPref}
                 className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
                   filter === f
                     ? "bg-primary text-primary-foreground border-primary"
@@ -450,27 +440,10 @@ const VideosTecnicos = () => {
             <span className="text-[10px] uppercase tracking-widest font-bold text-muted-foreground">
               Alunos veem:
             </span>
-            {(["ambos", "meus", "app"] as const).map((f) => (
-              <button
-                key={f}
-                onClick={() => salvarFonteAlunos(f)}
-                disabled={savingPref}
-                className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
-                  fonteAlunos === f
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
-                }`}
-              >
-                {f === "ambos" ? "App + meus" : f === "meus" ? "Só meus" : "Só do app"}
-                {fonteAlunos === f ? " (ativo)" : ""}
-              </button>
-            ))}
             <span className="text-[11px] text-muted-foreground">
               {fonteAlunos === "meus"
-                ? "Alunos veem somente os seus vídeos."
-                : fonteAlunos === "app"
-                  ? "Padrão travado: seus alunos verão somente os vídeos da plataforma."
-                  : "Alunos veem vídeos do app + os seus (os seus têm prioridade)."}
+                ? "Meus vídeos (ativo): alunos veem somente os vídeos deste coach."
+                : "Do App (ativo): alunos veem somente os vídeos da plataforma."}
             </span>
           </div>
 
