@@ -666,22 +666,28 @@ export const ExerciseCard = ({
     setSavingSlots((current) => new Set(current).add(i));
     try {
       const prescribedId = isUuid(data.id) ? data.id : null;
+      // upsert: a mesma série da mesma sessão nunca gera uma segunda linha
+      // (evita volume duplicado quando o app reenvia/reconfirma a série).
       const { data: inserted, error } = await supabase
         .from("series_executadas")
-        .insert({
-          aluno_id: userId,
-          tenant_id: tenantId,
-          sessao_id: sessaoId,
-          treino_prescrito_id: prescribedId,
-          numero_serie: i + 1,
-          tipo_serie: getSlotType(i),
-          peso_kg: weight,
-          reps,
-          tempo_seg: semCarga ? seconds : null,
-          concluida_em: new Date().toISOString(),
-        } as any)
+        .upsert(
+          {
+            aluno_id: userId,
+            tenant_id: tenantId,
+            sessao_id: sessaoId,
+            treino_prescrito_id: prescribedId,
+            numero_serie: i + 1,
+            tipo_serie: getSlotType(i),
+            peso_kg: weight,
+            reps,
+            tempo_seg: semCarga ? seconds : null,
+            concluida_em: new Date().toISOString(),
+          } as any,
+          { onConflict: "sessao_id,treino_prescrito_id,numero_serie" },
+        )
         .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie")
         .single();
+
       if (error) throw error;
 
 
