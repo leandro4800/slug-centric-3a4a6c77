@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { useBranding, type ThemeOverrides } from "@/contexts/BrandingProvider";
+import { useBranding, applyTheme, type ThemeOverrides, type ThemeMode } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { PhonePreview } from "./PhonePreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, RotateCcw, Save, Check, Music } from "lucide-react";
+import { Loader2, RotateCcw, Save, Check, Music, Contrast } from "lucide-react";
 import { toast } from "sonner";
 
 type Preset = {
@@ -76,6 +76,12 @@ export const IdentidadeVisual = () => {
   const [musicUrl, setMusicUrl] = useState<string>("");
   const [savingMusic, setSavingMusic] = useState(false);
   const [presets, setPresets] = useState<Preset[]>(FALLBACK_PRESETS);
+  const [themeMode, setThemeMode] = useState<ThemeMode>((tenant?.theme_mode as ThemeMode) ?? "escuro");
+  const [savingMode, setSavingMode] = useState(false);
+
+  useEffect(() => {
+    setThemeMode((tenant?.theme_mode as ThemeMode) ?? "escuro");
+  }, [tenant?.theme_mode]);
 
   useEffect(() => {
     if (!tenant?.owner_user_id) {
@@ -127,6 +133,23 @@ export const IdentidadeVisual = () => {
     setSavingMusic(false);
     if (error) return toast.error(error.message);
     toast.success(musicUrl.trim() ? "Música do seu perfil salva!" : "Música do perfil removida");
+  };
+
+  const saveMode = async (mode: ThemeMode) => {
+    if (!tenant || mode === themeMode) return;
+    setSavingMode(true);
+    const previous = themeMode;
+    setThemeMode(mode);
+    applyTheme((tenant.theme_overrides as ThemeOverrides | null) ?? null, tenant.hero_url, true, mode);
+    const { error } = await supabase.from("tenants").update({ theme_mode: mode }).eq("id", tenant.id);
+    setSavingMode(false);
+    if (error) {
+      setThemeMode(previous);
+      applyTheme((tenant.theme_overrides as ThemeOverrides | null) ?? null, tenant.hero_url, true, previous);
+      return toast.error(error.message);
+    }
+    toast.success(mode === "suave" ? "Modo Suave aplicado!" : "Modo Escuro aplicado!");
+    await refresh();
   };
 
   const handlePick = (p: Preset) => {
