@@ -555,17 +555,88 @@ export const ExerciseCard = ({
     return empty;
   };
 
+  // Chave do rascunho da sessão ativa: valores digitados sobrevivem ao fechar o app.
+  const draftKey = `treino-draft:${userId || "anon"}:${data.id}:${sessaoId || "no-session"}`;
+  const [draftLoaded, setDraftLoaded] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
     setSlots(emptySlots());
     setRecordSlots(new Set());
+    setDraftLoaded(false);
+
+    // 1) Rascunho local (séries digitadas mas ainda não confirmadas)
+    let base = emptySlots();
+    try {
+      const raw = localStorage.getItem(draftKey);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          base = base.map((s, i) => ({
+            carga: typeof parsed[i]?.carga === "string" ? parsed[i].carga : s.carga,
+            reps: typeof parsed[i]?.reps === "string" ? parsed[i].reps : s.reps,
+            done: false,
+          }));
+        }
+      }
+    } catch {}
+
+    // 2) Séries já confirmadas nesta sessão (fonte de verdade: Supabase)
+    (async () => {
+      let next = base;
+      if (userId && sessaoId && isUuid(data.id)) {
+        const { data: rows } = await supabase
+          .from("series_executadas")
+          .select("numero_serie, peso_kg, reps, is_recorde")
+          .eq("aluno_id", userId)
+          .eq("sessao_id", sessaoId)
+          .eq("treino_prescrito_id", data.id)
+          .order("numero_serie", { ascending: true });
+        if (cancelled) return;
+        const records = new Set<number>();
+        for (const row of rows || []) {
+          const idx = (Number(row.numero_serie) || 0) - 1;
+          if (idx < 0 || idx >= next.length) continue;
+          next = next.map((s, i) =>
+            i === idx
+              ? {
+                  carga: row.peso_kg != null ? String(row.peso_kg) : s.carga,
+                  reps: row.reps != null ? String(row.reps) : s.reps,
+                  done: true,
+                }
+              : s,
+          );
+          if (row.is_recorde) records.add(idx);
+        }
+        if (records.size) setRecordSlots(records);
+      }
+      if (!cancelled) {
+        setSlots(next);
+        setDraftLoaded(true);
+      }
+    })();
+
     loadHistory()
       .then((snapshot) => { if (!cancelled) setHistory(snapshot); })
       .catch(() => { if (!cancelled) setHistory({ hasWorkHistory: false, maxWeight: 0, maxEstimatedRm: 0, maxVolumeBySeries: new Map(), previousBySeries: new Map(), legacyPrevious: null }); });
     return () => { cancelled = true; };
-    // Inputs reset only when the exercise/session changes, never from previous values.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.id, userId, sessaoId]);
+
+  // Persiste o rascunho (KG/reps digitados) a cada alteração.
+  useEffect(() => {
+    if (!draftLoaded) return;
+    try {
+      if (slots.some((s) => s.carga || s.reps)) {
+        localStorage.setItem(
+          draftKey,
+          JSON.stringify(slots.map((s) => ({ carga: s.carga, reps: s.reps }))),
+        );
+      } else {
+        localStorage.removeItem(draftKey);
+      }
+    } catch {}
+  }, [slots, draftKey, draftLoaded]);
 
   const coachUrl = data.video_coach_url || null;
   const hasCoach = !!coachUrl;
