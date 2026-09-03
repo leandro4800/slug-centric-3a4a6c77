@@ -50,6 +50,9 @@ const AlunoLayout = () => {
         return;
       }
 
+      // Só alunos de verdade (não donos de tenant nem admins) marcam primeiro acesso.
+      supabase.functions.invoke("notify-first-access").catch(() => {});
+
       const [perfilRes, anamRes, avalRes] = await Promise.all([
         supabase.from("perfis").select("onboarding_completo").eq("id", user.id).maybeSingle(),
         supabase.from("anamnese_aluno").select("id", { count: "exact", head: true }).eq("aluno_id", user.id),
