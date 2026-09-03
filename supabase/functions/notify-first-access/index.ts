@@ -33,6 +33,16 @@ Deno.serve(async (req) => {
     const user = userRes?.user;
     if (userErr || !user) return json({ error: "not authenticated" }, 401);
 
+    // Segurança extra: coaches (donos de tenant) e admins da plataforma nunca
+    // disparam "primeiro acesso de aluno", mesmo que o client chame por engano.
+    const [{ data: ownedTenant }, { data: privilegedRoles }] = await Promise.all([
+      admin.from("tenants").select("id").eq("owner_user_id", user.id).limit(1).maybeSingle(),
+      admin.from("user_roles").select("role").eq("user_id", user.id).in("role", ["admin", "coach"]),
+    ]);
+    if (ownedTenant?.id || (privilegedRoles ?? []).length > 0) {
+      return json({ ok: true, first: false, skipped: "not_student" });
+    }
+
     const now = new Date();
 
     // Marca o primeiro acesso de forma atômica: só atualiza se ainda for nulo.
