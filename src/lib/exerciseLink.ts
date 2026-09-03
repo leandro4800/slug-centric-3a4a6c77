@@ -38,6 +38,16 @@ export async function matchExercicio(
  * Resolve o `referencia_exercicio_id` de uma lista de nomes.
  * Só vincula automaticamente acima de AUTO_LINK_SCORE.
  */
+/** Normaliza igual à função SQL `normalizar_nome_exercicio`. */
+export function normalizarNomeExercicio(nome: string): string {
+  return (nome || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
 export async function resolveExercicioIds(
   tenantId: string,
   nomes: string[],
@@ -47,7 +57,14 @@ export async function resolveExercicioIds(
   await Promise.all(
     unicos.map(async (nome) => {
       const m = await matchExercicio(tenantId, nome);
-      out[nome] = m && m.score >= AUTO_LINK_SCORE ? m.id : null;
+      if (!m) {
+        out[nome] = null;
+        return;
+      }
+      // Nome idêntico (ignorando acentos/maiúsculas) sempre vincula.
+      const exato =
+        normalizarNomeExercicio(m.nome_exercicio) === normalizarNomeExercicio(nome);
+      out[nome] = exato || m.score >= AUTO_LINK_SCORE ? m.id : null;
     }),
   );
   return out;
