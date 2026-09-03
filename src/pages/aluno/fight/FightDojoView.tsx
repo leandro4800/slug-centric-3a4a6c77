@@ -84,12 +84,32 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
       <div className="px-1">
         <h2 className="font-display text-lg uppercase italic tracking-tight flex items-center gap-2">
           <GraduationCap className="h-4 w-4 text-primary" />
-          Dojo Virtual · {modalidadeLabel(modalidade)}
+          Dojo Virtual · {modalidadeLabel(modAtiva)}
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
           Sua área de membros: técnica e metodologia do seu CT, por posição e nível.
         </p>
       </div>
+
+      {/* Seletor de modalidade */}
+      <div className="-mx-4 px-4 overflow-x-auto scrollbar-none">
+        <div className="flex gap-2 min-w-max pb-1">
+          {FIGHT_MODALIDADES.map((m) => (
+            <button
+              key={m.slug}
+              onClick={() => setModAtiva(m.slug)}
+              className={`rounded-full px-4 py-2 text-[11px] font-bold uppercase tracking-widest whitespace-nowrap transition-all ${
+                modAtiva === m.slug
+                  ? "bg-primary text-primary-foreground shadow-[0_0_20px_hsl(var(--primary)/0.4)]"
+                  : "border border-white/10 bg-black/40 text-muted-foreground hover:border-primary/40"
+              }`}
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
 
       {/* Destaque */}
       {destaque && (
