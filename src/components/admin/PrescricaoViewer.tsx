@@ -34,7 +34,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
-import { resolveExercicioIds } from "@/lib/exerciseLink";
+import { resolveExercicioIds, linkIdPara } from "@/lib/exerciseLink";
 import { toast } from "sonner";
 
 interface Props {
@@ -1217,7 +1217,7 @@ const TreinoEditor = ({
           cadencia: i.cadencia || null,
           detalhes_execucao: i.detalhes_execucao || null,
           observacao: i.observacao || null,
-          referencia_exercicio_id: linkMap[(i.exercicio || "").trim()] ?? null,
+          referencia_exercicio_id: linkIdPara(linkMap, i.exercicio),
         };
       });
 
