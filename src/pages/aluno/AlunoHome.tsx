@@ -160,20 +160,28 @@ const AlunoHome = () => {
     };
   };
 
-  const featuredRaw = vlogs.find((v) => Boolean(v.url?.trim())) ?? vlogs[0];
+  const featuredRaw = vlogs.find((v) => Boolean(v.url?.trim())) ?? null;
   const featured = featuredRaw ? normalizePlayableVlog(featuredRaw) : undefined;
   const featuredUrl = featured?.url ? normalizeVideoUrl(featured.url) : null;
-  const ytId = featuredUrl
-    ? extractYouTubeId(featuredUrl)
-    : extractYouTubeId(tenant?.hero_url);
-  
-  // Vídeo direto do featured (mp4 etc) ou fallback para hero do tenant
+
+  // Vídeo do coach: vlog em destaque (YouTube/mp4) ou hero_url se for vídeo.
+  // Imagem de capa NÃO conta — aí entra o videopadrao.
+  const featuredYtId = featuredUrl ? extractYouTubeId(featuredUrl) : null;
   const featuredDirectUrl = featuredUrl && isDirectVideo(featuredUrl) ? featuredUrl : null;
-  const tenantHeroVideoId = !featured ? extractYouTubeId(tenant?.hero_url) : null;
-  const tenantHeroDirectUrl = !featured && isDirectVideo(tenant?.hero_url) ? tenant?.hero_url : null;
+  const heroYtId = !featuredYtId && !featuredDirectUrl ? extractYouTubeId(tenant?.hero_url) : null;
+  const heroDirectUrl =
+    !featuredYtId && !featuredDirectUrl && isDirectVideo(tenant?.hero_url) ? tenant!.hero_url! : null;
+
+  const coachVideoYtId = featuredYtId || heroYtId;
+  const coachVideoDirectUrl = featuredDirectUrl || heroDirectUrl;
+  const hasCoachVideo = !!(coachVideoYtId || coachVideoDirectUrl);
+
+  const ytId = coachVideoYtId;
+  const heroVideoSrc = coachVideoDirectUrl || (!hasCoachVideo ? DEFAULT_COACH_VIDEO : null);
 
   const heroImg = featured
-    ? (!isVlogVideoPageUrl(featured.thumbnail_url) && featured.thumbnail_url) || (ytId ? buildYouTubeThumbnailUrl(ytId) : tenant?.hero_url || heroDefault)
+    ? (!isVlogVideoPageUrl(featured.thumbnail_url) && featured.thumbnail_url) ||
+      (featuredYtId ? buildYouTubeThumbnailUrl(featuredYtId) : tenant?.hero_url || heroDefault)
     : tenant?.hero_url || heroDefault;
 
   const buildThumb = (v: VlogPost): string => {
@@ -186,23 +194,45 @@ const AlunoHome = () => {
   };
 
   const handlePlay = () => {
-    if (featured && featuredUrl) {
+    if (featured && featuredUrl && (featuredYtId || isDirectVideo(featuredUrl))) {
       setPlaying({ ...featured, url: featuredUrl });
       return;
     }
-    
+
+    if (heroYtId) {
+      setPlaying({
+        id: "hero",
+        url: normalizeVideoUrl(tenant!.hero_url!),
+        title: tenant?.tagline || tenant?.nome || "Apresentação",
+        thumbnail_url: null,
+        platform: "hero",
+      });
+      return;
+    }
+
+    if (heroDirectUrl) {
+      setPlaying({
+        id: "hero",
+        url: heroDirectUrl,
+        title: tenant?.tagline || tenant?.nome || "Apresentação",
+        thumbnail_url: null,
+        platform: "hero",
+      });
+      return;
+    }
+
     setPlaying({
-      id: "hero",
-      url: tenant?.hero_url ? normalizeVideoUrl(tenant.hero_url) : DEFAULT_COACH_VIDEO,
+      id: "hero-default",
+      url: DEFAULT_COACH_VIDEO,
       title: tenant?.tagline || tenant?.nome || "Apresentação",
       thumbnail_url: null,
-      platform: "hero"
+      platform: "hero",
     });
   };
 
-  // Auto-play silencioso de fundo (YouTube) — usa featured se houver, senão hero do tenant
-  const ytAutoSrc = ytId
-    ? buildYouTubeEmbedUrl(ytId, {
+  // Auto-play silencioso de fundo (YouTube) — só se o coach tiver vídeo YouTube
+  const ytAutoSrc = coachVideoYtId
+    ? buildYouTubeEmbedUrl(coachVideoYtId, {
         autoplay: true,
         mute: muted,
         controls: expanded,
@@ -215,20 +245,7 @@ const AlunoHome = () => {
         disablekb: !expanded,
       })
     : null;
-  const tenantHeroEmbedSrc = tenantHeroVideoId
-    ? buildYouTubeEmbedUrl(tenantHeroVideoId, {
-        autoplay: true,
-        mute: true,
-        loop: true,
-        controls: false,
-        showinfo: false,
-        rel: false,
-        modestbranding: true,
-        playsinline: true,
-      })
-    : null;
-  const heroEmbedSrc = ytAutoSrc || tenantHeroEmbedSrc;
-  const heroVideoSrc = featuredDirectUrl || tenantHeroDirectUrl || (!heroEmbedSrc ? DEFAULT_COACH_VIDEO : null);
+  const heroEmbedSrc = ytAutoSrc;
 
   return (
     <>
@@ -236,25 +253,24 @@ const AlunoHome = () => {
       <section className="relative h-[70vh] min-h-[400px] w-full overflow-hidden flex flex-col justify-end pb-[10%] px-5">
         {/* Background Hero (contido na seção) */}
         <div className="hero-mask">
-          {(heroEmbedSrc || heroVideoSrc) ? (
-            heroEmbedSrc ? (
-              <iframe
-                key={`${ytId || tenantHeroVideoId}-${muted}-${expanded}`}
-                src={heroEmbedSrc}
-                referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
-                allow={YOUTUBE_IFRAME_ALLOW}
-                className="w-full h-full pointer-events-none scale-135"
-              />
-            ) : heroVideoSrc ? (
-              <video
-                src={heroVideoSrc}
-                autoPlay
-                muted
-                loop
-                playsInline
-                className="w-full h-full object-cover"
-              />
-            ) : null
+          {heroEmbedSrc ? (
+            <iframe
+              key={`${ytId}-${muted}-${expanded}`}
+              src={heroEmbedSrc}
+              referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
+              allow={YOUTUBE_IFRAME_ALLOW}
+              className="w-full h-full pointer-events-none scale-135"
+            />
+          ) : heroVideoSrc ? (
+            <video
+              src={heroVideoSrc}
+              autoPlay
+              muted
+              loop
+              playsInline
+              poster={hasCoachVideo ? undefined : heroImg}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <img src={heroImg} alt="" className="w-full h-full object-cover" />
           )}

@@ -13,7 +13,6 @@ import macroFats from "@/assets/macro-fats.jpg";
 import mealBreakfast from "@/assets/meal-breakfast.jpg";
 import mealLunch from "@/assets/meal-lunch.jpg";
 import mealDinner from "@/assets/meal-dinner.jpg";
-import { coachVideoOrDefault } from "@/lib/default-coach-video";
 
 interface Props {
   onPick: (target: EditableTarget) => void;
@@ -436,17 +435,19 @@ export const PhonePreview = ({ onPick, pickedTarget, initialScreen = "home" }: P
                   </div>
 
                   <div className="bg-black/40 border border-white/10 rounded-xl overflow-hidden shadow-2xl h-[400px] flex flex-col relative">
-                    <div className="absolute inset-0 z-0">
-                      <video
-                        src={coachVideoOrDefault(tenant?.login_video_url)}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute inset-0 bg-black/40" />
-                    </div>
+                    {tenant?.login_video_url && (
+                      <div className="absolute inset-0 z-0">
+                        <video
+                          src={tenant.login_video_url}
+                          autoPlay
+                          loop
+                          muted
+                          playsInline
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40" />
+                      </div>
+                    )}
                     <div className="p-4 space-y-3 relative z-10 flex-1 flex flex-col justify-center">
                       <div className="space-y-1">
                         <div className="h-1.5 w-8 bg-foreground/20 rounded" />

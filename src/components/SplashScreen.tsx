@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
-import { coachVideoOrDefault } from "@/lib/default-coach-video";
 
 // Chave por tenant e sessão — assim cada coach tem seu próprio splash garantido
 const sessionKeyFor = (slug: string | null | undefined) =>
@@ -33,7 +32,6 @@ export const SplashScreen = () => {
   const startedForTenantRef = useRef<string | null>(null);
 
   const tenantKey = tenant?.slug ?? "_neutral";
-  const splashSrc = coachVideoOrDefault(tenant?.splash_video_url);
 
   // Limpa marcas ao deslogar — assim no próximo login o splash volta a aparecer
   useEffect(() => {
@@ -88,7 +86,8 @@ export const SplashScreen = () => {
     }
 
     // Branding carregou, agora podemos agendar o fim baseado no conteúdo.
-    const showMs = 2800;
+    const hasVideo = !!tenant?.splash_video_url;
+    const showMs = hasVideo ? 2800 : 1800;
 
     const fadeTimer = setTimeout(() => {
       setIsVisible(false);
@@ -115,24 +114,60 @@ export const SplashScreen = () => {
         !isVisible && "opacity-0 pointer-events-none"
       )}
     >
-      <video
-        src={splashSrc}
-        autoPlay
-        muted
-        playsInline
-        onPlaying={() => setVideoPlaying(true)}
-        onError={() => {
-          setIsVisible(false);
-          setTimeout(() => setShouldRender(false), 300);
-        }}
-        className="absolute inset-0 w-full h-full object-cover"
-      />
-      <div
-        className={cn(
-          "absolute inset-0 z-10 flex flex-col items-center justify-center bg-background transition-opacity duration-200 ease-in-out",
-          videoPlaying && "opacity-0 pointer-events-none"
-        )}
-      >
+      {tenant?.splash_video_url ? (
+        <>
+          <video
+            src={tenant.splash_video_url}
+            autoPlay
+            muted
+            playsInline
+            onPlaying={() => setVideoPlaying(true)}
+            onError={() => {
+              setIsVisible(false);
+              setTimeout(() => setShouldRender(false), 300);
+            }}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div
+            className={cn(
+              "absolute inset-0 z-10 flex flex-col items-center justify-center bg-background transition-opacity duration-200 ease-in-out",
+              videoPlaying && "opacity-0 pointer-events-none"
+            )}
+          >
+            <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-1000">
+              {tenant?.logo_url ? (
+                <div className="flex flex-col items-center gap-6">
+                  <img
+                    src={tenant.logo_url}
+                    alt={tenant.nome}
+                    className="w-40 h-40 object-contain animate-pulse shadow-2xl rounded-xl"
+                  />
+                  <h1 className="text-3xl font-display tracking-[0.2em] uppercase text-foreground text-center px-4">
+                    {tenant.nome}
+                  </h1>
+                </div>
+              ) : (
+                <div className="scale-[2] mb-12">
+                  <img
+                    src={defaultLogoAsset.url}
+                    alt={tenant?.nome || "AlphaCoach"}
+                    className="w-24 h-24 object-contain"
+                  />
+                </div>
+              )}
+
+              <div className="mt-12 flex flex-col items-center gap-4">
+                <div className="w-56 h-1.5 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+                  <div className="h-full bg-primary animate-progress-loading shadow-[0_0_15px_rgba(var(--primary),0.5)]" />
+                </div>
+                <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground animate-pulse">
+                  Carregando Ecossistema
+                </span>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : (
         <div className="flex flex-col items-center gap-8 animate-in fade-in zoom-in duration-1000">
           {tenant?.logo_url ? (
             <div className="flex flex-col items-center gap-6">
@@ -164,7 +199,7 @@ export const SplashScreen = () => {
             </span>
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

@@ -12,7 +12,6 @@ import { BackgroundVideo } from "@/components/BackgroundVideo";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import loginBg from "@/assets/login-anilhas-bg.jpg";
-import { coachVideoOrDefault } from "@/lib/default-coach-video";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
 import { isSafeTenantSlug, readFallbackTenantSlug } from "@/lib/tenant-slug";
@@ -52,7 +51,6 @@ const Login = () => {
           login_video_url: null,
         }
       : null);
-  const loginVideoSrc = coachVideoOrDefault(displayTenant?.login_video_url);
   const { user } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -301,14 +299,21 @@ const Login = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center px-4 overflow-hidden bg-background">
-      <BackgroundVideo
-        src={loginVideoSrc}
-        posterUrl={displayTenant?.hero_url || loginBg}
-        className="absolute inset-0 scale-110 lg:block hidden"
-      />
-      
+      {displayTenant?.login_video_url ? (
+        <BackgroundVideo
+          src={displayTenant.login_video_url}
+          posterUrl={displayTenant?.hero_url || loginBg}
+          className="absolute inset-0 scale-110 lg:block hidden"
+        />
+      ) : (
+        <div
+          className="absolute inset-0 bg-cover bg-center scale-110 lg:block hidden"
+          style={{ backgroundImage: `url(${displayTenant?.hero_url || loginBg})` }}
+        />
+      )}
+
       {/* Background for mobile/tablet when video is inside the container */}
-      <div 
+      <div
         className="absolute inset-0 bg-cover bg-center scale-110 lg:hidden block"
         style={{ backgroundImage: `url(${displayTenant?.hero_url || loginBg})` }}
       />
@@ -338,14 +343,16 @@ const Login = () => {
         </div>
         <div className="relative bg-black/40 lg:bg-black/10 border border-white/20 rounded-none shadow-card overflow-hidden min-h-screen lg:min-h-[400px] flex flex-col">
           {/* Responsive Video Container for Mobile/Tablet */}
-          <div className="lg:hidden absolute inset-0 z-0">
-            <BackgroundVideo
-              src={loginVideoSrc}
-              posterUrl={displayTenant?.hero_url || loginBg}
-              className="h-full w-full"
-            />
-            <div className="absolute inset-0 bg-black/40" />
-          </div>
+          {displayTenant?.login_video_url && (
+            <div className="lg:hidden absolute inset-0 z-0">
+              <BackgroundVideo
+                src={displayTenant.login_video_url}
+                posterUrl={displayTenant?.hero_url || loginBg}
+                className="h-full w-full"
+              />
+              <div className="absolute inset-0 bg-black/40" />
+            </div>
+          )}
 
           <div className="p-8 relative z-10 flex-1 flex flex-col justify-center">
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary-glow via-primary to-primary-glow" />
