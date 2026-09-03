@@ -1387,12 +1387,15 @@ const AdminMontarTreino = () => {
       } catch {}
     }
     // Tag ORIGINAL
-    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
-    doc.rect(heroX, 8, 34, 5, "F");
-    doc.setTextColor(255, 255, 255);
+    const marcaNome = (tenant?.nome || "").toUpperCase() || "ALPHA COACH";
+    const tagTexto = `UM ORIGINAL ${marcaNome}`;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    doc.text("UM ORIGINAL ALPHA COACH", heroX + 17, 11.5, { align: "center" });
+    const tagW = Math.max(34, doc.getTextWidth(tagTexto) + 6);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
+    doc.rect(heroX, 8, tagW, 5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.text(tagTexto, heroX + tagW / 2, 11.5, { align: "center" });
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -1401,7 +1404,7 @@ const AdminMontarTreino = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(200, 200, 200);
-    doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 30);
+    doc.text(`METODOLOGIA ${marcaNome}  •  TEMPORADA 2026`, heroX, 30);
 
     doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.setLineWidth(0.4);
