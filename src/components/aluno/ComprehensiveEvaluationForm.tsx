@@ -361,11 +361,11 @@ export const ComprehensiveEvaluationForm = ({
     <div className="space-y-4 py-4">
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>Peso (kg)</Label>
+          <Label>Peso (kg) <span className="text-primary">*</span></Label>
           <Input type="number" step="0.1" value={form.peso} onChange={e => setForm({...form, peso: e.target.value})} />
         </div>
         <div className="space-y-2">
-          <Label>Altura (cm ou m)</Label>
+          <Label>Altura (cm ou m) <span className="text-primary">*</span></Label>
           <Input type="text" inputMode="decimal" value={form.altura} onChange={e => setForm({...form, altura: e.target.value})} placeholder="1,78 ou 178" />
         </div>
         <div className="space-y-2">
