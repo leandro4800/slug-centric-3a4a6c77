@@ -665,8 +665,8 @@ export const ExerciseCard = ({
     const slot = slots[i];
     if (!slot || slot.done || savingSlots.has(i)) return;
     const weight = semCarga ? 0 : Number(slot.carga.replace(",", "."));
-    const reps = Number.parseInt(slot.reps, 10);
-    if (!Number.isInteger(reps) || reps <= 0) {
+    const reps = soTempo ? null : Number.parseInt(slot.reps, 10);
+    if (!soTempo && (!Number.isInteger(reps as number) || (reps as number) <= 0)) {
       toast.error("Informe as repetições.");
       return;
     }
@@ -674,6 +674,7 @@ export const ExerciseCard = ({
       toast.error("Informe KG e repetições válidos.");
       return;
     }
+
 
     setSavingSlots((current) => new Set(current).add(i));
     try {
