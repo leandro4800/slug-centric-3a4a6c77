@@ -40,6 +40,13 @@ Use SEMPRE alternativas de lanche: pão integral, tapioca, torrada/biscoito inte
 iogurte natural/grego, queijo branco/cottage/ricota, ovos cozidos, whey protein, pasta de amendoim (controlada), aveia, granola sem açúcar.
 Se o alimento pedido pelo aluno ou pelo coach for de refeição principal, coloque-o no almoço/jantar e escolha o equivalente de lanche aqui.`;
 
+const REGRAS_WHEY = `==== WHEY PROTEIN (OBRIGATÓRIO) ====
+- Whey protein pode aparecer em NO MÁXIMO 2 (duas) refeições no dia inteiro.
+- Locais permitidos para whey: (1) refeição PÓS-TREINO e (2) LANCHE DA TARDE (opcional).
+- É PROIBIDO colocar whey no café da manhã, almoço, jantar, lanche da manhã, ceia ou qualquer outra refeição.
+- Se não houver refeição pós-treino nem lanche da tarde no plano do dia, NÃO use whey em nenhuma refeição.
+- Mesmo que a anamnese cite whey como suplemento, respeite este limite de 2 refeições e estas posições.`;
+
 const REGRAS_DUAS_OPCOES = `==== OPÇÕES DE CARDÁPIO POR REFEIÇÃO ====
 Quando fizer sentido oferecer alternativa (ou quando o documento/coach pedir duas opções), estruture a refeição em opções
 usando EXATAMENTE este formato dentro de "descricao_ia":
@@ -628,6 +635,8 @@ ${REGRAS_REFEICAO_LIVRE}
 
 ${REGRAS_LANCHE_TARDE}
 
+${REGRAS_WHEY}
+
 ${REGRAS_DUAS_OPCOES}
 
 REGRAS:
@@ -887,6 +896,8 @@ Se o aluno declarou um alimento favorito para uma refeição específica (ex.: "
 ${REGRAS_REFEICAO_LIVRE}
 
 ${REGRAS_LANCHE_TARDE}
+
+${REGRAS_WHEY}
 
 ${REGRAS_DUAS_OPCOES}
 
