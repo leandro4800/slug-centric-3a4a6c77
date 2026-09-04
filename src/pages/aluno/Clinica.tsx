@@ -410,7 +410,6 @@ const Clinica = () => {
               <ChevronRight className="h-3 w-3 rotate-180" /> Fazer nova análise
             </Button>
             <AnalysisResults
-              score={currentAnalysis.score_performance ?? currentAnalysis.pontuacao_geral}
               parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
               marcadores={currentAnalysis.marcadores}
             />
