@@ -222,7 +222,7 @@ export default function Onboarding() {
       const nivelEstresse = Math.min(Math.max(Number(estresse[0]) || 5, 1), 10);
 
       const { data: rpcData, error: rpcError } = await supabase.rpc("complete_student_onboarding", {
-        _tenant_id: tenantId,
+        _tenant_id: resolvedTenantId,
         _nome_completo: nome,
         _telefone: telefone,
         _data_nascimento: dataNasc || null,
