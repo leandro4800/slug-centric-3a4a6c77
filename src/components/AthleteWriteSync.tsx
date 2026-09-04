@@ -74,7 +74,7 @@ export default function AthleteWriteSync() {
       >
         <CloudOff className="h-4 w-4 shrink-0 text-amber-400" />
         <span className="flex-1">
-          {jobs.length} dado(s) do treino/avaliação aguardando rede para chegar ao coach.
+          {jobs.length} dado(s) (série/avaliação/anamnese) aguardando rede para chegar ao coach.
         </span>
         <RefreshCw className={`h-3.5 w-3.5 shrink-0 ${syncing ? "animate-spin" : ""}`} />
       </button>

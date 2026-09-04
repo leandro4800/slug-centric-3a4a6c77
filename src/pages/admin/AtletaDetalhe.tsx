@@ -169,6 +169,7 @@ const AtletaDetalhe = () => {
   const [anamnese, setAnamnese] = useState<any>(null);
   const [showAnamneseDialog, setShowAnamneseDialog] = useState(false);
   const [ultimaAvaliacao, setUltimaAvaliacao] = useState<any>(null);
+  const [seriesCount, setSeriesCount] = useState(0);
   const [pesoSerie, setPesoSerie] = useState<{ data: string; peso: number }[]>([]);
   const [loadingAnamnese, setLoadingAnamnese] = useState(false);
   const [showPromptDialog, setShowPromptDialog] = useState(false);
@@ -206,7 +207,8 @@ const AtletaDetalhe = () => {
       { data: pt }, 
       { data: ana },
       { data: avals },
-      { data: checkins }
+      { data: checkins },
+      { count: seriesCnt },
     ] = await Promise.all([
       supabase
         .from("perfis")
@@ -233,12 +235,17 @@ const AtletaDetalhe = () => {
         .select("data_checkin, peso_kg")
         .eq("user_id", atletaId!)
         .order("data_checkin", { ascending: true }),
+      supabase
+        .from("series_executadas")
+        .select("id", { count: "exact", head: true })
+        .eq("aluno_id", atletaId!),
     ]);
     const listaAvals = (avals as any[]) || [];
     setAluno((a as Aluno) || (DEMO_ATHLETES.find((athlete) => athlete.id === atletaId) as Aluno | undefined) || null);
     setPerfil((pt as PerfilTreino) || null);
     setAnamnese(ana);
     setUltimaAvaliacao(listaAvals.length ? listaAvals[listaAvals.length - 1] : null);
+    setSeriesCount(seriesCnt ?? 0);
 
     const pontos = [
       ...((checkins as any[]) || []).map((c) => ({
@@ -792,7 +799,30 @@ const AtletaDetalhe = () => {
             <span className="flex-1 text-xs font-bold uppercase tracking-wider">
               Ver anamnese completa
             </span>
+            <span className={`text-[10px] uppercase tracking-wider ${anamnese ? "text-emerald-400" : "text-muted-foreground"}`}>
+              {anamnese ? "OK" : "Pendente"}
+            </span>
           </button>
+
+          <div className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/20 text-left">
+            <Dumbbell className="h-4 w-4 text-primary" />
+            <span className="flex-1 text-xs font-bold uppercase tracking-wider">
+              Séries executadas
+            </span>
+            <span className={`text-[10px] uppercase tracking-wider ${seriesCount > 0 ? "text-emerald-400" : "text-muted-foreground"}`}>
+              {seriesCount > 0 ? `${seriesCount} registros` : "Nenhuma"}
+            </span>
+          </div>
+
+          <div className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-border bg-secondary/20 text-left">
+            <Ruler className="h-4 w-4 text-primary" />
+            <span className="flex-1 text-xs font-bold uppercase tracking-wider">
+              Avaliação física
+            </span>
+            <span className={`text-[10px] uppercase tracking-wider ${ultimaAvaliacao ? "text-emerald-400" : "text-muted-foreground"}`}>
+              {ultimaAvaliacao ? "OK" : "Pendente"}
+            </span>
+          </div>
 
           <button
             onClick={() => setEvaluationsViewerOpen(true)}

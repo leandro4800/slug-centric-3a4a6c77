@@ -92,8 +92,9 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
           .eq("user_id", alunoId).order("data_checkin", { ascending: true }).limit(60),
         supabase.from("avaliacoes_fisicas").select("*")
           .eq("aluno_id", alunoId).order("data", { ascending: true }).limit(60),
-        supabase.from("historico_cargas").select("exercicio_nome,carga_kg,data_treino")
-          .eq("user_id", alunoId).order("data_treino", { ascending: false }).limit(300),
+        // Fonte real de carga: series_executadas (historico_cargas não recebe writes do app)
+        supabase.from("series_executadas").select("peso_kg, concluida_em, exercicio_chave, treinos_prescritos(exercicio)")
+          .eq("aluno_id", alunoId).order("concluida_em", { ascending: false }).limit(300),
         supabase.from("anamnese_aluno").select("doencas,medicamentos,lesoes_atuais,qualidade_sono,horas_sono,nivel_estresse,suplementos")
           .eq("aluno_id", alunoId).maybeSingle(),
         supabase.from("dietas").select("objetivo,kcal_alvo,macros_alvo,created_at,id")
@@ -107,7 +108,22 @@ export const PainelEvolucao = ({ alunoId }: Props) => {
       ]);
       setCheckins((c.data ?? []) as Checkin[]);
       setAvaliacoes((a.data ?? []) as Avaliacao[]);
-      setCargas((h.data ?? []) as Carga[]);
+      setCargas(
+        ((h.data ?? []) as Array<{
+          peso_kg: number | null;
+          concluida_em: string | null;
+          exercicio_chave: string | null;
+          treinos_prescritos: { exercicio: string } | { exercicio: string }[] | null;
+        }>).map((row) => {
+          const join = row.treinos_prescritos;
+          const nomeJoin = Array.isArray(join) ? join[0]?.exercicio : join?.exercicio;
+          return {
+            exercicio_nome: nomeJoin || row.exercicio_chave || "Exercício",
+            carga_kg: Number(row.peso_kg) || 0,
+            data_treino: (row.concluida_em || "").slice(0, 10),
+          };
+        }).filter((x) => x.carga_kg > 0 && x.data_treino) as Carga[],
+      );
       setAnamnese((am.data ?? null) as Anamnese | null);
       setDieta((d.data ?? null) as DietaT | null);
       setTreinos((t.data ?? []) as Treino[]);

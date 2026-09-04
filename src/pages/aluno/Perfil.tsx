@@ -893,7 +893,7 @@ const Perfil = () => {
         open={comprehensiveOpen}
         onOpenChange={setComprehensiveOpen}
         alunoId={user?.id || ""}
-        tenantId={profile?.tenant_id}
+        tenantId={profile?.tenant_id || tenant?.id}
         sexo={profile?.sexo}
         onSaved={(goToDiet) => {
           loadData(true);

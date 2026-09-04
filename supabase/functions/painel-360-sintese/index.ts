@@ -77,8 +77,8 @@ serve(async (req) => {
         .eq("user_id", aluno_id).order("data_checkin", { ascending: false }).limit(20),
       sb.from("avaliacoes_fisicas").select("*")
         .eq("aluno_id", aluno_id).order("data", { ascending: false }).limit(10),
-      sb.from("historico_cargas").select("exercicio_nome,carga_kg,repeticoes_feitas,data_treino")
-        .eq("user_id", aluno_id).order("data_treino", { ascending: false }).limit(300),
+      sb.from("series_executadas").select("peso_kg, reps, concluida_em, exercicio_chave, treinos_prescritos(exercicio)")
+        .eq("aluno_id", aluno_id).order("concluida_em", { ascending: false }).limit(300),
       sb.from("anamnese_aluno").select("*").eq("aluno_id", aluno_id).maybeSingle(),
       sb.from("dietas").select("objetivo,kcal_alvo,macros_alvo,observacoes_clinicas,created_at")
         .eq("user_id", aluno_id).order("created_at", { ascending: false }).limit(1).maybeSingle(),
@@ -96,7 +96,12 @@ serve(async (req) => {
       anamnese: anamnese.data,
       check_ins_recentes: checkins.data,
       avaliacoes_fisicas: avaliacoes.data,
-      historico_cargas: cargas.data,
+      historico_cargas: (cargas.data ?? []).map((row: any) => ({
+        exercicio_nome: row.treinos_prescritos?.exercicio || row.exercicio_chave || "Exercício",
+        carga_kg: row.peso_kg,
+        repeticoes_feitas: row.reps,
+        data_treino: (row.concluida_em || "").slice(0, 10),
+      })),
       dieta_atual: dieta.data,
       treino_prescrito: treinos.data,
     };

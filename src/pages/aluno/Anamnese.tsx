@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { ArrowLeft, Loader2, Save, Sparkles, ClipboardCheck, Upload } from "lucide-react";
 import { PageHeader } from "@/components/aluno/PageHeader";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
+import { saveAnamneseDurable } from "@/lib/athlete-write-queue";
 
 const DIAS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
 
@@ -139,9 +140,15 @@ export default function Anamnese() {
     if (!user) return;
     setSaving(true);
     try {
+      const tenantIdResolved = existingRecord?.tenant_id || tenant?.id;
+      if (!tenantIdResolved) {
+        toast.error("Não foi possível vincular a anamnese ao coach. Feche e abra o app, depois tente de novo.");
+        return;
+      }
+
       const anamneseData = {
         aluno_id: user.id,
-        tenant_id: existingRecord?.tenant_id || tenant?.id,
+        tenant_id: tenantIdResolved,
         doencas: form.doencas.split(",").map(s => s.trim()).filter(Boolean),
         medicamentos: form.medicamentos,
         lesoes_atuais: form.lesoes_atuais,
@@ -175,15 +182,12 @@ export default function Anamnese() {
         nivel_atividade_diaria: form.nivel_atividade_diaria,
       };
 
-      console.log("Salvando anamnese:", anamneseData);
-
-      const { error } = await supabase.from("anamnese_aluno").upsert(
-        anamneseData,
-        { onConflict: "aluno_id" }
-      );
-
-      if (error) throw error;
-      toast.success("Anamnese salva com sucesso!");
+      const { pending } = await saveAnamneseDurable(anamneseData);
+      if (pending) {
+        toast.success("Anamnese salva no aparelho. Envia ao coach quando a rede voltar.");
+      } else {
+        toast.success("Anamnese salva com sucesso!");
+      }
       navigate(`/${slug}/app/perfil`);
     } catch (e: any) {
       toast.error("Erro ao salvar: " + e.message);

@@ -12,7 +12,7 @@ import {
 const QUEUE_KEY = "athlete_write_outbox_v1";
 const MAX_ATTEMPTS = 8;
 
-export type AthleteWriteKind = "series_executada" | "avaliacao_fisica";
+export type AthleteWriteKind = "series_executada" | "avaliacao_fisica" | "anamnese";
 
 export type AthleteWriteJob = {
   id: string;
@@ -124,9 +124,20 @@ async function applyAvaliacao(payload: Record<string, unknown>) {
   if (error) throw error;
 }
 
+async function applyAnamnese(payload: Record<string, unknown>) {
+  if (!payload.tenant_id) {
+    throw new Error("tenant_id obrigatório para salvar anamnese");
+  }
+  const { error } = await supabase.from("anamnese_aluno").upsert(payload as any, {
+    onConflict: "aluno_id",
+  });
+  if (error) throw error;
+}
+
 async function applyJob(job: AthleteWriteJob) {
   if (job.kind === "series_executada") return applySeries(job.payload);
   if (job.kind === "avaliacao_fisica") return applyAvaliacao(job.payload);
+  if (job.kind === "anamnese") return applyAnamnese(job.payload);
   throw new Error(`kind desconhecido: ${job.kind}`);
 }
 
@@ -197,6 +208,24 @@ export async function saveAvaliacaoDurable(
   } catch (err) {
     if (!isNetworkish(err)) throw err;
     await enqueueAthleteWrite("avaliacao_fisica", payload, jobId);
+    return { pending: true, jobId };
+  }
+}
+
+/** Grava anamnese: exige tenant; rede cai → fila. */
+export async function saveAnamneseDurable(
+  payload: Record<string, unknown>,
+): Promise<{ pending: boolean; jobId: string }> {
+  if (!payload.tenant_id) {
+    throw new Error("Não foi possível identificar o coach/tenant. Feche e abra o app, depois tente de novo.");
+  }
+  const jobId = newId();
+  try {
+    await applyAnamnese(payload);
+    return { pending: false, jobId };
+  } catch (err) {
+    if (!isNetworkish(err)) throw err;
+    await enqueueAthleteWrite("anamnese", payload, jobId);
     return { pending: true, jobId };
   }
 }
