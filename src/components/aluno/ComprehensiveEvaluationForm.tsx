@@ -242,17 +242,27 @@ export const ComprehensiveEvaluationForm = ({
 
   const handleSave = async (goToDiet = false) => {
     setSaving(true);
+
+    // Validação obrigatória ANTES de qualquer cálculo/insert — peso_kg e altura_cm
+    // são NOT NULL no banco; sem isso o insert inteiro falha e perde todas as medidas.
+    const pesoValidado = num(form.peso);
+    if (pesoValidado === null || pesoValidado <= 0) {
+      toast.error("Preencha o peso antes de salvar.");
+      setSaving(false);
+      return;
+    }
+    const alturaParsed = form.altura ? parseAlturaCm(form.altura) : null;
+    if (!alturaParsed) {
+      toast.error(form.altura ? "Altura inválida. Use centímetros (ex: 178) ou metros (ex: 1,78)." : "Preencha a altura antes de salvar.");
+      setSaving(false);
+      return;
+    }
+
     try {
       // Cálculo básico de BF 7 dobras (Jackson & Pollock)
       const soma = Object.values(form.dobras).reduce((acc, v) => acc + (num(v) || 0), 0);
       const idadeN = num(form.idade) || 0;
       const pesoN = num(form.peso) || 0;
-      const alturaParsed = form.altura ? parseAlturaCm(form.altura) : null;
-      if (form.altura && !alturaParsed) {
-        toast.error("Altura inválida. Use centímetros (ex: 178) ou metros (ex: 1,78).");
-        setSaving(false);
-        return;
-      }
       const sexoN = sexo?.toUpperCase().startsWith("F") ? "F" : "M";
 
       let bf = null;
@@ -333,7 +343,15 @@ export const ComprehensiveEvaluationForm = ({
       onOpenChange(false);
 
     } catch (err: any) {
-      toast.error("Erro ao salvar: " + err.message);
+      // Rede de segurança: se algum campo NOT NULL do Postgres não passou pela
+      // validação client-side (ex: novo campo obrigatório no futuro), mostra
+      // mensagem amigável em vez do erro técnico bruto do banco (código 23502).
+      const isNotNullViolation = err?.code === "23502" || /null value.*not null/i.test(err?.message || "");
+      if (isNotNullViolation) {
+        toast.error("Preencha todos os campos obrigatórios antes de salvar.");
+      } else {
+        toast.error("Erro ao salvar: " + (err?.message || "Tente novamente."));
+      }
     } finally {
       setSaving(false);
     }
@@ -343,11 +361,11 @@ export const ComprehensiveEvaluationForm = ({
     <div className="space-y-4 py-4">
       <div className="grid grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>Peso (kg)</Label>
+          <Label>Peso (kg) <span className="text-primary">*</span></Label>
           <Input type="number" step="0.1" value={form.peso} onChange={e => setForm({...form, peso: e.target.value})} />
         </div>
         <div className="space-y-2">
-          <Label>Altura (cm ou m)</Label>
+          <Label>Altura (cm ou m) <span className="text-primary">*</span></Label>
           <Input type="text" inputMode="decimal" value={form.altura} onChange={e => setForm({...form, altura: e.target.value})} placeholder="1,78 ou 178" />
         </div>
         <div className="space-y-2">
