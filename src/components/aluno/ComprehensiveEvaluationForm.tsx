@@ -242,17 +242,27 @@ export const ComprehensiveEvaluationForm = ({
 
   const handleSave = async (goToDiet = false) => {
     setSaving(true);
+
+    // Validação obrigatória ANTES de qualquer cálculo/insert — peso_kg e altura_cm
+    // são NOT NULL no banco; sem isso o insert inteiro falha e perde todas as medidas.
+    const pesoValidado = num(form.peso);
+    if (pesoValidado === null || pesoValidado <= 0) {
+      toast.error("Preencha o peso antes de salvar.");
+      setSaving(false);
+      return;
+    }
+    const alturaParsed = form.altura ? parseAlturaCm(form.altura) : null;
+    if (!alturaParsed) {
+      toast.error(form.altura ? "Altura inválida. Use centímetros (ex: 178) ou metros (ex: 1,78)." : "Preencha a altura antes de salvar.");
+      setSaving(false);
+      return;
+    }
+
     try {
       // Cálculo básico de BF 7 dobras (Jackson & Pollock)
       const soma = Object.values(form.dobras).reduce((acc, v) => acc + (num(v) || 0), 0);
       const idadeN = num(form.idade) || 0;
       const pesoN = num(form.peso) || 0;
-      const alturaParsed = form.altura ? parseAlturaCm(form.altura) : null;
-      if (form.altura && !alturaParsed) {
-        toast.error("Altura inválida. Use centímetros (ex: 178) ou metros (ex: 1,78).");
-        setSaving(false);
-        return;
-      }
       const sexoN = sexo?.toUpperCase().startsWith("F") ? "F" : "M";
 
       let bf = null;
