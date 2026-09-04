@@ -746,6 +746,7 @@ export const ExerciseCard = ({
             tenant_id: tenantId,
             sessao_id: sessaoId,
             treino_prescrito_id: prescribedId,
+            exercicio_chave: prescribedId ? null : String(data.id),
             numero_serie: i + 1,
             tipo_serie: getSlotType(i),
             peso_kg: weight,
@@ -753,7 +754,7 @@ export const ExerciseCard = ({
             tempo_seg: semCarga ? seconds : null,
             concluida_em: new Date().toISOString(),
           } as any,
-          { onConflict: "sessao_id,treino_prescrito_id,numero_serie" },
+          { onConflict: "sessao_id,treino_prescrito_id,exercicio_chave,numero_serie" },
         )
         .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie")
         .single();
