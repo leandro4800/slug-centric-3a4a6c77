@@ -92,6 +92,7 @@ export const AnalysisResults = ({ parecer, marcadores }: AnalysisResultsProps) =
             <MarkerCard
               key={i}
               nome={m.nome}
+              codigo={m.codigo}
               valor={m.valor}
               unidade={m.unidade}
               status={m.status}
