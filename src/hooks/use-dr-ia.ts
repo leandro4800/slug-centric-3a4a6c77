@@ -56,7 +56,9 @@ export const useDrIA = () => {
         if (functionError.status === 402) {
           throw new Error("Créditos de IA insuficientes para esta análise.");
         }
+        if (payload?.error) throw new Error(payload.message || payload.error);
         throw functionError;
+
       }
 
       queryClient.invalidateQueries({ queryKey: ["analises_clinicas"] });
