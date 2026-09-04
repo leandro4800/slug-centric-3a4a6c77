@@ -145,10 +145,15 @@ export const applyTheme = (
 
   applyThemeMode(root, mode);
 
+  const skin = (overrides?.metal_skin as MetalSkin | null | undefined) ?? null;
+  if (skin && METAL_SKINS.includes(skin)) root.setAttribute("data-metal-skin", skin);
+  else root.removeAttribute("data-metal-skin");
+
   if (!overrides && !heroUrl) {
     clearTokens(root);
     return;
   }
+
 
   const merged = { ...DEFAULTS, ...overrides };
   SAFE_KEYS.forEach((k) => {
