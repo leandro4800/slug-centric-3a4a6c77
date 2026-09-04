@@ -309,3 +309,31 @@
     box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.35);
   }
 }
+
+/* ============ SKIN METÁLICA POR TENANT ============
+   Ativada por data-metal-skin no <html> (BrandingProvider).
+   Aplica o gradiente escolhido ao botão principal e aos painéis
+   que já usam o gradiente da marca, sem tocar nas variáveis CSS. */
+html[data-metal-skin="azul"] .btn-premium-primary,
+html[data-metal-skin="azul"] .bg-gradient-primary {
+  background: linear-gradient(135deg, #0A1F5C 0%, #1B3FA0 25%, #3B5EDB 50%, #8FB4FF 65%, #3B5EDB 80%, #1B3FA0 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+html[data-metal-skin="dourado"] .btn-premium-primary,
+html[data-metal-skin="dourado"] .bg-gradient-primary {
+  background: linear-gradient(135deg, #FFD700 0%, #FF8C00 100%);
+  color: #000000;
+}
+html[data-metal-skin="verde"] .btn-premium-primary,
+html[data-metal-skin="verde"] .bg-gradient-primary {
+  background: linear-gradient(135deg, #062B1A 0%, #0E5C3B 25%, #2E9E63 50%, #A8F0C6 65%, #2E9E63 80%, #0E5C3B 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
+html[data-metal-skin="rosa"] .btn-premium-primary,
+html[data-metal-skin="rosa"] .bg-gradient-primary {
+  background: linear-gradient(135deg, #4A0E2E 0%, #8E1D57 25%, #D6488F 50%, #FFC1E3 65%, #D6488F 80%, #8E1D57 100%);
+  color: #ffffff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45);
+}
