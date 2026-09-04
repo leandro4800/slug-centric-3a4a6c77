@@ -221,22 +221,64 @@ ${intelligenceContext}`
       if (start === -1) throw new Error('Sem JSON na resposta da IA')
       cleaned = cleaned.substring(start)
       try { return JSON.parse(cleaned) as AIResponse } catch {}
-      // Recovery: close open string/arrays/braces caused por truncamento
-      let s = cleaned
-      const quotes = (s.match(/(?<!\\)"/g) || []).length
-      if (quotes % 2 === 1) s += '"'
-      s = s.replace(/,\s*$/, '')
-      const opens = (s.match(/\{/g) || []).length
-      const closes = (s.match(/\}/g) || []).length
-      const obrs = (s.match(/\[/g) || []).length
-      const cbrs = (s.match(/\]/g) || []).length
-      s += ']'.repeat(Math.max(0, obrs - cbrs))
-      s += '}'.repeat(Math.max(0, opens - closes))
-      s = s.replace(/,(\s*[}\]])/g, '$1')
-      return JSON.parse(s) as AIResponse
+
+      // Recovery 1: fechar strings/arrays/objetos abertos por truncamento
+      const closeOpen = (input: string): string => {
+        let s = input.replace(/,\s*$/, '')
+        const quotes = (s.match(/(?<!\\)"/g) || []).length
+        if (quotes % 2 === 1) s += '"'
+        const opens = (s.match(/\{/g) || []).length
+        const closes = (s.match(/\}/g) || []).length
+        const obrs = (s.match(/\[/g) || []).length
+        const cbrs = (s.match(/\]/g) || []).length
+        s += '}'.repeat(Math.max(0, opens - closes - Math.max(0, obrs - cbrs)))
+        s += ']'.repeat(Math.max(0, obrs - cbrs))
+        s += '}'.repeat(Math.max(0, opens - closes - Math.max(0, obrs - cbrs) === 0 ? 0 : 0))
+        return s.replace(/,(\s*[}\]])/g, '$1')
+      }
+      try { return JSON.parse(closeOpen(cleaned)) as AIResponse } catch {}
+
+      // Recovery 2: descartar o último objeto de marcador incompleto e fechar
+      const lastComplete = cleaned.lastIndexOf('},')
+      if (lastComplete > 0) {
+        const truncated = cleaned.substring(0, lastComplete + 1)
+        for (const suffix of [']}', '}]}', ']}}']) {
+          try { return JSON.parse(truncated + suffix) as AIResponse } catch {}
+        }
+      }
+
+      // Recovery 3: extrair resumo + marcadores completos via regex
+      const resumoMatch = cleaned.match(/"resumo_executivo"\s*:\s*"((?:[^"\\]|\\.)*)"/)
+      const marcadores: Marker[] = []
+      const objRegex = /\{[^{}]*"codigo"[^{}]*\}/g
+      for (const m of cleaned.match(objRegex) || []) {
+        try { marcadores.push(JSON.parse(m)) } catch { /* ignora */ }
+      }
+      if (marcadores.length > 0) {
+        return {
+          resumo_executivo: resumoMatch ? JSON.parse(`"${resumoMatch[1]}"`) : '',
+          marcadores,
+        }
+      }
+      throw new Error('Não foi possível ler a resposta da IA')
     }
 
     const analysisData: AIResponse = parseAIJson(rawContent)
+    analysisData.marcadores = (analysisData.marcadores ?? [])
+      .filter((m) => m && m.nome)
+      .map((m) => {
+        const raw = m.valor as unknown
+        let valor: number | null = null
+        if (typeof raw === 'number' && Number.isFinite(raw)) valor = raw
+        else if (typeof raw === 'string') {
+          const norm = raw.replace(/[^\d,.\-]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.')
+          const n = Number.parseFloat(norm)
+          valor = Number.isFinite(n) ? n : null
+        }
+        return { ...m, valor: valor as number }
+      })
+      .filter((m) => m.valor !== null)
+
 
     // Save to analises_clinicas
     const { data: analise, error: analiseError } = await supabase
