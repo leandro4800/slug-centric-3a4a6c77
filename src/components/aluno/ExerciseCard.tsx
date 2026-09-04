@@ -374,7 +374,10 @@ export const ExerciseCard = ({
     }
   };
 
-  const startListeningWeb = (index: number) => {
+  const startListeningWeb = (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       toast.error("Seu navegador não suporta reconhecimento de voz. Use Chrome no Android ou Safari no iOS.", { id: "voice-toast" });
@@ -419,7 +422,10 @@ export const ExerciseCard = ({
       setListeningIdx(null);
       recognitionRef.current = null;
       const text = finalText.trim();
-      if (text) processTranscript(text, index);
+      if (text) {
+        const filled = processTranscript(text, index);
+        if (filled) onFilled?.(filled);
+      }
       else toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
     };
 
@@ -470,12 +476,23 @@ export const ExerciseCard = ({
     }
   };
 
-  const startListening = (index: number) => {
+  const startListening = (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     if (Capacitor.isNativePlatform()) {
-      void startListeningNative(index);
+      void startListeningNative(index, onFilled);
     } else {
-      startListeningWeb(index);
+      startListeningWeb(index, onFilled);
     }
+  };
+
+  /** Modo voz: grava a série tocada e confirma sozinho quando entende. */
+  const handleVoiceSeries = (i: number) => {
+    if (listeningIdx !== null) return;
+    startListening(i, (filled) => {
+      void confirmSeries(i, filled);
+    });
   };
 
   // Restaura cronômetro do localStorage (mantém contagem mesmo com tela fechada)
