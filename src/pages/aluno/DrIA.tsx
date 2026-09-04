@@ -165,7 +165,6 @@ const DrIA = () => {
               <ChevronRight className="h-3 w-3 rotate-180" /> Voltar
             </button>
             <AnalysisResults
-              score={currentAnalysis.score_performance}
               parecer={currentAnalysis.parecer_tecnico}
               marcadores={currentAnalysis.marcadores}
             />
