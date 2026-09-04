@@ -387,17 +387,33 @@ const Clinica = () => {
               <ol className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
                   <span className="text-primary font-bold">1.</span>
-                  <span>Envie seu exame (PDF recomendado para maior precisão)</span>
+                  <span>
+                    <strong className="text-foreground/90 font-semibold">Envie seu exame</strong> — Faça o upload do
+                    PDF do seu exame laboratorial.
+                  </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-primary font-bold">2.</span>
-                  <span>A IA extrai biomarcadores e compara com faixas de referência</span>
+                  <span>
+                    <strong className="text-foreground/90 font-semibold">A IA analisa os resultados</strong> — A
+                    Inteligência Artificial identifica os exames e explica os valores encontrados com base nos dados
+                    disponíveis no documento e em referências técnicas.
+                  </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-primary font-bold">3.</span>
-                  <span>Acesse o parecer técnico informativo — sem recomendações médicas</span>
+                  <span>
+                    <strong className="text-foreground/90 font-semibold">Entenda seus resultados</strong> — Veja
+                    quais resultados estão dentro ou fora dos intervalos de referência informados no exame e entenda,
+                    de forma simples, o que eles podem representar.
+                  </span>
                 </li>
               </ol>
+            </div>
+
+            <div className="bg-gradient-to-br from-amber-500/10 to-card/30 border border-amber-500/30 rounded-xl p-4 flex gap-3 items-start mt-4">
+              <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">{UPLOAD_WARNING}</p>
             </div>
           </div>
         ) : currentAnalysis ? (
