@@ -106,6 +106,14 @@ export const IdentidadeVisual = () => {
   const [presets, setPresets] = useState<Preset[]>(FALLBACK_PRESETS);
   const [themeMode, setThemeMode] = useState<ThemeMode>((tenant?.theme_mode as ThemeMode) ?? "escuro");
   const [savingMode, setSavingMode] = useState(false);
+  const currentSkin = ((tenant?.theme_overrides as ThemeOverrides | null)?.metal_skin ?? null) as MetalSkin | null;
+  const [metalSkin, setMetalSkin] = useState<MetalSkin | null>(currentSkin);
+  const [savingSkin, setSavingSkin] = useState(false);
+
+  useEffect(() => {
+    setMetalSkin(currentSkin);
+  }, [currentSkin]);
+
 
   useEffect(() => {
     setThemeMode((tenant?.theme_mode as ThemeMode) ?? "escuro");
