@@ -195,7 +195,7 @@ export default function Anamnese() {
   const handleImportFile = async (file: File) => {
     if (!user) return;
     setImporting(true);
-    const toastId = toast.loading("Dr. IA analisando seu arquivo...");
+    const toastId = toast.loading("Alpha Insight analisando seu arquivo...");
     
     try {
       const reader = new FileReader();

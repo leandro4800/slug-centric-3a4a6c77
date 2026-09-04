@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
+import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine, ShieldAlert } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
+import { UPLOAD_WARNING } from "@/components/aluno/clinica/exam-references";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -198,8 +199,8 @@ const Clinica = () => {
   const actions = [
     {
       icon: Upload,
-      title: "ENVIAR PROTOCOLO OU EXAME",
-      sub: "PDF (Recomendado)",
+      title: "ENVIAR MEU EXAME",
+      sub: "PDF do exame laboratorial (recomendado)",
       dashed: true,
       onClick: () => fileInputRef.current?.click()
     },
@@ -335,6 +336,17 @@ const Clinica = () => {
 
         {tab === "nova" && !currentAnalysis ? (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="mb-5">
+              <h2 className="font-display text-2xl uppercase tracking-wide text-primary">Alpha Insight</h2>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mt-1">
+                Análise inteligente dos seus exames
+              </p>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+                Envie o PDF do seu exame para receber uma explicação educativa dos resultados encontrados pela
+                Inteligência Artificial.
+              </p>
+            </div>
+
             {actions.map((a, idx) => {
               const isUpload = idx === 0;
               const content = (
@@ -387,17 +399,33 @@ const Clinica = () => {
               <ol className="space-y-3 text-sm text-muted-foreground">
                 <li className="flex gap-2">
                   <span className="text-primary font-bold">1.</span>
-                  <span>Envie seu exame (PDF recomendado para maior precisão)</span>
+                  <span>
+                    <strong className="text-foreground/90 font-semibold">Envie seu exame</strong> — Faça o upload do
+                    PDF do seu exame laboratorial.
+                  </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-primary font-bold">2.</span>
-                  <span>A IA extrai biomarcadores e compara com faixas de referência</span>
+                  <span>
+                    <strong className="text-foreground/90 font-semibold">A IA analisa os resultados</strong> — A
+                    Inteligência Artificial identifica os exames e explica os valores encontrados com base nos dados
+                    disponíveis no documento e em referências técnicas.
+                  </span>
                 </li>
                 <li className="flex gap-2">
                   <span className="text-primary font-bold">3.</span>
-                  <span>Acesse o parecer técnico informativo — sem recomendações médicas</span>
+                  <span>
+                    <strong className="text-foreground/90 font-semibold">Entenda seus resultados</strong> — Veja
+                    quais resultados estão dentro ou fora dos intervalos de referência informados no exame e entenda,
+                    de forma simples, o que eles podem representar.
+                  </span>
                 </li>
               </ol>
+            </div>
+
+            <div className="bg-gradient-to-br from-amber-500/10 to-card/30 border border-amber-500/30 rounded-xl p-4 flex gap-3 items-start mt-4">
+              <ShieldAlert className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+              <p className="text-xs text-muted-foreground leading-relaxed">{UPLOAD_WARNING}</p>
             </div>
           </div>
         ) : currentAnalysis ? (
@@ -410,7 +438,6 @@ const Clinica = () => {
               <ChevronRight className="h-3 w-3 rotate-180" /> Fazer nova análise
             </Button>
             <AnalysisResults
-              score={currentAnalysis.score_performance ?? currentAnalysis.pontuacao_geral}
               parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
               marcadores={currentAnalysis.marcadores}
             />
@@ -438,7 +465,6 @@ const Clinica = () => {
                   key={analise.id}
                   variant="secondary"
                   onClick={() => setCurrentAnalysis({
-                    score_performance: analise.score_performance,
                     parecer_tecnico: analise.parecer_ia,
                     marcadores: analise.exames_biomarcadores.map((b: any) => ({
                       codigo: b.codigo,
@@ -446,17 +472,18 @@ const Clinica = () => {
                       valor: b.valor,
                       unidade: b.unidade,
                       status: b.classificacao,
+                      intervalo_referencia: b.valor_referencia,
                       insight_clinico: b.observacao,
                     }))
                   })}
                   className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
                 >
                   <div className="w-14 h-14 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-primary font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
-                    {analise.score_performance}
+                    {analise.exames_biomarcadores.length}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-display text-base uppercase tracking-wide">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
-                    <p className="text-[10px] text-muted-foreground tracking-widest">{analise.exames_biomarcadores.length} marcadores detectados</p>
+                    <p className="text-[10px] text-muted-foreground tracking-widest">{analise.exames_biomarcadores.length} resultados lidos</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-primary shrink-0" />
                 </Button>
@@ -526,9 +553,9 @@ const Clinica = () => {
             </div>
           </div>
           <div>
-            <h3 className="font-display text-xl">DR. IA ESTÁ ANALISANDO...</h3>
+            <h3 className="font-display text-xl">ALPHA INSIGHT ESTÁ ANALISANDO SEU EXAME...</h3>
             <p className="text-sm text-muted-foreground mt-2 max-w-[280px] mx-auto">
-              Escaneando o documento, extraindo biomarcadores e cruzando com dados de performance.
+              Lendo o documento e comparando os resultados com os intervalos de referência informados no exame.
             </p>
           </div>
         </div>,
