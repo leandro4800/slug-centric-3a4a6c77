@@ -328,7 +328,7 @@ serve(async (req) => {
         if (examesResp.ok) {
           const exames = await examesResp.json();
           if (exames && exames.length > 0) {
-            saudeContext = `\n\n=== DADOS CLÍNICOS RECENTES DO ALUNO ===\n${exames[0].parecer_ia || exames[0].resumo_clinico}\nScore Performance: ${exames[0].score_performance}%\n`;
+            saudeContext = `\n\n=== DADOS CLÍNICOS RECENTES DO ALUNO ===\n${exames[0].parecer_ia || exames[0].resumo_clinico}\n`;
           }
         }
         // Biomarcadores chave: Testosterona, CPK, ALT/AST, Colesterol
