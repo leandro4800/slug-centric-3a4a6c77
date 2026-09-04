@@ -1,12 +1,14 @@
-import { CircleHelp, CircleAlert, CheckCircle2, Volume2, Loader2, ExternalLink } from "lucide-react";
+import { CircleHelp, CircleAlert, CheckCircle2, Volume2, Loader2, ExternalLink, Lightbulb, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MARKER_REFERENCE_URL, normalizeMarkerStatus } from "./exam-references";
+import { getMarkerEducation, EDUCATION_CLOSING } from "./exam-education";
 
 interface MarkerCardProps {
   nome: string;
+  codigo?: string;
   valor: number;
   unidade: string;
   status?: string | null;
@@ -14,9 +16,11 @@ interface MarkerCardProps {
   observacao?: string;
 }
 
-export const MarkerCard = ({ nome, valor, unidade, status, intervalo_referencia, observacao }: MarkerCardProps) => {
+export const MarkerCard = ({ nome, codigo, valor, unidade, status, intervalo_referencia, observacao }: MarkerCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showEducation, setShowEducation] = useState(false);
   const normalized = normalizeMarkerStatus(status);
+  const education = getMarkerEducation(nome, codigo);
 
   const statusConfig = {
     DentroReferencia: {
