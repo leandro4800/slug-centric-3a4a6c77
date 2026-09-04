@@ -1,11 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { createPortal } from "react-dom";
-import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine } from "lucide-react";
+import { Stethoscope, Upload, Send, ChevronRight, Loader2, History, FileText, ScanLine, ShieldAlert } from "lucide-react";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AnalysisResults } from "@/components/aluno/clinica/AnalysisResults";
+import { UPLOAD_WARNING } from "@/components/aluno/clinica/exam-references";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
@@ -198,8 +199,8 @@ const Clinica = () => {
   const actions = [
     {
       icon: Upload,
-      title: "ENVIAR PROTOCOLO OU EXAME",
-      sub: "PDF (Recomendado)",
+      title: "ENVIAR MEU EXAME",
+      sub: "PDF do exame laboratorial (recomendado)",
       dashed: true,
       onClick: () => fileInputRef.current?.click()
     },
@@ -335,6 +336,17 @@ const Clinica = () => {
 
         {tab === "nova" && !currentAnalysis ? (
           <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-500">
+            <div className="mb-5">
+              <h2 className="font-display text-2xl uppercase tracking-wide text-primary">Alpha Insight</h2>
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mt-1">
+                Análise inteligente dos seus exames
+              </p>
+              <p className="text-sm text-muted-foreground mt-3 leading-relaxed">
+                Envie o PDF do seu exame para receber uma explicação educativa dos resultados encontrados pela
+                Inteligência Artificial.
+              </p>
+            </div>
+
             {actions.map((a, idx) => {
               const isUpload = idx === 0;
               const content = (
