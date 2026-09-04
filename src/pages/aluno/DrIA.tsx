@@ -55,9 +55,9 @@ const DrIA = () => {
         <div className="absolute bottom-4 left-5 right-5">
           <div className="flex items-center gap-2 text-white mb-1">
             <Stethoscope className="h-5 w-5" />
-            <p className="text-xs font-semibold tracking-wider">DR. IA</p>
+            <p className="text-xs font-semibold tracking-wider">ALPHA INSIGHT</p>
           </div>
-          <h1 className="font-display text-3xl leading-tight">SEU MÉDICO ESPORTIVO<br />DE BOLSO</h1>
+          <h1 className="font-display text-3xl leading-tight">ANÁLISE INTELIGENTE<br />DOS SEUS EXAMES</h1>
         </div>
       </div>
 
@@ -99,9 +99,9 @@ const DrIA = () => {
               <Loader2 className="h-12 w-12 text-primary animate-spin relative" />
             </div>
             <div>
-              <h3 className="font-display text-xl">DR. IA ESTÁ ANALISANDO SEU EXAME...</h3>
+              <h3 className="font-display text-xl">ALPHA INSIGHT ESTÁ ANALISANDO SEU EXAME...</h3>
               <p className="text-sm text-muted-foreground mt-2 max-w-[250px] mx-auto">
-                Extraindo biomarcadores e cruzando com dados de performance. Isso leva de 10 a 20 segundos.
+                Lendo o documento e comparando os resultados com os intervalos de referência informados no exame.
               </p>
             </div>
           </div>
@@ -191,7 +191,6 @@ const DrIA = () => {
                 <button
                   key={analise.id}
                   onClick={() => setCurrentAnalysis({
-                    score_performance: analise.score_performance,
                     parecer_tecnico: analise.parecer_ia,
                     marcadores: analise.exames_biomarcadores.map((b: any) => ({
                       codigo: b.codigo,
@@ -199,13 +198,14 @@ const DrIA = () => {
                       valor: b.valor,
                       unidade: b.unidade,
                       status: b.classificacao,
+                      intervalo_referencia: b.valor_referencia,
                       insight_clinico: b.observacao
                     }))
                   })}
                   className="w-full bg-card/40 border border-border rounded-2xl p-4 flex items-center gap-4 text-left"
                 >
                   <div className="w-12 h-12 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center font-bold text-primary">
-                    {analise.score_performance}%
+                    {analise.exames_biomarcadores.length}
                   </div>
                   <div className="flex-1">
                     <p className="font-display text-base uppercase">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>

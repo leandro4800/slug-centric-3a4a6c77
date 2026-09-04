@@ -437,7 +437,6 @@ const Clinica = () => {
                   key={analise.id}
                   variant="secondary"
                   onClick={() => setCurrentAnalysis({
-                    score_performance: analise.score_performance,
                     parecer_tecnico: analise.parecer_ia,
                     marcadores: analise.exames_biomarcadores.map((b: any) => ({
                       codigo: b.codigo,
@@ -445,17 +444,18 @@ const Clinica = () => {
                       valor: b.valor,
                       unidade: b.unidade,
                       status: b.classificacao,
+                      intervalo_referencia: b.valor_referencia,
                       insight_clinico: b.observacao,
                     }))
                   })}
                   className="w-full h-auto py-4 flex items-center gap-4 text-left justify-start"
                 >
                   <div className="w-14 h-14 rounded-xl bg-primary/20 border border-primary/40 flex items-center justify-center font-bold text-primary font-display text-lg shadow-[0_0_20px_-5px_hsl(var(--primary)/0.5)]">
-                    {analise.score_performance}
+                    {analise.exames_biomarcadores.length}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-display text-base uppercase tracking-wide">Análise de {new Date(analise.created_at).toLocaleDateString()}</p>
-                    <p className="text-[10px] text-muted-foreground tracking-widest">{analise.exames_biomarcadores.length} marcadores detectados</p>
+                    <p className="text-[10px] text-muted-foreground tracking-widest">{analise.exames_biomarcadores.length} resultados lidos</p>
                   </div>
                   <ChevronRight className="h-4 w-4 text-primary shrink-0" />
                 </Button>
@@ -525,9 +525,9 @@ const Clinica = () => {
             </div>
           </div>
           <div>
-            <h3 className="font-display text-xl">DR. IA ESTÁ ANALISANDO...</h3>
+            <h3 className="font-display text-xl">ALPHA INSIGHT ESTÁ ANALISANDO SEU EXAME...</h3>
             <p className="text-sm text-muted-foreground mt-2 max-w-[280px] mx-auto">
-              Escaneando o documento, extraindo biomarcadores e cruzando com dados de performance.
+              Lendo o documento e comparando os resultados com os intervalos de referência informados no exame.
             </p>
           </div>
         </div>,
