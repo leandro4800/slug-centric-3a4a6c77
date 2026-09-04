@@ -538,7 +538,7 @@ export const ExerciseCard = ({
 
     let query = supabase
       .from("series_executadas")
-      .select("peso_kg, reps, volume_kg, rm_estimado, numero_serie, tipo_serie, concluida_em")
+      .select("peso_kg, reps, volume_kg, rm_estimado, numero_serie, tipo_serie, tempo_seg, concluida_em")
       .eq("aluno_id", userId)
       .eq("tenant_id", tenantId)
       .in("treino_prescrito_id", prescribedIds)
@@ -554,6 +554,7 @@ export const ExerciseCard = ({
         empty.previousBySeries.set(seriesNumber, {
           peso: Number(row.peso_kg) || 0,
           reps: Number(row.reps) || 0,
+          tempo: (row as any).tempo_seg == null ? null : Number((row as any).tempo_seg),
         });
       }
       if (String(row.tipo_serie || "").trim().toLowerCase() !== "trabalho") continue;
