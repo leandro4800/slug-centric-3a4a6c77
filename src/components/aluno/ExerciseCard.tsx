@@ -856,7 +856,7 @@ export const ExerciseCard = ({
           {cargaAnterior && (
             <div className="mt-2 min-w-0">
               <span className="inline-block max-w-full truncate rounded-full bg-primary/15 px-3 py-1 text-xs text-primary">
-                Última: {semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
+                Última: {soTempo ? `${cargaAnterior.repeticoes_feitas ?? 0}s` : semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
               </span>
             </div>
           )}
