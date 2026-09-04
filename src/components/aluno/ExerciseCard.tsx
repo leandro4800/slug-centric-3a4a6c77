@@ -186,6 +186,8 @@ export const ExerciseCard = ({
   const [showYT, setShowYT] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [listeningIdx, setListeningIdx] = useState<number | null>(null);
+  /** Modo voz por série: o ✓ da linha grava a fala e confirma automaticamente. */
+  const [voiceMode, setVoiceMode] = useState(false);
   const [referenceVideoUrl, setReferenceVideoUrl] = useState<string | null>(data.video_url || null);
 
   // O vídeo vem sempre do vínculo por ID resolvido na consulta do treino.
@@ -198,7 +200,11 @@ export const ExerciseCard = ({
   // index = -1 significa "preencher TODAS as séries de uma vez"
   const recognitionRef = useRef<any>(null);
 
-  const processTranscript = (rawTranscript: string, index: number) => {
+  /** Retorna os valores capturados quando a fala foi para uma série específica. */
+  const processTranscript = (
+    rawTranscript: string,
+    index: number,
+  ): { carga: string; reps: string } | null => {
     const transcript = (rawTranscript || "").toLowerCase();
 
     const cargaRegexes = [
@@ -233,10 +239,9 @@ export const ExerciseCard = ({
           const n = parseFloat(numbers[0]);
           if (n <= 30) reps = numbers[0]; else carga = numbers[0];
         } else if (numbers.length >= 2) {
-          const n1 = parseFloat(numbers[0]);
-          const n2 = parseFloat(numbers[1]);
-          if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
-          else { reps = numbers[0]; carga = numbers[1]; }
+          // Ordem natural de fala: primeiro a carga, depois as repetições.
+          carga = numbers[0];
+          reps = numbers[1];
         }
       }
       const qtd = qtdMatch ? parseInt(qtdMatch[1]) : (tipo ? 1 : null);
@@ -277,7 +282,7 @@ export const ExerciseCard = ({
         return next;
       });
       toast.success(`Preenchido: ${totalPreenchido.join(", ")}`, { id: "voice-toast" });
-      return;
+      return null;
     }
 
     // Fallback: comportamento original (segmento único)
@@ -309,13 +314,18 @@ export const ExerciseCard = ({
           ...s, reps: reps || s.reps, carga: carga || s.carga,
         } : s));
         toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        return { carga, reps };
       }
     } else {
       toast.error("Não entendi. Tente: 'fiz 1 aquecimento com 20kg 12 reps, 1 ajuste com 40kg 10 reps e 3 de trabalho com 60kg 10 reps'", { id: "voice-toast" });
     }
+    return null;
   };
 
-  const startListeningNative = async (index: number) => {
+  const startListeningNative = async (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     try {
       const avail = await NativeSpeech.available();
       if (!avail.available) {
@@ -333,19 +343,28 @@ export const ExerciseCard = ({
       setListeningIdx(index);
       toast.info(index === -1 ? "Ouvindo (todas as séries)..." : "Ouvindo...", { id: "voice-toast" });
 
-      const result: any = await NativeSpeech.start({
-        language: "pt-BR",
-        maxResults: 1,
-        prompt: "Diga carga e repetições",
-        partialResults: false,
-        popup: false,
-      });
-      const matches: string[] = result?.matches || [];
-      const transcript = matches[0] || "";
+      const listen = async () => {
+        const result: any = await NativeSpeech.start({
+          language: "pt-BR",
+          maxResults: 3,
+          prompt: "Diga carga e repetições",
+          partialResults: false,
+          popup: false,
+        });
+        const matches: string[] = result?.matches || [];
+        return (matches.find((m) => /\d/.test(m)) || matches[0] || "").trim();
+      };
+
+      let transcript = await listen();
+      // Margem de segurança: uma única nova tentativa se o plugin cortar cedo.
+      if (!transcript) {
+        try { transcript = await listen(); } catch {}
+      }
       if (!transcript) {
         toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
       } else {
-        processTranscript(transcript, index);
+        const filled = processTranscript(transcript, index);
+        if (filled) onFilled?.(filled);
       }
     } catch (err: any) {
       const msg = err?.message || String(err);
@@ -355,7 +374,10 @@ export const ExerciseCard = ({
     }
   };
 
-  const startListeningWeb = (index: number) => {
+  const startListeningWeb = (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       toast.error("Seu navegador não suporta reconhecimento de voz. Use Chrome no Android ou Safari no iOS.", { id: "voice-toast" });
@@ -400,7 +422,10 @@ export const ExerciseCard = ({
       setListeningIdx(null);
       recognitionRef.current = null;
       const text = finalText.trim();
-      if (text) processTranscript(text, index);
+      if (text) {
+        const filled = processTranscript(text, index);
+        if (filled) onFilled?.(filled);
+      }
       else toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
     };
 
@@ -451,12 +476,23 @@ export const ExerciseCard = ({
     }
   };
 
-  const startListening = (index: number) => {
+  const startListening = (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     if (Capacitor.isNativePlatform()) {
-      void startListeningNative(index);
+      void startListeningNative(index, onFilled);
     } else {
-      startListeningWeb(index);
+      startListeningWeb(index, onFilled);
     }
+  };
+
+  /** Modo voz: grava a série tocada e confirma sozinho quando entende. */
+  const handleVoiceSeries = (i: number) => {
+    if (listeningIdx !== null) return;
+    startListening(i, (filled) => {
+      void confirmSeries(i, filled);
+    });
   };
 
   // Restaura cronômetro do localStorage (mantém contagem mesmo com tela fechada)
@@ -669,14 +705,23 @@ export const ExerciseCard = ({
   const updateSlot = (i: number, field: "carga" | "reps", val: string) =>
     setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)));
 
-  const confirmSeries = async (i: number) => {
+  const confirmSeries = async (
+    i: number,
+    override?: { carga?: string; reps?: string },
+  ) => {
     if (!userId || !tenantId || !sessaoId || !sessionActive) {
       toast.error("Inicie o treino primeiro.");
       return;
     }
-    const slot = slots[i];
-    if (!slot || slot.done || savingSlots.has(i)) return;
-    const weight = semCarga ? 0 : Number(slot.carga.replace(",", "."));
+    const base = slots[i];
+    if (!base || base.done || savingSlots.has(i)) return;
+    // No modo voz os valores chegam pelo override (o estado ainda não atualizou).
+    const slot = {
+      ...base,
+      carga: override?.carga || base.carga,
+      reps: override?.reps || base.reps,
+    };
+    const weight = semCarga ? 0 : Number(String(slot.carga).replace(",", "."));
     const reps = soTempo ? null : Number.parseInt(slot.reps, 10);
     if (!soTempo && (!Number.isInteger(reps as number) || (reps as number) <= 0)) {
       toast.error("Informe as repetições.");
@@ -996,19 +1041,20 @@ export const ExerciseCard = ({
           )}
 
 
-          {/* Botão destacado: preencher TODAS as séries por voz */}
+          {/* Interruptor compacto: modo voz por série (o ✓ da linha grava) */}
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); startListening(-1); }}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider border transition-all ${
-              listeningIdx === -1
-                ? "bg-primary text-primary-foreground border-primary animate-pulse shadow-[0_0_30px_-5px_hsl(var(--primary)/0.8)]"
-                : "bg-primary/10 text-primary border-primary/40 hover:bg-primary/20"
+            onClick={(e) => { e.stopPropagation(); setVoiceMode((v) => !v); }}
+            aria-pressed={voiceMode}
+            className={`self-start flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+              voiceMode
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-secondary/60 text-muted-foreground border-border hover:text-foreground"
             }`}
-            title='Ex: "fiz 4 séries com 20kg e 12 repetições"'
+            title="Com o modo voz ligado, toque no ✓ da série e fale carga e repetições"
           >
-            <Mic className="h-4 w-4" />
-            {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
+            <Mic className="h-3 w-3" />
+            🎤 Modo voz
           </button>
 
           {semCarga && (
@@ -1097,12 +1143,15 @@ export const ExerciseCard = ({
                       type="button"
                       size="icon"
                       variant={slot.done ? "green" : "default"}
-                      aria-label={`Confirmar série ${i + 1}`}
-                      disabled={!sessionActive || slot.done || saving}
-                      onClick={() => void confirmSeries(i)}
-                      className="h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4"
+                      aria-label={voiceMode && !slot.done ? `Registrar série ${i + 1} por voz` : `Confirmar série ${i + 1}`}
+                      disabled={!sessionActive || slot.done || saving || (listeningIdx !== null && listeningIdx !== i)}
+                      onClick={() => {
+                        if (voiceMode && !slot.done) handleVoiceSeries(i);
+                        else void confirmSeries(i);
+                      }}
+                      className={`h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4 ${listeningIdx === i ? "animate-pulse" : ""}`}
                     >
-                      {saving ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
+                      {saving ? <Loader2 className="animate-spin" /> : listeningIdx === i ? <Mic /> : voiceMode && !slot.done ? <Mic /> : <CheckCircle2 />}
                     </Button>
                   </div>
                 );
