@@ -1041,19 +1041,20 @@ export const ExerciseCard = ({
           )}
 
 
-          {/* Botão destacado: preencher TODAS as séries por voz */}
+          {/* Interruptor compacto: modo voz por série (o ✓ da linha grava) */}
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); startListening(-1); }}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider border transition-all ${
-              listeningIdx === -1
-                ? "bg-primary text-primary-foreground border-primary animate-pulse shadow-[0_0_30px_-5px_hsl(var(--primary)/0.8)]"
-                : "bg-primary/10 text-primary border-primary/40 hover:bg-primary/20"
+            onClick={(e) => { e.stopPropagation(); setVoiceMode((v) => !v); }}
+            aria-pressed={voiceMode}
+            className={`self-start flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+              voiceMode
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-secondary/60 text-muted-foreground border-border hover:text-foreground"
             }`}
-            title='Ex: "fiz 4 séries com 20kg e 12 repetições"'
+            title="Com o modo voz ligado, toque no ✓ da série e fale carga e repetições"
           >
-            <Mic className="h-4 w-4" />
-            {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
+            <Mic className="h-3 w-3" />
+            🎤 Modo voz
           </button>
 
           {semCarga && (
