@@ -343,7 +343,15 @@ export const ComprehensiveEvaluationForm = ({
       onOpenChange(false);
 
     } catch (err: any) {
-      toast.error("Erro ao salvar: " + err.message);
+      // Rede de segurança: se algum campo NOT NULL do Postgres não passou pela
+      // validação client-side (ex: novo campo obrigatório no futuro), mostra
+      // mensagem amigável em vez do erro técnico bruto do banco (código 23502).
+      const isNotNullViolation = err?.code === "23502" || /null value.*not null/i.test(err?.message || "");
+      if (isNotNullViolation) {
+        toast.error("Preencha todos os campos obrigatórios antes de salvar.");
+      } else {
+        toast.error("Erro ao salvar: " + (err?.message || "Tente novamente."));
+      }
     } finally {
       setSaving(false);
     }
