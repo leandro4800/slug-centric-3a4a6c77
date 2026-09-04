@@ -357,7 +357,7 @@ export const IdentidadeVisual = () => {
         </div>
 
         <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
-        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
+
 
           <div className="flex items-center gap-2">
             <Music className="h-4 w-4 text-primary" />
