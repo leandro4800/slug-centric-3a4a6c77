@@ -289,6 +289,13 @@ ${intelligenceContext}`
       })
       .filter((m) => m.valor !== null)
 
+    if (analysisData.marcadores.length === 0 && !analysisData.resumo_executivo) {
+      return new Response(JSON.stringify({
+        error: 'Não identificamos resultados legíveis neste documento. Envie o PDF original do laboratório.',
+      }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+
 
     // Save to analises_clinicas
     const { data: analise, error: analiseError } = await supabase
