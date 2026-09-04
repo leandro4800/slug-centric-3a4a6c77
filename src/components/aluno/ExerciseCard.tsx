@@ -1003,14 +1003,16 @@ export const ExerciseCard = ({
 
           {semCarga && (
             <p className="text-[11px] text-muted-foreground -mt-2">
-              Exercício sem carga — registre apenas as repetições. O tempo do cronômetro é salvo junto.
+              {soTempo
+                ? "Exercício de tempo — o cronômetro é salvo, sem repetições."
+                : "Exercício sem carga — registre apenas as repetições. O tempo do cronômetro é salvo junto."}
             </p>
           )}
 
           <div className="w-full border border-border bg-background/40">
             <div className="w-full">
-              <div className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground`}>
-                <span>Série</span><span>Ant.</span>{!semCarga && <span className="text-center">KG</span>}<span className="text-center">Reps</span><span className="text-center">✓</span>
+              <div className={`grid ${soTempo ? "grid-cols-[34px_44px_34px]" : semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground`}>
+                <span>Série</span><span>Ant.</span>{!semCarga && <span className="text-center">KG</span>}{!soTempo && <span className="text-center">Reps</span>}<span className="text-center">✓</span>
               </div>
 
               {slots.map((slot, i) => {
@@ -1022,7 +1024,7 @@ export const ExerciseCard = ({
                 return (
                   <div
                     key={i}
-                    className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
+                    className={`grid ${soTempo ? "grid-cols-[34px_44px_34px]" : semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
                   >
                     <div className="flex min-w-0 flex-col items-start leading-tight">
                       <span className="flex items-center gap-0.5 font-mono text-xs font-bold">
@@ -1052,7 +1054,7 @@ export const ExerciseCard = ({
                       className={`flex flex-col text-[9px] leading-tight ${legacy ? "text-muted-foreground/70 italic" : "text-muted-foreground"}`}
                       title={legacy ? "Histórico antigo do exercício" : undefined}
                     >
-                      {shown ? (semCarga ? <span>×{shown.reps}</span> : (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>)) : "—"}
+                      {shown ? (soTempo ? <span>{shown.tempo ? `${shown.tempo}s` : "—"}</span> : semCarga ? <span>×{shown.reps}</span> : (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>)) : "—"}
                     </span>
 
                     {!semCarga && (
@@ -1068,6 +1070,7 @@ export const ExerciseCard = ({
                         className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                       />
                     )}
+                    {!soTempo && (
                     <input
                       aria-label={`Repetições da série ${i + 1}`}
                       type="number"
@@ -1079,6 +1082,7 @@ export const ExerciseCard = ({
                       placeholder="—"
                       className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                     />
+                    )}
                     <Button
                       type="button"
                       size="icon"
