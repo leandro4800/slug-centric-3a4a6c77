@@ -197,7 +197,7 @@ ${intelligenceContext}`
             ] : `Leia os resultados laboratoriais a seguir (colados manualmente pelo usuário) e explique de forma educacional. Retorne APENAS um JSON estrito: { "resumo_executivo": "3 parágrafos educativos", "marcadores": [{ "codigo", "nome", "valor", "unidade", "intervalo_referencia", "status": "DentroReferencia"|"ForaReferencia"|"NaoIdentificado", "insight_clinico" }] }\n\nDADOS DO EXAME:\n${texto_exame}`
           }
         ],
-        max_completion_tokens: 8192,
+        max_completion_tokens: 32000,
         response_format: { type: 'json_object' }
       })
     })

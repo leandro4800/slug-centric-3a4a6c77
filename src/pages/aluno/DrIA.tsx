@@ -165,8 +165,9 @@ const DrIA = () => {
               <ChevronRight className="h-3 w-3 rotate-180" /> Voltar
             </button>
             <AnalysisResults
-              parecer={currentAnalysis.parecer_tecnico}
-              marcadores={currentAnalysis.marcadores}
+              parecer={currentAnalysis.parecer_tecnico ?? currentAnalysis.resumo_executivo}
+              marcadores={currentAnalysis.marcadores ?? []}
+
             />
           </div>
         ) : tab === "clinica" ? (
