@@ -200,7 +200,11 @@ export const ExerciseCard = ({
   // index = -1 significa "preencher TODAS as séries de uma vez"
   const recognitionRef = useRef<any>(null);
 
-  const processTranscript = (rawTranscript: string, index: number) => {
+  /** Retorna os valores capturados quando a fala foi para uma série específica. */
+  const processTranscript = (
+    rawTranscript: string,
+    index: number,
+  ): { carga: string; reps: string } | null => {
     const transcript = (rawTranscript || "").toLowerCase();
 
     const cargaRegexes = [
@@ -278,7 +282,7 @@ export const ExerciseCard = ({
         return next;
       });
       toast.success(`Preenchido: ${totalPreenchido.join(", ")}`, { id: "voice-toast" });
-      return;
+      return null;
     }
 
     // Fallback: comportamento original (segmento único)
@@ -310,10 +314,12 @@ export const ExerciseCard = ({
           ...s, reps: reps || s.reps, carga: carga || s.carga,
         } : s));
         toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        return { carga, reps };
       }
     } else {
       toast.error("Não entendi. Tente: 'fiz 1 aquecimento com 20kg 12 reps, 1 ajuste com 40kg 10 reps e 3 de trabalho com 60kg 10 reps'", { id: "voice-toast" });
     }
+    return null;
   };
 
   const startListeningNative = async (index: number) => {
