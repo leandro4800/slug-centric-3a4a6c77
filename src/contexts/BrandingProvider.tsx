@@ -18,7 +18,12 @@ export type ThemeOverrides = Partial<{
   foreground: string;
   border: string;
   bg_texture: string; // ex: url('/blackflow-bg.jpg')
+  metal_skin: MetalSkin | null; // skin metálica opcional (botão/painel)
 }>;
+
+export type MetalSkin = "azul" | "dourado" | "verde" | "rosa";
+export const METAL_SKINS: MetalSkin[] = ["azul", "dourado", "verde", "rosa"];
+
 
 export type ThemeMode = "escuro" | "suave";
 
