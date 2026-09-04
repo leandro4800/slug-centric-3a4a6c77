@@ -167,7 +167,7 @@ COMO CLASSIFICAR:
 
 CAMPO "intervalo_referencia": copie exatamente o intervalo impresso no exame (ex.: "13,0 - 400,0 ng/mL"). Se não houver, use null.
 
-CAMPO "insight_clinico": explicação educativa, curta e cautelosa. Exemplo de tom: "O valor informado está acima do intervalo de referência apresentado no exame. Esse resultado pode estar relacionado a diferentes fatores e sua interpretação depende do contexto individual e de outros resultados laboratoriais. Converse com um profissional de saúde para uma avaliação individualizada."
+CAMPO "insight_clinico": explicação educativa, curta e cautelosa, com no máximo 320 caracteres. Exemplo de tom: "O valor informado está acima do intervalo de referência apresentado no exame. Esse resultado pode estar relacionado a diferentes fatores e sua interpretação depende do contexto individual e de outros resultados laboratoriais. Converse com um profissional de saúde para uma avaliação individualizada."
 
 CAMPO "resumo_executivo": 3 parágrafos educativos — (1) panorama geral do que foi lido no documento, (2) quais resultados ficaram fora dos intervalos informados, (3) lembrete de que a leitura é educacional e não substitui avaliação profissional.
 
