@@ -21,8 +21,9 @@ export type ThemeOverrides = Partial<{
   metal_skin: MetalSkin | null; // skin metálica opcional (botão/painel)
 }>;
 
-export type MetalSkin = "azul" | "dourado" | "verde" | "rosa";
-export const METAL_SKINS: MetalSkin[] = ["azul", "dourado", "verde", "rosa"];
+export type MetalSkin = "azul" | "dourado" | "verde" | "rosa" | "prata";
+export const METAL_SKINS: MetalSkin[] = ["azul", "dourado", "verde", "rosa", "prata"];
+
 
 
 export type ThemeMode = "escuro" | "suave";

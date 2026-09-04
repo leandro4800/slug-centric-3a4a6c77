@@ -41,7 +41,16 @@ const METAL_PRESETS_DEF: { id: MetalSkin; name: string; subtitle: string; swatch
     gradient: "linear-gradient(135deg, #4A0E2E 0%, #8E1D57 25%, #D6488F 50%, #FFC1E3 65%, #D6488F 80%, #8E1D57 100%)",
     overrides: { primary: "329 63% 56%", primary_glow: "325 100% 88%", primary_foreground: "0 0% 100%", accent: "329 63% 56%", accent_foreground: "0 0% 100%", metal_skin: "rosa" },
   },
+  {
+    id: "prata",
+    name: "PRATA METÁLICO",
+    subtitle: "Prata espelhado premium",
+    swatches: ["#2E3338", "#767E86", "#C9D0D6", "#FFFFFF"],
+    gradient: "linear-gradient(135deg, #2E3338 0%, #6E767E 18%, #C9D0D6 38%, #FFFFFF 50%, #C9D0D6 62%, #767E86 82%, #3A4046 100%)",
+    overrides: { primary: "210 9% 72%", primary_glow: "210 20% 92%", primary_foreground: "0 0% 5%", accent: "210 9% 72%", accent_foreground: "0 0% 5%", metal_skin: "prata" },
+  },
 ];
+
 
 
 type Preset = {
