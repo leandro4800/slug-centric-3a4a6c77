@@ -907,7 +907,8 @@ Cafés da manhã NÃO precisam ter aveia. Varie entre opções como: tapioca + o
    - Homem bulking pesado (>90kg): pode chegar a 100g.
    - LIMITE ABSOLUTO: 100g por refeição. NUNCA fixar 100g por padrão.
 3. CREME DE ARROZ: use APENAS quando o carboidrato necessário no café da manhã ultrapassar o que a aveia pode entregar (acima de 80g de carbo só de cereal) E o aluno fizer bulking/alto volume. NÃO combine creme de arroz + aveia automaticamente. Se aveia bastar, use só aveia. Se o aluno preferir tapioca/pão/banana, use a preferência dele.
-4. DIGESTÃO: em bulking de alto volume, priorize fontes de fácil digestão (arroz branco, batata, banana), respeitando a fibra.
+4. DIGESTÃO: em bulking de alto volume, priorize fontes de fácil digestão (arroz branco, batata, banana) — mas SOMENTE nas refeições principais (almoço, jantar, pós-treino). Respeite a fibra.
+4.1 CARBOIDRATO DO CAFÉ DA MANHÃ / LANCHES: use APENAS fontes típicas de café da manhã — aveia, tapioca, crepioca, pão (integral ou francês), cuscuz de milho, fruta (banana, mamão, maçã), iogurte, granola, panqueca de aveia/banana, creme de arroz. É PROIBIDO colocar arroz, batata inglesa, batata doce, mandioca, macarrão, feijão ou qualquer prato de almoço no café da manhã e nos lanches, mesmo em bulking. Se precisar de mais carboidrato no café, aumente a porção dessas fontes ou some duas delas (ex.: tapioca + fruta).
 5. GORDURAS:
    - NUNCA use castanhas (custo elevado).
    - Cutting: priorize ovos, iogurte, pasta de amendoim controlada, abacate.
