@@ -83,21 +83,31 @@ const isAvancado = (n?: string | null) => {
 const normalize = (s: string) =>
   (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-/** Exercícios sem carga externa: só repetições + tempo. */
-const BODYWEIGHT_PATTERNS = [
-  "prancha", "plank", "alongamento", "mobilidade", "abdominal", "abdominais",
-  "supra", "infra", "obliquo", "elevacao de perna", "elevacao de pernas",
-  "barra fixa", "barra livre", "cardio", "esteira", "bike", "bicicleta",
-  "eliptico", "corrida", "caminhada", "pular corda", "corda naval",
-  "burpee", "polichinelo", "flexao de braco", "apoio de solo", "isometria",
-  "ponte", "glute bridge", "escalador", "mountain climber", "aquecimento articular",
+/** Exercícios de tempo puro: sem carga e sem repetições (só cronômetro). */
+const TIME_ONLY_PATTERNS = [
+  "cardio", "esteira", "bike", "bicicleta", "eliptico", "corrida", "caminhada",
+  "alongamento", "mobilidade", "isometria", "prancha", "plank", "ponte",
+  "glute bridge", "aquecimento articular",
 ];
 
-const isBodyweightExercise = (nome: string) => {
+/** Exercícios sem carga externa: só repetições + tempo. */
+const BODYWEIGHT_PATTERNS = [
+  "abdominal", "abdominais", "supra", "infra", "obliquo",
+  "elevacao de perna", "elevacao de pernas", "barra fixa", "barra livre",
+  "burpee", "polichinelo", "flexao de braco", "apoio de solo",
+  "escalador", "mountain climber", "pular corda", "corda naval",
+];
+
+export type ModoExercicio = "com_carga" | "sem_carga_reps" | "sem_carga_tempo";
+
+export const getModoExercicio = (nome: string): ModoExercicio => {
   const s = normalize(nome);
-  if (/(maquina|smith|halter|barra guiada|polia|cabo|caneleira|anilha|peso)/.test(s)) return false;
-  return BODYWEIGHT_PATTERNS.some((p) => s.includes(p));
+  if (/(maquina|smith|halter|barra guiada|polia|cabo|caneleira|anilha|peso)/.test(s)) return "com_carga";
+  if (TIME_ONLY_PATTERNS.some((p) => s.includes(p))) return "sem_carga_tempo";
+  if (BODYWEIGHT_PATTERNS.some((p) => s.includes(p))) return "sem_carga_reps";
+  return "com_carga";
 };
+
 
 
 // Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
