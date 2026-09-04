@@ -155,10 +155,49 @@ export default function Onboarding() {
     }
   };
 
+  // Resolve o tenant mesmo quando o branding ainda não carregou ou o perfil
+  // ainda não tem tenant_id (aluno recém-convidado).
+  const resolveTenantId = async (): Promise<string | null> => {
+    if (tenantId) return tenantId;
+    if (tenant?.id) return tenant.id;
+    if (slug) {
+      const { data: t } = await supabase.from("tenants").select("id, slug").eq("slug", slug).maybeSingle();
+      if (t?.id) { setTenantId(t.id); setTenantSlug(t.slug); return t.id; }
+    }
+    if (user) {
+      const { data: perfil } = await supabase.from("perfis").select("tenant_id").eq("id", user.id).maybeSingle();
+      if (perfil?.tenant_id) { setTenantId(perfil.tenant_id); return perfil.tenant_id; }
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("tenant_id")
+        .eq("user_id", user.id)
+        .not("tenant_id", "is", null)
+        .limit(1)
+        .maybeSingle();
+      if (roleRow?.tenant_id) { setTenantId(roleRow.tenant_id); return roleRow.tenant_id; }
+      const { data: assin } = await supabase
+        .from("assinaturas")
+        .select("tenant_id")
+        .eq("aluno_id", user.id)
+        .not("tenant_id", "is", null)
+        .limit(1)
+        .maybeSingle();
+      if (assin?.tenant_id) { setTenantId(assin.tenant_id); return assin.tenant_id; }
+    }
+    return null;
+  };
+
   const handleFinish = async () => {
     if (!user) return;
     setBusy(true);
     try {
+      const resolvedTenantId = await resolveTenantId();
+      if (!resolvedTenantId) {
+        toast({ title: "Não identificamos seu treinador", description: "Abra o app pelo link do seu coach (ex.: alpha-coach.app/nome-do-coach) e tente novamente.", variant: "destructive" });
+        setBusy(false);
+        return;
+      }
+
       const peso = Number(pesoKg);
       const alt = parseAlturaCm(alturaCm);
       if (!alt) {
@@ -183,7 +222,7 @@ export default function Onboarding() {
       const nivelEstresse = Math.min(Math.max(Number(estresse[0]) || 5, 1), 10);
 
       const { data: rpcData, error: rpcError } = await supabase.rpc("complete_student_onboarding", {
-        _tenant_id: tenantId,
+        _tenant_id: resolvedTenantId,
         _nome_completo: nome,
         _telefone: telefone,
         _data_nascimento: dataNasc || null,
