@@ -198,12 +198,32 @@ export const IdentidadeVisual = () => {
     clearPreview();
   };
 
+  const saveMetalSkin = async (skin: MetalSkin | null) => {
+    if (!tenant) return;
+    const base = ((tenant.theme_overrides as ThemeOverrides | null) ?? {}) as ThemeOverrides;
+    const next: ThemeOverrides = { ...base, metal_skin: skin };
+    const previous = metalSkin;
+    setSavingSkin(true);
+    setMetalSkin(skin);
+    applyTheme(next, tenant.hero_url, true, tenant.theme_mode);
+    const { error } = await supabase.from("tenants").update({ theme_overrides: next }).eq("id", tenant.id);
+    setSavingSkin(false);
+    if (error) {
+      setMetalSkin(previous);
+      applyTheme(base, tenant.hero_url, true, tenant.theme_mode);
+      return toast.error(error.message);
+    }
+    toast.success(skin ? "Acabamento metálico aplicado!" : "Acabamento metálico removido");
+    await refresh();
+  };
+
   const handleSave = async () => {
     if (!selected) return;
     setBusy(true);
+    const overrides: ThemeOverrides = { ...selected.overrides, metal_skin: metalSkin };
     const { error } = await supabase
       .from("tenants")
-      .update({ theme_overrides: selected.overrides })
+      .update({ theme_overrides: overrides })
       .eq("id", tenant.id);
     if (error) toast.error(error.message);
     else {
@@ -213,6 +233,7 @@ export const IdentidadeVisual = () => {
     }
     setBusy(false);
   };
+
 
   const handleResetAll = async () => {
     setBusy(true);
