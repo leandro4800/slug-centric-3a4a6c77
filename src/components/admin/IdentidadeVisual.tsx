@@ -1,11 +1,39 @@
 import { useEffect, useState } from "react";
-import { useBranding, applyTheme, type ThemeOverrides, type ThemeMode } from "@/contexts/BrandingProvider";
+import { useBranding, applyTheme, type ThemeOverrides, type ThemeMode, type MetalSkin } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { PhonePreview } from "./PhonePreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, RotateCcw, Save, Check, Music, Contrast } from "lucide-react";
+import { Loader2, RotateCcw, Save, Check, Music, Contrast, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+
+const METAL_OPTIONS: { id: MetalSkin; label: string; gradient: string; text: string }[] = [
+  {
+    id: "azul",
+    label: "Azul metálico",
+    gradient: "linear-gradient(135deg, #0A1F5C 0%, #1B3FA0 25%, #3B5EDB 50%, #8FB4FF 65%, #3B5EDB 80%, #1B3FA0 100%)",
+    text: "#ffffff",
+  },
+  {
+    id: "dourado",
+    label: "Dourado metálico",
+    gradient: "linear-gradient(135deg, #FFD700 0%, #FF8C00 100%)",
+    text: "#000000",
+  },
+  {
+    id: "verde",
+    label: "Verde metálico",
+    gradient: "linear-gradient(135deg, #062B1A 0%, #0E5C3B 25%, #2E9E63 50%, #A8F0C6 65%, #2E9E63 80%, #0E5C3B 100%)",
+    text: "#ffffff",
+  },
+  {
+    id: "rosa",
+    label: "Rosa metálico",
+    gradient: "linear-gradient(135deg, #4A0E2E 0%, #8E1D57 25%, #D6488F 50%, #FFC1E3 65%, #D6488F 80%, #8E1D57 100%)",
+    text: "#ffffff",
+  },
+];
+
 
 type Preset = {
   id: string;
