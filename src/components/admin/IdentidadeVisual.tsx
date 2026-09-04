@@ -364,6 +364,55 @@ export const IdentidadeVisual = () => {
         </div>
 
         <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <h3 className="font-display text-base">ACABAMENTO METÁLICO</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Opcional. Aplica um gradiente metálico ao botão principal e aos painéis do app do aluno, por cima do tema escolhido.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {METAL_OPTIONS.map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => saveMetalSkin(opt.id)}
+                disabled={savingSkin}
+                className={`relative rounded-xl border-2 p-3 text-left transition-all ${
+                  metalSkin === opt.id ? "border-primary shadow-glow" : "border-border hover:border-primary/60"
+                }`}
+              >
+                {metalSkin === opt.id && (
+                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                    <Check className="h-3 w-3" />
+                  </div>
+                )}
+                <div
+                  className="h-8 w-full rounded-md border border-white/20 shadow-md mb-2"
+                  style={{ background: opt.gradient }}
+                />
+                <p className="text-xs font-bold tracking-wide">{opt.label}</p>
+                <div
+                  className="mt-2 inline-flex items-center justify-center rounded px-3 py-1 text-[10px] font-bold"
+                  style={{ background: opt.gradient, color: opt.text }}
+                >
+                  BOTÃO
+                </div>
+              </button>
+            ))}
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => saveMetalSkin(null)}
+            disabled={savingSkin || !metalSkin}
+          >
+            {savingSkin ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RotateCcw className="h-3 w-3 mr-1" /> Sem acabamento metálico</>}
+          </Button>
+        </div>
+
+
+
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
 
           <div className="flex items-center gap-2">
             <Music className="h-4 w-4 text-primary" />
