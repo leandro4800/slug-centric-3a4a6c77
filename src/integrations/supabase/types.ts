@@ -3408,6 +3408,7 @@ export type Database = {
           aluno_id: string
           concluida_em: string | null
           created_at: string | null
+          exercicio_chave: string | null
           id: string
           is_recorde: boolean | null
           numero_serie: number
@@ -3426,6 +3427,7 @@ export type Database = {
           aluno_id: string
           concluida_em?: string | null
           created_at?: string | null
+          exercicio_chave?: string | null
           id?: string
           is_recorde?: boolean | null
           numero_serie: number
@@ -3444,6 +3446,7 @@ export type Database = {
           aluno_id?: string
           concluida_em?: string | null
           created_at?: string | null
+          exercicio_chave?: string | null
           id?: string
           is_recorde?: boolean | null
           numero_serie?: number
