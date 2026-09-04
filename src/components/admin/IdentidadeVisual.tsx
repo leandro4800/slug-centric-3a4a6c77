@@ -73,6 +73,16 @@ const FALLBACK_PRESETS: Preset[] = [
   },
 ];
 
+const METAL_PRESETS: Preset[] = METAL_PRESETS_DEF.map((m) => ({
+  id: `metal-${m.id}`,
+  name: m.name,
+  subtitle: m.subtitle,
+  swatches: m.swatches,
+  previewBackground: m.gradient,
+  overrides: m.overrides,
+}));
+
+
 type PresetRow = {
   codigo: string;
   nome: string;
