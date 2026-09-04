@@ -34,6 +34,7 @@ interface CargaAnterior {
 interface PreviousSeries {
   peso: number;
   reps: number;
+  tempo?: number | null;
 }
 
 interface HistorySnapshot {
@@ -83,21 +84,31 @@ const isAvancado = (n?: string | null) => {
 const normalize = (s: string) =>
   (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-/** Exercícios sem carga externa: só repetições + tempo. */
-const BODYWEIGHT_PATTERNS = [
-  "prancha", "plank", "alongamento", "mobilidade", "abdominal", "abdominais",
-  "supra", "infra", "obliquo", "elevacao de perna", "elevacao de pernas",
-  "barra fixa", "barra livre", "cardio", "esteira", "bike", "bicicleta",
-  "eliptico", "corrida", "caminhada", "pular corda", "corda naval",
-  "burpee", "polichinelo", "flexao de braco", "apoio de solo", "isometria",
-  "ponte", "glute bridge", "escalador", "mountain climber", "aquecimento articular",
+/** Exercícios de tempo puro: sem carga e sem repetições (só cronômetro). */
+const TIME_ONLY_PATTERNS = [
+  "cardio", "esteira", "bike", "bicicleta", "eliptico", "corrida", "caminhada",
+  "alongamento", "mobilidade", "isometria", "prancha", "plank", "ponte",
+  "glute bridge", "aquecimento articular",
 ];
 
-const isBodyweightExercise = (nome: string) => {
+/** Exercícios sem carga externa: só repetições + tempo. */
+const BODYWEIGHT_PATTERNS = [
+  "abdominal", "abdominais", "supra", "infra", "obliquo",
+  "elevacao de perna", "elevacao de pernas", "barra fixa", "barra livre",
+  "burpee", "polichinelo", "flexao de braco", "apoio de solo",
+  "escalador", "mountain climber", "pular corda", "corda naval",
+];
+
+export type ModoExercicio = "com_carga" | "sem_carga_reps" | "sem_carga_tempo";
+
+export const getModoExercicio = (nome: string): ModoExercicio => {
   const s = normalize(nome);
-  if (/(maquina|smith|halter|barra guiada|polia|cabo|caneleira|anilha|peso)/.test(s)) return false;
-  return BODYWEIGHT_PATTERNS.some((p) => s.includes(p));
+  if (/(maquina|smith|halter|barra guiada|polia|cabo|caneleira|anilha|peso)/.test(s)) return "com_carga";
+  if (TIME_ONLY_PATTERNS.some((p) => s.includes(p))) return "sem_carga_tempo";
+  if (BODYWEIGHT_PATTERNS.some((p) => s.includes(p))) return "sem_carga_reps";
+  return "com_carga";
 };
+
 
 
 // Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
@@ -131,8 +142,10 @@ export const ExerciseCard = ({
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
   const getSlotType = (i: number) => slotTypes[i] || "Trabalho";
-  /** Exercício sem carga: esconde a coluna KG e grava o tempo do cronômetro. */
-  const semCarga = isBodyweightExercise(data.exercicio);
+  /** Modo do exercício: com carga, sem carga (reps) ou só tempo. */
+  const modoExercicio = getModoExercicio(data.exercicio);
+  const semCarga = modoExercicio !== "com_carga";
+  const soTempo = modoExercicio === "sem_carga_tempo";
 
   // ISO week key — garante que cada semana começa com os campos em branco
   const isoWeekKey = (() => {
@@ -158,6 +171,16 @@ export const ExerciseCard = ({
     previousBySeries: new Map(),
     legacyPrevious: null,
   });
+
+  /** Último tempo registrado (exercícios de tempo puro). */
+  const ultimoTempoAnterior = (() => {
+    for (const prev of history.previousBySeries.values()) {
+      if (prev.tempo != null && prev.tempo > 0) return prev.tempo;
+    }
+    return null;
+  })();
+
+
 
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
@@ -525,7 +548,7 @@ export const ExerciseCard = ({
 
     let query = supabase
       .from("series_executadas")
-      .select("peso_kg, reps, volume_kg, rm_estimado, numero_serie, tipo_serie, concluida_em")
+      .select("peso_kg, reps, volume_kg, rm_estimado, numero_serie, tipo_serie, tempo_seg, concluida_em")
       .eq("aluno_id", userId)
       .eq("tenant_id", tenantId)
       .in("treino_prescrito_id", prescribedIds)
@@ -541,6 +564,7 @@ export const ExerciseCard = ({
         empty.previousBySeries.set(seriesNumber, {
           peso: Number(row.peso_kg) || 0,
           reps: Number(row.reps) || 0,
+          tempo: (row as any).tempo_seg == null ? null : Number((row as any).tempo_seg),
         });
       }
       if (String(row.tipo_serie || "").trim().toLowerCase() !== "trabalho") continue;
@@ -653,8 +677,8 @@ export const ExerciseCard = ({
     const slot = slots[i];
     if (!slot || slot.done || savingSlots.has(i)) return;
     const weight = semCarga ? 0 : Number(slot.carga.replace(",", "."));
-    const reps = Number.parseInt(slot.reps, 10);
-    if (!Number.isInteger(reps) || reps <= 0) {
+    const reps = soTempo ? null : Number.parseInt(slot.reps, 10);
+    if (!soTempo && (!Number.isInteger(reps as number) || (reps as number) <= 0)) {
       toast.error("Informe as repetições.");
       return;
     }
@@ -662,6 +686,7 @@ export const ExerciseCard = ({
       toast.error("Informe KG e repetições válidos.");
       return;
     }
+
 
     setSavingSlots((current) => new Set(current).add(i));
     try {
@@ -750,7 +775,7 @@ export const ExerciseCard = ({
           maxVolumeBySeries: nextVolumes,
         };
       });
-      onCargaSaved?.(data.exercicio, weight, reps);
+      onCargaSaved?.(data.exercicio, weight, reps ?? 0);
       onSeriesSaved?.();
       toast.success(`Série ${i + 1} registrada.`);
     } catch (error: any) {
@@ -843,7 +868,7 @@ export const ExerciseCard = ({
           {cargaAnterior && (
             <div className="mt-2 min-w-0">
               <span className="inline-block max-w-full truncate rounded-full bg-primary/15 px-3 py-1 text-xs text-primary">
-                Última: {semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
+                Última: {soTempo ? (ultimoTempoAnterior != null ? `${ultimoTempoAnterior}s` : "—") : semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
               </span>
             </div>
           )}
@@ -988,14 +1013,16 @@ export const ExerciseCard = ({
 
           {semCarga && (
             <p className="text-[11px] text-muted-foreground -mt-2">
-              Exercício sem carga — registre apenas as repetições. O tempo do cronômetro é salvo junto.
+              {soTempo
+                ? "Exercício de tempo — o cronômetro é salvo, sem repetições."
+                : "Exercício sem carga — registre apenas as repetições. O tempo do cronômetro é salvo junto."}
             </p>
           )}
 
           <div className="w-full border border-border bg-background/40">
             <div className="w-full">
-              <div className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground`}>
-                <span>Série</span><span>Ant.</span>{!semCarga && <span className="text-center">KG</span>}<span className="text-center">Reps</span><span className="text-center">✓</span>
+              <div className={`grid ${soTempo ? "grid-cols-[34px_44px_34px]" : semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground`}>
+                <span>Série</span><span>Ant.</span>{!semCarga && <span className="text-center">KG</span>}{!soTempo && <span className="text-center">Reps</span>}<span className="text-center">✓</span>
               </div>
 
               {slots.map((slot, i) => {
@@ -1007,7 +1034,7 @@ export const ExerciseCard = ({
                 return (
                   <div
                     key={i}
-                    className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
+                    className={`grid ${soTempo ? "grid-cols-[34px_44px_34px]" : semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
                   >
                     <div className="flex min-w-0 flex-col items-start leading-tight">
                       <span className="flex items-center gap-0.5 font-mono text-xs font-bold">
@@ -1037,7 +1064,7 @@ export const ExerciseCard = ({
                       className={`flex flex-col text-[9px] leading-tight ${legacy ? "text-muted-foreground/70 italic" : "text-muted-foreground"}`}
                       title={legacy ? "Histórico antigo do exercício" : undefined}
                     >
-                      {shown ? (semCarga ? <span>×{shown.reps}</span> : (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>)) : "—"}
+                      {shown ? (soTempo ? <span>{shown.tempo ? `${shown.tempo}s` : "—"}</span> : semCarga ? <span>×{shown.reps}</span> : (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>)) : "—"}
                     </span>
 
                     {!semCarga && (
@@ -1053,6 +1080,7 @@ export const ExerciseCard = ({
                         className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                       />
                     )}
+                    {!soTempo && (
                     <input
                       aria-label={`Repetições da série ${i + 1}`}
                       type="number"
@@ -1064,6 +1092,7 @@ export const ExerciseCard = ({
                       placeholder="—"
                       className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                     />
+                    )}
                     <Button
                       type="button"
                       size="icon"
