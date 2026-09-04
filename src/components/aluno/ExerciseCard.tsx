@@ -186,6 +186,8 @@ export const ExerciseCard = ({
   const [showYT, setShowYT] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [listeningIdx, setListeningIdx] = useState<number | null>(null);
+  /** Modo voz por série: o ✓ da linha grava a fala e confirma automaticamente. */
+  const [voiceMode, setVoiceMode] = useState(false);
   const [referenceVideoUrl, setReferenceVideoUrl] = useState<string | null>(data.video_url || null);
 
   // O vídeo vem sempre do vínculo por ID resolvido na consulta do treino.
@@ -233,10 +235,9 @@ export const ExerciseCard = ({
           const n = parseFloat(numbers[0]);
           if (n <= 30) reps = numbers[0]; else carga = numbers[0];
         } else if (numbers.length >= 2) {
-          const n1 = parseFloat(numbers[0]);
-          const n2 = parseFloat(numbers[1]);
-          if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
-          else { reps = numbers[0]; carga = numbers[1]; }
+          // Ordem natural de fala: primeiro a carga, depois as repetições.
+          carga = numbers[0];
+          reps = numbers[1];
         }
       }
       const qtd = qtdMatch ? parseInt(qtdMatch[1]) : (tipo ? 1 : null);
