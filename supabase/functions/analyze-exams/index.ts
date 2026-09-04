@@ -231,11 +231,12 @@ ${intelligenceContext}`
         const closes = (s.match(/\}/g) || []).length
         const obrs = (s.match(/\[/g) || []).length
         const cbrs = (s.match(/\]/g) || []).length
-        s += '}'.repeat(Math.max(0, opens - closes - Math.max(0, obrs - cbrs)))
+        s += '}'.repeat(Math.max(0, opens - closes - 1))
         s += ']'.repeat(Math.max(0, obrs - cbrs))
-        s += '}'.repeat(Math.max(0, opens - closes - Math.max(0, obrs - cbrs) === 0 ? 0 : 0))
+        if (opens - closes > 0) s += '}'
         return s.replace(/,(\s*[}\]])/g, '$1')
       }
+
       try { return JSON.parse(closeOpen(cleaned)) as AIResponse } catch {}
 
       // Recovery 2: descartar o último objeto de marcador incompleto e fechar
