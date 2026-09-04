@@ -264,7 +264,16 @@ ${intelligenceContext}`
       throw new Error('Não foi possível ler a resposta da IA')
     }
 
-    const analysisData: AIResponse = parseAIJson(rawContent)
+    let analysisData: AIResponse
+    try {
+      analysisData = parseAIJson(rawContent)
+    } catch (parseErr) {
+      console.error('Falha ao interpretar resposta da IA:', parseErr, 'len:', rawContent.length)
+      return new Response(JSON.stringify({
+        error: 'Não conseguimos ler este exame agora. Tente novamente ou envie um PDF mais legível.',
+      }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
     analysisData.marcadores = (analysisData.marcadores ?? [])
       .filter((m) => m && m.nome)
       .map((m) => {
