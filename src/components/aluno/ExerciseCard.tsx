@@ -644,14 +644,16 @@ export const ExerciseCard = ({
     // 2) Séries já confirmadas nesta sessão (fonte de verdade: Supabase)
     (async () => {
       let next = base;
-      if (userId && sessaoId && isUuid(data.id)) {
-        const { data: rows } = await supabase
+      if (userId && sessaoId) {
+        let query = supabase
           .from("series_executadas")
           .select("numero_serie, peso_kg, reps, is_recorde")
           .eq("aluno_id", userId)
-          .eq("sessao_id", sessaoId)
-          .eq("treino_prescrito_id", data.id)
-          .order("numero_serie", { ascending: true });
+          .eq("sessao_id", sessaoId);
+        query = isUuid(data.id)
+          ? query.eq("treino_prescrito_id", data.id)
+          : query.is("treino_prescrito_id", null).eq("exercicio_chave", String(data.id));
+        const { data: rows } = await query.order("numero_serie", { ascending: true });
         if (cancelled) return;
         const records = new Set<number>();
         for (const row of rows || []) {
