@@ -276,7 +276,7 @@ const MeusAtletas = () => {
             </div>
             <div className="text-left">
               <h3 className="font-display text-sm uppercase">CONSULTAR METODOLOGIA</h3>
-              <p className="text-[10px] text-muted-foreground uppercase">Pergunte à Dr. IA sobre o Coach ou Saúde</p>
+              <p className="text-[10px] text-muted-foreground uppercase">Pergunte à IA sobre o Coach ou Saúde</p>
             </div>
           </div>
           <ChevronRight className={`h-5 w-5 text-primary transition-transform ${qaOpen ? 'rotate-90' : ''}`} />

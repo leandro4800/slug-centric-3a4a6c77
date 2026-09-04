@@ -139,7 +139,7 @@ export const PhonePreview = ({ onPick, pickedTarget, initialScreen = "home" }: P
                         <Stethoscope className="h-3.5 w-3.5" style={{ color: "hsl(var(--primary))" }} />
                       </div>
                       <div className="flex-1 text-left">
-                        <p className="font-display text-[10px] uppercase" style={{ color: "hsl(var(--primary))" }}>Dr. IA</p>
+                        <p className="font-display text-[10px] uppercase" style={{ color: "hsl(var(--primary))" }}>ALPHA INSIGHT</p>
                         <p className="text-[7px]" style={{ color: "hsl(var(--foreground)/0.6)" }}>Médico esportivo de bolso</p>
                       </div>
                       <ChevronRight className="h-3 w-3" style={{ color: "hsl(var(--primary)/0.5)" }} />

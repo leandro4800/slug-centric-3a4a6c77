@@ -1024,7 +1024,7 @@ export const PersonalTreino = () => {
               <span className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
                 <Dumbbell className="h-4 w-4" />
               </span>
-              <h3 className="font-display text-lg uppercase">Parecer da Dr. IA (Clínico)</h3>
+              <h3 className="font-display text-lg uppercase">Observação da IA</h3>
             </div>
             <p className="text-sm text-foreground/90 leading-relaxed italic border-l-2 border-primary pl-4">
               "{observacaoClinica}"

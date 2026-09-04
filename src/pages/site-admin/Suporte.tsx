@@ -72,7 +72,7 @@ const GUIA = [
     titulo: "Avaliação física — 7 dobras",
     texto: [
       "Em Programação → Avaliação física, clique em Nova avaliação e escolha o protocolo de 7 dobras (Jackson & Pollock).",
-      "Você pode importar uma foto/print da ficha e o Dr. IA preenche as dobras automaticamente.",
+      "Você pode importar uma foto/print da ficha e a IA preenche as dobras automaticamente.",
       "A altura aceita formatos como 178, 1,78 ou 1.78m.",
     ],
   },
