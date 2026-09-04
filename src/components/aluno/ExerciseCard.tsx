@@ -1143,12 +1143,15 @@ export const ExerciseCard = ({
                       type="button"
                       size="icon"
                       variant={slot.done ? "green" : "default"}
-                      aria-label={`Confirmar série ${i + 1}`}
-                      disabled={!sessionActive || slot.done || saving}
-                      onClick={() => void confirmSeries(i)}
-                      className="h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4"
+                      aria-label={voiceMode && !slot.done ? `Registrar série ${i + 1} por voz` : `Confirmar série ${i + 1}`}
+                      disabled={!sessionActive || slot.done || saving || (listeningIdx !== null && listeningIdx !== i)}
+                      onClick={() => {
+                        if (voiceMode && !slot.done) handleVoiceSeries(i);
+                        else void confirmSeries(i);
+                      }}
+                      className={`h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4 ${listeningIdx === i ? "animate-pulse" : ""}`}
                     >
-                      {saving ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
+                      {saving ? <Loader2 className="animate-spin" /> : listeningIdx === i ? <Mic /> : voiceMode && !slot.done ? <Mic /> : <CheckCircle2 />}
                     </Button>
                   </div>
                 );
