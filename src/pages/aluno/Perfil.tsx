@@ -102,13 +102,22 @@ const Perfil = () => {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [adjustOpen, setAdjustOpen] = useState(false);
+  const [imgPosX, setImgPosX] = useState<number>(50);
   const [imgPosY, setImgPosY] = useState<number>(50);
 
   useEffect(() => {
-    if (profile?.avatar_pos_y !== undefined && profile?.avatar_pos_y !== null) {
-      setImgPosY(profile.avatar_pos_y);
-    }
+    // Banco antigo defaultava 20 (pensado p/ object-cover + rosto). Com object-contain
+    // o centro visual é 50 — 20 deixava logo/foto "grudada" no topo.
+    const y = profile?.avatar_pos_y;
+    setImgPosY(y === null || y === undefined || y === 20 ? 50 : y);
   }, [profile?.avatar_pos_y]);
+
+  useEffect(() => {
+    if (!user?.id || typeof window === "undefined") return;
+    const raw = localStorage.getItem(`avatar_pos_x:${user.id}`);
+    const x = raw != null ? Number(raw) : 50;
+    setImgPosX(Number.isFinite(x) ? Math.min(100, Math.max(0, x)) : 50);
+  }, [user?.id]);
 
   const [profileImageFailed, setProfileImageFailed] = useState(false);
   const [formImageFailed, setFormImageFailed] = useState(false);
@@ -517,17 +526,17 @@ const Perfil = () => {
     <>
       {/* Cada perfil toca APENAS a própria música — nunca a do tenant */}
       <ProfileMusicPlayer url={profile?.music_url ?? null} />
-      {/* Hero estilo Netflix */}
-      <section className="relative min-h-[95vh] -mt-0">
+      {/* Hero: object-contain encaixa a imagem inteira no contêiner (sem crop) */}
+      <section className="relative min-h-[95vh] -mt-0 bg-black">
         <img
           src={profileHeroSrc}
           alt=""
-          className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] w-full object-cover transition-[object-position] duration-300 ease-in-out"
-          style={{ objectPosition: `center ${imgPosY}%` }}
+          className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] w-full object-contain transition-[object-position] duration-300 ease-in-out"
+          style={{ objectPosition: `${imgPosX}% ${imgPosY}%` }}
           onError={() => setProfileImageFailed(true)}
         />
-        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-t from-black via-black/40 to-transparent" />
-        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-r from-black/20 via-transparent to-transparent" />
+        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
+        <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-r from-black/20 via-transparent to-transparent pointer-events-none" />
 
         <div className="relative pt-[52vh] px-5 space-y-2 pb-8">
 
@@ -551,6 +560,14 @@ const Perfil = () => {
               className="w-full h-12 font-bold"
             >
               <User className="h-4 w-4" /> Editar Perfil
+            </Button>
+            <Button
+              type="button"
+              onClick={() => setAdjustOpen(true)}
+              variant="secondary"
+              className="w-full h-11 font-bold"
+            >
+              <Move className="h-4 w-4" /> Ajustar imagem no hero
             </Button>
 
             {isCoach && (
@@ -700,6 +717,18 @@ const Perfil = () => {
                 onChange={handleImageUpload}
               />
               <p className="text-xs text-muted-foreground">Toque no ícone para alterar sua foto</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  setProfileOpen(false);
+                  setAdjustOpen(true);
+                }}
+              >
+                <Move className="h-3.5 w-3.5" /> Ajustar no hero
+              </Button>
             </div>
             <div>
               <Label htmlFor="avatar">Link da Imagem (Opcional)</Label>
@@ -902,34 +931,51 @@ const Perfil = () => {
         triggerImportOnInit={triggerImport}
       />
 
-      {/* Adjust photo position dialog */}
+      {/* Adjust photo: contain + posição X/Y */}
       <Dialog open={adjustOpen} onOpenChange={setAdjustOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Ajustar foto</DialogTitle>
-            <DialogDescription>Arraste o controle para encaixar melhor sua foto na tela.</DialogDescription>
+            <DialogTitle>Ajustar imagem</DialogTitle>
+            <DialogDescription>
+              A imagem encaixa inteira no contêiner (sem cortar). Use os controles se precisar deslocar.
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div
-              className="relative w-full rounded-xl overflow-hidden border border-border bg-muted mx-auto"
+              className="relative w-full rounded-xl overflow-hidden border border-border bg-black mx-auto"
               style={{
-                aspectRatio: `${typeof window !== 'undefined' ? window.innerWidth : 390} / ${typeof window !== 'undefined' ? Math.max(window.innerHeight * 0.85, 500) : 700}`,
-                maxHeight: '60vh',
+                aspectRatio: `${typeof window !== "undefined" ? window.innerWidth : 390} / ${typeof window !== "undefined" ? Math.max(window.innerHeight * 0.85, 500) : 700}`,
+                maxHeight: "60vh",
               }}
             >
               <img
                 src={profileHeroSrc}
                 alt=""
-                className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-150 ease-out"
-                style={{ objectPosition: `center ${imgPosY}%` }}
+                className="absolute inset-0 w-full h-full object-contain transition-[object-position] duration-150 ease-out"
+                style={{ objectPosition: `${imgPosX}% ${imgPosY}%` }}
                 onError={() => setProfileImageFailed(true)}
               />
               <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 h-px bg-white/40 pointer-events-none" />
+              <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-px bg-white/40 pointer-events-none" />
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
+                <span>← Esquerda</span>
+                <span>X: {imgPosX}%</span>
+                <span>Direita →</span>
+              </div>
+              <Slider
+                value={[imgPosX]}
+                min={0}
+                max={100}
+                step={1}
+                onValueChange={(v) => setImgPosX(v[0])}
+              />
             </div>
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground uppercase tracking-widest">
                 <span>↑ Subir</span>
-                <span>Centro: {imgPosY}%</span>
+                <span>Y: {imgPosY}%</span>
                 <span>Descer ↓</span>
               </div>
               <Slider
@@ -940,29 +986,46 @@ const Perfil = () => {
                 onValueChange={(v) => setImgPosY(v[0])}
               />
               <p className="text-[10px] text-muted-foreground text-center">
-                Use o slider para alinhar o rosto com a linha branca (centro da tela).
+                Cruz branca = centro do contêiner. Centralizar = 50% / 50%.
               </p>
             </div>
           </div>
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setImgPosY(50)}>Resetar</Button>
-            <Button variant="default" onClick={async () => {
-              try {
-                const { error } = await supabase
-                  .from("perfis")
-                  .update({ avatar_pos_y: imgPosY })
-                  .eq("id", user?.id);
-                
-                if (error) throw error;
-                
-                setProfile(prev => prev ? { ...prev, avatar_pos_y: imgPosY } : null);
-                setFormProfile(prev => ({ ...prev, avatar_pos_y: imgPosY }));
-                setAdjustOpen(false);
-                toast.success("Ajuste de foto salvo!");
-              } catch (err: any) {
-                toast.error("Erro ao salvar ajuste: " + err.message);
-              }
-            }}>Concluir</Button>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setImgPosX(50);
+                setImgPosY(50);
+              }}
+            >
+              Centralizar
+            </Button>
+            <Button
+              variant="default"
+              onClick={async () => {
+                try {
+                  const { error } = await supabase
+                    .from("perfis")
+                    .update({ avatar_pos_y: imgPosY })
+                    .eq("id", user?.id);
+
+                  if (error) throw error;
+
+                  if (user?.id) {
+                    localStorage.setItem(`avatar_pos_x:${user.id}`, String(imgPosX));
+                  }
+
+                  setProfile((prev) => (prev ? { ...prev, avatar_pos_y: imgPosY } : null));
+                  setFormProfile((prev) => ({ ...prev, avatar_pos_y: imgPosY }));
+                  setAdjustOpen(false);
+                  toast.success("Ajuste de imagem salvo!");
+                } catch (err: any) {
+                  toast.error("Erro ao salvar ajuste: " + err.message);
+                }
+              }}
+            >
+              Concluir
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
