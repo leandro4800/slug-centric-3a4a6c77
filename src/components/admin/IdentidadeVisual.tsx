@@ -1,11 +1,48 @@
 import { useEffect, useState } from "react";
-import { useBranding, type ThemeOverrides } from "@/contexts/BrandingProvider";
+import { useBranding, applyTheme, type ThemeOverrides, type ThemeMode, type MetalSkin } from "@/contexts/BrandingProvider";
 import { supabase } from "@/integrations/supabase/client";
 import { PhonePreview } from "./PhonePreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, RotateCcw, Save, Check, Music } from "lucide-react";
+import { Loader2, RotateCcw, Save, Check, Music, Contrast } from "lucide-react";
 import { toast } from "sonner";
+
+// Paletas metálicas: entram como temas selecionáveis (aplicam cor + acabamento metálico)
+const METAL_PRESETS_DEF: { id: MetalSkin; name: string; subtitle: string; swatches: string[]; gradient: string; overrides: ThemeOverrides }[] = [
+  {
+    id: "azul",
+    name: "AZUL METÁLICO",
+    subtitle: "Cromado azul",
+    swatches: ["#0A1F5C", "#1B3FA0", "#3B5EDB", "#FFFFFF"],
+    gradient: "linear-gradient(135deg, #0A1F5C 0%, #1B3FA0 25%, #3B5EDB 50%, #8FB4FF 65%, #3B5EDB 80%, #1B3FA0 100%)",
+    overrides: { primary: "224 62% 55%", primary_glow: "220 100% 78%", primary_foreground: "0 0% 100%", accent: "224 62% 55%", accent_foreground: "0 0% 100%", metal_skin: "azul" },
+  },
+  {
+    id: "dourado",
+    name: "DOURADO METÁLICO",
+    subtitle: "Ouro escovado",
+    swatches: ["#3B2600", "#FF8C00", "#FFD700", "#FFFFFF"],
+    gradient: "linear-gradient(135deg, #FFD700 0%, #FF8C00 100%)",
+    overrides: { primary: "45 100% 50%", primary_glow: "45 100% 65%", primary_foreground: "0 0% 0%", accent: "45 100% 50%", accent_foreground: "0 0% 0%", metal_skin: "dourado" },
+  },
+  {
+    id: "verde",
+    name: "VERDE METÁLICO",
+    subtitle: "Esmeralda cromada",
+    swatches: ["#062B1A", "#0E5C3B", "#2E9E63", "#FFFFFF"],
+    gradient: "linear-gradient(135deg, #062B1A 0%, #0E5C3B 25%, #2E9E63 50%, #A8F0C6 65%, #2E9E63 80%, #0E5C3B 100%)",
+    overrides: { primary: "152 55% 40%", primary_glow: "148 63% 80%", primary_foreground: "0 0% 100%", accent: "152 55% 40%", accent_foreground: "0 0% 100%", metal_skin: "verde" },
+  },
+  {
+    id: "rosa",
+    name: "ROSA METÁLICO",
+    subtitle: "Rosé cromado",
+    swatches: ["#4A0E2E", "#8E1D57", "#D6488F", "#FFFFFF"],
+    gradient: "linear-gradient(135deg, #4A0E2E 0%, #8E1D57 25%, #D6488F 50%, #FFC1E3 65%, #D6488F 80%, #8E1D57 100%)",
+    overrides: { primary: "329 63% 56%", primary_glow: "325 100% 88%", primary_foreground: "0 0% 100%", accent: "329 63% 56%", accent_foreground: "0 0% 100%", metal_skin: "rosa" },
+  },
+];
+
 
 type Preset = {
   id: string;
@@ -35,6 +72,16 @@ const FALLBACK_PRESETS: Preset[] = [
     },
   },
 ];
+
+const METAL_PRESETS: Preset[] = METAL_PRESETS_DEF.map((m) => ({
+  id: `metal-${m.id}`,
+  name: m.name,
+  subtitle: m.subtitle,
+  swatches: m.swatches,
+  previewBackground: m.gradient,
+  overrides: m.overrides,
+}));
+
 
 type PresetRow = {
   codigo: string;
@@ -75,7 +122,14 @@ export const IdentidadeVisual = () => {
   const [busy, setBusy] = useState(false);
   const [musicUrl, setMusicUrl] = useState<string>("");
   const [savingMusic, setSavingMusic] = useState(false);
-  const [presets, setPresets] = useState<Preset[]>(FALLBACK_PRESETS);
+  const [presets, setPresets] = useState<Preset[]>([...FALLBACK_PRESETS, ...METAL_PRESETS]);
+  const [themeMode, setThemeMode] = useState<ThemeMode>((tenant?.theme_mode as ThemeMode) ?? "escuro");
+  const [savingMode, setSavingMode] = useState(false);
+
+
+  useEffect(() => {
+    setThemeMode((tenant?.theme_mode as ThemeMode) ?? "escuro");
+  }, [tenant?.theme_mode]);
 
   useEffect(() => {
     if (!tenant?.owner_user_id) {
@@ -107,7 +161,7 @@ export const IdentidadeVisual = () => {
         .eq("ativo", true)
         .order("ordem", { ascending: true });
       if (!alive || error || !data?.length) return;
-      setPresets((data as PresetRow[]).map(rowToPreset));
+      setPresets([...(data as PresetRow[]).map(rowToPreset), ...METAL_PRESETS]);
     })();
     return () => {
       alive = false;
@@ -129,6 +183,23 @@ export const IdentidadeVisual = () => {
     toast.success(musicUrl.trim() ? "Música do seu perfil salva!" : "Música do perfil removida");
   };
 
+  const saveMode = async (mode: ThemeMode) => {
+    if (!tenant || mode === themeMode) return;
+    setSavingMode(true);
+    const previous = themeMode;
+    setThemeMode(mode);
+    applyTheme((tenant.theme_overrides as ThemeOverrides | null) ?? null, tenant.hero_url, true, mode);
+    const { error } = await supabase.from("tenants").update({ theme_mode: mode }).eq("id", tenant.id);
+    setSavingMode(false);
+    if (error) {
+      setThemeMode(previous);
+      applyTheme((tenant.theme_overrides as ThemeOverrides | null) ?? null, tenant.hero_url, true, previous);
+      return toast.error(error.message);
+    }
+    toast.success(mode === "suave" ? "Modo Suave aplicado!" : "Modo Escuro aplicado!");
+    await refresh();
+  };
+
   const handlePick = (p: Preset) => {
     setSelected(p);
     applyPreview(p.overrides);
@@ -142,9 +213,10 @@ export const IdentidadeVisual = () => {
   const handleSave = async () => {
     if (!selected) return;
     setBusy(true);
+    const overrides: ThemeOverrides = { metal_skin: null, ...selected.overrides };
     const { error } = await supabase
       .from("tenants")
-      .update({ theme_overrides: selected.overrides })
+      .update({ theme_overrides: overrides })
       .eq("id", tenant.id);
     if (error) toast.error(error.message);
     else {
@@ -154,6 +226,7 @@ export const IdentidadeVisual = () => {
     }
     setBusy(false);
   };
+
 
   const handleResetAll = async () => {
     setBusy(true);
@@ -250,6 +323,42 @@ export const IdentidadeVisual = () => {
         </div>
 
         <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
+          <div className="flex items-center gap-2">
+            <Contrast className="h-4 w-4 text-primary" />
+            <h3 className="font-display text-base">FUNDO DO APP</h3>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Escolha entre o preto absoluto e o cinza-grafite (mais suave para os olhos). Vale para o seu painel e para o app dos seus alunos. As cores da sua marca não mudam.
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            {([
+              { id: "escuro", label: "ESCURO", desc: "Preto absoluto", bg: "#000000" },
+              { id: "suave", label: "SUAVE", desc: "Cinza-grafite", bg: "#1F1F1F" },
+            ] as const).map((m) => (
+              <button
+                key={m.id}
+                onClick={() => saveMode(m.id)}
+                disabled={savingMode}
+                className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                  themeMode === m.id ? "border-primary shadow-glow" : "border-border hover:border-primary/60"
+                }`}
+                style={{ background: m.bg }}
+              >
+                {themeMode === m.id && (
+                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
+                    <Check className="h-3 w-3" />
+                  </div>
+                )}
+                <p className="font-display text-sm font-bold tracking-wide text-white">{m.label}</p>
+                <p className="text-[10px] text-white/60">{m.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
+
+
           <div className="flex items-center gap-2">
             <Music className="h-4 w-4 text-primary" />
             <h3 className="font-display text-base">MÚSICA DE FUNDO DO PERFIL</h3>

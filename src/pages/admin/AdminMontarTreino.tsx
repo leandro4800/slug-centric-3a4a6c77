@@ -1001,7 +1001,6 @@ const AdminMontarTreino = () => {
 
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || null;
     const logo = await loadImageDataUrl(tenant?.logo_url);
-    const platLogo = await loadImageDataUrl(platformLogo);
 
     // Fundo claro (legível) com faixa vermelha lateral em todas as páginas
     const paintPageBackground = () => {
@@ -1029,13 +1028,16 @@ const AdminMontarTreino = () => {
         heroX += targetW + 6;
       } catch {}
     }
-    // Tag "UM ORIGINAL ALPHA COACH"
-    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
-    doc.rect(heroX, 8, 34, 5, "F");
-    doc.setTextColor(255, 255, 255);
+    // Tag "UM ORIGINAL <TENANT>"
+    const marcaNome = (tenant?.nome || "").toUpperCase() || "ALPHA COACH";
+    const tagTexto = `UM ORIGINAL ${marcaNome}`;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    doc.text("UM ORIGINAL ALPHA COACH", heroX + 17, 11.5, { align: "center" });
+    const tagW = Math.max(34, doc.getTextWidth(tagTexto) + 6);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
+    doc.rect(heroX, 8, tagW, 5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.text(tagTexto, heroX + tagW / 2, 11.5, { align: "center" });
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -1044,7 +1046,7 @@ const AdminMontarTreino = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(200, 200, 200);
-    doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 30);
+    doc.text(`METODOLOGIA ${marcaNome}  •  TEMPORADA 2026`, heroX, 30);
 
     // Linha divisor + atleta / coach
     doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
@@ -1317,31 +1319,17 @@ const AdminMontarTreino = () => {
       y += 22;
     }
 
-    // Rodapé Netflix Alpha Coach Pro em todas as páginas
+    // Rodapé discreto (marca d'água da plataforma) em todas as páginas
     const pageH = doc.internal.pageSize.getHeight();
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
-      // Faixa vermelha
       doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(0, pageH - 12, pageW, 12, "F");
-      // Logo plataforma à esquerda
-      if (platLogo) {
-        try {
-          const targetH = 8;
-          const ratio = platLogo.w / platLogo.h || 1;
-          const targetW = Math.min(targetH * ratio, 22);
-          const fmt = platLogo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
-          doc.addImage(platLogo.dataUrl, fmt, 5, pageH - 10, targetW, targetH);
-        } catch {}
-      }
       doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 6.5, { align: "center" });
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.text("METODOLOGIA PREMIUM • TREINO • DIETA • EVOLUÇÃO", pageW / 2, pageH - 2.5, { align: "center" });
+      doc.setFontSize(6);
+      doc.text("Gerado via Alpha Coach Pro", 5, pageH - 4.5);
       doc.setFontSize(7.5);
       doc.setFont("helvetica", "bold");
       doc.text(`${p}/${totalPages}`, pageW - 5, pageH - 4.5, { align: "right" });
@@ -1366,7 +1354,6 @@ const AdminMontarTreino = () => {
 
     const alunoNome = alunos.find((a) => a.id === alunoId)?.nome_completo || null;
     const logo = await loadImageDataUrl(tenant?.logo_url);
-    const platLogo = await loadImageDataUrl(platformLogo);
 
     // Pinta fundo preto + faixa vermelha lateral (chamado ANTES de qualquer conteúdo em cada página)
     const paintDarkBg = () => {
@@ -1398,12 +1385,15 @@ const AdminMontarTreino = () => {
       } catch {}
     }
     // Tag ORIGINAL
-    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
-    doc.rect(heroX, 8, 34, 5, "F");
-    doc.setTextColor(255, 255, 255);
+    const marcaNome = (tenant?.nome || "").toUpperCase() || "ALPHA COACH";
+    const tagTexto = `UM ORIGINAL ${marcaNome}`;
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7);
-    doc.text("UM ORIGINAL ALPHA COACH", heroX + 17, 11.5, { align: "center" });
+    const tagW = Math.max(34, doc.getTextWidth(tagTexto) + 6);
+    doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
+    doc.rect(heroX, 8, tagW, 5, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.text(tagTexto, heroX + tagW / 2, 11.5, { align: "center" });
 
     doc.setTextColor(255, 255, 255);
     doc.setFontSize(24);
@@ -1412,7 +1402,7 @@ const AdminMontarTreino = () => {
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     doc.setTextColor(200, 200, 200);
-    doc.text("METODOLOGIA ALPHA COACH  •  TEMPORADA 2026", heroX, 30);
+    doc.text(`METODOLOGIA ${marcaNome}  •  TEMPORADA 2026`, heroX, 30);
 
     doc.setDrawColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
     doc.setLineWidth(0.4);
@@ -1657,29 +1647,17 @@ const AdminMontarTreino = () => {
       y += 22;
     }
 
-    // Rodapé em todas as páginas
+    // Rodapé discreto (marca d'água da plataforma) em todas as páginas
     const pageH = doc.internal.pageSize.getHeight();
     const totalPages = (doc as any).internal.getNumberOfPages();
     for (let p = 1; p <= totalPages; p++) {
       doc.setPage(p);
       doc.setFillColor(PRIMARY[0], PRIMARY[1], PRIMARY[2]);
       doc.rect(0, pageH - 12, pageW, 12, "F");
-      if (platLogo) {
-        try {
-          const targetH = 8;
-          const ratio = platLogo.w / platLogo.h || 1;
-          const targetW = Math.min(targetH * ratio, 22);
-          const fmt = platLogo.dataUrl.startsWith("data:image/png") ? "PNG" : "JPEG";
-          doc.addImage(platLogo.dataUrl, fmt, 5, pageH - 10, targetW, targetH);
-        } catch {}
-      }
       doc.setTextColor(255, 255, 255);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(12);
-      doc.text("ALPHA COACH PRO", pageW / 2, pageH - 6.5, { align: "center" });
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(7);
-      doc.text("METODOLOGIA PREMIUM • TREINO • DIETA • EVOLUÇÃO", pageW / 2, pageH - 2.5, { align: "center" });
+      doc.setFontSize(6);
+      doc.text("Gerado via Alpha Coach Pro", 5, pageH - 4.5);
       doc.setFontSize(7.5);
       doc.setFont("helvetica", "bold");
       doc.text(`${p}/${totalPages}`, pageW - 5, pageH - 4.5, { align: "right" });

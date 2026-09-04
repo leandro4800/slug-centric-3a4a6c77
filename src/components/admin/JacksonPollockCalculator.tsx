@@ -453,7 +453,7 @@ export default function JacksonPollockCalculator({
 
   const handleImportFile = async (file: File) => {
     setImporting(true);
-    const toastId = toast.loading("Dr. IA analisando as dobras...");
+    const toastId = toast.loading("IA analisando as dobras...");
     
     try {
       const reader = new FileReader();
@@ -482,7 +482,7 @@ export default function JacksonPollockCalculator({
         const { next, foundCount, textoLido, somaDobras, bfEstimado, aviso, fonteUrl, promptUtilizado } = extractSevenFolds(ext, createEmptyDobras());
         setAiAnalysis({ dobras: next, foundCount, textoLido, somaDobras, bfEstimado, aviso, fonteUrl, promptUtilizado });
         if (foundCount === 0) {
-          toast.warning("Dr. IA analisou a foto, mas não identificou valores em mm suficientes.", { id: toastId });
+          toast.warning("A IA analisou a foto, mas não identificou valores em mm suficientes.", { id: toastId });
         } else {
           setDobras((prev) => {
             const merged = { ...prev };
@@ -491,7 +491,7 @@ export default function JacksonPollockCalculator({
             });
             return merged;
           });
-          toast.success(`Dr. IA preencheu ${foundCount} dobra(s). Clique em Salvar Protocolo para manter no histórico.`, { id: toastId });
+          toast.success(`A IA preencheu ${foundCount} dobra(s). Clique em Salvar Protocolo para manter no histórico.`, { id: toastId });
         }
       } else {
         throw new Error("Não foi possível extrair dados do arquivo.");

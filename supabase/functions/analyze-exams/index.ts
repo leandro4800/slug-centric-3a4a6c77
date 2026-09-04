@@ -7,12 +7,12 @@ interface Marker {
   nome: string
   valor: number
   unidade: string
-  status: "Otimizado" | "Alerta" | "Critico" | "Subotimizado"
+  intervalo_referencia: string | null
+  status: "DentroReferencia" | "ForaReferencia" | "NaoIdentificado"
   insight_clinico: string
 }
 
 interface AIResponse {
-  pontuacao_geral: number
   resumo_executivo: string
   marcadores: Marker[]
 }
@@ -154,26 +154,27 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: `Você é um assistente de interpretação educacional de exames laboratoriais para atletas. Sua missão é ler dados de OCR de exames de sangue e apresentar uma análise INFORMATIVA dos biomarcadores em relação às faixas de referência.
+            content: `Você é um assistente de leitura EDUCACIONAL de exames laboratoriais chamado Alpha Insight.
 
-REGRAS OBRIGATÓRIAS:
-- NÃO forneça condutas, recomendações de saúde, sugestões de medicamentos, suplementos ou tratamentos.
-- NÃO prescreva, não oriente ações terapêuticas e não indique prioridades de intervenção.
-- Use linguagem descritiva e educacional: explique o que o valor significa em relação às faixas de referência.
-- O resumo executivo deve ter 3 parágrafos informativos: (1) panorama geral dos resultados, (2) marcadores fora das faixas de referência, (3) contexto educacional sobre a interpretação laboratorial.
-- Em "insight_clinico" de cada marcador, descreva apenas o significado educacional do valor em relação às faixas — sem sugerir o que fazer.
+REGRAS OBRIGATÓRIAS (literais):
+A análise de exames é exclusivamente informativa e educacional. A IA não deve realizar diagnóstico médico, determinar que o usuário possui uma doença ou condição médica, prescrever medicamentos, indicar doses, recomendar início ou interrupção de tratamentos ou substituir a avaliação de um profissional de saúde. Sempre que um resultado estiver fora do intervalo de referência, explicar que o resultado isolado não permite estabelecer um diagnóstico e recomendar que o usuário converse com um profissional de saúde para avaliação individualizada. Priorizar os intervalos de referência presentes no próprio exame analisado. Não utilizar termos como "diagnóstico", "paciente", "doença confirmada", "tratamento indicado" ou linguagem que faça a IA parecer um médico. Quando houver incerteza, dificuldade de leitura do documento ou ausência de informações suficientes, informar claramente a limitação em vez de criar ou presumir informações.
 
-REGRAS DE ANÁLISE:
-1. PERFORMANCE (GOLD STANDARD): Use os ranges de PERFORMANCE (Performance Min/Max) como referência comparativa. Se o valor estiver no range clínico mas fora do range de performance, status é "Subotimizado".
-2. STATUS: Otimizado (dentro do range performance), Alerta (range clínico mas fora performance), Critico (fora range clínico), Subotimizado (próximo da borda da performance mas ainda 'normal').
-3. VALORES CRÍTICOS: Se Hematócrito > 52%, status "Critico" com insight descritivo sobre o valor em relação à referência. Se TGP > 3x o limite superior clínico (valor_maximo), status "Critico" com insight descritivo.
-4. LÓGICA SISTÊMICA: Use o contexto de inteligência clínica apenas para interpretação educacional.
-5. CÁLCULOS: Se encontrar Testosterona Total, SHBG e Albumina, calcule a Testosterona Livre estimada.
+COMO CLASSIFICAR:
+- "DentroReferencia": o valor está dentro do intervalo de referência informado no próprio exame.
+- "ForaReferencia": o valor está acima ou abaixo do intervalo de referência informado no exame.
+- "NaoIdentificado": o exame não traz intervalo de referência confiável para aquele resultado.
+- Nunca use classificações como Otimizado, Alerta, Crítico ou Subotimizado.
 
-DADOS DE REFERÊNCIA:
+CAMPO "intervalo_referencia": copie exatamente o intervalo impresso no exame (ex.: "13,0 - 400,0 ng/mL"). Se não houver, use null.
+
+CAMPO "insight_clinico": explicação educativa, curta e cautelosa, com no máximo 320 caracteres. Exemplo de tom: "O valor informado está acima do intervalo de referência apresentado no exame. Esse resultado pode estar relacionado a diferentes fatores e sua interpretação depende do contexto individual e de outros resultados laboratoriais. Converse com um profissional de saúde para uma avaliação individualizada."
+
+CAMPO "resumo_executivo": 3 parágrafos educativos — (1) panorama geral do que foi lido no documento, (2) quais resultados ficaram fora dos intervalos informados, (3) lembrete de que a leitura é educacional e não substitui avaliação profissional.
+
+DADOS DE REFERÊNCIA (use apenas como apoio quando o exame não trouxer intervalo próprio):
 ${referenceContext}
 
-INTELIGÊNCIA CLÍNICA:
+CONTEXTO TÉCNICO AUXILIAR (uso apenas educacional):
 ${intelligenceContext}`
           },
           {
@@ -181,7 +182,7 @@ ${intelligenceContext}`
             content: fileBase64 ? [
               {
                 type: 'text',
-                text: 'Analise este exame laboratorial. Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos informativos e educacionais", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico" }] }'
+                text: 'Leia este exame laboratorial e explique os resultados de forma educacional. Retorne APENAS um JSON estrito: { "resumo_executivo": "3 parágrafos educativos", "marcadores": [{ "codigo", "nome", "valor", "unidade", "intervalo_referencia", "status": "DentroReferencia"|"ForaReferencia"|"NaoIdentificado", "insight_clinico" }] }'
               },
               fileMime === 'application/pdf' ? {
                 type: 'file',
@@ -193,10 +194,10 @@ ${intelligenceContext}`
                 type: 'image_url',
                 image_url: { url: `data:${fileMime};base64,${fileBase64}` }
               }
-            ] : `Analise os resultados laboratoriais a seguir (colados manualmente pelo paciente). Retorne APENAS um JSON estrito: { "pontuacao_geral": 0-100, "resumo_executivo": "3 parágrafos informativos e educacionais", "marcadores": [{ "codigo", "nome", "valor", "unidade", "status": "Otimizado"|"Alerta"|"Critico"|"Subotimizado", "insight_clinico" }] }\n\nDADOS DO EXAME:\n${texto_exame}`
+            ] : `Leia os resultados laboratoriais a seguir (colados manualmente pelo usuário) e explique de forma educacional. Retorne APENAS um JSON estrito: { "resumo_executivo": "3 parágrafos educativos", "marcadores": [{ "codigo", "nome", "valor", "unidade", "intervalo_referencia", "status": "DentroReferencia"|"ForaReferencia"|"NaoIdentificado", "insight_clinico" }] }\n\nDADOS DO EXAME:\n${texto_exame}`
           }
         ],
-        max_completion_tokens: 8192,
+        max_completion_tokens: 32000,
         response_format: { type: 'json_object' }
       })
     })
@@ -220,22 +221,81 @@ ${intelligenceContext}`
       if (start === -1) throw new Error('Sem JSON na resposta da IA')
       cleaned = cleaned.substring(start)
       try { return JSON.parse(cleaned) as AIResponse } catch {}
-      // Recovery: close open string/arrays/braces caused por truncamento
-      let s = cleaned
-      const quotes = (s.match(/(?<!\\)"/g) || []).length
-      if (quotes % 2 === 1) s += '"'
-      s = s.replace(/,\s*$/, '')
-      const opens = (s.match(/\{/g) || []).length
-      const closes = (s.match(/\}/g) || []).length
-      const obrs = (s.match(/\[/g) || []).length
-      const cbrs = (s.match(/\]/g) || []).length
-      s += ']'.repeat(Math.max(0, obrs - cbrs))
-      s += '}'.repeat(Math.max(0, opens - closes))
-      s = s.replace(/,(\s*[}\]])/g, '$1')
-      return JSON.parse(s) as AIResponse
+
+      // Recovery 1: fechar strings/arrays/objetos abertos por truncamento
+      const closeOpen = (input: string): string => {
+        let s = input.replace(/,\s*$/, '')
+        const quotes = (s.match(/(?<!\\)"/g) || []).length
+        if (quotes % 2 === 1) s += '"'
+        const opens = (s.match(/\{/g) || []).length
+        const closes = (s.match(/\}/g) || []).length
+        const obrs = (s.match(/\[/g) || []).length
+        const cbrs = (s.match(/\]/g) || []).length
+        s += '}'.repeat(Math.max(0, opens - closes - 1))
+        s += ']'.repeat(Math.max(0, obrs - cbrs))
+        if (opens - closes > 0) s += '}'
+        return s.replace(/,(\s*[}\]])/g, '$1')
+      }
+
+      try { return JSON.parse(closeOpen(cleaned)) as AIResponse } catch {}
+
+      // Recovery 2: descartar o último objeto de marcador incompleto e fechar
+      const lastComplete = cleaned.lastIndexOf('},')
+      if (lastComplete > 0) {
+        const truncated = cleaned.substring(0, lastComplete + 1)
+        for (const suffix of [']}', '}]}', ']}}']) {
+          try { return JSON.parse(truncated + suffix) as AIResponse } catch {}
+        }
+      }
+
+      // Recovery 3: extrair resumo + marcadores completos via regex
+      const resumoMatch = cleaned.match(/"resumo_executivo"\s*:\s*"((?:[^"\\]|\\.)*)"/)
+      const marcadores: Marker[] = []
+      const objRegex = /\{[^{}]*"codigo"[^{}]*\}/g
+      for (const m of cleaned.match(objRegex) || []) {
+        try { marcadores.push(JSON.parse(m)) } catch { /* ignora */ }
+      }
+      if (marcadores.length > 0) {
+        return {
+          resumo_executivo: resumoMatch ? JSON.parse(`"${resumoMatch[1]}"`) : '',
+          marcadores,
+        }
+      }
+      throw new Error('Não foi possível ler a resposta da IA')
     }
 
-    const analysisData: AIResponse = parseAIJson(rawContent)
+    let analysisData: AIResponse
+    try {
+      analysisData = parseAIJson(rawContent)
+    } catch (parseErr) {
+      console.error('Falha ao interpretar resposta da IA:', parseErr, 'len:', rawContent.length)
+      return new Response(JSON.stringify({
+        error: 'Não conseguimos ler este exame agora. Tente novamente ou envie um PDF mais legível.',
+      }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+    analysisData.marcadores = (analysisData.marcadores ?? [])
+      .filter((m) => m && m.nome)
+      .map((m) => {
+        const raw = m.valor as unknown
+        let valor: number | null = null
+        if (typeof raw === 'number' && Number.isFinite(raw)) valor = raw
+        else if (typeof raw === 'string') {
+          const norm = raw.replace(/[^\d,.\-]/g, '').replace(/\.(?=\d{3}\b)/g, '').replace(',', '.')
+          const n = Number.parseFloat(norm)
+          valor = Number.isFinite(n) ? n : null
+        }
+        return { ...m, valor: valor as number }
+      })
+      .filter((m) => m.valor !== null)
+
+    if (analysisData.marcadores.length === 0 && !analysisData.resumo_executivo) {
+      return new Response(JSON.stringify({
+        error: 'Não identificamos resultados legíveis neste documento. Envie o PDF original do laboratório.',
+      }), { status: 422, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+    }
+
+
 
     // Save to analises_clinicas
     const { data: analise, error: analiseError } = await supabase
@@ -243,7 +303,7 @@ ${intelligenceContext}`
       .insert({
         user_id: user.id,
         parecer_ia: analysisData.resumo_executivo,
-        score_performance: analysisData.pontuacao_geral,
+        score_performance: null,
         url_arquivo: file_path ?? null,
         status: 'concluido',
         dados_extraidos: analysisData,
@@ -254,18 +314,6 @@ ${intelligenceContext}`
 
     if (analiseError) throw analiseError
 
-    // Detect critical risk for dashboard alert
-    const isHematocritCritical = analysisData.marcadores.some(m => m.codigo === 'hematocrito' && m.valor > 52);
-    const isTGPCritical = analysisData.marcadores.some(m => m.codigo === 'tgp_alt' && m.valor > (refData?.find(r => r.codigo === 'tgp_alt')?.valor_maximo * 3 || 135));
-
-    if (isHematocritCritical || isTGPCritical) {
-      const motivo = isHematocritCritical ? "Hematócrito > 52% (Risco Cardiovascular)" : "TGP > 3x Limite (Estresse Hepático)";
-      await supabase
-        .from('analises_clinicas')
-        .update({ alerta_critico: true, motivo_alerta: motivo })
-        .eq('id', analise.id);
-    }
-
     // Save to exames_biomarcadores
     const biomarcadores = analysisData.marcadores.map(m => ({
       analise_id: analise.id,
@@ -274,6 +322,7 @@ ${intelligenceContext}`
       nome: m.nome,
       valor: m.valor,
       unidade: m.unidade,
+      valor_referencia: m.intervalo_referencia ?? null,
       classificacao: m.status,
       observacao: m.insight_clinico,
       data_exame: new Date().toISOString().split('T')[0]

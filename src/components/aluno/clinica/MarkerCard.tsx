@@ -1,19 +1,56 @@
-import { AlertCircle, CheckCircle2, Info, Volume2, Loader2 } from "lucide-react";
+import { CircleHelp, CircleAlert, CheckCircle2, Volume2, Loader2, ExternalLink, Lightbulb, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { MARKER_REFERENCE_URL, normalizeMarkerStatus } from "./exam-references";
+import { getMarkerEducation, EDUCATION_CLOSING } from "./exam-education";
 
 interface MarkerCardProps {
   nome: string;
+  codigo?: string;
   valor: number;
   unidade: string;
-  status: "Otimizado" | "Alerta" | "Critico" | "Subotimizado";
+  status?: string | null;
+  intervalo_referencia?: string | null;
   observacao?: string;
 }
 
-export const MarkerCard = ({ nome, valor, unidade, status, observacao }: MarkerCardProps) => {
+export const MarkerCard = ({ nome, codigo, valor, unidade, status, intervalo_referencia, observacao }: MarkerCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showEducation, setShowEducation] = useState(false);
+  const normalized = normalizeMarkerStatus(status);
+  const education = getMarkerEducation(nome, codigo);
+
+  const statusConfig = {
+    DentroReferencia: {
+      icon: CheckCircle2,
+      color: "text-green-500",
+      bg: "bg-gradient-to-br from-green-500/10 via-card/60 to-card/40",
+      border: "border-green-500/30",
+      glow: "shadow-[0_0_30px_-10px_hsl(142_76%_36%/0.4)]",
+      label: "🟢 DENTRO DO INTERVALO DE REFERÊNCIA",
+    },
+    ForaReferencia: {
+      icon: CircleAlert,
+      color: "text-amber-500",
+      bg: "bg-gradient-to-br from-amber-500/10 via-card/60 to-card/40",
+      border: "border-amber-500/30",
+      glow: "shadow-[0_0_30px_-10px_hsl(38_92%_50%/0.4)]",
+      label: "🟡 FORA DO INTERVALO DE REFERÊNCIA",
+    },
+    NaoIdentificado: {
+      icon: CircleHelp,
+      color: "text-muted-foreground",
+      bg: "bg-gradient-to-br from-muted/10 via-card/60 to-card/40",
+      border: "border-border",
+      glow: "",
+      label: "INTERVALO DE REFERÊNCIA NÃO IDENTIFICADO",
+    },
+  } as const;
+
+  const config = statusConfig[normalized];
+  const Icon = config.icon;
 
   const handleSpeak = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -21,13 +58,10 @@ export const MarkerCard = ({ nome, valor, unidade, status, observacao }: MarkerC
 
     setIsPlaying(true);
     try {
-      const textToSpeak = `${nome}: ${valor} ${unidade}. Status: ${status}. ${observacao || ""}`;
+      const textToSpeak = `${nome}: ${valor} ${unidade}. ${config.label.replace(/[🟢🟡]/g, "").trim()}. ${observacao || ""}`;
 
       const { data, error } = await supabase.functions.invoke("knowledge-qa", {
-        body: {
-          action: "text-to-speech",
-          text: textToSpeak,
-        },
+        body: { action: "text-to-speech", text: textToSpeak },
       });
 
       if (error) throw error;
@@ -44,48 +78,10 @@ export const MarkerCard = ({ nome, valor, unidade, status, observacao }: MarkerC
     }
   };
 
-  const statusConfig = {
-    Otimizado: {
-      icon: CheckCircle2,
-      color: "text-green-500",
-      bg: "bg-gradient-to-br from-green-500/10 via-card/60 to-card/40",
-      border: "border-green-500/30",
-      glow: "shadow-[0_0_30px_-10px_hsl(142_76%_36%/0.4)]",
-      label: "OTIMIZADO",
-    },
-    Alerta: {
-      icon: Info,
-      color: "text-amber-500",
-      bg: "bg-gradient-to-br from-amber-500/10 via-card/60 to-card/40",
-      border: "border-amber-500/30",
-      glow: "shadow-[0_0_30px_-10px_hsl(38_92%_50%/0.4)]",
-      label: "ALERTA",
-    },
-    Critico: {
-      icon: AlertCircle,
-      color: "text-primary",
-      bg: "bg-gradient-to-br from-primary/15 via-card/60 to-card/40",
-      border: "border-primary/40",
-      glow: "shadow-[0_0_30px_-10px_hsl(0_72%_51%/0.5)]",
-      label: "CRÍTICO",
-    },
-    Subotimizado: {
-      icon: Info,
-      color: "text-blue-400",
-      bg: "bg-gradient-to-br from-blue-500/10 via-card/60 to-card/40",
-      border: "border-blue-500/30",
-      glow: "shadow-[0_0_30px_-10px_hsl(217_91%_60%/0.4)]",
-      label: "SUBOTIMIZADO",
-    },
-  };
-
-  const config = statusConfig[status] || statusConfig.Alerta;
-  const Icon = config.icon;
-
   return (
     <div
       className={cn(
-        "rounded-none border p-4 transition-all duration-300 hover:scale-[1.02] hover:-translate-y-0.5",
+        "rounded-none border p-4 transition-all duration-300",
         config.bg,
         config.border,
         config.glow,
@@ -97,34 +93,77 @@ export const MarkerCard = ({ nome, valor, unidade, status, observacao }: MarkerC
           <p className="text-2xl font-bold mt-1.5 font-display">
             {valor} <span className="text-sm font-normal text-muted-foreground">{unidade}</span>
           </p>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Intervalo de referência do exame:{" "}
+            <span className="text-foreground/80">{intervalo_referencia || "não identificado"}</span>
+          </p>
         </div>
-        <div className={cn("px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider border shrink-0", config.color, config.border)}>
-          {config.label}
-        </div>
+        <button
+          onClick={handleSpeak}
+          disabled={isPlaying}
+          className="p-1.5 rounded-full hover:bg-primary/10 transition-colors disabled:opacity-50 shrink-0"
+          title="Ouvir explicação"
+        >
+          {isPlaying ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+          ) : (
+            <Volume2 className="h-3.5 w-3.5 text-primary" />
+          )}
+        </button>
+      </div>
+
+      <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold tracking-wider border", config.color, config.border)}>
+        <Icon className="h-3 w-3" />
+        {config.label}
       </div>
 
       {observacao && (
-        <div className="mt-3 flex gap-2 items-start">
-          <Icon className={cn("h-4 w-4 shrink-0 mt-0.5", config.color)} />
-          <div className="flex-1">
-            <div className="flex items-center justify-between gap-2">
-              <p className="text-xs leading-relaxed text-muted-foreground italic">{observacao}</p>
-              <button
-                onClick={handleSpeak}
-                disabled={isPlaying}
-                className="p-1.5 rounded-full hover:bg-primary/10 transition-colors disabled:opacity-50 shrink-0"
-                title="Ouvir parecer"
-              >
-                {isPlaying ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
-                ) : (
-                  <Volume2 className="h-3.5 w-3.5 text-primary" />
-                )}
-              </button>
+        <p className="text-xs leading-relaxed text-muted-foreground mt-3">{observacao}</p>
+      )}
+
+      {normalized === "ForaReferencia" && (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setShowEducation((v) => !v)}
+            aria-expanded={showEducation}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
+          >
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary">
+              <Lightbulb className="h-3.5 w-3.5" />
+              Você sabia?
+            </span>
+            <ChevronDown className={cn("h-3.5 w-3.5 text-primary transition-transform", showEducation && "rotate-180")} />
+          </button>
+
+          {showEducation && (
+            <div className="border border-t-0 border-primary/20 bg-card/40 p-3 space-y-2 animate-in fade-in duration-200">
+              <p className="font-display text-[11px] uppercase tracking-wider text-foreground/90">{education.titulo}</p>
+              <ul className="space-y-1.5">
+                {education.itens.map((item, i) => (
+                  <li key={i} className="flex gap-2 text-[11px] leading-relaxed text-muted-foreground">
+                    <span className="text-primary">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[10px] leading-relaxed text-muted-foreground/90 border-l-2 border-amber-500/40 pl-2">
+                {EDUCATION_CLOSING}
+              </p>
             </div>
-          </div>
+          )}
         </div>
       )}
+
+      <a
+        href={MARKER_REFERENCE_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="mt-3 inline-flex items-center gap-1 text-[10px] text-primary/90 underline underline-offset-2 hover:text-primary"
+      >
+        Fonte da informação: 🔗 Ver referência técnica
+        <ExternalLink className="h-3 w-3" />
+      </a>
     </div>
   );
 };

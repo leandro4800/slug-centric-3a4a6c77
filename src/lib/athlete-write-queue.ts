@@ -103,76 +103,16 @@ export async function enqueueAthleteWrite(
   return job;
 }
 
+/** Usa o unique já no banco: (sessao_id, treino_prescrito_id, exercicio_chave, numero_serie). */
 async function applySeries(payload: Record<string, unknown>) {
-  const sessaoId = String(payload.sessao_id || "");
-  const numeroSerie = Number(payload.numero_serie);
-  const prescritoId = payload.treino_prescrito_id
-    ? String(payload.treino_prescrito_id)
-    : null;
-
-  if (sessaoId && Number.isFinite(numeroSerie)) {
-    let q = supabase
-      .from("series_executadas")
-      .select("id")
-      .eq("sessao_id", sessaoId)
-      .eq("numero_serie", numeroSerie)
-      .limit(1);
-    q = prescritoId
-      ? q.eq("treino_prescrito_id", prescritoId)
-      : q.is("treino_prescrito_id", null);
-    const { data: existing, error: lookupError } = await q.maybeSingle();
-    if (lookupError) throw lookupError;
-    if (existing?.id) {
-      const { error: updateError } = await supabase
-        .from("series_executadas")
-        .update({
-          peso_kg: payload.peso_kg,
-          reps: payload.reps,
-          tempo_seg: payload.tempo_seg ?? null,
-          tipo_serie: payload.tipo_serie ?? null,
-          concluida_em: payload.concluida_em ?? new Date().toISOString(),
-        })
-        .eq("id", existing.id);
-      if (updateError) throw updateError;
-      return existing.id;
-    }
-  }
-
   const { data, error } = await supabase
     .from("series_executadas")
-    .insert(payload as any)
+    .upsert(payload as any, {
+      onConflict: "sessao_id,treino_prescrito_id,exercicio_chave,numero_serie",
+    })
     .select("id")
     .single();
-  if (error) {
-    // Unique index: retry virar update, não segunda linha
-    const code = (error as { code?: string }).code;
-    if (code === "23505" && sessaoId && Number.isFinite(numeroSerie)) {
-      let q = supabase
-        .from("series_executadas")
-        .select("id")
-        .eq("sessao_id", sessaoId)
-        .eq("numero_serie", numeroSerie)
-        .limit(1);
-      q = prescritoId
-        ? q.eq("treino_prescrito_id", prescritoId)
-        : q.is("treino_prescrito_id", null);
-      const { data: existing } = await q.maybeSingle();
-      if (existing?.id) {
-        await supabase
-          .from("series_executadas")
-          .update({
-            peso_kg: payload.peso_kg,
-            reps: payload.reps,
-            tempo_seg: payload.tempo_seg ?? null,
-            tipo_serie: payload.tipo_serie ?? null,
-            concluida_em: payload.concluida_em ?? new Date().toISOString(),
-          })
-          .eq("id", existing.id);
-        return existing.id;
-      }
-    }
-    throw error;
-  }
+  if (error) throw error;
   return data.id as string;
 }
 
@@ -198,7 +138,7 @@ export async function flushAthleteWriteQueue(): Promise<{ flushed: number; remai
   flushing = true;
   let flushed = 0;
   try {
-    let jobs = await loadQueue();
+    const jobs = await loadQueue();
     const keep: AthleteWriteJob[] = [];
 
     for (const job of jobs) {
@@ -216,14 +156,7 @@ export async function flushAthleteWriteQueue(): Promise<{ flushed: number; remai
         } else if (isNetworkish(err)) {
           keep.push(next);
         } else {
-          // RLS / validação: mantém 1 tentativa a mais só se for rede; senão descarta com log
           console.error("[athlete-write-queue] drop", next.kind, next.lastError);
-          // Avaliações com tenant errado não devem loopar para sempre — drop
-          if (job.kind === "avaliacao_fisica" && !isNetworkish(err)) {
-            /* drop */
-          } else if (next.attempts < MAX_ATTEMPTS) {
-            keep.push(next);
-          }
         }
       }
     }

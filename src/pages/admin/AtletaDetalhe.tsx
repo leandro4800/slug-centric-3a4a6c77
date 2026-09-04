@@ -771,7 +771,7 @@ const AtletaDetalhe = () => {
             )}
             <span className="flex-1">
               <span className="block text-xs font-bold uppercase tracking-wider text-primary">
-                Gerar Sugestão de Ciclo (DR. IA)
+                Gerar Sugestão de Ciclo (IA)
               </span>
               <span className="block text-[10px] text-muted-foreground tracking-wider uppercase mt-0.5">
                 Baseado no livro de Dudu Haluch

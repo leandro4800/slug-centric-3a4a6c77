@@ -3408,6 +3408,7 @@ export type Database = {
           aluno_id: string
           concluida_em: string | null
           created_at: string | null
+          exercicio_chave: string | null
           id: string
           is_recorde: boolean | null
           numero_serie: number
@@ -3426,6 +3427,7 @@ export type Database = {
           aluno_id: string
           concluida_em?: string | null
           created_at?: string | null
+          exercicio_chave?: string | null
           id?: string
           is_recorde?: boolean | null
           numero_serie: number
@@ -3444,6 +3446,7 @@ export type Database = {
           aluno_id?: string
           concluida_em?: string | null
           created_at?: string | null
+          exercicio_chave?: string | null
           id?: string
           is_recorde?: boolean | null
           numero_serie?: number
@@ -3740,10 +3743,12 @@ export type Database = {
           status: Database["public"]["Enums"]["tenant_status"]
           symbol_url: string | null
           tagline: string | null
+          theme_mode: string
           theme_overrides: Json
           updated_at: string
           usar_apenas_meus_videos: boolean
           vertical: Database["public"]["Enums"]["tenant_vertical"]
+          videos_fonte_alunos: string
         }
         Insert: {
           accent_hsl?: string
@@ -3771,10 +3776,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["tenant_status"]
           symbol_url?: string | null
           tagline?: string | null
+          theme_mode?: string
           theme_overrides?: Json
           updated_at?: string
           usar_apenas_meus_videos?: boolean
           vertical?: Database["public"]["Enums"]["tenant_vertical"]
+          videos_fonte_alunos?: string
         }
         Update: {
           accent_hsl?: string
@@ -3802,10 +3809,12 @@ export type Database = {
           status?: Database["public"]["Enums"]["tenant_status"]
           symbol_url?: string | null
           tagline?: string | null
+          theme_mode?: string
           theme_overrides?: Json
           updated_at?: string
           usar_apenas_meus_videos?: boolean
           vertical?: Database["public"]["Enums"]["tenant_vertical"]
+          videos_fonte_alunos?: string
         }
         Relationships: []
       }

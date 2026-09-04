@@ -35,6 +35,7 @@ interface CargaAnterior {
 interface PreviousSeries {
   peso: number;
   reps: number;
+  tempo?: number | null;
 }
 
 interface HistorySnapshot {
@@ -84,21 +85,31 @@ const isAvancado = (n?: string | null) => {
 const normalize = (s: string) =>
   (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
-/** Exercícios sem carga externa: só repetições + tempo. */
-const BODYWEIGHT_PATTERNS = [
-  "prancha", "plank", "alongamento", "mobilidade", "abdominal", "abdominais",
-  "supra", "infra", "obliquo", "elevacao de perna", "elevacao de pernas",
-  "barra fixa", "barra livre", "cardio", "esteira", "bike", "bicicleta",
-  "eliptico", "corrida", "caminhada", "pular corda", "corda naval",
-  "burpee", "polichinelo", "flexao de braco", "apoio de solo", "isometria",
-  "ponte", "glute bridge", "escalador", "mountain climber", "aquecimento articular",
+/** Exercícios de tempo puro: sem carga e sem repetições (só cronômetro). */
+const TIME_ONLY_PATTERNS = [
+  "cardio", "esteira", "bike", "bicicleta", "eliptico", "corrida", "caminhada",
+  "alongamento", "mobilidade", "isometria", "prancha", "plank", "ponte",
+  "glute bridge", "aquecimento articular",
 ];
 
-const isBodyweightExercise = (nome: string) => {
+/** Exercícios sem carga externa: só repetições + tempo. */
+const BODYWEIGHT_PATTERNS = [
+  "abdominal", "abdominais", "supra", "infra", "obliquo",
+  "elevacao de perna", "elevacao de pernas", "barra fixa", "barra livre",
+  "burpee", "polichinelo", "flexao de braco", "apoio de solo",
+  "escalador", "mountain climber", "pular corda", "corda naval",
+];
+
+export type ModoExercicio = "com_carga" | "sem_carga_reps" | "sem_carga_tempo";
+
+export const getModoExercicio = (nome: string): ModoExercicio => {
   const s = normalize(nome);
-  if (/(maquina|smith|halter|barra guiada|polia|cabo|caneleira|anilha|peso)/.test(s)) return false;
-  return BODYWEIGHT_PATTERNS.some((p) => s.includes(p));
+  if (/(maquina|smith|halter|barra guiada|polia|cabo|caneleira|anilha|peso)/.test(s)) return "com_carga";
+  if (TIME_ONLY_PATTERNS.some((p) => s.includes(p))) return "sem_carga_tempo";
+  if (BODYWEIGHT_PATTERNS.some((p) => s.includes(p))) return "sem_carga_reps";
+  return "com_carga";
 };
+
 
 
 // Estrutura padrão fixa: 1 Aquecimento + 1 Ajuste + 3 Trabalho
@@ -132,8 +143,10 @@ export const ExerciseCard = ({
   const slotTypes = buildSlotTypes(data.series, nivelExperiencia);
   const totalSlots = slotTypes.length;
   const getSlotType = (i: number) => slotTypes[i] || "Trabalho";
-  /** Exercício sem carga: esconde a coluna KG e grava o tempo do cronômetro. */
-  const semCarga = isBodyweightExercise(data.exercicio);
+  /** Modo do exercício: com carga, sem carga (reps) ou só tempo. */
+  const modoExercicio = getModoExercicio(data.exercicio);
+  const semCarga = modoExercicio !== "com_carga";
+  const soTempo = modoExercicio === "sem_carga_tempo";
 
   // ISO week key — garante que cada semana começa com os campos em branco
   const isoWeekKey = (() => {
@@ -160,10 +173,22 @@ export const ExerciseCard = ({
     legacyPrevious: null,
   });
 
+  /** Último tempo registrado (exercícios de tempo puro). */
+  const ultimoTempoAnterior = (() => {
+    for (const prev of history.previousBySeries.values()) {
+      if (prev.tempo != null && prev.tempo > 0) return prev.tempo;
+    }
+    return null;
+  })();
+
+
+
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [listeningIdx, setListeningIdx] = useState<number | null>(null);
+  /** Modo voz por série: o ✓ da linha grava a fala e confirma automaticamente. */
+  const [voiceMode, setVoiceMode] = useState(false);
   const [referenceVideoUrl, setReferenceVideoUrl] = useState<string | null>(data.video_url || null);
 
   // O vídeo vem sempre do vínculo por ID resolvido na consulta do treino.
@@ -176,7 +201,11 @@ export const ExerciseCard = ({
   // index = -1 significa "preencher TODAS as séries de uma vez"
   const recognitionRef = useRef<any>(null);
 
-  const processTranscript = (rawTranscript: string, index: number) => {
+  /** Retorna os valores capturados quando a fala foi para uma série específica. */
+  const processTranscript = (
+    rawTranscript: string,
+    index: number,
+  ): { carga: string; reps: string } | null => {
     const transcript = (rawTranscript || "").toLowerCase();
 
     const cargaRegexes = [
@@ -211,10 +240,9 @@ export const ExerciseCard = ({
           const n = parseFloat(numbers[0]);
           if (n <= 30) reps = numbers[0]; else carga = numbers[0];
         } else if (numbers.length >= 2) {
-          const n1 = parseFloat(numbers[0]);
-          const n2 = parseFloat(numbers[1]);
-          if (n1 > n2) { carga = numbers[0]; reps = numbers[1]; }
-          else { reps = numbers[0]; carga = numbers[1]; }
+          // Ordem natural de fala: primeiro a carga, depois as repetições.
+          carga = numbers[0];
+          reps = numbers[1];
         }
       }
       const qtd = qtdMatch ? parseInt(qtdMatch[1]) : (tipo ? 1 : null);
@@ -255,7 +283,7 @@ export const ExerciseCard = ({
         return next;
       });
       toast.success(`Preenchido: ${totalPreenchido.join(", ")}`, { id: "voice-toast" });
-      return;
+      return null;
     }
 
     // Fallback: comportamento original (segmento único)
@@ -287,13 +315,18 @@ export const ExerciseCard = ({
           ...s, reps: reps || s.reps, carga: carga || s.carga,
         } : s));
         toast.success(`Capturado: ${carga ? carga + "kg" : ""}${carga && reps ? " · " : ""}${reps ? reps + " reps" : ""}`, { id: "voice-toast" });
+        return { carga, reps };
       }
     } else {
       toast.error("Não entendi. Tente: 'fiz 1 aquecimento com 20kg 12 reps, 1 ajuste com 40kg 10 reps e 3 de trabalho com 60kg 10 reps'", { id: "voice-toast" });
     }
+    return null;
   };
 
-  const startListeningNative = async (index: number) => {
+  const startListeningNative = async (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     try {
       const avail = await NativeSpeech.available();
       if (!avail.available) {
@@ -311,19 +344,28 @@ export const ExerciseCard = ({
       setListeningIdx(index);
       toast.info(index === -1 ? "Ouvindo (todas as séries)..." : "Ouvindo...", { id: "voice-toast" });
 
-      const result: any = await NativeSpeech.start({
-        language: "pt-BR",
-        maxResults: 1,
-        prompt: "Diga carga e repetições",
-        partialResults: false,
-        popup: false,
-      });
-      const matches: string[] = result?.matches || [];
-      const transcript = matches[0] || "";
+      const listen = async () => {
+        const result: any = await NativeSpeech.start({
+          language: "pt-BR",
+          maxResults: 3,
+          prompt: "Diga carga e repetições",
+          partialResults: false,
+          popup: false,
+        });
+        const matches: string[] = result?.matches || [];
+        return (matches.find((m) => /\d/.test(m)) || matches[0] || "").trim();
+      };
+
+      let transcript = await listen();
+      // Margem de segurança: uma única nova tentativa se o plugin cortar cedo.
+      if (!transcript) {
+        try { transcript = await listen(); } catch {}
+      }
       if (!transcript) {
         toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
       } else {
-        processTranscript(transcript, index);
+        const filled = processTranscript(transcript, index);
+        if (filled) onFilled?.(filled);
       }
     } catch (err: any) {
       const msg = err?.message || String(err);
@@ -333,7 +375,10 @@ export const ExerciseCard = ({
     }
   };
 
-  const startListeningWeb = (index: number) => {
+  const startListeningWeb = (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SR) {
       toast.error("Seu navegador não suporta reconhecimento de voz. Use Chrome no Android ou Safari no iOS.", { id: "voice-toast" });
@@ -378,7 +423,10 @@ export const ExerciseCard = ({
       setListeningIdx(null);
       recognitionRef.current = null;
       const text = finalText.trim();
-      if (text) processTranscript(text, index);
+      if (text) {
+        const filled = processTranscript(text, index);
+        if (filled) onFilled?.(filled);
+      }
       else toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
     };
 
@@ -429,12 +477,23 @@ export const ExerciseCard = ({
     }
   };
 
-  const startListening = (index: number) => {
+  const startListening = (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     if (Capacitor.isNativePlatform()) {
-      void startListeningNative(index);
+      void startListeningNative(index, onFilled);
     } else {
-      startListeningWeb(index);
+      startListeningWeb(index, onFilled);
     }
+  };
+
+  /** Modo voz: grava a série tocada e confirma sozinho quando entende. */
+  const handleVoiceSeries = (i: number) => {
+    if (listeningIdx !== null) return;
+    startListening(i, (filled) => {
+      void confirmSeries(i, filled);
+    });
   };
 
   // Restaura cronômetro do localStorage (mantém contagem mesmo com tela fechada)
@@ -526,7 +585,7 @@ export const ExerciseCard = ({
 
     let query = supabase
       .from("series_executadas")
-      .select("peso_kg, reps, volume_kg, rm_estimado, numero_serie, tipo_serie, concluida_em")
+      .select("peso_kg, reps, volume_kg, rm_estimado, numero_serie, tipo_serie, tempo_seg, concluida_em")
       .eq("aluno_id", userId)
       .eq("tenant_id", tenantId)
       .in("treino_prescrito_id", prescribedIds)
@@ -542,6 +601,7 @@ export const ExerciseCard = ({
         empty.previousBySeries.set(seriesNumber, {
           peso: Number(row.peso_kg) || 0,
           reps: Number(row.reps) || 0,
+          tempo: (row as any).tempo_seg == null ? null : Number((row as any).tempo_seg),
         });
       }
       if (String(row.tipo_serie || "").trim().toLowerCase() !== "trabalho") continue;
@@ -585,14 +645,16 @@ export const ExerciseCard = ({
     // 2) Séries já confirmadas nesta sessão (fonte de verdade: Supabase)
     (async () => {
       let next = base;
-      if (userId && sessaoId && isUuid(data.id)) {
-        const { data: rows } = await supabase
+      if (userId && sessaoId) {
+        let query = supabase
           .from("series_executadas")
           .select("numero_serie, peso_kg, reps, is_recorde")
           .eq("aluno_id", userId)
-          .eq("sessao_id", sessaoId)
-          .eq("treino_prescrito_id", data.id)
-          .order("numero_serie", { ascending: true });
+          .eq("sessao_id", sessaoId);
+        query = isUuid(data.id)
+          ? query.eq("treino_prescrito_id", data.id)
+          : query.is("treino_prescrito_id", null).eq("exercicio_chave", String(data.id));
+        const { data: rows } = await query.order("numero_serie", { ascending: true });
         if (cancelled) return;
         const records = new Set<number>();
         for (const row of rows || []) {
@@ -646,16 +708,25 @@ export const ExerciseCard = ({
   const updateSlot = (i: number, field: "carga" | "reps", val: string) =>
     setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)));
 
-  const confirmSeries = async (i: number) => {
+  const confirmSeries = async (
+    i: number,
+    override?: { carga?: string; reps?: string },
+  ) => {
     if (!userId || !tenantId || !sessaoId || !sessionActive) {
       toast.error("Inicie o treino primeiro.");
       return;
     }
-    const slot = slots[i];
-    if (!slot || slot.done || savingSlots.has(i)) return;
-    const weight = semCarga ? 0 : Number(slot.carga.replace(",", "."));
-    const reps = Number.parseInt(slot.reps, 10);
-    if (!Number.isInteger(reps) || reps <= 0) {
+    const base = slots[i];
+    if (!base || base.done || savingSlots.has(i)) return;
+    // No modo voz os valores chegam pelo override (o estado ainda não atualizou).
+    const slot = {
+      ...base,
+      carga: override?.carga || base.carga,
+      reps: override?.reps || base.reps,
+    };
+    const weight = semCarga ? 0 : Number(String(slot.carga).replace(",", "."));
+    const reps = soTempo ? null : Number.parseInt(slot.reps, 10);
+    if (!soTempo && (!Number.isInteger(reps as number) || (reps as number) <= 0)) {
       toast.error("Informe as repetições.");
       return;
     }
@@ -663,6 +734,7 @@ export const ExerciseCard = ({
       toast.error("Informe KG e repetições válidos.");
       return;
     }
+
 
     setSavingSlots((current) => new Set(current).add(i));
     try {
@@ -672,6 +744,7 @@ export const ExerciseCard = ({
         tenant_id: tenantId,
         sessao_id: sessaoId,
         treino_prescrito_id: prescribedId,
+        exercicio_chave: prescribedId ? null : String(data.id),
         numero_serie: i + 1,
         tipo_serie: getSlotType(i),
         peso_kg: weight,
@@ -684,7 +757,7 @@ export const ExerciseCard = ({
 
       // Série no banco (ou na fila) = slot fechado. PR é efeito colateral — não pode reabrir e duplicar.
       setSlots((current) => current.map((item, index) => (index === i ? { ...item, done: true } : item)));
-      onCargaSaved?.(data.exercicio, weight, reps);
+      onCargaSaved?.(data.exercicio, weight, reps ?? 0);
       onSeriesSaved?.();
 
       if (pending) {
@@ -699,8 +772,8 @@ export const ExerciseCard = ({
         tipo_serie?: string | null;
       } = {
         id: seriesId || "",
-        volume_kg: weight * reps,
-        rm_estimado: reps > 0 ? weight * (1 + reps / 30) : weight,
+        volume_kg: weight * (reps ?? 0),
+        rm_estimado: reps && reps > 0 ? weight * (1 + reps / 30) : weight,
         tipo_serie: getSlotType(i),
       };
 
@@ -864,7 +937,7 @@ export const ExerciseCard = ({
           {cargaAnterior && (
             <div className="mt-2 min-w-0">
               <span className="inline-block max-w-full truncate rounded-full bg-primary/15 px-3 py-1 text-xs text-primary">
-                Última: {semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
+                Última: {soTempo ? (ultimoTempoAnterior != null ? `${ultimoTempoAnterior}s` : "—") : semCarga ? `${cargaAnterior.repeticoes_feitas} reps` : `${cargaAnterior.carga_kg}kg × ${cargaAnterior.repeticoes_feitas}`}
               </span>
             </div>
           )}
@@ -992,31 +1065,34 @@ export const ExerciseCard = ({
           )}
 
 
-          {/* Botão destacado: preencher TODAS as séries por voz */}
+          {/* Interruptor compacto: modo voz por série (o ✓ da linha grava) */}
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); startListening(-1); }}
-            className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-bold uppercase tracking-wider border transition-all ${
-              listeningIdx === -1
-                ? "bg-primary text-primary-foreground border-primary animate-pulse shadow-[0_0_30px_-5px_hsl(var(--primary)/0.8)]"
-                : "bg-primary/10 text-primary border-primary/40 hover:bg-primary/20"
+            onClick={(e) => { e.stopPropagation(); setVoiceMode((v) => !v); }}
+            aria-pressed={voiceMode}
+            className={`self-start flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
+              voiceMode
+                ? "bg-primary text-primary-foreground border-primary"
+                : "bg-secondary/60 text-muted-foreground border-border hover:text-foreground"
             }`}
-            title='Ex: "fiz 4 séries com 20kg e 12 repetições"'
+            title="Com o modo voz ligado, toque no ✓ da série e fale carga e repetições"
           >
-            <Mic className="h-4 w-4" />
-            {listeningIdx === -1 ? "Ouvindo... fale agora" : "🎤 Preencher TODAS as séries por voz"}
+            <Mic className="h-3 w-3" />
+            🎤 Modo voz
           </button>
 
           {semCarga && (
             <p className="text-[11px] text-muted-foreground -mt-2">
-              Exercício sem carga — registre apenas as repetições. O tempo do cronômetro é salvo junto.
+              {soTempo
+                ? "Exercício de tempo — o cronômetro é salvo, sem repetições."
+                : "Exercício sem carga — registre apenas as repetições. O tempo do cronômetro é salvo junto."}
             </p>
           )}
 
           <div className="w-full border border-border bg-background/40">
             <div className="w-full">
-              <div className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground`}>
-                <span>Série</span><span>Ant.</span>{!semCarga && <span className="text-center">KG</span>}<span className="text-center">Reps</span><span className="text-center">✓</span>
+              <div className={`grid ${soTempo ? "grid-cols-[34px_44px_34px]" : semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border bg-secondary/60 px-1.5 py-1.5 text-[8px] font-bold uppercase text-muted-foreground`}>
+                <span>Série</span><span>Ant.</span>{!semCarga && <span className="text-center">KG</span>}{!soTempo && <span className="text-center">Reps</span>}<span className="text-center">✓</span>
               </div>
 
               {slots.map((slot, i) => {
@@ -1028,7 +1104,7 @@ export const ExerciseCard = ({
                 return (
                   <div
                     key={i}
-                    className={`grid ${semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
+                    className={`grid ${soTempo ? "grid-cols-[34px_44px_34px]" : semCarga ? "grid-cols-[34px_44px_1fr_34px]" : "grid-cols-[34px_44px_1fr_1fr_34px]"} items-center gap-1 border-b border-border/70 px-1.5 py-1.5 last:border-b-0 ${slot.done ? "bg-emerald-500/5" : type === "Trabalho" ? "bg-primary/5" : ""}`}
                   >
                     <div className="flex min-w-0 flex-col items-start leading-tight">
                       <span className="flex items-center gap-0.5 font-mono text-xs font-bold">
@@ -1058,7 +1134,7 @@ export const ExerciseCard = ({
                       className={`flex flex-col text-[9px] leading-tight ${legacy ? "text-muted-foreground/70 italic" : "text-muted-foreground"}`}
                       title={legacy ? "Histórico antigo do exercício" : undefined}
                     >
-                      {shown ? (semCarga ? <span>×{shown.reps}</span> : (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>)) : "—"}
+                      {shown ? (soTempo ? <span>{shown.tempo ? `${shown.tempo}s` : "—"}</span> : semCarga ? <span>×{shown.reps}</span> : (<><span>{shown.peso}kg</span><span>×{shown.reps}</span></>)) : "—"}
                     </span>
 
                     {!semCarga && (
@@ -1074,6 +1150,7 @@ export const ExerciseCard = ({
                         className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                       />
                     )}
+                    {!soTempo && (
                     <input
                       aria-label={`Repetições da série ${i + 1}`}
                       type="number"
@@ -1085,16 +1162,20 @@ export const ExerciseCard = ({
                       placeholder="—"
                       className="h-9 w-full min-w-0 border border-input bg-secondary/70 px-1 text-center text-xs outline-none focus:border-primary disabled:opacity-60"
                     />
+                    )}
                     <Button
                       type="button"
                       size="icon"
                       variant={slot.done ? "green" : "default"}
-                      aria-label={`Confirmar série ${i + 1}`}
-                      disabled={!sessionActive || slot.done || saving}
-                      onClick={() => void confirmSeries(i)}
-                      className="h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4"
+                      aria-label={voiceMode && !slot.done ? `Registrar série ${i + 1} por voz` : `Confirmar série ${i + 1}`}
+                      disabled={!sessionActive || slot.done || saving || (listeningIdx !== null && listeningIdx !== i)}
+                      onClick={() => {
+                        if (voiceMode && !slot.done) handleVoiceSeries(i);
+                        else void confirmSeries(i);
+                      }}
+                      className={`h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4 ${listeningIdx === i ? "animate-pulse" : ""}`}
                     >
-                      {saving ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}
+                      {saving ? <Loader2 className="animate-spin" /> : listeningIdx === i ? <Mic /> : voiceMode && !slot.done ? <Mic /> : <CheckCircle2 />}
                     </Button>
                   </div>
                 );
