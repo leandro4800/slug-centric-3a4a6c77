@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 import { parseAlturaCm } from "@/lib/body-metrics";
+import { saveAvaliacaoDurable } from "@/lib/athlete-write-queue";
 
 interface Props {
   open: boolean;
@@ -263,9 +264,15 @@ export const ComprehensiveEvaluationForm = ({
         bf = 495 / BD - 450;
       }
 
-      const { error } = await supabase.from("avaliacoes_fisicas").insert({
+      if (!tenantId) {
+        toast.error("Não foi possível vincular a avaliação ao coach. Feche e abra o app, depois tente de novo.");
+        setSaving(false);
+        return;
+      }
+
+      const evalPayload = {
         aluno_id: alunoId,
-        tenant_id: tenantId || null,
+        tenant_id: tenantId,
         peso_kg: num(form.peso),
         altura_cm: alturaParsed,
         idade: idadeN,
@@ -303,15 +310,15 @@ export const ComprehensiveEvaluationForm = ({
         perimetro_coxa_distal_esq: num(form.perimetros.coxa_distal_esq),
         perimetro_panturrilha_dir: num(form.perimetros.panturrilha_dir),
         perimetro_panturrilha_esq: num(form.perimetros.panturrilha_esq),
-      });
+      };
 
-      if (error) throw error;
+      const { pending } = await saveAvaliacaoDurable(evalPayload);
 
       // Propaga sexo + métricas chave para perfis_treino e perfis (essencial p/ montar treino)
       try {
         await supabase.from("perfis_treino").upsert({
           aluno_id: alunoId,
-          tenant_id: tenantId || null,
+          tenant_id: tenantId,
           sexo: sexoN,
           peso_kg: num(form.peso),
           altura_cm: alturaParsed,
@@ -328,7 +335,11 @@ export const ComprehensiveEvaluationForm = ({
         console.warn("Falha ao sincronizar sexo/perfil:", syncErr);
       }
 
-      toast.success("Avaliação salva com sucesso!");
+      toast.success(
+        pending
+          ? "Avaliação salva no aparelho. Envia ao coach quando a rede voltar."
+          : "Avaliação salva com sucesso!",
+      );
       onSaved?.(goToDiet);
       onOpenChange(false);
 

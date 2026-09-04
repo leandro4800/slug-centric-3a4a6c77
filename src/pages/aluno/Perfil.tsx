@@ -23,6 +23,7 @@ import heic2any from "heic2any";
 import { AthleteEvaluationsViewer } from "@/components/aluno/AthleteEvaluationsViewer";
 import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 import { readProfileSnapshot, writeProfileSnapshot } from "@/lib/profile-cache";
+import { saveAvaliacaoDurable } from "@/lib/athlete-write-queue";
 
 type ProfileData = {
   id?: string;
@@ -465,9 +466,15 @@ const Perfil = () => {
     const massaGorda = bf && peso ? +(peso * (bf / 100)).toFixed(2) : null;
     const massaMagra = bf && peso ? +(peso - (massaGorda ?? 0)).toFixed(2) : null;
 
+    const tenantIdResolved = profile?.tenant_id || tenant?.id;
+    if (!tenantIdResolved) {
+      setSaving(false);
+      return toast.error("Não foi possível vincular a avaliação ao coach. Feche e abra o app, depois tente de novo.");
+    }
+
     const evalData = {
       aluno_id: user.id,
-      tenant_id: profile?.tenant_id || tenant?.id,
+      tenant_id: tenantIdResolved,
       peso_kg: peso,
       altura_cm: alt,
       pescoco_cm: Number(formEval.pescoco_cm),
@@ -480,16 +487,21 @@ const Perfil = () => {
       data: new Date().toISOString()
     };
 
-    const { error } = await supabase.from("avaliacoes_fisicas").insert(evalData);
-    setSaving(false);
-    if (error) {
+    try {
+      const { pending } = await saveAvaliacaoDurable(evalData);
+      setSaving(false);
+      if (pending) {
+        toast.success("Avaliação salva no aparelho. Envia ao coach quando a rede voltar.");
+      } else {
+        toast.success("Nova avaliação registrada!");
+      }
+      setEvalOpen(false);
+      loadData(true);
+    } catch (error: any) {
+      setSaving(false);
       console.error("Erro ao salvar avaliação:", error);
-      return toast.error("Erro ao salvar: " + error.message);
+      toast.error("Erro ao salvar: " + (error?.message || "tente de novo"));
     }
-    
-    toast.success("Nova avaliação registrada!");
-    setEvalOpen(false);
-    loadData(true);
   };
 
   const nomeDisplay = profile?.nome_completo || user?.email?.split("@")[0]?.toUpperCase() || "ATLETA";

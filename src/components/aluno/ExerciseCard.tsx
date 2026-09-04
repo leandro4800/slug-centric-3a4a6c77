@@ -9,6 +9,7 @@ import ExercisePlayer from "./ExercisePlayer";
 import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 import { Button } from "@/components/ui/button";
+import { saveSeriesDurable } from "@/lib/athlete-write-queue";
 
 export interface ExerciseCardData {
   id: string;
@@ -666,31 +667,57 @@ export const ExerciseCard = ({
     setSavingSlots((current) => new Set(current).add(i));
     try {
       const prescribedId = isUuid(data.id) ? data.id : null;
-      const { data: inserted, error } = await supabase
-        .from("series_executadas")
-        .insert({
-          aluno_id: userId,
-          tenant_id: tenantId,
-          sessao_id: sessaoId,
-          treino_prescrito_id: prescribedId,
-          numero_serie: i + 1,
-          tipo_serie: getSlotType(i),
-          peso_kg: weight,
-          reps,
-          tempo_seg: semCarga ? seconds : null,
-          concluida_em: new Date().toISOString(),
-        } as any)
-        .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie")
-        .single();
-      if (error) throw error;
+      const payload = {
+        aluno_id: userId,
+        tenant_id: tenantId,
+        sessao_id: sessaoId,
+        treino_prescrito_id: prescribedId,
+        numero_serie: i + 1,
+        tipo_serie: getSlotType(i),
+        peso_kg: weight,
+        reps,
+        tempo_seg: semCarga ? seconds : null,
+        concluida_em: new Date().toISOString(),
+      };
 
+      const { id: seriesId, pending } = await saveSeriesDurable(payload);
+
+      // Série no banco (ou na fila) = slot fechado. PR é efeito colateral — não pode reabrir e duplicar.
+      setSlots((current) => current.map((item, index) => (index === i ? { ...item, done: true } : item)));
+      onCargaSaved?.(data.exercicio, weight, reps);
+      onSeriesSaved?.();
+
+      if (pending) {
+        toast.success(`Série ${i + 1} salva no aparelho. Envia ao coach quando a rede voltar.`);
+        return;
+      }
+
+      let inserted: {
+        id: string;
+        volume_kg?: number | null;
+        rm_estimado?: number | null;
+        tipo_serie?: string | null;
+      } = {
+        id: seriesId || "",
+        volume_kg: weight * reps,
+        rm_estimado: reps > 0 ? weight * (1 + reps / 30) : weight,
+        tipo_serie: getSlotType(i),
+      };
+
+      if (seriesId) {
+        const { data: row } = await supabase
+          .from("series_executadas")
+          .select("id, numero_serie, peso_kg, reps, volume_kg, rm_estimado, tipo_serie")
+          .eq("id", seriesId)
+          .maybeSingle();
+        if (row) inserted = row;
+      }
 
       const isWorkSet = String(inserted.tipo_serie || "").trim().toLowerCase() === "trabalho";
       const recordTypes: Array<{ type: string; label: string; value: number; previous: number }> = [];
       if (isWorkSet && history.hasWorkHistory) {
         const volume = Number(inserted.volume_kg) || 0;
         const estimatedRm = Number(inserted.rm_estimado) || 0;
-        // baseline por posição de série; se não houver, usa o maior volume de trabalho já registrado
         const allVolumes = Array.from(history.maxVolumeBySeries.values());
         const previousVolume =
           history.maxVolumeBySeries.get(i + 1) || (allVolumes.length ? Math.max(...allVolumes) : 0);
@@ -705,47 +732,47 @@ export const ExerciseCard = ({
         }
       }
 
-
-      if (recordTypes.length) {
-        const { error: prsError } = await supabase.from("prs").insert(recordTypes.map((record) => ({
-          aluno_id: userId,
-          tenant_id: tenantId,
-          exercicio: data.exercicio,
-          tipo_recorde: record.type,
-          valor_numerico: Number(record.value.toFixed(2)),
-          valor_anterior: Number(record.previous.toFixed(2)),
-          valor: `${record.value.toFixed(1)} kg`,
-          unidade: "kg",
-          data: new Date().toISOString().split("T")[0],
-          treino_prescrito_id: prescribedId,
-          series_executada_id: inserted.id,
-        })));
-        if (prsError) throw prsError;
-        const { error: markError } = await supabase
-          .from("series_executadas")
-          .update({ is_recorde: true })
-          .eq("id", inserted.id);
-        if (markError) throw markError;
-        setRecordSlots((current) => new Set(current).add(i));
-        onRecords?.({
-          exercicio: data.exercicio,
-          records: recordTypes.map((record) => ({ type: record.type, value: record.value })),
-        });
+      if (recordTypes.length && inserted.id) {
+        try {
+          const { error: prsError } = await supabase.from("prs").insert(
+            recordTypes.map((record) => ({
+              aluno_id: userId,
+              tenant_id: tenantId,
+              exercicio: data.exercicio,
+              tipo_recorde: record.type,
+              valor_numerico: Number(record.value.toFixed(2)),
+              valor_anterior: Number(record.previous.toFixed(2)),
+              valor: `${record.value.toFixed(1)} kg`,
+              unidade: "kg",
+              data: new Date().toISOString().split("T")[0],
+              treino_prescrito_id: prescribedId,
+              series_executada_id: inserted.id,
+            })),
+          );
+          if (prsError) throw prsError;
+          await supabase.from("series_executadas").update({ is_recorde: true }).eq("id", inserted.id);
+          setRecordSlots((current) => new Set(current).add(i));
+          onRecords?.({
+            exercicio: data.exercicio,
+            records: recordTypes.map((record) => ({ type: record.type, value: record.value })),
+          });
+        } catch (prErr) {
+          console.warn("[ExerciseCard] PR opcional falhou — série já gravada:", prErr);
+        }
       }
 
-      setSlots((current) => current.map((item, index) => index === i ? { ...item, done: true } : item));
       setHistory((current) => {
         const nextVolumes = new Map(current.maxVolumeBySeries);
         if (isWorkSet) nextVolumes.set(i + 1, Math.max(nextVolumes.get(i + 1) || 0, Number(inserted.volume_kg) || 0));
         return {
           ...current,
           maxWeight: isWorkSet ? Math.max(current.maxWeight, weight) : current.maxWeight,
-          maxEstimatedRm: isWorkSet ? Math.max(current.maxEstimatedRm, Number(inserted.rm_estimado) || 0) : current.maxEstimatedRm,
+          maxEstimatedRm: isWorkSet
+            ? Math.max(current.maxEstimatedRm, Number(inserted.rm_estimado) || 0)
+            : current.maxEstimatedRm,
           maxVolumeBySeries: nextVolumes,
         };
       });
-      onCargaSaved?.(data.exercicio, weight, reps);
-      onSeriesSaved?.();
       toast.success(`Série ${i + 1} registrada.`);
     } catch (error: any) {
       toast.error(error?.message || "Não foi possível registrar a série.");
