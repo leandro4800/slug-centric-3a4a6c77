@@ -172,6 +172,16 @@ export const ExerciseCard = ({
     legacyPrevious: null,
   });
 
+  /** Último tempo registrado (exercícios de tempo puro). */
+  const ultimoTempoAnterior = (() => {
+    for (const prev of history.previousBySeries.values()) {
+      if (prev.tempo != null && prev.tempo > 0) return prev.tempo;
+    }
+    return null;
+  })();
+
+
+
   const [showCoach, setShowCoach] = useState(false);
   const [showYT, setShowYT] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
