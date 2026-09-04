@@ -1,12 +1,14 @@
-import { CircleHelp, CircleAlert, CheckCircle2, Volume2, Loader2, ExternalLink } from "lucide-react";
+import { CircleHelp, CircleAlert, CheckCircle2, Volume2, Loader2, ExternalLink, Lightbulb, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MARKER_REFERENCE_URL, normalizeMarkerStatus } from "./exam-references";
+import { getMarkerEducation, EDUCATION_CLOSING } from "./exam-education";
 
 interface MarkerCardProps {
   nome: string;
+  codigo?: string;
   valor: number;
   unidade: string;
   status?: string | null;
@@ -14,9 +16,11 @@ interface MarkerCardProps {
   observacao?: string;
 }
 
-export const MarkerCard = ({ nome, valor, unidade, status, intervalo_referencia, observacao }: MarkerCardProps) => {
+export const MarkerCard = ({ nome, codigo, valor, unidade, status, intervalo_referencia, observacao }: MarkerCardProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
+  const [showEducation, setShowEducation] = useState(false);
   const normalized = normalizeMarkerStatus(status);
+  const education = getMarkerEducation(nome, codigo);
 
   const statusConfig = {
     DentroReferencia: {
@@ -115,6 +119,40 @@ export const MarkerCard = ({ nome, valor, unidade, status, intervalo_referencia,
 
       {observacao && (
         <p className="text-xs leading-relaxed text-muted-foreground mt-3">{observacao}</p>
+      )}
+
+      {normalized === "ForaReferencia" && (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={() => setShowEducation((v) => !v)}
+            aria-expanded={showEducation}
+            className="w-full flex items-center justify-between gap-2 px-3 py-2 border border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
+          >
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-primary">
+              <Lightbulb className="h-3.5 w-3.5" />
+              Você sabia?
+            </span>
+            <ChevronDown className={cn("h-3.5 w-3.5 text-primary transition-transform", showEducation && "rotate-180")} />
+          </button>
+
+          {showEducation && (
+            <div className="border border-t-0 border-primary/20 bg-card/40 p-3 space-y-2 animate-in fade-in duration-200">
+              <p className="font-display text-[11px] uppercase tracking-wider text-foreground/90">{education.titulo}</p>
+              <ul className="space-y-1.5">
+                {education.itens.map((item, i) => (
+                  <li key={i} className="flex gap-2 text-[11px] leading-relaxed text-muted-foreground">
+                    <span className="text-primary">•</span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-[10px] leading-relaxed text-muted-foreground/90 border-l-2 border-amber-500/40 pl-2">
+                {EDUCATION_CLOSING}
+              </p>
+            </div>
+          )}
+        </div>
       )}
 
       <a
