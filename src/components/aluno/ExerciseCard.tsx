@@ -322,7 +322,10 @@ export const ExerciseCard = ({
     return null;
   };
 
-  const startListeningNative = async (index: number) => {
+  const startListeningNative = async (
+    index: number,
+    onFilled?: (v: { carga: string; reps: string }) => void,
+  ) => {
     try {
       const avail = await NativeSpeech.available();
       if (!avail.available) {
@@ -340,19 +343,28 @@ export const ExerciseCard = ({
       setListeningIdx(index);
       toast.info(index === -1 ? "Ouvindo (todas as séries)..." : "Ouvindo...", { id: "voice-toast" });
 
-      const result: any = await NativeSpeech.start({
-        language: "pt-BR",
-        maxResults: 1,
-        prompt: "Diga carga e repetições",
-        partialResults: false,
-        popup: false,
-      });
-      const matches: string[] = result?.matches || [];
-      const transcript = matches[0] || "";
+      const listen = async () => {
+        const result: any = await NativeSpeech.start({
+          language: "pt-BR",
+          maxResults: 3,
+          prompt: "Diga carga e repetições",
+          partialResults: false,
+          popup: false,
+        });
+        const matches: string[] = result?.matches || [];
+        return (matches.find((m) => /\d/.test(m)) || matches[0] || "").trim();
+      };
+
+      let transcript = await listen();
+      // Margem de segurança: uma única nova tentativa se o plugin cortar cedo.
+      if (!transcript) {
+        try { transcript = await listen(); } catch {}
+      }
       if (!transcript) {
         toast.error("Não ouvi nada. Tente de novo mais perto do microfone.", { id: "voice-toast" });
       } else {
-        processTranscript(transcript, index);
+        const filled = processTranscript(transcript, index);
+        if (filled) onFilled?.(filled);
       }
     } catch (err: any) {
       const msg = err?.message || String(err);
