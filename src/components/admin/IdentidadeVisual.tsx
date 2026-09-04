@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { PhonePreview } from "./PhonePreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, RotateCcw, Save, Check, Music, Contrast, Sparkles } from "lucide-react";
+import { Loader2, RotateCcw, Save, Check, Music, Contrast } from "lucide-react";
 import { toast } from "sonner";
 
 // Paletas metálicas: entram como temas selecionáveis (aplicam cor + acabamento metálico)
@@ -122,16 +122,9 @@ export const IdentidadeVisual = () => {
   const [busy, setBusy] = useState(false);
   const [musicUrl, setMusicUrl] = useState<string>("");
   const [savingMusic, setSavingMusic] = useState(false);
-  const [presets, setPresets] = useState<Preset[]>(FALLBACK_PRESETS);
+  const [presets, setPresets] = useState<Preset[]>([...FALLBACK_PRESETS, ...METAL_PRESETS]);
   const [themeMode, setThemeMode] = useState<ThemeMode>((tenant?.theme_mode as ThemeMode) ?? "escuro");
   const [savingMode, setSavingMode] = useState(false);
-  const currentSkin = ((tenant?.theme_overrides as ThemeOverrides | null)?.metal_skin ?? null) as MetalSkin | null;
-  const [metalSkin, setMetalSkin] = useState<MetalSkin | null>(currentSkin);
-  const [savingSkin, setSavingSkin] = useState(false);
-
-  useEffect(() => {
-    setMetalSkin(currentSkin);
-  }, [currentSkin]);
 
 
   useEffect(() => {
@@ -168,7 +161,7 @@ export const IdentidadeVisual = () => {
         .eq("ativo", true)
         .order("ordem", { ascending: true });
       if (!alive || error || !data?.length) return;
-      setPresets((data as PresetRow[]).map(rowToPreset));
+      setPresets([...(data as PresetRow[]).map(rowToPreset), ...METAL_PRESETS]);
     })();
     return () => {
       alive = false;
@@ -217,29 +210,10 @@ export const IdentidadeVisual = () => {
     clearPreview();
   };
 
-  const saveMetalSkin = async (skin: MetalSkin | null) => {
-    if (!tenant) return;
-    const base = ((tenant.theme_overrides as ThemeOverrides | null) ?? {}) as ThemeOverrides;
-    const next: ThemeOverrides = { ...base, metal_skin: skin };
-    const previous = metalSkin;
-    setSavingSkin(true);
-    setMetalSkin(skin);
-    applyTheme(next, tenant.hero_url, true, tenant.theme_mode);
-    const { error } = await supabase.from("tenants").update({ theme_overrides: next }).eq("id", tenant.id);
-    setSavingSkin(false);
-    if (error) {
-      setMetalSkin(previous);
-      applyTheme(base, tenant.hero_url, true, tenant.theme_mode);
-      return toast.error(error.message);
-    }
-    toast.success(skin ? "Acabamento metálico aplicado!" : "Acabamento metálico removido");
-    await refresh();
-  };
-
   const handleSave = async () => {
     if (!selected) return;
     setBusy(true);
-    const overrides: ThemeOverrides = { ...selected.overrides, metal_skin: metalSkin };
+    const overrides: ThemeOverrides = { metal_skin: null, ...selected.overrides };
     const { error } = await supabase
       .from("tenants")
       .update({ theme_overrides: overrides })
@@ -383,54 +357,6 @@ export const IdentidadeVisual = () => {
         </div>
 
         <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <h3 className="font-display text-base">ACABAMENTO METÁLICO</h3>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Opcional. Aplica um gradiente metálico ao botão principal e aos painéis do app do aluno, por cima do tema escolhido.
-          </p>
-          <div className="grid grid-cols-2 gap-3">
-            {METAL_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={() => saveMetalSkin(opt.id)}
-                disabled={savingSkin}
-                className={`relative rounded-xl border-2 p-3 text-left transition-all ${
-                  metalSkin === opt.id ? "border-primary shadow-glow" : "border-border hover:border-primary/60"
-                }`}
-              >
-                {metalSkin === opt.id && (
-                  <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full p-1">
-                    <Check className="h-3 w-3" />
-                  </div>
-                )}
-                <div
-                  className="h-8 w-full rounded-md border border-white/20 shadow-md mb-2"
-                  style={{ background: opt.gradient }}
-                />
-                <p className="text-xs font-bold tracking-wide">{opt.label}</p>
-                <div
-                  className="mt-2 inline-flex items-center justify-center rounded px-3 py-1 text-[10px] font-bold"
-                  style={{ background: opt.gradient, color: opt.text }}
-                >
-                  BOTÃO
-                </div>
-              </button>
-            ))}
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => saveMetalSkin(null)}
-            disabled={savingSkin || !metalSkin}
-          >
-            {savingSkin ? <Loader2 className="h-3 w-3 animate-spin" /> : <><RotateCcw className="h-3 w-3 mr-1" /> Sem acabamento metálico</>}
-          </Button>
-        </div>
-
-
-
         <div className="bg-black/40 border border-white/10 rounded-2xl p-5 shadow-2xl backdrop-blur-sm space-y-3">
 
           <div className="flex items-center gap-2">
