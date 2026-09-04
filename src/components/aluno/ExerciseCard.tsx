@@ -34,6 +34,7 @@ interface CargaAnterior {
 interface PreviousSeries {
   peso: number;
   reps: number;
+  tempo?: number | null;
 }
 
 interface HistorySnapshot {
