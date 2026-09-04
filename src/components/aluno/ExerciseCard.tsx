@@ -705,14 +705,23 @@ export const ExerciseCard = ({
   const updateSlot = (i: number, field: "carga" | "reps", val: string) =>
     setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)));
 
-  const confirmSeries = async (i: number) => {
+  const confirmSeries = async (
+    i: number,
+    override?: { carga?: string; reps?: string },
+  ) => {
     if (!userId || !tenantId || !sessaoId || !sessionActive) {
       toast.error("Inicie o treino primeiro.");
       return;
     }
-    const slot = slots[i];
-    if (!slot || slot.done || savingSlots.has(i)) return;
-    const weight = semCarga ? 0 : Number(slot.carga.replace(",", "."));
+    const base = slots[i];
+    if (!base || base.done || savingSlots.has(i)) return;
+    // No modo voz os valores chegam pelo override (o estado ainda não atualizou).
+    const slot = {
+      ...base,
+      carga: override?.carga || base.carga,
+      reps: override?.reps || base.reps,
+    };
+    const weight = semCarga ? 0 : Number(String(slot.carga).replace(",", "."));
     const reps = soTempo ? null : Number.parseInt(slot.reps, 10);
     if (!soTempo && (!Number.isInteger(reps as number) || (reps as number) <= 0)) {
       toast.error("Informe as repetições.");
