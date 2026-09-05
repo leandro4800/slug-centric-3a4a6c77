@@ -291,12 +291,13 @@ const Dashboard = () => {
   );
 };
 
-const HeroStat = ({ label, value, icon }: { label: string; value: string; icon: React.ReactNode }) => (
-  <div className="border border-white/10 bg-white/10 p-3">
-    <div className="flex items-center gap-1.5 text-white/60">{icon}<span className="text-[9px] font-bold uppercase tracking-[0.2em]">{label}</span></div>
-    <p className="mt-1.5 text-xl md:text-2xl font-black">{value}</p>
+const HeroStat = ({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone?: string }) => (
+  <div className={`rounded-xl border bg-gradient-to-br p-3 ${tone || "border-white/10 from-white/10 to-white/5 text-white/70"}`}>
+    <div className="flex items-center gap-1.5">{icon}<span className="text-[9px] font-bold uppercase tracking-[0.2em]">{label}</span></div>
+    <p className="mt-1.5 text-xl md:text-2xl font-black text-white">{value}</p>
   </div>
 );
+
 
 const Row = ({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) => (
   <section>
