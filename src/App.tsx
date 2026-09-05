@@ -40,6 +40,7 @@ import Comunidade from "./pages/aluno/Comunidade";
 const Perfil = lazy(() => import("./pages/aluno/Perfil"));
 import ControleCentral from "./pages/aluno/ControleCentral";
 import Parceiros from "./pages/aluno/Parceiros";
+import Biblioteca from "./pages/aluno/Biblioteca";
 import DrIA from "./pages/aluno/DrIA";
 import Anamnese from "./pages/aluno/Anamnese";
 import AdminPanel from "./pages/admin/AdminPanel";
@@ -301,6 +302,7 @@ const App = () => (
               <Route path="anamnese" element={<Anamnese />} />
               <Route path="controle" element={<ControleCentral />} />
               <Route path="parceiros" element={<Parceiros />} />
+              <Route path="biblioteca" element={<Biblioteca />} />
               <Route path="carta" element={<Carta />} />
               <Route path="presencial" element={<Scheduling />} />
               <Route path="ct" element={<AlunoCtHome />} />
