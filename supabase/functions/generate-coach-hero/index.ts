@@ -17,7 +17,7 @@ import {
   type ReferenceImage,
 } from "../_shared/image-generation.ts";
 
-
+const TEMPLATE_ID = "painel-hero";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -31,40 +31,18 @@ const json = (payload: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const ALPHA_LOGO_URL =
-  "https://alpha-coach.app/__l5e/assets-v1/a446ebdf-4144-4d45-b50d-062f1513f8a2/alpha-coach-pro-shirt-logo.jpg";
-
-const FACE_LOCK = `ABSOLUTE FACE PRESERVATION (HIGHEST PRIORITY — DO NOT VIOLATE): The face of the person in the FIRST reference image MUST be preserved with PHOTOGRAPHIC IDENTITY ACCURACY. Treat that face as a locked reference. DO NOT alter, reshape, slim, widen, smooth, beautify, age, de-age or stylize the face in any way. Preserve EXACTLY: nose shape and width, nostrils, mouth shape, lip thickness, philtrum, jawline, chin, cheekbones, eye shape and spacing, eyebrows, ears, skin tone, freckles, moles, scars, tattoos, facial hair pattern and density, hairline and haircut. IF THE PERSON IS SMILING IN THE REFERENCE PHOTO, KEEP THE EXACT SAME SMILE AND EXPRESSION — never change the facial expression. Keep their real body type and build.`;
-
-const SHIRT_LOGO = `- He/she wears a fitted black athletic t-shirt. The LAST reference image is the official "ALPHA COACH PRO" brand logo: print that EXACT logo (triangle emblem + "ALPHA COACH PRO" lettering, same shapes, colors and proportions) centered on the chest of the t-shirt, following the fabric folds, clean and legible. This shirt logo is standard and must look identical on every coach.`;
-
-// Banner HORIZONTAL 16:9 — exibido no topo do painel (não mexer).
-const buildPromptHorizontal = (nome: string, temLogo: boolean) => `${FACE_LOCK}
+const buildPrompt = (nome: string, temLogo: boolean) => `ABSOLUTE FACE PRESERVATION (HIGHEST PRIORITY — DO NOT VIOLATE): The face of the person in the FIRST reference image MUST be preserved with PHOTOGRAPHIC IDENTITY ACCURACY. Treat that face as a locked reference. DO NOT alter, reshape, slim, widen, smooth, beautify, age, de-age or stylize the face in any way. Preserve EXACTLY: nose shape and width, nostrils, mouth shape, lip thickness, philtrum, jawline, chin, cheekbones, eye shape and spacing, eyebrows, ears, skin tone, freckles, moles, scars, tattoos, facial hair pattern and density, hairline and haircut. IF THE PERSON IS SMILING IN THE REFERENCE PHOTO, KEEP THE EXACT SAME SMILE AND EXPRESSION — never change the facial expression. Keep their real body type and build.
 
 TASK: Create a WIDE HORIZONTAL 16:9 cinematic dashboard hero banner for the fitness coach ${nome}.
 
 COMPOSITION:
 - The coach from the FIRST reference image stands on the RIGHT side of the frame, cropped from mid-thigh/waist up, arms crossed, direct gaze at camera, cinematic rim lighting.
-${SHIRT_LOGO}${temLogo ? `\n- The SECOND reference image is the COACH'S OWN LOGO. Render that exact logo VERY LARGE just behind and slightly ABOVE the coach's shoulder, emerging from behind his/her body on the upper-left of the subject, like a monumental 3D metallic brand emblem mounted on the back wall, glowing with rim light. The coach's body partially occludes the lower-right part of the logo. Keep the logo's exact shapes, letters and proportions — do not redesign it.` : ""}
-- BACKGROUND: a moody dark gym / studio with dramatic light beams, subtle haze and deep shadows.
+- He/she wears a fitted dark athletic t-shirt with the coach name "${nome}" printed across the chest in bold uppercase athletic lettering, correctly spelled, clean and legible.
+- BACKGROUND: a moody dark gym / studio with dramatic light beams, subtle haze and deep shadows.${temLogo ? `\n- The SECOND reference image is the COACH'S OWN LOGO. Render that exact logo VERY LARGE just behind and slightly ABOVE the coach's shoulder, emerging from behind his/her body on the upper-left of the subject, like a monumental 3D metallic brand emblem mounted on the back wall, glowing with rim light. The coach's body partially occludes the lower-right part of the logo. Keep the logo's exact shapes, letters and proportions — do not redesign it.` : ""}
 - The LEFT third of the frame must stay visually calm and darker (empty negative space) so that UI text can be overlaid on top of it.
 - Smooth dark gradient fading on the left and bottom edges so the banner blends into a dark interface.
 
-STYLE: premium, cinematic, high-contrast, sharp photographic realism, editorial fitness campaign look. No extra text, no watermarks, no captions, no borders, no logos other than the coach's own logo and the ALPHA COACH PRO shirt logo.`;
-
-// Pôster VERTICAL 9:16 — só para download (não aparece no painel).
-const buildPromptVertical = (nome: string, temLogo: boolean) => `${FACE_LOCK}
-
-TASK: Create a VERTICAL 9:16 portrait poster of the fitness coach ${nome}. The frame must contain ONLY the coach and the logo — nothing else.
-
-COMPOSITION (vertical 9:16):
-- The coach from the FIRST reference image is CENTERED, full upper body from mid-thigh up, arms crossed, direct gaze at camera, cinematic rim lighting. The subject fills the vertical frame.
-${SHIRT_LOGO}${temLogo ? `\n- The SECOND reference image is the COACH'S OWN LOGO. Render that exact logo LARGE behind the coach, centered in the upper part of the frame, like a monumental metallic brand emblem on the back wall, glowing with rim light and partially occluded by the coach's head/shoulders. Keep its exact shapes, letters and proportions — do not redesign it.` : ""}
-- BACKGROUND: plain moody dark studio with a soft light beam and deep shadows. No gym equipment, no props, no other people, no furniture.
-- Smooth dark gradient fading on the bottom edge so the poster blends into a dark interface.
-
-STYLE: premium, cinematic, high-contrast, sharp photographic realism, editorial fitness campaign look. No extra text, no watermarks, no captions, no borders, no logos other than the coach's own logo and the ALPHA COACH PRO shirt logo.`;
-
+STYLE: premium, cinematic, high-contrast, sharp photographic realism, editorial fitness campaign look. No extra text, no watermarks, no captions, no logos other than the coach's own logo, no borders.`;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -72,11 +50,6 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const force: boolean = Boolean(body.force);
-    // "horizontal" (banner 16:9 do painel, padrão) | "vertical" (pôster 9:16 só p/ download)
-    const format: "horizontal" | "vertical" =
-      body.format === "vertical" ? "vertical" : "horizontal";
-    const isVertical = format === "vertical";
-    const TEMPLATE_ID = isVertical ? "painel-hero-vertical" : "painel-hero";
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -137,7 +110,6 @@ Deno.serve(async (req) => {
 
     const refs: ReferenceImage[] = [{ url: fotoCoach, role: "identity" }];
     if (logoUrl) refs.push({ url: logoUrl, role: "style" });
-    refs.push({ url: ALPHA_LOGO_URL, role: "style" });
 
     await admin.from("coach_marketing_cards").upsert(
       {
@@ -153,11 +125,9 @@ Deno.serve(async (req) => {
     let dataUrl: string;
     try {
       dataUrl = await generateImage({
-        prompt: isVertical
-          ? buildPromptVertical(nome, Boolean(logoUrl))
-          : buildPromptHorizontal(nome, Boolean(logoUrl)),
+        prompt: buildPrompt(nome, Boolean(logoUrl)),
         referenceImages: refs,
-        aspectRatio: isVertical ? "9:16" : "16:9",
+        aspectRatio: "16:9",
       });
     } catch (err) {
       await admin
@@ -170,8 +140,7 @@ Deno.serve(async (req) => {
 
     const base64 = dataUrl.split(",")[1];
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const dir = isVertical ? "painel-hero-vertical" : "painel-hero";
-    const path = `${dir}/${tenantId ?? "global"}/${userId}-${Date.now()}.png`;
+    const path = `painel-hero/${tenantId ?? "global"}/${userId}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
       .upload(path, bytes, { contentType: "image/png", upsert: true });
