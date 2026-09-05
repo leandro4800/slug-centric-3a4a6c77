@@ -126,7 +126,9 @@ const Dashboard = () => {
     if (!user?.id) return;
     setHeroBusy(true);
     try {
+      await garantirSessao();
       const ext = file.name.split(".").pop() || "jpg";
+
       const path = `${user.id}/coach-hero-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("avatars")
