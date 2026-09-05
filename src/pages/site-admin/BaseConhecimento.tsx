@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Upload, Trash2, Loader2, FileText, Dumbbell, Apple, PenLine, Save } from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
@@ -118,7 +119,10 @@ const CAT_META: Record<Categoria, { titulo: string; icone: any; descricao: strin
 
 const BaseConhecimento = () => {
   const { tenant } = useSiteTenant();
-  const [cat, setCat] = useState<Categoria>("treino");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const areaParam = searchParams.get("area");
+  const cat: Categoria = areaParam === "dieta" ? "dieta" : "treino";
+  const setCat = (c: Categoria) => setSearchParams({ area: c }, { replace: true });
   const [rows, setRows] = useState<ChunkRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
