@@ -113,6 +113,7 @@ Deno.serve(async (req) => {
 
     const refs: ReferenceImage[] = [{ url: fotoCoach, role: "identity" }];
     if (logoUrl) refs.push({ url: logoUrl, role: "style" });
+    refs.push({ url: ALPHA_LOGO_URL, role: "style" });
 
     await admin.from("coach_marketing_cards").upsert(
       {
@@ -130,7 +131,7 @@ Deno.serve(async (req) => {
       dataUrl = await generateImage({
         prompt: buildPrompt(nome, Boolean(logoUrl)),
         referenceImages: refs,
-        aspectRatio: "16:9",
+        aspectRatio: "9:16",
       });
     } catch (err) {
       await admin
