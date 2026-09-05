@@ -17,7 +17,7 @@ import {
   type ReferenceImage,
 } from "../_shared/image-generation.ts";
 
-const TEMPLATE_ID = "painel-hero";
+
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
