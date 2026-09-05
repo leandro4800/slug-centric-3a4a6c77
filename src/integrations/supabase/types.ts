@@ -1079,6 +1079,72 @@ export type Database = {
         }
         Relationships: []
       }
+      biblioteca_assuntos: {
+        Row: {
+          capa_url: string | null
+          categoria: string
+          conteudo_texto: string | null
+          created_at: string
+          descricao: string | null
+          id: string
+          ordem: number
+          pdf_url: string | null
+          publicado: boolean
+          tenant_id: string
+          titulo: string
+          updated_at: string
+          video_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          capa_url?: string | null
+          categoria?: string
+          conteudo_texto?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          pdf_url?: string | null
+          publicado?: boolean
+          tenant_id: string
+          titulo: string
+          updated_at?: string
+          video_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          capa_url?: string | null
+          categoria?: string
+          conteudo_texto?: string | null
+          created_at?: string
+          descricao?: string | null
+          id?: string
+          ordem?: number
+          pdf_url?: string | null
+          publicado?: boolean
+          tenant_id?: string
+          titulo?: string
+          updated_at?: string
+          video_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "biblioteca_assuntos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "biblioteca_assuntos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       biblioteca_exercicios: {
         Row: {
           contraindicacoes: string[] | null
@@ -2057,6 +2123,7 @@ export type Database = {
           descricao: string | null
           id: string
           nome: string
+          tenant_id: string | null
           video_explicativo: string | null
         }
         Insert: {
@@ -2064,6 +2131,7 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome: string
+          tenant_id?: string | null
           video_explicativo?: string | null
         }
         Update: {
@@ -2071,9 +2139,25 @@ export type Database = {
           descricao?: string | null
           id?: string
           nome?: string
+          tenant_id?: string | null
           video_explicativo?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "dicionario_tecnicas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dicionario_tecnicas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
       }
       dietas: {
         Row: {
@@ -4072,6 +4156,7 @@ export type Database = {
           repeticoes: string | null
           series: string | null
           status: string | null
+          tecnica_avancada: string | null
           tecnica_id: string | null
           técnica_intensificacao: string | null
           tempo_descanso_segundos: number | null
@@ -4099,6 +4184,7 @@ export type Database = {
           repeticoes?: string | null
           series?: string | null
           status?: string | null
+          tecnica_avancada?: string | null
           tecnica_id?: string | null
           técnica_intensificacao?: string | null
           tempo_descanso_segundos?: number | null
@@ -4126,6 +4212,7 @@ export type Database = {
           repeticoes?: string | null
           series?: string | null
           status?: string | null
+          tecnica_avancada?: string | null
           tecnica_id?: string | null
           técnica_intensificacao?: string | null
           tempo_descanso_segundos?: number | null
