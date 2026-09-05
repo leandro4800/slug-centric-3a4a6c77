@@ -45,7 +45,7 @@ const baseItems: Item[] = [
 const SECTIONS = ["Painel", "Alunos", "Programação", "Luta", "Negócio", "Conta"] as const;
 
 export const SiteAdminSidebar = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { tenant } = useSiteTenant();
   const [vertical, setVertical] = useState<string>("personal");
