@@ -385,7 +385,42 @@ serve(async (req) => {
       }
     }
 
-    const knowledgeContext = regrasVolumeContext + bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
+    // === BASE DE CONHECIMENTO DO COACH (prioridade máxima) ===
+    let coachRulesBlock = "";
+    try {
+      let bcTenantId: string | null = tenant_id || null;
+      if (!bcTenantId) {
+        const { data: p } = await adminE.from("perfis").select("tenant_id").eq("id", resolvedUserId).maybeSingle();
+        bcTenantId = (p as any)?.tenant_id || null;
+      }
+      if (bcTenantId) {
+        const bcQuery = [perfil?.objetivo, perfil?.nivel, perfil?.enfase].filter(Boolean).join(" ") || "metodologia de treino";
+        const embResp = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "openai/text-embedding-3-small", input: bcQuery }),
+        });
+        if (embResp.ok) {
+          const emb = await embResp.json();
+          const { data: matches } = await adminE.rpc("buscar_conhecimento_treino", {
+            query_embedding: emb.data[0].embedding,
+            p_tenant_id: bcTenantId,
+            match_count: 8,
+            similarity_threshold: 0.3,
+          });
+          if (Array.isArray(matches) && matches.length > 0) {
+            coachRulesBlock =
+              `=== REGRAS ESPECÍFICAS DESTE COACH (PRIORIDADE MÁXIMA — SOBREPÕE QUALQUER OUTRA REGRA DESTE PROMPT QUANDO HOUVER CONFLITO) ===\n` +
+              matches.map((m: any) => `[Fonte: ${m.fonte || m.titulo}]\n${m.conteudo}`).join("\n\n") +
+              `\n=== FIM DAS REGRAS DO COACH ===\n\n`;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Base de conhecimento do coach indisponível:", err);
+    }
+
+    const knowledgeContext = coachRulesBlock + regrasVolumeContext + bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
 
     const divisoesEscolhidas = Array.isArray(divisoes) && divisoes.length > 0
       ? divisoes
