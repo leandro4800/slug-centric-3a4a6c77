@@ -894,6 +894,7 @@ No JSON, inclua o campo "tag_clinica" no nível raiz com EXATAMENTE: "${fightBad
             p_tenant_id: bcTenantId,
             match_count: 8,
             similarity_threshold: 0.3,
+            p_categoria: "dieta",
           });
           if (Array.isArray(matches) && matches.length > 0) {
             coachRulesBlock =
