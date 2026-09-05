@@ -198,6 +198,19 @@ const Dashboard = () => {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 3px)" }} />
 
+        {heroUrl && (
+          <button
+            onClick={baixarHero}
+            disabled={heroBusy}
+            title="Baixar imagem"
+            aria-label="Baixar imagem"
+            className="absolute right-3 top-3 z-20 inline-flex h-8 w-8 items-center justify-center rounded-full border border-white/15 bg-black/40 text-white/80 backdrop-blur-sm transition hover:bg-black/60 hover:text-white disabled:opacity-40"
+          >
+            {heroBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          </button>
+        )}
+
+
         <div className="relative px-4 md:px-8 pt-8 pb-20">
 
           <div className="flex items-center gap-2 text-primary">
@@ -238,22 +251,13 @@ const Dashboard = () => {
               {heroUrl ? "Trocar minha foto" : "Minha foto no painel"}
             </button>
             {heroUrl && (
-              <>
-                <button
-                  onClick={() => gerarHero(true)}
-                  disabled={heroBusy}
-                  className="inline-flex items-center gap-2 border border-white/20 bg-white/10 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition disabled:opacity-50"
-                >
-                  <Sparkles className="h-3.5 w-3.5" /> Gerar de novo
-                </button>
-                <button
-                  onClick={baixarHero}
-                  disabled={heroBusy}
-                  className="inline-flex items-center gap-2 border border-white/20 bg-white/10 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition disabled:opacity-50"
-                >
-                  <Download className="h-3.5 w-3.5" /> Baixar imagem
-                </button>
-              </>
+              <button
+                onClick={() => gerarHero(true)}
+                disabled={heroBusy}
+                className="inline-flex items-center gap-2 border border-white/20 bg-white/10 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition disabled:opacity-50"
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Gerar de novo
+              </button>
             )}
 
           </div>
