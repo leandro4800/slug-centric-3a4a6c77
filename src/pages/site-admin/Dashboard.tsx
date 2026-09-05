@@ -149,6 +149,21 @@ const Dashboard = () => {
     }
   };
 
+  const baixarHero = async () => {
+    if (!heroUrl) return;
+    setHeroBusy(true);
+    try {
+      const res = await fetch(heroUrl, { cache: "no-store" });
+      if (!res.ok) throw new Error("Não foi possível baixar a imagem.");
+      const blob = await res.blob();
+      await saveOrShareBlob(blob, `arte-coach-${Date.now()}.png`);
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao baixar a imagem.");
+    } finally {
+      setHeroBusy(false);
+    }
+  };
+
   if (loading) {
     return <div className="flex min-h-[60vh] items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
