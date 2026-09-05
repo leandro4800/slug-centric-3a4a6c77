@@ -309,41 +309,44 @@ const Row = ({ title, subtitle, children }: { title: string; subtitle?: string; 
   </section>
 );
 
-const CineCard = ({ done, label, to, icon: Icon, image }: { done: boolean; label: string; to: string; icon: any; image: string }) => (
+const CineCard = ({ done, label, to, icon: Icon, image, tone = "from-sky-600/70 via-sky-900/40" }: { done: boolean; label: string; to: string; icon: any; image: string; tone?: string }) => (
   <Link
     to={to}
-    className="group relative aspect-[16/10] overflow-hidden border border-white/10 hover:border-primary transition-all hover:scale-[1.03] hover:z-10"
+    className="group relative aspect-[16/10] overflow-hidden rounded-xl border border-white/15 hover:border-primary transition-all hover:scale-[1.03] hover:z-10"
   >
-    <img src={image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-70 group-hover:opacity-90 group-hover:scale-105 transition-all duration-500" />
-    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-black/20" />
+    <img src={image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-90 group-hover:scale-105 transition-all duration-500" />
+    <div className={`absolute inset-0 bg-gradient-to-tr ${tone} to-transparent mix-blend-multiply`} />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
     <div className="relative h-full flex flex-col justify-between p-3">
       <div className="flex items-center justify-between">
-        <div className="h-8 w-8 rounded-full bg-white/15 flex items-center justify-center border border-white/20">
+        <div className="h-8 w-8 rounded-full bg-white/25 backdrop-blur flex items-center justify-center border border-white/40">
           <Icon className="h-4 w-4 text-white" />
         </div>
-        {done && <CheckCircle2 className="h-4 w-4 text-primary drop-shadow-[0_0_8px_hsl(var(--primary))]" />}
+        {done && <CheckCircle2 className="h-4 w-4 text-white drop-shadow-[0_0_8px_rgba(255,255,255,0.8)]" />}
       </div>
       <div>
-        <p className="font-display text-sm md:text-base uppercase italic tracking-tight leading-tight">{label}</p>
-        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/60 mt-1">{done ? "Concluído" : "Começar agora"}</p>
+        <p className="text-sm md:text-base font-extrabold uppercase tracking-wide leading-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{label}</p>
+        <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/85 mt-1">{done ? "Concluído" : "Começar agora"}</p>
       </div>
     </div>
   </Link>
 );
 
-const PosterCard = ({ label, value, sub, image }: { label: string; value: string; sub?: string; image: string }) => (
-  <div className="group relative aspect-[3/4] overflow-hidden border border-white/10 hover:border-primary transition-all hover:scale-[1.03]">
-    <img src={image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-60 group-hover:opacity-80 group-hover:scale-105 transition-all duration-500" />
-    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-black/30" />
+const PosterCard = ({ label, value, sub, image, tone = "from-primary/60" }: { label: string; value: string; sub?: string; image: string; tone?: string }) => (
+  <div className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-white/15 hover:border-primary transition-all hover:scale-[1.03]">
+    <img src={image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-85 group-hover:scale-105 transition-all duration-500" />
+    <div className={`absolute inset-0 bg-gradient-to-tr ${tone} to-transparent mix-blend-multiply`} />
+    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
     <div className="relative h-full flex flex-col justify-between p-3">
-      <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-white/80">{label}</p>
+      <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{label}</p>
       <div>
-        <p className="font-display text-xl md:text-2xl font-black italic tracking-tight">{value}</p>
-        {sub && <p className="text-[10px] text-white/60 mt-1">{sub}</p>}
+        <p className="text-xl md:text-2xl font-black tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{value}</p>
+        {sub && <p className="text-[10px] text-white/75 mt-1">{sub}</p>}
       </div>
     </div>
   </div>
 );
+
 
 const Quick = ({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) => (
   <Link to={to} className="group flex items-center justify-between border border-border/60 bg-gradient-to-r from-zinc-950 to-black p-3 hover:border-primary hover:from-red-950/30 transition-all">
