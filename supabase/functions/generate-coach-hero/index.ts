@@ -153,9 +153,11 @@ Deno.serve(async (req) => {
     let dataUrl: string;
     try {
       dataUrl = await generateImage({
-        prompt: buildPrompt(nome, Boolean(logoUrl)),
+        prompt: isVertical
+          ? buildPromptVertical(nome, Boolean(logoUrl))
+          : buildPromptHorizontal(nome, Boolean(logoUrl)),
         referenceImages: refs,
-        aspectRatio: "9:16",
+        aspectRatio: isVertical ? "9:16" : "16:9",
       });
     } catch (err) {
       await admin
@@ -168,7 +170,8 @@ Deno.serve(async (req) => {
 
     const base64 = dataUrl.split(",")[1];
     const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
-    const path = `painel-hero/${tenantId ?? "global"}/${userId}-${Date.now()}.png`;
+    const dir = isVertical ? "painel-hero-vertical" : "painel-hero";
+    const path = `${dir}/${tenantId ?? "global"}/${userId}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
       .upload(path, bytes, { contentType: "image/png", upsert: true });
