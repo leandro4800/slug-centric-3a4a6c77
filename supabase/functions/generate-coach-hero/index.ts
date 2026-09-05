@@ -36,11 +36,11 @@ const buildPrompt = (nome: string, temLogo: boolean) => `ABSOLUTE FACE PRESERVAT
 TASK: Create a WIDE HORIZONTAL 16:9 cinematic dashboard hero banner for the fitness coach ${nome}.
 
 COMPOSITION:
-- The coach from the FIRST reference image stands on the LEFT side of the frame, cropped from mid-thigh/waist up, arms crossed, direct gaze at camera, cinematic rim lighting.
+- The coach from the FIRST reference image stands on the RIGHT side of the frame, cropped from mid-thigh/waist up, arms crossed, direct gaze at camera, cinematic rim lighting.
 - He/she wears a fitted dark athletic t-shirt with the coach name "${nome}" printed across the chest in bold uppercase athletic lettering, correctly spelled, clean and legible.
-- BACKGROUND: a moody dark gym / studio with dramatic light beams, subtle haze and deep shadows.${temLogo ? `\n- The SECOND reference image is the COACH'S OWN LOGO. Render that exact logo VERY LARGE just behind and slightly ABOVE the coach's shoulder, emerging from behind his/her body on the upper-right of the subject, like a monumental 3D metallic brand emblem mounted on the back wall, glowing with rim light. The coach's body partially occludes the lower-left part of the logo. Keep the logo's exact shapes, letters and proportions — do not redesign it.` : ""}
-- The RIGHT third of the frame must stay visually calm and darker (empty negative space) so that UI text can be overlaid on top of it.
-- Smooth dark gradient fading on the right and bottom edges so the banner blends into a dark interface.
+- BACKGROUND: a moody dark gym / studio with dramatic light beams, subtle haze and deep shadows.${temLogo ? `\n- The SECOND reference image is the COACH'S OWN LOGO. Render that exact logo VERY LARGE just behind and slightly ABOVE the coach's shoulder, emerging from behind his/her body on the upper-left of the subject, like a monumental 3D metallic brand emblem mounted on the back wall, glowing with rim light. The coach's body partially occludes the lower-right part of the logo. Keep the logo's exact shapes, letters and proportions — do not redesign it.` : ""}
+- The LEFT third of the frame must stay visually calm and darker (empty negative space) so that UI text can be overlaid on top of it.
+- Smooth dark gradient fading on the left and bottom edges so the banner blends into a dark interface.
 
 STYLE: premium, cinematic, high-contrast, sharp photographic realism, editorial fitness campaign look. No extra text, no watermarks, no captions, no logos other than the coach's own logo, no borders.`;
 
