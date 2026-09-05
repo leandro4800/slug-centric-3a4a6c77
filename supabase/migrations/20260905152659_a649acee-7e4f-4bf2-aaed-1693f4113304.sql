@@ -1,0 +1,2 @@
+REVOKE ALL ON FUNCTION public.buscar_conhecimento_treino(extensions.vector, uuid, integer, double precision) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.buscar_conhecimento_treino(extensions.vector, uuid, integer, double precision) TO authenticated, service_role;
