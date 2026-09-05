@@ -955,6 +955,7 @@ export type Database = {
       }
       base_conhecimento_treino: {
         Row: {
+          categoria: string
           conteudo: string
           created_at: string
           created_by: string | null
@@ -966,6 +967,7 @@ export type Database = {
           titulo: string
         }
         Insert: {
+          categoria?: string
           conteudo: string
           created_at?: string
           created_by?: string | null
@@ -977,6 +979,7 @@ export type Database = {
           titulo: string
         }
         Update: {
+          categoria?: string
           conteudo?: string
           created_at?: string
           created_by?: string | null
@@ -4515,6 +4518,7 @@ export type Database = {
       buscar_conhecimento_treino: {
         Args: {
           match_count?: number
+          p_categoria?: string
           p_tenant_id?: string
           query_embedding: string
           similarity_threshold?: number
