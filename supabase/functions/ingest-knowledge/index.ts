@@ -167,6 +167,7 @@ serve(async (req) => {
     }
 
     // Chunk + embed + insert
+    const manualPath = `manual/${Date.now()}-${(fonte || "texto").toString().slice(0, 40)}`;
     let totalChunks = 0;
     for (const f of files) {
       const chunks = chunkText(f.text);
@@ -187,7 +188,7 @@ serve(async (req) => {
           file: f.name,
           chunk_index: idx,
           total_chunks: chunks.length,
-          source_path: file_path || `manual/${Date.now()}-${f.name}`,
+          source_path: file_path || manualPath,
           manual: !file_path,
         },
       }));
