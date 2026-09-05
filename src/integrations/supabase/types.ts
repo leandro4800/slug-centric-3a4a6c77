@@ -953,6 +953,57 @@ export type Database = {
           },
         ]
       }
+      base_conhecimento_treino: {
+        Row: {
+          conteudo: string
+          created_at: string
+          created_by: string | null
+          embedding: string | null
+          fonte: string | null
+          id: string
+          metadata: Json
+          tenant_id: string | null
+          titulo: string
+        }
+        Insert: {
+          conteudo: string
+          created_at?: string
+          created_by?: string | null
+          embedding?: string | null
+          fonte?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          titulo: string
+        }
+        Update: {
+          conteudo?: string
+          created_at?: string
+          created_by?: string | null
+          embedding?: string | null
+          fonte?: string | null
+          id?: string
+          metadata?: Json
+          tenant_id?: string | null
+          titulo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "base_conhecimento_treino_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "base_conhecimento_treino_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       benchmarks: {
         Row: {
           created_at: string
@@ -4461,6 +4512,22 @@ export type Database = {
       }
     }
     Functions: {
+      buscar_conhecimento_treino: {
+        Args: {
+          match_count?: number
+          p_tenant_id?: string
+          query_embedding: string
+          similarity_threshold?: number
+        }
+        Returns: {
+          conteudo: string
+          fonte: string
+          id: string
+          similarity: number
+          tenant_id: string
+          titulo: string
+        }[]
+      }
       buscar_templates_treino: {
         Args: {
           p_divisao?: string
