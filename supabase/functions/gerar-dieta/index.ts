@@ -872,7 +872,42 @@ No JSON, inclua o campo "tag_clinica" no nível raiz com EXATAMENTE: "${fightBad
       .limit(100);
     const alimentosLista = (alimentos || []).map(a => `${a.nome} (kcal:${a.energia_kcal}, P:${a.proteina_g}, C:${a.carboidrato_g}, G:${a.lipideos_g})`).join("\n");
 
-    const systemPrompt = `Você é um nutricionista esportivo experiente. Monte uma dieta com ${refDia} refeições.
+    // === BASE DE CONHECIMENTO DO COACH (prioridade máxima) ===
+    let coachRulesBlock = "";
+    try {
+      let bcTenantId: string | null = targetTenantId || null;
+      if (!bcTenantId) {
+        const { data: p } = await supabase.from("perfis").select("tenant_id").eq("id", targetUserId).maybeSingle();
+        bcTenantId = (p as any)?.tenant_id || null;
+      }
+      if (bcTenantId && LOVABLE_API_KEY) {
+        const bcQuery = [objetivo, restricoes, alimentosAma].filter(Boolean).join(" ") || "nutrição esportiva";
+        const embResp = await fetch("https://ai.gateway.lovable.dev/v1/embeddings", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${LOVABLE_API_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ model: "openai/text-embedding-3-small", input: bcQuery }),
+        });
+        if (embResp.ok) {
+          const emb = await embResp.json();
+          const { data: matches } = await supabase.rpc("buscar_conhecimento_treino", {
+            query_embedding: emb.data[0].embedding,
+            p_tenant_id: bcTenantId,
+            match_count: 8,
+            similarity_threshold: 0.3,
+          });
+          if (Array.isArray(matches) && matches.length > 0) {
+            coachRulesBlock =
+              `=== REGRAS ESPECÍFICAS DESTE COACH (PRIORIDADE MÁXIMA — SOBREPÕE QUALQUER OUTRA REGRA DESTE PROMPT QUANDO HOUVER CONFLITO) ===\n` +
+              matches.map((m: any) => `[Fonte: ${m.fonte || m.titulo}]\n${m.conteudo}`).join("\n\n") +
+              `\n=== FIM DAS REGRAS DO COACH ===\n\n`;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Base de conhecimento do coach indisponível:", err);
+    }
+
+    const systemPrompt = `${coachRulesBlock}Você é um nutricionista esportivo experiente. Monte uma dieta com ${refDia} refeições.
 
 PERFIL DO ALUNO:
 - Sexo: ${sexo === "M" ? "Masculino" : "Feminino"}
