@@ -233,22 +233,23 @@ const Dashboard = () => {
         {/* PRIMEIROS PASSOS */}
         <Row title="Primeiros passos" subtitle={`${stepDone}/4 concluídos`}>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <CineCard done={steps.aluno} label="Cadastrar 1º aluno" to="/site/admin/alunos/novo" icon={UserPlus} image={imgAluno} />
-            <CineCard done={steps.treino} label="Montar treino" to="/site/admin/treinos" icon={Dumbbell} image={imgTreino} />
-            <CineCard done={steps.dieta} label="Montar dieta" to="/site/admin/dieta" icon={Apple} image={imgDieta} />
-            <CineCard done={steps.avaliacao} label="Avaliação física" to="/site/admin/avaliacao-fisica" icon={Ruler} image={imgAvaliacao} />
+            <CineCard done={steps.aluno} label="Cadastrar 1º aluno" to="/site/admin/alunos/novo" icon={UserPlus} image={imgAluno} tone="from-sky-500/70 via-sky-800/30" />
+            <CineCard done={steps.treino} label="Montar treino" to="/site/admin/treinos" icon={Dumbbell} image={imgTreino} tone="from-orange-500/70 via-orange-800/30" />
+            <CineCard done={steps.dieta} label="Montar dieta" to="/site/admin/dieta" icon={Apple} image={imgDieta} tone="from-emerald-500/70 via-emerald-800/30" />
+            <CineCard done={steps.avaliacao} label="Avaliação física" to="/site/admin/avaliacao-fisica" icon={Ruler} image={imgAvaliacao} tone="from-violet-500/70 via-violet-800/30" />
           </div>
         </Row>
 
         {/* MÉTRICAS FINANCEIRAS */}
         <Row title="Métricas financeiras" subtitle="Em destaque">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <PosterCard label="Resumo diário" value="R$ 0,00" sub="Igual ao dia anterior" image={imgMoney} />
-            <PosterCard label="Vendas por período" value="R$ 0,00" sub="Igual à semana passada" image={imgChart} />
-            <PosterCard label="Vendas mensais" value="R$ 0,00" sub="Mês atual" image={imgMoney} />
-            <PosterCard label="Ticket médio" value="R$ 0,00" sub="Por transação" image={imgChart} />
-            <PosterCard label="Renovação esperada" value="R$ 0,00" sub="Próximos 30 dias" image={imgMoney} />
-            <PosterCard label="Meta mensal" value="R$ 0,00" sub="0% de R$ 10.000" image={imgTarget} />
+            <PosterCard label="Resumo diário" value="R$ 0,00" sub="Igual ao dia anterior" image={imgMoney} tone="from-emerald-500/60" />
+            <PosterCard label="Vendas por período" value="R$ 0,00" sub="Igual à semana passada" image={imgChart} tone="from-sky-500/60" />
+            <PosterCard label="Vendas mensais" value="R$ 0,00" sub="Mês atual" image={imgMoney} tone="from-amber-500/60" />
+            <PosterCard label="Ticket médio" value="R$ 0,00" sub="Por transação" image={imgChart} tone="from-cyan-500/60" />
+            <PosterCard label="Renovação esperada" value="R$ 0,00" sub="Próximos 30 dias" image={imgMoney} tone="from-fuchsia-500/60" />
+            <PosterCard label="Meta mensal" value="R$ 0,00" sub="0% de R$ 10.000" image={imgTarget} tone="from-rose-500/60" />
+
           </div>
         </Row>
 
