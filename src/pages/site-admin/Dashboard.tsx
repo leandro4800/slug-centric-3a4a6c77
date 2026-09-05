@@ -150,15 +150,27 @@ const Dashboard = () => {
   };
 
   const baixarHero = async () => {
-    if (!heroUrl) return;
+    if (!user?.id) return;
     setHeroBusy(true);
+    const tid = toast.loading("Preparando versão 9:16 para download...");
     try {
-      const res = await fetch(heroUrl, { cache: "no-store" });
+      await garantirSessao();
+      // Gera (ou pega em cache) o pôster vertical 9:16 — separado do banner do painel.
+      const { data, error } = await supabase.functions.invoke("generate-coach-hero", {
+        body: { force: false, format: "vertical" },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const verticalUrl = (data as any)?.hero_url as string | undefined;
+      if (!verticalUrl) throw new Error("Não foi possível obter a imagem.");
+
+      const res = await fetch(verticalUrl, { cache: "no-store" });
       if (!res.ok) throw new Error("Não foi possível baixar a imagem.");
       const blob = await res.blob();
       await saveOrShareBlob(blob, `arte-coach-${Date.now()}.png`);
+      toast.success("Download da arte 9:16 pronto!", { id: tid });
     } catch (e: any) {
-      toast.error(e?.message || "Erro ao baixar a imagem.");
+      toast.error(e?.message || "Erro ao baixar a imagem.", { id: tid });
     } finally {
       setHeroBusy(false);
     }
