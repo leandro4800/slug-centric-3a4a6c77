@@ -407,6 +407,7 @@ serve(async (req) => {
             p_tenant_id: bcTenantId,
             match_count: 8,
             similarity_threshold: 0.3,
+            p_categoria: "treino",
           });
           if (Array.isArray(matches) && matches.length > 0) {
             coachRulesBlock =
