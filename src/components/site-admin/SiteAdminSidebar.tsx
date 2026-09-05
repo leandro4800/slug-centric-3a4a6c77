@@ -45,7 +45,7 @@ const baseItems: Item[] = [
 const SECTIONS = ["Painel", "Alunos", "Programação", "Luta", "Negócio", "Conta"] as const;
 
 export const SiteAdminSidebar = () => {
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const navigate = useNavigate();
   const { tenant } = useSiteTenant();
   const [vertical, setVertical] = useState<string>("personal");
@@ -137,10 +137,15 @@ export const SiteAdminSidebar = () => {
             )}
             <div className="space-y-0.5">
               {items.filter((i) => i.section === section).map((item) => {
-                const exact = item.to === "/site/admin/alunos" || item.to === "/site/admin/alunos/novo";
-                const active = exact
-                  ? pathname === item.to
-                  : pathname === item.to || pathname.startsWith(item.to + "/");
+                const [itemPath, itemQuery] = item.to.split("?");
+                const exact = itemPath === "/site/admin/alunos" || itemPath === "/site/admin/alunos/novo";
+                const pathMatch = exact
+                  ? pathname === itemPath
+                  : pathname === itemPath || pathname.startsWith(itemPath + "/");
+                const active = itemQuery
+                  ? pathname === itemPath && search.replace("?", "") === itemQuery
+                  : pathMatch;
+
                 const Icon = item.icon;
                 return (
                   <NavLink
