@@ -72,6 +72,11 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const force: boolean = Boolean(body.force);
+    // "horizontal" (banner 16:9 do painel, padrão) | "vertical" (pôster 9:16 só p/ download)
+    const format: "horizontal" | "vertical" =
+      body.format === "vertical" ? "vertical" : "horizontal";
+    const isVertical = format === "vertical";
+    const TEMPLATE_ID = isVertical ? "painel-hero-vertical" : "painel-hero";
 
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
