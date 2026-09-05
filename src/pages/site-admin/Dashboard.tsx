@@ -238,22 +238,13 @@ const Dashboard = () => {
               {heroUrl ? "Trocar minha foto" : "Minha foto no painel"}
             </button>
             {heroUrl && (
-              <>
-                <button
-                  onClick={() => gerarHero(true)}
-                  disabled={heroBusy}
-                  className="inline-flex items-center gap-2 border border-white/20 bg-white/10 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition disabled:opacity-50"
-                >
-                  <Sparkles className="h-3.5 w-3.5" /> Gerar de novo
-                </button>
-                <button
-                  onClick={baixarHero}
-                  disabled={heroBusy}
-                  className="inline-flex items-center gap-2 border border-white/20 bg-white/10 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition disabled:opacity-50"
-                >
-                  <Download className="h-3.5 w-3.5" /> Baixar imagem
-                </button>
-              </>
+              <button
+                onClick={() => gerarHero(true)}
+                disabled={heroBusy}
+                className="inline-flex items-center gap-2 border border-white/20 bg-white/10 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition disabled:opacity-50"
+              >
+                <Sparkles className="h-3.5 w-3.5" /> Gerar de novo
+              </button>
             )}
 
           </div>
