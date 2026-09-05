@@ -93,10 +93,21 @@ const Dashboard = () => {
     })();
   }, [user?.id]);
 
+  const garantirSessao = async () => {
+    const { data } = await supabase.auth.getSession();
+    const exp = data.session?.expires_at ?? 0;
+    if (!data.session || exp * 1000 - Date.now() < 60_000) {
+      const { error } = await supabase.auth.refreshSession();
+      if (error) throw new Error("Sua sessão expirou. Entre novamente para continuar.");
+    }
+  };
+
   const gerarHero = async (force: boolean) => {
     if (!user?.id) return;
     setHeroBusy(true);
     try {
+      await garantirSessao();
+
       const { data, error } = await supabase.functions.invoke("generate-coach-hero", {
         body: { force },
       });
@@ -115,7 +126,9 @@ const Dashboard = () => {
     if (!user?.id) return;
     setHeroBusy(true);
     try {
+      await garantirSessao();
       const ext = file.name.split(".").pop() || "jpg";
+
       const path = `${user.id}/coach-hero-${Date.now()}.${ext}`;
       const { error: upErr } = await supabase.storage
         .from("avatars")
