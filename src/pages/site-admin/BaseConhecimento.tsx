@@ -281,39 +281,14 @@ const BaseConhecimento = () => {
       <div>
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Programação</p>
         <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter flex items-center gap-3">
-          <BookOpen className="h-7 w-7 text-primary" /> Base de Conhecimento
+          <BookOpen className="h-7 w-7 text-primary" /> {cat === "treino" ? "Conhecimento IA — Treino" : "Conhecimento IA — Dieta"}
         </h1>
         <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
-          Escolha a área abaixo e diga exatamente como a IA deve trabalhar. Você pode escrever direto na tela
+          Diga exatamente como a IA de {cat} deve trabalhar. Você pode escrever direto na tela
           ou enviar um documento com sua metodologia.
         </p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 max-w-xl">
-        {(["treino", "dieta"] as Categoria[]).map((c) => {
-          const I = CAT_META[c].icone;
-          const active = cat === c;
-          return (
-            <button
-              key={c}
-              onClick={() => setCat(c)}
-              className={`rounded-2xl border p-4 text-left transition ${
-                active
-                  ? "border-primary bg-primary/15"
-                  : "border-border/40 bg-card hover:border-primary/40"
-              }`}
-            >
-              <I className={`h-6 w-6 mb-2 ${active ? "text-primary" : "text-muted-foreground"}`} />
-              <p className="font-display uppercase italic tracking-tight text-lg leading-none">
-                {c === "treino" ? "IA de Treino" : "IA de Dieta"}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                {c === "treino" ? "Regras para montar treinos" : "Regras para montar dietas"}
-              </p>
-            </button>
-          );
-        })}
-      </div>
 
       <div className="rounded-2xl border border-border/40 bg-card p-5 space-y-5">
         <div className="flex items-start gap-3">
