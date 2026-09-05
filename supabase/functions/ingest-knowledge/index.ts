@@ -107,9 +107,10 @@ serve(async (req) => {
     }
     const userId = userData.user.id;
 
-    const { file_path, tenant_id, fonte } = await req.json();
-    if (!file_path) {
-      return new Response(JSON.stringify({ error: "file_path required" }), {
+    const { file_path, tenant_id, fonte, texto, categoria } = await req.json();
+    const cat = ["treino", "dieta"].includes(String(categoria)) ? String(categoria) : "geral";
+    if (!file_path && !(typeof texto === "string" && texto.trim().length > 20)) {
+      return new Response(JSON.stringify({ error: "Envie um arquivo ou um texto com pelo menos 20 caracteres" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -132,14 +133,18 @@ serve(async (req) => {
       });
     }
 
+    // Lista de {nome, conteúdo}
+    const files: Array<{ name: string; text: string }> = [];
+
+    if (!file_path) {
+      files.push({ name: fonte || "Texto do coach", text: String(texto) });
+    } else {
     // Baixar do storage
     const { data: blob, error: dlErr } = await admin.storage.from("base-conhecimento").download(file_path);
     if (dlErr || !blob) throw new Error(`Download failed: ${dlErr?.message}`);
     const buf = await blob.arrayBuffer();
 
-    // Lista de {nome, conteúdo}
     const lower = file_path.toLowerCase();
-    const files: Array<{ name: string; text: string }> = [];
 
     if (lower.endsWith(".zip")) {
       const zip = await JSZip.loadAsync(buf);
@@ -152,6 +157,7 @@ serve(async (req) => {
     } else {
       const text = await extractFromFile(file_path, buf);
       if (text) files.push({ name: file_path.split("/").pop()!, text });
+    }
     }
 
     if (!files.length) {
@@ -176,7 +182,14 @@ serve(async (req) => {
         fonte: fonte || f.name,
         embedding: embeddings[idx] as any,
         created_by: userId,
-        metadata: { file: f.name, chunk_index: idx, total_chunks: chunks.length, source_path: file_path },
+        categoria: cat,
+        metadata: {
+          file: f.name,
+          chunk_index: idx,
+          total_chunks: chunks.length,
+          source_path: file_path || `manual/${Date.now()}-${f.name}`,
+          manual: !file_path,
+        },
       }));
 
       // Insert em lotes de 100
