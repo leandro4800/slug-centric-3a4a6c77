@@ -119,10 +119,10 @@ const CAT_META: Record<Categoria, { titulo: string; icone: any; descricao: strin
 
 const BaseConhecimento = () => {
   const { tenant } = useSiteTenant();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const areaParam = searchParams.get("area");
   const cat: Categoria = areaParam === "dieta" ? "dieta" : "treino";
-  const setCat = (c: Categoria) => setSearchParams({ area: c }, { replace: true });
+
   const [rows, setRows] = useState<ChunkRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
