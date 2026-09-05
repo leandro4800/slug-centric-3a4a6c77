@@ -148,12 +148,12 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* HERO */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden min-h-[420px] md:min-h-[600px]">
         <div
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(1200px 500px at 15% 0%, hsl(var(--primary) / 0.35), transparent 60%), radial-gradient(900px 400px at 90% 20%, hsl(var(--primary) / 0.15), transparent 70%), linear-gradient(180deg, #0a0a0a 0%, #000 100%)",
+              "radial-gradient(1200px 500px at 85% 0%, hsl(var(--primary) / 0.35), transparent 60%), radial-gradient(900px 400px at 10% 20%, hsl(var(--primary) / 0.15), transparent 70%), linear-gradient(180deg, #0a0a0a 0%, #000 100%)",
           }}
         />
         {heroUrl && (
@@ -161,15 +161,16 @@ const Dashboard = () => {
             <img
               src={heroUrl}
               alt="Arte do coach"
-              className="pointer-events-none absolute inset-y-0 right-0 h-full w-full object-cover object-right md:w-[62%]"
+              className="pointer-events-none absolute inset-y-0 left-0 h-full w-full object-cover object-left md:w-[68%]"
             />
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black via-black/85 to-black/10 md:via-black/60" />
+            <div className="pointer-events-none absolute inset-0 bg-gradient-to-l from-black via-black/80 to-black/10 md:via-black/55" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/80 to-transparent" />
           </>
         )}
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 3px)" }} />
 
-        <div className="relative px-4 md:px-8 pt-8 pb-20">
+        <div className={`relative px-4 md:px-8 pt-8 pb-20 ${heroUrl ? "md:pl-[46%]" : ""}`}>
           <div className="flex items-center gap-2 text-primary">
             <Crown className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Painel Premium do Coach</span>
