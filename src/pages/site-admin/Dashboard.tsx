@@ -170,7 +170,7 @@ const Dashboard = () => {
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-background" />
         <div className="pointer-events-none absolute inset-0 opacity-[0.04]" style={{ backgroundImage: "repeating-linear-gradient(0deg, #fff 0 1px, transparent 1px 3px)" }} />
 
-        <div className="relative px-4 md:px-8 pt-8 pb-20">
+        <div className={`relative px-4 md:px-8 pt-8 pb-20 ${heroUrl ? "md:pl-[46%]" : ""}`}>
           <div className="flex items-center gap-2 text-primary">
             <Crown className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Painel Premium do Coach</span>
