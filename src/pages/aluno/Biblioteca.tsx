@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useBranding } from "@/contexts/BrandingProvider";
+import { useBranding, type Tenant } from "@/contexts/BrandingProvider";
+import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,7 +56,9 @@ const emptyForm = {
 };
 
 const Biblioteca = () => {
-  const { tenant } = useBranding();
+  const { tenant: brandingTenant } = useBranding();
+  const { tenant: siteTenant } = useSiteTenant();
+  const tenant: Tenant | null = brandingTenant || (siteTenant as any) || null;
   const { user, hasRole } = useAuth();
   const [assuntos, setAssuntos] = useState<Assunto[]>([]);
   const [loading, setLoading] = useState(true);
@@ -68,10 +71,15 @@ const Biblioteca = () => {
   const pdfRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLInputElement>(null);
 
+  // No painel do coach (site-admin) o acesso já é garantido pelo SiteAdminLayout,
+  // então qualquer coach autenticado ali pode editar a biblioteca do seu tenant.
   const isCoach =
     !!tenant &&
     !!user &&
-    (hasRole("admin") || hasRole("coach", tenant.id) || (tenant as any).owner_user_id === user.id);
+    (!!siteTenant ||
+      hasRole("admin") ||
+      hasRole("coach", tenant.id) ||
+      (tenant as any).owner_user_id === user.id);
 
   const load = async () => {
     if (!tenant?.id) return;

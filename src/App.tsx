@@ -222,6 +222,7 @@ const App = () => (
               <Route path="alunos/novo" element={<SiteAdminNovoAluno />} />
               <Route path="treinos" element={<SiteAdminMontarTreino />} />
               <Route path="videos-tecnicos" element={<SiteAdminVideosTecnicos />} />
+              <Route path="biblioteca" element={<Biblioteca />} />
               <Route path="base-conhecimento" element={<SiteAdminBaseConhecimento />} />
               <Route path="dieta" element={<SiteAdminMontarDieta />} />
               <Route path="avaliacao-fisica" element={<SiteAdminAvaliacaoFisica />} />
