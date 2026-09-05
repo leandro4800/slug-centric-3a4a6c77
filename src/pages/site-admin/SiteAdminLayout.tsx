@@ -12,6 +12,7 @@ const mobileItems = [
   { to: "/site/admin/alunos/novo", label: "Cadastrar", icon: UserPlus },
   { to: "/site/admin/agenda", label: "Agenda", icon: Calendar },
   { to: "/site/admin/treinos", label: "Treino", icon: Dumbbell },
+  { to: "/site/admin/biblioteca", label: "Biblioteca", icon: BookOpen },
   { to: "/site/admin/dieta", label: "Dieta", icon: Apple },
   { to: "/site/admin/avaliacao-fisica", label: "Avaliação", icon: Ruler },
   { to: "/site/admin/metricas", label: "Métricas", icon: Activity },

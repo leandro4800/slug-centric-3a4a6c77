@@ -22,6 +22,7 @@ const baseItems: Item[] = [
 
   { to: "/site/admin/treinos", label: "Montar treino", icon: Dumbbell, section: "Programação" },
   { to: "/site/admin/videos-tecnicos", label: "Exercícios & vídeos", icon: Video, section: "Programação" },
+  { to: "/site/admin/biblioteca", label: "Biblioteca", icon: BookOpen, section: "Programação" },
   { to: "/site/admin/base-conhecimento?area=treino", label: "Conhecimento IA — Treino", icon: BookOpen, section: "Programação" },
   { to: "/site/admin/base-conhecimento?area=dieta", label: "Conhecimento IA — Dieta", icon: BookOpen, section: "Programação" },
   { to: "/site/admin/dieta", label: "Montar dieta", icon: Apple, section: "Programação" },
