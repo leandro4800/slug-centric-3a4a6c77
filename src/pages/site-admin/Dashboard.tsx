@@ -1,12 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { useAuth } from "@/hooks/use-auth";
+import { toast } from "sonner";
 import {
   Users, Calendar, UserPlus, ArrowRight, Loader2, CheckCircle2,
   Dumbbell, Apple, Ruler, TrendingUp, AlertCircle, Play,
-  ShoppingBag, Crown, Flame
+  ShoppingBag, Crown, Flame, Camera, Sparkles
 } from "lucide-react";
 import imgAluno from "@/assets/dash-aluno.jpg";
 import imgTreino from "@/assets/dash-treino.jpg";
@@ -26,6 +27,10 @@ const Dashboard = () => {
   const [proximos, setProximos] = useState<{ id: string; nome: string; vence: string }[]>([]);
   const [steps, setSteps] = useState({ aluno: false, treino: false, dieta: false, avaliacao: false });
   const [nome, setNome] = useState<string>("");
+  const [heroUrl, setHeroUrl] = useState<string | null>(null);
+  const [heroBusy, setHeroBusy] = useState(false);
+  const heroInputRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     if (!tenant?.id) return;
