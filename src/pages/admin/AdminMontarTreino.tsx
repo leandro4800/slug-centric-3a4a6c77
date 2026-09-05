@@ -21,6 +21,7 @@ import { extractYouTubeId } from "@/lib/utils";
 import platformLogo from "@/assets/alphacoach-logo.jpeg";
 import { DivisaoPresetCard } from "@/components/admin/DivisaoPresetCard";
 import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
+import { TecnicaAvancadaPicker, useTecnicasAvancadas } from "@/components/admin/TecnicaAvancadaPicker";
 import { filtrarFightPresets, fightVideoFor, type FightDivisaoPreset } from "@/data/fightDivisoesPresets";
 import { FIGHT_MODALIDADES, modalidadeLabel, toModalidadeSlug } from "@/lib/fightModalidades";
 
@@ -81,6 +82,7 @@ interface ExercicioPrescrito {
   cadencia?: string;
   detalhes_execucao?: string;
   observacao: string;
+  tecnica_avancada?: string;
 }
 
 type DiaGeradoIA = {
@@ -329,6 +331,7 @@ const AdminMontarTreino = () => {
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
   const [biblioteca, setBiblioteca] = useState<Array<{ id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null }>>([]);
+  const { tecnicas, reloadTecnicas } = useTecnicasAvancadas(tenant?.id);
   // === MODO AVANÇADO (edição livre da divisão antes de gerar com IA) ===
   const [modoAvancado, setModoAvancado] = useState(false);
   const [diasAvancado, setDiasAvancado] = useState<Array<{ label: string; qtd: number }>>([]);
@@ -504,6 +507,7 @@ const AdminMontarTreino = () => {
             cadencia: r.cadencia || "",
             detalhes_execucao: r.detalhes_execucao || "",
             observacao: r.observacao || "",
+            tecnica_avancada: r.tecnica_avancada || "",
           }));
           const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
           setExercicios(carregados);
@@ -519,7 +523,7 @@ const AdminMontarTreino = () => {
       } else {
         const { data: tp } = await supabase
           .from("treinos_prescritos")
-          .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao")
+          .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tecnica_avancada")
           .eq("aluno_id", alunoId)
           .eq("tenant_id", tenant.id)
           .order("dia_ordem", { nullsFirst: false })
@@ -534,6 +538,7 @@ const AdminMontarTreino = () => {
             cadencia: r.cadencia || "",
             detalhes_execucao: r.detalhes_execucao || "",
             observacao: r.observacao || "",
+            tecnica_avancada: r.tecnica_avancada || "",
           }));
           const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
           setExercicios(carregados);
@@ -809,6 +814,7 @@ const AdminMontarTreino = () => {
             cadencia: e.cadencia,
             detalhes_execucao: e.detalhes_execucao,
             observacao: e.observacao,
+            tecnica_avancada: e.tecnica_avancada || null,
           })),
           cardio,
           perfil: { objetivo: perfil.objetivo, nivel: perfil.tempo_treino, frequencia: perfil.frequencia_semanal },
@@ -864,6 +870,7 @@ const AdminMontarTreino = () => {
           cadencia: e.cadencia,
           detalhes_execucao: e.detalhes_execucao,
           observacao: e.observacao,
+          tecnica_avancada: e.tecnica_avancada || null,
           referencia_exercicio_id: linkIdPara(linkMap, e.exercicio),
           status: "ativo",
         };
@@ -2309,6 +2316,16 @@ const AdminMontarTreino = () => {
                         <div>
                           <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Observação</Label>
                           <Textarea className="min-h-[50px] text-xs mt-1" placeholder="Observações para o aluno..." value={e.observacao} onChange={(ev) => updateEx(globalIdx, { observacao: ev.target.value })} />
+                        </div>
+                        <div>
+                          <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Técnica avançada</Label>
+                          <TecnicaAvancadaPicker
+                            value={e.tecnica_avancada || ""}
+                            tenantId={tenant?.id}
+                            tecnicas={tecnicas}
+                            onChange={(v) => updateEx(globalIdx, { tecnica_avancada: v })}
+                            onReload={reloadTecnicas}
+                          />
                         </div>
                       </div>
                       );
