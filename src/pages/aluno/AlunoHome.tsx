@@ -32,7 +32,7 @@ const sections = [
   { title: "Meu Treino", to: "treino", img: cardTreino },
   { title: "Minha Dieta", to: "dieta", img: cardDieta },
   { title: "Minha Evolução", to: "evolucao", img: cardEvolucao },
-  { title: "Clínica", to: "clinica", img: cardClinica },
+  // { title: "Clínica", to: "clinica", img: cardClinica },
 ];
 
 const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) => {
