@@ -112,7 +112,10 @@ Deno.serve(async (req) => {
       return json({ hero_url: cached.image_url, cached: true });
     }
 
-    const refs: ReferenceImage[] = [{ url: fotoCoach, role: "identity" }];
+    const refs: ReferenceImage[] = [
+      { url: fotoCoach, role: "identity" },
+      { url: ALPHA_LOGO_URL, role: "style" },
+    ];
     if (logoUrl) refs.push({ url: logoUrl, role: "style" });
 
     await admin.from("coach_marketing_cards").upsert(
