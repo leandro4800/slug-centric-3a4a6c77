@@ -67,7 +67,7 @@ const AlunoBottomNav = () => {
         ]),
     { label: "Biblioteca", icon: BookOpen, to: "biblioteca" },
     { label: "Comunidade", icon: Users, to: "comunidade" },
-    { label: "Clínica", icon: Stethoscope, to: "clinica" },
+    // { label: "Clínica", icon: Stethoscope, to: "clinica" },
     { label: "Presencial", icon: CalendarCheck, to: "presencial" },
     { label: "Minha Carta", icon: Sparkles, to: "carta" },
   ];
