@@ -19,6 +19,10 @@ import {
 
 const TEMPLATE_ID = "painel-hero";
 
+// Logo padrão Alpha Coach Pro (aplicada no peito esquerdo da camisa de todos os tenants)
+const ALPHA_LOGO_URL =
+  "https://alpha-coach.app/__l5e/assets-v1/ee4283bc-8129-4970-8609-86f336684075/alpha-coach-pro-emblem.jpg";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
