@@ -177,7 +177,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* HERO */}
-      <section className="relative overflow-hidden min-h-[420px] md:min-h-[520px]">
+      <section className="relative min-h-[620px] overflow-hidden sm:min-h-[590px] md:min-h-[610px] lg:min-h-[520px]">
         <div
           className="absolute inset-0"
           style={{
@@ -211,24 +211,24 @@ const Dashboard = () => {
         )}
 
 
-        <div className="relative px-4 md:px-8 pt-8 pb-20">
+        <div className="relative mx-auto w-full max-w-4xl px-3 pb-16 pt-6 sm:px-5 sm:pb-20 md:px-6 md:pt-8 lg:mx-0 lg:max-w-none lg:px-8 lg:pb-20">
 
           <div className="flex items-center gap-2 text-primary">
             <Crown className="h-4 w-4" />
             <span className="text-[10px] font-bold uppercase tracking-[0.3em]">Painel Premium do Coach</span>
           </div>
-          <h1 className="mt-3 font-display text-3xl md:text-5xl uppercase italic tracking-tighter leading-[0.9]">
+          <h1 className="mt-3 max-w-[68%] break-words font-display text-3xl uppercase italic leading-[0.9] tracking-tighter sm:max-w-md md:max-w-xl md:text-5xl lg:max-w-none">
             {saudacao}{firstName ? `, ${firstName}` : ""}.
           </h1>
-          <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+          <p className="mt-2 max-w-[68%] break-words text-sm text-muted-foreground sm:max-w-md md:max-w-xl">
             Seu império em tempo real. Alunos, faturamento e performance — em um só palco.
           </p>
 
-          <div className="mt-5 flex flex-wrap gap-2">
-            <Link to="/site/admin/alunos/novo" className="inline-flex items-center gap-2 bg-white text-black px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/90 transition">
+          <div className="mt-5 grid w-full grid-cols-2 gap-2 lg:flex lg:w-auto lg:flex-wrap">
+            <Link to="/site/admin/alunos/novo" className="inline-flex min-w-0 items-center justify-center gap-1.5 bg-white px-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-black transition hover:bg-white/90 sm:gap-2 sm:px-4 sm:text-xs lg:px-5">
               <Play className="h-3.5 w-3.5 fill-current" /> Cadastrar aluno
             </Link>
-            <Link to="/site/admin/planos" className="inline-flex items-center gap-2 bg-white/15 border border-white/20 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition">
+            <Link to="/site/admin/planos" className="inline-flex min-w-0 items-center justify-center gap-1.5 border border-white/20 bg-white/15 px-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-white transition hover:bg-white/20 sm:gap-2 sm:px-4 sm:text-xs lg:px-5">
               <Flame className="h-3.5 w-3.5" /> Meus planos
             </Link>
             <input
@@ -245,7 +245,7 @@ const Dashboard = () => {
             <button
               onClick={() => heroInputRef.current?.click()}
               disabled={heroBusy}
-              className="inline-flex items-center gap-2 border border-primary/60 bg-primary/15 text-primary px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-primary/25 transition disabled:opacity-50"
+              className="inline-flex min-w-0 items-center justify-center gap-1.5 border border-primary/60 bg-primary/15 px-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-primary transition hover:bg-primary/25 disabled:opacity-50 sm:gap-2 sm:px-4 sm:text-xs lg:px-5"
             >
               {heroBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
               {heroUrl ? "Trocar minha foto" : "Minha foto no painel"}
@@ -254,7 +254,7 @@ const Dashboard = () => {
               <button
                 onClick={() => gerarHero(true)}
                 disabled={heroBusy}
-                className="inline-flex items-center gap-2 border border-white/20 bg-white/10 text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:bg-white/20 transition disabled:opacity-50"
+                className="inline-flex min-w-0 items-center justify-center gap-1.5 border border-white/20 bg-white/10 px-2 py-2.5 text-center text-[10px] font-bold uppercase tracking-wider text-white transition hover:bg-white/20 disabled:opacity-50 sm:gap-2 sm:px-4 sm:text-xs lg:px-5"
               >
                 <Sparkles className="h-3.5 w-3.5" /> Gerar de novo
               </button>
@@ -262,7 +262,7 @@ const Dashboard = () => {
 
           </div>
 
-          <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-2.5 max-w-3xl">
+          <div className="mt-6 grid w-full max-w-3xl grid-cols-2 gap-2.5 sm:mt-8 lg:grid-cols-4">
             <HeroStat label="Alunos" value={String(alunos)} icon={<Users className="h-3.5 w-3.5" />} tone="from-sky-500/30 to-sky-500/5 border-sky-400/40 text-sky-200" />
             <HeroStat label="Ativos" value={String(ativos)} icon={<CheckCircle2 className="h-3.5 w-3.5" />} tone="from-emerald-500/30 to-emerald-500/5 border-emerald-400/40 text-emerald-200" />
             <HeroStat label="Renovação" value="0%" icon={<TrendingUp className="h-3.5 w-3.5" />} tone="from-amber-500/30 to-amber-500/5 border-amber-400/40 text-amber-200" />
@@ -273,7 +273,7 @@ const Dashboard = () => {
 
 
 
-      <div className="px-4 md:px-8 pb-16 space-y-10 -mt-8 relative z-10">
+      <div className="relative z-10 mx-auto -mt-8 w-full max-w-4xl space-y-8 px-3 pb-16 sm:px-5 md:px-6 lg:mx-0 lg:max-w-none lg:space-y-10 lg:px-8">
         {/* PRIMEIROS PASSOS */}
         <Row title="Primeiros passos" subtitle={`${stepDone}/4 concluídos`}>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -346,9 +346,9 @@ const HeroStat = ({ label, value, icon, tone }: { label: string; value: string; 
 
 const Row = ({ title, subtitle, children }: { title: string; subtitle?: string; children: React.ReactNode }) => (
   <section>
-    <div className="flex items-end justify-between mb-3">
-      <h2 className="font-display text-lg md:text-xl uppercase italic tracking-tight">{title}</h2>
-      {subtitle && <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-muted-foreground">{subtitle}</span>}
+    <div className="mb-3 flex min-w-0 items-end justify-between gap-3">
+      <h2 className="min-w-0 font-display text-lg uppercase italic tracking-tight md:text-xl">{title}</h2>
+      {subtitle && <span className="shrink-0 text-right text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground sm:text-[10px] sm:tracking-[0.3em]">{subtitle}</span>}
     </div>
     {children}
   </section>
