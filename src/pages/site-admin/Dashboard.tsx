@@ -190,7 +190,7 @@ const Dashboard = () => {
             <img
               src={heroUrl}
               alt="Arte do coach"
-              className="pointer-events-none absolute inset-0 h-full w-full object-cover object-right"
+              className="pointer-events-none absolute inset-0 h-full w-full object-contain object-top lg:object-cover lg:object-right"
             />
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black via-black/70 to-transparent md:via-black/40" />
           </>
