@@ -130,7 +130,8 @@ const Login = () => {
 
     const databaseDestination = destinationRows?.[0];
     const databaseSlug = getSafeAppSlug(databaseDestination?.tenant_slug);
-    const contextSlug = getSafeAppSlug(urlSlug || tenant?.slug);
+    // Não usa tenant?.slug do BrandingProvider — pode ser cache do coach anterior.
+    const contextSlug = getSafeAppSlug(urlSlug);
 
     if (databaseSlug) {
       // A RPC retorna apenas o papel do destino escolhido, não a lista completa

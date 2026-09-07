@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, ReactNode } fro
 import { useLocation, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { resolveBrandingSlug } from "@/lib/tenant-slug";
-import { writeStartupBranding } from "@/lib/startup-branding";
+import { clearSessionTenantMemory, writeStartupBranding } from "@/lib/startup-branding";
 import { readTenantBrandingCache, writeTenantBrandingCache } from "@/lib/tenant-branding-cache";
 
 export { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
@@ -254,26 +254,45 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
     }
     
     try {
-      // Sem slug na URL: usa o tenant do usuário logado para preservar logo/vlogs em /index/PWA.
-      if (!targetSlug) {
-        const t = await loadTenantForCurrentUser();
-        if (isMountedRef.current) {
-          setTenant(t);
-          if (t) {
-            writeTenantBrandingCache(t.slug, t as any);
-            localStorage.setItem("last_tenant_slug", t.slug);
+      // Conta autenticada: branding SEMPRE do tenant da conta.
+      // last_tenant_slug / alphateam em cache não pode pintar outro coach.
+      const { data: auth } = await supabase.auth.getUser();
+      if (auth.user?.id) {
+        const userTenant = await loadTenantForCurrentUser();
+        if (userTenant) {
+          if (isMountedRef.current) {
+            setTenant(userTenant);
+            writeTenantBrandingCache(userTenant.slug, userTenant as any);
+            localStorage.setItem("last_tenant_slug", userTenant.slug);
             writeStartupBranding({
-              slug: t.slug,
-              nome: t.nome,
-              logo_url: t.logo_url,
-              hero_url: t.hero_url,
+              slug: userTenant.slug,
+              nome: userTenant.nome,
+              logo_url: userTenant.logo_url,
+              hero_url: userTenant.hero_url,
             });
+            applyTheme(
+              (userTenant.theme_overrides as ThemeOverrides | null) ?? null,
+              userTenant.hero_url,
+              force,
+              userTenant.theme_mode,
+            );
+            setLoading(false);
           }
-          applyTheme((t?.theme_overrides as ThemeOverrides | null) ?? null, t?.hero_url, force, t?.theme_mode);
-          setLoading(false); // Garante que o loading termina aqui
+          lastLoadedSlug.current = userTenant.slug;
+          lastLoadedTenantId.current = userTenant.id;
+          return;
+        }
+      }
+
+      // Sem slug na URL e sem sessão: não inventa tenant (ex.: alphateam).
+      if (!targetSlug) {
+        if (isMountedRef.current) {
+          setTenant(null);
+          applyTheme(null, null, force, null);
+          setLoading(false);
         }
         lastLoadedSlug.current = null;
-        lastLoadedTenantId.current = t?.id ?? null;
+        lastLoadedTenantId.current = null;
         return;
       }
 
@@ -350,11 +369,24 @@ export const BrandingProvider = ({ children }: { children: ReactNode }) => {
 
     const { data: { subscription: authSub } } = supabase.auth.onAuthStateChange((event) => {
       if (event === "SIGNED_OUT") {
+        clearSessionTenantMemory();
         try {
           Object.keys(sessionStorage)
             .filter((k) => k.startsWith("splash_shown_v2"))
             .forEach((k) => sessionStorage.removeItem(k));
         } catch {}
+        if (isMountedRef.current) {
+          setTenant(null);
+          applyTheme(null, null, true, null);
+          lastLoadedSlug.current = null;
+          lastLoadedTenantId.current = null;
+        }
+        // Só recarrega branding se a URL ainda tiver slug explícito (tela de login do coach).
+        void load(slug, true);
+        return;
+      }
+      if (event === "SIGNED_IN") {
+        // Troca de conta: reaplica branding do tenant da sessão nova.
         void load(slug, true);
       }
     });

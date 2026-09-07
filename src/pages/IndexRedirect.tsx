@@ -138,20 +138,51 @@ const IndexRedirect = () => {
           return;
         }
 
-        // 2. Se há um slug na URL, verifica se o usuário tem acesso a ele
-        const targetSlug = safeSlug || tenant?.slug;
-        if (targetSlug && targetSlug !== "demo" && targetSlug !== "index") {
+        // 2. NUNCA usa tenant?.slug do BrandingProvider/cache — pode ser o coach
+        // anterior no aparelho (Leandro) enquanto a conta é aluna do Jackson.
+        // Só confia em slug explícito na URL se o usuário tiver vínculo com ele.
+        if (safeSlug && safeSlug !== "demo" && safeSlug !== "index") {
           const { data: targetTenant } = await withDecisionTimeout(supabase
             .from("tenants")
             .select("id, slug")
-            .eq("slug", targetSlug)
+            .eq("slug", safeSlug)
             .maybeSingle(), { data: null, error: null });
 
-          if (targetTenant) {
-            const target = `/${targetTenant.slug}/app`;
-            console.log("[IndexRedirect] Slug encontrado, tentando entrar no app:", target);
-            go(target);
-            return;
+          if (targetTenant?.id) {
+            const [{ data: roleLink }, { data: perfilLink }, { data: subLink }, { data: ownedLink }] = await Promise.all([
+              withDecisionTimeout(
+                supabase.from("user_roles").select("id").eq("user_id", user.id).eq("tenant_id", targetTenant.id).limit(1).maybeSingle(),
+                { data: null, error: null },
+              ),
+              withDecisionTimeout(
+                supabase.from("perfis").select("id").eq("id", user.id).eq("tenant_id", targetTenant.id).maybeSingle(),
+                { data: null, error: null },
+              ),
+              withDecisionTimeout(
+                supabase
+                  .from("assinaturas")
+                  .select("id")
+                  .eq("aluno_id", user.id)
+                  .eq("tenant_id", targetTenant.id)
+                  .in("status", ["active", "trialing"])
+                  .limit(1)
+                  .maybeSingle(),
+                { data: null, error: null },
+              ),
+              withDecisionTimeout(
+                supabase.from("tenants").select("id").eq("id", targetTenant.id).eq("owner_user_id", user.id).maybeSingle(),
+                { data: null, error: null },
+              ),
+            ]);
+
+            const hasAccess = !!(roleLink || perfilLink || subLink || ownedLink);
+            if (hasAccess) {
+              const target = `/${targetTenant.slug}/app`;
+              console.log("[IndexRedirect] Slug da URL com vínculo confirmado:", target);
+              go(target);
+              return;
+            }
+            console.warn("[IndexRedirect] Slug da URL sem vínculo; ignorando:", safeSlug);
           }
         }
 

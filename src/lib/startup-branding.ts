@@ -12,6 +12,7 @@ const STARTUP_BRANDING_KEY = "startup_branding_v1";
 const isSafeSlug = (value: string | null | undefined): value is string =>
   !!value && /^[a-z0-9-]+$/i.test(value) && value !== "index" && value !== "demo";
 
+/** Só white-labels com bundle id explícito. Sem VITE_NATIVE_APP_ID → sem default (evita vazar alphateam/Leandro). */
 const NATIVE_APP_DEFAULT_SLUG: Record<string, string> = {
   "app.leandro.alphacoach": "alphateam",
 };
@@ -21,12 +22,24 @@ export const readDefaultTenantSlug = (): string | null => {
   if (isSafeSlug(fromEnv)) return fromEnv;
 
   if (Capacitor.isNativePlatform()) {
-    const appId = (import.meta.env.VITE_NATIVE_APP_ID as string | undefined) || "app.leandro.alphacoach";
+    const appId = import.meta.env.VITE_NATIVE_APP_ID as string | undefined;
+    if (!appId) return null;
     const fromBundle = NATIVE_APP_DEFAULT_SLUG[appId];
     if (isSafeSlug(fromBundle)) return fromBundle;
   }
 
   return null;
+};
+
+/** Limpa memória de tenant entre contas — logout / troca de usuário. */
+export const clearSessionTenantMemory = () => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.removeItem("last_tenant_slug");
+    localStorage.removeItem(STARTUP_BRANDING_KEY);
+  } catch {
+    /* ignore */
+  }
 };
 
 export const readStartupBranding = (): StartupBranding | null => {

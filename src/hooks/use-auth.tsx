@@ -4,6 +4,7 @@ import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { supabase } from "@/integrations/supabase/client";
 import { consumeAuthRolesPrefetch } from "@/lib/auth-roles-prefetch";
+import { clearSessionTenantMemory } from "@/lib/startup-branding";
 
 export type AppRole = "admin" | "coach" | "aluno";
 
@@ -215,6 +216,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [sessionReady, session?.user?.id]);
 
   const signOut = async () => {
+    clearSessionTenantMemory();
     await supabase.auth.signOut();
   };
 
