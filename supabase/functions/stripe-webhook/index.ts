@@ -61,8 +61,7 @@ Deno.serve(async (req) => {
                 status: "active",
                 stripe_subscription_id: sub.id,
                 stripe_customer_id: sub.customer as string,
-                // @ts-ignore
-                current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+                current_period_end: getPeriodEndISO(sub),
               })
               .eq("user_id", meta.user_id!);
 
