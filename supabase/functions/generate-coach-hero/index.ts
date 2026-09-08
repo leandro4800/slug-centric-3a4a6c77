@@ -145,8 +145,11 @@ Deno.serve(async (req) => {
       return json({ error: "Não consegui ler sua foto. Envie a foto novamente." }, 400);
     }
     const refs: ReferenceImage[] = [{ url: fotoData, role: "identity" }];
+    const refs: ReferenceImage[] = [{ url: fotoData, role: "identity" }];
     if (alphaData) refs.push({ url: alphaData, role: "style" });
-    if (logoData) refs.push({ url: logoData, role: "style" });
+    // A logo do coach NÃO vai como referência: a IA sempre redesenha o desenho
+    // interno. Ela é colada pixel a pixel na imagem final (overlayLogo).
+
 
     await admin.from("coach_marketing_cards").upsert(
       {
