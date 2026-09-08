@@ -296,8 +296,7 @@ Deno.serve(async (req) => {
               stripe_subscription_id: sub.id,
               stripe_customer_id: sub.customer as string,
               status: sub.status as any,
-              // @ts-ignore
-              current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+              current_period_end: getPeriodEndISO(sub),
             },
             { onConflict: "stripe_subscription_id" }
           );
