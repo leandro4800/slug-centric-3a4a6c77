@@ -11,6 +11,15 @@ const corsHeaders = {
 const log = (s: string, d?: unknown) =>
   console.log(`[stripe-webhook] ${s}${d ? " " + JSON.stringify(d) : ""}`);
 
+function getPeriodEndISO(sub: Stripe.Subscription): string | null {
+  // @ts-ignore - campo pode não existir mais no nível da subscription nas APIs recentes
+  const topLevel = sub.current_period_end as number | undefined;
+  const itemLevel = sub.items?.data?.[0]?.current_period_end as number | undefined;
+  const raw = topLevel ?? itemLevel;
+  if (!raw || !Number.isFinite(raw)) return null;
+  return new Date(raw * 1000).toISOString();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -52,8 +61,7 @@ Deno.serve(async (req) => {
                 status: "active",
                 stripe_subscription_id: sub.id,
                 stripe_customer_id: sub.customer as string,
-                // @ts-ignore
-                current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+                current_period_end: getPeriodEndISO(sub),
               })
               .eq("user_id", meta.user_id!);
 
@@ -288,8 +296,7 @@ Deno.serve(async (req) => {
               stripe_subscription_id: sub.id,
               stripe_customer_id: sub.customer as string,
               status: sub.status as any,
-              // @ts-ignore
-              current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+              current_period_end: getPeriodEndISO(sub),
             },
             { onConflict: "stripe_subscription_id" }
           );
@@ -324,14 +331,13 @@ Deno.serve(async (req) => {
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
         // Assinatura aluno → tenant
-        await supabase
-          .from("assinaturas")
-          .update({
-            status: sub.status as any,
-            // @ts-ignore
-            current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-            cancelada_em: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
-          })
+          await supabase
+            .from("assinaturas")
+            .update({
+              status: sub.status as any,
+              current_period_end: getPeriodEndISO(sub),
+              cancelada_em: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
+            })
           .eq("stripe_subscription_id", sub.id);
 
         // Assinatura coach → plataforma
@@ -347,8 +353,7 @@ Deno.serve(async (req) => {
           .from("coach_platform_subscriptions")
           .update({
             status: platformStatus as any,
-            // @ts-ignore
-            current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+            current_period_end: getPeriodEndISO(sub),
           })
           .eq("stripe_subscription_id", sub.id);
         break;
