@@ -58,6 +58,55 @@ const json = (payload: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// Cola a logo original do coach (bytes reais, sem IA) sobre o banner gerado.
+// Blend "lighten" (max por canal) para o fundo preto da logo sumir na parede escura.
+async function overlayLogo(
+  heroBytes: Uint8Array,
+  logoDataUrl: string,
+): Promise<Uint8Array> {
+  const { Image, decode } = await import(
+    "https://deno.land/x/imagescript@1.2.17/mod.ts"
+  );
+  const hero = (await decode(heroBytes)) as InstanceType<typeof Image>;
+  const logoBytes = Uint8Array.from(
+    atob(logoDataUrl.split(",")[1]),
+    (c) => c.charCodeAt(0),
+  );
+  const logoRaw = (await decode(logoBytes)) as InstanceType<typeof Image>;
+
+  const target = Math.round(hero.height * 0.6);
+  const logo = logoRaw.clone().resize(
+    logoRaw.width >= logoRaw.height ? target : Image.RESIZE_AUTO,
+    logoRaw.width >= logoRaw.height ? Image.RESIZE_AUTO : target,
+  );
+
+  const offX = Math.round(hero.width * 0.34 - logo.width / 2);
+  const offY = Math.round(hero.height * 0.44 - logo.height / 2);
+
+  for (let y = 0; y < logo.height; y++) {
+    const hy = offY + y;
+    if (hy < 0 || hy >= hero.height) continue;
+    for (let x = 0; x < logo.width; x++) {
+      const hx = offX + x;
+      if (hx < 0 || hx >= hero.width) continue;
+      const [r, g, b, a] = Image.colorToRGBA(logo.getPixelAt(x + 1, y + 1));
+      if (a === 0) continue;
+      const [hr, hg, hb] = Image.colorToRGBA(hero.getPixelAt(hx + 1, hy + 1));
+      hero.setPixelAt(
+        hx + 1,
+        hy + 1,
+        Image.rgbaToColor(
+          Math.max(hr, r),
+          Math.max(hg, g),
+          Math.max(hb, b),
+          255,
+        ),
+      );
+    }
+  }
+  return await hero.encode(1);
+}
+
 const buildPrompt = (nome: string, temLogo: boolean) => `ABSOLUTE FACE PRESERVATION (HIGHEST PRIORITY — DO NOT VIOLATE): The face of the person in the FIRST reference image MUST be preserved with PHOTOGRAPHIC IDENTITY ACCURACY. Treat that face as a locked reference. DO NOT alter, reshape, slim, widen, smooth, beautify, age, de-age or stylize the face in any way. Preserve EXACTLY: nose shape and width, nostrils, mouth shape, lip thickness, philtrum, jawline, chin, cheekbones, eye shape and spacing, eyebrows, ears, skin tone, freckles, moles, scars, tattoos, facial hair pattern and density, hairline and haircut. IF THE PERSON IS SMILING IN THE REFERENCE PHOTO, KEEP THE EXACT SAME SMILE AND EXPRESSION — never change the facial expression. Keep their real body type and build.
 
 TASK: Create a WIDE HORIZONTAL 16:9 cinematic dashboard hero banner for the fitness coach ${nome}.
