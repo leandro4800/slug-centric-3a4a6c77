@@ -584,11 +584,34 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
             <ChartBox>
               <LineChart data={serieCarga}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="data" fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                <XAxis
+                  dataKey="i"
+                  type="number"
+                  domain={[0, Math.max(0, serieCarga.length - 1)]}
+                  allowDecimals={false}
+                  fontSize={11}
+                  stroke="hsl(var(--muted-foreground))"
+                  tickFormatter={(v: number) => serieCarga[v]?.data ?? ""}
+                />
                 <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Line type="monotone" dataKey="carga" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                <Tooltip
+                  contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                  labelFormatter={(v: number) => serieCarga[v]?.data ?? ""}
+                  formatter={(val: number, _n, item: any) => [
+                    `${val} kg × ${item?.payload?.reps ?? 0} reps`,
+                    "Carga",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="carga"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 5 }}
+                />
               </LineChart>
+
             </ChartBox>
           </Painel>
 
