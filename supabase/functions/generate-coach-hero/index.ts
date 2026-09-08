@@ -161,7 +161,7 @@ Deno.serve(async (req) => {
     let dataUrl: string;
     try {
       dataUrl = await generateImage({
-        prompt: buildPrompt(nome, Boolean(logoUrl)),
+        prompt: buildPrompt(nome, Boolean(logoData)),
         referenceImages: refs,
         aspectRatio: "16:9",
       });
