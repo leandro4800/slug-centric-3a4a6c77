@@ -3,7 +3,6 @@ import { ExternalLink } from "lucide-react";
 import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
 import { Button } from "@/components/ui/button";
 import { isIOSNativeApp } from "@/lib/native-platform";
-import { startLandscapePlayback, unlockLandscapeVideo } from "@/lib/video-orientation";
 import { openVideoExternally, resolveVideoPlayback } from "@/lib/video-embed";
 import {
   INSTAGRAM_IFRAME_ALLOW,
