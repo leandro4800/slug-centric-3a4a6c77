@@ -287,13 +287,15 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
     () =>
       cargas
         .filter((c) => c.exercicio_nome === exercicio)
-        .map((c) => ({
+        .map((c, i) => ({
+          i,
           data: fmtDate(c.data_treino),
           carga: Number(c.carga_kg) || 0,
           reps: c.repeticoes_feitas || 0,
         })),
     [cargas, exercicio],
   );
+
 
   const seriePeso = useMemo(() => {
     const fromAval = avaliacoes.map((a) => ({
