@@ -29,6 +29,29 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// O gateway às vezes não consegue baixar URLs de referência (assinadas, CDN,
+// redirects) e responde 400 URL_REJECTED. Baixamos aqui e enviamos em base64.
+async function toDataUrl(url: string): Promise<string | null> {
+  if (url.startsWith("data:")) return url;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) {
+      console.error("ref image fetch falhou", r.status, url);
+      return null;
+    }
+    const buf = new Uint8Array(await r.arrayBuffer());
+    let bin = "";
+    for (let i = 0; i < buf.length; i += 0x8000) {
+      bin += String.fromCharCode(...buf.subarray(i, i + 0x8000));
+    }
+    const mime = r.headers.get("content-type")?.split(";")[0] || "image/jpeg";
+    return `data:${mime};base64,${btoa(bin)}`;
+  } catch (e) {
+    console.error("ref image erro", url, e);
+    return null;
+  }
+}
+
 const json = (payload: unknown, status = 200) =>
   new Response(JSON.stringify(payload), {
     status,
