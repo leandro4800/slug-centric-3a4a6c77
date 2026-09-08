@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
 import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
 import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
-import { startLandscapePlayback, unlockLandscapeVideo } from "@/lib/video-orientation";
 import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 
 interface ExercisePlayerProps {
@@ -11,23 +9,13 @@ interface ExercisePlayerProps {
   showPlayButton?: boolean;
 }
 
+/**
+ * Player padrão do app: mesma lógica da Biblioteca — respeita o formato
+ * original do vídeo (vertical ou horizontal), sem rotação/paisagem forçada.
+ */
 const ExercisePlayer = ({ videoUrl, exerciseName }: ExercisePlayerProps) => {
   const ytId = extractYouTubeId(videoUrl);
   const isDirect = isDirectVideo(videoUrl);
-  const [cssLandscape, setCssLandscape] = useState(false);
-
-  useEffect(() => {
-    if (!ytId && !isDirect) return;
-    let cancelled = false;
-    void startLandscapePlayback().then((mode) => {
-      if (!cancelled && mode === "css" && ytId) setCssLandscape(true);
-    });
-    return () => {
-      cancelled = true;
-      setCssLandscape(false);
-      void unlockLandscapeVideo();
-    };
-  }, [ytId, isDirect]);
 
   if (!videoUrl) {
     return (
@@ -41,15 +29,11 @@ const ExercisePlayer = ({ videoUrl, exerciseName }: ExercisePlayerProps) => {
 
   if (ytId) {
     return (
-      <div className={cssLandscape ? "fixed inset-0 z-[400] bg-black" : "absolute inset-0"}>
+      <div className="absolute inset-0">
         <iframe
-          src={buildYouTubeEmbedUrl(ytId, { autoplay: true, mute: false, loop: true, controls: true, playsinline: false })}
+          src={buildYouTubeEmbedUrl(ytId, { autoplay: true, mute: false, loop: true, controls: true, playsinline: true })}
           title={exerciseName}
-          className={
-            cssLandscape
-              ? "absolute left-1/2 top-1/2 h-[100vw] w-[100vh] max-w-none -translate-x-1/2 -translate-y-1/2 rotate-90 border-0"
-              : "absolute inset-0 h-full w-full border-0"
-          }
+          className="absolute inset-0 h-full w-full border-0"
           allow={YOUTUBE_IFRAME_ALLOW}
           referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
           allowFullScreen
