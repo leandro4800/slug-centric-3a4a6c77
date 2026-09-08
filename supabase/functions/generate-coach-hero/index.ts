@@ -80,8 +80,8 @@ async function overlayLogo(
     logoRaw.width >= logoRaw.height ? Image.RESIZE_AUTO : target,
   );
 
-  const offX = Math.round(hero.width * 0.34 - logo.width / 2);
-  const offY = Math.round(hero.height * 0.44 - logo.height / 2);
+  const offX = Math.round(hero.width * 0.6 - logo.width / 2);
+  const offY = Math.round(hero.height * 0.4 - logo.height / 2);
 
   for (let y = 0; y < logo.height; y++) {
     const hy = offY + y;
