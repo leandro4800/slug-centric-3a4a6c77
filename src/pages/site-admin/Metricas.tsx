@@ -5,7 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { AtletaCard } from "@/pages/site-admin/MontarTreino";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Activity, Loader2, Sparkles, TrendingUp, Scale, Dumbbell, Flame } from "lucide-react";
+import { Activity, Loader2, Sparkles, TrendingUp, Scale, Dumbbell, Flame, Camera, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 interface Aluno {
@@ -121,6 +121,53 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const [depoisId, setDepoisId] = useState<string>("");
   const [analiseFotos, setAnaliseFotos] = useState<string>("");
   const [analisandoFotos, setAnalisandoFotos] = useState(false);
+  const [novaFotos, setNovaFotos] = useState<{ frente?: string; costas?: string; lado?: string }>({});
+  const [novoPeso, setNovoPeso] = useState("");
+  const [novoBf, setNovoBf] = useState("");
+  const [novaData, setNovaData] = useState(() => new Date().toISOString().slice(0, 10));
+  const [enviandoFotos, setEnviandoFotos] = useState(false);
+  const [fotosVersao, setFotosVersao] = useState(0);
+
+  const lerArquivo = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result));
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+
+  const enviarFotos = async () => {
+    if (!novaFotos.frente && !novaFotos.costas && !novaFotos.lado) {
+      toast.error("Selecione pelo menos uma foto.");
+      return;
+    }
+    setEnviandoFotos(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("coach-fotos-evolucao", {
+        body: {
+          aluno_id: alunoId,
+          action: "upload",
+          fotos: novaFotos,
+          peso_kg: novoPeso || null,
+          bf_percentual: novoBf || null,
+          data_checkin: novaData,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success("Fotos adicionadas — já aparecem no app do aluno.");
+      setNovaFotos({});
+      setNovoPeso("");
+      setNovoBf("");
+      setFotosVersao((v) => v + 1);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Não foi possível salvar as fotos: " + (e?.message || "erro"));
+    } finally {
+      setEnviandoFotos(false);
+    }
+  };
+
 
   useEffect(() => {
     (async () => {
@@ -142,7 +189,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
         setFotosLoading(false);
       }
     })();
-  }, [alunoId]);
+  }, [alunoId, fotosVersao]);
 
   const analisarFotos = async () => {
     setAnalisandoFotos(true);
@@ -240,13 +287,15 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
     () =>
       cargas
         .filter((c) => c.exercicio_nome === exercicio)
-        .map((c) => ({
+        .map((c, i) => ({
+          i,
           data: fmtDate(c.data_treino),
           carga: Number(c.carga_kg) || 0,
           reps: c.repeticoes_feitas || 0,
         })),
     [cargas, exercicio],
   );
+
 
   const seriePeso = useMemo(() => {
     const fromAval = avaliacoes.map((a) => ({
@@ -361,6 +410,75 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
       {/* Fotos de evolução (app) */}
       <div className="mb-6">
         <Painel title="Fotos de evolução do app">
+          {/* Coach adiciona fotos pelo painel — aparecem no app do aluno */}
+          <div className="mb-5 rounded-xl border border-white/10 bg-black/30 p-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Adicionar fotos deste atleta
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {(["frente", "costas", "lado"] as const).map((tipo) => (
+                <label
+                  key={tipo}
+                  className="relative flex aspect-[3/4] cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-white/10 bg-zinc-900/60 hover:border-primary/60"
+                >
+                  {novaFotos[tipo] ? (
+                    <img src={novaFotos[tipo]} alt={`Prévia ${tipo}`} className="h-full w-full object-cover" />
+                  ) : (
+                    <>
+                      <Camera className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{tipo}</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (ev) => {
+                      const file = ev.target.files?.[0];
+                      ev.target.value = "";
+                      if (!file) return;
+                      const dataUrl = await lerArquivo(file);
+                      setNovaFotos((p) => ({ ...p, [tipo]: dataUrl }));
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <input
+                type="date"
+                value={novaData}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(ev) => setNovaData(ev.target.value)}
+                className="rounded-md border border-white/10 bg-zinc-900 px-2 py-2 text-sm"
+              />
+              <input
+                type="number"
+                step="0.1"
+                placeholder="Peso (kg)"
+                value={novoPeso}
+                onChange={(ev) => setNovoPeso(ev.target.value)}
+                className="rounded-md border border-white/10 bg-zinc-900 px-2 py-2 text-sm"
+              />
+              <input
+                type="number"
+                step="0.1"
+                placeholder="%BF"
+                value={novoBf}
+                onChange={(ev) => setNovoBf(ev.target.value)}
+                className="rounded-md border border-white/10 bg-zinc-900 px-2 py-2 text-sm"
+              />
+            </div>
+            <button
+              onClick={enviarFotos}
+              disabled={enviandoFotos}
+              className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-60"
+            >
+              {enviandoFotos ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {enviandoFotos ? "Enviando..." : "Salvar fotos"}
+            </button>
+          </div>
+
           {fotosLoading ? (
             <div className="flex h-24 items-center justify-center">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
@@ -466,11 +584,34 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
             <ChartBox>
               <LineChart data={serieCarga}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="data" fontSize={11} stroke="hsl(var(--muted-foreground))" />
+                <XAxis
+                  dataKey="i"
+                  type="number"
+                  domain={[0, Math.max(0, serieCarga.length - 1)]}
+                  allowDecimals={false}
+                  fontSize={11}
+                  stroke="hsl(var(--muted-foreground))"
+                  tickFormatter={(v: number) => serieCarga[v]?.data ?? ""}
+                />
                 <YAxis fontSize={11} stroke="hsl(var(--muted-foreground))" />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }} />
-                <Line type="monotone" dataKey="carga" stroke="hsl(var(--primary))" strokeWidth={2} dot={false} />
+                <Tooltip
+                  contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))" }}
+                  labelFormatter={(v: number) => serieCarga[v]?.data ?? ""}
+                  formatter={(val: number, _n, item: any) => [
+                    `${val} kg × ${item?.payload?.reps ?? 0} reps`,
+                    "Carga",
+                  ]}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="carga"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{ r: 2 }}
+                  activeDot={{ r: 5 }}
+                />
               </LineChart>
+
             </ChartBox>
           </Painel>
 
