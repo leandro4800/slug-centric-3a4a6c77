@@ -135,11 +135,17 @@ Deno.serve(async (req) => {
       return json({ hero_url: cached.image_url, cached: true });
     }
 
-    const refs: ReferenceImage[] = [
-      { url: fotoCoach, role: "identity" },
-      { url: ALPHA_LOGO_URL, role: "style" },
-    ];
-    if (logoUrl) refs.push({ url: logoUrl, role: "style" });
+    const [fotoData, alphaData, logoData] = await Promise.all([
+      toDataUrl(fotoCoach),
+      toDataUrl(ALPHA_LOGO_URL),
+      logoUrl ? toDataUrl(logoUrl) : Promise.resolve(null),
+    ]);
+    if (!fotoData) {
+      return json({ error: "Não consegui ler sua foto. Envie a foto novamente." }, 400);
+    }
+    const refs: ReferenceImage[] = [{ url: fotoData, role: "identity" }];
+    if (alphaData) refs.push({ url: alphaData, role: "style" });
+    if (logoData) refs.push({ url: logoData, role: "style" });
 
     await admin.from("coach_marketing_cards").upsert(
       {
