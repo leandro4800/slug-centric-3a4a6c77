@@ -189,7 +189,7 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
         setFotosLoading(false);
       }
     })();
-  }, [alunoId]);
+  }, [alunoId, fotosVersao]);
 
   const analisarFotos = async () => {
     setAnalisandoFotos(true);
