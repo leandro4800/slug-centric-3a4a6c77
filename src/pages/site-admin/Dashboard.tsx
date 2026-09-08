@@ -31,6 +31,8 @@ const Dashboard = () => {
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
   const [heroBusy, setHeroBusy] = useState(false);
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const [stripeIncomplete, setStripeIncomplete] = useState(false);
+  const [stripeBusy, setStripeBusy] = useState(false);
 
 
   useEffect(() => {
