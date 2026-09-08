@@ -331,14 +331,13 @@ Deno.serve(async (req) => {
       case "customer.subscription.deleted": {
         const sub = event.data.object as Stripe.Subscription;
         // Assinatura aluno → tenant
-        await supabase
-          .from("assinaturas")
-          .update({
-            status: sub.status as any,
-            // @ts-ignore
-            current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
-            cancelada_em: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
-          })
+          await supabase
+            .from("assinaturas")
+            .update({
+              status: sub.status as any,
+              current_period_end: getPeriodEndISO(sub),
+              cancelada_em: sub.canceled_at ? new Date(sub.canceled_at * 1000).toISOString() : null,
+            })
           .eq("stripe_subscription_id", sub.id);
 
         // Assinatura coach → plataforma
