@@ -408,6 +408,75 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
       {/* Fotos de evolução (app) */}
       <div className="mb-6">
         <Painel title="Fotos de evolução do app">
+          {/* Coach adiciona fotos pelo painel — aparecem no app do aluno */}
+          <div className="mb-5 rounded-xl border border-white/10 bg-black/30 p-3">
+            <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Adicionar fotos deste atleta
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              {(["frente", "costas", "lado"] as const).map((tipo) => (
+                <label
+                  key={tipo}
+                  className="relative flex aspect-[3/4] cursor-pointer flex-col items-center justify-center gap-1 overflow-hidden rounded-lg border border-white/10 bg-zinc-900/60 hover:border-primary/60"
+                >
+                  {novaFotos[tipo] ? (
+                    <img src={novaFotos[tipo]} alt={`Prévia ${tipo}`} className="h-full w-full object-cover" />
+                  ) : (
+                    <>
+                      <Camera className="h-5 w-5 text-muted-foreground" />
+                      <span className="text-[9px] uppercase tracking-widest text-muted-foreground">{tipo}</span>
+                    </>
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (ev) => {
+                      const file = ev.target.files?.[0];
+                      ev.target.value = "";
+                      if (!file) return;
+                      const dataUrl = await lerArquivo(file);
+                      setNovaFotos((p) => ({ ...p, [tipo]: dataUrl }));
+                    }}
+                  />
+                </label>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-3 gap-2">
+              <input
+                type="date"
+                value={novaData}
+                max={new Date().toISOString().slice(0, 10)}
+                onChange={(ev) => setNovaData(ev.target.value)}
+                className="rounded-md border border-white/10 bg-zinc-900 px-2 py-2 text-sm"
+              />
+              <input
+                type="number"
+                step="0.1"
+                placeholder="Peso (kg)"
+                value={novoPeso}
+                onChange={(ev) => setNovoPeso(ev.target.value)}
+                className="rounded-md border border-white/10 bg-zinc-900 px-2 py-2 text-sm"
+              />
+              <input
+                type="number"
+                step="0.1"
+                placeholder="%BF"
+                value={novoBf}
+                onChange={(ev) => setNovoBf(ev.target.value)}
+                className="rounded-md border border-white/10 bg-zinc-900 px-2 py-2 text-sm"
+              />
+            </div>
+            <button
+              onClick={enviarFotos}
+              disabled={enviandoFotos}
+              className="mt-3 inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-bold uppercase tracking-wider text-primary-foreground disabled:opacity-60"
+            >
+              {enviandoFotos ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+              {enviandoFotos ? "Enviando..." : "Salvar fotos"}
+            </button>
+          </div>
+
           {fotosLoading ? (
             <div className="flex h-24 items-center justify-center">
               <Loader2 className="h-5 w-5 animate-spin text-primary" />
