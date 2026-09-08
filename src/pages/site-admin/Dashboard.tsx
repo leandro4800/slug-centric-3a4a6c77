@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   Users, Calendar, UserPlus, ArrowRight, Loader2, CheckCircle2,
   Dumbbell, Apple, Ruler, TrendingUp, AlertCircle, Play,
-  ShoppingBag, Crown, Flame, Camera, Sparkles, Download
+  ShoppingBag, Crown, Flame, Camera, Sparkles, Download, ExternalLink
 } from "lucide-react";
 import { saveOrShareBlob } from "@/lib/native-download";
 import imgAluno from "@/assets/dash-aluno.jpg";
@@ -31,6 +31,8 @@ const Dashboard = () => {
   const [heroUrl, setHeroUrl] = useState<string | null>(null);
   const [heroBusy, setHeroBusy] = useState(false);
   const heroInputRef = useRef<HTMLInputElement>(null);
+  const [stripeIncomplete, setStripeIncomplete] = useState(false);
+  const [stripeBusy, setStripeBusy] = useState(false);
 
 
   useEffect(() => {
@@ -76,6 +78,19 @@ const Dashboard = () => {
         nameMap = new Map((perfis || []).map((p: any) => [p.id, p.nome_completo || "Aluno"]));
       }
       setProximos((pp || []).map((p: any) => ({ id: p.id, nome: nameMap.get(p.aluno_id) || "Aluno", vence: p.current_period_end })));
+
+      // Aviso de Stripe Connect: só para tenants que não são da plataforma (alphateam)
+      if (!tenant?.is_platform_owned) {
+        const { data: tpriv } = await supabase
+          .from("tenants_private")
+          .select("stripe_onboarding_completed")
+          .eq("tenant_id", tenant.id)
+          .maybeSingle();
+        setStripeIncomplete(!!!(tpriv as any)?.stripe_onboarding_completed);
+      } else {
+        setStripeIncomplete(false);
+      }
+
       setLoading(false);
     })();
   }, [tenant?.id, user?.id]);
@@ -100,6 +115,34 @@ const Dashboard = () => {
     if (!data.session || exp * 1000 - Date.now() < 60_000) {
       const { error } = await supabase.auth.refreshSession();
       if (error) throw new Error("Sua sessão expirou. Entre novamente para continuar.");
+    }
+  };
+
+  const handleConnectStripe = async () => {
+    if (!tenant?.id) return;
+    setStripeBusy(true);
+    try {
+      await garantirSessao();
+      const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", {
+        body: { tenant_id: tenant.id, return_path: window.location.pathname },
+      });
+      if (error) {
+        const response = (error as any)?.context;
+        if (response && typeof response.clone === "function") {
+          let message = error.message;
+          try {
+            const body = await response.clone().json();
+            message = body?.error || message;
+          } catch { /* mantém a mensagem original */ }
+          throw new Error(message);
+        }
+        throw error;
+      }
+      if (!data?.url) throw new Error("URL de onboarding não retornada");
+      window.location.href = data.url;
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao iniciar onboarding Stripe.");
+      setStripeBusy(false);
     }
   };
 
@@ -274,6 +317,29 @@ const Dashboard = () => {
 
 
       <div className="px-4 md:px-8 pb-16 space-y-10 -mt-8 relative z-10 max-lg:mx-auto max-lg:w-full max-lg:max-w-4xl max-lg:px-6 max-sm:px-3 max-sm:space-y-8">
+        {/* AVISO STRIPE CONNECT */}
+        {stripeIncomplete && (
+          <div className="rounded-2xl border border-amber-500/50 bg-amber-500/10 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-start gap-3 flex-1">
+              <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-display text-sm uppercase tracking-wider text-amber-300">Conta de recebimento não configurada</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                  Seus alunos não vão conseguir assinar até você concluir o cadastro Stripe Connect. Leva ~3 minutos — dados bancários e documento.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleConnectStripe}
+              disabled={stripeBusy}
+              className="inline-flex items-center justify-center gap-2 bg-gradient-primary text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:opacity-90 transition disabled:opacity-50 shrink-0"
+            >
+              {stripeBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+              Conectar conta Stripe
+            </button>
+          </div>
+        )}
+
         {/* PRIMEIROS PASSOS */}
         <Row title="Primeiros passos" subtitle={`${stepDone}/4 concluídos`}>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

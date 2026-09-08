@@ -8,6 +8,7 @@ interface SiteTenant {
   nome: string;
   logo_url?: string | null;
   is_partner?: boolean | null;
+  is_platform_owned?: boolean | null;
   status?: string | null;
   vertical?: string | null;
 }
@@ -80,7 +81,7 @@ export const SiteTenantProvider = ({ children }: { children: ReactNode }) => {
         if (delays[i]) await new Promise((r) => setTimeout(r, delays[i]));
         const { data, error: err } = await supabase
           .from("tenants")
-          .select("id, slug, nome, logo_url, is_partner, status, vertical")
+          .select("id, slug, nome, logo_url, is_partner, is_platform_owned, status, vertical")
           .eq("owner_user_id", user.id)
           .order("created_at", { ascending: true })
           .limit(1)
