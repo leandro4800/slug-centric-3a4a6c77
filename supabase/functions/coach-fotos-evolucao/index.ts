@@ -57,7 +57,50 @@ Deno.serve(async (req) => {
 
     const lista = (checkins || []).filter((c: any) => TIPOS.some((t) => c[t]));
 
+    if (action === "upload") {
+      const fotosIn = (body.fotos || {}) as Record<string, string | null>;
+      const paths: Record<string, string | null> = {
+        foto_frente_url: null,
+        foto_costas_url: null,
+        foto_lado_url: null,
+      };
+      for (const tipo of ["frente", "costas", "lado"]) {
+        const dataUrl = fotosIn[tipo];
+        if (!dataUrl || typeof dataUrl !== "string") continue;
+        const m = dataUrl.match(/^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/);
+        if (!m) continue;
+        const mime = m[1];
+        const ext = mime.split("/")[1].replace("jpeg", "jpg");
+        const bin = Uint8Array.from(atob(m[2]), (c) => c.charCodeAt(0));
+        const path = `${alunoId}/${Date.now()}_${tipo}.${ext}`;
+        const { error: upErr } = await admin.storage
+          .from("evolucao-fotos")
+          .upload(path, bin, { contentType: mime, upsert: false });
+        if (upErr) return json({ error: `Falha ao enviar foto ${tipo}: ${upErr.message}` }, 400);
+        paths[`foto_${tipo}_url`] = path;
+      }
+
+      const temFoto = Object.values(paths).some(Boolean);
+      if (!temFoto) return json({ error: "Envie pelo menos uma foto" }, 400);
+
+      const dataCheckin = body.data_checkin
+        ? new Date(`${String(body.data_checkin).slice(0, 10)}T12:00:00`).toISOString()
+        : new Date().toISOString();
+
+      const { error: insErr } = await admin.from("evolucao_checkins").insert({
+        user_id: alunoId,
+        peso_kg: body.peso_kg != null && body.peso_kg !== "" ? Number(body.peso_kg) : null,
+        bf_percentual: body.bf_percentual != null && body.bf_percentual !== "" ? Number(body.bf_percentual) : null,
+        data_checkin: dataCheckin,
+        ...paths,
+      });
+      if (insErr) return json({ error: insErr.message }, 400);
+
+      return json({ ok: true });
+    }
+
     if (action === "list") {
+
       const out = [];
       for (const c of lista) {
         const fotos: { angulo: string; url: string }[] = [];
