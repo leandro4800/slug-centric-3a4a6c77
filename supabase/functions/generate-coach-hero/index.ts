@@ -145,7 +145,6 @@ Deno.serve(async (req) => {
       return json({ error: "Não consegui ler sua foto. Envie a foto novamente." }, 400);
     }
     const refs: ReferenceImage[] = [{ url: fotoData, role: "identity" }];
-    const refs: ReferenceImage[] = [{ url: fotoData, role: "identity" }];
     if (alphaData) refs.push({ url: alphaData, role: "style" });
     // A logo do coach NÃO vai como referência: a IA sempre redesenha o desenho
     // interno. Ela é colada pixel a pixel na imagem final (overlayLogo).
@@ -179,7 +178,15 @@ Deno.serve(async (req) => {
     }
 
     const base64 = dataUrl.split(",")[1];
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    let bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    // Cola a logo REAL do coach (cópia fiel, sem IA) na parede ao fundo.
+    if (logoData) {
+      try {
+        bytes = await overlayLogo(bytes, logoData);
+      } catch (e) {
+        console.error("overlay logo falhou", e);
+      }
+    }
     const path = `painel-hero/${tenantId ?? "global"}/${userId}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
