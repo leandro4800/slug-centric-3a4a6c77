@@ -80,18 +80,27 @@ async function overlayLogo(
     logoRaw.width >= logoRaw.height ? Image.RESIZE_AUTO : target,
   );
 
-  const offX = Math.round(hero.width * 0.6 - logo.width / 2);
+  const offX = Math.round(hero.width * 0.46 - logo.width / 2);
   const offY = Math.round(hero.height * 0.4 - logo.height / 2);
+
+  // TRAVADO: a logo é FUNDO. Nunca pode ser desenhada por cima do coach.
+  // 1) limite rígido de coluna: nada é colado na faixa direita onde o coach fica.
+  // 2) máscara por luminância: pixels claros do hero (corpo/rosto/roupa iluminados
+  //    pelo rim light) são preservados, então a logo passa "atrás" dele.
+  const maxX = Math.round(hero.width * 0.62);
+  const SUBJECT_LUM = 70;
 
   for (let y = 0; y < logo.height; y++) {
     const hy = offY + y;
     if (hy < 0 || hy >= hero.height) continue;
     for (let x = 0; x < logo.width; x++) {
       const hx = offX + x;
-      if (hx < 0 || hx >= hero.width) continue;
+      if (hx < 0 || hx >= hero.width || hx > maxX) continue;
       const [r, g, b, a] = Image.colorToRGBA(logo.getPixelAt(x + 1, y + 1));
       if (a === 0) continue;
       const [hr, hg, hb] = Image.colorToRGBA(hero.getPixelAt(hx + 1, hy + 1));
+      const lum = 0.299 * hr + 0.587 * hg + 0.114 * hb;
+      if (lum > SUBJECT_LUM) continue; // é o coach / luz — não sobrepor
       hero.setPixelAt(
         hx + 1,
         hy + 1,
