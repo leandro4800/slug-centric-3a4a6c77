@@ -35,12 +35,8 @@ export const VlogPlayerModal = ({ url, title, thumbnailUrl, onClose }: VlogPlaye
     thumbnailUrl || (playback.ytId ? buildYouTubeThumbnailUrl(playback.ytId) : null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => {
-    void startLandscapePlayback();
-    return () => {
-      void unlockLandscapeVideo();
-    };
-  }, []);
+  // Sem rotação forçada: o vídeo respeita o formato original (vertical ou horizontal).
+
 
   const handleIframeLoad = () => {
     if (!playback.isYouTube) return;
