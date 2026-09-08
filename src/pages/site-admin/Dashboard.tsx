@@ -78,6 +78,19 @@ const Dashboard = () => {
         nameMap = new Map((perfis || []).map((p: any) => [p.id, p.nome_completo || "Aluno"]));
       }
       setProximos((pp || []).map((p: any) => ({ id: p.id, nome: nameMap.get(p.aluno_id) || "Aluno", vence: p.current_period_end })));
+
+      // Aviso de Stripe Connect: só para tenants que não são da plataforma (alphateam)
+      if (!tenant?.is_platform_owned) {
+        const { data: tpriv } = await supabase
+          .from("tenants_private")
+          .select("stripe_onboarding_completed")
+          .eq("tenant_id", tenant.id)
+          .maybeSingle();
+        setStripeIncomplete(!!!(tpriv as any)?.stripe_onboarding_completed);
+      } else {
+        setStripeIncomplete(false);
+      }
+
       setLoading(false);
     })();
   }, [tenant?.id, user?.id]);
