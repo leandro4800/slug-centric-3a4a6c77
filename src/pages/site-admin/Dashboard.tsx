@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import {
   Users, Calendar, UserPlus, ArrowRight, Loader2, CheckCircle2,
   Dumbbell, Apple, Ruler, TrendingUp, AlertCircle, Play,
-  ShoppingBag, Crown, Flame, Camera, Sparkles, Download
+  ShoppingBag, Crown, Flame, Camera, Sparkles, Download, ExternalLink
 } from "lucide-react";
 import { saveOrShareBlob } from "@/lib/native-download";
 import imgAluno from "@/assets/dash-aluno.jpg";
