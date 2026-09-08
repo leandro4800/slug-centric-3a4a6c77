@@ -11,6 +11,15 @@ const corsHeaders = {
 const log = (s: string, d?: unknown) =>
   console.log(`[stripe-webhook] ${s}${d ? " " + JSON.stringify(d) : ""}`);
 
+function getPeriodEndISO(sub: Stripe.Subscription): string | null {
+  // @ts-ignore - campo pode não existir mais no nível da subscription nas APIs recentes
+  const topLevel = sub.current_period_end as number | undefined;
+  const itemLevel = sub.items?.data?.[0]?.current_period_end as number | undefined;
+  const raw = topLevel ?? itemLevel;
+  if (!raw || !Number.isFinite(raw)) return null;
+  return new Date(raw * 1000).toISOString();
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
