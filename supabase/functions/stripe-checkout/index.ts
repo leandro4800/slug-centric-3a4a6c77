@@ -102,7 +102,7 @@ Deno.serve(async (req) => {
       if (!plano_id) throw new Error("plano_id required");
       const { data: plano, error: planoErr } = await supabase
         .from("planos")
-        .select("*, tenants!inner(id,slug,nome,status,is_partner)")
+        .select("*, tenants!inner(id,slug,nome,status,is_partner,is_platform_owned)")
         .eq("id", plano_id)
         .eq("ativo", true)
         .maybeSingle();
@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
     const isPartner = !!tenant_to_use.is_partner;
 
     if (tenant_to_use.status !== "approved") throw new Error("tenant not approved");
-    const isPlatformOwned = !tenant_to_use.stripe_account_id;
+    const isPlatformOwned = !!tenant_to_use.is_platform_owned;
     if (!isPlatformOwned && !tenant_to_use.stripe_onboarding_completed) {
       throw new Error("Coach ainda não concluiu o cadastro Stripe Connect para receber pagamentos.");
     }
