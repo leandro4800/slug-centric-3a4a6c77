@@ -58,6 +58,55 @@ const json = (payload: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// Cola a logo original do coach (bytes reais, sem IA) sobre o banner gerado.
+// Blend "lighten" (max por canal) para o fundo preto da logo sumir na parede escura.
+async function overlayLogo(
+  heroBytes: Uint8Array,
+  logoDataUrl: string,
+): Promise<Uint8Array> {
+  const { Image, decode } = await import(
+    "https://deno.land/x/imagescript@1.2.17/mod.ts"
+  );
+  const hero = (await decode(heroBytes)) as InstanceType<typeof Image>;
+  const logoBytes = Uint8Array.from(
+    atob(logoDataUrl.split(",")[1]),
+    (c) => c.charCodeAt(0),
+  );
+  const logoRaw = (await decode(logoBytes)) as InstanceType<typeof Image>;
+
+  const target = Math.round(hero.height * 0.6);
+  const logo = logoRaw.clone().resize(
+    logoRaw.width >= logoRaw.height ? target : Image.RESIZE_AUTO,
+    logoRaw.width >= logoRaw.height ? Image.RESIZE_AUTO : target,
+  );
+
+  const offX = Math.round(hero.width * 0.34 - logo.width / 2);
+  const offY = Math.round(hero.height * 0.44 - logo.height / 2);
+
+  for (let y = 0; y < logo.height; y++) {
+    const hy = offY + y;
+    if (hy < 0 || hy >= hero.height) continue;
+    for (let x = 0; x < logo.width; x++) {
+      const hx = offX + x;
+      if (hx < 0 || hx >= hero.width) continue;
+      const [r, g, b, a] = Image.colorToRGBA(logo.getPixelAt(x + 1, y + 1));
+      if (a === 0) continue;
+      const [hr, hg, hb] = Image.colorToRGBA(hero.getPixelAt(hx + 1, hy + 1));
+      hero.setPixelAt(
+        hx + 1,
+        hy + 1,
+        Image.rgbaToColor(
+          Math.max(hr, r),
+          Math.max(hg, g),
+          Math.max(hb, b),
+          255,
+        ),
+      );
+    }
+  }
+  return await hero.encode(1);
+}
+
 const buildPrompt = (nome: string, temLogo: boolean) => `ABSOLUTE FACE PRESERVATION (HIGHEST PRIORITY — DO NOT VIOLATE): The face of the person in the FIRST reference image MUST be preserved with PHOTOGRAPHIC IDENTITY ACCURACY. Treat that face as a locked reference. DO NOT alter, reshape, slim, widen, smooth, beautify, age, de-age or stylize the face in any way. Preserve EXACTLY: nose shape and width, nostrils, mouth shape, lip thickness, philtrum, jawline, chin, cheekbones, eye shape and spacing, eyebrows, ears, skin tone, freckles, moles, scars, tattoos, facial hair pattern and density, hairline and haircut. IF THE PERSON IS SMILING IN THE REFERENCE PHOTO, KEEP THE EXACT SAME SMILE AND EXPRESSION — never change the facial expression. Keep their real body type and build.
 
 TASK: Create a WIDE HORIZONTAL 16:9 cinematic dashboard hero banner for the fitness coach ${nome}.
@@ -65,8 +114,9 @@ TASK: Create a WIDE HORIZONTAL 16:9 cinematic dashboard hero banner for the fitn
 COMPOSITION:
 - The coach from the FIRST reference image is anchored at the FAR RIGHT EDGE of the frame, directly below the download icon area, LARGE and PROMINENT (cropped from mid-thigh/waist up), arms crossed, direct gaze at camera, cinematic rim lighting. Shift the coach horizontally to the RIGHT so the body occupies the far-right empty space; do not place the coach in the center or extend the body toward the left. Keep the coach's existing size unchanged. POSITION THE COACH LOW IN THE FRAME: the coach's body sits in the LOWER portion of the banner so it appears directly above the bottom edge of the hero (right above the UI row that reads "x/4 concluidos" just below this banner). Do NOT push the coach up to the top edge — keep the head well below the top of the frame so the coach is never hidden behind the dashboard's top text and stat cards. The coach must be fully visible IN FRONT of the dashboard's stat cards, never hidden behind them.
 - He/she wears a plain fitted dark athletic t-shirt with NO name and NO text printed on it. The SECOND reference image is the ALPHA COACH PRO logo (silver/red triangular "AC" emblem with the words ALPHA COACH PRO): render that exact logo SMALL and DISCREET on the LEFT CHEST of the t-shirt (viewer's right side of the chest), like an embroidered team crest — correct proportions, correct letters, subtly following the fabric folds and lighting. Do not put any other text on the shirt.
-- BACKGROUND: a moody dark gym / studio with dramatic light beams, subtle haze and deep shadows.${temLogo ? `\n- ABSOLUTE LOGO PRESERVATION (HIGHEST PRIORITY, SAME LEVEL AS FACE PRESERVATION): The THIRD reference image is the COACH'S OWN LOGO (exclusive to this coach). Reproduce it as an EXACT PIXEL-FAITHFUL COPY of that reference image — treat it as a locked asset that must be copied, never re-drawn, never re-imagined, never re-illustrated. Preserve EXACTLY every element inside it: all characters, mascots, human or animal figures drawn inside the logo, their poses, faces and proportions, every letter and word with identical spelling, identical typeface, identical letter spacing, identical colors, identical outlines, identical internal shapes and negative space, identical overall silhouette and aspect ratio. DO NOT simplify, stylize, redesign, restyle, re-letter, recolor, add or remove any element, and DO NOT turn drawn figures into different characters. If any detail is unclear, copy the reference literally rather than inventing.\n- Place that logo on the back wall directly BEHIND the coach, immediately behind the coach's head and shoulders, nearly touching them. Keep the same size as before (do not enlarge), FULLY VISIBLE inside the frame with no edge cropped and with the whole artwork readable — the coach's body may only slightly overlap its lower edge, never covering the drawn figure or the lettering. It reads as a brand emblem mounted on the wall, lit by the scene, but flat and undistorted (no perspective warping, no 3D remodeling, no reflections that alter its shapes). NEVER place the ALPHA COACH PRO logo on the wall or anywhere in the background — the Alpha Coach Pro emblem appears ONLY as the small crest on the coach's chest.` : ""}
-- Only the LEFT EDGE of the frame (a narrow vertical vertical strip) must stay visually calm and darker (negative space) so that UI text can be overlaid on top of it; the rest of the left area is filled by the coach's own logo.
+- BACKGROUND: a moody dark gym / studio with dramatic light beams, subtle haze and deep shadows.${temLogo ? `\n- IMPORTANT: leave the back wall on the LEFT-CENTER area, immediately behind the coach's head and shoulders, as a CLEAN, EMPTY, DARK wall surface (no posters, no signs, no letters, no emblems, no equipment) — a real logo will be placed there afterwards. Do NOT draw, invent or render ANY logo, badge, circle emblem or brand mark anywhere in the background.` : ""}
+- NEVER place the ALPHA COACH PRO logo on the wall or anywhere in the background — the Alpha Coach Pro emblem appears ONLY as the small crest on the coach's chest.
+- Only the LEFT EDGE of the frame (a narrow vertical strip) must stay visually calm and darker (negative space) so that UI text can be overlaid on top of it.
 - Smooth dark gradient fading on the left and bottom edges so the banner blends into a dark interface.
 
 STYLE: premium, cinematic, high-contrast, sharp photographic realism, editorial fitness campaign look. No extra text, no watermarks, no captions, no logos other than the Alpha Coach Pro chest crest and the coach's own logo, no borders.`;
@@ -145,7 +195,9 @@ Deno.serve(async (req) => {
     }
     const refs: ReferenceImage[] = [{ url: fotoData, role: "identity" }];
     if (alphaData) refs.push({ url: alphaData, role: "style" });
-    if (logoData) refs.push({ url: logoData, role: "style" });
+    // A logo do coach NÃO vai como referência: a IA sempre redesenha o desenho
+    // interno. Ela é colada pixel a pixel na imagem final (overlayLogo).
+
 
     await admin.from("coach_marketing_cards").upsert(
       {
@@ -175,7 +227,15 @@ Deno.serve(async (req) => {
     }
 
     const base64 = dataUrl.split(",")[1];
-    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    let bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    // Cola a logo REAL do coach (cópia fiel, sem IA) na parede ao fundo.
+    if (logoData) {
+      try {
+        bytes = await overlayLogo(bytes, logoData);
+      } catch (e) {
+        console.error("overlay logo falhou", e);
+      }
+    }
     const path = `painel-hero/${tenantId ?? "global"}/${userId}-${Date.now()}.png`;
     const { error: upErr } = await admin.storage
       .from("avatars")
