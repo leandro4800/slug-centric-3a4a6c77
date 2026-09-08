@@ -317,6 +317,29 @@ const Dashboard = () => {
 
 
       <div className="px-4 md:px-8 pb-16 space-y-10 -mt-8 relative z-10 max-lg:mx-auto max-lg:w-full max-lg:max-w-4xl max-lg:px-6 max-sm:px-3 max-sm:space-y-8">
+        {/* AVISO STRIPE CONNECT */}
+        {stripeIncomplete && (
+          <div className="rounded-2xl border border-amber-500/50 bg-amber-500/10 p-5 flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex items-start gap-3 flex-1">
+              <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-display text-sm uppercase tracking-wider text-amber-300">Conta de recebimento não configurada</p>
+                <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                  Seus alunos não vão conseguir assinar até você concluir o cadastro Stripe Connect. Leva ~3 minutos — dados bancários e documento.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={handleConnectStripe}
+              disabled={stripeBusy}
+              className="inline-flex items-center justify-center gap-2 bg-gradient-primary text-white px-5 py-2.5 font-bold uppercase tracking-wider text-xs hover:opacity-90 transition disabled:opacity-50 shrink-0"
+            >
+              {stripeBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <ExternalLink className="h-4 w-4" />}
+              Conectar conta Stripe
+            </button>
+          </div>
+        )}
+
         {/* PRIMEIROS PASSOS */}
         <Row title="Primeiros passos" subtitle={`${stepDone}/4 concluídos`}>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
