@@ -5,7 +5,7 @@ import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { AtletaCard } from "@/pages/site-admin/MontarTreino";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { Activity, Loader2, Sparkles, TrendingUp, Scale, Dumbbell, Flame } from "lucide-react";
+import { Activity, Loader2, Sparkles, TrendingUp, Scale, Dumbbell, Flame, Camera, Upload } from "lucide-react";
 import { toast } from "sonner";
 
 interface Aluno {
