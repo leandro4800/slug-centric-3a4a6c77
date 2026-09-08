@@ -640,7 +640,7 @@ const Perfil = () => {
             </div>
           </Link>
 
-          <Link
+          {/* <Link
             to={`/${slug}/app/clinica`}
             className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border hover:border-primary/50 transition-all group"
           >
@@ -651,7 +651,8 @@ const Perfil = () => {
               <p className="font-display text-sm uppercase leading-tight break-words group-hover:text-primary transition-colors">Clínica</p>
               <p className="text-[10px] text-muted-foreground mt-0.5">Leitura e envio de exames</p>
             </div>
-          </Link>
+          </Link> */}
+
 
         </div>
       </section>
