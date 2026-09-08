@@ -353,8 +353,7 @@ Deno.serve(async (req) => {
           .from("coach_platform_subscriptions")
           .update({
             status: platformStatus as any,
-            // @ts-ignore
-            current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+            current_period_end: getPeriodEndISO(sub),
           })
           .eq("stripe_subscription_id", sub.id);
         break;
