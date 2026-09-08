@@ -118,6 +118,34 @@ const Dashboard = () => {
     }
   };
 
+  const handleConnectStripe = async () => {
+    if (!tenant?.id) return;
+    setStripeBusy(true);
+    try {
+      await garantirSessao();
+      const { data, error } = await supabase.functions.invoke("stripe-connect-onboard", {
+        body: { tenant_id: tenant.id, return_path: window.location.pathname },
+      });
+      if (error) {
+        const response = (error as any)?.context;
+        if (response && typeof response.clone === "function") {
+          let message = error.message;
+          try {
+            const body = await response.clone().json();
+            message = body?.error || message;
+          } catch { /* mantém a mensagem original */ }
+          throw new Error(message);
+        }
+        throw error;
+      }
+      if (!data?.url) throw new Error("URL de onboarding não retornada");
+      window.location.href = data.url;
+    } catch (e: any) {
+      toast.error(e?.message || "Erro ao iniciar onboarding Stripe.");
+      setStripeBusy(false);
+    }
+  };
+
   const gerarHero = async (force: boolean) => {
     if (!user?.id) return;
     setHeroBusy(true);
