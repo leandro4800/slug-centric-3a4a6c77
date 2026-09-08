@@ -121,6 +121,53 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
   const [depoisId, setDepoisId] = useState<string>("");
   const [analiseFotos, setAnaliseFotos] = useState<string>("");
   const [analisandoFotos, setAnalisandoFotos] = useState(false);
+  const [novaFotos, setNovaFotos] = useState<{ frente?: string; costas?: string; lado?: string }>({});
+  const [novoPeso, setNovoPeso] = useState("");
+  const [novoBf, setNovoBf] = useState("");
+  const [novaData, setNovaData] = useState(() => new Date().toISOString().slice(0, 10));
+  const [enviandoFotos, setEnviandoFotos] = useState(false);
+  const [fotosVersao, setFotosVersao] = useState(0);
+
+  const lerArquivo = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const fr = new FileReader();
+      fr.onload = () => resolve(String(fr.result));
+      fr.onerror = reject;
+      fr.readAsDataURL(file);
+    });
+
+  const enviarFotos = async () => {
+    if (!novaFotos.frente && !novaFotos.costas && !novaFotos.lado) {
+      toast.error("Selecione pelo menos uma foto.");
+      return;
+    }
+    setEnviandoFotos(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("coach-fotos-evolucao", {
+        body: {
+          aluno_id: alunoId,
+          action: "upload",
+          fotos: novaFotos,
+          peso_kg: novoPeso || null,
+          bf_percentual: novoBf || null,
+          data_checkin: novaData,
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success("Fotos adicionadas — já aparecem no app do aluno.");
+      setNovaFotos({});
+      setNovoPeso("");
+      setNovoBf("");
+      setFotosVersao((v) => v + 1);
+    } catch (e: any) {
+      console.error(e);
+      toast.error("Não foi possível salvar as fotos: " + (e?.message || "erro"));
+    } finally {
+      setEnviandoFotos(false);
+    }
+  };
+
 
   useEffect(() => {
     (async () => {
