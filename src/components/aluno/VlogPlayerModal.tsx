@@ -1,9 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { ExternalLink } from "lucide-react";
 import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
 import { Button } from "@/components/ui/button";
 import { isIOSNativeApp } from "@/lib/native-platform";
-import { startLandscapePlayback, unlockLandscapeVideo } from "@/lib/video-orientation";
 import { openVideoExternally, resolveVideoPlayback } from "@/lib/video-embed";
 import {
   INSTAGRAM_IFRAME_ALLOW,
@@ -35,12 +34,8 @@ export const VlogPlayerModal = ({ url, title, thumbnailUrl, onClose }: VlogPlaye
     thumbnailUrl || (playback.ytId ? buildYouTubeThumbnailUrl(playback.ytId) : null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
-  useEffect(() => {
-    void startLandscapePlayback();
-    return () => {
-      void unlockLandscapeVideo();
-    };
-  }, []);
+  // Sem rotação forçada: o vídeo respeita o formato original (vertical ou horizontal).
+
 
   const handleIframeLoad = () => {
     if (!playback.isYouTube) return;
