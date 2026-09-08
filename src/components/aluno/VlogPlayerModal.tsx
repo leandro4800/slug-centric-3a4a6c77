@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { ExternalLink } from "lucide-react";
 import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
 import { Button } from "@/components/ui/button";
