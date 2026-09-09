@@ -530,7 +530,7 @@ const AdminMontarTreino = () => {
           setPendingReview(true);
           toast.info(`Treino avulso carregado (${carregados.length} exercícios).`);
         } else {
-          setExercicios([]);
+          restaurarRascunho();
         }
       } else {
         const { data: tp } = await supabase
