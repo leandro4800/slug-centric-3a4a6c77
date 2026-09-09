@@ -194,7 +194,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       supabase
         .from("treinos_prescritos")
         .select(
-          "id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao",
+          "id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao, tecnica_avancada",
         )
         .eq("aluno_id", alunoId)
         .eq("tenant_id", tenant.id)
