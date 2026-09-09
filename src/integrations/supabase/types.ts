@@ -2159,6 +2159,46 @@ export type Database = {
           },
         ]
       }
+      dicionario_tecnicas_ocultas: {
+        Row: {
+          created_at: string
+          tecnica_id: string
+          tenant_id: string
+        }
+        Insert: {
+          created_at?: string
+          tecnica_id: string
+          tenant_id: string
+        }
+        Update: {
+          created_at?: string
+          tecnica_id?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dicionario_tecnicas_ocultas_tecnica_id_fkey"
+            columns: ["tecnica_id"]
+            isOneToOne: false
+            referencedRelation: "dicionario_tecnicas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dicionario_tecnicas_ocultas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dicionario_tecnicas_ocultas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       dietas: {
         Row: {
           analise_id: string | null

@@ -23,12 +23,21 @@ export const useTecnicasAvancadas = (tenantId?: string | null) => {
   const [tecnicas, setTecnicas] = useState<TecnicaAvancada[]>([]);
 
   const load = async () => {
-    const { data } = await (supabase as any)
-      .from("dicionario_tecnicas")
-      .select("id, nome, descricao, video_explicativo, tenant_id")
-      .order("nome");
+    const [{ data }, { data: ocultas }] = await Promise.all([
+      (supabase as any)
+        .from("dicionario_tecnicas")
+        .select("id, nome, descricao, video_explicativo, tenant_id")
+        .order("nome"),
+      tenantId
+        ? (supabase as any)
+            .from("dicionario_tecnicas_ocultas")
+            .select("tecnica_id")
+            .eq("tenant_id", tenantId)
+        : Promise.resolve({ data: [] }),
+    ]);
+    const idsOcultos = new Set(((ocultas as Array<{ tecnica_id: string }>) || []).map((item) => item.tecnica_id));
     const rows = ((data as TecnicaAvancada[]) || []).filter(
-      (t) => !t.tenant_id || t.tenant_id === tenantId
+      (t) => (!t.tenant_id || t.tenant_id === tenantId) && !idsOcultos.has(t.id)
     );
     // Técnica do tenant tem prioridade sobre a global de mesmo nome
     const map = new Map<string, TecnicaAvancada>();
@@ -238,15 +247,20 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
   };
 
   const excluirTecnica = async () => {
-    if (!editando || editando.tenant_id !== tenantId || !tenantId) return;
+    if (!editando || !tenantId) return;
     if (!window.confirm(`Excluir a técnica “${editando.nome}”?`)) return;
     setSalvandoEdicao(true);
     try {
-      const { error } = await (supabase as any)
-        .from("dicionario_tecnicas")
-        .delete()
-        .eq("id", editando.id)
-        .eq("tenant_id", tenantId);
+      const operacao = editando.tenant_id === tenantId
+        ? (supabase as any)
+            .from("dicionario_tecnicas")
+            .delete()
+            .eq("id", editando.id)
+            .eq("tenant_id", tenantId)
+        : (supabase as any)
+            .from("dicionario_tecnicas_ocultas")
+            .insert({ tenant_id: tenantId, tecnica_id: editando.id });
+      const { error } = await operacao;
       if (error) throw error;
       if (norm(value || "") === norm(editando.nome)) onChange("");
       await onReload();
@@ -380,7 +394,7 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
               </p>
             )}
             <div className="flex items-center justify-between gap-2">
-              {editando?.tenant_id === tenantId ? (
+              {editando ? (
                 <Button
                   type="button"
                   variant="ghost"
