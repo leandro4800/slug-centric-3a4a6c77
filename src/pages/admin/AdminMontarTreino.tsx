@@ -2201,14 +2201,8 @@ const AdminMontarTreino = () => {
                   )}
                 <div
                   key={dia}
-                  className="group relative overflow-hidden rounded-xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-white/10 hover:border-primary/70 transition-all duration-500 hover:scale-[1.015] hover:shadow-[0_25px_70px_-18px_hsl(var(--primary)/0.6)]"
+                  className="relative overflow-hidden rounded-xl bg-gradient-to-b from-zinc-900 via-zinc-950 to-black border border-white/10"
                 >
-                  {/* Aura vermelha no hover */}
-                  <div className="pointer-events-none absolute -inset-px rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(ellipse_at_top,hsl(var(--primary)/0.22),transparent_65%)]" />
-                  {/* Varredura de luz (shine) ao passar o mouse */}
-                  <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
-                    <div className="absolute inset-y-0 -left-1/2 w-1/2 translate-x-[-200%] group-hover:translate-x-[400%] transition-transform duration-1000 ease-out bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-20deg]" />
-                  </div>
                   {/* Capa estilo pôster Netflix */}
                   <div className="relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-zinc-800/70 via-zinc-950 to-black" />

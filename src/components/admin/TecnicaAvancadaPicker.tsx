@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronDown, PlayCircle, Plus, Video } from "lucide-react";
+import { ChevronDown, Pencil, PlayCircle, Plus, Trash2, Video } from "lucide-react";
 import ExercisePlayer from "@/components/aluno/ExercisePlayer";
 import { toast } from "sonner";
 
@@ -167,6 +167,10 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState("");
   const [criando, setCriando] = useState(false);
+  const [editando, setEditando] = useState<TecnicaAvancada | null>(null);
+  const [nomeEdicao, setNomeEdicao] = useState("");
+  const [descricaoEdicao, setDescricaoEdicao] = useState("");
+  const [salvandoEdicao, setSalvandoEdicao] = useState(false);
 
   const q = norm(busca);
   const lista = q ? tecnicas.filter((t) => norm(`${t.nome} ${t.descricao || ""}`).includes(q)) : tecnicas;
@@ -190,6 +194,68 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
       toast.error(e.message || "Não foi possível cadastrar a técnica.");
     } finally {
       setCriando(false);
+    }
+  };
+
+  const abrirEdicao = (tecnica: TecnicaAvancada) => {
+    setEditando(tecnica);
+    setNomeEdicao(tecnica.nome);
+    setDescricaoEdicao(tecnica.descricao || "");
+    setOpen(false);
+  };
+
+  const salvarEdicao = async () => {
+    const nome = nomeEdicao.trim();
+    if (!editando || !tenantId || !nome) return;
+    setSalvandoEdicao(true);
+    try {
+      const descricao = descricaoEdicao.trim() || null;
+      if (editando.tenant_id === tenantId) {
+        const { error } = await (supabase as any)
+          .from("dicionario_tecnicas")
+          .update({ nome, descricao })
+          .eq("id", editando.id)
+          .eq("tenant_id", tenantId);
+        if (error) throw error;
+      } else {
+        const { error } = await (supabase as any).from("dicionario_tecnicas").insert({
+          nome,
+          descricao,
+          video_explicativo: editando.video_explicativo,
+          tenant_id: tenantId,
+        });
+        if (error) throw error;
+      }
+      if (norm(value || "") === norm(editando.nome)) onChange(nome);
+      await onReload();
+      setEditando(null);
+      toast.success("Técnica atualizada.");
+    } catch (e: any) {
+      toast.error(e.message || "Não foi possível atualizar a técnica.");
+    } finally {
+      setSalvandoEdicao(false);
+    }
+  };
+
+  const excluirTecnica = async () => {
+    if (!editando || editando.tenant_id !== tenantId || !tenantId) return;
+    if (!window.confirm(`Excluir a técnica “${editando.nome}”?`)) return;
+    setSalvandoEdicao(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("dicionario_tecnicas")
+        .delete()
+        .eq("id", editando.id)
+        .eq("tenant_id", tenantId);
+      if (error) throw error;
+      if (norm(value || "") === norm(editando.nome)) onChange("");
+      await onReload();
+      setEditando(null);
+      toast.success("Técnica excluída.");
+    } catch (e: any) {
+      toast.error(e.message || "Não foi possível excluir a técnica.");
+    } finally {
+      setSalvandoEdicao(false);
     }
   };
 
@@ -242,21 +308,33 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
               </li>
             )}
             {lista.map((t) => (
-              <li key={t.id}>
-                <button
+              <li key={t.id} className="flex items-center gap-1 pr-1">
+                <Button
                   type="button"
+                  variant="ghost"
                   onClick={() => {
                     onChange(t.nome);
                     setOpen(false);
                     setBusca("");
                   }}
-                  className="w-full text-left px-3 py-2 hover:bg-primary/10 flex items-center justify-between gap-2"
+                  className="h-auto min-w-0 flex-1 justify-start rounded-none px-3 py-2 hover:bg-primary/10"
                 >
                   <span className="text-xs truncate flex items-center gap-1.5">
                     {t.video_explicativo && <Video className="h-3 w-3 text-emerald-400 shrink-0" />}
                     {t.nome}
                   </span>
-                </button>
+                </Button>
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
+                  onClick={() => abrirEdicao(t)}
+                  title="Editar técnica"
+                  aria-label={`Editar ${t.nome}`}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
               </li>
             ))}
           </ul>
@@ -279,6 +357,47 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
       {selecionada && (
         <TecnicaVideoButton tecnica={selecionada} tenantId={tenantId} onSaved={onReload} />
       )}
+
+      <Dialog open={!!editando} onOpenChange={(aberto) => !aberto && setEditando(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-display uppercase tracking-wider text-base">
+              Editar técnica avançada
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Nome</p>
+              <Input value={nomeEdicao} onChange={(e) => setNomeEdicao(e.target.value)} />
+            </div>
+            <div className="space-y-1.5">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Descrição</p>
+              <Input value={descricaoEdicao} onChange={(e) => setDescricaoEdicao(e.target.value)} />
+            </div>
+            {editando?.tenant_id !== tenantId && (
+              <p className="text-xs text-muted-foreground">
+                Ao salvar, esta técnica padrão será personalizada somente para este coach.
+              </p>
+            )}
+            <div className="flex items-center justify-between gap-2">
+              {editando?.tenant_id === tenantId ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-destructive hover:text-destructive"
+                  onClick={excluirTecnica}
+                  disabled={salvandoEdicao}
+                >
+                  <Trash2 className="mr-1.5 h-4 w-4" /> Excluir
+                </Button>
+              ) : <span />}
+              <Button type="button" onClick={salvarEdicao} disabled={salvandoEdicao || !nomeEdicao.trim()}>
+                Salvar
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
