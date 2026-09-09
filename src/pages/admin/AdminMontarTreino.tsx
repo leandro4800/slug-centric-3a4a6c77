@@ -958,6 +958,17 @@ const AdminMontarTreino = () => {
       return prev.map((e) => (e.dia_semana === oldName ? { ...e, dia_semana: trimmed } : e));
     });
   };
+  // Move um dia inteiro para outra posição na semana (1 = primeiro)
+  const moveDiaPara = (dia: string, novaPos: number) => {
+    setExercicios((prev) => {
+      const ordem = [...new Set(prev.map((e) => e.dia_semana))];
+      const idx = ordem.indexOf(dia);
+      const alvo = Math.max(0, Math.min(ordem.length - 1, novaPos - 1));
+      if (idx < 0 || alvo === idx) return prev;
+      ordem.splice(alvo, 0, ordem.splice(idx, 1)[0]);
+      return ordem.flatMap((d) => prev.filter((e) => e.dia_semana === d));
+    });
+  };
   const reindexOrdem = (list: ExercicioPrescrito[]) => {
     const counters: Record<string, number> = {};
     return list.map((e) => {
