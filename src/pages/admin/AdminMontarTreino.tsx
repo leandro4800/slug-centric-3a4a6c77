@@ -339,6 +339,18 @@ const AdminMontarTreino = () => {
   const isFight = String((tenant as any)?.vertical || "") === "fight";
   const [modalidadeLuta, setModalidadeLuta] = useState<string>("bjj");
 
+  // Rascunho local do treino em montagem (não some ao sair da tela antes de publicar)
+  const draftKey = alunoId ? `montar-treino-draft:${tenant?.id || ""}:${alunoId}` : "";
+  const lerRascunho = () => {
+    if (!draftKey) return null;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+
 
   useEffect(() => {
     if (!tenant) return;
