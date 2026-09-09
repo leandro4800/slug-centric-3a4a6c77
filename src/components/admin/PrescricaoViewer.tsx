@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
+import { TecnicaAvancadaPicker, useTecnicasAvancadas } from "@/components/admin/TecnicaAvancadaPicker";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 import { resolveExercicioIds, linkIdPara } from "@/lib/exerciseLink";
 import { toast } from "sonner";
@@ -54,6 +55,7 @@ interface TreinoRow {
   cadencia: string | null;
   observacao: string | null;
   detalhes_execucao: string | null;
+  tecnica_avancada?: string | null;
 }
 
 interface DietaRow {
@@ -193,7 +195,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       supabase
         .from("treinos_prescritos")
         .select(
-          "id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao",
+          "id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao, tecnica_avancada",
         )
         .eq("aluno_id", alunoId)
         .eq("tenant_id", tenant.id)
@@ -817,6 +819,7 @@ interface TreinoEditItem {
   cadencia: string;
   detalhes_execucao: string;
   observacao: string;
+  tecnica_avancada: string;
 }
 
 interface BibliotecaExercicio {
@@ -993,6 +996,7 @@ const TreinoEditor = ({
   const [saving, setSaving] = useState(false);
   const [items, setItems] = useState<TreinoEditItem[]>([]);
   const [biblioteca, setBiblioteca] = useState<BibliotecaExercicio[]>([]);
+  const { tecnicas, reloadTecnicas } = useTecnicasAvancadas(tenantId);
 
   useEffect(() => {
     void (async () => {
@@ -1057,6 +1061,7 @@ const TreinoEditor = ({
       cadencia: t.cadencia || "",
       detalhes_execucao: t.detalhes_execucao || "",
       observacao: t.observacao || "",
+      tecnica_avancada: (t as any).tecnica_avancada || "",
     }));
 
   useEffect(() => {
@@ -1124,6 +1129,7 @@ const TreinoEditor = ({
         cadencia: "",
         detalhes_execucao: "",
         observacao: "",
+        tecnica_avancada: "",
       };
       if (lastIdx === undefined) return [...prev, novo];
       const arr = [...prev];
@@ -1149,6 +1155,7 @@ const TreinoEditor = ({
         cadencia: "",
         detalhes_execucao: "",
         observacao: "",
+        tecnica_avancada: "",
       },
     ]);
   };
@@ -1217,6 +1224,7 @@ const TreinoEditor = ({
           cadencia: i.cadencia || null,
           detalhes_execucao: i.detalhes_execucao || null,
           observacao: i.observacao || null,
+          tecnica_avancada: i.tecnica_avancada || null,
           referencia_exercicio_id: linkIdPara(linkMap, i.exercicio),
         };
       });
@@ -1507,6 +1515,17 @@ const TreinoEditor = ({
                           value={e.observacao}
                           onChange={(ev) => updateItem(e._key, { observacao: ev.target.value })}
                           placeholder="PSE, ponto fraco, foco..."
+                        />
+                      </div>
+
+                      <div>
+                        <Label className="text-[10px] uppercase">Técnica avançada</Label>
+                        <TecnicaAvancadaPicker
+                          value={e.tecnica_avancada || ""}
+                          tenantId={tenantId}
+                          tecnicas={tecnicas}
+                          onChange={(v) => updateItem(e._key, { tecnica_avancada: v })}
+                          onReload={reloadTecnicas}
                         />
                       </div>
                     </div>
