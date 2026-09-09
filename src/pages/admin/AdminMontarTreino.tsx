@@ -330,7 +330,7 @@ const AdminMontarTreino = () => {
   const [divisaoSelecionadaId, setDivisaoSelecionadaId] = useState<string>("");
   const [divisaoCustom, setDivisaoCustom] = useState<string[]>([]);
   const [estimulosExtras, setEstimulosExtras] = useState<string[]>([]);
-  const [biblioteca, setBiblioteca] = useState<Array<{ id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null }>>([]);
+  const [biblioteca, setBiblioteca] = useState<Array<{ id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null; descricao?: string | null }>>([]);
   const { tecnicas, reloadTecnicas } = useTecnicasAvancadas(tenant?.id);
   // === MODO AVANÇADO (edição livre da divisão antes de gerar com IA) ===
   const [modoAvancado, setModoAvancado] = useState(false);
@@ -379,7 +379,7 @@ const AdminMontarTreino = () => {
           .eq("tenant_id", tenant.id),
         supabase
           .from("referencia_exercicios")
-          .select("id, nome_exercicio, grupamento_muscular, url_video"),
+          .select("id, nome_exercicio, grupamento_muscular, url_video, descricao"),
       ]);
       const bib = ((bibRes.data as any[]) || []).map((b) => ({
         id: b.id,
@@ -387,6 +387,7 @@ const AdminMontarTreino = () => {
         grupo_muscular: b.grupo_muscular || "",
         video_url: b.video_url,
         video_coach_url: b.video_coach_url,
+        descricao: null as string | null,
       }));
       const ref = ((refRes.data as any[]) || []).map((r) => ({
         id: r.id,
@@ -394,6 +395,7 @@ const AdminMontarTreino = () => {
         grupo_muscular: r.grupamento_muscular || "",
         video_url: r.url_video,
         video_coach_url: null as string | null,
+        descricao: (r.descricao as string | null) || null,
       }));
       // Dedup por nome normalizado, biblioteca tenant tem prioridade
       const seen = new Set<string>();
@@ -2325,7 +2327,7 @@ const AdminMontarTreino = () => {
                             sugestoes={sugestoes}
                             biblioteca={biblioteca}
                             onChangeText={(v) => updateEx(globalIdx, { exercicio: v })}
-                            onPick={(b) => updateEx(globalIdx, { exercicio: b.nome })}
+                            onPick={(b) => updateEx(globalIdx, { exercicio: b.nome, detalhes_execucao: b.descricao || "" })}
                           />
                         </div>
                         <div className="grid grid-cols-3 gap-2">
@@ -2381,7 +2383,7 @@ const AdminMontarTreino = () => {
   );
 };
 
-type BibItem = { id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null };
+type BibItem = { id: string; nome: string; grupo_muscular: string; video_url: string | null; video_coach_url: string | null; descricao?: string | null };
 
 const ExercisePicker = ({
   value,

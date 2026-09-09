@@ -828,6 +828,7 @@ interface BibliotecaExercicio {
   grupo_muscular: string;
   video_url: string | null;
   video_coach_url: string | null;
+  descricao?: string | null;
 }
 
 const normalizarBusca = (texto: string) =>
@@ -837,10 +838,12 @@ const ExerciseLibraryPicker = ({
   value,
   biblioteca,
   onChange,
+  onPick,
 }: {
   value: string;
   biblioteca: BibliotecaExercicio[];
   onChange: (value: string) => void;
+  onPick?: (item: BibliotecaExercicio) => void;
 }) => {
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState("");
@@ -892,7 +895,8 @@ const ExerciseLibraryPicker = ({
                   type="button"
                   variant="ghost"
                   onClick={() => {
-                    onChange(item.nome);
+                    if (onPick) onPick(item);
+                    else onChange(item.nome);
                     setOpen(false);
                     setBusca("");
                   }}
@@ -1011,7 +1015,7 @@ const TreinoEditor = ({
         bibliotecaQuery,
         supabase
           .from("referencia_exercicios")
-          .select("id, nome_exercicio, grupamento_muscular, url_video")
+          .select("id, nome_exercicio, grupamento_muscular, url_video, descricao")
           .not("url_video", "is", null)
           .range(0, 4999),
       ]);
@@ -1021,6 +1025,7 @@ const TreinoEditor = ({
         grupo_muscular: item.grupo_muscular || "",
         video_url: item.video_url,
         video_coach_url: item.video_coach_url,
+        descricao: null,
       }));
       const referencias: BibliotecaExercicio[] = ((referenciasRes.data as any[]) || []).map((item) => ({
         id: item.id,
@@ -1028,6 +1033,7 @@ const TreinoEditor = ({
         grupo_muscular: item.grupamento_muscular || "",
         video_url: item.url_video,
         video_coach_url: null,
+        descricao: (item.descricao as string | null) || null,
       }));
       // Prioriza a versão que possui vídeo. Sem isso, um item local sem vídeo
       // pode ocultar uma referência técnica de mesmo nome que possui URL salva.
@@ -1464,6 +1470,12 @@ const TreinoEditor = ({
                           value={e.exercicio}
                           biblioteca={biblioteca}
                           onChange={(value) => updateItem(e._key, { exercicio: value })}
+                          onPick={(item) =>
+                            updateItem(e._key, {
+                              exercicio: item.nome,
+                              detalhes_execucao: item.descricao || "",
+                            })
+                          }
                         />
                       </div>
 
