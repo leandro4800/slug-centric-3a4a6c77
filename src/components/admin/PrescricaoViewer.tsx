@@ -818,6 +818,7 @@ interface TreinoEditItem {
   cadencia: string;
   detalhes_execucao: string;
   observacao: string;
+  tecnica_avancada: string;
 }
 
 interface BibliotecaExercicio {
