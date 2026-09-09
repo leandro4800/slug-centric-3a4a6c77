@@ -996,6 +996,7 @@ const TreinoEditor = ({
   const [saving, setSaving] = useState(false);
   const [items, setItems] = useState<TreinoEditItem[]>([]);
   const [biblioteca, setBiblioteca] = useState<BibliotecaExercicio[]>([]);
+  const { tecnicas, reloadTecnicas } = useTecnicasAvancadas(tenantId);
 
   useEffect(() => {
     void (async () => {
