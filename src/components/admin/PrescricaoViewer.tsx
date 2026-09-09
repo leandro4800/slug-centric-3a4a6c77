@@ -1153,6 +1153,7 @@ const TreinoEditor = ({
         cadencia: "",
         detalhes_execucao: "",
         observacao: "",
+        tecnica_avancada: "",
       },
     ]);
   };
