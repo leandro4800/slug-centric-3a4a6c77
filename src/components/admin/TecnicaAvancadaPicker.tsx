@@ -356,18 +356,7 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
                 Ao salvar, esta técnica padrão será personalizada somente para este coach.
               </p>
             )}
-            <div className="flex items-center justify-between gap-2">
-              {editando ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive"
-                  onClick={excluirTecnica}
-                  disabled={salvandoEdicao}
-                >
-                  <Trash2 className="mr-1.5 h-4 w-4" /> Excluir
-                </Button>
-              ) : <span />}
+            <div className="flex items-center justify-end gap-2">
               <Button type="button" onClick={salvarEdicao} disabled={salvandoEdicao || !nomeEdicao.trim()}>
                 Salvar
               </Button>
