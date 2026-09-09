@@ -838,10 +838,12 @@ const ExerciseLibraryPicker = ({
   value,
   biblioteca,
   onChange,
+  onPick,
 }: {
   value: string;
   biblioteca: BibliotecaExercicio[];
   onChange: (value: string) => void;
+  onPick?: (item: BibliotecaExercicio) => void;
 }) => {
   const [open, setOpen] = useState(false);
   const [busca, setBusca] = useState("");
@@ -893,7 +895,8 @@ const ExerciseLibraryPicker = ({
                   type="button"
                   variant="ghost"
                   onClick={() => {
-                    onChange(item.nome);
+                    if (onPick) onPick(item);
+                    else onChange(item.nome);
                     setOpen(false);
                     setBusca("");
                   }}
