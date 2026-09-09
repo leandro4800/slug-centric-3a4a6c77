@@ -1350,34 +1350,18 @@ const TreinoEditor = ({
                 )}
               <div className="rounded-xl border border-border bg-secondary/30 p-4 space-y-3">
                 <div className="flex items-center gap-2">
-                  <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary font-display text-sm font-bold text-primary-foreground select-none"
-                    title={`Dia ${diaIdx + 1}`}
+                  <select
+                    value={diaIdx + 1}
+                    title="Ordem do dia na semana — escolha para mover"
+                    onChange={(e) => moveDiaPara(dia, parseInt(e.target.value, 10))}
+                    className="h-7 w-11 shrink-0 cursor-pointer rounded-md bg-primary text-center font-display text-sm font-bold text-primary-foreground"
                   >
-                    {diaIdx + 1}
-                  </span>
-                  <div className="flex flex-col gap-0.5">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-5 w-6"
-                      title="Mover dia para cima"
-                      onClick={() => moveDia(dia, -1)}
-                      disabled={diaIdx === 0}
-                    >
-                      ↑
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-5 w-6"
-                      title="Mover dia para baixo"
-                      onClick={() => moveDia(dia, 1)}
-                      disabled={diaIdx === dias.length - 1}
-                    >
-                      ↓
-                    </Button>
-                  </div>
+                    {dias.map((_, i) => (
+                      <option key={i} value={i + 1}>
+                        {i + 1}
+                      </option>
+                    ))}
+                  </select>
                   <Input
                     value={dia}
                     onChange={(e) => renameDia(dia, e.target.value)}
