@@ -1,0 +1,1 @@
+DELETE FROM public.dicionario_tecnicas_ocultas WHERE tecnica_id IS NOT NULL;

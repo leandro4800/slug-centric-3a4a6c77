@@ -339,6 +339,34 @@ const AdminMontarTreino = () => {
   const isFight = String((tenant as any)?.vertical || "") === "fight";
   const [modalidadeLuta, setModalidadeLuta] = useState<string>("bjj");
 
+  // Rascunho local do treino em montagem (não some ao sair da tela antes de publicar)
+  const draftKey = alunoId ? `montar-treino-draft:${tenant?.id || ""}:${alunoId}` : "";
+  const lerRascunho = () => {
+    if (!draftKey) return null;
+    try {
+      const raw = localStorage.getItem(draftKey);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  };
+  const restaurarRascunho = () => {
+    const rascunho: any = lerRascunho();
+    const exs: ExercicioPrescrito[] = Array.isArray(rascunho?.exercicios) ? rascunho.exercicios : [];
+    if (exs.length === 0) {
+      setExercicios([]);
+      return;
+    }
+    setExercicios(exs);
+    if (Array.isArray(rascunho?.divisaoCustom) && rascunho.divisaoCustom.length > 0) {
+      setDivisaoCustom(rascunho.divisaoCustom);
+      setDivisaoSelecionadaId("custom-editar");
+    }
+    setCardio(rascunho?.cardio || "");
+    setPendingReview(true);
+    toast.info(`Rascunho do treino restaurado (${exs.length} exercícios). Publique para enviar ao aluno.`);
+  };
+
 
   useEffect(() => {
     if (!tenant) return;
@@ -518,7 +546,7 @@ const AdminMontarTreino = () => {
           setPendingReview(true);
           toast.info(`Treino avulso carregado (${carregados.length} exercícios).`);
         } else {
-          setExercicios([]);
+          restaurarRascunho();
         }
       } else {
         const { data: tp } = await supabase
@@ -553,12 +581,23 @@ const AdminMontarTreino = () => {
             toast.info(`Treino atual carregado (${tp.length} exercícios). Edite ou gere novamente para substituir.`);
           }
         } else {
-          setExercicios([]);
+          restaurarRascunho();
         }
       }
       setPerfilLoading(false);
     })();
   }, [alunoId, tenant, isAvulso]);
+
+  // Guarda o rascunho enquanto o coach monta o treino (evita perder ao sair da tela)
+  useEffect(() => {
+    if (!draftKey || perfilLoading) return;
+    try {
+      if (exercicios.length === 0) localStorage.removeItem(draftKey);
+      else localStorage.setItem(draftKey, JSON.stringify({ exercicios, cardio, divisaoCustom }));
+    } catch {
+      /* armazenamento indisponível */
+    }
+  }, [draftKey, perfilLoading, exercicios, cardio, divisaoCustom]);
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
 

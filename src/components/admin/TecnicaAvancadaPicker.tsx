@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronDown, Pencil, PlayCircle, Plus, Trash2, Video } from "lucide-react";
+import { ChevronDown, Pencil, PlayCircle, Plus, Video } from "lucide-react";
 import ExercisePlayer from "@/components/aluno/ExercisePlayer";
 import { toast } from "sonner";
 
@@ -213,6 +213,7 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
     setOpen(false);
   };
 
+
   const salvarEdicao = async () => {
     const nome = nomeEdicao.trim();
     if (!editando || !tenantId || !nome) return;
@@ -241,33 +242,6 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
       toast.success("Técnica atualizada.");
     } catch (e: any) {
       toast.error(e.message || "Não foi possível atualizar a técnica.");
-    } finally {
-      setSalvandoEdicao(false);
-    }
-  };
-
-  const excluirTecnica = async () => {
-    if (!editando || !tenantId) return;
-    if (!window.confirm(`Excluir a técnica “${editando.nome}”?`)) return;
-    setSalvandoEdicao(true);
-    try {
-      const operacao = editando.tenant_id === tenantId
-        ? (supabase as any)
-            .from("dicionario_tecnicas")
-            .delete()
-            .eq("id", editando.id)
-            .eq("tenant_id", tenantId)
-        : (supabase as any)
-            .from("dicionario_tecnicas_ocultas")
-            .insert({ tenant_id: tenantId, tecnica_id: editando.id });
-      const { error } = await operacao;
-      if (error) throw error;
-      if (norm(value || "") === norm(editando.nome)) onChange("");
-      await onReload();
-      setEditando(null);
-      toast.success("Técnica excluída.");
-    } catch (e: any) {
-      toast.error(e.message || "Não foi possível excluir a técnica.");
     } finally {
       setSalvandoEdicao(false);
     }
@@ -322,7 +296,7 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
               </li>
             )}
             {lista.map((t) => (
-              <li key={t.id} className="flex items-center gap-1 pr-1">
+              <li key={t.id}>
                 <Button
                   type="button"
                   variant="ghost"
@@ -331,23 +305,12 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
                     setOpen(false);
                     setBusca("");
                   }}
-                  className="h-auto min-w-0 flex-1 justify-start rounded-none px-3 py-2 hover:bg-primary/10"
+                  className="h-auto w-full min-w-0 justify-start rounded-none px-3 py-2 hover:bg-primary/10"
                 >
                   <span className="text-xs truncate flex items-center gap-1.5">
                     {t.video_explicativo && <Video className="h-3 w-3 text-emerald-400 shrink-0" />}
                     {t.nome}
                   </span>
-                </Button>
-                <Button
-                  type="button"
-                  size="icon"
-                  variant="ghost"
-                  className="h-7 w-7 shrink-0 text-muted-foreground hover:text-primary"
-                  onClick={() => abrirEdicao(t)}
-                  title="Editar técnica"
-                  aria-label={`Editar ${t.nome}`}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
                 </Button>
               </li>
             ))}
@@ -369,7 +332,19 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
       </Popover>
 
       {selecionada && (
-        <TecnicaVideoButton tecnica={selecionada} tenantId={tenantId} onSaved={onReload} />
+        <div className="flex items-center gap-1">
+          <TecnicaVideoButton tecnica={selecionada} tenantId={tenantId} onSaved={onReload} />
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => abrirEdicao(selecionada)}
+            className="h-6 px-2 gap-1 text-[9px] uppercase tracking-wider font-bold text-muted-foreground hover:text-primary"
+            title="Corrigir o nome desta técnica"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Editar nome
+          </Button>
+        </div>
       )}
 
       <Dialog open={!!editando} onOpenChange={(aberto) => !aberto && setEditando(null)}>
@@ -393,18 +368,7 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
                 Ao salvar, esta técnica padrão será personalizada somente para este coach.
               </p>
             )}
-            <div className="flex items-center justify-between gap-2">
-              {editando ? (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-destructive hover:text-destructive"
-                  onClick={excluirTecnica}
-                  disabled={salvandoEdicao}
-                >
-                  <Trash2 className="mr-1.5 h-4 w-4" /> Excluir
-                </Button>
-              ) : <span />}
+            <div className="flex items-center justify-end gap-2">
               <Button type="button" onClick={salvarEdicao} disabled={salvandoEdicao || !nomeEdicao.trim()}>
                 Salvar
               </Button>
