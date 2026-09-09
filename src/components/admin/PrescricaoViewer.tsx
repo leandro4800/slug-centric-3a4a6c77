@@ -1127,6 +1127,7 @@ const TreinoEditor = ({
         cadencia: "",
         detalhes_execucao: "",
         observacao: "",
+        tecnica_avancada: "",
       };
       if (lastIdx === undefined) return [...prev, novo];
       const arr = [...prev];
