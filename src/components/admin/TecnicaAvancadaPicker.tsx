@@ -344,6 +344,16 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
           >
             <Pencil className="h-3.5 w-3.5" /> Editar nome
           </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => onChange("")}
+            className="h-6 px-2 text-[9px] uppercase tracking-wider font-bold text-muted-foreground hover:text-red-400"
+            title="Retirar esta técnica do exercício"
+          >
+            <X className="h-3.5 w-3.5" /> Retirar
+          </Button>
         </div>
       )}
 
