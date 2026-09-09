@@ -1059,6 +1059,7 @@ const TreinoEditor = ({
       cadencia: t.cadencia || "",
       detalhes_execucao: t.detalhes_execucao || "",
       observacao: t.observacao || "",
+      tecnica_avancada: (t as any).tecnica_avancada || "",
     }));
 
   useEffect(() => {
