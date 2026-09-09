@@ -59,6 +59,7 @@ import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import Suporte from "./pages/Suporte";
+import CheckoutSucesso from "./pages/CheckoutSucesso";
 import AdminAgendaPresencial from "./pages/admin/AdminAgendaPresencial";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import Hub from "./pages/coach/Hub";
@@ -210,7 +211,8 @@ const App = () => (
             <Route path="/site/login" element={<SiteLogin />} />
             <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
             <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
-            <Route path="/suporte" element={<Suporte />} />
+             <Route path="/checkout/sucesso" element={<CheckoutSucesso />} />
+             <Route path="/suporte" element={<Suporte />} />
             <Route path="/support" element={<Navigate to="/suporte" replace />} />
             <Route path="/privacy" element={<Navigate to="/politica-de-privacidade" replace />} />
 
