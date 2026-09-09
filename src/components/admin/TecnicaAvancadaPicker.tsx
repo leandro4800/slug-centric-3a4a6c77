@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronDown, Pencil, PlayCircle, Plus, Trash2, Video } from "lucide-react";
+import { ChevronDown, Pencil, PlayCircle, Plus, Video } from "lucide-react";
 import ExercisePlayer from "@/components/aluno/ExercisePlayer";
 import { toast } from "sonner";
 
