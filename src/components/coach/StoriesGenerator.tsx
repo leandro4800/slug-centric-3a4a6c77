@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { resolvePublicAssetUrl } from "@/lib/app-url";
 import refMenteVida from "@/assets/marketing-refs/alpha-mente-vida-lima.png.asset.json";
 import refNovaVersao from "@/assets/marketing-refs/alpha-nova-versao-lima.png.asset.json";
 import refTreinoDieta from "@/assets/marketing-refs/alpha-treino-dieta-cyan.png.asset.json";
@@ -50,12 +51,12 @@ type TemplateId =
   | "alpha-disciplina-serie-dourado";
 
 const TEMPLATES: { id: TemplateId; label: string; desc: string; accent: string; Icon: LucideIcon; ref: string }[] = [
-  { id: "alpha-mente-vida-lima", label: "Corpo, Mente e Vida", desc: "Verde lima", accent: "#8BC53F", Icon: Salad, ref: refMenteVida.url },
-  { id: "alpha-nova-versao-lima", label: "Nova Versão", desc: "Verde lima", accent: "#8BC53F", Icon: Flame, ref: refNovaVersao.url },
-  { id: "alpha-treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#2DD4CE", Icon: Dumbbell, ref: refTreinoDieta.url },
-  { id: "alpha-modo-alpha-vermelho", label: "Modo Alpha", desc: "Vermelho intenso", accent: "#C0272D", Icon: Zap, ref: refModoAlpha.url },
-  { id: "alpha-foco-dias-lima", label: "Foco Todos os Dias", desc: "Verde lima", accent: "#8BC53F", Icon: Trophy, ref: refFocoDias.url },
-  { id: "alpha-disciplina-serie-dourado", label: "Disciplina — A Série", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown, ref: refDisciplina.url },
+  { id: "alpha-mente-vida-lima", label: "Corpo, Mente e Vida", desc: "Verde lima", accent: "#8BC53F", Icon: Salad, ref: resolvePublicAssetUrl(refMenteVida.url) },
+  { id: "alpha-nova-versao-lima", label: "Nova Versão", desc: "Verde lima", accent: "#8BC53F", Icon: Flame, ref: resolvePublicAssetUrl(refNovaVersao.url) },
+  { id: "alpha-treino-dieta-cyan", label: "Treino & Dieta", desc: "Cyan elétrico", accent: "#2DD4CE", Icon: Dumbbell, ref: resolvePublicAssetUrl(refTreinoDieta.url) },
+  { id: "alpha-modo-alpha-vermelho", label: "Modo Alpha", desc: "Vermelho intenso", accent: "#C0272D", Icon: Zap, ref: resolvePublicAssetUrl(refModoAlpha.url) },
+  { id: "alpha-foco-dias-lima", label: "Foco Todos os Dias", desc: "Verde lima", accent: "#8BC53F", Icon: Trophy, ref: resolvePublicAssetUrl(refFocoDias.url) },
+  { id: "alpha-disciplina-serie-dourado", label: "Disciplina — A Série", desc: "Dourado premium", accent: "#D4A24A", Icon: Crown, ref: resolvePublicAssetUrl(refDisciplina.url) },
 ];
 
 

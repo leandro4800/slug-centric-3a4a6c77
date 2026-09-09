@@ -8,8 +8,10 @@ import { buildTenantLoginPath, readFallbackTenantSlug } from "@/lib/tenant-slug"
 import { readStartupBranding } from "@/lib/startup-branding";
 import { readTenantBrandingCache } from "@/lib/tenant-branding-cache";
 import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
+import { resolvePublicAssetUrl } from "@/lib/app-url";
 
 const NAVIGATION_MEMORY_KEY = "startup_navigation_memory_v1";
+const DEFAULT_LOGO = resolvePublicAssetUrl(defaultLogoAsset.url);
 
 const normalizePath = (path: string) => path.replace(/\/+$/, "") || "/";
 
@@ -241,7 +243,9 @@ const IndexRedirect = () => {
   const startupSlug = safeSlug || readFallbackTenantSlug();
   const startupBranding = readStartupBranding();
   const startupTenant = startupSlug ? readTenantBrandingCache(startupSlug) : null;
-  const startupLogo = startupTenant?.logo_url ?? startupBranding?.logo_url ?? defaultLogoAsset.url;
+  const startupLogo = resolvePublicAssetUrl(
+    startupTenant?.logo_url ?? startupBranding?.logo_url ?? DEFAULT_LOGO,
+  );
   const startupName = startupTenant?.nome ?? startupBranding?.nome;
 
   return (

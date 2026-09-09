@@ -1,8 +1,9 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { readStartupBranding } from "@/lib/startup-branding";
+import { resolvePublicAssetUrl } from "@/lib/app-url";
 import alphaCoachProLogo from "@/assets/alphacoach-pro-logo.jpg.asset.json";
 
-const DEFAULT_LOGO_SRC = alphaCoachProLogo.url;
+const DEFAULT_LOGO_SRC = resolvePublicAssetUrl(alphaCoachProLogo.url);
 
 export const Logo = ({ size = 36, withText = true }: { size?: number; withText?: boolean }) => {
   const { tenant } = useBranding();

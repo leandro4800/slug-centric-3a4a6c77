@@ -581,28 +581,32 @@ const Perfil = () => {
             )}
           </div>
 
-          <div className="flex gap-2 pt-2">
-            <Button
-              onClick={() => setPwOpen(true)}
-              variant="secondary"
-              className="flex-1 h-11"
-            >
-              <KeyRound className="h-4 w-4 shrink-0" /> Trocar senha
-            </Button>
+          <div className="flex flex-col gap-2 pt-2">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setPwOpen(true)}
+                variant="secondary"
+                className="min-w-0 flex-1 h-11 px-3 text-xs sm:text-sm whitespace-nowrap"
+              >
+                <KeyRound className="h-4 w-4 shrink-0" />
+                Trocar senha
+              </Button>
+              <Button
+                onClick={handleLogout}
+                variant="secondary"
+                className="w-11 h-11 p-0 shrink-0"
+                aria-label="Sair"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            </div>
             <Button
               onClick={() => setDeleteOpen(true)}
               variant="destructive"
-              className="flex-1 h-11 bg-red-600/20 border border-red-500/30 text-red-500 hover:bg-red-600/30"
+              className="w-full h-11 px-3 text-xs sm:text-sm bg-red-600/20 border border-red-500/30 text-red-500 hover:bg-red-600/30 whitespace-nowrap"
             >
-              <Trash2 className="h-4 w-4 shrink-0" /> Excluir Conta
-            </Button>
-            <Button
-              onClick={handleLogout}
-              variant="secondary"
-              className="w-11 h-11 p-0 shrink-0"
-              aria-label="Sair"
-            >
-              <LogOut className="h-4 w-4" />
+              <Trash2 className="h-4 w-4 shrink-0" />
+              Excluir Conta
             </Button>
           </div>
 

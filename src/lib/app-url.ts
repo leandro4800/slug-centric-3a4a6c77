@@ -20,6 +20,21 @@ const isUnsafeAuthOrigin = (origin: string) => {
   }
 };
 
+/**
+ * Assets Lovable (`.asset.json`) usam path relativo `/__l5e/...`.
+ * No Capacitor/ionic isso aponta pro WebView local e quebra.
+ * Sempre resolve para o origin público de produção.
+ */
+export const resolvePublicAssetUrl = (url: string | null | undefined): string => {
+  if (!url) return "";
+  if (/^(https?:|data:|blob:)/i.test(url)) return url;
+  if (url.startsWith("/__l5e/")) return `${PRODUCTION_APP_ORIGIN}${url}`;
+  if (url.startsWith("/") && typeof window !== "undefined" && isUnsafeAuthOrigin(window.location.origin)) {
+    return `${PRODUCTION_APP_ORIGIN}${url}`;
+  }
+  return url;
+};
+
 export const getPublicAppOriginForced = () => PRODUCTION_APP_ORIGIN;
 
 export const getPublicAppOrigin = () => {

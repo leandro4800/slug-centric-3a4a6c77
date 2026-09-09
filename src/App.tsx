@@ -96,6 +96,9 @@ import SiteAdminCtNutricao from "./pages/site-admin/ct/NutricaoCombate";
 import AlunoCtHome from "./pages/aluno/ct/CtHome";
 import CtDojoAdmin from "./pages/aluno/ct/CtDojoAdmin";
 import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
+import { resolvePublicAssetUrl } from "@/lib/app-url";
+
+const DEFAULT_LOGO = resolvePublicAssetUrl(defaultLogoAsset.url);
 
 const queryClient = new QueryClient();
 
@@ -159,7 +162,7 @@ const NativeStartupRedirect = () => {
             ) : null}
           </>
         ) : (
-          <img src={defaultLogoAsset.url} alt="AlphaCoach" className="h-20 w-20 object-contain" />
+          <img src={DEFAULT_LOGO} alt="AlphaCoach" className="h-20 w-20 object-contain" />
         )}
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="sr-only">Carregando...</span>
