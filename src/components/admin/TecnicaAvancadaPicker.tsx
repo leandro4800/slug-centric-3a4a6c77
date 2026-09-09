@@ -247,33 +247,6 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
     }
   };
 
-  const excluirTecnica = async () => {
-    if (!editando || !tenantId) return;
-    if (!window.confirm(`Excluir a técnica “${editando.nome}”?`)) return;
-    setSalvandoEdicao(true);
-    try {
-      const operacao = editando.tenant_id === tenantId
-        ? (supabase as any)
-            .from("dicionario_tecnicas")
-            .delete()
-            .eq("id", editando.id)
-            .eq("tenant_id", tenantId)
-        : (supabase as any)
-            .from("dicionario_tecnicas_ocultas")
-            .insert({ tenant_id: tenantId, tecnica_id: editando.id });
-      const { error } = await operacao;
-      if (error) throw error;
-      if (norm(value || "") === norm(editando.nome)) onChange("");
-      await onReload();
-      setEditando(null);
-      toast.success("Técnica excluída.");
-    } catch (e: any) {
-      toast.error(e.message || "Não foi possível excluir a técnica.");
-    } finally {
-      setSalvandoEdicao(false);
-    }
-  };
-
   return (
     <div className="space-y-1">
       <Popover open={open} onOpenChange={setOpen}>
