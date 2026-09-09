@@ -33,6 +33,7 @@ import {
 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
+import { TecnicaAvancadaPicker, useTecnicasAvancadas } from "@/components/admin/TecnicaAvancadaPicker";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
 import { resolveExercicioIds, linkIdPara } from "@/lib/exerciseLink";
 import { toast } from "sonner";
