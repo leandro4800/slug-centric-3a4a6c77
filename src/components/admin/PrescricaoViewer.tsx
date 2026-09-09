@@ -1222,6 +1222,7 @@ const TreinoEditor = ({
           cadencia: i.cadencia || null,
           detalhes_execucao: i.detalhes_execucao || null,
           observacao: i.observacao || null,
+          tecnica_avancada: i.tecnica_avancada || null,
           referencia_exercicio_id: linkIdPara(linkMap, i.exercicio),
         };
       });
