@@ -213,6 +213,7 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
     setOpen(false);
   };
 
+
   const salvarEdicao = async () => {
     const nome = nomeEdicao.trim();
     if (!editando || !tenantId || !nome) return;
