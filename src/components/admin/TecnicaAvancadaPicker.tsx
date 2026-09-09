@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronDown, Pencil, PlayCircle, Plus, Video } from "lucide-react";
+import { ChevronDown, Pencil, PlayCircle, Plus, Video, X } from "lucide-react";
 import ExercisePlayer from "@/components/aluno/ExercisePlayer";
 import { toast } from "sonner";
 
@@ -343,6 +343,16 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
             title="Corrigir o nome desta técnica"
           >
             <Pencil className="h-3.5 w-3.5" /> Editar nome
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => onChange("")}
+            className="h-6 px-2 text-[9px] uppercase tracking-wider font-bold text-muted-foreground hover:text-red-400"
+            title="Retirar esta técnica do exercício"
+          >
+            <X className="h-3.5 w-3.5" /> Retirar
           </Button>
         </div>
       )}
