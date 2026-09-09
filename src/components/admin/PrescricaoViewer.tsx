@@ -1515,6 +1515,17 @@ const TreinoEditor = ({
                           placeholder="PSE, ponto fraco, foco..."
                         />
                       </div>
+
+                      <div>
+                        <Label className="text-[10px] uppercase">Técnica avançada</Label>
+                        <TecnicaAvancadaPicker
+                          value={e.tecnica_avancada || ""}
+                          tenantId={tenantId}
+                          tecnicas={tecnicas}
+                          onChange={(v) => updateItem(e._key, { tecnica_avancada: v })}
+                          onReload={reloadTecnicas}
+                        />
+                      </div>
                     </div>
                     );
                   })}
