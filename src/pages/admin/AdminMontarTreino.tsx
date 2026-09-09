@@ -350,6 +350,22 @@ const AdminMontarTreino = () => {
       return null;
     }
   };
+  const restaurarRascunho = () => {
+    const rascunho: any = lerRascunho();
+    const exs: ExercicioPrescrito[] = Array.isArray(rascunho?.exercicios) ? rascunho.exercicios : [];
+    if (exs.length === 0) {
+      setExercicios([]);
+      return;
+    }
+    setExercicios(exs);
+    if (Array.isArray(rascunho?.divisaoCustom) && rascunho.divisaoCustom.length > 0) {
+      setDivisaoCustom(rascunho.divisaoCustom);
+      setDivisaoSelecionadaId("custom-editar");
+    }
+    setCardio(rascunho?.cardio || "");
+    setPendingReview(true);
+    toast.info(`Rascunho do treino restaurado (${exs.length} exercícios). Publique para enviar ao aluno.`);
+  };
 
 
   useEffect(() => {
