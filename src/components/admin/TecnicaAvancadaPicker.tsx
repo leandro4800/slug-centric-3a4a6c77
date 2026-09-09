@@ -332,7 +332,19 @@ export const TecnicaAvancadaPicker = ({ value, tenantId, tecnicas, onChange, onR
       </Popover>
 
       {selecionada && (
-        <TecnicaVideoButton tecnica={selecionada} tenantId={tenantId} onSaved={onReload} />
+        <div className="flex items-center gap-1">
+          <TecnicaVideoButton tecnica={selecionada} tenantId={tenantId} onSaved={onReload} />
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => abrirEdicao(selecionada)}
+            className="h-6 px-2 gap-1 text-[9px] uppercase tracking-wider font-bold text-muted-foreground hover:text-primary"
+            title="Corrigir o nome desta técnica"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Editar nome
+          </Button>
+        </div>
       )}
 
       <Dialog open={!!editando} onOpenChange={(aberto) => !aberto && setEditando(null)}>
