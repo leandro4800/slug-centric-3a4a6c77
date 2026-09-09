@@ -54,6 +54,7 @@ interface TreinoRow {
   cadencia: string | null;
   observacao: string | null;
   detalhes_execucao: string | null;
+  tecnica_avancada?: string | null;
 }
 
 interface DietaRow {
