@@ -1187,6 +1187,18 @@ const TreinoEditor = ({
     });
   };
 
+  // Move o dia inteiro para uma posição específica da semana (1 = primeiro)
+  const moveDiaPara = (dia: string, novaPos: number) => {
+    setItems((prev) => {
+      const ordemDias = [...new Set(prev.map((t) => t.dia_semana))];
+      const idx = ordemDias.indexOf(dia);
+      const alvo = Math.max(0, Math.min(ordemDias.length - 1, novaPos - 1));
+      if (idx < 0 || alvo === idx) return prev;
+      ordemDias.splice(alvo, 0, ordemDias.splice(idx, 1)[0]);
+      return ordemDias.flatMap((d) => prev.filter((t) => t.dia_semana === d));
+    });
+  };
+
   const salvar = async () => {
     if (!tenantId) {
       toast.error("Tenant não identificado.");
