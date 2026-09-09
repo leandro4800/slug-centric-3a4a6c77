@@ -828,6 +828,7 @@ interface BibliotecaExercicio {
   grupo_muscular: string;
   video_url: string | null;
   video_coach_url: string | null;
+  descricao?: string | null;
 }
 
 const normalizarBusca = (texto: string) =>
