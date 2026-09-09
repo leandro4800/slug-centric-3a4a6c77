@@ -565,12 +565,23 @@ const AdminMontarTreino = () => {
             toast.info(`Treino atual carregado (${tp.length} exercícios). Edite ou gere novamente para substituir.`);
           }
         } else {
-          setExercicios([]);
+          restaurarRascunho();
         }
       }
       setPerfilLoading(false);
     })();
   }, [alunoId, tenant, isAvulso]);
+
+  // Guarda o rascunho enquanto o coach monta o treino (evita perder ao sair da tela)
+  useEffect(() => {
+    if (!draftKey || perfilLoading) return;
+    try {
+      if (exercicios.length === 0) localStorage.removeItem(draftKey);
+      else localStorage.setItem(draftKey, JSON.stringify({ exercicios, cardio, divisaoCustom }));
+    } catch {
+      /* armazenamento indisponível */
+    }
+  }, [draftKey, perfilLoading, exercicios, cardio, divisaoCustom]);
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
 
