@@ -51,7 +51,7 @@ export const PersonalTreino = () => {
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [startingSession, setStartingSession] = useState(false);
   const [concluindo, setConcluindo] = useState(false);
-  const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number } | null>(null);
+  const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number; dia_semana: string } | null>(null);
   const [sessaoStats, setSessaoStats] = useState<{ volume: number; series: number }>({ volume: 0, series: 0 });
   const [recordeBanner, setRecordeBanner] = useState<{ exercicio: string; records: Array<{ type: string; value: number }> } | null>(null);
   const [recordeIndex, setRecordeIndex] = useState(0);
