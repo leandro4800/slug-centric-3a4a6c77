@@ -563,7 +563,7 @@ export const PersonalTreino = () => {
       if (error) throw error;
       const id = (data as any)?.id || null;
       const startedAt = (data as any)?.created_at ? new Date((data as any).created_at).getTime() : Date.now();
-      if (id) setSessaoAndamento({ id, startedAt });
+      if (id) setSessaoAndamento({ id, startedAt, dia_semana: diaAtual });
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível iniciar o treino.");
     } finally {
