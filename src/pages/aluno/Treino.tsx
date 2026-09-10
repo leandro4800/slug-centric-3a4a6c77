@@ -980,8 +980,8 @@ export const PersonalTreino = () => {
                 markCompleted(t.id);
                 setActiveIndex(null);
               }}
-              sessaoId={sessaoAndamento?.id || null}
-              sessionActive={!!sessaoAndamento}
+              sessaoId={sessaoAndamento && sessaoAndamento.dia_semana === diaAtual ? sessaoAndamento.id : null}
+              sessionActive={!!(sessaoAndamento && sessaoAndamento.dia_semana === diaAtual)}
               onSeriesSaved={() => carregarStatsSessao()}
               onRecords={(info) => setRecordeBanner(info)}
             />
