@@ -51,7 +51,7 @@ export const PersonalTreino = () => {
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [startingSession, setStartingSession] = useState(false);
   const [concluindo, setConcluindo] = useState(false);
-  const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number } | null>(null);
+  const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number; dia_semana: string } | null>(null);
   const [sessaoStats, setSessaoStats] = useState<{ volume: number; series: number }>({ volume: 0, series: 0 });
   const [recordeBanner, setRecordeBanner] = useState<{ exercicio: string; records: Array<{ type: string; value: number }> } | null>(null);
   const [recordeIndex, setRecordeIndex] = useState(0);
@@ -478,7 +478,7 @@ export const PersonalTreino = () => {
         .maybeSingle();
       if (cancelled) return;
       if (data?.id) {
-        setSessaoAndamento({ id: (data as any).id, startedAt: new Date((data as any).created_at).getTime() });
+        setSessaoAndamento({ id: (data as any).id, startedAt: new Date((data as any).created_at).getTime(), dia_semana: (data as any).dia_semana });
       } else {
         setSessaoAndamento(null);
       }
@@ -563,7 +563,7 @@ export const PersonalTreino = () => {
       if (error) throw error;
       const id = (data as any)?.id || null;
       const startedAt = (data as any)?.created_at ? new Date((data as any).created_at).getTime() : Date.now();
-      if (id) setSessaoAndamento({ id, startedAt });
+      if (id) setSessaoAndamento({ id, startedAt, dia_semana: diaAtual });
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível iniciar o treino.");
     } finally {
@@ -896,7 +896,7 @@ export const PersonalTreino = () => {
         </div>
 
         {treinosDoDia.length > 0 && (
-          sessaoAndamento ? (
+          sessaoAndamento && sessaoAndamento.dia_semana === diaAtual ? (
             <div className="mt-4 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-400 flex items-center gap-2">
@@ -919,6 +919,12 @@ export const PersonalTreino = () => {
                   <p className="font-mono text-base">{sessaoStats.series}</p>
                 </div>
               </div>
+            </div>
+          ) : sessaoAndamento && sessaoAndamento.dia_semana !== diaAtual ? (
+            <div className="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center">
+              <p className="text-xs text-amber-300 font-medium">
+                Finalize o treino em andamento antes de começar outro dia
+              </p>
             </div>
           ) : (
             <button
@@ -974,8 +980,8 @@ export const PersonalTreino = () => {
                 markCompleted(t.id);
                 setActiveIndex(null);
               }}
-              sessaoId={sessaoAndamento?.id || null}
-              sessionActive={!!sessaoAndamento}
+              sessaoId={sessaoAndamento && sessaoAndamento.dia_semana === diaAtual ? sessaoAndamento.id : null}
+              sessionActive={!!(sessaoAndamento && sessaoAndamento.dia_semana === diaAtual)}
               onSeriesSaved={() => carregarStatsSessao()}
               onRecords={(info) => setRecordeBanner(info)}
             />
