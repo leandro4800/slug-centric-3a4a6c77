@@ -896,7 +896,7 @@ export const PersonalTreino = () => {
         </div>
 
         {treinosDoDia.length > 0 && (
-          sessaoAndamento ? (
+          sessaoAndamento && sessaoAndamento.dia_semana === diaAtual ? (
             <div className="mt-4 rounded-2xl border border-primary/40 bg-primary/10 px-4 py-3">
               <div className="flex items-center justify-between">
                 <span className="text-[11px] uppercase tracking-[0.18em] text-emerald-400 flex items-center gap-2">
@@ -919,6 +919,12 @@ export const PersonalTreino = () => {
                   <p className="font-mono text-base">{sessaoStats.series}</p>
                 </div>
               </div>
+            </div>
+          ) : sessaoAndamento && sessaoAndamento.dia_semana !== diaAtual ? (
+            <div className="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center">
+              <p className="text-xs text-amber-300 font-medium">
+                Finalize o treino em andamento antes de começar outro dia
+              </p>
             </div>
           ) : (
             <button
