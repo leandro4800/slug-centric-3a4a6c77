@@ -478,7 +478,7 @@ export const PersonalTreino = () => {
         .maybeSingle();
       if (cancelled) return;
       if (data?.id) {
-        setSessaoAndamento({ id: (data as any).id, startedAt: new Date((data as any).created_at).getTime() });
+        setSessaoAndamento({ id: (data as any).id, startedAt: new Date((data as any).created_at).getTime(), dia_semana: (data as any).dia_semana });
       } else {
         setSessaoAndamento(null);
       }
