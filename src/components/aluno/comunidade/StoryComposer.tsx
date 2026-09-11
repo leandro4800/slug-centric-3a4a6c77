@@ -205,6 +205,14 @@ export const StoryComposer = ({ open, onOpenChange, userId, tenantId, onPublishe
             className="hidden"
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
           />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+          />
 
           {preview ? (
             <div className="relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-black">
@@ -221,14 +229,24 @@ export const StoryComposer = ({ open, onOpenChange, userId, tenantId, onPublishe
               </Button>
             </div>
           ) : (
-            <button
-              onClick={() => inputRef.current?.click()}
-              className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm text-muted-foreground"
-            >
-              <Camera className="h-6 w-6 text-primary" />
-              Escolher foto ou vídeo (até {MAX_VIDEO_SEC}s)
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={tirarFoto}
+                className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm text-muted-foreground"
+              >
+                <Camera className="h-6 w-6 text-primary" />
+                Tirar foto
+              </button>
+              <button
+                onClick={() => inputRef.current?.click()}
+                className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border px-2 text-center text-sm text-muted-foreground"
+              >
+                <ImageIcon className="h-6 w-6 text-primary" />
+                Galeria (até {MAX_VIDEO_SEC}s de vídeo)
+              </button>
+            </div>
           )}
+
 
           <Input
             value={texto}
