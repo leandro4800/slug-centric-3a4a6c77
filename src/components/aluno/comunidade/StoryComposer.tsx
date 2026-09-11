@@ -52,6 +52,7 @@ const readVideoDuration = (file: File): Promise<number> =>
 export const StoryComposer = ({ open, onOpenChange, userId, tenantId, onPublished }: Props) => {
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [texto, setTexto] = useState("");
