@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
-import { Camera, Send, X } from "lucide-react";
+import { Camera, Image as ImageIcon, Send, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isNativeApp } from "@/lib/native-platform";
+
 
 const MAX_VIDEO_SEC = 15;
 const MAX_SIZE_MB = 30;
@@ -50,6 +52,7 @@ const readVideoDuration = (file: File): Promise<number> =>
 export const StoryComposer = ({ open, onOpenChange, userId, tenantId, onPublished }: Props) => {
   const { toast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [texto, setTexto] = useState("");
@@ -85,6 +88,45 @@ export const StoryComposer = ({ open, onOpenChange, userId, tenantId, onPublishe
     setFile(f);
     setPreview(URL.createObjectURL(f));
   };
+
+  /** Câmera nativa (iOS/Android) com pedido de permissão adequado. */
+  const tirarFoto = async () => {
+    if (!isNativeApp()) {
+      cameraInputRef.current?.click();
+      return;
+    }
+    try {
+      const { Camera: CapCamera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+      const perm = await CapCamera.checkPermissions();
+      if (perm.camera !== "granted") {
+        const req = await CapCamera.requestPermissions({ permissions: ["camera"] });
+        if (req.camera !== "granted") {
+          toast({
+            title: "Câmera bloqueada",
+            description: "Libere o acesso à câmera nas configurações do celular.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      const photo = await CapCamera.getPhoto({
+        quality: 85,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        saveToGallery: false,
+      });
+      if (!photo.webPath) return;
+      const blob = await (await fetch(photo.webPath)).blob();
+      const ext = photo.format || "jpg";
+      await handleFile(new File([blob], `story-${Date.now()}.${ext}`, { type: blob.type || "image/jpeg" }));
+    } catch (e: any) {
+      const msg = String(e?.message || e);
+      if (/cancel/i.test(msg)) return;
+      toast({ title: "Não foi possível abrir a câmera", description: msg, variant: "destructive" });
+    }
+  };
+
 
   const publicar = async () => {
     if (!file && !texto.trim()) {
@@ -163,6 +205,14 @@ export const StoryComposer = ({ open, onOpenChange, userId, tenantId, onPublishe
             className="hidden"
             onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
           />
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+          />
 
           {preview ? (
             <div className="relative flex items-center justify-center overflow-hidden rounded-2xl border border-border bg-black">
@@ -179,14 +229,24 @@ export const StoryComposer = ({ open, onOpenChange, userId, tenantId, onPublishe
               </Button>
             </div>
           ) : (
-            <button
-              onClick={() => inputRef.current?.click()}
-              className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm text-muted-foreground"
-            >
-              <Camera className="h-6 w-6 text-primary" />
-              Escolher foto ou vídeo (até {MAX_VIDEO_SEC}s)
-            </button>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                onClick={tirarFoto}
+                className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-sm text-muted-foreground"
+              >
+                <Camera className="h-6 w-6 text-primary" />
+                Tirar foto
+              </button>
+              <button
+                onClick={() => inputRef.current?.click()}
+                className="flex h-40 flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border px-2 text-center text-sm text-muted-foreground"
+              >
+                <ImageIcon className="h-6 w-6 text-primary" />
+                Galeria (até {MAX_VIDEO_SEC}s de vídeo)
+              </button>
+            </div>
           )}
+
 
           <Input
             value={texto}
