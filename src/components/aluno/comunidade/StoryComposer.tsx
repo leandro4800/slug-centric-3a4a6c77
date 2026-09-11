@@ -1,10 +1,12 @@
 import { useRef, useState } from "react";
-import { Camera, Send, X } from "lucide-react";
+import { Camera, Image as ImageIcon, Send, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { isNativeApp } from "@/lib/native-platform";
+
 
 const MAX_VIDEO_SEC = 15;
 const MAX_SIZE_MB = 30;
