@@ -88,6 +88,45 @@ export const StoryComposer = ({ open, onOpenChange, userId, tenantId, onPublishe
     setPreview(URL.createObjectURL(f));
   };
 
+  /** Câmera nativa (iOS/Android) com pedido de permissão adequado. */
+  const tirarFoto = async () => {
+    if (!isNativeApp()) {
+      cameraInputRef.current?.click();
+      return;
+    }
+    try {
+      const { Camera: CapCamera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+      const perm = await CapCamera.checkPermissions();
+      if (perm.camera !== "granted") {
+        const req = await CapCamera.requestPermissions({ permissions: ["camera"] });
+        if (req.camera !== "granted") {
+          toast({
+            title: "Câmera bloqueada",
+            description: "Libere o acesso à câmera nas configurações do celular.",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+      const photo = await CapCamera.getPhoto({
+        quality: 85,
+        allowEditing: false,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        saveToGallery: false,
+      });
+      if (!photo.webPath) return;
+      const blob = await (await fetch(photo.webPath)).blob();
+      const ext = photo.format || "jpg";
+      await handleFile(new File([blob], `story-${Date.now()}.${ext}`, { type: blob.type || "image/jpeg" }));
+    } catch (e: any) {
+      const msg = String(e?.message || e);
+      if (/cancel/i.test(msg)) return;
+      toast({ title: "Não foi possível abrir a câmera", description: msg, variant: "destructive" });
+    }
+  };
+
+
   const publicar = async () => {
     if (!file && !texto.trim()) {
       toast({ title: "Story vazio", description: "Escolha uma mídia ou escreva algo.", variant: "destructive" });
