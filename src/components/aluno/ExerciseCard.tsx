@@ -496,39 +496,53 @@ export const ExerciseCard = ({
     });
   };
 
-  // Restaura cronômetro do localStorage (mantém contagem mesmo com tela fechada)
-  const [running, setRunning] = useState<boolean>(() => {
-    try {
-      const raw = localStorage.getItem(storageKey);
-      if (raw) return !!JSON.parse(raw).running;
-    } catch {}
-    return false;
-  });
-  const [seconds, setSeconds] = useState<number>(() => {
+  // Cronômetro baseado em relógio real: continua contando mesmo se sair da tela
+  const readStored = () => {
     try {
       const raw = localStorage.getItem(storageKey);
       if (raw) {
         const p = JSON.parse(raw);
-        const base = Number(p.seconds) || 0;
-        if (p.running && p.startedAt) {
-          const elapsed = Math.floor((Date.now() - p.startedAt) / 1000);
-          return base + Math.max(0, elapsed);
-        }
-        return base;
+        return {
+          base: Number(p.seconds) || 0,
+          running: !!p.running,
+          startedAt: p.startedAt ? Number(p.startedAt) : null,
+        };
       }
     } catch {}
-    return 0;
-  });
+    return { base: 0, running: false, startedAt: null as number | null };
+  };
+  const storedInit = useRef(readStored()).current;
+  const baseRef = useRef<number>(storedInit.base);
+  const startRef = useRef<number | null>(storedInit.running ? storedInit.startedAt ?? Date.now() : null);
+  const [running, setRunning] = useState<boolean>(storedInit.running);
+  const calcSeconds = () =>
+    baseRef.current + (startRef.current ? Math.max(0, Math.floor((Date.now() - startRef.current) / 1000)) : 0);
+  const [seconds, setSeconds] = useState<number>(calcSeconds);
   const intRef = useRef<number | null>(null);
+
+  // Sincroniza refs quando o usuário dá play/pause
   useEffect(() => {
-    if (running) {
-      intRef.current = window.setInterval(() => setSeconds((s) => s + 1), 1000);
-    } else if (intRef.current) {
-      window.clearInterval(intRef.current);
+    if (running && !startRef.current) {
+      startRef.current = Date.now();
+    } else if (!running && startRef.current) {
+      baseRef.current = calcSeconds();
+      startRef.current = null;
     }
+    setSeconds(calcSeconds());
+
+    if (running) {
+      intRef.current = window.setInterval(() => setSeconds(calcSeconds()), 1000);
+    }
+    const onVisible = () => setSeconds(calcSeconds());
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
     return () => {
       if (intRef.current) window.clearInterval(intRef.current);
+      intRef.current = null;
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
   // Persiste somente o cronômetro. As entradas de KG/reps sempre começam vazias.
@@ -537,9 +551,9 @@ export const ExerciseCard = ({
       localStorage.setItem(
         storageKey,
         JSON.stringify({
-          seconds,
+          seconds: baseRef.current,
           running,
-          startedAt: running ? Date.now() : null,
+          startedAt: startRef.current,
         })
       );
     } catch {}
