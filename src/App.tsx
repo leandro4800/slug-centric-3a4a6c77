@@ -37,6 +37,7 @@ import Evolucao from "./pages/aluno/Evolucao";
 import CompararEvolucao from "./pages/aluno/CompararEvolucao";
 import Clinica from "./pages/aluno/Clinica";
 import Comunidade from "./pages/aluno/Comunidade";
+import AnalisePostural from "./pages/aluno/AnalisePostural";
 const Perfil = lazy(() => import("./pages/aluno/Perfil"));
 import ControleCentral from "./pages/aluno/ControleCentral";
 import Parceiros from "./pages/aluno/Parceiros";
@@ -294,6 +295,7 @@ const App = () => (
               <Route path="evolucao" element={<Evolucao />} />
               <Route path="evolucao/comparar" element={<CompararEvolucao />} />
               <Route path="clinica" element={<Clinica />} />
+              <Route path="analise-postural" element={<AnalisePostural />} />
               <Route path="dr-ia" element={<DrIA />} />
               <Route path="comunidade" element={<Comunidade />} />
               <Route path="perfil" element={
