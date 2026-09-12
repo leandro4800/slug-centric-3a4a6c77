@@ -87,3 +87,7 @@ additional_redirect_urls = [
 
   [functions.notify-first-access]
     verify_jwt = false
+
+  [functions.analyze-posture]
+    # O JWT é validado dentro da função via auth.getUser().
+    verify_jwt = false
