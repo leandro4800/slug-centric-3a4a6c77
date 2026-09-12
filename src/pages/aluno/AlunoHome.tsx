@@ -268,9 +268,15 @@ const AlunoHome = () => {
               muted
               loop
               playsInline
+              controls={false}
+              disablePictureInPicture
+              onLoadedMetadata={(e) => {
+                void e.currentTarget.play().catch(() => {});
+              }}
               poster={hasCoachVideo ? undefined : heroImg}
               className="w-full h-full object-cover"
             />
+
           ) : (
             <img src={heroImg} alt="" className="w-full h-full object-cover" />
           )}
