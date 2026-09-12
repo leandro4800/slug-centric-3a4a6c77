@@ -70,20 +70,30 @@ serve(async (req) => {
 
     // Baixa e converte as 3 fotos em base64
     async function toBase64(path: string) {
-      const { data, error } = await supabase.storage.from('fotos_posturais').download(path)
-      if (error) throw new Error(`Erro ao baixar ${path}: ${error.message}`)
-      const bytes = new Uint8Array(await data.arrayBuffer())
-      let binary = ''
-      const chunkSize = 0x8000
-      for (let i = 0; i < bytes.length; i += chunkSize) {
-        binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
+      let lastError = 'Falha desconhecida'
+
+      for (let attempt = 1; attempt <= 3; attempt += 1) {
+        const { data, error } = await supabase.storage.from('fotos_posturais').download(path)
+        if (!error && data) {
+          const bytes = new Uint8Array(await data.arrayBuffer())
+          let binary = ''
+          const chunkSize = 0x8000
+          for (let i = 0; i < bytes.length; i += chunkSize) {
+            binary += String.fromCharCode.apply(null, Array.from(bytes.subarray(i, i + chunkSize)))
+          }
+          return btoa(binary)
+        }
+
+        lastError = error?.message ?? 'Arquivo não retornado pelo armazenamento'
+        if (attempt < 3) await new Promise((resolve) => setTimeout(resolve, attempt * 500))
       }
-      return btoa(binary)
+
+      throw new Error(`Erro ao baixar ${path} após 3 tentativas: ${lastError}`)
     }
 
-    const [frontalB64, posteriorB64, lateralB64] = await Promise.all([
-      toBase64(foto_frontal_path), toBase64(foto_posterior_path), toBase64(foto_lateral_path)
-    ])
+    const frontalB64 = await toBase64(foto_frontal_path)
+    const posteriorB64 = await toBase64(foto_posterior_path)
+    const lateralB64 = await toBase64(foto_lateral_path)
 
     const systemPrompt = `Você é um especialista sênior em fisioterapia, biomecânica e cinesiologia.
 Analise as 3 imagens posturais (1. Vista Frontal, 2. Vista Posterior, 3. Vista Lateral).
