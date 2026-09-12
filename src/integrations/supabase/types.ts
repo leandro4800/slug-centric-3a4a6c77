@@ -953,6 +953,45 @@ export type Database = {
           },
         ]
       }
+      avaliacoes_posturais: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          foto_frontal_path: string
+          foto_lateral_path: string
+          foto_posterior_path: string
+          id: string
+          resultado_json: Json | null
+          status: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          foto_frontal_path: string
+          foto_lateral_path: string
+          foto_posterior_path: string
+          id?: string
+          resultado_json?: Json | null
+          status?: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          foto_frontal_path?: string
+          foto_lateral_path?: string
+          foto_posterior_path?: string
+          id?: string
+          resultado_json?: Json | null
+          status?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       base_conhecimento_treino: {
         Row: {
           categoria: string
