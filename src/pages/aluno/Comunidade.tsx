@@ -596,6 +596,7 @@ const Comunidade = () => {
                       src={post.video_url}
                       controls
                       playsInline
+                      autoPlayWhenVisible
                       wrapperClassName="max-h-[80vh] max-w-full"
                       className="max-h-[80vh] max-w-full h-auto w-auto object-contain"
                     />
