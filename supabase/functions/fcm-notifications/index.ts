@@ -30,7 +30,25 @@ serve(async (req) => {
   const authHeader = req.headers.get('Authorization') ?? ''
   const bearer = authHeader.replace('Bearer ', '')
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-  const isServiceCall = !!bearer && !!serviceKey && bearer === serviceKey
+
+  // Um token de service_role pode chegar em formatos diferentes (JWT legado ou
+  // chave nova). Como `verify_jwt = true` já valida a assinatura na borda,
+  // basta reconhecer a role do token para aceitar chamadas server-to-server
+  // (cron de lembretes via send_push_notification).
+  const isServiceRoleJwt = (t: string): boolean => {
+    try {
+      const part = t.split('.')[1]
+      if (!part) return false
+      const json = atob(part.replace(/-/g, '+').replace(/_/g, '/'))
+      const claims = JSON.parse(json)
+      return claims?.role === 'service_role'
+    } catch {
+      return false
+    }
+  }
+
+  const isServiceCall =
+    !!bearer && ((!!serviceKey && bearer === serviceKey) || isServiceRoleJwt(bearer))
 
   let callerId: string | null = null
   if (!isServiceCall) {
