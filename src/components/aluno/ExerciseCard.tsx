@@ -888,6 +888,8 @@ export const ExerciseCard = ({
     setSavingAll(true);
     try {
       onCompleted?.();
+      baseRef.current = 0;
+      startRef.current = null;
       setRunning(false);
       setSeconds(0);
       try { localStorage.removeItem(storageKey); } catch {}
