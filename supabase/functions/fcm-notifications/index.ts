@@ -214,6 +214,16 @@ serve(async (req) => {
     console.log('FCM Response:', fcmResult)
 
     if (!fcmResponse.ok) {
+      // Token morto (app desinstalado/reinstalado, token antigo de navegador):
+      // limpa do perfil para o app registrar um novo na próxima abertura.
+      const errCode = fcmResult?.error?.details?.[0]?.errorCode
+      if (errCode === 'UNREGISTERED' || errCode === 'INVALID_ARGUMENT' || fcmResponse.status === 404) {
+        await supabaseClient
+          .from('perfis')
+          .update({ push_token: null })
+          .eq('push_token', targetToken)
+      }
+
       await logSend({
         user_id,
         has_token: true,

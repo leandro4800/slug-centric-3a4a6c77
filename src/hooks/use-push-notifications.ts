@@ -17,6 +17,14 @@ const saveTokenToSupabase = async (newToken: string) => {
     .update({ push_token: newToken })
     .eq("id", user.id);
   if (error) console.error("Erro ao salvar token:", error);
+
+  // O mesmo aparelho pode ter sido usado por outra conta: garante que o token
+  // fique só no perfil logado, evitando envios para o destino errado.
+  await supabase
+    .from("perfis")
+    .update({ push_token: null })
+    .eq("push_token", newToken)
+    .neq("id", user.id);
 };
 
 const enableNative = async (): Promise<{ token: string | null; reason?: string; permission: PushPermission }> => {
