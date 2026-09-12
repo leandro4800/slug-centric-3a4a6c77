@@ -176,6 +176,14 @@
     -webkit-appearance: none;
     opacity: 0 !important;
   }
+  /* Mesmo overlay gigante aparece em qualquer vídeo mp4 no Android (comunidade, stories, exercícios) */
+  video::-webkit-media-controls-overlay-play-button,
+  video::-webkit-media-controls-start-playback-button {
+    display: none !important;
+    -webkit-appearance: none;
+    opacity: 0 !important;
+  }
+
   .scrollbar-hide::-webkit-scrollbar { display: none; }
   .scrollbar-hide { scrollbar-width: none; }
 
