@@ -270,6 +270,10 @@ const AnalisePostural = () => {
           )}
         </Button>
 
+        <p className="text-xs text-muted-foreground text-center leading-relaxed border border-border rounded-lg p-3 bg-card/40">
+          Este software é uma ferramenta de apoio educacional e de acompanhamento físico-esportivo. Não fornece diagnósticos médicos ou clínicos. A interpretação dos dados é de responsabilidade exclusiva do profissional habilitado.
+        </p>
+
         {!resultado && !analisando && (
           <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
             Envie as três fotos para gerar sua análise postural. Este recurso é
