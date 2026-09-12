@@ -1,0 +1,4 @@
+CREATE POLICY "Alunos veem suas fotos posturais" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'fotos_posturais' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Alunos enviam suas fotos posturais" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'fotos_posturais' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Alunos atualizam suas fotos posturais" ON storage.objects FOR UPDATE TO authenticated USING (bucket_id = 'fotos_posturais' AND auth.uid()::text = (storage.foldername(name))[1]) WITH CHECK (bucket_id = 'fotos_posturais' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Alunos apagam suas fotos posturais" ON storage.objects FOR DELETE TO authenticated USING (bucket_id = 'fotos_posturais' AND auth.uid()::text = (storage.foldername(name))[1]);
