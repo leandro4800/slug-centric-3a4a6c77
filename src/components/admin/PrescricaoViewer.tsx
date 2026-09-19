@@ -56,6 +56,8 @@ interface TreinoRow {
   observacao: string | null;
   detalhes_execucao: string | null;
   tecnica_avancada?: string | null;
+  video_url?: string | null;
+  referencia_exercicio_id?: string | null;
 }
 
 interface DietaRow {
@@ -195,7 +197,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       supabase
         .from("treinos_prescritos")
         .select(
-          "id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao, tecnica_avancada",
+          "id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao, tecnica_avancada, video_url, referencia_exercicio_id",
         )
         .eq("aluno_id", alunoId)
         .eq("tenant_id", tenant.id)
