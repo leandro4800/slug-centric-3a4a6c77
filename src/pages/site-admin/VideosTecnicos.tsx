@@ -537,7 +537,45 @@ const VideosTecnicos = () => {
                   <Upload className="h-3 w-3 mr-1" /> Upload
                 </Button>
               </div>
-              <Input placeholder="Nome do exercício" value={novoNome} onChange={(e) => setNovoNome(e.target.value)} />
+              <Input
+                placeholder="Nome do exercício"
+                value={novoNome}
+                onChange={(e) => {
+                  setNovoNome(e.target.value);
+                  setIgnorarSimilares(false);
+                }}
+              />
+              {checandoSimilares && (
+                <p className="text-[11px] text-muted-foreground">Procurando exercícios parecidos...</p>
+              )}
+              {!ignorarSimilares && similares.length > 0 && (
+                <div className="border border-amber-400/40 bg-amber-400/5 p-3 space-y-2">
+                  <p className="text-xs text-amber-300 font-semibold">
+                    Já existe exercício parecido cadastrado:
+                  </p>
+                  <ul className="space-y-2">
+                    {similares.map((s) => (
+                      <li key={s.id} className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-semibold">{s.nome_exercicio}</span>
+                        <span className="text-muted-foreground">
+                          {s.url_video ? "(com vídeo ✓)" : "(sem vídeo)"} ·{" "}
+                          {s.tenant_id === null
+                            ? "Do App"
+                            : s.tenant_id === tenant?.id
+                              ? "Meu"
+                              : `Comunidade${s.tenant_nome ? ` · ${s.tenant_nome}` : ""}`}
+                        </span>
+                        <Button size="sm" variant="outline" onClick={() => usarExistente(s)}>
+                          Usar este
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button size="sm" variant="ghost" onClick={() => setIgnorarSimilares(true)}>
+                    Continuar criando novo
+                  </Button>
+                </div>
+              )}
               {isFight && (
                 <div className="grid md:grid-cols-2 gap-2">
                   <select
