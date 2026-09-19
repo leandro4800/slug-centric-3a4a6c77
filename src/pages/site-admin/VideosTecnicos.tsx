@@ -73,7 +73,7 @@ const VideosTecnicos = () => {
   const [search, setSearch] = useState("");
   // Administradores podem filtrar livremente. Para coaches, o filtro visível é
   // sempre derivado de `fonteAlunos`, evitando dois estados divergentes.
-  const [filter, setFilter] = useState<"todos" | "app" | "meus">("app");
+  const [filter, setFilter] = useState<"todos" | "app" | "meus" | "comunidade">("app");
   // Fonte de vídeos que os ALUNOS enxergam (travada no tenant, persiste até
   // o coach trocar manualmente): ambos | meus | app.
   const [fonteAlunos, setFonteAlunos] = useState<"ambos" | "meus" | "app">("app");
@@ -96,6 +96,11 @@ const VideosTecnicos = () => {
   const [editNome, setEditNome] = useState("");
   const [editUrl, setEditUrl] = useState("");
   const [previewId, setPreviewId] = useState<string | null>(null);
+
+  // Checagem de nome parecido (pg_trgm) antes de salvar
+  const [similares, setSimilares] = useState<SimilarRow[]>([]);
+  const [checandoSimilares, setChecandoSimilares] = useState(false);
+  const [ignorarSimilares, setIgnorarSimilares] = useState(false);
 
   // Aba alunos
   const [alunos, setAlunos] = useState<AlunoRow[]>([]);
