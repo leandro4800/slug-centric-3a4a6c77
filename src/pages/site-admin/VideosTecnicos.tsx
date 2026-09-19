@@ -14,11 +14,26 @@ interface VideoRow {
   nome_exercicio: string;
   url_video: string | null;
   tenant_id: string | null;
+  tenant_nome?: string | null;
   origem: string | null;
   storage_path: string | null;
   modalidade: string | null;
   valencia: string | null;
 }
+
+interface SimilarRow {
+  id: string;
+  nome_exercicio: string;
+  url_video: string | null;
+  tenant_id: string | null;
+  tenant_nome: string | null;
+  origem: string | null;
+  similaridade: number;
+}
+
+// Limiar validado com os nomes reais da base (0.35 separa bem
+// "Cadeira Extensora" x "extensora" sem trazer ruído).
+const SIMILARITY_THRESHOLD = 0.35;
 
 interface PrescritoRow {
   id: string;
@@ -58,7 +73,7 @@ const VideosTecnicos = () => {
   const [search, setSearch] = useState("");
   // Administradores podem filtrar livremente. Para coaches, o filtro visível é
   // sempre derivado de `fonteAlunos`, evitando dois estados divergentes.
-  const [filter, setFilter] = useState<"todos" | "app" | "meus">("app");
+  const [filter, setFilter] = useState<"todos" | "app" | "meus" | "comunidade">("app");
   // Fonte de vídeos que os ALUNOS enxergam (travada no tenant, persiste até
   // o coach trocar manualmente): ambos | meus | app.
   const [fonteAlunos, setFonteAlunos] = useState<"ambos" | "meus" | "app">("app");
@@ -81,6 +96,11 @@ const VideosTecnicos = () => {
   const [editNome, setEditNome] = useState("");
   const [editUrl, setEditUrl] = useState("");
   const [previewId, setPreviewId] = useState<string | null>(null);
+
+  // Checagem de nome parecido (pg_trgm) antes de salvar
+  const [similares, setSimilares] = useState<SimilarRow[]>([]);
+  const [checandoSimilares, setChecandoSimilares] = useState(false);
+  const [ignorarSimilares, setIgnorarSimilares] = useState(false);
 
   // Aba alunos
   const [alunos, setAlunos] = useState<AlunoRow[]>([]);
@@ -113,11 +133,9 @@ const VideosTecnicos = () => {
       if (isAppAdmin) setFilter("todos");
       setVertical(String((t as any)?.vertical || "personal"));
 
-      const { data, error } = await supabase
-        .from("referencia_exercicios")
-        .select("id, nome_exercicio, url_video, tenant_id, origem, storage_path, modalidade, valencia")
-        .or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`)
-        .order("nome_exercicio", { ascending: true });
+      // Biblioteca compartilhada: traz exercícios do app, os do próprio coach
+      // e os cadastrados por outros coaches (com o nome de quem cadastrou).
+      const { data, error } = await (supabase as any).rpc("listar_referencia_exercicios");
       if (error) throw error;
       setRows((data || []) as VideoRow[]);
     } catch (e: any) {
@@ -294,6 +312,47 @@ const VideosTecnicos = () => {
     }
   };
 
+  // Busca por nomes parecidos (pg_trgm) enquanto o coach digita.
+  useEffect(() => {
+    const termo = novoNome.trim();
+    if (!isAdding || termo.length < 3) {
+      setSimilares([]);
+      return;
+    }
+    let cancelado = false;
+    setChecandoSimilares(true);
+    const t = setTimeout(async () => {
+      const { data, error } = await (supabase as any).rpc("buscar_exercicios_similares", {
+        _nome: termo,
+        _limit: 5,
+        _threshold: SIMILARITY_THRESHOLD,
+      });
+      if (cancelado) return;
+      setChecandoSimilares(false);
+      if (error) return;
+      setSimilares((data || []) as SimilarRow[]);
+    }, 400);
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+      setChecandoSimilares(false);
+      clearTimeout(t);
+    };
+  }, [novoNome, isAdding]);
+
+  // "Usar este": aproveita o exercício já cadastrado em vez de criar outro.
+  const usarExistente = (s: SimilarRow) => {
+    setIsAdding(false);
+    setSimilares([]);
+    setNovoNome("");
+    setNovoUrl("");
+    setNovoArquivo(null);
+    setSearch(s.nome_exercicio);
+    setFilter(s.tenant_id === null ? "app" : s.tenant_id === tenant?.id ? "meus" : "comunidade");
+    setPreviewId(s.id);
+    toast.success(`Usando o exercício já cadastrado: ${s.nome_exercicio}`);
+  };
+
   const startEdit = (v: VideoRow) => {
     setEditId(v.id);
     setEditNome(v.nome_exercicio);
@@ -350,14 +409,21 @@ const VideosTecnicos = () => {
   };
 
   const isFight = vertical === "fight";
-  const activeFilter: "todos" | "app" | "meus" = isAppAdmin ? filter : fonteAlunos === "meus" ? "meus" : "app";
+  const activeFilter: "todos" | "app" | "meus" | "comunidade" =
+    filter === "comunidade" ? "comunidade" : isAppAdmin ? filter : fonteAlunos === "meus" ? "meus" : "app";
 
   const filtered = useMemo(
     () =>
       rows
         .filter((v) => v.nome_exercicio.toLowerCase().includes(search.toLowerCase()))
         .filter((v) =>
-          activeFilter === "app" ? v.tenant_id === null : activeFilter === "meus" ? v.tenant_id === tenant?.id : true,
+          activeFilter === "app"
+            ? v.tenant_id === null
+            : activeFilter === "meus"
+              ? v.tenant_id === tenant?.id
+              : activeFilter === "comunidade"
+                ? v.tenant_id !== null && v.tenant_id !== tenant?.id
+                : true,
         )
         .filter((v) =>
           !isFight || filtroModalidade === "todas"
@@ -424,13 +490,21 @@ const VideosTecnicos = () => {
       {tab === "biblioteca" ? (
         <>
           <div className="mt-5 flex flex-wrap gap-2 items-center">
-            {((isAppAdmin ? ["todos", "meus", "app"] : ["meus", "app"]) as ("todos" | "meus" | "app")[]).map((f) => (
+            {((isAppAdmin ? ["todos", "meus", "app", "comunidade"] : ["meus", "app", "comunidade"]) as (
+              | "todos"
+              | "meus"
+              | "app"
+              | "comunidade"
+            )[]).map((f) => (
               <button
                 type="button"
                 key={f}
                 onClick={() => {
-                  if (isAppAdmin || f === "todos") setFilter(f);
-                  else void salvarFonteAlunos(f);
+                  if (f === "comunidade" || f === "todos" || isAppAdmin) setFilter(f);
+                  else {
+                    setFilter(f);
+                    void salvarFonteAlunos(f);
+                  }
                 }}
                 disabled={savingPref}
                 className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
@@ -439,7 +513,13 @@ const VideosTecnicos = () => {
                     : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
                 }`}
               >
-                {f === "todos" ? "Todos" : f === "meus" ? "Meus vídeos" : "Do App"}
+                {f === "todos"
+                  ? "Todos"
+                  : f === "meus"
+                    ? "Meus vídeos"
+                    : f === "app"
+                      ? "Do App"
+                      : "Comunidade"}
               </button>
             ))}
           </div>
@@ -498,7 +578,45 @@ const VideosTecnicos = () => {
                   <Upload className="h-3 w-3 mr-1" /> Upload
                 </Button>
               </div>
-              <Input placeholder="Nome do exercício" value={novoNome} onChange={(e) => setNovoNome(e.target.value)} />
+              <Input
+                placeholder="Nome do exercício"
+                value={novoNome}
+                onChange={(e) => {
+                  setNovoNome(e.target.value);
+                  setIgnorarSimilares(false);
+                }}
+              />
+              {checandoSimilares && (
+                <p className="text-[11px] text-muted-foreground">Procurando exercícios parecidos...</p>
+              )}
+              {!ignorarSimilares && similares.length > 0 && (
+                <div className="border border-amber-400/40 bg-amber-400/5 p-3 space-y-2">
+                  <p className="text-xs text-amber-300 font-semibold">
+                    Já existe exercício parecido cadastrado:
+                  </p>
+                  <ul className="space-y-2">
+                    {similares.map((s) => (
+                      <li key={s.id} className="flex flex-wrap items-center gap-2 text-xs">
+                        <span className="font-semibold">{s.nome_exercicio}</span>
+                        <span className="text-muted-foreground">
+                          {s.url_video ? "(com vídeo ✓)" : "(sem vídeo)"} ·{" "}
+                          {s.tenant_id === null
+                            ? "Do App"
+                            : s.tenant_id === tenant?.id
+                              ? "Meu"
+                              : `Comunidade${s.tenant_nome ? ` · ${s.tenant_nome}` : ""}`}
+                        </span>
+                        <Button size="sm" variant="outline" onClick={() => usarExistente(s)}>
+                          Usar este
+                        </Button>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button size="sm" variant="ghost" onClick={() => setIgnorarSimilares(true)}>
+                    Continuar criando novo
+                  </Button>
+                </div>
+              )}
               {isFight && (
                 <div className="grid md:grid-cols-2 gap-2">
                   <select
@@ -553,7 +671,9 @@ const VideosTecnicos = () => {
             ) : (
               filtered.map((v) => {
                 const isGlobal = v.tenant_id === null;
-                const canManage = !isGlobal || isAppAdmin;
+                const isMine = v.tenant_id === tenant?.id;
+                const isComunidade = !isGlobal && !isMine;
+                const canManage = isMine || isAppAdmin;
                 const isEditing = editId === v.id;
                 return (
                   <div key={v.id} className="border border-border bg-card/30 p-4">
@@ -561,12 +681,21 @@ const VideosTecnicos = () => {
                       <div className="flex-1 min-w-0">
                         <span
                           className={`text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold border ${
-                            isGlobal ? "text-muted-foreground border-border" : "text-primary border-primary/40"
+                            isGlobal
+                              ? "text-muted-foreground border-border"
+                              : isComunidade
+                                ? "text-amber-400 border-amber-400/50"
+                                : "text-primary border-primary/40"
                           }`}
                         >
                           {isGlobal ? (
                             <>
                               <Globe className="h-2.5 w-2.5 inline mr-1" />App
+                            </>
+                          ) : isComunidade ? (
+                            <>
+                              <Users className="h-2.5 w-2.5 inline mr-1" />
+                              Comunidade{v.tenant_nome ? ` · ${v.tenant_nome}` : ""}
                             </>
                           ) : (
                             v.origem || "meu"
@@ -598,7 +727,9 @@ const VideosTecnicos = () => {
                           <Play className="h-4 w-4 mr-1" /> {previewId === v.id ? "Fechar" : "Ver"}
                         </Button>
                         {!canManage ? (
-                          <span className="text-[10px] text-muted-foreground">Vídeo do app</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {isComunidade ? "Vídeo de outro coach" : "Vídeo do app"}
+                          </span>
                         ) : isEditing ? (
                           <>
                             <Button size="sm" onClick={saveEdit}>

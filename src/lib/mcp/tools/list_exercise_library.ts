@@ -23,12 +23,14 @@ export default defineTool({
     const tenantFilter = (col = "tenant_id") =>
       apenas_meus ? `${col}.eq.${auth.tenantId}` : `${col}.eq.${auth.tenantId},${col}.is.null`;
 
+    // Biblioteca compartilhada: exercícios de qualquer coach ficam visíveis
+    // para toda a plataforma (salvo quando o coach pede apenas_meus).
     let refQ = supa
       .from("referencia_exercicios")
-      .select("id, nome_exercicio, url_video, thumbnail_url, grupamento_muscular, tenant_id, origem")
-      .or(tenantFilter())
+      .select("id, nome_exercicio, url_video, thumbnail_url, grupamento_muscular, tenant_id, origem, tenants(nome)")
       .order("nome_exercicio")
       .limit(max);
+    if (apenas_meus) refQ = refQ.eq("tenant_id", auth.tenantId);
     if (search?.trim()) refQ = refQ.ilike("nome_exercicio", `%${search.trim()}%`);
     if (grupo_muscular?.trim()) refQ = refQ.ilike("grupamento_muscular", `%${grupo_muscular.trim()}%`);
 
@@ -53,13 +55,23 @@ export default defineTool({
     const erro = ref.error?.message ?? vid.error?.message ?? bib.error?.message;
     if (erro) return errorResult(`Erro consultando biblioteca: ${erro}`);
 
+    const refComOrigem = (ref.data ?? []).map((r: any) => ({
+      ...r,
+      origem_biblioteca:
+        r.tenant_id === null
+          ? "App (oficial)"
+          : r.tenant_id === auth.tenantId
+            ? "Meu"
+            : `Comunidade${r.tenants?.nome ? ` · ${r.tenants.nome}` : ""}`,
+    }));
+
     return jsonResult({
       tenant: auth.tenantName,
-      referencia_exercicios: ref.data ?? [],
+      referencia_exercicios: refComOrigem,
       referencia_videos: vid.data ?? [],
       biblioteca_exercicios: bib.data ?? [],
       totais: {
-        referencia_exercicios: ref.data?.length ?? 0,
+        referencia_exercicios: refComOrigem.length,
         referencia_videos: vid.data?.length ?? 0,
         biblioteca_exercicios: bib.data?.length ?? 0,
       },

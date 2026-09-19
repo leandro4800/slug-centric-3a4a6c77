@@ -12,6 +12,7 @@ interface VideoReferencia {
   nome_exercicio: string;
   url_video: string | null;
   tenant_id: string | null;
+  tenant_nome?: string | null;
   origem: string | null;
   storage_path: string | null;
 }
@@ -32,6 +33,7 @@ const AdminVideosTecnicos = () => {
   const onlyMine = fonteAlunos === "meus";
 
   const [publicarComoApp, setPublicarComoApp] = useState(false);
+  const [verComunidade, setVerComunidade] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
 
   useEffect(() => {
@@ -91,18 +93,8 @@ const AdminVideosTecnicos = () => {
   const loadVideos = async () => {
     try {
       setLoading(true);
-      let query = supabase
-        .from("referencia_exercicios")
-        .select("id, nome_exercicio, url_video, tenant_id, origem, storage_path")
-        .order("nome_exercicio", { ascending: true });
-
-      if (tenant?.id) {
-        query = query.or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`);
-      } else {
-        query = query.is("tenant_id", null);
-      }
-
-      const { data, error } = await query;
+      // Biblioteca compartilhada entre todos os coaches da plataforma.
+      const { data, error } = await (supabase as any).rpc("listar_referencia_exercicios");
       if (error) throw error;
       setVideos((data || []) as VideoReferencia[]);
     } catch (error: any) {
@@ -257,6 +249,7 @@ const AdminVideosTecnicos = () => {
   const filteredVideos = videos
     .filter((v) => v.nome_exercicio.toLowerCase().includes(search.toLowerCase()))
     .filter((v) => {
+      if (verComunidade) return v.tenant_id !== null && v.tenant_id !== tenant?.id;
       if (filter === "meus") return v.tenant_id === tenant?.id;
       if (filter === "app") return v.tenant_id === null;
       return true;
@@ -283,7 +276,10 @@ const AdminVideosTecnicos = () => {
         {(["meus", "app"] as const).map((f) => (
           <button
             key={f}
-            onClick={() => salvarFonteAlunos(f)}
+            onClick={() => {
+              setVerComunidade(false);
+              salvarFonteAlunos(f);
+            }}
             disabled={savingPref}
             className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
               fonteAlunos === f
@@ -294,6 +290,16 @@ const AdminVideosTecnicos = () => {
             {f === "meus" ? "Meus" : "Do App"} {fonteAlunos === f ? "(ativo)" : ""}
           </button>
         ))}
+        <button
+          onClick={() => setVerComunidade((v) => !v)}
+          className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
+            verComunidade
+              ? "bg-amber-400 text-black border-amber-400"
+              : "bg-card/40 text-muted-foreground border-white/10 hover:border-amber-400/40"
+          }`}
+        >
+          Comunidade
+        </button>
       </div>
       <p className="text-[10px] text-muted-foreground mt-2">
         {onlyMine
@@ -489,6 +495,8 @@ const AdminVideosTecnicos = () => {
             <div className="grid grid-cols-1 gap-3">
               {filteredVideos.map((video) => {
                 const isGlobal = video.tenant_id === null;
+                const isMine = video.tenant_id === tenant?.id;
+                const isComunidade = !isGlobal && !isMine;
                 return (
                   <div
                     key={video.id}
@@ -500,13 +508,17 @@ const AdminVideosTecnicos = () => {
                           className={`text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold border ${
                             isGlobal
                               ? "text-muted-foreground border-white/10 bg-white/5"
-                              : "text-primary border-primary/40 bg-primary/10"
+                              : isComunidade
+                                ? "text-amber-400 border-amber-400/50 bg-amber-400/10"
+                                : "text-primary border-primary/40 bg-primary/10"
                           }`}
                         >
                           {isGlobal ? (
                             <>
                               <Globe className="h-2.5 w-2.5 inline mr-1" />App
                             </>
+                          ) : isComunidade ? (
+                            <>Comunidade{video.tenant_nome ? ` · ${video.tenant_nome}` : ""}</>
                           ) : (
                             video.origem || "meu"
                           )}
@@ -530,7 +542,7 @@ const AdminVideosTecnicos = () => {
                           Testar
                         </a>
                       )}
-                      {!isGlobal && (
+                      {isMine && (
                         <button
                           onClick={() => handleDelete(video)}
                           className="w-10 h-10 flex items-center justify-center text-red-500/50 hover:text-red-500 transition-all border border-red-500/20 hover:border-red-500/50 bg-red-500/5"

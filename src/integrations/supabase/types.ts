@@ -4701,6 +4701,18 @@ export type Database = {
           titulo: string
         }[]
       }
+      buscar_exercicios_similares: {
+        Args: { _limit?: number; _nome: string; _threshold?: number }
+        Returns: {
+          id: string
+          nome_exercicio: string
+          origem: string
+          similaridade: number
+          tenant_id: string
+          tenant_nome: string
+          url_video: string
+        }[]
+      }
       buscar_templates_treino: {
         Args: {
           p_divisao?: string
@@ -4813,6 +4825,20 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      listar_referencia_exercicios: {
+        Args: never
+        Returns: {
+          id: string
+          modalidade: string
+          nome_exercicio: string
+          origem: string
+          storage_path: string
+          tenant_id: string
+          tenant_nome: string
+          url_video: string
+          valencia: string
+        }[]
       }
       match_referencia_exercicio: {
         Args: { _limit?: number; _nome: string; _tenant_id: string }
