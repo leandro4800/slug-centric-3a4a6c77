@@ -312,6 +312,47 @@ const VideosTecnicos = () => {
     }
   };
 
+  // Busca por nomes parecidos (pg_trgm) enquanto o coach digita.
+  useEffect(() => {
+    const termo = novoNome.trim();
+    if (!isAdding || termo.length < 3) {
+      setSimilares([]);
+      return;
+    }
+    let cancelado = false;
+    setChecandoSimilares(true);
+    const t = setTimeout(async () => {
+      const { data, error } = await (supabase as any).rpc("buscar_exercicios_similares", {
+        _nome: termo,
+        _limit: 5,
+        _threshold: SIMILARITY_THRESHOLD,
+      });
+      if (cancelado) return;
+      setChecandoSimilares(false);
+      if (error) return;
+      setSimilares((data || []) as SimilarRow[]);
+    }, 400);
+    return () => {
+      cancelado = true;
+      clearTimeout(t);
+      setChecandoSimilares(false);
+      clearTimeout(t);
+    };
+  }, [novoNome, isAdding]);
+
+  // "Usar este": aproveita o exercício já cadastrado em vez de criar outro.
+  const usarExistente = (s: SimilarRow) => {
+    setIsAdding(false);
+    setSimilares([]);
+    setNovoNome("");
+    setNovoUrl("");
+    setNovoArquivo(null);
+    setSearch(s.nome_exercicio);
+    setFilter(s.tenant_id === null ? "app" : s.tenant_id === tenant?.id ? "meus" : "comunidade");
+    setPreviewId(s.id);
+    toast.success(`Usando o exercício já cadastrado: ${s.nome_exercicio}`);
+  };
+
   const startEdit = (v: VideoRow) => {
     setEditId(v.id);
     setEditNome(v.nome_exercicio);
