@@ -83,6 +83,8 @@ interface ExercicioPrescrito {
   detalhes_execucao?: string;
   observacao: string;
   tecnica_avancada?: string;
+  video_url?: string | null;
+  referencia_exercicio_id?: string | null;
 }
 
 type DiaGeradoIA = {
@@ -553,7 +555,7 @@ const AdminMontarTreino = () => {
       } else {
         const { data: tp } = await supabase
           .from("treinos_prescritos")
-          .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tecnica_avancada")
+          .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tecnica_avancada, video_url, referencia_exercicio_id")
           .eq("aluno_id", alunoId)
           .eq("tenant_id", tenant.id)
           .order("dia_ordem", { nullsFirst: false })
@@ -569,6 +571,8 @@ const AdminMontarTreino = () => {
             detalhes_execucao: r.detalhes_execucao || "",
             observacao: r.observacao || "",
             tecnica_avancada: r.tecnica_avancada || "",
+            video_url: r.video_url ?? null,
+            referencia_exercicio_id: r.referencia_exercicio_id ?? null,
           }));
           const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
           setExercicios(carregados);
@@ -912,7 +916,9 @@ const AdminMontarTreino = () => {
           detalhes_execucao: e.detalhes_execucao,
           observacao: e.observacao,
           tecnica_avancada: e.tecnica_avancada || null,
-          referencia_exercicio_id: linkIdPara(linkMap, e.exercicio),
+          referencia_exercicio_id: linkIdPara(linkMap, e.exercicio) ?? e.referencia_exercicio_id ?? null,
+          // preserva o vídeo já vinculado (só é limpo quando o nome do exercício muda)
+          video_url: e.video_url ?? null,
           status: "ativo",
         };
       });
@@ -943,7 +949,17 @@ const AdminMontarTreino = () => {
   };
 
   const updateEx = (idx: number, patch: Partial<ExercicioPrescrito>) => {
-    setExercicios((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
+    setExercicios((prev) =>
+      prev.map((e, i) => {
+        if (i !== idx) return e;
+        // Trocou o exercício? o vídeo antigo não vale mais — será resolvido pela referência
+        const trocouExercicio =
+          patch.exercicio !== undefined && patch.exercicio.trim() !== (e.exercicio || "").trim();
+        return trocouExercicio
+          ? { ...e, ...patch, video_url: null, referencia_exercicio_id: null }
+          : { ...e, ...patch };
+      }),
+    );
   };
   const removeEx = (idx: number) => setExercicios((prev) => prev.filter((_, i) => i !== idx));
   const renameDia = (oldName: string, newName: string) => {

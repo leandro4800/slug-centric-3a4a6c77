@@ -56,6 +56,8 @@ interface TreinoRow {
   observacao: string | null;
   detalhes_execucao: string | null;
   tecnica_avancada?: string | null;
+  video_url?: string | null;
+  referencia_exercicio_id?: string | null;
 }
 
 interface DietaRow {
@@ -195,7 +197,7 @@ export const PrescricaoViewer = ({ open, onOpenChange, alunoId, alunoNome }: Pro
       supabase
         .from("treinos_prescritos")
         .select(
-          "id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao, tecnica_avancada",
+          "id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, cadencia, observacao, detalhes_execucao, tecnica_avancada, video_url, referencia_exercicio_id",
         )
         .eq("aluno_id", alunoId)
         .eq("tenant_id", tenant.id)
@@ -820,6 +822,8 @@ interface TreinoEditItem {
   detalhes_execucao: string;
   observacao: string;
   tecnica_avancada: string;
+  video_url?: string | null;
+  referencia_exercicio_id?: string | null;
 }
 
 interface BibliotecaExercicio {
@@ -1068,6 +1072,8 @@ const TreinoEditor = ({
       detalhes_execucao: t.detalhes_execucao || "",
       observacao: t.observacao || "",
       tecnica_avancada: (t as any).tecnica_avancada || "",
+      video_url: (t as any).video_url ?? null,
+      referencia_exercicio_id: (t as any).referencia_exercicio_id ?? null,
     }));
 
   useEffect(() => {
@@ -1078,7 +1084,17 @@ const TreinoEditor = ({
   const dias = [...new Set(items.map((i) => i.dia_semana))];
 
   const updateItem = (key: string, patch: Partial<TreinoEditItem>) =>
-    setItems((prev) => prev.map((it) => (it._key === key ? { ...it, ...patch } : it)));
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it._key !== key) return it;
+        // Trocou o exercício? o vídeo antigo não vale mais — será resolvido pela referência
+        const trocouExercicio =
+          patch.exercicio !== undefined && patch.exercicio.trim() !== (it.exercicio || "").trim();
+        return trocouExercicio
+          ? { ...it, ...patch, video_url: null, referencia_exercicio_id: null }
+          : { ...it, ...patch };
+      }),
+    );
 
   const removeItem = (key: string) =>
     setItems((prev) => prev.filter((it) => it._key !== key));
@@ -1243,7 +1259,9 @@ const TreinoEditor = ({
           detalhes_execucao: i.detalhes_execucao || null,
           observacao: i.observacao || null,
           tecnica_avancada: i.tecnica_avancada || null,
-          referencia_exercicio_id: linkIdPara(linkMap, i.exercicio),
+          referencia_exercicio_id: linkIdPara(linkMap, i.exercicio) ?? i.referencia_exercicio_id ?? null,
+          // preserva o vídeo já vinculado (só é limpo quando o nome do exercício muda)
+          video_url: i.video_url ?? null,
         };
       });
 
