@@ -648,7 +648,9 @@ const VideosTecnicos = () => {
                           <Play className="h-4 w-4 mr-1" /> {previewId === v.id ? "Fechar" : "Ver"}
                         </Button>
                         {!canManage ? (
-                          <span className="text-[10px] text-muted-foreground">Vídeo do app</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {isComunidade ? "Vídeo de outro coach" : "Vídeo do app"}
+                          </span>
                         ) : isEditing ? (
                           <>
                             <Button size="sm" onClick={saveEdit}>
