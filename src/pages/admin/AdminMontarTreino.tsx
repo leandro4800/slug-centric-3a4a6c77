@@ -83,6 +83,8 @@ interface ExercicioPrescrito {
   detalhes_execucao?: string;
   observacao: string;
   tecnica_avancada?: string;
+  video_url?: string | null;
+  referencia_exercicio_id?: string | null;
 }
 
 type DiaGeradoIA = {
@@ -553,7 +555,7 @@ const AdminMontarTreino = () => {
       } else {
         const { data: tp } = await supabase
           .from("treinos_prescritos")
-          .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tecnica_avancada")
+          .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tecnica_avancada, video_url, referencia_exercicio_id")
           .eq("aluno_id", alunoId)
           .eq("tenant_id", tenant.id)
           .order("dia_ordem", { nullsFirst: false })
@@ -569,6 +571,8 @@ const AdminMontarTreino = () => {
             detalhes_execucao: r.detalhes_execucao || "",
             observacao: r.observacao || "",
             tecnica_avancada: r.tecnica_avancada || "",
+            video_url: r.video_url ?? null,
+            referencia_exercicio_id: r.referencia_exercicio_id ?? null,
           }));
           const diasUnicos = [...new Set(carregados.map((e) => e.dia_semana))].filter(Boolean);
           setExercicios(carregados);
