@@ -33,6 +33,7 @@ const AdminVideosTecnicos = () => {
   const onlyMine = fonteAlunos === "meus";
 
   const [publicarComoApp, setPublicarComoApp] = useState(false);
+  const [verComunidade, setVerComunidade] = useState(false);
   const [savingPref, setSavingPref] = useState(false);
 
   useEffect(() => {
@@ -289,6 +290,16 @@ const AdminVideosTecnicos = () => {
             {f === "meus" ? "Meus" : "Do App"} {fonteAlunos === f ? "(ativo)" : ""}
           </button>
         ))}
+        <button
+          onClick={() => setVerComunidade((v) => !v)}
+          className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
+            verComunidade
+              ? "bg-amber-400 text-black border-amber-400"
+              : "bg-card/40 text-muted-foreground border-white/10 hover:border-amber-400/40"
+          }`}
+        >
+          Comunidade
+        </button>
       </div>
       <p className="text-[10px] text-muted-foreground mt-2">
         {onlyMine
