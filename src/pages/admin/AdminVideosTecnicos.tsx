@@ -248,6 +248,7 @@ const AdminVideosTecnicos = () => {
   const filteredVideos = videos
     .filter((v) => v.nome_exercicio.toLowerCase().includes(search.toLowerCase()))
     .filter((v) => {
+      if (verComunidade) return v.tenant_id !== null && v.tenant_id !== tenant?.id;
       if (filter === "meus") return v.tenant_id === tenant?.id;
       if (filter === "app") return v.tenant_id === null;
       return true;
@@ -274,7 +275,10 @@ const AdminVideosTecnicos = () => {
         {(["meus", "app"] as const).map((f) => (
           <button
             key={f}
-            onClick={() => salvarFonteAlunos(f)}
+            onClick={() => {
+              setVerComunidade(false);
+              salvarFonteAlunos(f);
+            }}
             disabled={savingPref}
             className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
               fonteAlunos === f
