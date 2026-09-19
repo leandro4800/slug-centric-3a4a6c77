@@ -661,13 +661,17 @@ var list_exercise_library_default = defineTool12({
     const [ref, vid, bib] = await Promise.all([refQ, vidQ, bibQ]);
     const erro = ref.error?.message ?? vid.error?.message ?? bib.error?.message;
     if (erro) return errorResult(`Erro consultando biblioteca: ${erro}`);
+    const refComOrigem = (ref.data ?? []).map((r) => ({
+      ...r,
+      origem_biblioteca: r.tenant_id === null ? "App (oficial)" : r.tenant_id === auth2.tenantId ? "Meu" : `Comunidade${r.tenants?.nome ? ` \xB7 ${r.tenants.nome}` : ""}`
+    }));
     return jsonResult({
       tenant: auth2.tenantName,
-      referencia_exercicios: ref.data ?? [],
+      referencia_exercicios: refComOrigem,
       referencia_videos: vid.data ?? [],
       biblioteca_exercicios: bib.data ?? [],
       totais: {
-        referencia_exercicios: ref.data?.length ?? 0,
+        referencia_exercicios: refComOrigem.length,
         referencia_videos: vid.data?.length ?? 0,
         biblioteca_exercicios: bib.data?.length ?? 0
       }
