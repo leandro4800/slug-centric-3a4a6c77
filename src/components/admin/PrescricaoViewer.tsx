@@ -1259,7 +1259,9 @@ const TreinoEditor = ({
           detalhes_execucao: i.detalhes_execucao || null,
           observacao: i.observacao || null,
           tecnica_avancada: i.tecnica_avancada || null,
-          referencia_exercicio_id: linkIdPara(linkMap, i.exercicio),
+          referencia_exercicio_id: linkIdPara(linkMap, i.exercicio) ?? i.referencia_exercicio_id ?? null,
+          // preserva o vídeo já vinculado (só é limpo quando o nome do exercício muda)
+          video_url: i.video_url ?? null,
         };
       });
 
