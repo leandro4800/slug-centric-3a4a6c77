@@ -133,11 +133,9 @@ const VideosTecnicos = () => {
       if (isAppAdmin) setFilter("todos");
       setVertical(String((t as any)?.vertical || "personal"));
 
-      const { data, error } = await supabase
-        .from("referencia_exercicios")
-        .select("id, nome_exercicio, url_video, tenant_id, origem, storage_path, modalidade, valencia")
-        .or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`)
-        .order("nome_exercicio", { ascending: true });
+      // Biblioteca compartilhada: traz exercícios do app, os do próprio coach
+      // e os cadastrados por outros coaches (com o nome de quem cadastrou).
+      const { data, error } = await (supabase as any).rpc("listar_referencia_exercicios");
       if (error) throw error;
       setRows((data || []) as VideoRow[]);
     } catch (e: any) {
@@ -370,14 +368,21 @@ const VideosTecnicos = () => {
   };
 
   const isFight = vertical === "fight";
-  const activeFilter: "todos" | "app" | "meus" = isAppAdmin ? filter : fonteAlunos === "meus" ? "meus" : "app";
+  const activeFilter: "todos" | "app" | "meus" | "comunidade" =
+    filter === "comunidade" ? "comunidade" : isAppAdmin ? filter : fonteAlunos === "meus" ? "meus" : "app";
 
   const filtered = useMemo(
     () =>
       rows
         .filter((v) => v.nome_exercicio.toLowerCase().includes(search.toLowerCase()))
         .filter((v) =>
-          activeFilter === "app" ? v.tenant_id === null : activeFilter === "meus" ? v.tenant_id === tenant?.id : true,
+          activeFilter === "app"
+            ? v.tenant_id === null
+            : activeFilter === "meus"
+              ? v.tenant_id === tenant?.id
+              : activeFilter === "comunidade"
+                ? v.tenant_id !== null && v.tenant_id !== tenant?.id
+                : true,
         )
         .filter((v) =>
           !isFight || filtroModalidade === "todas"
