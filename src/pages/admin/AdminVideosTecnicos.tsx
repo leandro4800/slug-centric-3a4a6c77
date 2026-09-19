@@ -542,7 +542,7 @@ const AdminVideosTecnicos = () => {
                           Testar
                         </a>
                       )}
-                      {!isGlobal && (
+                      {isMine && (
                         <button
                           onClick={() => handleDelete(video)}
                           className="w-10 h-10 flex items-center justify-center text-red-500/50 hover:text-red-500 transition-all border border-red-500/20 hover:border-red-500/50 bg-red-500/5"
