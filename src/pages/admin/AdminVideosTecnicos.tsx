@@ -495,6 +495,8 @@ const AdminVideosTecnicos = () => {
             <div className="grid grid-cols-1 gap-3">
               {filteredVideos.map((video) => {
                 const isGlobal = video.tenant_id === null;
+                const isMine = video.tenant_id === tenant?.id;
+                const isComunidade = !isGlobal && !isMine;
                 return (
                   <div
                     key={video.id}
@@ -506,13 +508,17 @@ const AdminVideosTecnicos = () => {
                           className={`text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold border ${
                             isGlobal
                               ? "text-muted-foreground border-white/10 bg-white/5"
-                              : "text-primary border-primary/40 bg-primary/10"
+                              : isComunidade
+                                ? "text-amber-400 border-amber-400/50 bg-amber-400/10"
+                                : "text-primary border-primary/40 bg-primary/10"
                           }`}
                         >
                           {isGlobal ? (
                             <>
                               <Globe className="h-2.5 w-2.5 inline mr-1" />App
                             </>
+                          ) : isComunidade ? (
+                            <>Comunidade{video.tenant_nome ? ` · ${video.tenant_nome}` : ""}</>
                           ) : (
                             video.origem || "meu"
                           )}
