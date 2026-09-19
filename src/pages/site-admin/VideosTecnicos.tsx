@@ -592,7 +592,9 @@ const VideosTecnicos = () => {
             ) : (
               filtered.map((v) => {
                 const isGlobal = v.tenant_id === null;
-                const canManage = !isGlobal || isAppAdmin;
+                const isMine = v.tenant_id === tenant?.id;
+                const isComunidade = !isGlobal && !isMine;
+                const canManage = isMine || isAppAdmin;
                 const isEditing = editId === v.id;
                 return (
                   <div key={v.id} className="border border-border bg-card/30 p-4">
@@ -600,12 +602,21 @@ const VideosTecnicos = () => {
                       <div className="flex-1 min-w-0">
                         <span
                           className={`text-[9px] px-2 py-0.5 uppercase tracking-widest font-bold border ${
-                            isGlobal ? "text-muted-foreground border-border" : "text-primary border-primary/40"
+                            isGlobal
+                              ? "text-muted-foreground border-border"
+                              : isComunidade
+                                ? "text-amber-400 border-amber-400/50"
+                                : "text-primary border-primary/40"
                           }`}
                         >
                           {isGlobal ? (
                             <>
                               <Globe className="h-2.5 w-2.5 inline mr-1" />App
+                            </>
+                          ) : isComunidade ? (
+                            <>
+                              <Users className="h-2.5 w-2.5 inline mr-1" />
+                              Comunidade{v.tenant_nome ? ` · ${v.tenant_nome}` : ""}
                             </>
                           ) : (
                             v.origem || "meu"
