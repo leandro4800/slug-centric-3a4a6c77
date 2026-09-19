@@ -449,13 +449,21 @@ const VideosTecnicos = () => {
       {tab === "biblioteca" ? (
         <>
           <div className="mt-5 flex flex-wrap gap-2 items-center">
-            {((isAppAdmin ? ["todos", "meus", "app"] : ["meus", "app"]) as ("todos" | "meus" | "app")[]).map((f) => (
+            {((isAppAdmin ? ["todos", "meus", "app", "comunidade"] : ["meus", "app", "comunidade"]) as (
+              | "todos"
+              | "meus"
+              | "app"
+              | "comunidade"
+            )[]).map((f) => (
               <button
                 type="button"
                 key={f}
                 onClick={() => {
-                  if (isAppAdmin || f === "todos") setFilter(f);
-                  else void salvarFonteAlunos(f);
+                  if (f === "comunidade" || f === "todos" || isAppAdmin) setFilter(f);
+                  else {
+                    setFilter(f);
+                    void salvarFonteAlunos(f);
+                  }
                 }}
                 disabled={savingPref}
                 className={`px-3 py-1.5 text-[10px] uppercase tracking-widest font-bold border transition-all ${
@@ -464,7 +472,13 @@ const VideosTecnicos = () => {
                     : "bg-card/40 text-muted-foreground border-border hover:border-primary/40"
                 }`}
               >
-                {f === "todos" ? "Todos" : f === "meus" ? "Meus vídeos" : "Do App"}
+                {f === "todos"
+                  ? "Todos"
+                  : f === "meus"
+                    ? "Meus vídeos"
+                    : f === "app"
+                      ? "Do App"
+                      : "Comunidade"}
               </button>
             ))}
           </div>
