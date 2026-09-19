@@ -1072,6 +1072,8 @@ const TreinoEditor = ({
       detalhes_execucao: t.detalhes_execucao || "",
       observacao: t.observacao || "",
       tecnica_avancada: (t as any).tecnica_avancada || "",
+      video_url: (t as any).video_url ?? null,
+      referencia_exercicio_id: (t as any).referencia_exercicio_id ?? null,
     }));
 
   useEffect(() => {
@@ -1082,7 +1084,17 @@ const TreinoEditor = ({
   const dias = [...new Set(items.map((i) => i.dia_semana))];
 
   const updateItem = (key: string, patch: Partial<TreinoEditItem>) =>
-    setItems((prev) => prev.map((it) => (it._key === key ? { ...it, ...patch } : it)));
+    setItems((prev) =>
+      prev.map((it) => {
+        if (it._key !== key) return it;
+        // Trocou o exercício? o vídeo antigo não vale mais — será resolvido pela referência
+        const trocouExercicio =
+          patch.exercicio !== undefined && patch.exercicio.trim() !== (it.exercicio || "").trim();
+        return trocouExercicio
+          ? { ...it, ...patch, video_url: null, referencia_exercicio_id: null }
+          : { ...it, ...patch };
+      }),
+    );
 
   const removeItem = (key: string) =>
     setItems((prev) => prev.filter((it) => it._key !== key));
