@@ -14,11 +14,26 @@ interface VideoRow {
   nome_exercicio: string;
   url_video: string | null;
   tenant_id: string | null;
+  tenant_nome?: string | null;
   origem: string | null;
   storage_path: string | null;
   modalidade: string | null;
   valencia: string | null;
 }
+
+interface SimilarRow {
+  id: string;
+  nome_exercicio: string;
+  url_video: string | null;
+  tenant_id: string | null;
+  tenant_nome: string | null;
+  origem: string | null;
+  similaridade: number;
+}
+
+// Limiar validado com os nomes reais da base (0.35 separa bem
+// "Cadeira Extensora" x "extensora" sem trazer ruído).
+const SIMILARITY_THRESHOLD = 0.35;
 
 interface PrescritoRow {
   id: string;
