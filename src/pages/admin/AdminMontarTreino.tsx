@@ -916,7 +916,9 @@ const AdminMontarTreino = () => {
           detalhes_execucao: e.detalhes_execucao,
           observacao: e.observacao,
           tecnica_avancada: e.tecnica_avancada || null,
-          referencia_exercicio_id: linkIdPara(linkMap, e.exercicio),
+          referencia_exercicio_id: linkIdPara(linkMap, e.exercicio) ?? e.referencia_exercicio_id ?? null,
+          // preserva o vídeo já vinculado (só é limpo quando o nome do exercício muda)
+          video_url: e.video_url ?? null,
           status: "ativo",
         };
       });
@@ -947,7 +949,17 @@ const AdminMontarTreino = () => {
   };
 
   const updateEx = (idx: number, patch: Partial<ExercicioPrescrito>) => {
-    setExercicios((prev) => prev.map((e, i) => (i === idx ? { ...e, ...patch } : e)));
+    setExercicios((prev) =>
+      prev.map((e, i) => {
+        if (i !== idx) return e;
+        // Trocou o exercício? o vídeo antigo não vale mais — será resolvido pela referência
+        const trocouExercicio =
+          patch.exercicio !== undefined && patch.exercicio.trim() !== (e.exercicio || "").trim();
+        return trocouExercicio
+          ? { ...e, ...patch, video_url: null, referencia_exercicio_id: null }
+          : { ...e, ...patch };
+      }),
+    );
   };
   const removeEx = (idx: number) => setExercicios((prev) => prev.filter((_, i) => i !== idx));
   const renameDia = (oldName: string, newName: string) => {
