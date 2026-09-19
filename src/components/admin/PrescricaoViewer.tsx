@@ -822,6 +822,8 @@ interface TreinoEditItem {
   detalhes_execucao: string;
   observacao: string;
   tecnica_avancada: string;
+  video_url?: string | null;
+  referencia_exercicio_id?: string | null;
 }
 
 interface BibliotecaExercicio {
