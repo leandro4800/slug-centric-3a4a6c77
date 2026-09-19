@@ -23,12 +23,14 @@ export default defineTool({
     const tenantFilter = (col = "tenant_id") =>
       apenas_meus ? `${col}.eq.${auth.tenantId}` : `${col}.eq.${auth.tenantId},${col}.is.null`;
 
+    // Biblioteca compartilhada: exercícios de qualquer coach ficam visíveis
+    // para toda a plataforma (salvo quando o coach pede apenas_meus).
     let refQ = supa
       .from("referencia_exercicios")
-      .select("id, nome_exercicio, url_video, thumbnail_url, grupamento_muscular, tenant_id, origem")
-      .or(tenantFilter())
+      .select("id, nome_exercicio, url_video, thumbnail_url, grupamento_muscular, tenant_id, origem, tenants(nome)")
       .order("nome_exercicio")
       .limit(max);
+    if (apenas_meus) refQ = refQ.eq("tenant_id", auth.tenantId);
     if (search?.trim()) refQ = refQ.ilike("nome_exercicio", `%${search.trim()}%`);
     if (grupo_muscular?.trim()) refQ = refQ.ilike("grupamento_muscular", `%${grupo_muscular.trim()}%`);
 

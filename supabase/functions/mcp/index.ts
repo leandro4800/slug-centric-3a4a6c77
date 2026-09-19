@@ -649,7 +649,8 @@ var list_exercise_library_default = defineTool12({
     const supa = getServiceClient();
     const max = limit ?? 100;
     const tenantFilter = (col = "tenant_id") => apenas_meus ? `${col}.eq.${auth2.tenantId}` : `${col}.eq.${auth2.tenantId},${col}.is.null`;
-    let refQ = supa.from("referencia_exercicios").select("id, nome_exercicio, url_video, thumbnail_url, grupamento_muscular, tenant_id, origem").or(tenantFilter()).order("nome_exercicio").limit(max);
+    let refQ = supa.from("referencia_exercicios").select("id, nome_exercicio, url_video, thumbnail_url, grupamento_muscular, tenant_id, origem, tenants(nome)").order("nome_exercicio").limit(max);
+    if (apenas_meus) refQ = refQ.eq("tenant_id", auth2.tenantId);
     if (search?.trim()) refQ = refQ.ilike("nome_exercicio", `%${search.trim()}%`);
     if (grupo_muscular?.trim()) refQ = refQ.ilike("grupamento_muscular", `%${grupo_muscular.trim()}%`);
     let vidQ = supa.from("referencia_videos").select("id, nome_exercicio, url_video, video_coach_url, tenant_id").or(tenantFilter()).order("nome_exercicio").limit(max);
