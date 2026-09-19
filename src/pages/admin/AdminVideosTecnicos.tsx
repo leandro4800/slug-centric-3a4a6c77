@@ -12,6 +12,7 @@ interface VideoReferencia {
   nome_exercicio: string;
   url_video: string | null;
   tenant_id: string | null;
+  tenant_nome?: string | null;
   origem: string | null;
   storage_path: string | null;
 }
@@ -91,18 +92,8 @@ const AdminVideosTecnicos = () => {
   const loadVideos = async () => {
     try {
       setLoading(true);
-      let query = supabase
-        .from("referencia_exercicios")
-        .select("id, nome_exercicio, url_video, tenant_id, origem, storage_path")
-        .order("nome_exercicio", { ascending: true });
-
-      if (tenant?.id) {
-        query = query.or(`tenant_id.is.null,tenant_id.eq.${tenant.id}`);
-      } else {
-        query = query.is("tenant_id", null);
-      }
-
-      const { data, error } = await query;
+      // Biblioteca compartilhada entre todos os coaches da plataforma.
+      const { data, error } = await (supabase as any).rpc("listar_referencia_exercicios");
       if (error) throw error;
       setVideos((data || []) as VideoReferencia[]);
     } catch (error: any) {
