@@ -601,6 +601,8 @@ const Comunidade = () => {
                   <div className="relative w-full bg-background flex items-center justify-center overflow-hidden">
                     <DirectVideoPlayer
                       src={post.video_url}
+                      poster={post.poster_url}
+                      onPosterCaptured={(blob) => void savePostPoster(post, blob)}
                       controls
                       playsInline
                       autoPlayWhenVisible
