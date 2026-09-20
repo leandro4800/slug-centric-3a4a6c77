@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { buildVlogEmbedUrl, normalizeVideoUrl } from "@/lib/video-embed";
 import { isDirectVideo } from "@/lib/utils";
 import { FIGHT_MODALIDADES, modalidadeLabel } from "@/lib/fightModalidades";
+import { captureAndUploadPoster } from "@/lib/video-poster";
 
 interface VideoRow {
   id: string;

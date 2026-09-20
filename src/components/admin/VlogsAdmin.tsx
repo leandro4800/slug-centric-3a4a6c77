@@ -19,6 +19,7 @@ import {
   type VlogPlatform,
 } from "@/lib/vlog-url";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
+import { captureAndUploadPoster } from "@/lib/video-poster";
 
 interface VlogPost {
   id: string;
