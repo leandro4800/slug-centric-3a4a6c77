@@ -322,6 +322,7 @@ const Comunidade = () => {
     try {
       setIsUploading(true);
       let publicUrl: string | null = null;
+      let posterUrl: string | null = null;
       const isVideo = !!selectedFile?.type.startsWith("video");
       if (selectedFile) {
         const fileExt = selectedFile.name.split(".").pop();
@@ -330,15 +331,19 @@ const Comunidade = () => {
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("comunidade_uploads").getPublicUrl(filePath);
         publicUrl = urlData.publicUrl;
+        if (isVideo) {
+          posterUrl = await captureAndUploadPoster(selectedFile, "comunidade_uploads", `${user.id}/posters`);
+        }
       }
       const { error: insertError } = await supabase.from("comunidade_posts").insert({
         usuario_id: user.id,
         conteudo: newPostText,
         imagem_url: isVideo ? null : publicUrl,
         video_url: isVideo ? publicUrl : null,
+        poster_url: isVideo ? posterUrl : null,
         tipo: isVideo ? "video" : "foto",
         profissional_id: tenant.id,
-      });
+      } as any);
       if (insertError) throw insertError;
       toast({ title: "Sucesso!", description: "Seu post foi enviado." });
       setNewPostText("");
