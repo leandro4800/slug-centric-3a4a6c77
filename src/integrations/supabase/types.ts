@@ -1962,6 +1962,7 @@ export type Database = {
           criado_em: string | null
           id: string
           imagem_url: string | null
+          poster_url: string | null
           profissional_id: string
           tipo: string | null
           usuario_id: string | null
@@ -1972,6 +1973,7 @@ export type Database = {
           criado_em?: string | null
           id?: string
           imagem_url?: string | null
+          poster_url?: string | null
           profissional_id: string
           tipo?: string | null
           usuario_id?: string | null
@@ -1982,6 +1984,7 @@ export type Database = {
           criado_em?: string | null
           id?: string
           imagem_url?: string | null
+          poster_url?: string | null
           profissional_id?: string
           tipo?: string | null
           usuario_id?: string | null
