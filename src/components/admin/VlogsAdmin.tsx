@@ -486,6 +486,9 @@ export const VlogsAdmin = () => {
         if (tErr) throw tErr;
         const { data: tUrl } = supabase.storage.from("vlog_videos").getPublicUrl(thumbPath);
         finalThumb = tUrl.publicUrl;
+      } else {
+        // Sem capa enviada: captura o primeiro frame do vídeo como capa automática.
+        finalThumb = await captureAndUploadPoster(videoFile, "vlog_videos", `${tenant.id}/posters`);
       }
 
       // 3. Insert into DB
