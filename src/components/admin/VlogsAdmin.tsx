@@ -19,6 +19,7 @@ import {
   type VlogPlatform,
 } from "@/lib/vlog-url";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
+import { captureAndUploadPoster } from "@/lib/video-poster";
 
 interface VlogPost {
   id: string;
@@ -485,6 +486,9 @@ export const VlogsAdmin = () => {
         if (tErr) throw tErr;
         const { data: tUrl } = supabase.storage.from("vlog_videos").getPublicUrl(thumbPath);
         finalThumb = tUrl.publicUrl;
+      } else {
+        // Sem capa enviada: captura o primeiro frame do vídeo como capa automática.
+        finalThumb = await captureAndUploadPoster(videoFile, "vlog_videos", `${tenant.id}/posters`);
       }
 
       // 3. Insert into DB

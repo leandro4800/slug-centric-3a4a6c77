@@ -10,15 +10,33 @@ import {
 } from "@/lib/instagram-embed";
 import { YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 import { buildYouTubeThumbnailUrl } from "@/lib/vlog-url";
+import { supabase } from "@/integrations/supabase/client";
+import { uploadPoster } from "@/lib/video-poster";
 
 type VlogPlayerModalProps = {
   url: string;
   title?: string | null;
   thumbnailUrl?: string | null;
+  /** Id do vlog: permite salvar a capa capturada de volta no banco. */
+  vlogId?: string | null;
   onClose: () => void;
 };
 
-export const VlogPlayerModal = ({ url, title, thumbnailUrl, onClose }: VlogPlayerModalProps) => {
+/** Salva a capa capturada de um vlog em vídeo direto (silencioso). */
+const saveVlogPoster = async (vlogId: string, blob: Blob) => {
+  try {
+    const { data: auth } = await supabase.auth.getUser();
+    const uid = auth.user?.id;
+    if (!uid) return;
+    const url = await uploadPoster("vlog_videos", `posters/${vlogId}.jpg`, blob);
+    if (!url) return;
+    await supabase.from("vlog_posts").update({ thumbnail_url: url } as any).eq("id", vlogId);
+  } catch (e) {
+    console.warn("[VlogPlayerModal] poster retroativo falhou", e);
+  }
+};
+
+export const VlogPlayerModal = ({ url, title, thumbnailUrl, vlogId, onClose }: VlogPlayerModalProps) => {
   const playback = resolveVideoPlayback(url, { userInitiated: true, muted: isIOSNativeApp() });
   const iframeAllow = playback.isInstagram ? INSTAGRAM_IFRAME_ALLOW : YOUTUBE_IFRAME_ALLOW;
   const iframeReferrerPolicy = playback.isInstagram
@@ -113,6 +131,8 @@ export const VlogPlayerModal = ({ url, title, thumbnailUrl, onClose }: VlogPlaye
           ) : playback.isDirect ? (
             <DirectVideoPlayer
               src={playback.url}
+              poster={thumbnailUrl}
+              onPosterCaptured={vlogId ? (blob) => void saveVlogPoster(vlogId, blob) : undefined}
               controls
               autoPlay
               playsInline

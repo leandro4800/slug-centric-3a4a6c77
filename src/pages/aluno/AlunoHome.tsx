@@ -468,6 +468,7 @@ const AlunoHome = () => {
           url={playing.url}
           title={playing.title}
           thumbnailUrl={playing.thumbnail_url || buildThumb(playing)}
+          vlogId={playing.id}
           onClose={() => setPlaying(null)}
         />
       )}

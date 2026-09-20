@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { buildVlogEmbedUrl, normalizeVideoUrl } from "@/lib/video-embed";
 import { isDirectVideo } from "@/lib/utils";
 import { FIGHT_MODALIDADES, modalidadeLabel } from "@/lib/fightModalidades";
+import { captureAndUploadPoster } from "@/lib/video-poster";
 
 interface VideoRow {
   id: string;
@@ -277,11 +278,17 @@ const VideosTecnicos = () => {
       let url = novoUrl.trim();
       let storagePath: string | null = null;
       let origem = "youtube";
+      let thumbnailUrl: string | null = null;
       if (modo === "upload" && novoArquivo) {
         const up = await uploadArquivo(novoArquivo);
         url = up.url;
         storagePath = up.path;
         origem = "upload";
+        thumbnailUrl = await captureAndUploadPoster(
+          novoArquivo,
+          STORAGE_BUCKET,
+          `${userId}/posters`,
+        );
       } else if (url.includes("drive.google.com")) {
         origem = "drive";
       }
@@ -289,6 +296,7 @@ const VideosTecnicos = () => {
       const { error } = await supabase.from("referencia_exercicios").insert({
         nome_exercicio: novoNome.trim(),
         url_video: url,
+        thumbnail_url: thumbnailUrl,
         tenant_id: tenant.id,
         profissional_id: userId,
         origem,

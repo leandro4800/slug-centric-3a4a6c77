@@ -25,6 +25,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { sharePostLink } from "@/lib/share";
 import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
+import { captureAndUploadPoster, uploadPoster } from "@/lib/video-poster";
 import StoriesViewer from "@/components/aluno/comunidade/StoriesViewer";
 import StoryComposer from "@/components/aluno/comunidade/StoryComposer";
 import DirectDrawer from "@/components/aluno/comunidade/DirectDrawer";
@@ -58,6 +59,7 @@ interface Post {
   conteudo: string;
   imagem_url: string | null;
   video_url: string | null;
+  poster_url: string | null;
   tipo: string;
   criado_em: string;
   perfil?: Perfil | null;
@@ -320,6 +322,7 @@ const Comunidade = () => {
     try {
       setIsUploading(true);
       let publicUrl: string | null = null;
+      let posterUrl: string | null = null;
       const isVideo = !!selectedFile?.type.startsWith("video");
       if (selectedFile) {
         const fileExt = selectedFile.name.split(".").pop();
@@ -328,15 +331,19 @@ const Comunidade = () => {
         if (uploadError) throw uploadError;
         const { data: urlData } = supabase.storage.from("comunidade_uploads").getPublicUrl(filePath);
         publicUrl = urlData.publicUrl;
+        if (isVideo) {
+          posterUrl = await captureAndUploadPoster(selectedFile, "comunidade_uploads", `${user.id}/posters`);
+        }
       }
       const { error: insertError } = await supabase.from("comunidade_posts").insert({
         usuario_id: user.id,
         conteudo: newPostText,
         imagem_url: isVideo ? null : publicUrl,
         video_url: isVideo ? publicUrl : null,
+        poster_url: isVideo ? posterUrl : null,
         tipo: isVideo ? "video" : "foto",
         profissional_id: tenant.id,
-      });
+      } as any);
       if (insertError) throw insertError;
       toast({ title: "Sucesso!", description: "Seu post foi enviado." });
       setNewPostText("");
@@ -348,6 +355,23 @@ const Comunidade = () => {
       toast({ title: "Erro ao postar", description: error.message, variant: "destructive" });
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  /** Correção retroativa: salva a capa capturada de um post antigo sem poster. */
+  const savePostPoster = async (post: Post, blob: Blob) => {
+    if (!user || post.poster_url) return;
+    try {
+      const url = await uploadPoster("comunidade_uploads", `${user.id}/posters/post-${post.id}.jpg`, blob);
+      if (!url) return;
+      const { error } = await supabase
+        .from("comunidade_posts")
+        .update({ poster_url: url } as any)
+        .eq("id", post.id);
+      if (error) throw error;
+      setPosts((ps) => ps.map((p) => (p.id === post.id ? { ...p, poster_url: url } : p)));
+    } catch (e) {
+      console.warn("[Comunidade] poster retroativo falhou", e);
     }
   };
 
@@ -594,6 +618,8 @@ const Comunidade = () => {
                   <div className="relative w-full bg-background flex items-center justify-center overflow-hidden">
                     <DirectVideoPlayer
                       src={post.video_url}
+                      poster={post.poster_url}
+                      onPosterCaptured={(blob) => void savePostPoster(post, blob)}
                       controls
                       playsInline
                       autoPlayWhenVisible
