@@ -25,6 +25,7 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { sharePostLink } from "@/lib/share";
 import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
+import { captureAndUploadPoster, uploadPoster } from "@/lib/video-poster";
 import StoriesViewer from "@/components/aluno/comunidade/StoriesViewer";
 import StoryComposer from "@/components/aluno/comunidade/StoryComposer";
 import DirectDrawer from "@/components/aluno/comunidade/DirectDrawer";
@@ -58,6 +59,7 @@ interface Post {
   conteudo: string;
   imagem_url: string | null;
   video_url: string | null;
+  poster_url: string | null;
   tipo: string;
   criado_em: string;
   perfil?: Perfil | null;
