@@ -132,6 +132,7 @@ export const VlogPlayerModal = ({ url, title, thumbnailUrl, vlogId, onClose }: V
             <DirectVideoPlayer
               src={playback.url}
               poster={thumbnailUrl}
+              onPosterCaptured={vlogId ? (blob) => void saveVlogPoster(vlogId, blob) : undefined}
               controls
               autoPlay
               playsInline
