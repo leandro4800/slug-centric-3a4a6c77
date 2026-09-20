@@ -358,6 +358,23 @@ const Comunidade = () => {
     }
   };
 
+  /** Correção retroativa: salva a capa capturada de um post antigo sem poster. */
+  const savePostPoster = async (post: Post, blob: Blob) => {
+    if (!user || post.poster_url) return;
+    try {
+      const url = await uploadPoster("comunidade_uploads", `${user.id}/posters/post-${post.id}.jpg`, blob);
+      if (!url) return;
+      const { error } = await supabase
+        .from("comunidade_posts")
+        .update({ poster_url: url } as any)
+        .eq("id", post.id);
+      if (error) throw error;
+      setPosts((ps) => ps.map((p) => (p.id === post.id ? { ...p, poster_url: url } : p)));
+    } catch (e) {
+      console.warn("[Comunidade] poster retroativo falhou", e);
+    }
+  };
+
   const groupIndexOf = (uid: string) => storyGroups.findIndex((g) => g.user_id === uid);
 
   const markStoryViewed = async (story: StoryRow) => {
