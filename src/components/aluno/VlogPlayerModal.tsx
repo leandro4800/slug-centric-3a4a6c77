@@ -113,6 +113,7 @@ export const VlogPlayerModal = ({ url, title, thumbnailUrl, onClose }: VlogPlaye
           ) : playback.isDirect ? (
             <DirectVideoPlayer
               src={playback.url}
+              poster={thumbnailUrl}
               controls
               autoPlay
               playsInline
