@@ -49,18 +49,18 @@ export async function carregarIndiceReferencias(
   const { data, error } = await (supabase as any)
     .from("referencia_exercicios")
     .select("id, nome_exercicio, url_video, tenant_id")
-    .not("url_video", "is", null)
-    .or(`tenant_id.eq.${tenantId},tenant_id.is.null`);
+    .not("url_video", "is", null);
   if (error) {
     console.error("carregarIndiceReferencias:", error.message);
     return idx;
   }
+  // prioridade: próprio tenant (2) > global do app (1) > outros coaches (0)
+  const prio = (t: string | null) => (t === tenantId ? 2 : t === null ? 1 : 0);
   for (const row of (data as ExercicioRef[]) || []) {
     const key = normalizarNomeExercicio(row.nome_exercicio);
     if (!key) continue;
     const atual = idx.get(key);
-    // tenant-specific vence global
-    if (!atual || (!atual.tenant_id && row.tenant_id)) idx.set(key, row);
+    if (!atual || prio(row.tenant_id) > prio(atual.tenant_id)) idx.set(key, row);
   }
   return idx;
 }
