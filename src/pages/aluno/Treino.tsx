@@ -574,6 +574,11 @@ export const PersonalTreino = () => {
   // Conclui a sessão: fecha sessoes_treino, calcula gasto calórico (MET) e abre o card de compartilhar
   const concluirTreino = async () => {
     if (!user || !tenant) { setShowConclusao(true); return; }
+    // Nunca conclui sem nenhuma série registrada — evita sessão fantasma com duração>0 e zero séries
+    if (sessaoStats.series === 0) {
+      toast.error("Registre pelo menos 1 série para concluir o treino.");
+      return;
+    }
     setConcluindo(true);
     try {
       let sessaoId: string | null = null;
