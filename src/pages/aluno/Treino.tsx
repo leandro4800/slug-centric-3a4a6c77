@@ -1001,14 +1001,21 @@ export const PersonalTreino = () => {
               TREINO CONCLUÍDO ✓
             </div>
           ) : (
-            <button
-              onClick={concluirTreino}
-              disabled={concluindo}
-              className="mt-6 w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition disabled:opacity-70"
-            >
-              {concluindo ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trophy className="h-5 w-5" />}
-              CONCLUIR TREINO
-            </button>
+            <div className="mt-6 w-full">
+              <button
+                onClick={concluirTreino}
+                disabled={concluindo || sessaoStats.series === 0}
+                className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition disabled:opacity-40"
+              >
+                {concluindo ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trophy className="h-5 w-5" />}
+                CONCLUIR TREINO
+              </button>
+              {sessaoStats.series === 0 && (
+                <p className="mt-2 text-center text-xs text-muted-foreground tracking-wide">
+                  Registre pelo menos 1 série para concluir o treino
+                </p>
+              )}
+            </div>
           )
         )}
 
