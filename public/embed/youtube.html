@@ -41,12 +41,38 @@
         params.delete("v");
         if (!params.has("origin")) params.set("origin", window.location.origin);
         if (!params.has("playsinline")) params.set("playsinline", "1");
+        // Sem JS API o comando de tocar nunca chega ao player interno.
+        params.set("enablejsapi", "1");
+        var wantsAutoplay = params.get("autoplay") === "1";
+        var isMuted = params.get("mute") === "1";
         var embedUrl =
           "https://www.youtube-nocookie.com/embed/" +
           encodeURIComponent(videoId) +
           "?" +
           params.toString();
-        document.getElementById("player").src = embedUrl;
+        var player = document.getElementById("player");
+        player.src = embedUrl;
+
+        // iOS ignora o autoplay do parâmetro: reforça via postMessage quando o player carrega.
+        function send(func, args) {
+          try {
+            player.contentWindow.postMessage(
+              JSON.stringify({ event: "command", func: func, args: args || "" }),
+              "*"
+            );
+          } catch (_e) {}
+        }
+        player.addEventListener("load", function () {
+          if (!wantsAutoplay) return;
+          var tries = 0;
+          var timer = setInterval(function () {
+            tries += 1;
+            if (isMuted) send("mute");
+            send("playVideo");
+            if (tries >= 8) clearInterval(timer);
+          }, 400);
+        });
+
 
         // Encaminha comandos do app (play/pause/mute) para o player interno do YouTube.
         window.addEventListener("message", function (event) {
