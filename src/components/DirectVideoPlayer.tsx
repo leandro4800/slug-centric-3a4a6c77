@@ -1,6 +1,8 @@
 import { Maximize2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { enterNativeFullscreen } from "@/lib/video-orientation";
+import { isIOSNativeApp } from "@/lib/native-platform";
+
 import { frameToJpeg } from "@/lib/video-poster";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +32,10 @@ export function DirectVideoPlayer({
   const captureCbRef = useRef(onPosterCaptured);
   captureCbRef.current = onPosterCaptured;
 
-  const needsCapture = !poster && !!onPosterCaptured;
+  // No iOS o crossOrigin="anonymous" faz o vídeo falhar quando o servidor não
+  // devolve CORS — melhor não capturar capa lá (Android segue igual).
+  const needsCapture = !poster && !!onPosterCaptured && !isIOSNativeApp();
+
 
   // Correção retroativa: sem capa salva, captura o primeiro frame assim que o vídeo carrega.
   useEffect(() => {
