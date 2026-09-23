@@ -1,6 +1,8 @@
 import { Maximize2 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { enterNativeFullscreen } from "@/lib/video-orientation";
+import { isIOSNativeApp } from "@/lib/native-platform";
+
 import { frameToJpeg } from "@/lib/video-poster";
 import { cn } from "@/lib/utils";
 
