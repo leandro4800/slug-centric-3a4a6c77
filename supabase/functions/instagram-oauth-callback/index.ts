@@ -1,11 +1,15 @@
-// Callback OAuth Meta — troca code por token longo e salva credenciais Instagram por tenant.
+// Callback OAuth — Instagram Login (padrão) ou Facebook Page + IG Business (legado).
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import {
   buildAppReturnUrl,
   exchangeCodeForToken,
   exchangeForLongLivedToken,
+  exchangeInstagramLoginCode,
+  exchangeInstagramLoginLongLivedToken,
+  fetchInstagramLoginUsername,
   findInstagramBusinessAccount,
   getInstagramOAuthRedirectUri,
+  resolveInstagramAppCredentials,
   verifyInstagramOAuthState,
 } from "../_shared/instagram-oauth.ts";
 
@@ -13,14 +17,13 @@ const redirect = (url: string) =>
   new Response(null, { status: 302, headers: { Location: url } });
 
 Deno.serve(async (req) => {
-  const appId = Deno.env.get("META_APP_ID")?.trim();
-  const appSecret = Deno.env.get("META_APP_SECRET")?.trim();
+  const creds = resolveInstagramAppCredentials();
   const stateSecret = Deno.env.get("INSTAGRAM_OAUTH_STATE_SECRET")?.trim() ||
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
   const appBaseUrl = (Deno.env.get("APP_BASE_URL") || "https://alpha-coach.app").trim();
 
-  if (!appId || !appSecret || !stateSecret || !supabaseUrl) {
+  if (!creds || !stateSecret || !supabaseUrl) {
     return new Response("Instagram OAuth not configured", { status: 500 });
   }
 
@@ -46,55 +49,92 @@ Deno.serve(async (req) => {
   }
 
   const redirectUri = getInstagramOAuthRedirectUri(supabaseUrl);
-
-  let shortToken: string;
-  try {
-    const short = await exchangeCodeForToken({
-      appId,
-      appSecret,
-      redirectUri,
-      code,
-    });
-    if (!short.access_token) {
-      throw new Error(short.error?.message || "Token curto não retornado pela Meta");
-    }
-    shortToken = short.access_token;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Falha ao trocar código OAuth";
-    return fail(state.slug, message);
-  }
+  const flow = state.flow ?? "facebook_login";
 
   let accessToken: string;
   let expiresIn = 60 * 24 * 60 * 60;
-  try {
-    const long = await exchangeForLongLivedToken({
-      appId,
-      appSecret,
-      shortLivedToken: shortToken,
-    });
-    if (!long.access_token) {
-      throw new Error(long.error?.message || "Token longo não retornado pela Meta");
+  let igUserId: string;
+  let displayName: string | undefined;
+
+  if (flow === "instagram_login") {
+    try {
+      const short = await exchangeInstagramLoginCode({
+        appId: creds.appId,
+        appSecret: creds.appSecret,
+        redirectUri,
+        code,
+      });
+      if (!short.access_token || short.user_id == null) {
+        throw new Error(
+          short.error_message || short.error_type || "Token não retornado pelo Instagram",
+        );
+      }
+      const long = await exchangeInstagramLoginLongLivedToken({
+        appSecret: creds.appSecret,
+        shortLivedToken: short.access_token,
+      });
+      if (!long.access_token) {
+        throw new Error(long.error?.message || "Token longo não retornado pelo Instagram");
+      }
+      accessToken = long.access_token;
+      if (long.expires_in) expiresIn = long.expires_in;
+      igUserId = String(short.user_id);
+      displayName = (await fetchInstagramLoginUsername(igUserId, accessToken)) ?? undefined;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Falha ao conectar conta Instagram";
+      return fail(state.slug, message);
     }
-    accessToken = long.access_token;
-    if (long.expires_in) expiresIn = long.expires_in;
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Falha ao gerar token longo";
-    return fail(state.slug, message);
-  }
+  } else {
+    let shortToken: string;
+    try {
+      const short = await exchangeCodeForToken({
+        appId: creds.appId,
+        appSecret: creds.appSecret,
+        redirectUri,
+        code,
+      });
+      if (!short.access_token) {
+        throw new Error(short.error?.message || "Token curto não retornado pela Meta");
+      }
+      shortToken = short.access_token;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Falha ao trocar código OAuth";
+      return fail(state.slug, message);
+    }
 
-  let igMatch;
-  try {
-    igMatch = await findInstagramBusinessAccount(accessToken);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Falha ao localizar conta Instagram Business";
-    return fail(state.slug, message);
-  }
+    try {
+      const long = await exchangeForLongLivedToken({
+        appId: creds.appId,
+        appSecret: creds.appSecret,
+        shortLivedToken: shortToken,
+      });
+      if (!long.access_token) {
+        throw new Error(long.error?.message || "Token longo não retornado pela Meta");
+      }
+      accessToken = long.access_token;
+      if (long.expires_in) expiresIn = long.expires_in;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Falha ao gerar token longo";
+      return fail(state.slug, message);
+    }
 
-  if (!igMatch) {
-    return fail(
-      state.slug,
-      "Nenhuma Página do Facebook com Instagram Business encontrada. Vincule o Instagram à sua Página na Meta.",
-    );
+    let igMatch;
+    try {
+      igMatch = await findInstagramBusinessAccount(accessToken);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Falha ao localizar conta Instagram";
+      return fail(state.slug, message);
+    }
+
+    if (!igMatch) {
+      return fail(
+        state.slug,
+        "Nenhuma Página do Facebook com Instagram vinculado. Use a conexão pelo Instagram ou vincule a Página na Meta.",
+      );
+    }
+
+    igUserId = igMatch.instagramBusinessAccountId;
+    displayName = igMatch.pageName;
   }
 
   const supabase = createClient(
@@ -104,13 +144,16 @@ Deno.serve(async (req) => {
   );
 
   const expiresAt = new Date(Date.now() + expiresIn * 1000).toISOString();
+  const authFlow = flow === "instagram_login" ? "instagram_login" : "facebook_login";
+
   const { error: upsertErr } = await supabase
     .from("tenants_private")
     .upsert({
       tenant_id: state.tenant_id,
       instagram_access_token: accessToken,
-      instagram_business_account_id: igMatch.instagramBusinessAccountId,
+      instagram_business_account_id: igUserId,
       instagram_token_expires_at: expiresAt,
+      instagram_auth_flow: authFlow,
     });
 
   if (upsertErr) {
@@ -122,7 +165,7 @@ Deno.serve(async (req) => {
       appBaseUrl,
       slug: state.slug,
       status: "connected",
-      pageName: igMatch.pageName,
+      pageName: displayName,
     }),
   );
 });

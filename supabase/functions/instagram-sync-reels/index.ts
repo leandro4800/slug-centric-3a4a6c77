@@ -2,6 +2,7 @@
 // Requer: tenants_private.instagram_access_token + instagram_business_account_id
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { assertCoachAccess } from "../_shared/coach-access.ts";
+import { getInstagramGraphApiBase } from "../_shared/instagram-oauth.ts";
 import { normalizeVlogUrl } from "../_shared/vlog-url.ts";
 
 const corsHeaders = {
@@ -16,7 +17,6 @@ const json = (status: number, body: unknown) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
-const FB = "https://graph.facebook.com/v21.0";
 const MEDIA_FIELDS = "id,caption,media_type,media_product_type,permalink,thumbnail_url,timestamp";
 
 type IgMedia = {
@@ -35,10 +35,15 @@ const isReel = (item: IgMedia) => {
   return item.media_type?.toUpperCase() === "VIDEO" && link.includes("/reel/");
 };
 
-async function fetchAllReels(igId: string, token: string, maxItems: number): Promise<IgMedia[]> {
+async function fetchAllReels(
+  igId: string,
+  token: string,
+  maxItems: number,
+  graphBase: string,
+): Promise<IgMedia[]> {
   const reels: IgMedia[] = [];
   let nextUrl: string | null =
-    `${FB}/${igId}/media?fields=${encodeURIComponent(MEDIA_FIELDS)}&limit=25&access_token=${encodeURIComponent(token)}`;
+    `${graphBase}/${igId}/media?fields=${encodeURIComponent(MEDIA_FIELDS)}&limit=25&access_token=${encodeURIComponent(token)}`;
 
   while (nextUrl && reels.length < maxItems) {
     const res = await fetch(nextUrl);
@@ -90,7 +95,7 @@ Deno.serve(async (req) => {
 
   const { data: priv, error: privErr } = await supabase
     .from("tenants_private")
-    .select("instagram_access_token, instagram_business_account_id")
+    .select("instagram_access_token, instagram_business_account_id, instagram_auth_flow")
     .eq("tenant_id", tenantId)
     .maybeSingle();
   if (privErr) return json(500, { error: privErr.message });
@@ -102,10 +107,14 @@ Deno.serve(async (req) => {
 
   let reels: IgMedia[];
   try {
+    const graphBase = getInstagramGraphApiBase(
+      (priv as { instagram_auth_flow?: string | null }).instagram_auth_flow,
+    );
     reels = await fetchAllReels(
       priv.instagram_business_account_id,
       priv.instagram_access_token,
       maxItems,
+      graphBase,
     );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Erro ao buscar Reels";

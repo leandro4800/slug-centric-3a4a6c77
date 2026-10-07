@@ -17,6 +17,7 @@ import { readStartupBranding } from "@/lib/startup-branding";
 import { Loader2 } from "lucide-react";
 import PushNotificationManager from "@/components/PushNotificationManager";
 import AthleteWriteSync from "@/components/AthleteWriteSync";
+import { PortraitLock } from "@/components/PortraitLock";
 
 import Landing from "./pages/Landing";
 import IndexRedirect from "./pages/IndexRedirect";
@@ -204,6 +205,7 @@ const App = () => (
             
             <PushNotificationManager />
             <AthleteWriteSync />
+            <PortraitLock />
             <Routes>
             {/* Redirecionamentos de Raiz */}
              <Route path="/" element={<IndexRedirect />} />

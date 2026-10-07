@@ -36,6 +36,24 @@ export const PushTester = () => {
 
       if (error) throw error;
 
+      if (data?.skipped) {
+        toast.error("Push pulado", {
+          description: data.reason === "push_token_not_found"
+            ? "Seu perfil ainda não tem push_token. Ative as notificações de novo."
+            : String(data.reason || "skipped"),
+        });
+        return;
+      }
+      if (data?.success === false) {
+        const fcmErr =
+          data?.error?.error?.message ||
+          data?.error?.message ||
+          data?.reason ||
+          "FCM rejeitou";
+        toast.error("FCM rejeitou", { description: fcmErr });
+        return;
+      }
+
       toast.success("Comando de push enviado com sucesso!");
       console.log("Resultado do push:", data);
     } catch (err: any) {

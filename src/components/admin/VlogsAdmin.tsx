@@ -377,6 +377,7 @@ export const VlogsAdmin = () => {
         instagram_access_token: null,
         instagram_business_account_id: null,
         instagram_token_expires_at: null,
+        instagram_auth_flow: null,
       });
     if (error) return toast.error(error.message);
     toast.success("Instagram desconectado");
@@ -561,8 +562,9 @@ export const VlogsAdmin = () => {
           <Video className="h-6 w-6" /> INSTAGRAM — PUBLICAR E SINCRONIZAR REELS
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Conecte a conta Business do coach para <b>publicar Reels</b> e <b>importar automaticamente</b> os últimos Reels para os Vlogs dos alunos.
-          Use o botão abaixo — o token é salvo automaticamente por tenant.
+          Conecte o <b>Instagram do coach</b> (login direto no Instagram — conta <b>Criador</b> ou <b>Empresa</b>) para{" "}
+          <b>publicar Reels</b> e <b>sincronizar</b> os últimos posts nos Vlogs. Não precisa vincular Página do Facebook.
+          Conta pessoal comum (sem perfil profissional) não é suportada pela Meta — use <b>Importar link</b> acima.
         </p>
 
         <Button

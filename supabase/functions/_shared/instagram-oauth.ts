@@ -1,5 +1,9 @@
 const FB = "https://graph.facebook.com/v22.0";
 const FB_DIALOG = "https://www.facebook.com/v22.0/dialog/oauth";
+const IG_GRAPH = "https://graph.instagram.com/v21.0";
+const IG_AUTHORIZE = "https://www.instagram.com/oauth/authorize";
+
+export type InstagramAuthFlow = "instagram_login" | "facebook_login";
 
 export const IG_OAUTH_SCOPES = [
   "instagram_basic",
@@ -9,13 +13,37 @@ export const IG_OAUTH_SCOPES = [
   "business_management",
 ].join(",");
 
+/** Instagram API with Instagram Login (Creator/Business profissional — sem Página do Facebook). */
+export const IG_LOGIN_SCOPES = [
+  "instagram_business_basic",
+  "instagram_business_content_publish",
+].join(",");
+
 export type InstagramOAuthState = {
   tenant_id: string;
   user_id: string;
   slug: string;
   exp: number;
   nonce: string;
+  flow?: InstagramAuthFlow;
 };
+
+export function getInstagramGraphApiBase(flow: string | null | undefined): string {
+  return flow === "instagram_login" ? IG_GRAPH : "https://graph.facebook.com/v21.0";
+}
+
+export function resolveInstagramAppCredentials(): { appId: string; appSecret: string } | null {
+  const appId = Deno.env.get("INSTAGRAM_APP_ID")?.trim() ||
+    Deno.env.get("META_APP_ID")?.trim();
+  const appSecret = Deno.env.get("INSTAGRAM_APP_SECRET")?.trim() ||
+    Deno.env.get("META_APP_SECRET")?.trim();
+  if (!appId || !appSecret) return null;
+  return { appId, appSecret };
+}
+
+export function useFacebookInstagramLogin(): boolean {
+  return Deno.env.get("META_USE_FACEBOOK_INSTAGRAM_LOGIN") === "1";
+}
 
 const encoder = new TextEncoder();
 
@@ -108,6 +136,21 @@ export function buildInstagramOAuthUrl(args: {
   return `${FB_DIALOG}?${params.toString()}`;
 }
 
+export function buildInstagramLoginOAuthUrl(args: {
+  appId: string;
+  redirectUri: string;
+  state: string;
+}) {
+  const params = new URLSearchParams({
+    client_id: args.appId,
+    redirect_uri: args.redirectUri,
+    state: args.state,
+    response_type: "code",
+    scope: IG_LOGIN_SCOPES,
+  });
+  return `${IG_AUTHORIZE}?${params.toString()}`;
+}
+
 type TokenResponse = {
   access_token?: string;
   expires_in?: number;
@@ -143,6 +186,59 @@ export async function exchangeForLongLivedToken(args: {
   });
   const res = await fetch(`${FB}/oauth/access_token?${params}`);
   return res.json();
+}
+
+type InstagramLoginTokenResponse = {
+  access_token?: string;
+  user_id?: string | number;
+  error_type?: string;
+  error_message?: string;
+};
+
+export async function exchangeInstagramLoginCode(args: {
+  appId: string;
+  appSecret: string;
+  redirectUri: string;
+  code: string;
+}): Promise<InstagramLoginTokenResponse> {
+  const res = await fetch("https://api.instagram.com/oauth/access_token", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      client_id: args.appId,
+      client_secret: args.appSecret,
+      grant_type: "authorization_code",
+      redirect_uri: args.redirectUri,
+      code: args.code,
+    }),
+  });
+  return res.json();
+}
+
+export async function exchangeInstagramLoginLongLivedToken(args: {
+  appSecret: string;
+  shortLivedToken: string;
+}): Promise<TokenResponse> {
+  const params = new URLSearchParams({
+    grant_type: "ig_exchange_token",
+    client_secret: args.appSecret,
+    access_token: args.shortLivedToken,
+  });
+  const res = await fetch(`https://graph.instagram.com/access_token?${params}`);
+  return res.json();
+}
+
+export async function fetchInstagramLoginUsername(
+  userId: string,
+  token: string,
+): Promise<string | null> {
+  const res = await fetch(
+    `${IG_GRAPH}/${encodeURIComponent(userId)}?fields=username&access_token=${encodeURIComponent(token)}`,
+  );
+  const payload = await res.json();
+  if (!res.ok) return null;
+  const username = payload?.username as string | undefined;
+  return username ? `@${username}` : null;
 }
 
 type IgPageMatch = {

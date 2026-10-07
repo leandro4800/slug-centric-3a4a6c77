@@ -37,6 +37,9 @@ const EnablePushBanner = () => {
     try {
       const result = await enable(false);
       if (!result.ok) {
+        toast.error("Falha ao registrar notificações", {
+          description: result.reason || "Permissão negada ou token FCM indisponível.",
+        });
         // Fallback local — confirma se o navegador aceita alertas
         if ("Notification" in window && Notification.permission === "granted") {
           try {

@@ -1,10 +1,13 @@
-// Inicia OAuth Meta/Instagram — retorna URL de autorização para o coach conectar a conta Business.
+// Inicia OAuth Instagram — padrão: login direto no Instagram (Creator/Business profissional).
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import { assertCoachAccess } from "../_shared/coach-access.ts";
 import {
+  buildInstagramLoginOAuthUrl,
   buildInstagramOAuthUrl,
   getInstagramOAuthRedirectUri,
+  resolveInstagramAppCredentials,
   signInstagramOAuthState,
+  useFacebookInstagramLogin,
 } from "../_shared/instagram-oauth.ts";
 
 const corsHeaders = {
@@ -23,16 +26,14 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json(405, { error: "method not allowed" });
 
-  const appId = Deno.env.get("META_APP_ID")?.trim();
-  const appSecret = Deno.env.get("META_APP_SECRET")?.trim();
-  const loginConfigId = Deno.env.get("META_LOGIN_CONFIG_ID")?.trim();
+  const creds = resolveInstagramAppCredentials();
   const stateSecret = Deno.env.get("INSTAGRAM_OAUTH_STATE_SECRET")?.trim() ||
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")?.trim();
   const supabaseUrl = Deno.env.get("SUPABASE_URL")?.trim();
 
-  if (!appId || !appSecret || !stateSecret || !supabaseUrl) {
+  if (!creds || !stateSecret || !supabaseUrl) {
     return json(500, {
-      error: "Instagram OAuth não configurado no servidor (META_APP_ID / META_APP_SECRET).",
+      error: "Instagram OAuth não configurado no servidor (META_APP_ID / META_APP_SECRET ou INSTAGRAM_APP_ID).",
     });
   }
 
@@ -69,6 +70,9 @@ Deno.serve(async (req) => {
   const slug = (body.slug || tenantRow?.slug || "").trim();
   if (!slug) return json(400, { error: "missing tenant slug" });
 
+  const facebookFlow = useFacebookInstagramLogin();
+  const flow = facebookFlow ? "facebook_login" : "instagram_login";
+
   const state = await signInstagramOAuthState(
     {
       tenant_id: tenantId,
@@ -76,17 +80,24 @@ Deno.serve(async (req) => {
       slug,
       exp: Date.now() + 15 * 60 * 1000,
       nonce: crypto.randomUUID(),
+      flow,
     },
     stateSecret,
   );
 
   const redirectUri = getInstagramOAuthRedirectUri(supabaseUrl);
-  const authUrl = buildInstagramOAuthUrl({
-    appId,
-    redirectUri,
-    state,
-    loginConfigId,
-  });
+  const authUrl = facebookFlow
+    ? buildInstagramOAuthUrl({
+      appId: creds.appId,
+      redirectUri,
+      state,
+      loginConfigId: Deno.env.get("META_LOGIN_CONFIG_ID")?.trim(),
+    })
+    : buildInstagramLoginOAuthUrl({
+      appId: creds.appId,
+      redirectUri,
+      state,
+    });
 
-  return json(200, { auth_url: authUrl });
+  return json(200, { auth_url: authUrl, flow });
 });

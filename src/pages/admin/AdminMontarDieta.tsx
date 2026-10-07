@@ -470,15 +470,20 @@ const AdminMontarDieta = () => {
       // Enviar notificação push se for publicado
       if (publish) {
         try {
-          await supabase.functions.invoke("fcm-notifications", {
+          const { data: pushData, error: pushErr } = await supabase.functions.invoke("fcm-notifications", {
             body: {
               user_id: alunoId,
               title: "Sua Nova Dieta Chegou! 🍎",
               body: "Seu coach publicou seu novo plano alimentar. Dê uma olhada!",
             },
           });
+          if (pushErr) throw pushErr;
+          if (pushData?.skipped) {
+            toast.message("Dieta publicada, mas o aluno ainda não ativou as notificações.");
+          }
         } catch (pushErr) {
           console.error("Erro ao enviar push:", pushErr);
+          toast.message("Dieta publicada. Push falhou — aluno pode não ter token ativo.");
         }
       }
     } catch (e: any) {

@@ -274,7 +274,7 @@ const AlunoHome = () => {
                 void e.currentTarget.play().catch(() => {});
               }}
               poster={hasCoachVideo ? undefined : heroImg}
-              className="w-full h-full object-cover"
+              className="bg-video w-full h-full object-cover"
             />
 
           ) : (

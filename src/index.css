@@ -116,18 +116,21 @@
     letter-spacing: 0.05em;
   }
 
-  /* Vídeos de fundo: esconde overlay de play nativo do WebView Android/Chromium */
+  /* Vídeos: esconde overlay de play nativo do WebView Android/Chromium */
   video.bg-video {
     pointer-events: none;
   }
-  video.bg-video::-webkit-media-controls {
+  video.bg-video::-webkit-media-controls,
+  video.bg-video::-webkit-media-controls-start-playback-button,
+  video.bg-video::-webkit-media-controls-overlay-play-button,
+  video.ac-direct-video::-webkit-media-controls-start-playback-button,
+  video.ac-direct-video::-webkit-media-controls-overlay-play-button {
     display: none !important;
-  }
-  video.bg-video::-webkit-media-controls-start-playback-button {
-    display: none !important;
-  }
-  video.bg-video::-webkit-media-controls-overlay-play-button {
-    display: none !important;
+    -webkit-appearance: none !important;
+    opacity: 0 !important;
+    width: 0 !important;
+    height: 0 !important;
+    pointer-events: none !important;
   }
 }
 

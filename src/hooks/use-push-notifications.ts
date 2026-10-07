@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FirebaseMessaging } from "@capacitor-firebase/messaging";
+import { Capacitor } from "@capacitor/core";
 import { requestForToken, onMessageListener, FIREBASE_VAPID_KEY } from "@/lib/firebase";
 import { supabase } from "@/integrations/supabase/client";
 import { isNativeApp } from "@/lib/native-platform";
@@ -7,16 +8,41 @@ import { toast } from "sonner";
 
 type PushPermission = NotificationPermission | "unsupported" | "prompt";
 
-const saveTokenToSupabase = async (newToken: string) => {
+const ANDROID_CHANNEL_ID = "default";
+
+/** Android 8+: sem channel criado, FCM "sucesso" mas a notificação não aparece. */
+const ensureAndroidChannel = async () => {
+  if (Capacitor.getPlatform() !== "android") return;
+  try {
+    await FirebaseMessaging.createChannel({
+      id: ANDROID_CHANNEL_ID,
+      name: "Geral",
+      description: "Treinos, dieta e avisos do coach",
+      importance: 5,
+      sound: "default",
+      vibration: true,
+      lights: true,
+      lightColor: "#FF0000",
+      visibility: 1,
+    });
+  } catch (err) {
+    console.warn("[push] createChannel", err);
+  }
+};
+
+const saveTokenToSupabase = async (newToken: string): Promise<{ ok: boolean; reason?: string }> => {
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { ok: false, reason: "Usuário não autenticado" };
   const { error } = await supabase
     .from("perfis")
     .update({ push_token: newToken })
     .eq("id", user.id);
-  if (error) console.error("Erro ao salvar token:", error);
+  if (error) {
+    console.error("Erro ao salvar token:", error);
+    return { ok: false, reason: error.message };
+  }
 
   // O mesmo aparelho pode ter sido usado por outra conta: garante que o token
   // fique só no perfil logado, evitando envios para o destino errado.
@@ -25,10 +51,13 @@ const saveTokenToSupabase = async (newToken: string) => {
     .update({ push_token: null })
     .eq("push_token", newToken)
     .neq("id", user.id);
+
+  return { ok: true };
 };
 
 const enableNative = async (): Promise<{ token: string | null; reason?: string; permission: PushPermission }> => {
   try {
+    await ensureAndroidChannel();
     const perm = await FirebaseMessaging.requestPermissions();
     const receive = perm.receive as PushPermission;
     if (receive !== "granted") {
@@ -74,7 +103,15 @@ export const usePushNotifications = () => {
 
     if (result.token) {
       setToken(result.token);
-      await saveTokenToSupabase(result.token);
+      const saved = await saveTokenToSupabase(result.token);
+      if (!saved.ok) {
+        if (!silent) {
+          toast.error("Token obtido, mas não salvou no perfil", {
+            description: saved.reason || "Sem push_token no servidor o coach não consegue te notificar.",
+          });
+        }
+        return { ok: false as const, reason: saved.reason || "falha ao salvar push_token" };
+      }
       if (!silent) toast.success("Notificações ativadas! 🔔");
       return { ok: true as const };
     }
@@ -106,7 +143,9 @@ export const usePushNotifications = () => {
 
     const tokenSub = FirebaseMessaging.addListener("tokenReceived", ({ token: next }) => {
       setToken(next);
-      void saveTokenToSupabase(next);
+      void saveTokenToSupabase(next).then((saved) => {
+        if (!saved.ok) console.error("[push] tokenReceived save failed:", saved.reason);
+      });
     });
 
     const msgSub = FirebaseMessaging.addListener("notificationReceived", (event) => {

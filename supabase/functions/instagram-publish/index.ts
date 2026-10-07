@@ -2,6 +2,7 @@
 // Requer: tenants_private.instagram_access_token + instagram_business_account_id
 // Fluxo: POST /{ig-user-id}/media (container) -> poll status -> POST /{ig-user-id}/media_publish
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { getInstagramGraphApiBase } from "../_shared/instagram-oauth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,8 +12,6 @@ const corsHeaders = {
 
 const json = (s: number, b: unknown) =>
   new Response(JSON.stringify(b), { status: s, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-
-const FB = "https://graph.facebook.com/v21.0";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -48,7 +47,7 @@ Deno.serve(async (req) => {
   // Load IG credentials
   const { data: priv, error: pErr } = await supabase
     .from("tenants_private")
-    .select("instagram_access_token, instagram_business_account_id")
+    .select("instagram_access_token, instagram_business_account_id, instagram_auth_flow")
     .eq("tenant_id", tenant_id)
     .maybeSingle();
   if (pErr) return json(500, { error: pErr.message });
@@ -58,6 +57,9 @@ Deno.serve(async (req) => {
 
   const igId = priv.instagram_business_account_id;
   const token = priv.instagram_access_token;
+  const graph = getInstagramGraphApiBase(
+    (priv as { instagram_auth_flow?: string | null }).instagram_auth_flow,
+  );
 
   // 1) Create media container
   const params = new URLSearchParams({
@@ -68,7 +70,7 @@ Deno.serve(async (req) => {
   });
   if (media_type === "REELS") params.set("share_to_feed", "true");
 
-  const containerRes = await fetch(`${FB}/${igId}/media`, { method: "POST", body: params });
+  const containerRes = await fetch(`${graph}/${igId}/media`, { method: "POST", body: params });
   const containerData = await containerRes.json();
   if (!containerRes.ok || !containerData.id) {
     return json(400, { error: "Falha criando container", details: containerData });
@@ -79,7 +81,7 @@ Deno.serve(async (req) => {
   let status = "IN_PROGRESS";
   for (let i = 0; i < 30; i++) {
     await new Promise((r) => setTimeout(r, 3000));
-    const stRes = await fetch(`${FB}/${creationId}?fields=status_code,status&access_token=${token}`);
+    const stRes = await fetch(`${graph}/${creationId}?fields=status_code,status&access_token=${token}`);
     const st = await stRes.json();
     status = st.status_code || st.status || "IN_PROGRESS";
     if (status === "FINISHED") break;
@@ -90,7 +92,7 @@ Deno.serve(async (req) => {
   if (status !== "FINISHED") return json(408, { error: "Timeout aguardando processamento do Instagram" });
 
   // 3) Publish
-  const pubRes = await fetch(`${FB}/${igId}/media_publish`, {
+  const pubRes = await fetch(`${graph}/${igId}/media_publish`, {
     method: "POST",
     body: new URLSearchParams({ creation_id: creationId, access_token: token }),
   });
@@ -98,7 +100,7 @@ Deno.serve(async (req) => {
   if (!pubRes.ok || !pubData.id) return json(400, { error: "Falha publicando", details: pubData });
 
   // 4) Fetch permalink and save to vlog_posts
-  const linkRes = await fetch(`${FB}/${pubData.id}?fields=permalink,thumbnail_url,caption,timestamp&access_token=${token}`);
+  const linkRes = await fetch(`${graph}/${pubData.id}?fields=permalink,thumbnail_url,caption,timestamp&access_token=${token}`);
   const linkData = await linkRes.json();
 
   await supabase.from("vlog_posts").upsert(

@@ -929,15 +929,20 @@ const AdminMontarTreino = () => {
       
       // Enviar notificação push
       try {
-        await supabase.functions.invoke("fcm-notifications", {
+        const { data: pushData, error: pushErr } = await supabase.functions.invoke("fcm-notifications", {
           body: {
             user_id: alunoId,
             title: "Novo Treino Disponível! 🏋️‍♂️",
             body: "Seu coach atualizou sua ficha de treino. Confira agora no app!",
           },
         });
+        if (pushErr) throw pushErr;
+        if (pushData?.skipped) {
+          toast.message("Treino salvo, mas o aluno ainda não ativou as notificações.");
+        }
       } catch (pushErr) {
         console.error("Erro ao enviar push:", pushErr);
+        toast.message("Treino salvo. Push falhou — aluno pode não ter token ativo.");
       }
 
       setPendingReview(false);

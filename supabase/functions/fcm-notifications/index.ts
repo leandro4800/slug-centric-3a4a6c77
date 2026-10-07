@@ -106,34 +106,46 @@ serve(async (req) => {
 
       if (!isAdmin) {
         if (user_id && user_id !== callerId) {
-          // Coach só pode notificar alunos do próprio tenant.
+          // Coach (dono OU role coach) só notifica alunos do próprio tenant.
           const { data: target } = await supabaseClient
             .from('perfis')
             .select('tenant_id')
             .eq('id', user_id)
             .maybeSingle()
-          const { data: owned } = target?.tenant_id
-            ? await supabaseClient
+
+          let allowed = false
+          if (target?.tenant_id) {
+            const [{ data: owned }, { data: isCoach }] = await Promise.all([
+              supabaseClient
                 .from('tenants')
                 .select('id')
                 .eq('id', target.tenant_id)
                 .eq('owner_user_id', callerId)
-                .maybeSingle()
-            : { data: null }
-          if (!owned) {
+                .maybeSingle(),
+              supabaseClient.rpc('has_role', {
+                _user_id: callerId,
+                _role: 'coach',
+                _tenant_id: target.tenant_id,
+              }),
+            ])
+            allowed = !!owned || !!isCoach
+          }
+
+          if (!allowed) {
             return new Response(
               JSON.stringify({ error: 'Sem permissão para notificar este usuário' }),
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
             )
           }
         } else if (!user_id && token) {
-          // Token cru: só se pertencer ao próprio caller.
+          // Token cru: bloqueia só se já estiver ligado a OUTRO usuário.
+          // Token recém-obtido ainda não salvo em perfis — liberar pro caller autenticado.
           const { data: owner } = await supabaseClient
             .from('perfis')
             .select('id')
             .eq('push_token', token)
             .maybeSingle()
-          if (owner?.id !== callerId) {
+          if (owner && owner.id !== callerId) {
             return new Response(
               JSON.stringify({ error: 'Sem permissão para notificar este dispositivo' }),
               { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 403 }
@@ -184,17 +196,48 @@ serve(async (req) => {
     const { project_id, client_email, private_key } = serviceAccount
 
     const accessToken = await getAccessToken(client_email, private_key)
+    if (!accessToken) {
+      await logSend({
+        user_id,
+        has_token: true,
+        status: 'error',
+        error_message: 'Failed to obtain Google OAuth access_token',
+        title,
+        body,
+      })
+      throw new Error('Failed to obtain Google OAuth access_token — check FIREBASE_SERVICE_ACCOUNT private_key')
+    }
+
+    // FCM exige data values como string
+    const stringData: Record<string, string> = {}
+    if (data && typeof data === 'object') {
+      for (const [k, v] of Object.entries(data)) {
+        stringData[k] = v == null ? '' : String(v)
+      }
+    }
 
     const message = {
       token: targetToken,
       notification: { title, body },
-      data: data || {},
+      data: stringData,
       android: {
         priority: 'high',
-        notification: { sound: 'default', channel_id: 'default' },
+        notification: {
+          sound: 'default',
+          channel_id: 'default',
+          default_sound: true,
+          default_vibrate_timings: true,
+        },
       },
       apns: {
-        payload: { aps: { contentAvailable: true, mutableContent: true, sound: 'default' } },
+        headers: { 'apns-priority': '10' },
+        payload: {
+          aps: {
+            alert: { title, body },
+            sound: 'default',
+            'content-available': 1,
+          },
+        },
       },
       webpush: {
         notification: { icon: 'https://alpha-coach.app/icon-192x192.png' },
@@ -308,7 +351,12 @@ async function getAccessToken(clientEmail: string, privateKey: string): Promise<
   })
 
   const result = await response.json()
-  return result.access_token
+  if (!response.ok || !result.access_token) {
+    throw new Error(
+      `Google OAuth token failed: ${result.error || result.error_description || JSON.stringify(result)}`,
+    )
+  }
+  return result.access_token as string
 }
 
 function b64(data: string | ArrayBuffer): string {
