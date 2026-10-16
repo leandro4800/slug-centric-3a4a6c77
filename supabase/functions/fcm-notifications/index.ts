@@ -329,7 +329,7 @@ async function getAccessToken(clientEmail: string, privateKey: string): Promise<
 
   const key = await crypto.subtle.importKey(
     'pkcs8',
-    pemToBinary(privateKey),
+    pemToBinary(privateKey) as unknown as BufferSource,
     { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
     false,
     ['sign']
