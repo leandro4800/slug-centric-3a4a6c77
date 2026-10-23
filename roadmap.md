@@ -1,5 +1,6 @@
 # Correção de conclusão de treino
 ## Card de compartilhamento
+- [x] Arte full separada abaixo do cabeçalho; navegador confirmou título até y=409 e imagem a partir de y=518; prévia e exportação com atleta conferidas em desktop e mobile. Prévia ilustrativa reconstruída a partir do print, não geração autenticada da conta.
 - [x] Reforçar zona segura do atleta no prompt e renovar a versão do cache.
 - [x] Reduzir título e adicionar faixa escura exclusiva, compartilhada pela prévia e exportação.
 - [x] Função implantada; faixa e título conferidos no navegador e exportação 1080×1920, também em largura móvel, com imagem local sem nova geração IA; build OK.
