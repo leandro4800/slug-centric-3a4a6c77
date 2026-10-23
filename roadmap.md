@@ -1,5 +1,6 @@
 # Correção de conclusão de treino
 ## Card de compartilhamento
+- [ ] Separar fisicamente título e arte full e enviar prévia com atleta.
 - [x] Reforçar zona segura do atleta no prompt e renovar a versão do cache.
 - [x] Reduzir título e adicionar faixa escura exclusiva, compartilhada pela prévia e exportação.
 - [x] Função implantada; faixa e título conferidos no navegador e exportação 1080×1920, também em largura móvel, com imagem local sem nova geração IA; build OK.

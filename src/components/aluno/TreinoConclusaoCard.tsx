@@ -467,17 +467,16 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
           <>
             {/* Fundo preto sólido: garante que barras do object-contain fiquem invisíveis */}
             <div className="absolute inset-0 bg-black" />
-            {/* ===== CAMADA IA: cenário cinematográfico (+ atleta no modo full) =====
-                object-contain: a imagem INTEIRA sempre aparece — sem cortar cabeça/pés.
-                object-bottom: quando a proporção do card é mais alta que a da imagem,
-                a sobra vertical fica TODA no topo (zona do título).
-                O enquadramento interno depende da IA; o título tem proteção própria. */}
-            <img
-              src={bgUrl}
-              alt=""
-              crossOrigin="anonymous"
-              className="absolute inset-0 w-full h-full object-contain object-bottom"
-            />
+            {/* Arte full fisicamente abaixo do cabeçalho: até uma cabeça no topo
+                da imagem não pode invadir o título. Contain preserva a arte inteira. */}
+            <div className={`absolute inset-x-0 bottom-0 ${bgMode === "full" ? "top-[27%]" : "top-0"}`}>
+              <img
+                src={bgUrl}
+                alt=""
+                crossOrigin="anonymous"
+                className="absolute inset-0 w-full h-full object-contain object-bottom"
+              />
+            </div>
 
             {/* Modo scenario (fallback de identidade): compõe o avatar original por cima do cenário */}
             {bgMode === "scenario" && avatar ? (
