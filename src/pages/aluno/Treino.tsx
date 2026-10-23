@@ -475,7 +475,7 @@ export const PersonalTreino = () => {
     if (!user || !tenant) return;
     let cancelled = false;
     (async () => {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("sessoes_treino")
         .select("id, created_at, dia_semana")
         .eq("aluno_id", user.id)
@@ -483,7 +483,7 @@ export const PersonalTreino = () => {
         .eq("duracao_min", 0)
         .order("created_at", { ascending: false })
         .limit(50);
-      if (cancelled) return;
+      if (cancelled || error) return;
       const abertas: SessaoAberta[] = (data || []).filter((row) => row.dia_semana).map((row) => ({
         id: row.id, startedAt: new Date(row.created_at).getTime(), dia_semana: row.dia_semana || "",
       }));
