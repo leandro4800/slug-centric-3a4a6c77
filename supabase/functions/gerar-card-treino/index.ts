@@ -20,17 +20,12 @@
 //   - scenario: IA gera só o cenário; o app compõe o avatar original por cima
 // ============================================================================
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import {
   generateImage,
   ImageGenerationError,
   type ReferenceImage,
 } from "../_shared/image-generation.ts";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
 
 const json = (payload: unknown, status = 200) =>
   new Response(JSON.stringify(payload), {
@@ -102,7 +97,7 @@ Deno.serve(async (req) => {
     if (
       !force &&
       perfil?.card_bg_url &&
-      meta?.v === 4 &&
+      meta?.v === 5 &&
       meta?.mode === mode &&
       meta?.tenant_id === tenantId &&
       meta?.primary === primary &&
@@ -126,15 +121,14 @@ Deno.serve(async (req) => {
       ? `The ${mode === "full" ? "SECOND" : "FIRST"} reference image is ONLY art direction: use it to guide composition, framing, lighting, depth, atmosphere and visual hierarchy. Do NOT copy its text, typography, logos, numbers, or the person in it.`
       : "";
 
-    // Zona segura vertical: o atleta inteiro fica entre 30% e 75% da altura.
-    // O topo de 30% é reservado ao cabeçalho real do card (logo + selo
-    // "TREINO CONCLUÍDO" + título + divisor), que ocupa mais de 20% do frame.
+    // Zona segura vertical: corpo inteiro entre 44% e 75% da altura.
+    // A área acima de 44% é reservada ao cabeçalho e título React.
     const subjectPart =
       mode === "full"
-        ? "Place the athlete as the central protagonist, FULL BODY visible from head to feet, perfectly centered horizontally, standing in a confident powerful pose, looking at the camera. SAFE ZONE (critical): the entire body must fit between 36% and 78% of the image height — the top of the head strictly below the 36% line and the soles of the feet above the 75% line, with generous clear space above the head and below the feet. NEVER crop or cut the head, hair, hands or feet; never let any body part touch the top or bottom edge of the frame. Keep the surrounding space dark and clean because a UI overlay will be rendered over the top and bottom areas."
+        ? "Place the athlete as the central protagonist, FULL BODY visible from head to feet, perfectly centered horizontally, standing in a confident powerful pose, looking at the camera. SAFE ZONE — THIS IS THE MOST IMPORTANT COMPOSITION CONSTRAINT: the topmost hair and head must be strictly BELOW 44% of the total image height, measured from the top edge. Reserve the entire upper 44% as dark, empty negative space for a title overlay: NO face, NO hair, NO head, NO body parts in this region. The ENTIRE athlete must fit between 44% and 75% of the image height, with the soles of the feet above the 75% line. Use a distant wide full-body shot and make the athlete smaller if needed; never move the head upward to fill the frame. Do NOT generate a close-up or portrait-style crop where the head is near the top third of the frame. Repeat: even the top of the hair must remain below the 44% line, never behind the upper title area. NEVER crop or cut the head, hair, hands or feet; never let any body part touch the top or bottom edge of the frame. Keep the surrounding space dark and clean because a UI overlay will be rendered over the top and bottom areas."
         : "Compose the scene WITHOUT any person: an empty protagonist spot in the vertical center (between 30% and 75% of the image height) where the light converges — a person will be composited there later. Keep the top 36% and bottom 22% dark and clean.";
 
-    const prompt = `Cinematic premium fitness campaign photograph, vertical 9:16 composition. ${identityPart} ${stylePart} ${subjectPart} Setting: a dark premium professional gym at night, equipment blurred deep in the background, shallow depth of field. Behind the central subject, a large glowing geometric hexagonal portal structure made of light in the brand color ${primary}, with depth, inner glow and volumetric light rays. Strong rim light using the brand color ${primary}, dramatic studio lighting, volumetric lighting, subtle atmospheric smoke, floating dust particles catching the light, realistic wet reflective floor with light reflections, deep shadows, high cinematic contrast. CRITICAL: absolutely NO text, NO letters, NO numbers, NO typography, NO logos, NO watermarks anywhere in the image. Keep the top 36% and the bottom 30% of the frame darker and clean (soft vignette) because a UI overlay will be rendered there. High-end fitness advertising aesthetic, professional commercial photography, realistic skin texture, natural anatomy, extremely detailed, photorealistic, sharp focus.${tenantNome ? ` Brand context: team/gym "${tenantNome}".` : ""}`;
+    const prompt = `Cinematic premium fitness campaign photograph, vertical 9:16 composition. ${identityPart} ${stylePart} ${subjectPart} Setting: a dark premium professional gym at night, equipment blurred deep in the background, shallow depth of field. Behind the central subject, a large glowing geometric hexagonal portal structure made of light in the brand color ${primary}, with depth, inner glow and volumetric light rays. Strong rim light using the brand color ${primary}, dramatic studio lighting, volumetric lighting, subtle atmospheric smoke, floating dust particles catching the light, realistic wet reflective floor with light reflections, deep shadows, high cinematic contrast. CRITICAL: absolutely NO text, NO letters, NO numbers, NO typography, NO logos, NO watermarks anywhere in the image. Keep the top ${mode === "full" ? "44" : "36"}% and the bottom 30% of the frame darker and clean (soft vignette) because a UI overlay will be rendered there.${mode === "full" ? " Final framing priority: NO athlete above the 44% height line; all facial features and hair must be below it, regardless of the style reference framing." : ""} High-end fitness advertising aesthetic, professional commercial photography, realistic skin texture, natural anatomy, extremely detailed, photorealistic, sharp focus.${tenantNome ? ` Brand context: team/gym "${tenantNome}".` : ""}`;
 
     // ---- Referências: 1) avatar (identity) 2) design cinematográfico (style) ----
     const refs: ReferenceImage[] = [];
@@ -164,7 +158,7 @@ Deno.serve(async (req) => {
       .update({
         card_bg_url: cardUrl,
         card_bg_meta: {
-          v: 4,
+          v: 5,
           mode,
           tenant_id: tenantId,
           primary,

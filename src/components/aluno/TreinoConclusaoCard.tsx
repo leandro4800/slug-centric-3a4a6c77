@@ -470,8 +470,8 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             {/* ===== CAMADA IA: cenário cinematográfico (+ atleta no modo full) =====
                 object-contain: a imagem INTEIRA sempre aparece — sem cortar cabeça/pés.
                 object-bottom: quando a proporção do card é mais alta que a da imagem,
-                a sobra vertical fica TODA no topo (zona do título), garantindo que
-                "MAIS UM CHECK" nunca caia sobre a cabeça do avatar (bug do iPhone). */}
+                a sobra vertical fica TODA no topo (zona do título).
+                O enquadramento interno depende da IA; o título tem proteção própria. */}
             <img
               src={bgUrl}
               alt=""
@@ -576,7 +576,7 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
 
         {/* Título cinematográfico — Anton (condensada esportiva), "MAIS UM" metálico,
             "CHECK" na cor do tenant com itálico rasgado */}
-        <div className="relative z-20 px-14 pt-10 text-center leading-none">
+        <div className="workout-card-title relative isolate z-20 px-14 pt-10 text-center leading-none">
           <h1
             className="whitespace-nowrap uppercase"
             style={{ fontFamily: "'Anton', 'Bebas Neue', sans-serif", fontWeight: 400 }}
@@ -584,13 +584,13 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
             {/* "MAIS UM" em branco sólido: html2canvas não suporta background-clip: text
                 (renderizaria o retângulo do gradiente por cima da imagem) */}
             <span
-              className="text-[120px] tracking-[0.02em] text-white"
+              className="text-[104px] tracking-normal text-white"
               style={{ textShadow: "0 2px 18px rgba(0,0,0,0.55)" }}
             >
               MAIS UM{" "}
             </span>
             <span
-              className="text-[120px] italic tracking-[0.02em] inline-block"
+              className="text-[104px] italic tracking-normal inline-block"
               style={{
                 color: colors.primary,
                 textShadow: `0 0 60px ${colors.primarySoft}, 0 0 24px ${colors.primarySoft}`,
