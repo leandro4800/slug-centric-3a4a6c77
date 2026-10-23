@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Dumbbell, Music, Loader2, Trophy, Clock, Flame, Sparkles, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
@@ -10,6 +10,7 @@ import { TenantSymbol } from "@/components/TenantSymbol";
 import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard";
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 import { TreinoConclusaoCard } from "@/components/aluno/TreinoConclusaoCard";
+import { Button } from "@/components/ui/button";
 
 import { filtrarPresetsParaAluno, type DivisaoPreset, type Nivel } from "@/data/divisoesPresets";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
@@ -25,6 +26,7 @@ interface CargaMap {
 }
 
 type VideoRef = { yt: string | null; coach: string | null };
+type SessaoAberta = { id: string; startedAt: number; dia_semana: string };
 
 export const PersonalTreino = () => {
   const { user } = useAuth();
@@ -51,8 +53,14 @@ export const PersonalTreino = () => {
   const [avatarPerfil, setAvatarPerfil] = useState<string | null>(null);
   const [startingSession, setStartingSession] = useState(false);
   const [concluindo, setConcluindo] = useState(false);
-  const [sessaoAndamento, setSessaoAndamento] = useState<{ id: string; startedAt: number; dia_semana: string } | null>(null);
-  const [sessaoStats, setSessaoStats] = useState<{ volume: number; series: number }>({ volume: 0, series: 0 });
+  const [sessaoAndamento, setSessaoAndamento] = useState<SessaoAberta | null>(null);
+  const sessaoAtualId = useRef<string | null>(null);
+  sessaoAtualId.current = sessaoAndamento?.id ?? null;
+  const [sessoesAntigas, setSessoesAntigas] = useState<SessaoAberta[]>([]);
+  const sessaoRetomadaId = useRef<string | null>(null);
+  const [sessaoStats, setSessaoStats] = useState<{ sessaoId: string | null; volume: number; series: number }>({ sessaoId: null, volume: 0, series: 0 });
+  const statsDaSessao = sessaoStats.sessaoId === sessaoAndamento?.id;
+  const podeConcluir = !!sessaoAndamento && sessaoAndamento.dia_semana === diaAtual && statsDaSessao && sessaoStats.series > 0;
   const [recordeBanner, setRecordeBanner] = useState<{ exercicio: string; records: Array<{ type: string; value: number }> } | null>(null);
   const [recordeIndex, setRecordeIndex] = useState(0);
   const [agora, setAgora] = useState(() => Date.now());
@@ -471,17 +479,20 @@ export const PersonalTreino = () => {
         .from("sessoes_treino")
         .select("id, created_at, dia_semana")
         .eq("aluno_id", user.id)
+        .eq("tenant_id", tenant.id)
         .eq("duracao_min", 0)
-        .gte("created_at", new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString())
         .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        .limit(50);
       if (cancelled) return;
-      if (data?.id) {
-        setSessaoAndamento({ id: (data as any).id, startedAt: new Date((data as any).created_at).getTime(), dia_semana: (data as any).dia_semana });
-      } else {
-        setSessaoAndamento(null);
-      }
+      const abertas: SessaoAberta[] = (data || []).filter((row) => row.dia_semana).map((row) => ({
+        id: row.id, startedAt: new Date(row.created_at).getTime(), dia_semana: row.dia_semana || "",
+      }));
+      const limite = Date.now() - 12 * 60 * 60 * 1000;
+      const atual = abertas.find((row) => row.startedAt >= limite)
+        ?? abertas.find((row) => row.id === sessaoRetomadaId.current)
+        ?? null;
+      setSessaoAndamento(atual);
+      setSessoesAntigas(abertas.filter((row) => row.startedAt < limite && row.id !== atual?.id));
     })();
     return () => { cancelled = true; };
   }, [user?.id, tenant?.id, reloadKey]);
@@ -506,16 +517,18 @@ export const PersonalTreino = () => {
   // Estatísticas da sessão (volume / séries) lidas de series_executadas
   const carregarStatsSessao = async (sessId?: string | null) => {
     const id = sessId ?? sessaoAndamento?.id;
-    if (!id) { setSessaoStats({ volume: 0, series: 0 }); return; }
-    const { data } = await supabase
+    if (!id) { setSessaoStats({ sessaoId: null, volume: 0, series: 0 }); return; }
+    const { data, error, count } = await supabase
       .from("series_executadas")
-      .select("volume_kg")
+      .select("volume_kg", { count: "exact" })
       .eq("sessao_id", id)
       .limit(2000);
+    if (sessaoAtualId.current !== id) return;
     const rows = (data as any[]) || [];
     setSessaoStats({
+      sessaoId: id,
       volume: rows.reduce((acc, r) => acc + (Number(r.volume_kg) || 0), 0),
-      series: rows.length,
+      series: error ? 0 : count ?? rows.length,
     });
   };
 
@@ -546,7 +559,7 @@ export const PersonalTreino = () => {
 
   // Inicia a sessão de treino (cria registro em sessoes_treino)
   const iniciarTreinoAoVivo = async () => {
-    if (!user || !tenant || !treinosDoDia.length || sessaoAndamento) return;
+    if (!user || !tenant || !treinosDoDia.length || sessaoAndamento || startingSession || concluindo) return;
     setStartingSession(true);
     try {
       const { data, error } = await supabase
@@ -573,48 +586,52 @@ export const PersonalTreino = () => {
 
   // Conclui a sessão: fecha sessoes_treino, calcula gasto calórico (MET) e abre o card de compartilhar
   const concluirTreino = async () => {
-    if (!user || !tenant) { setShowConclusao(true); return; }
+    if (!user || !tenant || concluindo) return;
+    if (sessaoAndamento && sessaoAndamento.dia_semana !== diaAtual) {
+      toast.error(`Você tem um treino de ${sessaoAndamento.dia_semana} em aberto. Troque para a aba de ${sessaoAndamento.dia_semana} para finalizá-lo.`);
+      return;
+    }
+    const sessao = sessaoAndamento;
+    if (!sessao) {
+      toast.error("Inicie ou retome o treino deste dia antes de concluí-lo.");
+      return;
+    }
     // Nunca conclui sem nenhuma série registrada — evita sessão fantasma com duração>0 e zero séries
-    if (sessaoStats.series === 0) {
+    if (!statsDaSessao || sessaoStats.series === 0) {
       toast.error("Registre pelo menos 1 série para concluir o treino.");
       return;
     }
     setConcluindo(true);
     try {
-      let sessaoId: string | null = null;
-      let durMin: number | null = null;
-      if (sessaoAndamento) {
-        const min = Math.min(
-          Math.max(Math.round((Date.now() - sessaoAndamento.startedAt) / 60000) || 1, 1),
-          300,
-        );
-        await supabase
-          .from("sessoes_treino")
-          .update({ duracao_min: min, exercicios_total: treinosDoDia.length } as any)
-          .eq("id", sessaoAndamento.id);
-        sessaoId = sessaoAndamento.id;
-        durMin = min;
-      } else {
-        await supabase.rpc("registrar_sessao_treino" as any, {
-          _tenant_id: tenant.id,
-          _dia_semana: diaAtual,
-          _duracao_min: 60,
-          _exercicios_total: treinosDoDia.length,
-        } as any);
-        const { data: sRow } = await supabase
-          .from("sessoes_treino")
-          .select("id")
-          .eq("aluno_id", user.id)
-          .eq("dia_semana", diaAtual)
-          .eq("data_treino", new Date().toISOString().split("T")[0])
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        sessaoId = (sRow as any)?.id ?? null;
-        durMin = 60;
+      // Confere as séries da sessão exata no banco, nunca o total de outra sessão em memória.
+      const { data: series, count, error: seriesError } = await supabase
+        .from("series_executadas")
+        .select("volume_kg", { count: "exact" })
+        .eq("sessao_id", sessao.id)
+        .eq("aluno_id", user.id)
+        .limit(2000);
+      if (seriesError) throw seriesError;
+      if (!count) {
+        setSessaoStats({ sessaoId: sessao.id, volume: 0, series: 0 });
+        toast.error("Registre pelo menos 1 série para concluir o treino.");
+        return;
       }
+      const volume = (series || []).reduce((acc, row) => acc + (Number(row.volume_kg) || 0), 0);
+      const sessaoId = sessao.id;
+      const durMin = Math.min(Math.max(Math.round((Date.now() - sessao.startedAt) / 60000) || 1, 1), 300);
+      const { error: updateError } = await supabase
+        .from("sessoes_treino")
+        .update({ duracao_min: durMin, exercicios_total: treinosDoDia.length } as any)
+        .eq("id", sessao.id)
+        .eq("aluno_id", user.id)
+        .eq("tenant_id", tenant.id)
+        .eq("dia_semana", diaAtual)
+        .eq("duracao_min", 0)
+        .select("id")
+        .single();
+      if (updateError) throw updateError;
       // Snapshot dos stats antes de zerar a sessão em andamento
-      setResumoConclusao({ duracaoMin: durMin, volume: sessaoStats.volume, series: sessaoStats.series });
+      setResumoConclusao({ duracaoMin: durMin, volume, series: count });
       // Gasto calórico (MET determinístico + mensagem da IA) — preenche o modal em seguida
       setResumoCalorias({ loading: !!sessaoId, kcal: null, mensagem: null });
       if (sessaoId) {
@@ -639,13 +656,15 @@ export const PersonalTreino = () => {
       try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
       try { localStorage.removeItem(sessionStartKey); } catch {}
       setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
+      sessaoRetomadaId.current = null;
       setSessaoAndamento(null);
       setReloadKey((k) => k + 1);
+      setShowConclusao(true);
     } catch (e) {
       console.warn("Não foi possível registrar conclusão", e);
+      toast.error("Não foi possível concluir o treino. Tente novamente.");
     } finally {
       setConcluindo(false);
-      setShowConclusao(true);
     }
   };
 
@@ -930,6 +949,12 @@ export const PersonalTreino = () => {
               <p className="text-xs text-amber-300 font-medium">
                 Finalize o treino em andamento antes de começar outro dia
               </p>
+              <Button type="button" variant="secondary" size="sm" className="mt-3 max-w-full h-auto min-h-10 whitespace-normal tracking-normal" disabled={concluindo} onClick={() => {
+                setDiaAtual(sessaoAndamento.dia_semana);
+                setActiveIndex(null);
+              }}>
+                <Clock /> Ir para {sessaoAndamento.dia_semana}
+              </Button>
             </div>
           ) : (
             <button
@@ -942,6 +967,27 @@ export const PersonalTreino = () => {
               Iniciar Treino
             </button>
           )
+        )}
+
+        {sessoesAntigas.length > 0 && (
+          <div className="mt-4 space-y-2 border-t border-border pt-3">
+            <p className="text-sm text-muted-foreground">Treinos anteriores em aberto</p>
+            {sessoesAntigas.map((sessao) => (
+              <div key={sessao.id} className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs text-muted-foreground">{sessao.dia_semana} · {new Date(sessao.startedAt).toLocaleDateString("pt-BR")}</span>
+                <Button type="button" variant="secondary" size="sm" className="tracking-normal" disabled={!!sessaoAndamento || concluindo || startingSession || !dias.includes(sessao.dia_semana)} onClick={() => {
+                  sessaoRetomadaId.current = sessao.id;
+                  setSessaoStats({ sessaoId: null, volume: 0, series: 0 });
+                  setSessaoAndamento(sessao);
+                  setSessoesAntigas((prev) => prev.filter((row) => row.id !== sessao.id));
+                  setDiaAtual(sessao.dia_semana);
+                  setActiveIndex(null);
+                }}>
+                  <Clock /> Retomar
+                </Button>
+              </div>
+            ))}
+          </div>
         )}
 
         {recordeBanner && (() => {
@@ -1002,15 +1048,15 @@ export const PersonalTreino = () => {
             </div>
           ) : (
             <div className="mt-6 w-full">
-              <button
+              <Button
                 onClick={concluirTreino}
-                disabled={concluindo || sessaoStats.series === 0}
+                disabled={concluindo || !podeConcluir}
                 className="w-full py-4 rounded-2xl bg-gradient-to-r from-primary to-primary/70 text-primary-foreground font-display tracking-[0.15em] flex items-center justify-center gap-3 shadow-[0_10px_40px_-10px_hsl(var(--primary)/0.6)] border border-white/20 active:scale-[0.98] transition disabled:opacity-40"
               >
                 {concluindo ? <Loader2 className="h-5 w-5 animate-spin" /> : <Trophy className="h-5 w-5" />}
                 CONCLUIR TREINO
-              </button>
-              {sessaoStats.series === 0 && (
+              </Button>
+              {(!statsDaSessao || sessaoStats.series === 0) && (
                 <p className="mt-2 text-center text-xs text-muted-foreground tracking-wide">
                   Registre pelo menos 1 série para concluir o treino
                 </p>
