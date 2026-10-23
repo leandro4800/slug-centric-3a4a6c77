@@ -26,7 +26,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
     const query: any = {
       select: () => query,
       eq: (key: string, value: any) => { filters.push([key, value]); return query; },
-      gt: () => query, gte: () => query, lte: () => query, order: () => query, limit: () => query,
+      gt: (key: string, value: any) => { filters.push([`gt:${key}`, value]); return query; }, gte: () => query, lte: () => query, order: () => query, limit: () => query,
       maybeSingle: () => { single = true; return query; },
       single: () => { single = true; return query; },
       insert: (value: any) => { operation = "insert"; payload = value; return query; },
@@ -45,7 +45,7 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
           { id: "exercise-friday", aluno_id: "student", tenant_id: "tenant", dia_semana: "sexta", dia_ordem: 2, exercicio: "Remada" },
         ];
         else if (table === "anamnese_aluno") rows = [{ disponibilidade_dias: [] }];
-        rows = rows.filter((row) => filters.every(([key, value]) => row[key] === value));
+        rows = rows.filter((row) => filters.every(([key, value]) => key.startsWith("gt:") ? row[key.slice(3)] > value : row[key] === value));
         if (operation === "update") {
           db.writes.push({ table, filters, payload });
           if (db.failUpdate) return { data: null, error: { message: "failed" } };
