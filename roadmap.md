@@ -2,7 +2,7 @@
 ## Card de compartilhamento
 - [x] Reforçar zona segura do atleta no prompt e renovar a versão do cache.
 - [x] Reduzir título e adicionar faixa escura exclusiva, compartilhada pela prévia e exportação.
-- [ ] Verificar visualmente o card e implantar a função atualizada.
+- [x] Função implantada; faixa e título conferidos no navegador e exportação 1080×1920, também em largura móvel, com imagem local sem nova geração IA; build OK.
 
 ## Conclusão de treino
 - [x] Validar dia e séries da sessão exata antes de concluir; impedir sucesso após erro.
