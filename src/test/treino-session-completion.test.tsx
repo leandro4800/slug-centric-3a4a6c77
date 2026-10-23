@@ -5,7 +5,8 @@ const db = vi.hoisted(() => ({
   sessions: [] as any[], series: [] as any[], writes: [] as any[], failUpdate: false,
   countOverride: null as number | null,
 }));
-vi.mock("@/hooks/use-auth", () => ({ useAuth: () => ({ user: { id: "student", user_metadata: {} } }) }));
+const auth = { user: { id: "student", user_metadata: {} } };
+vi.mock("@/hooks/use-auth", () => ({ useAuth: () => auth }));
 const branding = { tenant: { id: "tenant" } };
 vi.mock("@/contexts/BrandingProvider", () => ({ useBranding: () => branding }));
 vi.mock("react-router-dom", () => ({ useParams: () => ({ slug: "coach" }) }));
