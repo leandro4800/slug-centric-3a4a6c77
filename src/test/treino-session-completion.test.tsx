@@ -40,8 +40,8 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
           rows = db.sessions;
         } else if (table === "series_executadas") rows = db.series;
         else if (table === "treinos_prescritos") rows = [
-          { id: "exercise-thursday", dia_semana: "quinta", dia_ordem: 1, exercicio: "Supino" },
-          { id: "exercise-friday", dia_semana: "sexta", dia_ordem: 2, exercicio: "Remada" },
+          { id: "exercise-thursday", aluno_id: "student", tenant_id: "tenant", dia_semana: "quinta", dia_ordem: 1, exercicio: "Supino" },
+          { id: "exercise-friday", aluno_id: "student", tenant_id: "tenant", dia_semana: "sexta", dia_ordem: 2, exercicio: "Remada" },
         ];
         else if (table === "anamnese_aluno") rows = [{ disponibilidade_dias: [] }];
         rows = rows.filter((row) => filters.every(([key, value]) => row[key] === value));
@@ -136,6 +136,6 @@ describe("Conclusão por sessão e dia", () => {
     await waitFor(() => expect(db.writes).toHaveLength(1));
     await waitFor(() => expect(finish()).toBeEnabled());
     expect(db.sessions[0].duracao_min).toBe(0);
-    expect(localStorage.getItem(`treino:completed:student:any:sexta`)).toBeNull();
+    expect(Object.keys(localStorage).filter((key) => key.startsWith("treino:completed:student:"))).toHaveLength(0);
   });
 });
