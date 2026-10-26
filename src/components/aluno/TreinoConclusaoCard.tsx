@@ -467,9 +467,10 @@ const CardArt = forwardRef<HTMLDivElement, CardArtProps>(
           <>
             {/* Fundo preto sólido: garante que barras do object-contain fiquem invisíveis */}
             <div className="absolute inset-0 bg-black" />
-            {/* Arte full fisicamente abaixo do cabeçalho: até uma cabeça no topo
-                da imagem não pode invadir o título. Contain preserva a arte inteira. */}
-            <div className={`absolute inset-x-0 bottom-0 ${bgMode === "full" ? "top-[27%]" : "top-0"}`}>
+            {/* Arte em tela cheia (tamanho original). O atleta desce no frame
+                pela geração da IA (zona segura de 44% no prompt) e o título
+                tem scrim escuro local — sem encolher a imagem. */}
+            <div className="absolute inset-0">
               <img
                 src={bgUrl}
                 alt=""
