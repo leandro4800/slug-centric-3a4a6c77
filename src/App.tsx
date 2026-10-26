@@ -18,7 +18,6 @@ import { Loader2 } from "lucide-react";
 import PushNotificationManager from "@/components/PushNotificationManager";
 import AthleteWriteSync from "@/components/AthleteWriteSync";
 import { PortraitLock } from "@/components/PortraitLock";
-import RestPreview from "./pages/rest-preview";
 
 import Landing from "./pages/Landing";
 import IndexRedirect from "./pages/IndexRedirect";
@@ -211,7 +210,6 @@ const App = () => (
             {/* Redirecionamentos de Raiz */}
              <Route path="/" element={<IndexRedirect />} />
              <Route path="/site" element={<Landing />} />
-             <Route path="/rest-preview" element={<RestPreview />} />
              <Route path="/marketplace" element={<Navigate to="/" replace />} />
 
             <Route path="/seja-coach" element={<SejaCoach />} />
