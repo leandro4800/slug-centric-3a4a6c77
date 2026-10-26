@@ -210,6 +210,7 @@ const App = () => (
             {/* Redirecionamentos de Raiz */}
              <Route path="/" element={<IndexRedirect />} />
              <Route path="/site" element={<Landing />} />
+             <Route path="/rest-preview" element={<RestPreview />} />
              <Route path="/marketplace" element={<Navigate to="/" replace />} />
 
             <Route path="/seja-coach" element={<SejaCoach />} />
