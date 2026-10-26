@@ -10,6 +10,7 @@ import { Capacitor } from "@capacitor/core";
 import { SpeechRecognition as NativeSpeech } from "@capacitor-community/speech-recognition";
 import { Button } from "@/components/ui/button";
 import { saveSeriesDurable } from "@/lib/athlete-write-queue";
+import { RestTimerButton } from "./RestTimerButton";
 
 export interface ExerciseCardData {
   id: string;
@@ -24,6 +25,8 @@ export interface ExerciseCardData {
   /** Vídeo gravado pelo coach (demo personalizada) */
   video_coach_url?: string | null;
   is_extra?: boolean;
+  /** Descanso definido pelo coach (segundos) */
+  tempo_descanso_segundos?: number | null;
 }
 
 interface CargaAnterior {
@@ -1081,6 +1084,7 @@ export const ExerciseCard = ({
           )}
 
 
+          <div className="flex items-center gap-2 flex-wrap">
           {/* Interruptor compacto: modo voz por série (o ✓ da linha grava) */}
           <button
             type="button"
@@ -1096,6 +1100,10 @@ export const ExerciseCard = ({
             <Mic className="h-3 w-3" />
             🎤 Modo voz
           </button>
+          {(data.tempo_descanso_segundos ?? 0) > 0 && (
+            <RestTimerButton seconds={data.tempo_descanso_segundos as number} />
+          )}
+          </div>
 
           {semCarga && (
             <p className="text-[11px] text-muted-foreground -mt-2">
