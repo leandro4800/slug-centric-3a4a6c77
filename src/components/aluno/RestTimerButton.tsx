@@ -39,7 +39,9 @@ export const RestTimerButton = ({ seconds }: { seconds: number }) => {
     return () => clearTimeout(t);
   }, [finished]);
 
-  const restante = endAt ? Math.max(0, Math.ceil((endAt - now) / 1000)) : seconds;
+  const restante = endAt
+    ? Math.min(seconds, Math.max(0, Math.ceil((endAt - now) / 1000)))
+    : seconds;
   const ativo = !!endAt;
   const progresso = seconds > 0 ? Math.min(1, Math.max(0, restante / seconds)) : 0;
 
@@ -50,8 +52,9 @@ export const RestTimerButton = ({ seconds }: { seconds: number }) => {
   };
 
   const iniciar = () => {
-    setNow(Date.now());
-    setEndAt(Date.now() + seconds * 1000);
+    const t = Date.now();
+    setNow(t);
+    setEndAt(t + seconds * 1000);
     setFinished(false);
     setOpen(true);
   };
