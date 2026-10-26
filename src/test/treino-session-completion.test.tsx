@@ -87,7 +87,7 @@ describe("Conclusão por sessão e dia", () => {
     db.sessions = [session("thursday", "quinta")];
     db.series = [{ sessao_id: "thursday", aluno_id: "student", volume_kg: 100 }];
     await open();
-    await screen.findByRole("button", { name: "Ir para quinta" }).catch(() => null);
+    await waitFor(() => expect(screen.getByRole("button", { name: "QUI" }).className).toContain("bg-primary"));
     selectDay("SEX");
     expect(finish()).toBeDisabled();
     fireEvent.click(finish()); expect(db.writes).toHaveLength(0);
