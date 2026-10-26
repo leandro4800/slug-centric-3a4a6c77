@@ -10,3 +10,9 @@
 - [x] Adicionar acesso direto à aba pendente e recuperação de sessões antigas sem apagar dados.
 - [x] Cinco testes da tela aprovados: troca de dias, sexta vazia com quinta antiga, contador desatualizado, retomada após 24h e falha ao salvar.
 - [ ] Verificar com uma conta real: bloqueado pela conexão Supabase externa sem sessão de teste disponível; navegador só mostrou a abertura do app.
+
+## Descanso entre séries
+- [x] Botão "Descanso" ao lado de "Modo voz" com o tempo definido pelo coach; vibra no fim da contagem.
+- [x] Ao tocar, a contagem abre em versão grande na tela, com anel de progresso; "Parar" encerra e "Fechar" mantém a contagem no botão compacto.
+- [x] Três testes do botão aprovados; prévia conferida em tela de celular (384×638) antes e depois de fechar.
+- [ ] Verificar com conta real: mesmo bloqueio da conclusão de treino (Supabase externo sem sessão de teste).
