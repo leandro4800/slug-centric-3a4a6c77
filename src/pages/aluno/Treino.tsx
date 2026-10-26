@@ -36,6 +36,7 @@ export const PersonalTreino = () => {
   const [treinos, setTreinos] = useState<Treino[]>([]);
   const [observacaoClinica, setObservacaoClinica] = useState<string | null>(null);
   const [diaAtual, setDiaAtual] = useState<string>(() => sessionStorage.getItem("treino:diaAtual") || "");
+  const sessaoFocadaId = useRef<string | null>(null);
   const [isMock, setIsMock] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(() => {
     const v = sessionStorage.getItem("treino:activeIndex");
@@ -418,6 +419,7 @@ export const PersonalTreino = () => {
   // Quando availableDays carrega, seleciona automaticamente o dia de HOJE (se hoje for treino).
   useEffect(() => {
     if (!dias.length) return;
+    if (sessaoFocadaId.current) return; // treino em andamento manda no dia exibido
     const todayIdx = (new Date().getDay() + 6) % 7; // 0=Seg ... 6=Dom
     const targetDia = dias.find((d) => weekIdxForDia(d) === todayIdx);
     if (targetDia && targetDia !== diaAtual) setDiaAtual(targetDia);
@@ -492,6 +494,11 @@ export const PersonalTreino = () => {
         ?? abertas.find((row) => row.id === sessaoRetomadaId.current)
         ?? null;
       setSessaoAndamento(atual);
+      // Ao reabrir a tela, volta para o dia em que o treino em andamento foi iniciado (uma vez por sessão).
+      if (atual && sessaoFocadaId.current !== atual.id) {
+        sessaoFocadaId.current = atual.id;
+        setDiaAtual(atual.dia_semana);
+      }
       setSessoesAntigas(abertas.filter((row) => row.startedAt < limite && row.id !== atual?.id));
     })();
     return () => { cancelled = true; };
