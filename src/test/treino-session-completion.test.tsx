@@ -77,10 +77,18 @@ describe("Conclusão por sessão e dia", () => {
   });
   afterEach(cleanup);
 
+  it("reabre no dia em que o treino foi iniciado", async () => {
+    db.sessions = [session("tuesday-started", "quinta")];
+    await open();
+    await waitFor(() => expect(screen.getByRole("button", { name: "QUI" }).className).toContain("bg-primary"));
+  });
+
   it("não finaliza quinta ao visualizar sexta e permite ir diretamente para quinta", async () => {
     db.sessions = [session("thursday", "quinta")];
     db.series = [{ sessao_id: "thursday", aluno_id: "student", volume_kg: 100 }];
     await open();
+    await screen.findByRole("button", { name: "Ir para quinta" }).catch(() => null);
+    selectDay("SEX");
     expect(finish()).toBeDisabled();
     fireEvent.click(finish()); expect(db.writes).toHaveLength(0);
     fireEvent.click(screen.getByRole("button", { name: "Ir para quinta" }));
