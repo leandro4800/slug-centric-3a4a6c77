@@ -1226,10 +1226,12 @@ export const ExerciseCard = ({
                       type="button"
                       size="icon"
                       variant={slot.done ? "green" : "default"}
-                      aria-label={voiceMode && !slot.done ? `Registrar série ${i + 1} por voz` : `Confirmar série ${i + 1}`}
-                      disabled={!sessionActive || slot.done || saving || (listeningIdx !== null && listeningIdx !== i)}
+                      aria-label={slot.done ? `Editar série ${i + 1}` : voiceMode ? `Registrar série ${i + 1} por voz` : `Confirmar série ${i + 1}`}
+                      title={slot.done ? "Toque para corrigir esta série" : undefined}
+                      disabled={!sessionActive || saving || (listeningIdx !== null && listeningIdx !== i)}
                       onClick={() => {
-                        if (voiceMode && !slot.done) handleVoiceSeries(i);
+                        if (slot.done) startEditSlot(i);
+                        else if (voiceMode && !editingSlots.has(i)) handleVoiceSeries(i);
                         else void confirmSeries(i);
                       }}
                       className={`h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4 ${listeningIdx === i ? "animate-pulse" : ""}`}
