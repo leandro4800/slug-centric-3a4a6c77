@@ -725,6 +725,13 @@ export const ExerciseCard = ({
   const updateSlot = (i: number, field: "carga" | "reps", val: string) =>
     setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: val } : s)));
 
+  const [editingSlots, setEditingSlots] = useState<Set<number>>(new Set());
+  const startEditSlot = (i: number) => {
+    setEditingSlots((current) => new Set(current).add(i));
+    setSlots((prev) => prev.map((s, idx) => (idx === i ? { ...s, done: false } : s)));
+    toast("Corrija a carga ou as repetições e confirme de novo.");
+  };
+
   const confirmSeries = async (
     i: number,
     override?: { carga?: string; reps?: string },
@@ -752,8 +759,36 @@ export const ExerciseCard = ({
       return;
     }
 
+    // Correção de uma série já registrada: atualiza a linha existente (não duplica).
+    if (editingSlots.has(i)) {
+      setSavingSlots((current) => new Set(current).add(i));
+      try {
+        let q = supabase
+          .from("series_executadas")
+          .update({ peso_kg: weight, reps })
+          .eq("aluno_id", userId)
+          .eq("sessao_id", sessaoId)
+          .eq("numero_serie", i + 1);
+        q = isUuid(data.id)
+          ? q.eq("treino_prescrito_id", data.id)
+          : q.is("treino_prescrito_id", null).eq("exercicio_chave", String(data.id));
+        const { error } = await q;
+        if (error) throw error;
+        setSlots((current) => current.map((item, index) => (index === i ? { ...item, done: true } : item)));
+        setEditingSlots((current) => { const n = new Set(current); n.delete(i); return n; });
+        onCargaSaved?.(data.exercicio, weight, reps ?? 0);
+        onSeriesSaved?.();
+        toast.success(`Série ${i + 1} corrigida.`);
+      } catch (error: any) {
+        toast.error(error?.message || "Não foi possível corrigir a série.");
+      } finally {
+        setSavingSlots((current) => { const n = new Set(current); n.delete(i); return n; });
+      }
+      return;
+    }
 
     setSavingSlots((current) => new Set(current).add(i));
+
     try {
       const prescribedId = isUuid(data.id) ? data.id : null;
       const payload = {
@@ -1191,10 +1226,12 @@ export const ExerciseCard = ({
                       type="button"
                       size="icon"
                       variant={slot.done ? "green" : "default"}
-                      aria-label={voiceMode && !slot.done ? `Registrar série ${i + 1} por voz` : `Confirmar série ${i + 1}`}
-                      disabled={!sessionActive || slot.done || saving || (listeningIdx !== null && listeningIdx !== i)}
+                      aria-label={slot.done ? `Editar série ${i + 1}` : voiceMode ? `Registrar série ${i + 1} por voz` : `Confirmar série ${i + 1}`}
+                      title={slot.done ? "Toque para corrigir esta série" : undefined}
+                      disabled={!sessionActive || saving || (listeningIdx !== null && listeningIdx !== i)}
                       onClick={() => {
-                        if (voiceMode && !slot.done) handleVoiceSeries(i);
+                        if (slot.done) startEditSlot(i);
+                        else if (voiceMode && !editingSlots.has(i)) handleVoiceSeries(i);
                         else void confirmSeries(i);
                       }}
                       className={`h-9 w-9 rounded-none p-0 tracking-normal [&_svg]:size-4 ${listeningIdx === i ? "animate-pulse" : ""}`}
