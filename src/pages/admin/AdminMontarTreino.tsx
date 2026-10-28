@@ -81,6 +81,7 @@ interface ExercicioPrescrito {
   repeticoes: string;
   cadencia?: string;
   detalhes_execucao?: string;
+  tempo_descanso_segundos?: number | null;
   observacao: string;
   tecnica_avancada?: string;
   video_url?: string | null;
@@ -538,6 +539,7 @@ const AdminMontarTreino = () => {
             repeticoes: r.repeticoes || "",
             cadencia: r.cadencia || "",
             detalhes_execucao: r.detalhes_execucao || "",
+            tempo_descanso_segundos: r.tempo_descanso_segundos ?? 90,
             observacao: r.observacao || "",
             tecnica_avancada: r.tecnica_avancada || "",
           }));
@@ -555,7 +557,7 @@ const AdminMontarTreino = () => {
       } else {
         const { data: tp } = await supabase
           .from("treinos_prescritos")
-          .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tecnica_avancada, video_url, referencia_exercicio_id")
+          .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, tecnica_avancada, video_url, referencia_exercicio_id")
           .eq("aluno_id", alunoId)
           .eq("tenant_id", tenant.id)
           .order("dia_ordem", { nullsFirst: false })
@@ -569,6 +571,7 @@ const AdminMontarTreino = () => {
             repeticoes: r.repeticoes || "",
             cadencia: r.cadencia || "",
             detalhes_execucao: r.detalhes_execucao || "",
+            tempo_descanso_segundos: r.tempo_descanso_segundos ?? 90,
             observacao: r.observacao || "",
             tecnica_avancada: r.tecnica_avancada || "",
             video_url: r.video_url ?? null,
@@ -846,6 +849,11 @@ const AdminMontarTreino = () => {
       toast.error("Gere ou adicione exercícios antes de salvar.");
       return;
     }
+    if (exerciciosToSave.some((e) => e.tempo_descanso_segundos != null &&
+      (!Number.isInteger(e.tempo_descanso_segundos) || e.tempo_descanso_segundos < 0))) {
+      toast.error("Informe o descanso em segundos inteiros, sem valores negativos.");
+      return;
+    }
     setSaving(true);
     try {
       if (isAvulso) {
@@ -858,6 +866,7 @@ const AdminMontarTreino = () => {
             repeticoes: e.repeticoes,
             cadencia: e.cadencia,
             detalhes_execucao: e.detalhes_execucao,
+            tempo_descanso_segundos: e.tempo_descanso_segundos ?? 90,
             observacao: e.observacao,
             tecnica_avancada: e.tecnica_avancada || null,
           })),
@@ -914,6 +923,7 @@ const AdminMontarTreino = () => {
           repeticoes: e.repeticoes,
           cadencia: e.cadencia,
           detalhes_execucao: e.detalhes_execucao,
+          tempo_descanso_segundos: e.tempo_descanso_segundos ?? 90,
           observacao: e.observacao,
           tecnica_avancada: e.tecnica_avancada || null,
           referencia_exercicio_id: linkIdPara(linkMap, e.exercicio) ?? e.referencia_exercicio_id ?? null,
@@ -2371,7 +2381,7 @@ const AdminMontarTreino = () => {
                             onPick={(b) => updateEx(globalIdx, { exercicio: b.nome, detalhes_execucao: b.descricao || "" })}
                           />
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           <div>
                             <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Séries</Label>
                             <Input placeholder="4" value={e.series} onChange={(ev) => updateEx(globalIdx, { series: ev.target.value })} className="mt-1" />
@@ -2383,6 +2393,21 @@ const AdminMontarTreino = () => {
                           <div>
                             <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Cadência</Label>
                             <Input placeholder="3-1-X-0" value={e.cadencia} onChange={(ev) => updateEx(globalIdx, { cadencia: ev.target.value })} className="mt-1" />
+                          </div>
+                          <div>
+                            <Label htmlFor={`descanso-${globalIdx}`} className="text-[10px] uppercase tracking-wider text-muted-foreground">Descanso (segundos)</Label>
+                            <Input
+                              id={`descanso-${globalIdx}`}
+                              type="number"
+                              inputMode="numeric"
+                              min={0}
+                              step={1}
+                              value={e.tempo_descanso_segundos ?? 90}
+                              onChange={(ev) => updateEx(globalIdx, {
+                                tempo_descanso_segundos: ev.target.value === "" ? null : Number(ev.target.value),
+                              })}
+                              className="mt-1"
+                            />
                           </div>
                         </div>
                         <div>

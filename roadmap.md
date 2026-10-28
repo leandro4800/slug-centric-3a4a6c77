@@ -12,6 +12,7 @@
 - [ ] Verificar com uma conta real: bloqueado pela conexão Supabase externa sem sessão de teste disponível; navegador só mostrou a abertura do app.
 
 ## Descanso entre séries
+- [x] Campo de descanso em segundos por exercício no editor do coach; salvamento e reabertura preservam tempos independentes. Dez testes aprovados e build OK.
 - [x] Botão "Descanso" ao lado de "Modo voz" com o tempo definido pelo coach; vibra no fim da contagem.
 - [x] Ao tocar, a contagem abre em versão grande na tela, com anel de progresso; "Parar" encerra e "Fechar" mantém a contagem no botão compacto.
 - [x] Três testes do botão aprovados; prévia conferida em tela de celular (384×638) antes e depois de fechar.
