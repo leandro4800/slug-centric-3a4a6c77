@@ -77,9 +77,9 @@ describe("descanso definido pelo coach por exercício", () => {
     student.unmount();
     const coach = render(<AdminMontarTreino />);
     await screen.findAllByLabelText("Descanso (segundos)");
-    const coachField = screen.getByRole("option", { name: "Força", exact: true }).parentElement;
+    const coachField = screen.getByRole("option", { name: "Força" }).parentElement;
     expect(coachField).toHaveValue("forca");
-    fireEvent.click(screen.getByRole("button", { name: "Salvar perfil", exact: true }));
+    fireEvent.click(screen.getByRole("button", { name: "Salvar perfil" }));
     await waitFor(() => expect(db.profile.aluno_id).toBe("student"));
     expect(db.profile.objetivo).toBe("forca");
     coach.unmount();

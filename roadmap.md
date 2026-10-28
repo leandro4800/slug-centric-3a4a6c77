@@ -1,6 +1,7 @@
 # Correção de conclusão de treino
 ## Objetivo Força
-- [ ] Adicionar opção do aluno e do coach, preservando a escolha no salvamento; testar os fluxos envolvidos.
+- [x] Força no cadastro e Editar Perfil do aluno e nos seletores do coach; teste de salvamento e leitura aluno → coach → aluno aprovado, sem alterar os demais dados.
+- [ ] Conferir com conta real: Supabase externo sem sessão disponível; fluxo autenticado não verificado.
 
 ## Card de compartilhamento
 - [x] Arte full separada abaixo do cabeçalho; navegador confirmou título até y=409 e imagem a partir de y=518; prévia e exportação com atleta conferidas em desktop e mobile. Prévia ilustrativa reconstruída a partir do print, não geração autenticada da conta.
