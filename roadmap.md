@@ -3,6 +3,7 @@
 - [x] Reutilizar exatamente o link de Alunos (https://alpha-coach.app/[slug]) e a lógica de cópia compartilhada, com tenant resolvido pelo dono.
 - [x] Link de divulgação no Controle Central e menus do painel, com cópia e envio neutro; app nativo usa folha de compartilhamento sem abrir a landing.
 - [x] Nove testes aprovados; tela e cópia conferidas em prévia isolada de coach fictício, desktop e celular 390×844, sem overflow; WhatsApp abre separado na web; build OK.
+- [x] Botão de acesso no Controle Central com fundo branco e texto preto; render conferido no navegador (fundo rgb(250,250,250), texto preto).
 - [ ] Conferir com coach real e aparelhos iOS/Android: Supabase externo sem sessão gerenciável e sem aparelho nativo disponível; requer nova versão nas lojas.
 
 ## Objetivo Força
