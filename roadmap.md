@@ -1,8 +1,9 @@
 # Correção de conclusão de treino
 ## Link de divulgação do coach
-- [ ] Localizar e reutilizar o link do painel, preservando o tenant atual.
-- [ ] Disponibilizar na área mobile do coach com cópia e envio neutro pelo WhatsApp, sem abrir a landing no app.
-- [ ] Testar isolamento dos links e compartilhamento; verificar a tela no celular.
+- [x] Reutilizar exatamente o link de Alunos (https://alpha-coach.app/[slug]) e a lógica de cópia compartilhada, com tenant resolvido pelo dono.
+- [x] Link de divulgação no Controle Central e menus do painel, com cópia e envio neutro; app nativo usa folha de compartilhamento sem abrir a landing.
+- [x] Nove testes aprovados; tela e cópia conferidas em prévia isolada de coach fictício, desktop e celular 390×844, sem overflow; WhatsApp abre separado na web; build OK.
+- [ ] Conferir com coach real e aparelhos iOS/Android: Supabase externo sem sessão gerenciável e sem aparelho nativo disponível; requer nova versão nas lojas.
 
 ## Objetivo Força
 - [x] Força no cadastro e Editar Perfil do aluno e nos seletores do coach; teste de salvamento e leitura aluno → coach → aluno aprovado, sem alterar os demais dados.
