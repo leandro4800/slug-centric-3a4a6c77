@@ -18,6 +18,7 @@ import { extractYouTubeId, isDirectVideo } from "@/lib/utils";
 import { buildYouTubeEmbedUrl, YOUTUBE_IFRAME_ALLOW, YOUTUBE_IFRAME_REFERRER_POLICY } from "@/lib/youtube-embed";
 import { calcBodyFatUSNavy, calcIMC, parseAlturaCm } from "@/lib/body-metrics";
 import heroDefault from "@/assets/hero-default.jpg";
+import { TRAINING_GOALS } from "@/lib/training-goals";
 
 type Sexo = "M" | "F";
 const dias = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -54,6 +55,7 @@ export default function Onboarding() {
   const [anosTreino, setAnosTreino] = useState("0");
   const [diasDisponiveis, setDiasDisponiveis] = useState<string[]>([]);
   const [nivelExperiencia, setNivelExperiencia] = useState("Iniciante");
+  const [objetivo, setObjetivo] = useState("hipertrofia");
   const [pesoKg, setPesoKg] = useState("");
   const [alturaCm, setAlturaCm] = useState("");
   const [pescocoCm, setPescocoCm] = useState("");
@@ -260,6 +262,10 @@ export default function Onboarding() {
       const result = rpcData as { ok: boolean; error?: string } | null;
       if (!result?.ok) throw new Error(result?.error || "Falha ao concluir cadastro");
 
+      const { data: savedGoal, error: goalError } = await supabase.from("perfis_treino")
+        .update({ objetivo }).eq("aluno_id", user.id).select("objetivo").single();
+      if (goalError || !savedGoal) throw new Error("Não foi possível salvar seu objetivo. Tente novamente.");
+
       toast({ title: "Tudo pronto!", description: "Bem-vindo ao seu painel." });
       navigate(tenantSlug ? `/${tenantSlug}/app` : "/login", { replace: true });
     } catch (e: any) {
@@ -387,6 +393,11 @@ export default function Onboarding() {
               </section>
               <section className="space-y-3">
                 <h3 className="font-display text-lg uppercase text-primary">Treino & Experiência</h3>
+                <div><Label htmlFor="onboarding-goal">Objetivo</Label>
+                  <select id="onboarding-goal" value={objetivo} onChange={e => setObjetivo(e.target.value)} className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm">
+                    {TRAINING_GOALS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                  </select>
+                </div>
                 <div><Label>Nível de Experiência</Label><Select value={nivelExperiencia} onValueChange={setNivelExperiencia}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Iniciante">Iniciante</SelectItem><SelectItem value="Intermediário">Intermediário</SelectItem><SelectItem value="Avançado">Avançado</SelectItem><SelectItem value="Atleta de Alto Nível">Atleta de Alto Nível</SelectItem></SelectContent></Select></div>
                 <div><Label>Anos de treino</Label><Input type="number" value={anosTreino} onChange={e => setAnosTreino(e.target.value)} step={0.5} min={0} /></div>
                 <div><Label>Dias disponíveis</Label><div className="mt-2 flex flex-wrap gap-2">{dias.map(d => <button key={d} type="button" onClick={() => setDiasDisponiveis(arr => arr.includes(d) ? arr.filter(x => x !== d) : [...arr, d])} className={`rounded-full border px-4 py-1.5 text-sm ${diasDisponiveis.includes(d) ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card"}`}>{d}</button>)}</div></div>

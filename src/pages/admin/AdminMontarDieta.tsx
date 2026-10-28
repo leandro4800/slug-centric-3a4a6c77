@@ -22,6 +22,7 @@ import imgPre from "@/assets/meal-pre.jpg";
 import imgPost from "@/assets/meal-post.jpg";
 import imgSupper from "@/assets/meal-supper.jpg";
 import platformLogo from "@/assets/alphacoach-logo.jpeg";
+import { TRAINING_GOALS } from "@/lib/training-goals";
 
 const mealImgFor = (nome: string): string => {
   const n = (nome || "").toLowerCase();
@@ -1109,9 +1110,7 @@ const AdminMontarDieta = () => {
                     onChange={(e) => setPerfil({...perfil, objetivo: e.target.value})}
                     className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm"
                   >
-                    <option value="hipertrofia">Bulking (ganho de massa muscular)</option>
-                    <option value="cutting">Cutting (emagrecimento)</option>
-                    <option value="manutencao">Recomposição Corporal (ganhar músculo e perder gordura)</option>
+                    {TRAINING_GOALS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </div>
                 <div>

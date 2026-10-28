@@ -24,6 +24,7 @@ import { ExerciseVideoButton } from "@/components/admin/ExerciseVideoButton";
 import { TecnicaAvancadaPicker, useTecnicasAvancadas } from "@/components/admin/TecnicaAvancadaPicker";
 import { filtrarFightPresets, fightVideoFor, type FightDivisaoPreset } from "@/data/fightDivisoesPresets";
 import { FIGHT_MODALIDADES, modalidadeLabel, toModalidadeSlug } from "@/lib/fightModalidades";
+import { TRAINING_GOALS } from "@/lib/training-goals";
 
 
 interface Aluno {
@@ -1821,9 +1822,7 @@ const AdminMontarTreino = () => {
                 <div><Label>Objetivo</Label>
                   <select value={perfil.objetivo || ""} onChange={(e) => setPerfil({ ...perfil, objetivo: e.target.value })}
                     className="w-full mt-1 bg-secondary border border-border rounded-lg px-3 py-2 text-sm">
-                    <option value="hipertrofia">Bulking (ganho de massa muscular)</option>
-                    <option value="cutting">Cutting (emagrecimento)</option>
-                    <option value="manutencao">Recomposição Corporal (ganhar músculo e perder gordura)</option>
+                    {TRAINING_GOALS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
                   </select>
                 </div>
                 <div><Label>Peso (kg)</Label><Input type="number" step="0.1" value={perfil.peso_kg ?? ""} onChange={(e) => setPerfil({ ...perfil, peso_kg: e.target.value ? +e.target.value : null })} /></div>
