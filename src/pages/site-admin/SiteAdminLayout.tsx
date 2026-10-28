@@ -5,11 +5,13 @@ import { SiteTenantProvider, useSiteTenant } from "@/hooks/use-site-tenant";
 import { SiteAdminSidebar } from "@/components/site-admin/SiteAdminSidebar";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Link as LinkIcon } from "lucide-react";
 
 const mobileItems = [
   { to: "/site/admin/dashboard", label: "Resumo", icon: Home },
   { to: "/site/admin/alunos", label: "Alunos", icon: Users },
   { to: "/site/admin/alunos/novo", label: "Cadastrar", icon: UserPlus },
+  { to: "/site/admin/link-divulgacao", label: "Link de divulgação", icon: LinkIcon },
   { to: "/site/admin/agenda", label: "Agenda", icon: Calendar },
   { to: "/site/admin/treinos", label: "Treino", icon: Dumbbell },
   { to: "/site/admin/biblioteca", label: "Biblioteca", icon: BookOpen },

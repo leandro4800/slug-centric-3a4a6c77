@@ -9,6 +9,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        whatsapp: "bg-whatsapp text-whatsapp-foreground hover:bg-whatsapp/90 focus-visible:ring-whatsapp",
         default: [
           "bg-gradient-primary text-primary-foreground",
           "before:absolute before:inset-0 before:bg-[var(--btn-mirror)] before:pointer-events-none before:z-10",

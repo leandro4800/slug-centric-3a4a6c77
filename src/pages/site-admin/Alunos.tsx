@@ -19,6 +19,7 @@ import {
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AnamneseDetails } from "@/components/aluno/AnamneseDetails";
 import { toast } from "@/hooks/use-toast";
+import { copyCoachPublicLink, getCoachPublicLink } from "@/lib/coach-public-link";
 
 interface Aluno {
   id: string;
@@ -69,12 +70,12 @@ const Alunos = () => {
     setAnamneseData(data);
   };
 
-  const publicLink = tenant?.slug ? `https://alpha-coach.app/${tenant.slug}` : "";
+  const publicLink = getCoachPublicLink(tenant);
 
   const handleCopyLink = async () => {
     if (!publicLink) return;
     try {
-      await navigator.clipboard.writeText(publicLink);
+      await copyCoachPublicLink(publicLink);
       setCopied(true);
       toast({ title: "Link copiado!", description: "Compartilhe com seus alunos para assinarem um plano." });
       setTimeout(() => setCopied(false), 2500);
