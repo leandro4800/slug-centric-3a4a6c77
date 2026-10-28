@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const db = vi.hoisted(() => ({ exercises: [] as any[], inserts: [] as any[] }));
+const db = vi.hoisted(() => ({ exercises: [] as any[], inserts: [] as any[], profile: { objetivo: "hipertrofia" } as any }));
 const tenant = { id: "tenant", nome: "Coach", vertical: "personal" };
 vi.mock("@/contexts/BrandingProvider", () => ({ useBranding: () => ({ tenant }) }));
 vi.mock("@/hooks/use-site-tenant", () => ({ useSiteTenant: () => ({ tenant: null }) }));
@@ -27,12 +27,19 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
     const query: any = {
       select: () => query, eq: () => query, order: () => query, limit: () => query,
       maybeSingle: () => { single = true; return query; },
+      single: () => { single = true; return query; },
+      update: (row: any) => { operation = "update"; payload = row; return query; },
+      upsert: (row: any) => { operation = "update"; payload = row; return query; },
       delete: () => { operation = "delete"; return query; },
       insert: (rows: any[]) => { operation = "insert"; payload = rows; return query; },
       then: (resolve: any, reject: any) => Promise.resolve().then(() => {
         let rows: any[] = [];
         if (table === "perfis") rows = [{ id: "student", nome_completo: "Aluno", tenant_id: "tenant", sexo: "masculino" }];
         if (table === "anamnese_aluno") rows = [{ disponibilidade_dias: [] }];
+        if (table === "perfis_treino") {
+          if (operation === "update") db.profile = { ...db.profile, ...payload };
+          rows = [db.profile];
+        }
         if (table === "treinos_prescritos") {
           if (operation === "delete") db.exercises = [];
           if (operation === "insert") { db.inserts.push(payload); db.exercises = payload; }
@@ -46,17 +53,39 @@ vi.mock("@/integrations/supabase/client", () => ({ supabase: {
 } }));
 
 import AdminMontarTreino from "@/pages/admin/AdminMontarTreino";
+import { StudentGoalField } from "@/components/aluno/StudentGoalField";
 
 describe("descanso definido pelo coach por exercício", () => {
   beforeEach(() => {
     localStorage.clear();
     db.inserts = [];
+    db.profile = { objetivo: "hipertrofia", frequencia_semanal: 4 };
     db.exercises = [
       { dia_semana: "Treino A", ordem: 0, exercicio: "Supino", series: "3", repeticoes: "10", tempo_descanso_segundos: 60 },
       { dia_semana: "Treino A", ordem: 1, exercicio: "Remada", series: "3", repeticoes: "10", tempo_descanso_segundos: 120 },
     ];
   });
   afterEach(cleanup);
+
+  it("o aluno salva Força e o coach carrega e preserva esse objetivo", async () => {
+    const student = render(<StudentGoalField alunoId="student" />);
+    const field = screen.getByLabelText("Objetivo");
+    await waitFor(() => expect(field).toBeEnabled());
+    fireEvent.change(field, { target: { value: "forca" } });
+    await waitFor(() => expect(db.profile.objetivo).toBe("forca"));
+    expect(db.profile.frequencia_semanal).toBe(4);
+    student.unmount();
+    const coach = render(<AdminMontarTreino />);
+    await screen.findAllByLabelText("Descanso (segundos)");
+    const coachField = screen.getByRole("option", { name: "Força" }).parentElement;
+    expect(coachField).toHaveValue("forca");
+    fireEvent.click(screen.getByRole("button", { name: "Salvar perfil" }));
+    await waitFor(() => expect(db.profile.aluno_id).toBe("student"));
+    expect(db.profile.objetivo).toBe("forca");
+    coach.unmount();
+    render(<StudentGoalField alunoId="student" />);
+    await waitFor(() => expect(screen.getByLabelText("Objetivo")).toHaveValue("forca"));
+  });
 
   it("salva descansos independentes e os mantém ao reabrir o treino", async () => {
     const view = render(<AdminMontarTreino />);

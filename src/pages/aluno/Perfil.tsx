@@ -24,6 +24,7 @@ import { AthleteEvaluationsViewer } from "@/components/aluno/AthleteEvaluationsV
 import { PhysicalEvaluationScienceFooter } from "@/components/HealthScienceFootnotes";
 import { readProfileSnapshot, writeProfileSnapshot } from "@/lib/profile-cache";
 import { saveAvaliacaoDurable } from "@/lib/athlete-write-queue";
+import { StudentGoalField } from "@/components/aluno/StudentGoalField";
 
 type ProfileData = {
   id?: string;
@@ -743,6 +744,7 @@ const Perfil = () => {
               <Label htmlFor="nome">Nome Completo</Label>
               <Input id="nome" value={formProfile.nome_completo} onChange={(e) => setFormProfile({...formProfile, nome_completo: e.target.value})} required />
             </div>
+            {!isCoach && user && <StudentGoalField alunoId={user.id} />}
             <div>
               <Label htmlFor="tel">Telefone</Label>
               <Input id="tel" value={formProfile.telefone} onChange={(e) => setFormProfile({...formProfile, telefone: e.target.value})} placeholder="(00) 00000-0000" />
