@@ -1,4 +1,9 @@
 # Correção de conclusão de treino
+## Link de divulgação do coach
+- [ ] Localizar e reutilizar o link do painel, preservando o tenant atual.
+- [ ] Disponibilizar na área mobile do coach com cópia e envio neutro pelo WhatsApp, sem abrir a landing no app.
+- [ ] Testar isolamento dos links e compartilhamento; verificar a tela no celular.
+
 ## Objetivo Força
 - [x] Força no cadastro e Editar Perfil do aluno e nos seletores do coach; teste de salvamento e leitura aluno → coach → aluno aprovado, sem alterar os demais dados.
 - [ ] Conferir com conta real: Supabase externo sem sessão disponível; fluxo autenticado não verificado.
