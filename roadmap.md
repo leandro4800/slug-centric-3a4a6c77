@@ -1,4 +1,7 @@
 # Correção de conclusão de treino
+## Objetivo Força
+- [ ] Adicionar opção do aluno e do coach, preservando a escolha no salvamento; testar os fluxos envolvidos.
+
 ## Card de compartilhamento
 - [x] Arte full separada abaixo do cabeçalho; navegador confirmou título até y=409 e imagem a partir de y=518; prévia e exportação com atleta conferidas em desktop e mobile. Prévia ilustrativa reconstruída a partir do print, não geração autenticada da conta.
 - [x] Reforçar zona segura do atleta no prompt e renovar a versão do cache.
