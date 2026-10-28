@@ -1,4 +1,5 @@
 # Architecture rules
+- Coach promotion screens and the web panel share the same public-link builder and clipboard helper, resolving the coach's owned tenant through SiteTenantProvider; native delivery uses the system share sheet rather than landing-page navigation to prevent WebView checkout and cross-tenant links.
 - Student and coach goal selectors share the training-goals catalog and persist the objective in perfis_treino; student edits update only the objective to preserve coach settings.
 - Workout completion must validate the selected day and re-read series for the exact active session before updating it; cached counts are not proof of completion.
 - Recover old open workout sessions explicitly in the student screen without deleting history or converting empty sessions into completed workouts.

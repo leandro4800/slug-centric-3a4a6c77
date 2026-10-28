@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard, Wallet, Video, CalendarClock, MapPin, Dumbbell, Apple, Settings, Stethoscope, GraduationCap } from "lucide-react";
+import { ArrowLeft, Users, Palette, Plus, Headphones, Save, Pencil, Trash2, Star, Clapperboard, LayoutDashboard, Wallet, Video, CalendarClock, MapPin, Dumbbell, Apple, Settings, Stethoscope, GraduationCap, Link as LinkIcon } from "lucide-react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
@@ -139,6 +139,12 @@ const ControleCentral = () => {
       </div>
 
       <div className="space-y-4">
+        <Button asChild variant="outline" className="w-full justify-start h-auto py-4 px-4 gap-4 tracking-normal">
+          <Link to={`/${slug}/admin/link-divulgacao`}>
+            <LinkIcon className="h-5 w-5 shrink-0" />
+            <span className="font-display text-lg text-left whitespace-normal">Link de divulgação</span>
+          </Link>
+        </Button>
         <Link
           to={`/${slug}/admin/atletas`}
           className="block bg-card/40 border border-white/10 rounded-none p-4 flex items-center gap-4 hover:border-primary/50 transition-all group"

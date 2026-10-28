@@ -3,6 +3,7 @@ import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
   LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag, GraduationCap,
   ChevronLeft, ChevronRight, Video, ShieldCheck, Crown, HeartPulse, BookOpen,
+  Link as LinkIcon,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -19,6 +20,7 @@ const baseItems: Item[] = [
 
   { to: "/site/admin/alunos", label: "Alunos", icon: Users, section: "Alunos" },
   { to: "/site/admin/alunos/novo", label: "Cadastrar aluno", icon: UserPlus, section: "Alunos" },
+  { to: "/site/admin/link-divulgacao", label: "Link de divulgação", icon: LinkIcon, section: "Alunos" },
 
   { to: "/site/admin/treinos", label: "Montar treino", icon: Dumbbell, section: "Programação" },
   { to: "/site/admin/videos-tecnicos", label: "Exercícios & vídeos", icon: Video, section: "Programação" },

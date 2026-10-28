@@ -66,6 +66,7 @@ import AdminAgendaPresencial from "./pages/admin/AdminAgendaPresencial";
 import AdminFaturamento from "./pages/admin/AdminFaturamento";
 import Hub from "./pages/coach/Hub";
 import CoachDashboard from "./pages/coach/CoachDashboard";
+import LinkDivulgacao, { LinkDivulgacaoContent } from "./pages/coach/LinkDivulgacao";
 import RedeemPlan from "./pages/coach/RedeemPlan";
 import SiteAdminLayout from "./pages/site-admin/SiteAdminLayout";
 import SiteAdminDashboard from "./pages/site-admin/Dashboard";
@@ -228,6 +229,7 @@ const App = () => (
               <Route path="dashboard" element={<SiteAdminDashboard />} />
               <Route path="alunos" element={<SiteAdminAlunos />} />
               <Route path="alunos/novo" element={<SiteAdminNovoAluno />} />
+              <Route path="link-divulgacao" element={<LinkDivulgacaoContent />} />
               <Route path="treinos" element={<SiteAdminMontarTreino />} />
               <Route path="videos-tecnicos" element={<SiteAdminVideosTecnicos />} />
               <Route path="biblioteca" element={<Biblioteca />} />
@@ -323,6 +325,7 @@ const App = () => (
             <Route path="/:slug/admin" element={<SlugRedirect to="app/controle" />} />
             <Route path="/:slug/admin/controle" element={<SlugRedirect to="app/controle" />} />
             <Route path="/:slug/admin/atletas" element={<RequireAuth requireRole="coach" checkTenant><MeusAtletas /></RequireAuth>} />
+            <Route path="/:slug/admin/link-divulgacao" element={<RequireAuth requireRole="coach" checkTenant><LinkDivulgacao /></RequireAuth>} />
             <Route path="/:slug/admin/aparencia" element={<RequireAuth requireRole="coach" checkTenant><AdminPanel /></RequireAuth>} />
             <Route path="/:slug/admin/montar-treino" element={<RequireAuth requireRole="coach" checkTenant><AdminMontarTreino /></RequireAuth>} />
             <Route path="/:slug/admin/montar-dieta" element={<RequireAuth requireRole="coach" checkTenant><AdminMontarDieta /></RequireAuth>} />

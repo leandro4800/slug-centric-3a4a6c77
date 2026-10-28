@@ -1,4 +1,10 @@
 # Correção de conclusão de treino
+## Link de divulgação do coach
+- [x] Reutilizar exatamente o link de Alunos (https://alpha-coach.app/[slug]) e a lógica de cópia compartilhada, com tenant resolvido pelo dono.
+- [x] Link de divulgação no Controle Central e menus do painel, com cópia e envio neutro; app nativo usa folha de compartilhamento sem abrir a landing.
+- [x] Nove testes aprovados; tela e cópia conferidas em prévia isolada de coach fictício, desktop e celular 390×844, sem overflow; WhatsApp abre separado na web; build OK.
+- [ ] Conferir com coach real e aparelhos iOS/Android: Supabase externo sem sessão gerenciável e sem aparelho nativo disponível; requer nova versão nas lojas.
+
 ## Objetivo Força
 - [x] Força no cadastro e Editar Perfil do aluno e nos seletores do coach; teste de salvamento e leitura aluno → coach → aluno aprovado, sem alterar os demais dados.
 - [ ] Conferir com conta real: Supabase externo sem sessão disponível; fluxo autenticado não verificado.
