@@ -139,7 +139,11 @@ const ControleCentral = () => {
       </div>
 
       <div className="space-y-4">
-        <Button asChild variant="outline" className="w-full justify-start h-auto py-4 px-4 gap-4 tracking-normal">
+        <Button
+          asChild
+          variant="outline"
+          className="w-full justify-start h-auto py-4 px-4 gap-4 tracking-normal bg-foreground text-background border-transparent hover:bg-foreground hover:text-background hover:shadow-none"
+        >
           <Link to={`/${slug}/admin/link-divulgacao`}>
             <LinkIcon className="h-5 w-5 shrink-0" />
             <span className="font-display text-lg text-left whitespace-normal">Link de divulgação</span>
