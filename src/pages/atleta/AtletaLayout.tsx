@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, NavLink, Outlet, useParams, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
 import { Activity, CalendarDays, Dumbbell, FileText, Home, LogOut, Menu, UserRound, Utensils, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -21,6 +21,7 @@ export default function AtletaLayout() {
   const { slug } = useParams();
   const { tenant } = useBranding();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const base = `/${slug}/atleta`;
 
@@ -43,7 +44,7 @@ export default function AtletaLayout() {
         <nav aria-label="Painel do atleta" className="space-y-1">
           {navigation.map(({ label, path, icon: Icon }) => (
             <Button key={path} asChild variant="ghost" className="h-auto min-h-10 w-full justify-start rounded-md px-3 py-2 text-sm font-normal normal-case tracking-normal shadow-none">
-              <NavLink to={`${base}${path ? `/${path}` : ""}`} end onClick={() => setMenuOpen(false)} className={({ isActive }) => cn(isActive ? "border-l-2 border-primary bg-primary/15 text-primary" : "text-muted-foreground")}><Icon /><span className="whitespace-normal text-left">{label}</span></NavLink>
+              <NavLink to={`${base}${path ? `/${path}` : ""}`} end onClick={() => setMenuOpen(false)} className={cn(pathname === `${base}${path ? `/${path}` : ""}` ? "border-l-2 border-primary bg-primary/15 text-primary" : "text-muted-foreground")}><Icon /><span className="whitespace-normal text-left">{label}</span></NavLink>
             </Button>
           ))}
         </nav>
