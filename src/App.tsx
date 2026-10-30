@@ -322,10 +322,10 @@ const App = () => (
               }
             >
               <Route index element={<AlunoHome />} />
-              <Route path="treino" element={<AtletaTreino />} />
-              <Route path="dieta" element={<AtletaDieta />} />
-              <Route path="evolucao" element={<AtletaEvolucao />} />
-              <Route path="evolucao/comparar" element={<AtletaEvolucao />} />
+              <Route path="treino" element={<Treino />} />
+              <Route path="dieta" element={<Dieta />} />
+              <Route path="evolucao" element={<Evolucao />} />
+              <Route path="evolucao/comparar" element={<CompararEvolucao />} />
               <Route path="clinica" element={<Clinica />} />
               <Route path="analise-postural" element={<AnalisePostural />} />
               <Route path="dr-ia" element={<DrIA />} />
@@ -352,10 +352,10 @@ const App = () => (
             {/* Painel do coach */}
             <Route path="/:slug/atleta" element={<RequireAuth checkTenant><SubscriptionGuard><AlunoLayout panel /></SubscriptionGuard></RequireAuth>}>
               <Route index element={<AtletaDashboard />} />
-              <Route path="treino" element={<Treino />} />
-              <Route path="dieta" element={<Dieta />} />
-              <Route path="evolucao" element={<Evolucao />} />
-              <Route path="evolucao/comparar" element={<CompararEvolucao />} />
+              <Route path="treino" element={<AtletaTreino />} />
+              <Route path="dieta" element={<AtletaDieta />} />
+              <Route path="evolucao" element={<AtletaEvolucao />} />
+              <Route path="evolucao/comparar" element={<AtletaEvolucao />} />
               <Route path="perfil" element={<Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-primary" />}><Perfil /></Suspense>} />
               <Route path="carta" element={<Carta />} />
               <Route path="biblioteca" element={<Biblioteca />} />
