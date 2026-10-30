@@ -28,3 +28,11 @@
 - [x] Ao tocar, a contagem abre em versão grande na tela, com anel de progresso; "Parar" encerra e "Fechar" mantém a contagem no botão compacto.
 - [x] Três testes do botão aprovados; prévia conferida em tela de celular (384×638) antes e depois de fechar.
 - [ ] Verificar com conta real: mesmo bloqueio da conclusão de treino (Supabase externo sem sessão de teste).
+## Saúde & Lesões (pedido 30/out)
+- [x] 1. Protocolo por fases (IA + botão + PDF)
+- [ ] 2. Cards por região com perguntas guiadas
+- [ ] 3. Histórico por aluno + liberar protocolo ao aluno
+- [ ] 4. Registro de dor + alertas push
+- [ ] 5. Aplicar protocolo no Montar Treino
+- [ ] 6. Novas regiões na trava clínica
+- [ ] 7. Favoritos e comandos do coach
