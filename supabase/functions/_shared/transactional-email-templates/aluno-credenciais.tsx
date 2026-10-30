@@ -3,6 +3,7 @@ import {
   Body, Button, Container, Head, Heading, Html, Preview, Section, Text, Hr,
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
+import { ATHLETE_PANEL_URL } from '../athlete-panel-link.ts'
 
 const APP_URL = 'https://alpha-coach.app'
 
@@ -32,6 +33,11 @@ const AlunoCredenciaisEmail = ({ nome, email, password, coachNome, slug }: Aluno
             <Text style={credLabel}>SEUS DADOS DE ACESSO</Text>
             <Text style={credRow}><strong>Usuário:</strong> {email}</Text>
             <Text style={credRow}><strong>Senha temporária:</strong> {password}</Text>
+          </Section>
+
+          <Text style={text}><strong>Painel do atleta:</strong> {ATHLETE_PANEL_URL}<br />Acesse com o mesmo e-mail e senha do aplicativo.</Text>
+          <Section style={{ textAlign: 'center', margin: '24px 0' }}>
+            <Button href={ATHLETE_PANEL_URL} style={button}>ACESSAR PAINEL DO ATLETA</Button>
           </Section>
 
           <Section style={{ textAlign: 'center', margin: '32px 0' }}>

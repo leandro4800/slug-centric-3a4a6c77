@@ -1,6 +1,7 @@
 // Envia o e-mail de boas-vindas com as credenciais para alunos que se cadastram
 // pela landing page do coach (fluxo "Entrar grátis").
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { athletePanelEmailSection } from "../_shared/athlete-panel-link.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -64,6 +65,7 @@ Deno.serve(async (req) => {
           <p style="font-family:monospace;margin:4px 0;"><strong>Usuário:</strong> ${email}</p>
           <p style="font-family:monospace;margin:4px 0;"><strong>Senha:</strong> ${password}</p>
         </div>
+        ${athletePanelEmailSection()}
         <p style="text-align:center;margin:32px 0;">
           <a href="${loginUrl}" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">ENTRAR NO APP</a>
         </p>

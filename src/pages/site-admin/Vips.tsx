@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { invokeEdgeFunction } from "@/lib/invoke-edge-function";
+import { ATHLETE_PANEL_URL, formatVipAccess } from "@/lib/athlete-access";
 
 type Vip = {
   id: string;
@@ -155,15 +156,21 @@ const Vips = () => {
               <p className="text-[10px] uppercase tracking-widest text-primary font-bold">Credenciais geradas</p>
               <p className="font-mono">{lastCreated.email}</p>
               <p className="font-mono">{lastCreated.password}</p>
-              <button
-                className="text-xs text-primary flex items-center gap-1"
-                onClick={() => {
-                  navigator.clipboard.writeText(`Login: ${lastCreated.email}\nSenha: ${lastCreated.password}\nLink: https://alpha-coach.app/alphateam`);
-                  toast.success("Copiado");
+              <p className="pt-2 text-xs text-muted-foreground">Painel do atleta</p>
+              <a href={ATHLETE_PANEL_URL} target="_blank" rel="noopener noreferrer" className="block break-all text-primary underline">{ATHLETE_PANEL_URL}</a>
+              <Button
+                variant="ghost" size="sm" className="h-auto justify-start px-0 py-2 text-xs tracking-normal"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(formatVipAccess(lastCreated.email, lastCreated.password));
+                    toast.success("Copiado");
+                  } catch {
+                    toast.error("Não foi possível copiar. Tente novamente.");
+                  }
                 }}
               >
                 <Copy className="h-3 w-3" /> Copiar credenciais e link
-              </button>
+              </Button>
             </div>
           )}
         </div>
