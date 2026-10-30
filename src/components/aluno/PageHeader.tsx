@@ -1,6 +1,7 @@
 import { ArrowLeft, LucideIcon } from "lucide-react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { isAthletePanelPath } from "@/lib/athlete-panel";
 
 interface PageHeaderProps {
   icon: LucideIcon;
@@ -19,6 +20,7 @@ export const PageHeader = ({
   showTeam = true,
 }: PageHeaderProps) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { slug } = useParams();
   const { tenant } = useBranding();
 
@@ -27,7 +29,7 @@ export const PageHeader = ({
       {back && (
         <button
           type="button"
-          onClick={() => navigate(`/${slug}/app`)}
+          onClick={() => navigate(`/${slug}/${isAthletePanelPath(location.pathname) ? "atleta" : "app"}`)}
           className="w-10 h-10 rounded-none bg-primary flex items-center justify-center shrink-0 shadow-glow mt-2"
         >
           <ArrowLeft className="h-4 w-4" />
