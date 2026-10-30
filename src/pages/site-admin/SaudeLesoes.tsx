@@ -8,7 +8,7 @@ import ReactMarkdown from "react-markdown";
 import jsPDF from "jspdf";
 import { toast } from "sonner";
 import {
-  HeartPulse, Loader2, Send, FileDown, ShieldAlert, Stethoscope, Info, ExternalLink, AlertTriangle, Pencil,
+  HeartPulse, Loader2, Send, FileDown, ShieldAlert, Stethoscope, Info, ExternalLink, AlertTriangle, Pencil, ListChecks,
 } from "lucide-react";
 
 const CAMPOS: [string, string, string][] = [
@@ -89,6 +89,7 @@ const SaudeLesoes = () => {
   const [loading, setLoading] = useState(false);
   const [laudo, setLaudo] = useState("");
   const [gerandoLaudo, setGerandoLaudo] = useState(false);
+  const [docTipo, setDocTipo] = useState<"laudo" | "protocolo">("laudo");
   const [meta, setMeta] = useState<RestricoesMeta | null>(null);
   const fimChat = useRef<HTMLDivElement>(null);
   const laudoRef = useRef<HTMLDivElement>(null);
@@ -190,11 +191,12 @@ const SaudeLesoes = () => {
     }
   };
 
-  const gerarLaudo = async () => {
+  const gerarLaudo = async (tipo: "laudo" | "protocolo" = "laudo") => {
     if (!relato.trim() && !contexto) {
       toast.error("Selecione um aluno ou descreva a condição clínica.");
       return;
     }
+    setDocTipo(tipo);
     setGerandoLaudo(true);
     setLaudo("");
     try {
@@ -209,7 +211,7 @@ const SaudeLesoes = () => {
             Authorization: `Bearer ${sess.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
           },
           body: JSON.stringify({
-            modo: "laudo",
+            modo: tipo,
             pergunta: pergunta.trim(),
             relato,
             aluno: contexto,
@@ -260,7 +262,7 @@ const SaudeLesoes = () => {
 
       if (!texto.trim()) throw new Error("A IA não retornou conteúdo. Tente novamente.");
       setLaudo(limparLoop(texto));
-      toast.success("Laudo gerado. Revise antes de baixar.");
+      toast.success(tipo === "protocolo" ? "Protocolo gerado. Revise antes de baixar." : "Laudo gerado. Revise antes de baixar.");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Falha ao gerar o laudo");
     } finally {
@@ -279,8 +281,8 @@ const SaudeLesoes = () => {
     const pageH = doc.internal.pageSize.getHeight();
     let y = renderPdfHeader({
       doc,
-      title: "LAUDO TÉCNICO DE EXERCÍCIOS",
-      subtitle: "Adequação de treino a restrições clínicas",
+      title: docTipo === "protocolo" ? "PROTOCOLO DE RETORNO POR FASES" : "LAUDO TÉCNICO DE EXERCÍCIOS",
+      subtitle: docTipo === "protocolo" ? "Progressão por critérios — material de apoio, não é diagnóstico" : "Adequação de treino a restrições clínicas",
       coachName: branding?.nome || tenant?.nome,
       studentName: dados.nome?.trim() || alunoSelecionado?.nome_completo || null,
       logo,
@@ -328,7 +330,7 @@ const SaudeLesoes = () => {
     doc.text(aviso, 14, y);
 
     const nome = (dados.nome?.trim() || alunoSelecionado?.nome_completo || "atleta").replace(/\s+/g, "-").toLowerCase();
-    doc.save(`laudo-exercicios-${nome}.pdf`);
+    doc.save(`${docTipo === "protocolo" ? "protocolo-fases" : "laudo-exercicios"}-${nome}.pdf`);
   };
 
   if (tenantLoading) {
@@ -436,19 +438,27 @@ const SaudeLesoes = () => {
             </p>
 
             <button
-              onClick={gerarLaudo}
+              onClick={() => gerarLaudo("laudo")}
               disabled={gerandoLaudo}
               className="flex w-full items-center justify-center gap-2 rounded-md bg-primary px-3 py-2.5 text-sm font-bold uppercase tracking-wide text-primary-foreground disabled:opacity-60"
             >
               {gerandoLaudo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Stethoscope className="h-4 w-4" />}
               Gerar laudo técnico
             </button>
+            <button
+              onClick={() => gerarLaudo("protocolo")}
+              disabled={gerandoLaudo}
+              className="flex w-full items-center justify-center gap-2 rounded-md border border-primary bg-primary/10 px-3 py-2.5 text-sm font-bold uppercase tracking-wide text-primary disabled:opacity-60"
+            >
+              {gerandoLaudo && docTipo === "protocolo" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ListChecks className="h-4 w-4" />}
+              Gerar protocolo por fases
+            </button>
             {laudo && (
               <button
                 onClick={baixarPdf}
                 className="flex w-full items-center justify-center gap-2 rounded-md border border-primary/40 px-3 py-2.5 text-sm font-bold uppercase tracking-wide text-primary hover:bg-primary/10"
               >
-                <FileDown className="h-4 w-4" /> Baixar laudo em PDF
+                <FileDown className="h-4 w-4" /> Baixar {docTipo === "protocolo" ? "protocolo" : "laudo"} em PDF
               </button>
             )}
           </div>
@@ -514,7 +524,7 @@ const SaudeLesoes = () => {
           {(gerandoLaudo || laudo) && (
             <div ref={laudoRef} className="rounded-xl border border-primary/30 bg-black/40 p-4">
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Prévia do laudo</p>
+                <p className="text-[10px] uppercase tracking-widest text-muted-foreground">{docTipo === "protocolo" ? "Prévia do protocolo por fases" : "Prévia do laudo"}</p>
                 {laudo && (
                   <button onClick={baixarPdf} className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                     <FileDown className="h-3.5 w-3.5" /> Baixar PDF
@@ -527,7 +537,7 @@ const SaudeLesoes = () => {
                 </div>
               ) : (
                 <p className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> Gerando laudo técnico...
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" /> {docTipo === "protocolo" ? "Gerando protocolo por fases..." : "Gerando laudo técnico..."}
                 </p>
               )}
             </div>

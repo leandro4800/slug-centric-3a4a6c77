@@ -47,6 +47,33 @@ Na seção 7 deixe explícito que este documento é um material técnico de apoi
 Educação Física, NÃO é laudo médico, não substitui avaliação clínica presencial e não serve para
 diagnóstico. Seja exato: nada de exercício genérico sem parâmetro.`;
 
+const PROMPT_PROTOCOLO = `${BASE}
+
+FORMATO OBRIGATÓRIO: NÃO use tabelas markdown.
+Use apenas títulos e listas com hífen. Nunca escreva linhas de separação (---, ===, ___). Máximo de 1100 palavras.
+Nunca afirme diagnóstico. Respeite integralmente as RESTRIÇÕES DETECTADAS (nenhum exercício proibido pode aparecer).
+
+Gere um PROTOCOLO DE RETORNO POR FASES, em markdown, com EXATAMENTE esta estrutura:
+## Resumo do caso
+## Fase 1 — Restauração
+## Fase 2 — Preparação
+## Fase 3 — Retorno progressivo
+Dentro de CADA fase, use estes subtítulos:
+### Duração estimada
+### Objetivo
+### Exercícios liberados
+Uma linha por exercício (4 a 7 por fase), no formato:
+- **Nome do exercício** — Séries x Reps: X | Amplitude: Y | Cadência: Z | PSE máx: W
+### Critérios para avançar
+Critérios MENSURÁVEIS (ex.: dor até 3/10 durante e 24h após o treino, amplitude completa sem dor,
+força próxima de 85% do lado sadio, controle/propriocepção adequados, confiança do atleta).
+## Red flags — interromper imediatamente
+Liste: dor aguda que piora, inchaço que volta, instabilidade, bloqueio articular, dor noturna ou em repouso,
+sintomas neurológicos (formigamento, perda de força), além de sinais específicos do caso.
+## Limitações deste documento
+Deixe explícito que é material técnico de apoio ao profissional de Educação Física, NÃO é diagnóstico
+nem laudo médico, e que patologia diagnosticada exige liberação médica/fisioterapêutica.`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
@@ -71,7 +98,7 @@ Deno.serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY não configurada");
 
     const body = await req.json().catch(() => ({}));
-    const modo: string = body?.modo === "laudo" ? "laudo" : "chat";
+    const modo: string = body?.modo === "laudo" ? "laudo" : body?.modo === "protocolo" ? "protocolo" : "chat";
     const pergunta: string = String(body?.pergunta || "").slice(0, 4000);
     const aluno = body?.aluno ?? null;
     const relato: string = String(body?.relato || "").slice(0, 4000);
@@ -120,7 +147,7 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
 `.trim();
 
     const messages = [
-      { role: "system", content: modo === "laudo" ? PROMPT_LAUDO : PROMPT_CHAT },
+      { role: "system", content: modo === "laudo" ? PROMPT_LAUDO : modo === "protocolo" ? PROMPT_PROTOCOLO : PROMPT_CHAT },
       { role: "system", content: contexto },
       ...historico
         .filter((m) => m && typeof m.content === "string")
@@ -130,11 +157,13 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
         content:
           modo === "laudo"
             ? `Gere o laudo técnico completo para este caso.${pergunta ? ` Observações do coach: ${pergunta}` : ""}`
+            : modo === "protocolo"
+            ? `Gere o protocolo de retorno por fases para este caso.${pergunta ? ` Observações do coach: ${pergunta}` : ""}`
             : pergunta,
       },
     ];
 
-    const stream = modo === "laudo";
+    const stream = modo === "laudo" || modo === "protocolo";
 
     const resp = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -143,7 +172,7 @@ ${analise.temRestricao ? analise.blocoPrompt : "Nenhuma restrição identificada
         model: "google/gemini-2.5-flash",
         messages,
         temperature: 0.2,
-        max_tokens: 3000,
+        max_tokens: modo === "protocolo" ? 4000 : 3000,
         stream,
       }),
     });
