@@ -162,7 +162,7 @@ const SaudeLesoes = () => {
         cirurgias: txt(a.cirurgias),
         limitacoes: txt(p.limitacoes),
       });
-      if (lesoes.length) setRelato(lesoes.join(" | "));
+      setRelato(lesoes.join(" | "));
     })();
   }, [alunoId, alunos]);
 
