@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { athletePanelEmailSection } from "../_shared/athlete-panel-link.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -294,6 +295,7 @@ Deno.serve(async (req) => {
           <h1 style="color:#000;">Olá, ${nome}! 💪</h1>
           <p>Seu cadastro foi feito por <strong>${tenant.nome || "seu coach"}</strong>. Agora você tem acesso ao aplicativo.</p>
           ${credenciaisBlock}
+          ${athletePanelEmailSection()}
           <p style="font-size:14px;color:#333;">
             Pelo <strong>app Alpha Coach Pro</strong> você acompanha todo o seu acompanhamento com seu coach:
             treinos personalizados com vídeos de cada exercício, plano alimentar diário, avaliações físicas,

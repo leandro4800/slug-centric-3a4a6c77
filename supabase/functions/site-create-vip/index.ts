@@ -1,4 +1,5 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
+import { athletePanelEmailSection } from "../_shared/athlete-panel-link.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -133,6 +134,7 @@ Deno.serve(async (req) => {
               <p style="font-family:monospace;margin:4px 0;"><strong>Senha:</strong> ${password}</p>
               <p style="font-family:monospace;margin:4px 0;"><strong>Seu link:</strong> https://alpha-coach.app/alphateam</p>
             </div>
+            ${athletePanelEmailSection()}
             <p style="text-align:center;margin:32px 0;">
               <a href="https://alpha-coach.app/alphateam/login" style="background:#E50914;color:#fff;padding:14px 28px;text-decoration:none;font-weight:bold;text-transform:uppercase;font-size:13px;letter-spacing:1px;">ACESSAR O APP</a>
             </p>
