@@ -31,8 +31,8 @@
 ## Saúde & Lesões (pedido 30/out)
 - [x] 1. Protocolo por fases (IA + botão + PDF)
 - [ ] 2. Cards por região com perguntas guiadas
-- [ ] 3. Histórico por aluno + liberar protocolo ao aluno
-- [ ] 4. Registro de dor + alertas push
+- [ ] 3. Histórico por aluno + liberar protocolo ao aluno, visível em Minha Carta (não em Clínica), com fase atual, critérios e sinais de alerta
+- [ ] 4. Feedback após concluir treino sobre dor/incômodo enviado ao coach + alertas push; sem botão de dor ou alteração em Clínica
 - [ ] 5. Aplicar protocolo no Montar Treino
 - [ ] 6. Novas regiões na trava clínica
 - [ ] 7. Favoritos e comandos do coach
