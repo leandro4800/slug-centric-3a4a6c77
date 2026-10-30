@@ -6,8 +6,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 import { recoverSession } from "@/lib/auth-session";
+import AtletaLayout from "@/pages/atleta/AtletaLayout";
 
-const AlunoLayout = () => {
+const AlunoLayout = ({ panel = false }: { panel?: boolean }) => {
   const { user } = useAuth();
   const { slug } = useParams();
   const [checking, setChecking] = useState(true);
@@ -119,6 +120,8 @@ const AlunoLayout = () => {
   if (needsOnboarding && slug) {
     return <Navigate to={`/${slug}/onboarding`} replace />;
   }
+
+  if (panel) return <AtletaLayout />;
 
   return (
     <div className="min-h-screen bg-transparent pb-24">

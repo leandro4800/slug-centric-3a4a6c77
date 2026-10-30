@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import { createClient } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -26,6 +26,7 @@ import {
 } from "@/lib/login-credentials";
 import { stashAuthRolesPrefetch, type PrefetchedRole } from "@/lib/auth-roles-prefetch";
 import { getSupabaseAnonKey, getSupabaseUrl } from "@/lib/supabase-env";
+import { isAthletePanelPath, toAthletePanelDestination } from "@/lib/athlete-panel";
 
 const getSafeAppSlug = (slug?: string | null) => {
   if (!slug || !/^[a-z0-9-]+$/i.test(slug) || slug === "index" || slug === "demo") return null;
@@ -34,6 +35,9 @@ const getSafeAppSlug = (slug?: string | null) => {
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const returnFrom = (location.state as { from?: string } | null)?.from;
+  const wantsAthletePanel = new URLSearchParams(location.search).get("painel") === "atleta" || (typeof returnFrom === "string" && isAthletePanelPath(returnFrom));
   const { slug: urlSlug } = useParams<{ slug: string }>();
   const { tenant } = useBranding();
   const startupBranding = readStartupBranding();
@@ -265,7 +269,7 @@ const Login = () => {
       // Recarrega no tenant correto para que AuthProvider, BrandingProvider e
       // os guards nasçam juntos com a nova conta. Isso evita que o tenant da
       // sessão anterior sobreviva durante a troca de usuário no app instalado.
-      window.location.replace(res.destination);
+      window.location.replace(wantsAthletePanel ? toAthletePanelDestination(res.destination) : res.destination);
 
     } catch (err) {
       console.error("[Login] Erro inesperado:", err);

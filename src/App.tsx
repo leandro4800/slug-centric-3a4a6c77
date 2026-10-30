@@ -18,6 +18,8 @@ import { Loader2 } from "lucide-react";
 import PushNotificationManager from "@/components/PushNotificationManager";
 import AthleteWriteSync from "@/components/AthleteWriteSync";
 import { PortraitLock } from "@/components/PortraitLock";
+import AtletaDashboard from "./pages/atleta/AtletaDashboard";
+import { toAthletePanelDestination } from "@/lib/athlete-panel";
 
 import Landing from "./pages/Landing";
 import IndexRedirect from "./pages/IndexRedirect";
@@ -138,6 +140,28 @@ const IndexTenantRedirect = ({ children }: { children: JSX.Element }) => {
   return children;
 };
 
+const AtletaEntry = () => {
+  const { user, sessionReady } = useAuth();
+  const [destination, setDestination] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    void (async () => {
+      const { data, error } = await supabase.rpc("get_my_app_destination");
+      if (cancelled) return;
+      const slug = data?.[0]?.tenant_slug;
+      if (error || !slug || !/^[a-z0-9-]+$/i.test(slug)) { setFailed(true); return; }
+      setDestination(toAthletePanelDestination(`/${slug}/app`));
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+  if (sessionReady && !user) return <Navigate to="/login?painel=atleta" replace />;
+  if (destination) return <Navigate to={destination} replace />;
+  if (failed) return <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-background p-6 text-center"><p>Não foi possível encontrar seu painel.</p><a className="text-primary underline" href="/login?painel=atleta">Entrar novamente</a></div>;
+  return <div className="flex min-h-screen items-center justify-center bg-background"><Loader2 className="h-8 w-8 animate-spin text-primary" /><span className="sr-only">Carregando painel</span></div>;
+};
+
 const NativeStartupRedirect = () => {
   const location = useLocation();
   const { user, sessionReady } = useAuth();
@@ -212,6 +236,7 @@ const App = () => (
              <Route path="/" element={<IndexRedirect />} />
              <Route path="/site" element={<Landing />} />
              <Route path="/marketplace" element={<Navigate to="/" replace />} />
+             <Route path="/atleta" element={<AtletaEntry />} />
 
             <Route path="/seja-coach" element={<SejaCoach />} />
             <Route path="/login" element={<Login />} />
@@ -322,6 +347,23 @@ const App = () => (
 
 
             {/* Painel do coach */}
+            <Route path="/:slug/atleta" element={<RequireAuth checkTenant><SubscriptionGuard><AlunoLayout panel /></SubscriptionGuard></RequireAuth>}>
+              <Route index element={<AtletaDashboard />} />
+              <Route path="treino" element={<Treino />} />
+              <Route path="dieta" element={<Dieta />} />
+              <Route path="evolucao" element={<Evolucao />} />
+              <Route path="evolucao/comparar" element={<CompararEvolucao />} />
+              <Route path="perfil" element={<Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-primary" />}><Perfil /></Suspense>} />
+              <Route path="carta" element={<Carta />} />
+              <Route path="comunidade" element={<Comunidade />} />
+              <Route path="biblioteca" element={<Biblioteca />} />
+              <Route path="presencial" element={<Scheduling />} />
+              <Route path="anamnese" element={<Anamnese />} />
+              <Route path="parceiros" element={<Parceiros />} />
+              <Route path="analise-postural" element={<AnalisePostural />} />
+              <Route path="dr-ia" element={<DrIA />} />
+              <Route path="ct" element={<AlunoCtHome />} />
+            </Route>
             <Route path="/:slug/admin" element={<SlugRedirect to="app/controle" />} />
             <Route path="/:slug/admin/controle" element={<SlugRedirect to="app/controle" />} />
             <Route path="/:slug/admin/atletas" element={<RequireAuth requireRole="coach" checkTenant><MeusAtletas /></RequireAuth>} />
