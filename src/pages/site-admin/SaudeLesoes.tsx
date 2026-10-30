@@ -120,8 +120,15 @@ const SaudeLesoes = () => {
   const alunoSelecionado = useMemo(() => alunos.find((a) => a.id === alunoId) || null, [alunos, alunoId]);
 
   useEffect(() => {
+    // Ao trocar de atleta, zera tudo que pertence ao caso anterior
+    // (o histórico do chat ia junto para a IA e misturava os casos).
+    setChat([]);
+    setPergunta("");
+    setLaudo("");
+    setMeta(null);
     if (!alunoId) {
       setDados({});
+      setRelato("");
       return;
     }
     (async () => {
@@ -155,7 +162,7 @@ const SaudeLesoes = () => {
         cirurgias: txt(a.cirurgias),
         limitacoes: txt(p.limitacoes),
       });
-      if (lesoes.length) setRelato(lesoes.join(" | "));
+      setRelato(lesoes.join(" | "));
     })();
   }, [alunoId, alunos]);
 
@@ -425,7 +432,7 @@ const SaudeLesoes = () => {
             )}
 
 
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Quadro clínico relatado</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Lesões e condições relatadas</p>
             <textarea
               value={relato}
               onChange={(e) => setRelato(e.target.value)}
