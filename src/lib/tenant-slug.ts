@@ -26,6 +26,7 @@ const RESERVED_ROOT_SEGMENTS = new Set([
   "unsubscribe",
   "onboarding",
   "app",
+  "atleta",
   "site",
   "join",
   "privacy",

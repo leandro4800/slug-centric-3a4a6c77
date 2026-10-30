@@ -1,4 +1,9 @@
 # Correção de conclusão de treino
+## Painel do atleta
+- [ ] Criar /atleta com login existente e destino vinculado à conta, sem alterar o app das lojas.
+- [ ] Painel com evolução, fotos, perfil e acesso aos recursos existentes, mantendo dados compartilhados.
+- [ ] Testar navegação, isolamento do destino e visualização no navegador; conta real depende de sessão disponível.
+
 ## Link de divulgação do coach
 - [x] Reutilizar exatamente o link de Alunos (https://alpha-coach.app/[slug]) e a lógica de cópia compartilhada, com tenant resolvido pelo dono.
 - [x] Link de divulgação no Controle Central e menus do painel, com cópia e envio neutro; app nativo usa folha de compartilhamento sem abrir a landing.
