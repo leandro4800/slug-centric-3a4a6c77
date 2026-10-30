@@ -120,8 +120,15 @@ const SaudeLesoes = () => {
   const alunoSelecionado = useMemo(() => alunos.find((a) => a.id === alunoId) || null, [alunos, alunoId]);
 
   useEffect(() => {
+    // Ao trocar de atleta, zera tudo que pertence ao caso anterior
+    // (o histórico do chat ia junto para a IA e misturava os casos).
+    setChat([]);
+    setPergunta("");
+    setLaudo("");
+    setMeta(null);
     if (!alunoId) {
       setDados({});
+      setRelato("");
       return;
     }
     (async () => {
