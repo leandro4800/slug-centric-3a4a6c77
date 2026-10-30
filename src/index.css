@@ -69,6 +69,8 @@
     --workout-card-title-scrim: linear-gradient(180deg, hsl(0 0% 0% / 0.96) 0%, hsl(0 0% 0% / 0.96) 72%, hsl(0 0% 0% / 0) 100%);
 
     --transition-premium: cubic-bezier(0.2, 0, 0, 1);
+    --panel-chart-grid: hsl(var(--border));
+    --panel-chart-line: hsl(var(--primary));
 
     --sidebar-background: 0 0% 10%;
     --sidebar-foreground: 0 0% 90%;

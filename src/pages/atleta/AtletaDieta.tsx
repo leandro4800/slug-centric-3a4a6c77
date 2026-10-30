@@ -1,0 +1,10 @@
+import { useAthletePanelData } from "@/hooks/use-athlete-panel-data";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { panelNumber } from "./AtletaMetricChart";
+
+export default function AtletaDieta() {
+  const { data, isLoading, error, refetch } = useAthletePanelData();
+  const macros = data?.diet?.macros_alvo;
+  return <div className="space-y-6"><header><h1 className="font-display text-3xl tracking-normal">Planejamento alimentar</h1><p className="mt-1 text-sm text-muted-foreground">Plano vigente</p></header>{isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : error ? <div role="alert"><p>Não foi possível carregar o plano.</p><Button variant="outline" onClick={() => refetch()}><RefreshCw /> Tentar novamente</Button></div> : !data?.diet ? <p className="text-sm text-muted-foreground">Nenhum plano alimentar publicado.</p> : <><section className="grid gap-4 sm:grid-cols-2"><div className="border border-border bg-card p-5"><p className="text-xs text-muted-foreground">Objetivo</p><p className="mt-3 text-lg font-medium">{data.diet.objetivo || "—"}</p></div><div className="border border-border bg-card p-5"><p className="text-xs text-muted-foreground">Meta energética</p><p className="mt-3 text-2xl font-semibold">{data.diet.kcal_alvo != null ? `${panelNumber(data.diet.kcal_alvo)} kcal` : "—"}</p></div></section>{macros && typeof macros === "object" && !Array.isArray(macros) && <section><h2 className="mb-4 font-display text-xl tracking-normal">Metas nutricionais</h2><dl className="divide-y divide-border">{Object.entries(macros).filter(([, value]) => typeof value === "number" || typeof value === "string").map(([key, value]) => <div key={key} className="flex justify-between gap-4 py-3 text-sm"><dt className="capitalize text-muted-foreground">{key.replace(/_/g, " ")}</dt><dd>{String(value)}</dd></div>)}</dl></section>}</>}</div>;
+}
