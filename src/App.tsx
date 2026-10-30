@@ -19,6 +19,9 @@ import PushNotificationManager from "@/components/PushNotificationManager";
 import AthleteWriteSync from "@/components/AthleteWriteSync";
 import { PortraitLock } from "@/components/PortraitLock";
 import AtletaDashboard from "./pages/atleta/AtletaDashboard";
+import AtletaTreino from "./pages/atleta/AtletaTreino";
+import AtletaEvolucao from "./pages/atleta/AtletaEvolucao";
+import AtletaDieta from "./pages/atleta/AtletaDieta";
 import { toAthletePanelDestination } from "@/lib/athlete-panel";
 
 import Landing from "./pages/Landing";
@@ -319,10 +322,10 @@ const App = () => (
               }
             >
               <Route index element={<AlunoHome />} />
-              <Route path="treino" element={<Treino />} />
-              <Route path="dieta" element={<Dieta />} />
-              <Route path="evolucao" element={<Evolucao />} />
-              <Route path="evolucao/comparar" element={<CompararEvolucao />} />
+              <Route path="treino" element={<AtletaTreino />} />
+              <Route path="dieta" element={<AtletaDieta />} />
+              <Route path="evolucao" element={<AtletaEvolucao />} />
+              <Route path="evolucao/comparar" element={<AtletaEvolucao />} />
               <Route path="clinica" element={<Clinica />} />
               <Route path="analise-postural" element={<AnalisePostural />} />
               <Route path="dr-ia" element={<DrIA />} />
@@ -355,7 +358,6 @@ const App = () => (
               <Route path="evolucao/comparar" element={<CompararEvolucao />} />
               <Route path="perfil" element={<Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-primary" />}><Perfil /></Suspense>} />
               <Route path="carta" element={<Carta />} />
-              <Route path="comunidade" element={<Comunidade />} />
               <Route path="biblioteca" element={<Biblioteca />} />
               <Route path="presencial" element={<Scheduling />} />
               <Route path="anamnese" element={<Anamnese />} />
