@@ -1,6 +1,6 @@
 # Correção de conclusão de treino
 ## Painel do atleta
-- [ ] Incluir endereço do painel na confirmação/cópia do cadastro VIP e nos e-mails de credenciais.
+- [x] Endereço https://alpha-coach.app/atleta na confirmação/cópia de VIP e e-mails de credenciais (cadastro, boas-vindas e reenvio); oito testes passaram e funções implantadas, sem enviar e-mail real.
 - [x] Criar /atleta com login existente e destino vinculado à conta, sem alterar o app das lojas.
 - [x] Painel com evolução, fotos, perfil e acesso aos recursos existentes, mantendo dados compartilhados.
 - [x] Quinze testes passaram; entrada /atleta abre login, resumo e navegação conferidos com dados fictícios em desktop e celular, sem overflow ou erros de execução.
