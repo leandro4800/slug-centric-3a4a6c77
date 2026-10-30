@@ -432,7 +432,7 @@ const SaudeLesoes = () => {
             )}
 
 
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Quadro clínico relatado</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">Lesões e condições relatadas</p>
             <textarea
               value={relato}
               onChange={(e) => setRelato(e.target.value)}
