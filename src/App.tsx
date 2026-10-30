@@ -19,8 +19,7 @@ import PushNotificationManager from "@/components/PushNotificationManager";
 import AthleteWriteSync from "@/components/AthleteWriteSync";
 import { PortraitLock } from "@/components/PortraitLock";
 import AtletaDashboard from "./pages/atleta/AtletaDashboard";
-import AtletaTreino from "./pages/atleta/AtletaTreino";
-import AtletaEvolucao from "./pages/atleta/AtletaEvolucao";
+import AtletaMetricas from "./pages/atleta/AtletaMetricas";
 import AtletaDieta from "./pages/atleta/AtletaDieta";
 import AtletaConta from "./pages/atleta/AtletaConta";
 import AtletaAccountGuard from "./pages/atleta/AtletaAccountGuard";
@@ -354,12 +353,13 @@ const App = () => (
             {/* Painel do coach */}
             <Route path="/:slug/atleta" element={<AtletaAccountGuard><RequireAuth checkTenant><SubscriptionGuard><AlunoLayout panel /></SubscriptionGuard></RequireAuth></AtletaAccountGuard>}>
               <Route index element={<AtletaDashboard />} />
-              <Route path="treino" element={<AtletaTreino />} />
+              <Route path="treino" element={<Navigate to="../metricas" replace />} />
+              <Route path="metricas" element={<AtletaMetricas />} />
               <Route path="dieta" element={<AtletaDieta />} />
-              <Route path="evolucao" element={<AtletaEvolucao />} />
-              <Route path="evolucao/comparar" element={<AtletaEvolucao />} />
+              <Route path="evolucao" element={<Navigate to="../metricas" replace />} />
+              <Route path="evolucao/comparar" element={<Navigate to="../../metricas" replace />} />
               <Route path="perfil" element={<AtletaConta />} />
-              <Route path="carta" element={<Carta />} />
+              <Route path="carta" element={<Navigate to="../metricas" replace />} />
               <Route path="presencial" element={<Scheduling />} />
               <Route path="anamnese" element={<Anamnese />} />
               <Route path="*" element={<Navigate to=".." relative="path" replace />} />
