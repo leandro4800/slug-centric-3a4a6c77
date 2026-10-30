@@ -1,5 +1,6 @@
 # Correção de conclusão de treino
 ## Painel do atleta
+- [ ] Transformar em painel de acompanhamento com visual do coach, volume e evolução de cargas; remover Comunidade e Abrir app, preservando o app.
 - [x] Endereço https://alpha-coach.app/atleta na confirmação/cópia de VIP e e-mails de credenciais (cadastro, boas-vindas e reenvio); oito testes passaram e funções implantadas, sem enviar e-mail real.
 - [x] Criar /atleta com login existente e destino vinculado à conta, sem alterar o app das lojas.
 - [x] Painel com evolução, fotos, perfil e acesso aos recursos existentes, mantendo dados compartilhados.
