@@ -22,6 +22,8 @@ import AtletaDashboard from "./pages/atleta/AtletaDashboard";
 import AtletaTreino from "./pages/atleta/AtletaTreino";
 import AtletaEvolucao from "./pages/atleta/AtletaEvolucao";
 import AtletaDieta from "./pages/atleta/AtletaDieta";
+import AtletaConta from "./pages/atleta/AtletaConta";
+import AtletaAccountGuard from "./pages/atleta/AtletaAccountGuard";
 import { toAthletePanelDestination } from "@/lib/athlete-panel";
 
 import Landing from "./pages/Landing";
@@ -350,21 +352,17 @@ const App = () => (
 
 
             {/* Painel do coach */}
-            <Route path="/:slug/atleta" element={<RequireAuth checkTenant><SubscriptionGuard><AlunoLayout panel /></SubscriptionGuard></RequireAuth>}>
+            <Route path="/:slug/atleta" element={<AtletaAccountGuard><RequireAuth checkTenant><SubscriptionGuard><AlunoLayout panel /></SubscriptionGuard></RequireAuth></AtletaAccountGuard>}>
               <Route index element={<AtletaDashboard />} />
               <Route path="treino" element={<AtletaTreino />} />
               <Route path="dieta" element={<AtletaDieta />} />
               <Route path="evolucao" element={<AtletaEvolucao />} />
               <Route path="evolucao/comparar" element={<AtletaEvolucao />} />
-              <Route path="perfil" element={<Suspense fallback={<Loader2 className="h-6 w-6 animate-spin text-primary" />}><Perfil /></Suspense>} />
+              <Route path="perfil" element={<AtletaConta />} />
               <Route path="carta" element={<Carta />} />
-              <Route path="biblioteca" element={<Biblioteca />} />
               <Route path="presencial" element={<Scheduling />} />
               <Route path="anamnese" element={<Anamnese />} />
-              <Route path="parceiros" element={<Parceiros />} />
-              <Route path="analise-postural" element={<AnalisePostural />} />
-              <Route path="dr-ia" element={<DrIA />} />
-              <Route path="ct" element={<AlunoCtHome />} />
+              <Route path="*" element={<Navigate to=".." relative="path" replace />} />
             </Route>
             <Route path="/:slug/admin" element={<SlugRedirect to="app/controle" />} />
             <Route path="/:slug/admin/controle" element={<SlugRedirect to="app/controle" />} />
