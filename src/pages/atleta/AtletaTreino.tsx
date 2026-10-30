@@ -1,0 +1,35 @@
+import { useState } from "react";
+import { useAthletePanelData } from "@/hooks/use-athlete-panel-data";
+import { trainingMetrics } from "@/lib/athlete-training-metrics";
+import { AtletaMetricChart, panelDate, panelNumber } from "./AtletaMetricChart";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export default function AtletaTreino({ overview = false }: { overview?: boolean }) {
+  const { data, isLoading, error, refetch } = useAthletePanelData();
+  const [period, setPeriod] = useState("30");
+  const [exercise, setExercise] = useState("");
+  const start = new Date(); start.setDate(start.getDate() - Number(period) + 1);
+  const since = period === "all" ? "0000-00-00" : `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, "0")}-${String(start.getDate()).padStart(2, "0")}`;
+  const metrics = trainingMetrics(data?.sets || [], data?.sessions || [], new Map((data?.prescriptions || []).map(p => [p.id, p.exercicio])), since);
+  const selected = metrics.exercises.find(e => e.name === exercise) || metrics.exercises[0];
+  if (isLoading) return <div className="flex items-center gap-2 py-12 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" /> Carregando registros…</div>;
+  if (error) return <div role="alert" className="space-y-3 py-8"><p>Não foi possível carregar seus registros.</p><Button variant="outline" onClick={() => refetch()}><RefreshCw /> Tentar novamente</Button></div>;
+  return <div className="space-y-6">
+    <header className="flex flex-wrap items-center justify-between gap-4">
+      <div><h1 className="font-display text-3xl tracking-normal">{overview ? `Olá, ${data?.profile?.nome_completo?.split(" ")[0] || "Atleta"}` : "Desempenho no treino"}</h1><p className="mt-1 text-sm text-muted-foreground">{overview ? "Visão geral" : "Volume e evolução de cargas"}</p></div>
+      <div className="flex items-center gap-2"><Button variant="ghost" size="icon" aria-label="Atualizar registros" onClick={() => refetch()}><RefreshCw /></Button><Select value={period} onValueChange={setPeriod}><SelectTrigger className="w-40" aria-label="Período"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7">Últimos 7 dias</SelectItem><SelectItem value="30">Últimos 30 dias</SelectItem><SelectItem value="90">Últimos 90 dias</SelectItem><SelectItem value="all">Todo o histórico</SelectItem></SelectContent></Select></div>
+    </header>
+    <section aria-label="Resumo de desempenho" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
+      {[{ label: "Volume registrado", value: `${panelNumber(metrics.volume)} kg` }, { label: "Séries registradas", value: metrics.series }, { label: "Treinos concluídos", value: metrics.completed }, { label: "Último peso", value: data?.checkins.filter(c => c.peso_kg != null).at(-1)?.peso_kg != null ? `${panelNumber(Number(data.checkins.filter(c => c.peso_kg != null).at(-1)?.peso_kg))} kg` : "—" }].map(item => <div key={item.label} className="min-w-0 rounded-md border border-border bg-card p-4"><p className="text-xs text-muted-foreground">{item.label}</p><p className="mt-3 break-words text-2xl font-semibold tabular-nums">{item.value}</p></div>)}
+    </section>
+    <section className="grid gap-6 xl:grid-cols-2">
+      <div className="min-w-0 border-y border-border py-5"><h2 className="font-display text-xl tracking-normal">Volume por dia</h2><p className="mt-1 text-xs text-muted-foreground">Carga × repetições • todas as séries registradas</p><AtletaMetricChart data={metrics.chart.map(d => ({ date: d.date, value: d.volume }))} label="Volume" unit="kg" /></div>
+      <div className="min-w-0 border-y border-border py-5"><div className="flex flex-wrap items-center justify-between gap-3"><h2 className="font-display text-xl tracking-normal">Evolução de carga</h2>{selected && <Select value={selected.name} onValueChange={setExercise}><SelectTrigger className="w-full max-w-64" aria-label="Exercício"><SelectValue /></SelectTrigger><SelectContent>{metrics.exercises.map(e => <SelectItem key={e.name} value={e.name}>{e.name}</SelectItem>)}</SelectContent></Select>}</div><p className="mt-1 text-xs text-muted-foreground">Maior carga registrada no exercício em cada dia</p><AtletaMetricChart data={selected?.points || []} label="Carga" unit="kg" /></div>
+    </section>
+    <section><h2 className="mb-4 font-display text-xl tracking-normal">Cargas por exercício</h2><div className="overflow-x-auto"><table className="w-full min-w-[560px] text-sm"><thead className="border-y border-border bg-card text-left text-xs text-muted-foreground"><tr>{["Exercício", "Primeira carga", "Última carga", "Variação", "Volume"].map(h => <th key={h} className="px-3 py-3 font-medium">{h}</th>)}</tr></thead><tbody>{metrics.exercises.map(e => <tr key={e.name} className="border-b border-border"><td className="px-3 py-4">{e.name}</td><td className="px-3 py-4 tabular-nums">{e.first == null ? "—" : `${panelNumber(e.first)} kg`}</td><td className="px-3 py-4 tabular-nums">{e.last == null ? "—" : `${panelNumber(e.last)} kg`}</td><td className="px-3 py-4 tabular-nums">{e.first == null || e.last == null ? "—" : `${e.last - e.first > 0 ? "+" : ""}${panelNumber(e.last - e.first)} kg`}</td><td className="px-3 py-4 tabular-nums">{panelNumber(e.volume)} kg</td></tr>)}</tbody></table></div>{!metrics.exercises.length && <p className="py-6 text-sm text-muted-foreground">Nenhuma série registrada neste período.</p>}</section>
+    <section><h2 className="mb-4 font-display text-xl tracking-normal">Histórico de treinos</h2><div className="space-y-0">{metrics.history.map(s => <div key={s.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border py-4 text-sm"><div><p className="font-medium">{s.dia_semana || "Treino"} · {panelDate(s.data_treino)}</p><p className="mt-1 text-xs text-muted-foreground">{s.duracao_min > 0 ? `Concluído · ${s.duracao_min} min` : "Em aberto"}</p></div><p className="tabular-nums">{s.series} séries · {panelNumber(s.volume || 0)} kg</p></div>)}</div>{!metrics.history.length && <p className="text-sm text-muted-foreground">Nenhum treino com séries neste período.</p>}</section>
+    {!overview && !!data?.prescriptions.length && <section><h2 className="mb-4 font-display text-xl tracking-normal">Programação atual</h2><div className="divide-y divide-border">{data.prescriptions.map(p => <div key={p.id} className="py-3 text-sm"><p className="font-medium">{p.dia_semana} · {p.exercicio}</p><p className="mt-1 text-muted-foreground">{p.series || "—"} séries · {p.repeticoes || "—"} repetições{p.tempo_descanso_segundos != null && ` · ${p.tempo_descanso_segundos}s de descanso`}</p>{p.observacao && <p className="mt-2 text-xs text-muted-foreground">{p.observacao}</p>}</div>)}</div></section>}
+  </div>;
+}

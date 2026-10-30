@@ -17,7 +17,7 @@ export function useAthletePanelData() {
         supabase.from("perfis").select("nome_completo, avatar_url").eq("id", user.id).eq("tenant_id", tenant.id).maybeSingle(),
         supabase.from("evolucao_checkins").select("id, data_checkin, peso_kg, bf_percentual, foto_frente_url, foto_costas_url, foto_lado_url").eq("user_id", user.id).order("data_checkin", { ascending: true }),
         supabase.from("sessoes_treino").select("id, data_treino, dia_semana, duracao_min").eq("aluno_id", user.id).eq("tenant_id", tenant.id).order("data_treino", { ascending: false }),
-        supabase.from("treinos_prescritos").select("id, exercicio, dia_semana, series, repeticoes, observacao, tempo_descanso_segundos").eq("aluno_id", user.id).eq("tenant_id", tenant.id).eq("status", "publicado").order("ordem_execucao"),
+        supabase.from("treinos_prescritos").select("id, exercicio, dia_semana, series, repeticoes, observacao, tempo_descanso_segundos").eq("aluno_id", user.id).eq("tenant_id", tenant.id).eq("status", "ativo").order("ordem_execucao"),
         supabase.from("dietas").select("id, objetivo, kcal_alvo, macros_alvo, created_at").eq("user_id", user.id).eq("is_published", true).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
       for (const result of [profile, checkins, sessions, prescriptions, diet]) if (result.error) throw result.error;
