@@ -1,5 +1,6 @@
 # Correção de conclusão de treino
 ## Painel do atleta
+- [x] Treino e evolução reunidos em Métricas e evolução, carta/avatar gerado e redefinição de senha retirados; foto real editável junto ao nome. Nove testes passaram; abas, menu e foto conferidos em prévia isolada sem erros; salvamento com conta real permanece pendente abaixo.
 - [x] /atleta usa e-mail/senha existentes e RPC autenticada para resolver o tenant antes de montar o painel; políticas reais de acesso conferidas, sem alterar permissões. Login público e dois testes do guard passaram; sessão real continua pendente abaixo.
 - [x] Painel de acompanhamento no visual do coach com volume, cargas por exercício, gráficos e histórico; Comunidade e Abrir app removidos, rotas do app preservadas. Treze testes passaram e prévia isolada conferida em desktop/celular, sem overflow ou erros; build OK.
 - [x] Endereço https://alpha-coach.app/atleta na confirmação/cópia de VIP e e-mails de credenciais (cadastro, boas-vindas e reenvio); oito testes passaram e funções implantadas, sem enviar e-mail real.

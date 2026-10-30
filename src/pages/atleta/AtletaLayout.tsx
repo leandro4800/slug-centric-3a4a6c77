@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink, Outlet, useParams, useNavigate, useLocation } from "react-router-dom";
-import { Activity, CalendarDays, Dumbbell, FileText, Home, LogOut, Menu, UserRound, Utensils, X } from "lucide-react";
+import { Activity, CalendarDays, FileText, Home, LogOut, Menu, UserRound, Utensils, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBranding } from "@/contexts/BrandingProvider";
 import { cn } from "@/lib/utils";
@@ -8,10 +8,8 @@ import { supabase } from "@/integrations/supabase/client";
 
 const navigation = [
   { label: "Visão geral", path: "", icon: Home },
-  { label: "Desempenho no treino", path: "treino", icon: Dumbbell },
-  { label: "Evolução e fotos", path: "evolucao", icon: Activity },
+  { label: "Métricas e evolução", path: "metricas", icon: Activity },
   { label: "Planejamento alimentar", path: "dieta", icon: Utensils },
-  { label: "Minha carta", path: "carta", icon: FileText },
   { label: "Meu perfil", path: "perfil", icon: UserRound },
   { label: "Agenda", path: "presencial", icon: CalendarDays },
   { label: "Anamnese", path: "anamnese", icon: FileText },

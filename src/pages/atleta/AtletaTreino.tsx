@@ -5,8 +5,9 @@ import { AtletaMetricChart, panelDate, panelNumber } from "./AtletaMetricChart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import AtletaProfilePhoto from "./AtletaProfilePhoto";
 
-export default function AtletaTreino({ overview = false }: { overview?: boolean }) {
+export default function AtletaTreino({ overview = false, embedded = false }: { overview?: boolean; embedded?: boolean }) {
   const { data, isLoading, error, refetch } = useAthletePanelData();
   const [period, setPeriod] = useState("30");
   const [exercise, setExercise] = useState("");
@@ -18,7 +19,7 @@ export default function AtletaTreino({ overview = false }: { overview?: boolean 
   if (error) return <div role="alert" className="space-y-3 py-8"><p>Não foi possível carregar seus registros.</p><Button variant="outline" onClick={() => refetch()}><RefreshCw /> Tentar novamente</Button></div>;
   return <div className="space-y-6">
     <header className="flex flex-wrap items-center justify-between gap-4">
-      <div><h1 className="font-display text-3xl tracking-normal">{overview ? `Olá, ${data?.profile?.nome_completo?.split(" ")[0] || "Atleta"}` : "Desempenho no treino"}</h1><p className="mt-1 text-sm text-muted-foreground">{overview ? "Visão geral" : "Volume e evolução de cargas"}</p></div>
+      <div className="flex min-w-0 items-center gap-4">{overview && <AtletaProfilePhoto url={data?.profile?.avatar_url} />}<div className="min-w-0">{!embedded && <h1 className="break-words font-display text-3xl tracking-normal">{overview ? `Olá, ${data?.profile?.nome_completo?.split(" ")[0] || "Atleta"}` : "Métricas e evolução"}</h1>}<p className="mt-1 text-sm text-muted-foreground">{overview ? "Visão geral" : "Volume e evolução de cargas"}</p></div></div>
       <div className="flex items-center gap-2"><Button variant="ghost" size="icon" aria-label="Atualizar registros" onClick={() => refetch()}><RefreshCw /></Button><Select value={period} onValueChange={setPeriod}><SelectTrigger className="w-40" aria-label="Período"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="7">Últimos 7 dias</SelectItem><SelectItem value="30">Últimos 30 dias</SelectItem><SelectItem value="90">Últimos 90 dias</SelectItem><SelectItem value="all">Todo o histórico</SelectItem></SelectContent></Select></div>
     </header>
     <section aria-label="Resumo de desempenho" className="grid grid-cols-2 gap-3 xl:grid-cols-4">
