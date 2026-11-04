@@ -11,6 +11,7 @@ import { ArrowLeft, CheckCircle2, Loader2, ExternalLink, ShieldAlert, Monitor } 
 import { buildAuthRedirectUrl, PRIVACY_POLICY_URL } from "@/lib/app-url";
 import { isIOSNativeApp, blocksExternalPayments } from "@/lib/native-platform";
 import { CoachQuiz, type QuizAnswers } from "@/components/coach/CoachQuiz";
+import { COACH_TIPOS, verticalFromTipo, type CoachTipo } from "@/lib/coach-tipo";
 import { CoachPlanSelector, COACH_PLANS, type CoachPlanTier } from "@/components/coach/CoachPlanSelector";
 
 type Step = "welcome" | "quiz" | "plans" | "signup" | "verify-email" | "personal" | "tenant" | "checkout" | "pending";
@@ -44,6 +45,7 @@ export default function SejaCoach() {
   const [tagline, setTagline] = useState("");
   const [bio, setBio] = useState("");
   const [especialidades, setEspecialidades] = useState("");
+  const [tipoCoach, setTipoCoach] = useState<CoachTipo | "">("");
 
   const [tenantId, setTenantId] = useState<string | null>(null);
 
@@ -195,18 +197,20 @@ export default function SejaCoach() {
     try {
       const cleanSlug = slug.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
       if (!cleanSlug) throw new Error("Slug inválido");
+      if (!tipoCoach) throw new Error("Escolha o tipo do seu negócio");
+      const verticalFields = { vertical: verticalFromTipo(tipoCoach), vertical_manual: true } as any;
       const especArr = especialidades.split(",").map((s) => s.trim()).filter(Boolean);
 
       let currentTenantId = tenantId;
       if (currentTenantId) {
         const { error } = await supabase.from("tenants").update({
-          slug: cleanSlug, nome: nomePainel, tagline, bio, especialidades: especArr, cidade, estado: estado.toUpperCase(),
+          slug: cleanSlug, nome: nomePainel, tagline, bio, especialidades: especArr, cidade, estado: estado.toUpperCase(), ...verticalFields,
         }).eq("id", currentTenantId);
         if (error) throw error;
       } else {
         const { data, error } = await supabase.from("tenants").insert({
           slug: cleanSlug, nome: nomePainel, tagline, bio, especialidades: especArr, cidade, estado: estado.toUpperCase(),
-          owner_user_id: user.id, status: "pending",
+          owner_user_id: user.id, status: "pending", ...verticalFields,
         }).select().single();
         if (error) throw error;
         currentTenantId = data.id;
@@ -457,6 +461,21 @@ export default function SejaCoach() {
           {step === "tenant" && (
             <form onSubmit={handleCreateTenant} className="space-y-4">
               <h2 className="font-display text-2xl uppercase italic">3. Configure seu painel</h2>
+              <div>
+                <Label>Tipo do seu negócio</Label>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  {COACH_TIPOS.map((t) => (
+                    <button
+                      key={t.value}
+                      type="button"
+                      onClick={() => setTipoCoach(t.value)}
+                      className={`border px-3 py-3 text-sm font-bold uppercase tracking-wide ${tipoCoach === t.value ? "border-primary bg-primary/15 text-primary" : "border-border text-muted-foreground hover:text-foreground"}`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <Label>Nome da sua marca / Consultoria</Label>
                 <Input value={nomePainel} onChange={(e) => setNomePainel(e.target.value)} placeholder="Ex: TEAM ALPHA" required />
