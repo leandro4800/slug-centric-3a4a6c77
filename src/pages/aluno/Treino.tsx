@@ -28,18 +28,20 @@ interface CargaMap {
 type VideoRef = { yt: string | null; coach: string | null };
 type SessaoAberta = { id: string; startedAt: number; dia_semana: string };
 
-export const PersonalTreino = () => {
+export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => {
   const { user } = useAuth();
   const { tenant } = useBranding();
   const { slug } = useParams();
   const [loading, setLoading] = useState(true);
   const [treinos, setTreinos] = useState<Treino[]>([]);
   const [observacaoClinica, setObservacaoClinica] = useState<string | null>(null);
-  const [diaAtual, setDiaAtual] = useState<string>(() => sessionStorage.getItem("treino:diaAtual") || "");
+  // CT de luta: a luta entra na chave para não misturar dias de lutas diferentes
+  const storageSuffix = modalidade ? `:${modalidade}` : "";
+  const [diaAtual, setDiaAtual] = useState<string>(() => sessionStorage.getItem(`treino:diaAtual${storageSuffix}`) || "");
   const sessaoFocadaId = useRef<string | null>(null);
   const [isMock, setIsMock] = useState(false);
   const [activeIndex, setActiveIndex] = useState<number | null>(() => {
-    const v = sessionStorage.getItem("treino:activeIndex");
+    const v = sessionStorage.getItem(`treino:activeIndex${storageSuffix}`);
     return v !== null && v !== "" ? Number(v) : null;
   });
   const [cargas, setCargas] = useState<CargaMap>({});
@@ -202,12 +204,26 @@ export const PersonalTreino = () => {
 
 
   // Persiste seleção de dia / exercício aberto
+  // Troca de luta: restaura a seleção guardada para aquela luta
+  const storageSuffixRef = useRef(storageSuffix);
+  const trocandoLuta = storageSuffixRef.current !== storageSuffix;
   useEffect(() => {
-    if (diaAtual) sessionStorage.setItem("treino:diaAtual", diaAtual);
+    if (storageSuffixRef.current === storageSuffix) return;
+    storageSuffixRef.current = storageSuffix;
+    setDiaAtual(sessionStorage.getItem(`treino:diaAtual${storageSuffix}`) || "");
+    const v = sessionStorage.getItem(`treino:activeIndex${storageSuffix}`);
+    setActiveIndex(v !== null && v !== "" ? Number(v) : null);
+  }, [storageSuffix]);
+  useEffect(() => {
+    if (trocandoLuta) return;
+    if (diaAtual) sessionStorage.setItem(`treino:diaAtual${storageSuffix}`, diaAtual);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [diaAtual]);
   useEffect(() => {
-    if (activeIndex === null) sessionStorage.removeItem("treino:activeIndex");
-    else sessionStorage.setItem("treino:activeIndex", String(activeIndex));
+    if (trocandoLuta) return;
+    if (activeIndex === null) sessionStorage.removeItem(`treino:activeIndex${storageSuffix}`);
+    else sessionStorage.setItem(`treino:activeIndex${storageSuffix}`, String(activeIndex));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeIndex]);
 
   useEffect(() => {
@@ -267,6 +283,7 @@ export const PersonalTreino = () => {
             .select("id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
+            .or(modalidade ? `modalidade.eq.${modalidade},modalidade.is.null` : "modalidade.is.null,modalidade.not.is.null")
             .order("dia_ordem", { nullsFirst: false })
             .order("ordem")
         ),
@@ -341,7 +358,8 @@ export const PersonalTreino = () => {
       console.error("Erro fatal no load do treino", e);
       setLoading(false);
     });
-  }, [tenant, user, reloadKey]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenant, user, reloadKey, modalidade]);
 
   // Realtime: quando o coach salvar/atualizar treinos, recarrega automaticamente
   useEffect(() => {
@@ -428,7 +446,13 @@ export const PersonalTreino = () => {
 
 
   // Deriva nome do grupo muscular a partir dos exercícios do dia
-  const grupoMuscularDoDia = (() => {
+  // (CT de luta: usa o próprio nome do dia prescrito pelo coach)
+  const grupoMuscularDoDia = modalidade ? (() => {
+    const semPrefixo = (diaAtual || "")
+      .replace(/^\s*(segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado|domingo|seg|ter|qua|qui|sex|s[aá]b|dom)(-feira)?\s*([—–\-:·|]\s*)?/i, "")
+      .trim();
+    return semPrefixo ? semPrefixo.toUpperCase() : null;
+  })() : (() => {
     const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const grupos: { keys: string[]; label: string }[] = [
       { keys: ["peito", "supino", "crucifixo", "peck"], label: "PEITO" },
