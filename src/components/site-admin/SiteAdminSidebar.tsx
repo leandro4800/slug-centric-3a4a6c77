@@ -45,7 +45,7 @@ const baseItems: Item[] = [
   { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy, section: "Conta" },
 ];
 
-const SECTIONS = ["Painel", "Alunos", "Programação", "Luta", "Negócio", "Conta"] as const;
+const SECTIONS = ["Painel", "Alunos", "Programação", "Luta", "Box", "Negócio", "Conta"] as const;
 
 export const SiteAdminSidebar = () => {
   const { pathname, search } = useLocation();
@@ -138,7 +138,7 @@ export const SiteAdminSidebar = () => {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-        {SECTIONS.map((section) => (
+        {SECTIONS.filter((section) => items.some((i) => i.section === section)).map((section) => (
           <div key={section}>
             {!collapsed && (
               <p className="px-3 mb-1 text-[9px] uppercase tracking-widest text-muted-foreground/60">{section}</p>
