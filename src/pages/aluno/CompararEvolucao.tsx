@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { TrendingUp, ArrowLeft, Calendar, Scale, Activity, Brain, Loader2 } from "lucide-react";
+import { TrendingUp, Calendar, Scale, Activity, Brain, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { PageHeader } from "@/components/aluno/PageHeader";
@@ -161,16 +161,6 @@ const CompararEvolucao = () => {
 
   return (
     <div className="pb-32 bg-black min-h-screen">
-      <div className="px-5 pt-5">
-        <Button 
-          variant="ghost" 
-          onClick={() => navigate(-1)} 
-          className="text-white/60 hover:text-white p-0 mb-4"
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Voltar
-        </Button>
-      </div>
-
       <PageHeader icon={TrendingUp} title="COMPARATIVO" subtitle="EVOLUÇÃO VISUAL" />
 
       <div className="px-5 space-y-6">
