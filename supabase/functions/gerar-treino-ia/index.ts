@@ -421,8 +421,6 @@ serve(async (req) => {
       console.error("Base de conhecimento do coach indisponível:", err);
     }
 
-    const knowledgeContext = coachRulesBlock + regrasVolumeContext + bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
-
     const divisoesEscolhidas = Array.isArray(divisoes) && divisoes.length > 0
       ? divisoes
       : null;
@@ -440,7 +438,29 @@ serve(async (req) => {
         const { data: t } = await adminE.from("tenants").select("vertical").eq("id", tenantAlvo).maybeSingle();
         vertical = (t as any)?.vertical ?? null;
       }
-      const modalidade = String(perfilLuta?.modalidade_luta || perfil?.modalidade_luta || "").toLowerCase();
+      const SLUGS = ["bjj", "muay_thai", "kickboxing", "boxe", "mma"];
+      const toSlug = (v: unknown): string => {
+        const n = String(v || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+        if (!n) return "";
+        if (n === "jiujitsu" || n === "jiujitsubrasileiro") return "bjj";
+        return SLUGS.find((s) => s.replace(/_/g, "") === n) || "";
+      };
+      let modalidade = "";
+      if (vertical === "fight") {
+        modalidade = toSlug((reqBody as any)?.modalidade);
+        if (!modalidade) {
+          const { data: lutaRow } = await adminE
+            .from("aluno_modalidades_luta")
+            .select("modalidade")
+            .eq("aluno_id", resolvedUserId)
+            .eq("tenant_id", tenantAlvo)
+            .order("created_at")
+            .limit(1)
+            .maybeSingle();
+          modalidade = toSlug((lutaRow as any)?.modalidade);
+        }
+        if (!modalidade) modalidade = toSlug(perfilLuta?.modalidade_luta || perfil?.modalidade_luta);
+      }
 
       if (vertical === "fight" && modalidade) {
         const REGRAS: Record<string, { nome: string; regras: string }> = {
@@ -458,6 +478,11 @@ serve(async (req) => {
             nome: "Boxe",
             regras:
               "Prioridade absoluta: (1) POTÊNCIA DE ROTAÇÃO DE TRONCO (transferência quadril→ombro: medicine ball rotacional, landmine); (2) RESISTÊNCIA DE OMBRO E BRAÇO para sustentar guarda alta em rounds longos (overhead press, elevações, isometrias); (3) EXPLOSÃO DE PERNAS para deslocamento no ringue (jump squat, pliometria leve). Volume de peito reduzido; nada que engesse a mobilidade escapular.",
+          },
+          kickboxing: {
+            nome: "Kickboxing",
+            regras:
+              "Prioridade absoluta: (1) POTÊNCIA E FORÇA DE PERNAS para chutes (agachamento salto, passada explosiva, agachamento frontal, terra sumô), com FLEXORES DE QUADRIL fortes (abdominal infra na barra fixa, elevações de pernas) e PANTURRILHA para pivô e deslocamento; (2) POTÊNCIA ROTACIONAL DE TRONCO (landmine rotation, cable woodchopper) para socos e chutes rodados; (3) RESISTÊNCIA DE OMBRO PARA GUARDA ALTA e PESCOÇO (desenvolvimento, isometrias de ombro, face pull, treino cervical). Séries explosivas de 4-6 repetições para potência, mais blocos de condicionamento curtos, deixando margem de recuperação para o treino técnico e o sparring.",
           },
           mma: {
             nome: "MMA",
@@ -491,6 +516,7 @@ serve(async (req) => {
           modalidadeBlock =
             `\n\n═══════════════════════════════════════════════\n0-LUTA. PROTOCOLO ESPECÍFICO DE MODALIDADE — ${cfg.nome.toUpperCase()} (PRIORIDADE MÁXIMA — INVIOLÁVEL)\n═══════════════════════════════════════════════\n` +
             `O aluno é atleta de ${cfg.nome}. O treino é PREPARAÇÃO FÍSICA PARA A LUTA, não musculação estética.\n\n${cfg.regras}\n\n` +
+            `PRIORIDADE: este protocolo de ${cfg.nome} PREVALECE sobre a seção "ESTRUTURA POR NÍVEL" de musculação estética e sobre quaisquer volumes mínimos por grupo muscular citados neste prompt. O treino continua sendo MUSCULAÇÃO EM ACADEMIA, com peso, com ênfase na luta.\n\n` +
             `REGRAS GERAIS DO SEGMENTO LUTA:\n- Nunca prescreva volume que comprometa o treino técnico/sparring do atleta (deixe margem de recuperação).\n- Priorize movimentos multiarticulares, potência e força-resistência sobre isolados de estética.\n- Inclua mobilidade de quadril e ombro em todo aquecimento.\n- Nomeie os exercícios EXATAMENTE como aparecem na biblioteca oficial abaixo quando existirem.` +
             bibliotecaLuta +
             `\n`;
@@ -499,6 +525,9 @@ serve(async (req) => {
     } catch (err) {
       console.error("Erro ao montar bloco de modalidade de luta:", err);
     }
+
+    // Com protocolo de luta válido, as regras de volume de musculação estética não entram no prompt.
+    const knowledgeContext = coachRulesBlock + (modalidadeBlock ? "" : regrasVolumeContext) + bibliotecaPachoContext + regrasDescansoContext + bibliotecaAbsContext + saudeContext + historicoTreinoContext;
 
     const sexoStr = String(perfil?.sexo || "").toLowerCase();
     const isFeminino = sexoStr.startsWith("f") || sexoStr.includes("mulher") || sexoStr.includes("femin");

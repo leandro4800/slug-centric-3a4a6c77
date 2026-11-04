@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { useLutasAlunos, formatLutas } from "@/hooks/use-lutas-alunos";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -136,6 +137,8 @@ const withTimeout = async <T,>(promise: Promise<T>, ms: number, message: string)
 const AtletaDetalhe = () => {
   const { slug, atletaId } = useParams();
   const { tenant } = useBranding();
+  const isFightTenant = String((tenant as any)?.vertical || "") === "fight";
+  const { data: lutasMap } = useLutasAlunos(tenant?.id, isFightTenant, atletaId);
   const navigate = useNavigate();
   const [aluno, setAluno] = useState<Aluno | null>(null);
   const [perfil, setPerfil] = useState<PerfilTreino | null>(null);
@@ -699,6 +702,9 @@ const AtletaDetalhe = () => {
           <h1 className="font-display text-3xl md:text-4xl uppercase tracking-tight text-foreground">
             {aluno.nome_completo || "Sem nome"}
           </h1>
+{isFightTenant && formatLutas(lutasMap?.[aluno.id]) && (
+                      <p className="text-xs text-foreground/80 mt-1 whitespace-pre">{formatLutas(lutasMap?.[aluno.id])}</p>
+                    )}
           {aluno.email && (
             <p className="text-xs text-muted-foreground mt-1">{aluno.email}</p>
           )}
