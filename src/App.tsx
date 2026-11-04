@@ -103,6 +103,10 @@ import SiteAdminCtDojo from "./pages/site-admin/ct/DojoVirtual";
 import SiteAdminCtNutricao from "./pages/site-admin/ct/NutricaoCombate";
 
 import AlunoCtHome from "./pages/aluno/ct/CtVirtual";
+import BoxHome from "./pages/aluno/box/BoxHome";
+import BoxTurmas from "./pages/site-admin/box/BoxTurmas";
+import BoxProgramacao from "./pages/site-admin/box/BoxProgramacao";
+import BoxResultados from "./pages/site-admin/box/BoxResultados";
 import CtDojoAdmin from "./pages/aluno/ct/CtDojoAdmin";
 import defaultLogoAsset from "@/assets/alphacoach-pro-logo.jpg.asset.json";
 import { resolvePublicAssetUrl } from "@/lib/app-url";
@@ -282,6 +286,10 @@ const App = () => (
 
               <Route path="suporte" element={<SiteAdminSuporte />} />
               <Route path="ct/camps" element={<SiteAdminCtCamps />} />
+              <Route path="box" element={<Navigate to="/site/admin/box/programacao" replace />} />
+              <Route path="box/turmas" element={<BoxTurmas />} />
+              <Route path="box/programacao" element={<BoxProgramacao />} />
+              <Route path="box/resultados" element={<BoxResultados />} />
               <Route path="ct/dojo" element={<SiteAdminCtDojo />} />
               <Route path="ct/nutricao" element={<SiteAdminCtNutricao />} />
 
@@ -347,6 +355,7 @@ const App = () => (
               <Route path="carta" element={<Carta />} />
               <Route path="presencial" element={<Scheduling />} />
               <Route path="ct" element={<AlunoCtHome />} />
+              <Route path="box" element={<BoxHome />} />
             </Route>
 
 

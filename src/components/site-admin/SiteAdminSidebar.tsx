@@ -3,7 +3,7 @@ import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
   LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag, GraduationCap,
   ChevronLeft, ChevronRight, Video, ShieldCheck, Crown, HeartPulse, BookOpen,
-  Link as LinkIcon,
+  Link as LinkIcon, Timer, ListOrdered,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +45,7 @@ const baseItems: Item[] = [
   { to: "/site/admin/suporte", label: "Suporte", icon: LifeBuoy, section: "Conta" },
 ];
 
-const SECTIONS = ["Painel", "Alunos", "Programação", "Luta", "Negócio", "Conta"] as const;
+const SECTIONS = ["Painel", "Alunos", "Programação", "Luta", "Box", "Negócio", "Conta"] as const;
 
 export const SiteAdminSidebar = () => {
   const { pathname, search } = useLocation();
@@ -72,6 +72,11 @@ export const SiteAdminSidebar = () => {
       { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
       { to: "/site/admin/ct/dojo", label: "CT Virtual", icon: GraduationCap, section: "Luta" },
       { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
+    ] : []),
+    ...(vertical === "crossfit" ? [
+      { to: "/site/admin/box/turmas", label: "Turmas", icon: Users, section: "Box" },
+      { to: "/site/admin/box/programacao", label: "Programação WOD", icon: Timer, section: "Box" },
+      { to: "/site/admin/box/resultados", label: "Resultados", icon: ListOrdered, section: "Box" },
     ] : []),
 
   ];
@@ -133,7 +138,7 @@ export const SiteAdminSidebar = () => {
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-4">
-        {SECTIONS.map((section) => (
+        {SECTIONS.filter((section) => items.some((i) => i.section === section)).map((section) => (
           <div key={section}>
             {!collapsed && (
               <p className="px-3 mb-1 text-[9px] uppercase tracking-widest text-muted-foreground/60">{section}</p>
