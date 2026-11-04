@@ -278,14 +278,18 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
       const spotifyP = withTimeout(loadSpotify()).catch(() => null);
       const treinosP = withTimeout(
         Promise.resolve(
-          supabase
+          (() => {
+            let q = supabase
             .from("treinos_prescritos")
             .select("id, dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, video_url, video_coach_url, referencia_exercicio_id, referencia_exercicios(url_video)")
             .eq("aluno_id", user.id)
             .eq("tenant_id", tenant.id)
-            .or(modalidade ? `modalidade.eq.${modalidade},modalidade.is.null` : "modalidade.is.null,modalidade.not.is.null")
             .order("dia_ordem", { nullsFirst: false })
-            .order("ordem")
+            .order("ordem");
+            // CT de luta: só o treino da luta selecionada (ou legado sem luta)
+            if (modalidade) q = q.or(`modalidade.eq.${modalidade},modalidade.is.null`);
+            return q;
+          })()
         ),
         15000
       ).catch(() => null);
@@ -451,7 +455,7 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
     const semPrefixo = (diaAtual || "")
       .replace(/^\s*(segunda|ter[cç]a|quarta|quinta|sexta|s[aá]bado|domingo|seg|ter|qua|qui|sex|s[aá]b|dom)(-feira)?\s*([—–\-:·|]\s*)?/i, "")
       .trim();
-    return semPrefixo ? semPrefixo.toUpperCase() : null;
+    return semPrefixo || null;
   })() : (() => {
     const norm = (s: string) => (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const grupos: { keys: string[]; label: string }[] = [
