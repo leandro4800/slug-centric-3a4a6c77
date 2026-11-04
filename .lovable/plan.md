@@ -1,50 +1,68 @@
-# Capa (poster) para vídeos MP4 — fim da tela cinza no Android
+# Plano: segmento CrossFit (Box)
 
-Objetivo: todo vídeo MP4 direto exibe uma imagem de capa imediatamente, em vez do placeholder cinza com play gigante do Android. Nada de YouTube é tocado.
+Personal e lutas não mudam em nada. Cada etapa termina com o app funcionando.
 
-## 1. Player compartilhado
+## O que já existe (conferido)
+- `TreinoScreen.tsx` hoje só tem `if vertical === "fight"`; o resto vai para o treino personal.
+- O gatilho `detect_tenant_vertical` só reclassifica quando a vertical é `personal`, e "condicionamento físico", "funcional", "studio" e "hiit" contam como crossfit. Por isso o erro aconteceu.
+- METODOLOGIA JACKSON (`metodojackson`) já está como `personal`.
+- `SejaCoach.tsx` ainda não pergunta o tipo de coach. A vertical depende só do gatilho.
+- Já existem as tabelas `wods` e `benchmarks`, ambas com 0 linhas. Elas não serão usadas: as tabelas novas `box_*` substituem essa parte e as antigas ficam como estão.
 
-`src/components/DirectVideoPlayer.tsx` hoje repassa `...props` para o `<video>`, então `poster` já chega ao elemento — mas vamos torná-lo explícito na tipagem e adicionar:
+## Etapa 1: cadastro por tipo
+**Migração 1**
+- `tenants.vertical_manual boolean not null default false`.
+- Novo `detect_tenant_vertical`: se `vertical_manual = true`, devolve sem alterar nada. O resto continua igual para os tenants atuais.
+- `update tenants set vertical_manual = true where slug = 'metodojackson'`.
+- Uma regra no banco garante que só o dono do tenant (ou um admin) pode mudar `vertical`/`vertical_manual`, e só durante o cadastro. Isso aproveita a proteção de tenant que já existe.
 
-- `poster?: string | null` (converte `null` para `undefined`).
-- `onPosterCaptured?: (blob: Blob) => void` — disparado só quando o vídeo é direto, **não** tem poster e o evento `loadeddata` acontece. Captura o frame atual num `<canvas>` e devolve um JPEG (~0.7 de qualidade, largura máx. 640px).
-- O `<video>` usa `crossOrigin="anonymous"` quando `onPosterCaptured` está ativo, para o canvas não ser bloqueado. Se a captura falhar (canvas bloqueado, codec), falha em silêncio — o vídeo continua normal.
+**Código**
+- `src/pages/SejaCoach.tsx`: novo seletor obrigatório com Personal, Nutricionista, CT de lutas e CrossFit. Grava `vertical` (personal/personal/fight/crossfit) e `vertical_manual = true`.
+- `src/pages/Onboarding.tsx`: só se ele também criar tenants. Vou conferir na implementação.
 
-## 2. Captura no envio (3 pontos de upload)
+## Etapa 2: base do CrossFit (presets)
+**Migração 2**: tabela `box_presets`, só leitura para quem está logado. São 9 presets: Iniciante, Intermediário e Avançado × 3x, 4x e 5x, cada um com a estrutura semanal de blocos. Não há opção de foco.
 
-Novo utilitário `src/lib/video-poster.ts`:
-- `captureVideoPoster(file: File): Promise<Blob | null>` — cria um `<video>` temporário com `URL.createObjectURL`, busca ~1s (ou o meio, se for mais curto), desenha num canvas e devolve JPEG.
-- `uploadPoster(bucket, path, blob)` — sobe e devolve a URL pública.
+## Etapa 3: turmas, WOD e resultados
+**Migração 3**: todas as tabelas recebem os acessos necessários e regras por tenant.
+- `box_turmas` (tenant_id, nome, horario, ativo).
+- `box_turma_alunos` (tenant_id, turma_id, aluno_id; uma linha por aluno em cada turma).
+- `box_wods` (tenant_id, turma_id, data, titulo, aquecimento, forca_skill jsonb, acessorio, formato com os tipos AMRAP/EMOM/FOR_TIME/RFT/CHIPPER/TABATA/LADDER, time_cap_seg, rounds, movimentos jsonb com Rx/Scaled, benchmark_nome, publicado).
+- `box_resultados` (tenant_id, wod_id, aluno_id, escala rx/scaled, tempo_seg, rounds, reps, carga_kg, observacao; um resultado por aluno em cada WOD).
+- `box_benchmark_prs` (tenant_id, aluno_id, benchmark, resultado, data). Também pode ser calculado a partir de `box_resultados` com `benchmark_nome`.
+- Quem pode fazer o quê: coach/admin do tenant gerenciam tudo. O aluno lê as turmas e WODs publicados das turmas dele e o ranking (resultados da turma no mesmo tenant). Ele só cria e edita o próprio resultado. A checagem de tipo de WOD e de escala é feita por gatilho.
+- O bloco de força grava em `series_executadas`, o mesmo registro de carga × reps que já existe.
 
-Aplicado em:
+## Etapa 4: telas e rotas
+**Aluno**: `/:slug/app/box` (pasta `src/pages/aluno/box/`)
+- `BoxHome.tsx`: WOD do dia da turma, com os blocos.
+- `WodTimer.tsx`: contagem regressiva no AMRAP, EMOM e Tabata; progressiva no For Time, RFT, Chipper e Ladder, parando no time cap. Usa o relógio real, como o cronômetro de descanso.
+- `LancarResultado.tsx`: escolha Rx/Scaled e campos conforme o formato.
+- `RankingDia.tsx`: Rx primeiro, depois Scaled, ordenado pelo critério do formato.
+- `BenchmarkPrs.tsx`.
+- `TreinoScreen.tsx`: só uma linha nova, `if vertical === "crossfit" return <BoxHome/>`.
+- `AlunoHome.tsx`: card "WOD do dia" só para crossfit.
 
-| Tela | Bucket | Coluna gravada |
-|---|---|---|
-| Nova Publicação da Comunidade (`src/pages/aluno/Comunidade.tsx`) | `comunidade_uploads` | `comunidade_posts.poster_url` |
-| Upload de vlog (`src/components/admin/VlogsAdmin.tsx`) | `vlog_videos` | `vlog_posts.thumbnail_url` (só quando o coach não enviou capa própria) |
-| Upload de exercício (`src/pages/site-admin/VideosTecnicos.tsx`) | `comunidade_uploads` | `referencia_exercicios.thumbnail_url` |
+**Coach**: `/site/admin/box/*` (pasta `src/pages/site-admin/box/`)
+- `BoxTurmas.tsx`: criar turmas e adicionar ou remover alunos.
+- `BoxProgramacao.tsx`: semana em grade, editor de WOD e aplicação de preset.
+- `BoxResultados.tsx`: resultados por dia e turma.
+- `SiteAdminLayout.tsx`: grupo de menu "Box" só para crossfit.
+- `App.tsx`: novas rotas, sem mudar as existentes.
+- Lógica: `src/hooks/use-box.ts` (React Query) e `src/lib/box-wod.ts` (formatos, ordenação do ranking e regras do cronômetro).
+- Testes: `src/test/box-wod.test.ts` (ordenação do ranking, contagem regressiva do AMRAP e progressiva do For Time com time cap).
 
-Se a captura falhar, o envio do vídeo continua normalmente, só sem capa.
+## Etapa 5: dados de teste
+Uma Edge Function de uso único (`seed-box-test`), no mesmo modelo usado no CT de lutas. Ela cria:
+- o tenant "Box Alphacoach" (`box-alphacoach`, crossfit, `vertical_manual = true`, aprovado, parceiro);
+- o coach `boxalphacoach@coach.app` e o aluno "Aluno Teste Box" `boxaluno@coach.app`, ambos com senha `box2026`, além dos perfis e papéis;
+- a turma "Turma 6h", com o aluno, e um WOD de exemplo para hoje (AMRAP 12 min com versões Rx e Scaled).
 
-## 3. Exibição
+Ela precisa da chave de serviço configurada nas funções do Supabase. Se ela não estiver lá, aviso antes.
 
-- `Comunidade.tsx`: incluir `poster_url` no select e no tipo do post; passar `poster={post.poster_url}` ao player.
-- `VlogPlayerModal.tsx`: no ramo de vídeo direto, passar `poster={thumbnailUrl}` (prop que o modal já recebe). A lógica de YouTube fica intacta.
-- `ExercisePlayer.tsx`: nova prop opcional `posterUrl`; repassada ao `DirectVideoPlayer`. `ExerciseCard.tsx` e `ExerciseVideoButton.tsx` passam a capa quando a conhecem.
+## Ordem
+1 → 2 → 3 → 4 → 5. Depois, teste completo com as contas de teste: o coach publica o WOD, o aluno lança o resultado e o ranking aparece.
 
-## 4. Correção retroativa (sem job em lote)
-
-Quando o player carrega um vídeo direto **sem** poster, ele captura o frame no `loadeddata` e chama `onPosterCaptured`. Cada tela trata isso:
-
-- Comunidade: sobe em `comunidade_uploads/<user>/posters/` e faz update de `poster_url` do post.
-- Vlog: sobe em `vlog_videos/<tenant>/posters/` e faz update de `thumbnail_url`.
-- Exercício: sobe em `comunidade_uploads/...` e faz update de `thumbnail_url` na linha de `referencia_exercicios`.
-
-Tudo silencioso: erro de upload ou de permissão apenas registra no console, nunca mostra alerta nem quebra a reprodução. Cada vídeo tenta uma única vez por sessão.
-
-## Premissas e detalhes técnicos
-
-- `comunidade_posts.poster_url`, `vlog_posts.thumbnail_url` e `referencia_exercicios.thumbnail_url` já existem — confirmado no banco. **Nenhuma migração nova é necessária.**
-- No exercício, o `ExerciseCard` só conhece a URL do vídeo, não a linha da biblioteca. A gravação retroativa localiza a linha de `referencia_exercicios` pelo `url_video` igual ao vídeo tocado; se não achar nenhuma (ou se o aluno não tiver permissão de escrita), apenas não grava — a capa da sessão atual continua funcionando.
-- A escrita retroativa respeita as regras de acesso existentes: o aluno consegue gravar a capa do próprio post; capas de exercícios e vlogs só serão gravadas por quem já tem permissão de edição. Se isso ficar restritivo demais na prática, o passo seguinte seria uma função de servidor dedicada — fora deste escopo.
-- Sem mudanças em YouTube, em pausa de mídia no logout ou em qualquer outra lógica do player.
+## Observações
+- Os apps das lojas precisam de uma nova versão para mostrar as telas novas. As mudanças no banco valem na hora.
+- Suposição: o aluno do Box continua usando a dieta e o restante do app como hoje. Só a tela de treino muda.
