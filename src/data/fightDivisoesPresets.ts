@@ -19,7 +19,7 @@ export type FightDiaPreset = {
 
 export type FightDivisaoPreset = {
   id: string;
-  modalidade: "bjj" | "muay_thai" | "boxe" | "mma";
+  modalidade: "bjj" | "muay_thai" | "kickboxing" | "boxe" | "mma";
   nivel: FightNivel;
   freq: number;
   label: string;
@@ -580,6 +580,245 @@ export const FIGHT_DIVISOES_PRESETS: FightDivisaoPreset[] = [
       { label: "Qui — Potência Rotacional", exercicios: [ex("Landmine Punch", "4", "6"), ex("Landmine Rotation", "4", "8")] },
       { label: "Sex — Simulador Glicolítico", exercicios: [ex("Circuito de Aparelhos", "5", "5min")] },
       { label: "Sáb — Pescoço & Recuperação", exercicios: [ex("Treino Cervical com Anilha", "4", "15"), ex("Mobilidade", "3", "10")] },
+    ],
+  },
+  // ==================== KICKBOXING ====================
+  {
+    id: "kb-ini-2x", modalidade: "kickboxing", nivel: "Iniciante", freq: 2,
+    label: "Kickboxing 2x — Full Body Base",
+    dias: [
+      { label: "A — Pernas & Base", exercicios: [
+        ex("Agachamento Livre com Barra", "4", "8", "Base para chutes"),
+        ex("Stiff com Halteres", "3", "10"),
+        ex("Elevação de Panturrilha em Pé", "4", "15", "Pivô e deslocamento"),
+        ex("Prancha Abdominal", "3", "60s"),
+      ]},
+      { label: "B — Superior, Guarda & Rotação", exercicios: [
+        ex("Desenvolvimento Militar com Barra", "3", "8", "Guarda alta"),
+        ex("Remada Baixa no Cabo", "3", "12"),
+        ex("Landmine Rotation", "3", "10"),
+        ex("Abdominal Infra na Barra Fixa", "3", "12", "Flexores de quadril para chutes"),
+      ]},
+    ],
+  },
+  {
+    id: "kb-ini-3x", modalidade: "kickboxing", nivel: "Iniciante", freq: 3,
+    label: "Kickboxing 3x — Full Body A/B/C",
+    dias: [
+      { label: "A — Quadríceps & Chute", exercicios: [
+        ex("Agachamento Livre", "4", "8"),
+        ex("Leg Press 45°", "3", "12"),
+        ex("Cadeira Extensora", "3", "12"),
+        ex("Elevação de Panturrilha em Pé", "4", "15"),
+      ]},
+      { label: "B — Posterior & Quadril", exercicios: [
+        ex("Stiff com Halteres", "4", "8"),
+        ex("Elevação de Quadril com Barra (Hip Thrust)", "3", "10"),
+        ex("Cadeira Flexora", "3", "12"),
+        ex("Abdominal Infra na Barra Fixa", "3", "12"),
+      ]},
+      { label: "C — Superior & Rotação", exercicios: [
+        ex("Desenvolvimento Militar", "3", "8"),
+        ex("Supino Reto com Halteres", "3", "10"),
+        ex("Remada Curvada com Halteres", "3", "10"),
+        ex("Landmine Rotation", "3", "10"),
+      ]},
+    ],
+  },
+  {
+    id: "kb-ini-4x", modalidade: "kickboxing", nivel: "Iniciante", freq: 4,
+    label: "Kickboxing 4x — Upper / Lower",
+    dias: [
+      { label: "A — Superior (Empurrar & Guarda)", exercicios: [
+        ex("Desenvolvimento Militar", "4", "8"),
+        ex("Supino Reto com Halteres", "3", "10"),
+        ex("Elevação Lateral Isométrica com Halter Leve", "3", "45s"),
+        ex("Tríceps Pulley", "3", "15"),
+      ]},
+      { label: "B — Inferior (Quadríceps & Chute)", exercicios: [
+        ex("Agachamento Livre", "4", "8"),
+        ex("Leg Press 45°", "3", "12"),
+        ex("Cadeira Extensora", "3", "12"),
+        ex("Elevação de Panturrilha em Pé", "4", "15"),
+      ]},
+      { label: "C — Superior (Puxar & Pescoço)", exercicios: [
+        ex("Barra Fixa ou Puxada Alta Neutra", "4", "8"),
+        ex("Remada Baixa no Cabo", "3", "12"),
+        ex("Face Pull no Cabo", "3", "15"),
+        ex("Treino Cervical com Anilha", "3", "15"),
+      ]},
+      { label: "D — Inferior (Posterior & Core)", exercicios: [
+        ex("Stiff com Halteres", "4", "8"),
+        ex("Elevação de Quadril com Barra (Hip Thrust)", "3", "10"),
+        ex("Cadeira Flexora", "3", "12"),
+        ex("Landmine Rotation", "3", "10"),
+      ]},
+    ],
+  },
+  {
+    id: "kb-int-3x", modalidade: "kickboxing", nivel: "Intermediário", freq: 3,
+    label: "Kickboxing 3x — Potência / Rotação / Resistência",
+    dias: [
+      { label: "A — Potência de Chute", exercicios: [
+        ex("Agachamento Salto com Halteres", "4", "6"),
+        ex("Passada Explosiva Alternada", "3", "8"),
+        ex("Leg Press Unilateral em Velocidade", "3", "8"),
+        ex("Elevação de Panturrilha em Pé", "4", "12"),
+      ]},
+      { label: "B — Rotação & Superior", exercicios: [
+        ex("Landmine Rotation com Carga", "4", "6"),
+        ex("Supino Reto com Barra em Velocidade (50%)", "4", "5"),
+        ex("Cable Woodchopper", "3", "8"),
+        ex("Remada Pendlay com Barra", "3", "8"),
+      ]},
+      { label: "C — Guarda & Cadeia Posterior", exercicios: [
+        ex("Desenvolvimento com Halteres Alternado", "3", "12"),
+        ex("Isometria de Ombro no Cabo", "3", "45s"),
+        ex("Stiff com Barra", "3", "8"),
+        ex("Abdominal Infra na Barra Fixa", "3", "12"),
+      ]},
+    ],
+  },
+  {
+    id: "kb-int-4x", modalidade: "kickboxing", nivel: "Intermediário", freq: 4,
+    label: "Kickboxing 4x — Força / Potência / Chute / Guarda",
+    dias: [
+      { label: "A — Força de Pernas", exercicios: [
+        ex("Agachamento Frontal com Barra", "4", "6"),
+        ex("Levantamento Terra Sumô", "3", "5"),
+        ex("Cadeira Extensora", "3", "12"),
+        ex("Elevação de Panturrilha em Pé", "4", "12"),
+      ]},
+      { label: "B — Potência Superior & Rotação", exercicios: [
+        ex("Landmine Press Unilateral Explosivo", "4", "6"),
+        ex("Supino Reto com Barra", "4", "6"),
+        ex("Cable Woodchopper", "3", "8"),
+        ex("Flexão Pliométrica", "3", "6"),
+      ]},
+      { label: "C — Potência de Chute", exercicios: [
+        ex("Agachamento Salto com Halteres", "4", "6"),
+        ex("Passada Explosiva Alternada", "3", "8"),
+        ex("Hip Thrust Pesado com Barra", "3", "6"),
+        ex("Abdominal Infra na Barra Fixa", "3", "12"),
+      ]},
+      { label: "D — Guarda, Pescoço & Core", exercicios: [
+        ex("Desenvolvimento Militar com Barra", "3", "8"),
+        ex("Face Pull no Cabo", "3", "15"),
+        ex("Treino Cervical com Anilha", "3", "15"),
+        ex("Abdominal Roda", "3", "12"),
+      ]},
+    ],
+  },
+  {
+    id: "kb-int-5x", modalidade: "kickboxing", nivel: "Intermediário", freq: 5,
+    label: "Kickboxing 5x — Por Valência",
+    dias: [
+      { label: "A — Potência de Pernas", exercicios: [
+        ex("Jump Squats", "4", "6"),
+        ex("Passada Explosiva", "3", "8"),
+        ex("Cadeira Flexora", "3", "12"),
+      ]},
+      { label: "B — Potência de Soco & Rotação", exercicios: [
+        ex("Landmine Press Unilateral", "4", "6"),
+        ex("Supino Reto Explosivo", "4", "5"),
+        ex("Cable Woodchopper", "3", "10"),
+      ]},
+      { label: "C — Resistência de Guarda", exercicios: [
+        ex("Desenvolvimento Militar", "4", "10"),
+        ex("Isometria de Ombro com Halter", "3", "45s"),
+        ex("Flexão de Braço com Anilha nas Costas", "3", "10"),
+      ]},
+      { label: "D — Posterior & Flexores de Quadril", exercicios: [
+        ex("Stiff com Barra", "4", "8"),
+        ex("Hip Thrust Pesado com Barra", "3", "8"),
+        ex("Abdominal Infra na Barra Fixa", "4", "12"),
+      ]},
+      { label: "E — Condicionamento", exercicios: [
+        ex("Sprints na Esteira", "12", "30s", "30s de descanso"),
+        ex("Abdominal Roda", "3", "12"),
+      ]},
+    ],
+  },
+  {
+    id: "kb-av-4x", modalidade: "kickboxing", nivel: "Avançado", freq: 4,
+    label: "Kickboxing 4x — Atleta em Camp",
+    dias: [
+      { label: "A — Potência Neural", exercicios: [
+        ex("Power Clean com Barra", "4", "3"),
+        ex("Jump Squat com Barra", "4", "4"),
+        ex("Landmine Punch", "4", "5"),
+      ]},
+      { label: "B — Força de Pernas", exercicios: [
+        ex("Agachamento Frontal com Barra", "5", "4"),
+        ex("Levantamento Terra Sumô", "4", "4"),
+        ex("Elevação de Panturrilha em Pé", "4", "10"),
+      ]},
+      { label: "C — Simulador de Rounds (circuito de 5 rounds de 3 min, 1 min de pausa)", exercicios: [
+        ex("Leg Press", "5", "1min"),
+        ex("Remada Baixa no Cabo", "5", "1min"),
+        ex("Flexão de Braço Explosiva", "5", "1min"),
+        ex("Abdominal Roda", "5", "1min", "Circuito"),
+      ]},
+      { label: "D — Prevenção, Pescoço & Quadril", exercicios: [
+        ex("Treino Cervical com Anilha", "4", "15"),
+        ex("Manguito Rotador no Cabo", "3", "15"),
+        ex("Mobilidade de Quadril", "3", "10"),
+      ]},
+    ],
+  },
+  {
+    id: "kb-av-5x", modalidade: "kickboxing", nivel: "Avançado", freq: 5,
+    label: "Kickboxing 5x — Camp Profissional",
+    dias: [
+      { label: "A — Explosão", exercicios: [
+        ex("Push Press com Barra", "4", "4"),
+        ex("Landmine Punch", "4", "5"),
+        ex("Jump Squats", "4", "6"),
+      ]},
+      { label: "B — Força de Pernas", exercicios: [
+        ex("Agachamento Frontal com Barra", "5", "3"),
+        ex("Hip Thrust Pesado com Barra", "4", "5"),
+      ]},
+      { label: "C — Potência Rotacional", exercicios: [
+        ex("Landmine Rotation Pesado", "4", "6"),
+        ex("Cable Woodchopper Explosivo", "4", "6"),
+      ]},
+      { label: "D — Condicionamento de Rounds", exercicios: [
+        ex("Circuito na Crossover", "5", "3min"),
+      ]},
+      { label: "E — Recuperação & Pescoço", exercicios: [
+        ex("Treino Cervical com Anilha", "4", "15"),
+        ex("Manguito Rotador no Cabo", "3", "15"),
+        ex("Esteira Leve Zona 2", "1", "30min"),
+      ]},
+    ],
+  },
+  {
+    id: "kb-av-6x", modalidade: "kickboxing", nivel: "Avançado", freq: 6,
+    label: "Kickboxing 6x — Microciclo Profissional",
+    dias: [
+      { label: "Seg — Potência Superior", exercicios: [
+        ex("Push Press", "5", "4"),
+        ex("Landmine Punch", "4", "5"),
+      ]},
+      { label: "Ter — Potência Inferior", exercicios: [
+        ex("Jump Squats", "5", "6"),
+        ex("Agachamento Frontal", "4", "5"),
+      ]},
+      { label: "Qua — Cardio Zona 2", exercicios: [
+        ex("Esteira Zona 2", "1", "45min"),
+      ]},
+      { label: "Qui — Rotacional & Core", exercicios: [
+        ex("Landmine Rotation", "4", "8"),
+        ex("Abdominal Roda", "4", "12"),
+      ]},
+      { label: "Sex — Simulador Glicolítico", exercicios: [
+        ex("Circuito de Aparelhos", "5", "3min"),
+      ]},
+      { label: "Sáb — Prevenção", exercicios: [
+        ex("Treino Cervical com Anilha", "4", "15"),
+        ex("Manguito Rotador no Cabo", "3", "15"),
+      ]},
     ],
   },
 ];
