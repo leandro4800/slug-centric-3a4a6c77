@@ -70,7 +70,7 @@ export const SiteAdminSidebar = () => {
     ] : []),
     ...(vertical === "fight" ? [
       { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
-      { to: "/site/admin/ct/dojo", label: "Dojo Virtual", icon: GraduationCap, section: "Luta" },
+      { to: "/site/admin/ct/dojo", label: "CT Virtual", icon: GraduationCap, section: "Luta" },
       { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
     ] : []),
 

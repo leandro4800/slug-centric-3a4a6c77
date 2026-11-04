@@ -174,7 +174,7 @@ const ControleCentral = () => {
               <GraduationCap className="h-5 w-5 text-primary" />
             </div>
             <div className="flex-1">
-              <p className="font-display text-lg text-white group-hover:text-primary transition-all">DOJO VIRTUAL</p>
+              <p className="font-display text-lg text-white group-hover:text-primary transition-all">CT VIRTUAL</p>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Postar aulas em vídeo por modalidade e nível</p>
             </div>
             <span className="text-primary">→</span>

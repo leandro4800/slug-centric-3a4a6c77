@@ -1,6 +1,6 @@
 import { useBranding } from "@/contexts/BrandingProvider";
 import { Logo } from "@/components/Logo";
-import { Play, Volume2, VolumeX, ChevronRight, User, Users, CalendarCheck, HelpCircle, Plus } from "lucide-react";
+import { Play, Volume2, VolumeX, ChevronRight, User, Users, CalendarCheck, HelpCircle, Plus, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useParams } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
@@ -359,6 +359,21 @@ const AlunoHome = () => {
             </div>
           </Link>
         </div>
+
+        {tenant?.vertical === "fight" && (
+          <Link
+            to={`/${tenantSlug}/app/ct`}
+            className="bg-card border border-border rounded-2xl p-4 flex items-center gap-4 hover:border-primary/50 transition-all active:scale-[0.98] group"
+          >
+            <div className="w-12 h-12 rounded-lg bg-card/50 border border-border flex items-center justify-center group-hover:bg-primary/10 group-hover:border-primary/30 transition-all">
+              <Swords className="h-6 w-6 text-primary" />
+            </div>
+            <div>
+              <p className="font-display text-lg text-foreground/80 leading-tight uppercase group-hover:text-primary transition-colors">CT Virtual</p>
+              <p className="text-xs text-muted-foreground">Aulas das suas lutas</p>
+            </div>
+          </Link>
+        )}
 
         <Link 
           to={`/${tenantSlug}/app/parceiros`}

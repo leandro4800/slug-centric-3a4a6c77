@@ -144,7 +144,7 @@ const FightTrainingView = () => {
               <GraduationCap className="h-6 w-6 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">Dojo Virtual</p>
+              <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">CT Virtual</p>
               <h3 className="font-display text-xl uppercase italic tracking-tight leading-tight mt-0.5">
                 Vídeo-aulas do seu CT 🥋
               </h3>
