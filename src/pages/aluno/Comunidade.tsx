@@ -84,6 +84,8 @@ const Comunidade = () => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  useOwnBackButton();
+
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Perfil[]>([]);
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
