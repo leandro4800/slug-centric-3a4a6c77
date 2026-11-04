@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, ExternalLink, Ticket, Star } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { useOwnBackButton } from "@/hooks/use-own-back-button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -50,13 +51,16 @@ const Parceiros = () => {
     toast.success("Cupom copiado!");
   };
 
+  useOwnBackButton();
+
   return (
     <div className="px-5 pt-6 pb-32 bg-background min-h-screen">
       <button
         onClick={() => navigate(`/${slug}/app`)}
-        className="flex items-center gap-2 text-primary text-sm font-semibold uppercase tracking-widest hover:brightness-125 transition-all mb-8"
+        aria-label="Voltar"
+        className="mb-8 flex items-center justify-center w-10 h-10 -ml-2 text-primary hover:brightness-125 transition-all"
       >
-        <ArrowLeft className="h-4 w-4" /> Voltar
+        <ArrowLeft className="h-5 w-5" />
       </button>
 
       <div className="flex items-center gap-2 text-primary/80">

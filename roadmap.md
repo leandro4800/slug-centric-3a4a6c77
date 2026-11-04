@@ -46,3 +46,9 @@
 - [ ] 5. Aplicar protocolo no Montar Treino
 - [ ] 6. Novas regiões na trava clínica
 - [ ] 7. Favoritos e comandos do coach
+
+## Seta de voltar e títulos cortados (pedido 04/nov)
+- [x] Seta flutuante não aparece mais nas telas que já têm a própria seta; nas demais o topo reserva espaço para ela não cobrir o título. Quatro testes aprovados.
+- [x] Palavra "Voltar" retirada de Controle Central, Parceiros, Comunidade e Dojo do CT; comparativo perdeu a linha de voltar duplicada.
+- [x] Títulos do cabeçalho sem corte: "MINHA DIETA" e "EVOLUÇÃO" medidos inteiros em 384px; "EVOLUÇÃO…" perdeu as reticências.
+- [ ] Conferir com conta real: Supabase externo sem sessão de teste; a conferência visual foi feita em rota temporária já removida.

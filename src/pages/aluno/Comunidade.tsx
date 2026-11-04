@@ -17,6 +17,7 @@ import { useBranding } from "@/contexts/BrandingProvider";
 import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useOwnBackButton } from "@/hooks/use-own-back-button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -83,6 +84,8 @@ const Comunidade = () => {
   const { tenant } = useBranding();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  useOwnBackButton();
 
   const [posts, setPosts] = useState<Post[]>([]);
   const [stories, setStories] = useState<Perfil[]>([]);
@@ -427,9 +430,10 @@ const Comunidade = () => {
           <Button
             variant="ghost"
             onClick={() => navigate(`/${slug}/app`)}
-            className="text-foreground p-0 h-auto w-fit hover:bg-transparent -ml-2"
+            aria-label="Voltar"
+            className="text-foreground p-0 h-10 w-10 hover:bg-transparent -ml-2"
           >
-            <ArrowLeft className="h-5 w-5 mr-1" /> Voltar
+            <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="font-display text-2xl mt-1 tracking-tight">COMUNIDADE</h1>
         </div>
