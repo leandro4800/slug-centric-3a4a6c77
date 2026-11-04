@@ -281,6 +281,48 @@ export type Database = {
         }
         Relationships: []
       }
+      aluno_modalidades_luta: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          modalidade: string
+          nivel: string
+          tenant_id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          modalidade: string
+          nivel?: string
+          tenant_id: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          modalidade?: string
+          nivel?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "aluno_modalidades_luta_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "aluno_modalidades_luta_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       alunos: {
         Row: {
           created_at: string
