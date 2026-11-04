@@ -427,9 +427,10 @@ const Comunidade = () => {
           <Button
             variant="ghost"
             onClick={() => navigate(`/${slug}/app`)}
-            className="text-foreground p-0 h-auto w-fit hover:bg-transparent -ml-2"
+            aria-label="Voltar"
+            className="text-foreground p-0 h-10 w-10 hover:bg-transparent -ml-2"
           >
-            <ArrowLeft className="h-5 w-5 mr-1" /> Voltar
+            <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="font-display text-2xl mt-1 tracking-tight">COMUNIDADE</h1>
         </div>
