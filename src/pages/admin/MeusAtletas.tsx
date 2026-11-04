@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
+import { useLutasAlunos, formatLutas } from "@/hooks/use-lutas-alunos";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +50,8 @@ const MeusAtletas = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
   const { tenant } = useBranding();
+  const isFightTenant = String((tenant as any)?.vertical || "") === "fight";
+  const { data: lutasMap } = useLutasAlunos(tenant?.id, isFightTenant);
   const [alunos, setAlunos] = useState<Aluno[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState("");
@@ -348,6 +351,9 @@ const MeusAtletas = () => {
                     <p className="font-semibold text-sm text-foreground truncate">
                       {a.nome_completo || "Sem nome"}
                     </p>
+{isFightTenant && formatLutas(lutasMap?.[a.id]) && (
+                      <p className="text-[10px] text-foreground/80 truncate mt-0.5 whitespace-pre">{formatLutas(lutasMap?.[a.id])}</p>
+                    )}
                     {a.email && (
                       <p className="text-[10px] text-muted-foreground truncate flex items-center gap-1 mt-0.5">
                         <Mail className="h-2.5 w-2.5" /> {a.email}
