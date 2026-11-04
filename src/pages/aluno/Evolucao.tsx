@@ -99,7 +99,7 @@ const Evolucao = () => {
 
   return (
     <div className="pb-32">
-      <PageHeader icon={TrendingUp} title="EVOLUÇÃO…" subtitle={tenant?.nome || "MEU TIME"} />
+      <PageHeader icon={TrendingUp} title="EVOLUÇÃO" subtitle={tenant?.nome || "MEU TIME"} />
       
       <div className="px-5">
         <div className="bg-primary/10 border border-primary/30 rounded-xl px-4 py-3 flex items-center justify-center gap-2 text-[10px] text-primary mb-5 uppercase tracking-widest font-bold">
