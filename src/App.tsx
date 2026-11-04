@@ -65,6 +65,7 @@ import AdminDebugPush from "./pages/admin/AdminDebugPush";
 import AdminBaseConhecimento from "./pages/admin/AdminBaseConhecimento";
 import AdminVideosTecnicos from "./pages/admin/AdminVideosTecnicos";
 import NotFound from "./pages/NotFound";
+import VisualCheck from "./pages/__visual-check";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import Suporte from "./pages/Suporte";
 import CheckoutSucesso from "./pages/CheckoutSucesso";
@@ -313,6 +314,7 @@ const App = () => (
             {/* Landing pública do coach (Vendas) */}
             <Route path="/:slug" element={<TenantLanding />} />
             <Route path="/:slug/site" element={<TenantLanding />} />
+            <Route path="/:slug/__visual" element={<VisualCheck />} />
 
 
             {/* App do aluno */}
