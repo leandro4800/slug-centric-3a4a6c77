@@ -568,14 +568,16 @@ const AdminMontarTreino = () => {
           restaurarRascunho();
         }
       } else {
-        const { data: tp } = await supabase
+        let tpQuery = supabase
           .from("treinos_prescritos")
           .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, tecnica_avancada, video_url, referencia_exercicio_id")
           .eq("aluno_id", alunoId)
           .eq("tenant_id", tenant.id)
-          .or(usaLutas ? `modalidade.eq.${modalidadeLuta},modalidade.is.null` : "id.not.is.null")
           .order("dia_ordem", { nullsFirst: false })
           .order("ordem");
+        // CT de luta: carrega só o treino da luta selecionada (ou legado sem luta)
+        if (usaLutas) tpQuery = tpQuery.or(`modalidade.eq.${modalidadeLuta},modalidade.is.null`);
+        const { data: tp } = await tpQuery;
         if (tp && tp.length > 0) {
           const carregados: ExercicioPrescrito[] = (tp as any[]).map((r, i) => ({
             dia_semana: r.dia_semana || "",
@@ -1960,7 +1962,7 @@ const AdminMontarTreino = () => {
                       Modalidade do atleta
                     </Label>
                     {usaLutas && lutasReady && lutasAluno.length === 0 && (
-                      <p className="text-xs font-semibold text-amber-400">Este aluno ainda não escolheu as lutas</p>
+                      <p className="text-xs font-semibold text-primary">Este aluno ainda não escolheu as lutas</p>
                     )}
                     <div className="flex flex-wrap gap-2">
                       {(usaLutas && lutasAluno.length > 0
