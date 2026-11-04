@@ -453,6 +453,7 @@ serve(async (req) => {
             .from("aluno_modalidades_luta")
             .select("modalidade")
             .eq("aluno_id", resolvedUserId)
+            .eq("tenant_id", tenantAlvo)
             .order("created_at")
             .limit(1)
             .maybeSingle();
