@@ -3,7 +3,7 @@ import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
   LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag, GraduationCap,
   ChevronLeft, ChevronRight, Video, ShieldCheck, Crown, HeartPulse, BookOpen,
-  Link as LinkIcon,
+  Link as LinkIcon, Timer, ListOrdered,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -72,6 +72,11 @@ export const SiteAdminSidebar = () => {
       { to: "/site/admin/ct/camps", label: "Camps & Sessões", icon: Swords, section: "Luta" },
       { to: "/site/admin/ct/dojo", label: "CT Virtual", icon: GraduationCap, section: "Luta" },
       { to: "/site/admin/ct/nutricao", label: "Nutrição de combate", icon: Utensils, section: "Luta" },
+    ] : []),
+    ...(vertical === "crossfit" ? [
+      { to: "/site/admin/box/turmas", label: "Turmas", icon: Users, section: "Box" },
+      { to: "/site/admin/box/programacao", label: "Programação WOD", icon: Timer, section: "Box" },
+      { to: "/site/admin/box/resultados", label: "Resultados", icon: ListOrdered, section: "Box" },
     ] : []),
 
   ];
