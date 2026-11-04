@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useBranding } from "@/contexts/BrandingProvider";
@@ -342,9 +342,18 @@ const AdminMontarTreino = () => {
   // === SEGMENTO LUTA (CT) — divisões por modalidade + nível ===
   const isFight = String((tenant as any)?.vertical || "") === "fight";
   const [modalidadeLuta, setModalidadeLuta] = useState<string>("bjj");
+  // Lutas escolhidas pelo aluno (aluno_modalidades_luta) — só tenants de luta e aluno não avulso
+  const [lutasAluno, setLutasAluno] = useState<Array<{ modalidade: string; nivel: string | null }>>([]);
+  const [lutasReady, setLutasReady] = useState(false);
+  const usaLutas = isFight && !!alunoId && !isAvulso;
+  const lutaKey = usaLutas ? (lutasReady ? modalidadeLuta : "") : "-";
 
   // Rascunho local do treino em montagem (não some ao sair da tela antes de publicar)
-  const draftKey = alunoId ? `montar-treino-draft:${tenant?.id || ""}:${alunoId}` : "";
+  const draftKey = alunoId
+    ? `montar-treino-draft:${tenant?.id || ""}:${alunoId}${usaLutas ? `:${modalidadeLuta}` : ""}`
+    : "";
+  // Chave do rascunho a que os exercícios atuais pertencem (evita gravar treino de uma luta no rascunho de outra)
+  const loadedDraftKeyRef = useRef<string>("");
   const lerRascunho = () => {
     if (!draftKey) return null;
     try {
@@ -462,6 +471,9 @@ const AdminMontarTreino = () => {
       setPerfilLoading(false);
       return;
     }
+    if (usaLutas && !lutasReady) return;
+    const draftKeyAtual = draftKey;
+    loadedDraftKeyRef.current = "";
     void (async () => {
       setPerfilLoading(true);
       setExercicios([]);
@@ -561,6 +573,7 @@ const AdminMontarTreino = () => {
           .select("dia_semana, dia_ordem, ordem, exercicio, series, repeticoes, observacao, cadencia, detalhes_execucao, tempo_descanso_segundos, tecnica_avancada, video_url, referencia_exercicio_id")
           .eq("aluno_id", alunoId)
           .eq("tenant_id", tenant.id)
+          .or(usaLutas ? `modalidade.eq.${modalidadeLuta},modalidade.is.null` : "id.not.is.null")
           .order("dia_ordem", { nullsFirst: false })
           .order("ordem");
         if (tp && tp.length > 0) {
@@ -594,13 +607,15 @@ const AdminMontarTreino = () => {
           restaurarRascunho();
         }
       }
+      loadedDraftKeyRef.current = draftKeyAtual;
       setPerfilLoading(false);
     })();
-  }, [alunoId, tenant, isAvulso]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [alunoId, tenant, isAvulso, lutaKey]);
 
   // Guarda o rascunho enquanto o coach monta o treino (evita perder ao sair da tela)
   useEffect(() => {
-    if (!draftKey || perfilLoading) return;
+    if (!draftKey || perfilLoading || loadedDraftKeyRef.current !== draftKey) return;
     try {
       if (exercicios.length === 0) localStorage.removeItem(draftKey);
       else localStorage.setItem(draftKey, JSON.stringify({ exercicios, cardio, divisaoCustom }));
@@ -611,24 +626,85 @@ const AdminMontarTreino = () => {
 
   const nivel = useMemo(() => classificarNivel(perfil.tempo_treino), [perfil.tempo_treino]);
 
-  // Modalidade do atleta (CT de luta) — carrega o que já está salvo no perfil
+  // Lutas do atleta (CT de luta) — aluno_modalidades_luta; sem registro, cai no perfil antigo
   useEffect(() => {
-    if (!isFight || !alunoId || isAvulso) return;
+    setLutasAluno([]);
+    setLutasReady(false);
+    if (!usaLutas || !tenant?.id) return;
+    let cancel = false;
     void (async () => {
-      const { data } = await supabase
-        .from("perfis")
-        .select("modalidade_luta")
-        .eq("id", alunoId)
-        .maybeSingle();
-      const slug = toModalidadeSlug((data as any)?.modalidade_luta);
-      if (slug) setModalidadeLuta(slug);
+      const [{ data: lutas }, { data: perfilLuta }] = await Promise.all([
+        (supabase as any)
+          .from("aluno_modalidades_luta")
+          .select("modalidade, nivel, created_at")
+          .eq("aluno_id", alunoId)
+          .eq("tenant_id", tenant.id)
+          .order("created_at"),
+        supabase.from("perfis").select("modalidade_luta").eq("id", alunoId).maybeSingle(),
+      ]);
+      if (cancel) return;
+      const lista = ((lutas as any[]) || [])
+        .map((l) => ({ modalidade: toModalidadeSlug(l.modalidade) || l.modalidade, nivel: l.nivel ?? null }));
+      setLutasAluno(lista);
+      const inicial = lista[0]?.modalidade || toModalidadeSlug((perfilLuta as any)?.modalidade_luta) || "bjj";
+      setModalidadeLuta(inicial);
+      setLutasReady(true);
     })();
-  }, [isFight, alunoId, isAvulso]);
+    return () => { cancel = true; };
+  }, [usaLutas, alunoId, tenant?.id]);
+
+  const lutaSelecionada = lutasAluno.find((l) => l.modalidade === modalidadeLuta) || null;
+  const NIVEL_LUTA_LABEL: Record<string, "Iniciante" | "Intermediário" | "Avançado"> = {
+    iniciante: "Iniciante", intermediario: "Intermediário", avancado: "Avançado",
+  };
+  const nivelFight = (lutaSelecionada?.nivel && NIVEL_LUTA_LABEL[lutaSelecionada.nivel]) || nivel;
+
+  const salvarLutaAluno = async (modalidade: string, nivelLuta: string | null) => {
+    if (!tenant?.id || !alunoId) return false;
+    const { error } = await (supabase as any)
+      .from("aluno_modalidades_luta")
+      .upsert({ aluno_id: alunoId, tenant_id: tenant.id, modalidade, nivel: nivelLuta }, { onConflict: "aluno_id,modalidade" });
+    if (error) {
+      toast.error("Não foi possível salvar a luta: " + error.message);
+      return false;
+    }
+    return true;
+  };
+  const adicionarLuta = async (modalidade: string) => {
+    if (!(await salvarLutaAluno(modalidade, "iniciante"))) return;
+    setLutasAluno((prev) => [...prev, { modalidade, nivel: "iniciante" }]);
+    setModalidadeLuta(modalidade);
+    toast.success(`${modalidadeLabel(modalidade)} adicionada ao aluno.`);
+  };
+  const alterarNivelLuta = async (nivelLuta: string) => {
+    if (!lutaSelecionada) return;
+    if (!(await salvarLutaAluno(lutaSelecionada.modalidade, nivelLuta))) return;
+    setLutasAluno((prev) => prev.map((l) => (l.modalidade === lutaSelecionada.modalidade ? { ...l, nivel: nivelLuta } : l)));
+    toast.success(`Nível de ${modalidadeLabel(lutaSelecionada.modalidade)} atualizado.`);
+  };
+  const removerLuta = async () => {
+    if (!lutaSelecionada || !tenant?.id || !alunoId) return;
+    const alvo = lutaSelecionada.modalidade;
+    const { error } = await (supabase as any)
+      .from("aluno_modalidades_luta")
+      .delete()
+      .eq("aluno_id", alunoId)
+      .eq("tenant_id", tenant.id)
+      .eq("modalidade", alvo);
+    if (error) {
+      toast.error("Não foi possível remover a luta: " + error.message);
+      return;
+    }
+    const restantes = lutasAluno.filter((l) => l.modalidade !== alvo);
+    setLutasAluno(restantes);
+    if (restantes[0]) setModalidadeLuta(restantes[0].modalidade);
+    toast.success(`${modalidadeLabel(alvo)} removida do aluno.`);
+  };
 
   // Presets de luta (modalidade + nível) — substituem os de musculação em tenants 'fight'
   const fightPresets = useMemo(
-    () => (isFight ? filtrarFightPresets(modalidadeLuta, nivel, perfil.frequencia_semanal || 4) : []),
-    [isFight, modalidadeLuta, nivel, perfil.frequencia_semanal],
+    () => (isFight ? filtrarFightPresets(modalidadeLuta, nivelFight, perfil.frequencia_semanal || 4) : []),
+    [isFight, modalidadeLuta, nivelFight, perfil.frequencia_semanal],
   );
 
   // Presets aplicáveis ao perfil atual (freq + sexo + nível)
@@ -780,7 +856,7 @@ const AdminMontarTreino = () => {
       const activePrompt = customPrompt || promptFromUrl || "";
 
       const { data, error } = await supabase.functions.invoke("gerar-treino-ia", {
-        body: { perfil: { ...perfil, aluno_id: alunoId, avulso: isAvulso }, biblioteca: bibliotecaParaIA, divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras },
+        body: { perfil: { ...perfil, aluno_id: alunoId, avulso: isAvulso }, biblioteca: bibliotecaParaIA, divisoes: divisoesParaGerar, tenant_id: tenant.id, prompt: activePrompt, estimulos_extras: estimulosExtras, ...(usaLutas ? { modalidade: modalidadeLuta } : {}) },
       });
       if (error) {
         // supabase-js esconde o corpo do erro ("non-2xx status code"); tenta ler a mensagem real.
@@ -892,11 +968,14 @@ const AdminMontarTreino = () => {
       if (alunoError) throw alunoError;
       if (!alunoTenant) throw new Error("Este aluno não pertence a este tenant.");
 
-      const { error: deleteError } = await supabase
+      let deleteQuery = supabase
         .from("treinos_prescritos")
         .delete()
         .eq("aluno_id", alunoId)
         .eq("tenant_id", tenant.id);
+      // CT de luta: um treino por luta — só substitui o da luta selecionada (ou legado sem luta)
+      if (usaLutas) deleteQuery = deleteQuery.or(`modalidade.eq.${modalidadeLuta},modalidade.is.null`);
+      const { error: deleteError } = await deleteQuery;
       if (deleteError) throw deleteError;
 
       // Mapeia cada divisão de treino (A, B, C...) para o dia da semana escolhido pelo aluno
@@ -931,6 +1010,7 @@ const AdminMontarTreino = () => {
           // preserva o vídeo já vinculado (só é limpo quando o nome do exercício muda)
           video_url: e.video_url ?? null,
           status: "ativo",
+          modalidade: usaLutas ? modalidadeLuta : null,
         };
       });
 
@@ -1879,8 +1959,14 @@ const AdminMontarTreino = () => {
                     <Label className="text-xs uppercase tracking-wider text-muted-foreground">
                       Modalidade do atleta
                     </Label>
+                    {usaLutas && lutasReady && lutasAluno.length === 0 && (
+                      <p className="text-xs font-semibold text-amber-400">Este aluno ainda não escolheu as lutas</p>
+                    )}
                     <div className="flex flex-wrap gap-2">
-                      {FIGHT_MODALIDADES.map((m) => (
+                      {(usaLutas && lutasAluno.length > 0
+                        ? FIGHT_MODALIDADES.filter((m) => lutasAluno.some((l) => l.modalidade === m.slug))
+                        : FIGHT_MODALIDADES
+                      ).map((m) => (
                         <button
                           key={m.slug}
                           type="button"
@@ -1895,10 +1981,53 @@ const AdminMontarTreino = () => {
                         </button>
                       ))}
                     </div>
+                    {usaLutas && lutasReady && (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {FIGHT_MODALIDADES.some((m) => !lutasAluno.some((l) => l.modalidade === m.slug)) && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button type="button" size="sm" variant="outline" className="rounded-none h-8 text-xs">
+                                <Plus className="w-3 h-3 mr-1" /> Adicionar luta
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-48 p-1 rounded-none">
+                              {FIGHT_MODALIDADES.filter((m) => !lutasAluno.some((l) => l.modalidade === m.slug)).map((m) => (
+                                <button
+                                  key={m.slug}
+                                  type="button"
+                                  onClick={() => void adicionarLuta(m.slug)}
+                                  className="block w-full px-3 py-2 text-left text-sm hover:bg-muted"
+                                >
+                                  {m.label}
+                                </button>
+                              ))}
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                        {lutaSelecionada && (
+                          <>
+                            <select
+                              value={lutaSelecionada.nivel || ""}
+                              onChange={(e) => void alterarNivelLuta(e.target.value)}
+                              className="h-8 rounded-none border border-input bg-background px-2 text-xs"
+                              aria-label="Nível na luta"
+                            >
+                              <option value="" disabled>Nível…</option>
+                              <option value="iniciante">Iniciante</option>
+                              <option value="intermediario">Intermediário</option>
+                              <option value="avancado">Avançado</option>
+                            </select>
+                            <Button type="button" size="sm" variant="ghost" className="rounded-none h-8 text-xs text-destructive" onClick={() => void removerLuta()}>
+                              <Trash2 className="w-3 h-3 mr-1" /> Remover luta
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Divisões de preparação física para <strong className="text-foreground">{modalidadeLabel(modalidadeLuta)}</strong> · nível{" "}
-                    <strong className="text-foreground">{nivel}</strong> ({presetsDisponiveis.length} opções). Ao escolher, os exercícios já vêm
+                    <strong className="text-foreground">{nivelFight}</strong> ({presetsDisponiveis.length} opções). Ao escolher, os exercícios já vêm
                     prescritos com séries, repetições e <strong className="text-foreground">vídeo de referência</strong> — revise e salve.
                   </p>
                 </>
