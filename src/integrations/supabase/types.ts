@@ -1470,6 +1470,318 @@ export type Database = {
           },
         ]
       }
+      box_benchmark_prs: {
+        Row: {
+          aluno_id: string
+          benchmark: string
+          created_at: string
+          data: string
+          escala: string
+          id: string
+          resultado: string
+          tenant_id: string
+        }
+        Insert: {
+          aluno_id: string
+          benchmark: string
+          created_at?: string
+          data?: string
+          escala?: string
+          id?: string
+          resultado: string
+          tenant_id: string
+        }
+        Update: {
+          aluno_id?: string
+          benchmark?: string
+          created_at?: string
+          data?: string
+          escala?: string
+          id?: string
+          resultado?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "box_benchmark_prs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_benchmark_prs_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
+      box_presets: {
+        Row: {
+          created_at: string
+          frequencia: number
+          id: string
+          nivel: string
+          semana: Json
+          titulo: string
+        }
+        Insert: {
+          created_at?: string
+          frequencia: number
+          id?: string
+          nivel: string
+          semana?: Json
+          titulo: string
+        }
+        Update: {
+          created_at?: string
+          frequencia?: number
+          id?: string
+          nivel?: string
+          semana?: Json
+          titulo?: string
+        }
+        Relationships: []
+      }
+      box_resultados: {
+        Row: {
+          aluno_id: string
+          carga_kg: number | null
+          created_at: string
+          escala: string
+          id: string
+          observacao: string | null
+          reps: number | null
+          rounds: number | null
+          tempo_seg: number | null
+          tenant_id: string
+          updated_at: string
+          wod_id: string
+        }
+        Insert: {
+          aluno_id: string
+          carga_kg?: number | null
+          created_at?: string
+          escala?: string
+          id?: string
+          observacao?: string | null
+          reps?: number | null
+          rounds?: number | null
+          tempo_seg?: number | null
+          tenant_id: string
+          updated_at?: string
+          wod_id: string
+        }
+        Update: {
+          aluno_id?: string
+          carga_kg?: number | null
+          created_at?: string
+          escala?: string
+          id?: string
+          observacao?: string | null
+          reps?: number | null
+          rounds?: number | null
+          tempo_seg?: number | null
+          tenant_id?: string
+          updated_at?: string
+          wod_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "box_resultados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_resultados_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+          {
+            foreignKeyName: "box_resultados_wod_id_fkey"
+            columns: ["wod_id"]
+            isOneToOne: false
+            referencedRelation: "box_wods"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      box_turma_alunos: {
+        Row: {
+          aluno_id: string
+          created_at: string
+          id: string
+          tenant_id: string
+          turma_id: string
+        }
+        Insert: {
+          aluno_id: string
+          created_at?: string
+          id?: string
+          tenant_id: string
+          turma_id: string
+        }
+        Update: {
+          aluno_id?: string
+          created_at?: string
+          id?: string
+          tenant_id?: string
+          turma_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "box_turma_alunos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_turma_alunos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+          {
+            foreignKeyName: "box_turma_alunos_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "box_turmas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      box_turmas: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          horario: string | null
+          id: string
+          nome: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          horario?: string | null
+          id?: string
+          nome: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          horario?: string | null
+          id?: string
+          nome?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "box_turmas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_turmas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
+      box_wods: {
+        Row: {
+          acessorio: string | null
+          aquecimento: string | null
+          benchmark_nome: string | null
+          created_at: string
+          data: string
+          forca_skill: Json
+          formato: string
+          id: string
+          movimentos: Json
+          publicado: boolean
+          rounds: number | null
+          tenant_id: string
+          time_cap_seg: number | null
+          titulo: string | null
+          turma_id: string
+          updated_at: string
+        }
+        Insert: {
+          acessorio?: string | null
+          aquecimento?: string | null
+          benchmark_nome?: string | null
+          created_at?: string
+          data: string
+          forca_skill?: Json
+          formato?: string
+          id?: string
+          movimentos?: Json
+          publicado?: boolean
+          rounds?: number | null
+          tenant_id: string
+          time_cap_seg?: number | null
+          titulo?: string | null
+          turma_id: string
+          updated_at?: string
+        }
+        Update: {
+          acessorio?: string | null
+          aquecimento?: string | null
+          benchmark_nome?: string | null
+          created_at?: string
+          data?: string
+          forca_skill?: Json
+          formato?: string
+          id?: string
+          movimentos?: Json
+          publicado?: boolean
+          rounds?: number | null
+          tenant_id?: string
+          time_cap_seg?: number | null
+          titulo?: string | null
+          turma_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "box_wods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "box_wods_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+          {
+            foreignKeyName: "box_wods_turma_id_fkey"
+            columns: ["turma_id"]
+            isOneToOne: false
+            referencedRelation: "box_turmas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       camps_luta: {
         Row: {
           aluno_id: string
@@ -4011,6 +4323,7 @@ export type Database = {
           updated_at: string
           usar_apenas_meus_videos: boolean
           vertical: Database["public"]["Enums"]["tenant_vertical"]
+          vertical_manual: boolean
           videos_fonte_alunos: string
         }
         Insert: {
@@ -4045,6 +4358,7 @@ export type Database = {
           updated_at?: string
           usar_apenas_meus_videos?: boolean
           vertical?: Database["public"]["Enums"]["tenant_vertical"]
+          vertical_manual?: boolean
           videos_fonte_alunos?: string
         }
         Update: {
@@ -4079,6 +4393,7 @@ export type Database = {
           updated_at?: string
           usar_apenas_meus_videos?: boolean
           vertical?: Database["public"]["Enums"]["tenant_vertical"]
+          vertical_manual?: boolean
           videos_fonte_alunos?: string
         }
         Relationships: []
@@ -4874,6 +5189,8 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_box_staff: { Args: { _tenant: string }; Returns: boolean }
+      is_box_turma_member: { Args: { _turma: string }; Returns: boolean }
       listar_referencia_exercicios: {
         Args: never
         Returns: {
