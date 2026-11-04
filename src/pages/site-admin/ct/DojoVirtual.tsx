@@ -165,7 +165,7 @@ const DojoVirtual = () => {
         ? await supabase.from("dojo_conteudos").update(payload).eq("id", editId)
         : await supabase.from("dojo_conteudos").insert(payload);
       if (error) throw error;
-      toast.success(editId ? "Aula atualizada" : "Aula publicada no Dojo");
+      toast.success(editId ? "Aula atualizada" : "Aula publicada no CT Virtual");
       resetForm();
       load();
     } catch (e: any) {
@@ -233,7 +233,7 @@ const DojoVirtual = () => {
         <GraduationCap className="h-4 w-4" />
         <span className="text-[10px] uppercase tracking-[0.3em] font-bold">Luta</span>
       </div>
-      <h1 className="font-display text-2xl md:text-3xl mt-1">Dojo Virtual</h1>
+      <h1 className="font-display text-2xl md:text-3xl mt-1">CT Virtual</h1>
       <p className="text-sm text-muted-foreground mt-1">
         Publique vídeo-aulas do seu CT organizadas por modalidade, nível e posição. O aluno vê tudo como uma área de
         membros.
@@ -434,7 +434,7 @@ const DojoVirtual = () => {
 
       <div className="mt-6 space-y-6">
         {loading ? (
-          <p className="text-muted-foreground animate-pulse">Carregando Dojo...</p>
+          <p className="text-muted-foreground animate-pulse">Carregando CT Virtual...</p>
         ) : filtrados.length === 0 ? (
           <div className="border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             Nenhuma aula em {modalidadeLabel(filtro)} ainda. Clique em “Nova aula” para publicar a primeira.

@@ -28,7 +28,7 @@ const mobileItems = [
 
 const fightMobileItems = [
   { to: "/site/admin/ct/camps", label: "Camps", icon: Swords },
-  { to: "/site/admin/ct/dojo", label: "Dojo Virtual", icon: GraduationCap },
+  { to: "/site/admin/ct/dojo", label: "CT Virtual", icon: GraduationCap },
   { to: "/site/admin/ct/nutricao", label: "Nutri. combate", icon: Utensils },
 ];
 

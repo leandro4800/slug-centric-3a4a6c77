@@ -84,7 +84,7 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
       <div className="px-1">
         <h2 className="font-display text-lg uppercase italic tracking-tight flex items-center gap-2">
           <GraduationCap className="h-4 w-4 text-primary" />
-          Dojo Virtual · {modalidadeLabel(modAtiva)}
+          CT Virtual · {modalidadeLabel(modAtiva)}
         </h2>
         <p className="text-xs text-muted-foreground mt-1">
           Sua área de membros: técnica e metodologia do seu CT, por posição e nível.
@@ -234,7 +234,7 @@ const FightDojoView = ({ modalidade }: { modalidade: string }) => {
           {video && (
             <div className="p-4 pt-0">
               <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-bold">
-                {video.categoria || "Dojo"} {video.nivel ? `· ${video.nivel}` : ""}
+                {video.categoria || "CT Virtual"} {video.nivel ? `· ${video.nivel}` : ""}
               </p>
               <h3 className="font-display text-lg uppercase italic tracking-tight">{video.titulo}</h3>
               {video.descricao && (
