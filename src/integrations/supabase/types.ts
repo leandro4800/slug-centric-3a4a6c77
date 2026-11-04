@@ -4275,6 +4275,7 @@ export type Database = {
           dia_semana: string
           exercicio: string
           id: string
+          modalidade: string | null
           observacao: string | null
           ordem: number | null
           ordem_execucao: number | null
@@ -4303,6 +4304,7 @@ export type Database = {
           dia_semana: string
           exercicio: string
           id?: string
+          modalidade?: string | null
           observacao?: string | null
           ordem?: number | null
           ordem_execucao?: number | null
@@ -4331,6 +4333,7 @@ export type Database = {
           dia_semana?: string
           exercicio?: string
           id?: string
+          modalidade?: string | null
           observacao?: string | null
           ordem?: number | null
           ordem_execucao?: number | null
