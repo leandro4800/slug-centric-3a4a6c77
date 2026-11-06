@@ -356,8 +356,13 @@ export const ExerciseCard = ({
     index: number,
     onFilled?: (v: { carga: string; reps: string }) => void,
   ) => {
+    setListeningIdx(index);
+    toast.info("Abrindo microfone...", { id: "voice-toast" });
     try {
-      const avail = await NativeSpeech.available();
+      const avail = await Promise.race([
+        NativeSpeech.available(),
+        new Promise<{ available: boolean }>((_, rej) => setTimeout(() => rej(new Error("o microfone não respondeu")), 6000)),
+      ]);
       if (!avail.available) {
         toast.error("Reconhecimento de voz não disponível neste aparelho.", { id: "voice-toast" });
         return;
@@ -419,6 +424,18 @@ export const ExerciseCard = ({
     }
     const recognition = new SR();
     recognitionRef.current = recognition;
+    // Feedback imediato: o aluno vê que o toque funcionou mesmo antes do microfone abrir.
+    setListeningIdx(index);
+    toast.info("Abrindo microfone...", { id: "voice-toast" });
+    // Se o navegador nunca disparar "onstart" (ex.: microfone bloqueado em silêncio), avisa.
+    let started = false;
+    const startTimeout = window.setTimeout(() => {
+      if (started) return;
+      try { recognition.abort(); } catch {}
+      recognitionRef.current = null;
+      setListeningIdx(null);
+      toast.error("O microfone não abriu. Libere o microfone para o app nas configurações e tente de novo.", { id: "voice-toast", duration: 6000 });
+    }, 6000);
     recognition.lang = "pt-BR";
     // continuous + interim: a fala longa ("1 aquecimento..., 1 ajuste..., 3 de
     // trabalho...") tem pausas naturais que antes encerravam o reconhecimento
@@ -460,6 +477,8 @@ export const ExerciseCard = ({
     };
 
     recognition.onstart = () => {
+      started = true;
+      window.clearTimeout(startTimeout);
       setListeningIdx(index);
       toast.info(index === -1 ? "Ouvindo (todas as séries)... fale e pause no final" : "Ouvindo...", { id: "voice-toast" });
       stopSoon();
@@ -477,6 +496,8 @@ export const ExerciseCard = ({
     };
     recognition.onspeechstart = () => stopSoon();
     recognition.onerror = (e: any) => {
+      started = true;
+      window.clearTimeout(startTimeout);
       const err = e?.error || "";
       // "no-speech" pode chegar no meio de uma fala longa — só encerra de fato
       // se ainda não capturamos nada.
@@ -495,10 +516,35 @@ export const ExerciseCard = ({
       setListeningIdx(null);
       recognitionRef.current = null;
     };
-    recognition.onend = () => finish();
+    recognition.onend = () => { window.clearTimeout(startTimeout); if (started) finish(); };
+    const begin = () => {
+      try { recognition.start(); } catch (err: any) {
+        window.clearTimeout(startTimeout);
+        toast.error(`Não consegui iniciar o microfone: ${err?.message || err}`, { id: "voice-toast" });
+        setListeningIdx(null);
+        recognitionRef.current = null;
+      }
+    };
+    // Pede a permissão do microfone antes: no Android o reconhecimento às vezes
+    // fica mudo sem pedir permissão nenhuma.
+    if (navigator.mediaDevices?.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ audio: true })
+        .then((stream) => { stream.getTracks().forEach((t) => t.stop()); begin(); })
+        .catch((err: any) => {
+          window.clearTimeout(startTimeout);
+          setListeningIdx(null);
+          recognitionRef.current = null;
+          const denied = err?.name === "NotAllowedError" || err?.name === "SecurityError";
+          toast.error(denied
+            ? "Permissão de microfone negada. Libere o microfone para o app nas configurações."
+            : `Microfone indisponível (${err?.name || "erro"}).`, { id: "voice-toast", duration: 6000 });
+        });
+      return;
+    }
     try {
       recognition.start();
     } catch (err: any) {
+      window.clearTimeout(startTimeout);
       toast.error(`Não consegui iniciar o microfone: ${err?.message || err}`, { id: "voice-toast" });
       clearTimers();
       setListeningIdx(null);
