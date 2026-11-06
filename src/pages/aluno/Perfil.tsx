@@ -69,10 +69,17 @@ const Perfil = () => {
   const hero = heroDefault;
 
   // Profile data
-  const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [lastEval, setLastEval] = useState<LastEvalData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isCoach, setIsCoach] = useState(false);
+  // Lê o cache antes do primeiro quadro para não piscar a imagem padrão.
+  const [initialSnapshot] = useState(() => (user?.id ? readProfileSnapshot(user.id) : null));
+  const [profile, setProfile] = useState<ProfileData | null>(
+    () => (initialSnapshot?.profile as ProfileData | undefined) ?? null,
+  );
+  const [lastEval, setLastEval] = useState<LastEvalData | null>(
+    () => (initialSnapshot?.lastEval as LastEvalData | undefined) ?? null,
+  );
+  const [loading, setLoading] = useState(() => !initialSnapshot);
+  const [isCoach, setIsCoach] = useState(() => Boolean(initialSnapshot?.isCoach));
+  const [heroLoaded, setHeroLoaded] = useState(false);
 
   // Edit Modals
   const [pwOpen, setPwOpen] = useState(false);
@@ -126,6 +133,14 @@ const Perfil = () => {
   useEffect(() => {
     setProfileImageFailed(false);
   }, [profile?.avatar_url, tenant?.hero_url]);
+
+  // Pré-carrega a foto do perfil assim que o link é conhecido.
+  useEffect(() => {
+    if (!profile?.avatar_url) return;
+    const img = new Image();
+    img.decoding = "async";
+    img.src = profile.avatar_url;
+  }, [profile?.avatar_url]);
 
   // Profile form
   const [formProfile, setFormProfile] = useState({
@@ -518,7 +533,10 @@ const Perfil = () => {
   const profileAvatarSrc = !profileImageFailed && profile?.avatar_url
     ? profile.avatar_url
     : null;
-  const profileHeroSrc = profileAvatarSrc || (isCoach ? tenant?.hero_url : null) || heroDefault;
+  // Enquanto o perfil não chegou, fica no preto (sem imagem padrão).
+  const profileHeroSrc = loading && !profile
+    ? null
+    : profileAvatarSrc || (isCoach ? tenant?.hero_url : null) || heroDefault;
   const formAvatarSrc = !formImageFailed && formProfile.avatar_url
     ? formProfile.avatar_url
     : "";
@@ -529,13 +547,19 @@ const Perfil = () => {
       <ProfileMusicPlayer url={profile?.music_url ?? null} />
       {/* Hero: object-contain encaixa a imagem inteira no contêiner (sem crop) */}
       <section className="relative min-h-[95vh] -mt-0 bg-black">
-        <img
-          src={profileHeroSrc}
-          alt=""
-          className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] w-full object-contain transition-[object-position] duration-300 ease-in-out"
-          style={{ objectPosition: `${imgPosX}% ${imgPosY}%` }}
-          onError={() => setProfileImageFailed(true)}
-        />
+        {profileHeroSrc && (
+          <img
+            key={profileHeroSrc}
+            src={profileHeroSrc}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+            className={`absolute inset-x-0 top-0 h-[95vh] min-h-[640px] w-full object-contain transition-[object-position,opacity] duration-500 ease-in-out ${heroLoaded ? "opacity-100" : "opacity-0"}`}
+            style={{ objectPosition: `${imgPosX}% ${imgPosY}%` }}
+            onLoad={() => setHeroLoaded(true)}
+            onError={() => setProfileImageFailed(true)}
+          />
+        )}
         <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-t from-black via-black/40 to-transparent pointer-events-none" />
         <div className="absolute inset-x-0 top-0 h-[95vh] min-h-[640px] bg-gradient-to-r from-black/20 via-transparent to-transparent pointer-events-none" />
 
