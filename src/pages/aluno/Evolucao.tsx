@@ -131,11 +131,11 @@ const Evolucao = () => {
             </Button>
           </div>
           {photosLoading ? (
-            <Skeleton className="w-full aspect-[3/4] rounded-xl" />
+            <Skeleton className="w-full aspect-[4/5]" />
           ) : beforeUrl && afterUrl ? (
             <BeforeAfterSlider beforeUrl={beforeUrl} afterUrl={afterUrl} />
           ) : (
-            <div className="w-full aspect-[3/4] rounded-xl border border-dashed border-border bg-card/40 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+            <div className="w-full aspect-[4/5] border border-dashed border-border bg-card/40 flex flex-col items-center justify-center gap-2 text-muted-foreground">
               <Camera className="h-6 w-6" />
               <p className="text-xs uppercase tracking-widest">Adicione fotos no check-in</p>
             </div>
