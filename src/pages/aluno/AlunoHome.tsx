@@ -289,7 +289,7 @@ const AlunoHome = () => {
           ) : heroEmbedSrc ? (
             <div className="relative w-full h-full bg-background">
               {heroImg && (
-                <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover animate-fade-in" />
+                <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
               )}
               <iframe
                 key={`${ytId}-${muted}-${expanded}`}
