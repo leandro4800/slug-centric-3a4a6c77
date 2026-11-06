@@ -356,8 +356,13 @@ export const ExerciseCard = ({
     index: number,
     onFilled?: (v: { carga: string; reps: string }) => void,
   ) => {
+    setListeningIdx(index);
+    toast.info("Abrindo microfone...", { id: "voice-toast" });
     try {
-      const avail = await NativeSpeech.available();
+      const avail = await Promise.race([
+        NativeSpeech.available(),
+        new Promise<{ available: boolean }>((_, rej) => setTimeout(() => rej(new Error("o microfone não respondeu")), 6000)),
+      ]);
       if (!avail.available) {
         toast.error("Reconhecimento de voz não disponível neste aparelho.", { id: "voice-toast" });
         return;
