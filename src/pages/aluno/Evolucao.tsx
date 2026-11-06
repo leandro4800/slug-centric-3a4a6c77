@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, Brain, Plus, Camera, Image as ImageIcon, Loader2, Sparkles, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,15 +15,28 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 
+// Links assinados valem 1h; reaproveitamos por ~50 min.
+const SIGNED_TTL_MS = 50 * 60 * 1000;
+const signedCache = new Map<string, { url: string; exp: number }>();
+async function getSignedPhotoUrl(path: string): Promise<string | null> {
+  const hit = signedCache.get(path);
+  if (hit && hit.exp > Date.now()) return hit.url;
+  const { data } = await supabase.storage.from('evolucao-fotos').createSignedUrl(path, 3600);
+  if (!data?.signedUrl) return null;
+  signedCache.set(path, { url: data.signedUrl, exp: Date.now() + SIGNED_TTL_MS });
+  return data.signedUrl;
+}
+
 const Evolucao = () => {
   const [tab, setTab] = useState<"PESO" | "BF%">("PESO");
   const { tenant } = useBranding();
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [beforeUrl, setBeforeUrl] = useState("https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=800&auto=format&fit=crop&q=60");
-  const [afterUrl, setAfterUrl] = useState("https://images.unsplash.com/photo-1534438327276-14e5300c3a48?w=800&auto=format&fit=crop&q=60");
+  const [checkins, setCheckins] = useState<any[]>([]);
+  const [beforeUrl, setBeforeUrl] = useState<string | null>(null);
+  const [afterUrl, setAfterUrl] = useState<string | null>(null);
+  const [photosLoading, setPhotosLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
   const [aiAnalise, setAiAnalise] = useState<string | null>(null);
   const [aiMeta, setAiMeta] = useState<any>(null);
@@ -53,49 +67,46 @@ const Evolucao = () => {
     }
   };
 
+  // Busca uma vez para PESO e BF% — trocar de aba só refiltra o gráfico.
   useEffect(() => {
-    if (user) {
-      fetchEvolucao();
-    }
-  }, [user, tab, refreshKey]);
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('evolucao_checkins')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('data_checkin', { ascending: true });
+      if (cancelled) return;
+      const rows = data || [];
+      setCheckins(rows);
 
-  const fetchEvolucao = async () => {
-    const { data } = await supabase
-      .from('evolucao_checkins')
-      .select('*')
-      .eq('user_id', user?.id)
-      .order('data_checkin', { ascending: true });
+      const pickPath = (c: any) => c?.foto_frente_url || c?.foto_lado_url || c?.foto_costas_url;
+      const withPhotos = rows.filter((c: any) => pickPath(c));
+      const firstPath = pickPath(withPhotos[0]);
+      const lastPath = pickPath(withPhotos[withPhotos.length - 1]);
+      const [first, last] = await Promise.all([
+        firstPath ? getSignedPhotoUrl(firstPath) : Promise.resolve(null),
+        lastPath ? getSignedPhotoUrl(lastPath) : Promise.resolve(null),
+      ]);
+      if (cancelled) return;
+      setBeforeUrl(first);
+      setAfterUrl(last);
+      setPhotosLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [user, refreshKey]);
 
-    if (data && data.length > 0) {
-      const formatted = data
+  const chartData = useMemo(
+    () =>
+      checkins
         .filter(c => (tab === "PESO" ? c.peso_kg != null : c.bf_percentual != null))
         .map(c => ({
           date: new Date(c.data_checkin).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' }),
-          value: tab === "PESO" ? Number(c.peso_kg) : Number(c.bf_percentual)
-        }));
-      setChartData(formatted);
-
-      // Carregar fotos para o slider — usa primeiro/último com qualquer foto disponível
-      const withPhotos = data.filter(c => c.foto_frente_url || c.foto_costas_url || c.foto_lado_url);
-      const firstCheckin = withPhotos[0];
-      const lastCheckin = withPhotos[withPhotos.length - 1];
-
-      const pickPath = (c: any) => c?.foto_frente_url || c?.foto_lado_url || c?.foto_costas_url;
-      const firstPath = pickPath(firstCheckin);
-      const lastPath = pickPath(lastCheckin);
-
-      if (firstPath) {
-        const { data: fData } = await supabase.storage.from('evolucao-fotos').createSignedUrl(firstPath, 3600);
-        if (fData?.signedUrl) setBeforeUrl(fData.signedUrl);
-      }
-      if (lastPath) {
-        const { data: lData } = await supabase.storage.from('evolucao-fotos').createSignedUrl(lastPath, 3600);
-        if (lData?.signedUrl) setAfterUrl(lData.signedUrl);
-      }
-    } else {
-      setChartData([]);
-    }
-  };
+          value: tab === "PESO" ? Number(c.peso_kg) : Number(c.bf_percentual),
+        })),
+    [checkins, tab],
+  );
 
   return (
     <div className="pb-32">
@@ -119,7 +130,16 @@ const Evolucao = () => {
               <ImageIcon className="mr-2 h-3 w-3" /> COMPARAR FOTOS
             </Button>
           </div>
-          <BeforeAfterSlider beforeUrl={beforeUrl} afterUrl={afterUrl} />
+          {photosLoading ? (
+            <Skeleton className="w-full aspect-[4/5]" />
+          ) : beforeUrl && afterUrl ? (
+            <BeforeAfterSlider beforeUrl={beforeUrl} afterUrl={afterUrl} />
+          ) : (
+            <div className="w-full aspect-[4/5] border border-dashed border-border bg-card/40 flex flex-col items-center justify-center gap-2 text-muted-foreground">
+              <Camera className="h-6 w-6" />
+              <p className="text-xs uppercase tracking-widest">Adicione fotos no check-in</p>
+            </div>
+          )}
         </div>
 
         {/* Gráfico de Performance */}
@@ -211,8 +231,8 @@ const Evolucao = () => {
         <InstagramCardGenerator 
           userName={user?.user_metadata?.nome || "Você"} 
           weightLoss="3.0" 
-          beforeImg={beforeUrl} 
-          afterImg={afterUrl} 
+          beforeImg={beforeUrl || ""} 
+          afterImg={afterUrl || ""} 
         />
 
         {/* Botão de Check-in (Modal) */}

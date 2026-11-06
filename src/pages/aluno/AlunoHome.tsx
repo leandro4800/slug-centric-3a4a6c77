@@ -70,12 +70,27 @@ const TiltCard = ({ children, to }: { children: React.ReactNode; to: string }) =
   );
 };
 
+const vlogCacheKey = (tenantId: string) => `aluno-home-vlogs:${tenantId}`;
+const readCachedVlogs = (tenantId?: string | null): VlogPost[] | null => {
+  if (!tenantId || typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(vlogCacheKey(tenantId));
+    const parsed = raw ? JSON.parse(raw) : null;
+    return Array.isArray(parsed) ? parsed : null;
+  } catch {
+    return null;
+  }
+};
+
 const AlunoHome = () => {
   const { tenant } = useBranding();
   const { user, hasRole } = useAuth();
   const { slug } = useParams();
   const tenantSlug = tenant?.slug || slug;
-  const [vlogs, setVlogs] = useState<VlogPost[]>([]);
+  // Últimos vlogs do tenant guardados no aparelho — aparecem na hora.
+  const [vlogs, setVlogs] = useState<VlogPost[]>(() => readCachedVlogs(tenant?.id) ?? []);
+  const [vlogsReady, setVlogsReady] = useState(() => readCachedVlogs(tenant?.id) !== null);
+  const [ytReady, setYtReady] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -108,6 +123,11 @@ const AlunoHome = () => {
 
   useEffect(() => {
     if (!tenant?.id) return;
+    const cached = readCachedVlogs(tenant.id);
+    if (cached) {
+      setVlogs(cached);
+      setVlogsReady(true);
+    }
 
     const loadVlogs = () => {
       void supabase
@@ -119,9 +139,19 @@ const AlunoHome = () => {
         .order("posted_at", { ascending: false, nullsFirst: false })
         .order("created_at", { ascending: false })
         .limit(6)
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) {
+            setVlogsReady(true);
+            return;
+          }
           const rows = ((data as VlogPost[]) || []).filter((v) => Boolean(v.url?.trim()));
           setVlogs(rows);
+          setVlogsReady(true);
+          try {
+            localStorage.setItem(vlogCacheKey(tenant.id), JSON.stringify(rows));
+          } catch {
+            /* armazenamento cheio: ignora */
+          }
         });
     };
 
@@ -184,13 +214,14 @@ const AlunoHome = () => {
       (featuredYtId ? buildYouTubeThumbnailUrl(featuredYtId) : tenant?.hero_url || heroDefault)
     : tenant?.hero_url || heroDefault;
 
-  const buildThumb = (v: VlogPost): string => {
+  const buildThumb = (v: VlogPost): string | null => {
     if (v.thumbnail_url && !isVlogVideoPageUrl(v.thumbnail_url)) return v.thumbnail_url;
     const normalized = normalizeVideoUrl(v.url);
     const yt = extractYouTubeId(normalized) || extractYouTubeId(v.thumbnail_url);
     if (yt) return buildYouTubeThumbnailUrl(yt);
     if (!normalized?.trim()) return heroDefault;
-    return `https://api.microlink.io/?url=${encodeURIComponent(normalized)}&screenshot=true&meta=false&embed=screenshot.url`;
+    // Sem miniatura salva (ex.: Instagram): placeholder neutro em vez de print externo.
+    return null;
   };
 
   const handlePlay = () => {
@@ -253,14 +284,22 @@ const AlunoHome = () => {
       <section className="relative h-[70vh] min-h-[400px] w-full overflow-hidden flex flex-col justify-end pb-[10%] px-5">
         {/* Background Hero (contido na seção) */}
         <div className="hero-mask">
-          {heroEmbedSrc ? (
-            <iframe
-              key={`${ytId}-${muted}-${expanded}`}
-              src={heroEmbedSrc}
-              referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
-              allow={YOUTUBE_IFRAME_ALLOW}
-              className="w-full h-full pointer-events-none scale-135"
-            />
+          {!vlogsReady ? (
+            <div className="w-full h-full bg-background" />
+          ) : heroEmbedSrc ? (
+            <div className="relative w-full h-full bg-background">
+              {heroImg && (
+                <img src={heroImg} alt="" className="absolute inset-0 w-full h-full object-cover" />
+              )}
+              <iframe
+                key={`${ytId}-${muted}-${expanded}`}
+                src={heroEmbedSrc}
+                referrerPolicy={YOUTUBE_IFRAME_REFERRER_POLICY}
+                allow={YOUTUBE_IFRAME_ALLOW}
+                onLoad={() => setYtReady(true)}
+                className={`relative w-full h-full pointer-events-none scale-135 transition-opacity duration-700 ${ytReady ? "opacity-100" : "opacity-0"}`}
+              />
+            </div>
           ) : heroVideoSrc ? (
             <video
               src={heroVideoSrc}
@@ -311,7 +350,9 @@ const AlunoHome = () => {
             <span className="text-[10px] uppercase tracking-[0.3em] text-muted-foreground">{tenant?.nome || "ALPHACOACH PRO"}</span>
           </div>
           <h1 className="font-display text-4xl leading-none drop-shadow-lg">
-            {(featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO").toUpperCase()}
+            {vlogsReady
+              ? (featured?.title || tenant?.tagline || "TREINE COMO UM CAMPEÃO").toUpperCase()
+              : "\u00A0"}
           </h1>
           <div className="flex items-center gap-3 text-xs mb-4">
             <span className="text-[hsl(142_70%_55%)] font-semibold">98% compatível</span>
@@ -415,7 +456,8 @@ const AlunoHome = () => {
               <img
                 src={s.img}
                 alt={s.title}
-                loading="lazy"
+                loading="eager"
+                decoding="async"
                 className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
@@ -472,11 +514,17 @@ const AlunoHome = () => {
               className="bg-card border border-border rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 transition-all group"
             >
               <div className="relative aspect-video">
-                <img
-                  src={buildThumb(v)}
-                  alt={v.title || ""}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
+                {buildThumb(v) ? (
+                  <img
+                    src={buildThumb(v)!}
+                    alt={v.title || ""}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full bg-muted flex items-center justify-center">
+                    <Play className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                )}
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground shadow-lg">
                     <Play className="h-4 w-4 fill-current" />
@@ -497,7 +545,7 @@ const AlunoHome = () => {
         <VlogPlayerModal
           url={playing.url}
           title={playing.title}
-          thumbnailUrl={playing.thumbnail_url || buildThumb(playing)}
+          thumbnailUrl={playing.thumbnail_url || buildThumb(playing) || undefined}
           vlogId={playing.id}
           onClose={() => setPlaying(null)}
         />
