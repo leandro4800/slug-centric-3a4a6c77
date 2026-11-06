@@ -209,7 +209,22 @@ export const ExerciseCard = ({
     rawTranscript: string,
     index: number,
   ): { carga: string; reps: string } | null => {
-    const transcript = (rawTranscript || "").toLowerCase();
+    const NUM_WORDS: Record<string, string> = {
+      um: "1", uma: "1", dois: "2", duas: "2", "três": "3", tres: "3", quatro: "4", cinco: "5",
+      seis: "6", sete: "7", oito: "8", nove: "9", dez: "10", onze: "11", doze: "12", treze: "13",
+      quatorze: "14", catorze: "14", quinze: "15", dezesseis: "16", dezessete: "17", dezoito: "18",
+      dezenove: "19", vinte: "20", trinta: "30", quarenta: "40", cinquenta: "50", sessenta: "60",
+      setenta: "70", oitenta: "80", noventa: "90", cem: "100",
+    };
+    const transcript = (rawTranscript || "")
+      .toLowerCase()
+      .replace(/\b(vinte|trinta|quarenta|cinquenta|sessenta|setenta|oitenta|noventa) e (um|uma|dois|duas|tr[eê]s|quatro|cinco|seis|sete|oito|nove)\b/g,
+        (_m, a, b) => String(Number(NUM_WORDS[a]) + Number(NUM_WORDS[b])))
+      .replace(/\b[a-zçãéêíóôõú]+\b/g, (w) => {
+        // "uma série" / "um aquecimento" continuam palavras de quantidade válidas
+        return NUM_WORDS[w] ?? w;
+      })
+      .replace(/(\d)\s*(?:x|por)\s*(\d)/g, "$1 kg $2 reps");
 
     const cargaRegexes = [
       /(\d+(?:[.,]\d+)?)\s*(?:kg|quilos?|kilos?)/i,
@@ -234,6 +249,16 @@ export const ExerciseCard = ({
       let reps = "";
       for (const r of cargaRegexes) { const m = txt.match(r); if (m) { carga = m[1].replace(",", "."); break; } }
       for (const r of repsRegexes) { const m = txt.match(r); if (m) { reps = m[1]; break; } }
+      // "20 quilos 12" → a carga foi dita com unidade, o outro número é a repetição (e vice-versa).
+      if ((carga && !reps) || (reps && !carga)) {
+        const others = (txt.match(/\d+(?:[.,]\d+)?/g) || [])
+          .map((n) => n.replace(",", "."))
+          .filter((n) => n !== carga && n !== reps && !(qtdMatch && n === qtdMatch[1]));
+        if (others.length) {
+          if (carga && !reps && Number.isInteger(Number(others[0]))) reps = others[0];
+          else if (reps && !carga) carga = others[0];
+        }
+      }
 
       if (!reps && !carga) {
         const numbers = (txt.match(/\d+(?:[.,]\d+)?/g) || [])
@@ -294,7 +319,8 @@ export const ExerciseCard = ({
     const { tipo: tipoFilter, qtd: qtdNum, carga, reps } = single;
     const qtdMatch = transcript.match(/(\d+)\s*(?:s[eé]ries?|sets?)/i);
     const bulkKeyword = /\b(todas?|tudo|todas as series|todas as séries|todos os slots|todas iguais)\b/i.test(transcript);
-    const isBulk = index === -1 || bulkKeyword || !!qtdMatch || !!tipoFilter;
+    // Na série tocada, falar "trabalho" ou "aquecimento" não deve virar preenchimento em lote.
+    const isBulk = index === -1 || bulkKeyword || !!qtdMatch;
 
     if (reps || carga) {
       if (isBulk) {
@@ -1123,7 +1149,12 @@ export const ExerciseCard = ({
           {/* Interruptor compacto: modo voz por série (o ✓ da linha grava) */}
           <button
             type="button"
-            onClick={(e) => { e.stopPropagation(); setVoiceMode((v) => !v); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              const next = !voiceMode;
+              setVoiceMode(next);
+              if (next) toast.info("Modo voz ligado: toque no 🎤 da série e fale, ex.: “40 quilos 12 repetições”.", { id: "voice-toast" });
+            }}
             aria-pressed={voiceMode}
             className={`self-start flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-all ${
               voiceMode
