@@ -20,6 +20,229 @@ function getPeriodEndISO(sub: Stripe.Subscription): string | null {
   return new Date(raw * 1000).toISOString();
 }
 
+// ====== Registro de pagamentos (painel "Meu negócio") ======
+// Tudo aqui é isolado: qualquer falha só gera log e nunca altera a resposta do webhook.
+const logErr = (s: string, d?: unknown) =>
+  console.error(`[stripe-webhook][pagamentos] ${s}${d ? " " + JSON.stringify(d) : ""}`);
+
+function invoiceSubscriptionId(inv: any): string | null {
+  const fromParent = inv?.parent?.subscription_details?.subscription;
+  const legacy = inv?.subscription;
+  const raw = fromParent ?? legacy;
+  if (!raw) return null;
+  return typeof raw === "string" ? raw : raw.id ?? null;
+}
+
+const tsToISO = (t?: number | null) => (t && Number.isFinite(t) ? new Date(t * 1000).toISOString() : null);
+const tsToDate = (t?: number | null) => (t && Number.isFinite(t) ? new Date(t * 1000).toISOString().slice(0, 10) : null);
+
+/** Dados da assinatura/aluno/plano para preencher a linha do pagamento. */
+async function contextoPagamento(supabase: any, subscriptionId: string) {
+  const { data: assin, error } = await supabase
+    .from("assinaturas")
+    .select("id, tenant_id, aluno_id, plano_id")
+    .eq("stripe_subscription_id", subscriptionId)
+    .maybeSingle();
+  if (error) {
+    logErr("falha ao buscar assinatura", { subscriptionId, error });
+    return null;
+  }
+  if (!assin) return null;
+
+  let aluno_nome: string | null = null;
+  let produto_nome: string | null = null;
+  if (assin.aluno_id) {
+    const { data, error: e } = await supabase.from("perfis").select("nome_completo").eq("id", assin.aluno_id).maybeSingle();
+    if (e) logErr("falha ao buscar nome do aluno", { aluno_id: assin.aluno_id, e });
+    aluno_nome = data?.nome_completo ?? null;
+  }
+  if (assin.plano_id) {
+    const { data, error: e } = await supabase.from("planos").select("nome").eq("id", assin.plano_id).maybeSingle();
+    if (e) logErr("falha ao buscar plano", { plano_id: assin.plano_id, e });
+    produto_nome = data?.nome ?? null;
+  }
+  return {
+    tenant_id: assin.tenant_id,
+    aluno_id: assin.aluno_id,
+    assinatura_id: assin.id,
+    plano_id: assin.plano_id,
+    aluno_nome,
+    produto_nome,
+  };
+}
+
+/** Localiza o payment intent / charge da fatura (API basil usa invoice.payments). */
+async function cobrancaDaFatura(stripe: Stripe, inv: any): Promise<{ piId: string | null; chargeId: string | null }> {
+  let piId: string | null = null;
+  let chargeId: string | null = null;
+  try {
+    const full: any = await stripe.invoices.retrieve(inv.id, { expand: ["payments"] } as any);
+    const pays: any[] = full?.payments?.data ?? [];
+    const pago = pays.find((p) => p?.status === "paid") ?? pays[0];
+    const pay = pago?.payment;
+    if (pay?.payment_intent) piId = typeof pay.payment_intent === "string" ? pay.payment_intent : pay.payment_intent.id;
+    if (pay?.charge) chargeId = typeof pay.charge === "string" ? pay.charge : pay.charge.id;
+  } catch (e) {
+    logErr("falha ao ler pagamentos da fatura", { invoice: inv.id, e: String(e) });
+  }
+  // Fallback para versões antigas da API
+  if (!piId && inv?.payment_intent) piId = typeof inv.payment_intent === "string" ? inv.payment_intent : inv.payment_intent.id;
+  if (!chargeId && inv?.charge) chargeId = typeof inv.charge === "string" ? inv.charge : inv.charge.id;
+  return { piId, chargeId };
+}
+
+/**
+ * Taxas gravadas de forma que valor_liquido = o que o coach realmente recebe.
+ * - Coach normal (application fee + transfer): cartão = taxa Stripe (limitada à fee); Alpha = fee − cartão.
+ * - Parceiro (transfer sem fee): coach recebe valor cheio → 0 e 0.
+ * - Tenant da plataforma (sem transfer): cartão = taxa Stripe; Alpha = 0.
+ */
+async function calcularTaxas(stripe: Stripe, piId: string | null, chargeId: string | null) {
+  const out = { taxa_cartao_centavos: 0, taxa_alpha_centavos: 0, charge_id: chargeId, pi_id: piId };
+  try {
+    let charge: any = null;
+    if (piId) {
+      const pi: any = await stripe.paymentIntents.retrieve(piId, { expand: ["latest_charge.balance_transaction"] });
+      charge = pi?.latest_charge && typeof pi.latest_charge === "object" ? pi.latest_charge : null;
+    }
+    if (!charge && chargeId) {
+      charge = await stripe.charges.retrieve(chargeId, { expand: ["balance_transaction"] });
+    }
+    if (!charge) {
+      logErr("charge não encontrada para calcular taxas; gravando 0", { piId, chargeId });
+      return out;
+    }
+    out.charge_id = charge.id ?? chargeId;
+    const bt = charge.balance_transaction && typeof charge.balance_transaction === "object" ? charge.balance_transaction : null;
+    const stripeFee = Number(bt?.fee ?? 0) || 0;
+    const appFee = Number(charge.application_fee_amount ?? 0) || 0;
+    const temRepasse = !!charge.transfer_data?.destination || !!charge.destination;
+    if (!bt) logErr("balance_transaction indisponível; taxa do cartão = 0", { charge: charge.id });
+
+    if (appFee > 0) {
+      out.taxa_cartao_centavos = Math.min(stripeFee, appFee);
+      out.taxa_alpha_centavos = appFee - out.taxa_cartao_centavos;
+    } else if (temRepasse) {
+      out.taxa_cartao_centavos = 0;
+      out.taxa_alpha_centavos = 0;
+    } else {
+      out.taxa_cartao_centavos = stripeFee;
+      out.taxa_alpha_centavos = 0;
+    }
+  } catch (e) {
+    logErr("falha ao calcular taxas; gravando 0", { piId, chargeId, e: String(e) });
+  }
+  return out;
+}
+
+async function registrarInvoicePaga(stripe: Stripe, supabase: any, inv: any) {
+  const subId = invoiceSubscriptionId(inv);
+  if (!subId) {
+    log("invoice.paid sem assinatura; ignorado", { invoice: inv.id });
+    return;
+  }
+  const ctx = await contextoPagamento(supabase, subId);
+  if (!ctx) {
+    log("invoice.paid de assinatura fora de 'assinaturas' (ex.: plataforma); ignorado", { invoice: inv.id, subId });
+    return;
+  }
+  const { piId, chargeId } = await cobrancaDaFatura(stripe, inv);
+  const taxas = await calcularTaxas(stripe, piId, chargeId);
+  const bruto = Number(inv.amount_paid ?? 0) || 0;
+  // Taxas nunca podem passar do bruto (evita líquido negativo).
+  const cartao = Math.min(taxas.taxa_cartao_centavos, bruto);
+  const alpha = Math.min(taxas.taxa_alpha_centavos, bruto - cartao);
+
+  const { error } = await supabase.from("pagamentos").upsert(
+    {
+      ...ctx,
+      produto_tipo: "consultoria",
+      valor_bruto_centavos: bruto,
+      taxa_cartao_centavos: cartao,
+      taxa_alpha_centavos: alpha,
+      status: "pago",
+      data_vencimento: tsToDate(inv.due_date) ?? tsToDate(inv.created),
+      data_pagamento: tsToISO(inv.status_transitions?.paid_at) ?? new Date().toISOString(),
+      stripe_invoice_id: inv.id,
+      stripe_charge_id: taxas.charge_id,
+      stripe_payment_intent_id: taxas.pi_id,
+      origem: "stripe",
+    },
+    { onConflict: "stripe_invoice_id" },
+  );
+  if (error) logErr("falha no upsert de pagamento pago", { invoice: inv.id, error });
+  else log("pagamento registrado", { invoice: inv.id, bruto, cartao, alpha });
+}
+
+async function registrarInvoiceFalha(supabase: any, inv: any) {
+  const subId = invoiceSubscriptionId(inv);
+  if (!subId) return;
+  const ctx = await contextoPagamento(supabase, subId);
+  if (!ctx) return;
+
+  const { data: existente, error: eSel } = await supabase
+    .from("pagamentos")
+    .select("id, status")
+    .eq("stripe_invoice_id", inv.id)
+    .maybeSingle();
+  if (eSel) {
+    logErr("falha ao checar pagamento existente", { invoice: inv.id, eSel });
+    return;
+  }
+  if (existente?.status === "pago" || existente?.status === "estornado") {
+    log("payment_failed chegou depois de pago/estornado; mantido", { invoice: inv.id });
+    return;
+  }
+
+  const temNovaTentativa = !!inv.next_payment_attempt;
+  const { error } = await supabase.from("pagamentos").upsert(
+    {
+      ...ctx,
+      produto_tipo: "consultoria",
+      valor_bruto_centavos: Number(inv.amount_due ?? 0) || 0,
+      taxa_cartao_centavos: 0,
+      taxa_alpha_centavos: 0,
+      status: temNovaTentativa ? "pendente" : "vencido",
+      data_vencimento: tsToDate(inv.next_payment_attempt) ?? tsToDate(inv.due_date) ?? tsToDate(inv.created),
+      stripe_invoice_id: inv.id,
+      origem: "stripe",
+    },
+    { onConflict: "stripe_invoice_id" },
+  );
+  if (error) logErr("falha no upsert de pagamento com falha", { invoice: inv.id, error });
+}
+
+async function registrarEstorno(supabase: any, ch: any) {
+  const total = !!ch.refunded || (Number(ch.amount_refunded ?? 0) >= Number(ch.amount ?? 0) && Number(ch.amount ?? 0) > 0);
+  if (!total) {
+    log("estorno parcial; pagamento mantido como pago", { charge: ch.id, amount_refunded: ch.amount_refunded });
+    return;
+  }
+  const { data, error } = await supabase
+    .from("pagamentos")
+    .update({ status: "estornado" })
+    .eq("stripe_charge_id", ch.id)
+    .select("id");
+  if (error) {
+    logErr("falha ao marcar estorno por charge", { charge: ch.id, error });
+    return;
+  }
+  if (data && data.length > 0) return;
+
+  const piId = typeof ch.payment_intent === "string" ? ch.payment_intent : ch.payment_intent?.id;
+  if (!piId) {
+    log("estorno sem pagamento correspondente", { charge: ch.id });
+    return;
+  }
+  const { data: d2, error: e2 } = await supabase
+    .from("pagamentos")
+    .update({ status: "estornado" })
+    .eq("stripe_payment_intent_id", piId)
+    .select("id");
+  if (e2) logErr("falha ao marcar estorno por payment_intent", { piId, e2 });
+  else if (!d2?.length) log("estorno sem pagamento correspondente", { charge: ch.id, piId });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -367,6 +590,34 @@ Deno.serve(async (req) => {
           .from("tenants_private")
           .update({ stripe_onboarding_completed: completed })
           .eq("stripe_account_id", acc.id);
+        break;
+      }
+
+      // ====== Novos: registro de pagamentos para o painel "Meu negócio" ======
+      case "invoice.paid": {
+        try {
+          await registrarInvoicePaga(stripe, supabase, event.data.object);
+        } catch (e) {
+          logErr("erro inesperado em invoice.paid", { e: String(e) });
+        }
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        try {
+          await registrarInvoiceFalha(supabase, event.data.object);
+        } catch (e) {
+          logErr("erro inesperado em invoice.payment_failed", { e: String(e) });
+        }
+        break;
+      }
+
+      case "charge.refunded": {
+        try {
+          await registrarEstorno(supabase, event.data.object);
+        } catch (e) {
+          logErr("erro inesperado em charge.refunded", { e: String(e) });
+        }
         break;
       }
 

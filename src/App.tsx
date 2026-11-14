@@ -82,6 +82,7 @@ import SiteAdminPlaceholder from "./pages/site-admin/Placeholder";
 import SiteAdminAparencia from "./pages/site-admin/Aparencia";
 import SiteAdminLandingEditor from "./pages/site-admin/LandingEditor";
 import SiteAdminFinanceiro from "./pages/site-admin/Financeiro";
+import SiteAdminMeuNegocio from "./pages/site-admin/MeuNegocio";
 import SiteAdminMontarTreino from "./pages/site-admin/MontarTreino";
 import SiteAdminVideosTecnicos from "./pages/site-admin/VideosTecnicos";
 import SiteAdminBaseConhecimento from "./pages/site-admin/BaseConhecimento";
@@ -260,6 +261,7 @@ const App = () => (
             <Route path="/site/admin" element={<SiteAdminLayout />}>
               <Route index element={<Navigate to="/site/admin/dashboard" replace />} />
               <Route path="dashboard" element={<SiteAdminDashboard />} />
+              <Route path="meu-negocio" element={<SiteAdminMeuNegocio />} />
               <Route path="alunos" element={<SiteAdminAlunos />} />
               <Route path="alunos/novo" element={<SiteAdminNovoAluno />} />
               <Route path="link-divulgacao" element={<LinkDivulgacaoContent />} />

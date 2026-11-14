@@ -52,3 +52,9 @@
 - [x] Palavra "Voltar" retirada de Controle Central, Parceiros, Comunidade e Dojo do CT; comparativo perdeu a linha de voltar duplicada.
 - [x] Títulos do cabeçalho sem corte: "MINHA DIETA" e "EVOLUÇÃO" medidos inteiros em 384px; "EVOLUÇÃO…" perdeu as reticências.
 - [ ] Conferir com conta real: Supabase externo sem sessão de teste; a conferência visual foi feita em rota temporária já removida.
+
+## Painel "Meu negócio" (pedido 14/nov)
+- [x] Webhook: registrar pagamentos pagos, falhos e estornados sem tocar nos eventos atuais (publicado; aguardando venda real para conferir)
+- [x] Página "Meu negócio" com resumo, indicadores, receita por produto e lista de alunos com ficha
+- [x] Testes das regras de cálculo (10 aprovados)
+- [ ] Conferir a página com conta real de coach: bloqueado (Supabase externo sem sessão de teste); conferida com dados de exemplo
