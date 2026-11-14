@@ -80,6 +80,11 @@
     --sidebar-accent-foreground: 0 0% 98%;
     --sidebar-border: 0 0% 18%;
     --sidebar-ring: 355 100% 48%;
+
+    /* Semáforo dos indicadores do painel "Meu negócio" */
+    --semaforo-verde: 142 70% 42%;
+    --semaforo-amarelo: 45 95% 52%;
+    --semaforo-vermelho: 355 100% 48%;
   }
 }
 
