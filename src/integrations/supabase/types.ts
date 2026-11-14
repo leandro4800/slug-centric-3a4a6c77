@@ -634,6 +634,57 @@ export type Database = {
           },
         ]
       }
+      assinatura_eventos: {
+        Row: {
+          aluno_id: string
+          aluno_nome: string | null
+          assinatura_id: string | null
+          created_at: string
+          detalhe: Json
+          id: string
+          ocorreu_em: string
+          tenant_id: string
+          tipo: string
+        }
+        Insert: {
+          aluno_id: string
+          aluno_nome?: string | null
+          assinatura_id?: string | null
+          created_at?: string
+          detalhe?: Json
+          id?: string
+          ocorreu_em?: string
+          tenant_id: string
+          tipo: string
+        }
+        Update: {
+          aluno_id?: string
+          aluno_nome?: string | null
+          assinatura_id?: string | null
+          created_at?: string
+          detalhe?: Json
+          id?: string
+          ocorreu_em?: string
+          tenant_id?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assinatura_eventos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assinatura_eventos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       assinaturas: {
         Row: {
           aluno_id: string
@@ -643,6 +694,7 @@ export type Database = {
           created_at: string
           current_period_end: string | null
           id: string
+          origem: string
           plano_id: string | null
           status: Database["public"]["Enums"]["assinatura_status"]
           stripe_customer_id: string | null
@@ -658,6 +710,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
+          origem?: string
           plano_id?: string | null
           status?: Database["public"]["Enums"]["assinatura_status"]
           stripe_customer_id?: string | null
@@ -673,6 +726,7 @@ export type Database = {
           created_at?: string
           current_period_end?: string | null
           id?: string
+          origem?: string
           plano_id?: string | null
           status?: Database["public"]["Enums"]["assinatura_status"]
           stripe_customer_id?: string | null
@@ -2513,6 +2567,66 @@ export type Database = {
           },
         ]
       }
+      despesas: {
+        Row: {
+          categoria: string
+          created_at: string
+          criado_por: string | null
+          data: string
+          descricao: string | null
+          fixa: boolean
+          gasto_captacao: boolean
+          id: string
+          origem: string
+          tenant_id: string
+          updated_at: string
+          valor_centavos: number
+        }
+        Insert: {
+          categoria: string
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string | null
+          fixa?: boolean
+          gasto_captacao?: boolean
+          id?: string
+          origem?: string
+          tenant_id: string
+          updated_at?: string
+          valor_centavos: number
+        }
+        Update: {
+          categoria?: string
+          created_at?: string
+          criado_por?: string | null
+          data?: string
+          descricao?: string | null
+          fixa?: boolean
+          gasto_captacao?: boolean
+          id?: string
+          origem?: string
+          tenant_id?: string
+          updated_at?: string
+          valor_centavos?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "despesas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "despesas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       dicionario_tecnicas: {
         Row: {
           created_at: string | null
@@ -3214,6 +3328,93 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: []
+      }
+      pagamentos: {
+        Row: {
+          aluno_id: string | null
+          aluno_nome: string | null
+          assinatura_id: string | null
+          created_at: string
+          data_pagamento: string | null
+          data_vencimento: string | null
+          id: string
+          origem: string
+          plano_id: string | null
+          produto_nome: string | null
+          produto_tipo: string
+          status: string
+          stripe_charge_id: string | null
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
+          taxa_alpha_centavos: number
+          taxa_cartao_centavos: number
+          tenant_id: string
+          updated_at: string
+          valor_bruto_centavos: number
+          valor_liquido_centavos: number | null
+        }
+        Insert: {
+          aluno_id?: string | null
+          aluno_nome?: string | null
+          assinatura_id?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          id?: string
+          origem?: string
+          plano_id?: string | null
+          produto_nome?: string | null
+          produto_tipo?: string
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          taxa_alpha_centavos?: number
+          taxa_cartao_centavos?: number
+          tenant_id: string
+          updated_at?: string
+          valor_bruto_centavos: number
+          valor_liquido_centavos?: number | null
+        }
+        Update: {
+          aluno_id?: string | null
+          aluno_nome?: string | null
+          assinatura_id?: string | null
+          created_at?: string
+          data_pagamento?: string | null
+          data_vencimento?: string | null
+          id?: string
+          origem?: string
+          plano_id?: string | null
+          produto_nome?: string | null
+          produto_tipo?: string
+          status?: string
+          stripe_charge_id?: string | null
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          taxa_alpha_centavos?: number
+          taxa_cartao_centavos?: number
+          tenant_id?: string
+          updated_at?: string
+          valor_bruto_centavos?: number
+          valor_liquido_centavos?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pagamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pagamentos_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
       }
       parceiros: {
         Row: {
