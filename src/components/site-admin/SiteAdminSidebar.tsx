@@ -3,7 +3,7 @@ import {
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
   LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag, GraduationCap,
   ChevronLeft, ChevronRight, Video, ShieldCheck, Crown, HeartPulse, BookOpen,
-  Link as LinkIcon, Timer, ListOrdered,
+  Link as LinkIcon, Timer, ListOrdered, BriefcaseBusiness,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -33,6 +33,7 @@ const baseItems: Item[] = [
   { to: "/site/admin/saude-lesoes", label: "Saúde & lesões", icon: HeartPulse, section: "Programação" },
 
 
+  { to: "/site/admin/meu-negocio", label: "Meu negócio", icon: BriefcaseBusiness, section: "Negócio" },
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench, section: "Negócio" },
   { to: "/site/admin/integracao-ia", label: "Integração com IA", icon: Bot, section: "Negócio" },
   { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet, section: "Negócio" },

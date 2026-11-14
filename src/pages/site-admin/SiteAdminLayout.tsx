@@ -5,7 +5,7 @@ import { SiteTenantProvider, useSiteTenant } from "@/hooks/use-site-tenant";
 import { SiteAdminSidebar } from "@/components/site-admin/SiteAdminSidebar";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Link as LinkIcon } from "lucide-react";
+import { Link as LinkIcon, BriefcaseBusiness } from "lucide-react";
 
 const mobileItems = [
   { to: "/site/admin/dashboard", label: "Resumo", icon: Home },
@@ -19,6 +19,7 @@ const mobileItems = [
   { to: "/site/admin/avaliacao-fisica", label: "Avaliação", icon: Ruler },
   { to: "/site/admin/metricas", label: "Métricas", icon: Activity },
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench },
+  { to: "/site/admin/meu-negocio", label: "Meu negócio", icon: BriefcaseBusiness },
   { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet },
   { to: "/site/admin/aparencia", label: "Aparência", icon: Palette },
   { to: "/site/admin/meu-perfil", label: "Meu perfil", icon: UserCog },
