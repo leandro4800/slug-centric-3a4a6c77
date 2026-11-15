@@ -607,3 +607,121 @@ export function textoComparacao(atual: number, anterior: number, rotulo: string,
   const pct = Math.round(v * 100);
   return `${pct > 0 ? "+" : ""}${pct}% vs ${rotulo.toLowerCase()}`;
 }
+
+// ============================================================================
+// Telas de detalhe dos cartões do Resumo
+// ============================================================================
+
+const diaKey = (d: Date) => `${mesKey(d)}-${String(d.getDate()).padStart(2, "0")}`;
+
+/** Receita paga por dia, do mais antigo ao dia de hoje. */
+export function receitaDiaria(pagamentos: Pagamento[], dias = 30, now: Date = new Date()) {
+  const hoje0 = startOfDay(now);
+  return Array.from({ length: dias }, (_, i) => {
+    const inicio = addDays(hoje0, i - (dias - 1));
+    return {
+      key: diaKey(inicio),
+      label: `${String(inicio.getDate()).padStart(2, "0")}/${String(inicio.getMonth() + 1).padStart(2, "0")}`,
+      inicio,
+      valor: receita(pagamentos, { inicio, fim: addDays(inicio, 1) }),
+    };
+  });
+}
+
+/** Receita paga por semana (blocos de 7 dias terminando hoje). */
+export function receitaSemanal(pagamentos: Pagamento[], semanas = 13, now: Date = new Date()) {
+  const fimHoje = addDays(startOfDay(now), 1);
+  return Array.from({ length: semanas }, (_, i) => {
+    const fim = addDays(fimHoje, -7 * (semanas - 1 - i));
+    const inicio = addDays(fim, -7);
+    return {
+      key: diaKey(inicio),
+      label: `${String(inicio.getDate()).padStart(2, "0")}/${String(inicio.getMonth() + 1).padStart(2, "0")}`,
+      valor: receita(pagamentos, { inicio, fim }),
+    };
+  });
+}
+
+/** Período dos últimos N dias (inclui hoje) e o período anterior do mesmo tamanho. */
+export function periodoDias(dias: number, now: Date = new Date()): { atual: Periodo; anterior: Periodo } {
+  const fim = addDays(startOfDay(now), 1);
+  const inicio = addDays(fim, -dias);
+  return { atual: { inicio, fim }, anterior: { inicio: addDays(inicio, -dias), fim: inicio } };
+}
+
+/** Pagamentos pagos no período, do mais recente ao mais antigo. */
+export function pagamentosPagos(pagamentos: Pagamento[], p: Periodo): Pagamento[] {
+  return pagamentos
+    .filter((x) => x.status === "pago" && inPeriodo(dataPagamento(x), p))
+    .sort((a, b) => dataPagamento(b).localeCompare(dataPagamento(a)));
+}
+
+/** Ticket médio por aluno em cada um dos últimos N meses. */
+export function ticketMensal(pagamentos: Pagamento[], meses = 12, now: Date = new Date()) {
+  const atual = startOfMonth(now);
+  return Array.from({ length: meses }, (_, i) => {
+    const inicio = addMonths(atual, i - (meses - 1));
+    return {
+      key: mesKey(inicio),
+      label: inicio.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+      valor: ticketMedio(pagamentos, { inicio, fim: addMonths(inicio, 1) }),
+    };
+  });
+}
+
+/** Quanto cada aluno pagou no período (maior primeiro). */
+export function pagoPorAluno(pagamentos: Pagamento[], p: Periodo) {
+  const m = new Map<string, { aluno_id: string; nome: string | null; total: number; qtd: number }>();
+  for (const x of pagamentosPagos(pagamentos, p)) {
+    const k = x.aluno_id ?? x.id;
+    if (!m.has(k)) m.set(k, { aluno_id: k, nome: x.aluno_nome, total: 0, qtd: 0 });
+    const g = m.get(k)!;
+    g.total += x.valor_bruto_centavos;
+    g.qtd++;
+  }
+  return [...m.values()].sort((a, b) => b.total - a.total);
+}
+
+export type Renovacao = { assinatura_id: string; aluno_id: string; plano: string; valor: number; vence: string; dias: number };
+
+/** Assinaturas pagas (não gratuitas) que renovam nos próximos N dias, da mais próxima à mais distante. */
+export function renovacoesProximas(
+  assinaturas: Assinatura[],
+  planos: Plano[],
+  dias = 30,
+  now: Date = new Date(),
+): Renovacao[] {
+  const byId = new Map(planos.map((pl) => [pl.id, pl]));
+  const limite = now.getTime() + dias * 24 * 60 * 60 * 1000;
+  return assinaturas
+    .filter((a) => {
+      if (!isAtiva(a) || a.origem === "gratuito" || !a.current_period_end) return false;
+      const t = new Date(a.current_period_end).getTime();
+      return t >= now.getTime() && t <= limite;
+    })
+    .map((a) => {
+      const pl = a.plano_id ? byId.get(a.plano_id) : undefined;
+      return {
+        assinatura_id: a.id,
+        aluno_id: a.aluno_id,
+        plano: pl?.nome ?? "Plano",
+        valor: pl?.preco_centavos ?? 0,
+        vence: a.current_period_end!,
+        dias: Math.max(0, Math.ceil((new Date(a.current_period_end!).getTime() - startOfDay(now).getTime()) / 86400000) - 1),
+      };
+    })
+    .sort((a, b) => a.vence.localeCompare(b.vence));
+}
+
+/** Pagamentos em atraso, do mais antigo ao mais recente. */
+export const pagamentosAtrasados = (pagamentos: Pagamento[]) =>
+  pagamentos.filter((x) => x.status === "vencido").sort((a, b) => dataCobranca(a).localeCompare(dataCobranca(b)));
+
+/** Progresso da meta do mês: quanto falta e quanto vender por dia até o fim do mês (inclui hoje). */
+export function progressoMeta(meta: number | null, vendido: number, now: Date = new Date()) {
+  const ultimoDia = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+  const diasRestantes = ultimoDia - now.getDate() + 1;
+  if (!meta || meta <= 0) return { pct: null as number | null, falta: null as number | null, diasRestantes, porDia: null as number | null };
+  const falta = Math.max(0, meta - vendido);
+  return { pct: vendido / meta, falta, diasRestantes, porDia: falta === 0 ? 0 : Math.ceil(falta / diasRestantes) };
+}
