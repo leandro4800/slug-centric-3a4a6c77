@@ -293,13 +293,13 @@ const ResumoDetalhe = () => {
   const { tenant, loading } = useSiteTenant();
   const { data, isLoading, error, refetch } = useMeuNegocio(tenant?.id);
 
-  if (!TEMAS_RESUMO.includes(tema as Tema)) return <Navigate to="/site/admin" replace />;
+  if (!TEMAS_RESUMO.includes(tema as Tema)) return <Navigate to="/site/admin/dashboard" replace />;
   const t = tema as Tema;
   const { titulo, icon: Icon } = TITULOS[t];
 
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 md:p-8">
-      <AdminBackButton to="/site/admin" />
+      <AdminBackButton to="/site/admin/dashboard" />
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Métricas financeiras</p>

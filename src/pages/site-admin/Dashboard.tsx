@@ -17,15 +17,11 @@ import imgAvaliacao from "@/assets/dash-avaliacao.jpg";
 import imgMoney from "@/assets/dash-money.jpg";
 import imgChart from "@/assets/dash-chart.jpg";
 import imgTarget from "@/assets/dash-target.jpg";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMeuNegocio } from "@/hooks/use-meu-negocio";
 import { resumoFinanceiro, textoComparacao, formatBRL, formatPct } from "@/lib/meu-negocio-metrics";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { useMetaMensal } from "@/hooks/use-meta-mensal";
 
-const META_CHAVE = "meta_mensal_centavos";
-const NEGOCIO = "/site/admin/meu-negocio";
+const RESUMO = "/site/admin/resumo";
 
 const Dashboard = () => {
   const { tenant } = useSiteTenant();
@@ -42,11 +38,6 @@ const Dashboard = () => {
   const heroInputRef = useRef<HTMLInputElement>(null);
   const [stripeIncomplete, setStripeIncomplete] = useState(false);
   const [stripeBusy, setStripeBusy] = useState(false);
-  const [metaOpen, setMetaOpen] = useState(false);
-  const [metaInput, setMetaInput] = useState("");
-  const [metaSaving, setMetaSaving] = useState(false);
-  const queryClient = useQueryClient();
-
   // Métricas financeiras: mesma fonte e mesmas regras de "Meu negócio".
   const negocio = useMeuNegocio(tenant?.id);
   const fin = negocio.data
@@ -58,52 +49,7 @@ const Dashboard = () => {
       })
     : null;
 
-  const metaQuery = useQuery({
-    queryKey: ["meta-mensal", tenant?.id],
-    enabled: !!tenant?.id,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("configuracoes_tenant")
-        .select("valor")
-        .eq("tenant_id", tenant!.id)
-        .eq("chave", META_CHAVE)
-        .maybeSingle();
-      if (error) throw error;
-      const n = Number(data?.valor);
-      return Number.isFinite(n) && n > 0 ? n : null;
-    },
-  });
-  const meta = metaQuery.data ?? null;
-
-  const abrirMeta = () => {
-    setMetaInput(meta ? String(Math.round(meta / 100)) : "");
-    setMetaOpen(true);
-  };
-
-  const salvarMeta = async () => {
-    if (!tenant?.id) return;
-    const reais = Number(metaInput.replace(/\./g, "").replace(",", "."));
-    if (!Number.isFinite(reais) || reais <= 0) {
-      toast.error("Digite um valor maior que zero.");
-      return;
-    }
-    setMetaSaving(true);
-    const { error } = await supabase
-      .from("configuracoes_tenant")
-      .upsert(
-        { tenant_id: tenant.id, chave: META_CHAVE, valor: String(Math.round(reais * 100)), updated_at: new Date().toISOString() },
-        { onConflict: "tenant_id,chave" },
-      );
-    setMetaSaving(false);
-    if (error) {
-      toast.error("Não foi possível salvar a meta.");
-      return;
-    }
-    await queryClient.invalidateQueries({ queryKey: ["meta-mensal", tenant.id] });
-    toast.success("Meta mensal salva!");
-    setMetaOpen(false);
-  };
-
+  const { meta } = useMetaMensal(tenant?.id);
 
   useEffect(() => {
     if (!tenant?.id) return;
@@ -423,13 +369,13 @@ const Dashboard = () => {
         {/* MÉTRICAS FINANCEIRAS */}
         <Row title="Métricas financeiras" subtitle="Em destaque">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <PosterCard to={NEGOCIO} label="Resumo diário" value={money(fin?.hoje)} sub={fin ? textoComparacao(fin.hoje, fin.ontem, "Ontem", "Igual ao dia anterior") : "Carregando..."} image={imgMoney} tone="from-emerald-500/60" />
-            <PosterCard to={NEGOCIO} label="Vendas por período" value={money(fin?.semana)} sub={fin ? textoComparacao(fin.semana, fin.semanaAnterior, "Semana passada", "Igual à semana passada") : "Últimos 7 dias"} image={imgChart} tone="from-sky-500/60" />
-            <PosterCard to={NEGOCIO} label="Vendas mensais" value={money(fin?.mes)} sub="Mês atual" image={imgMoney} tone="from-amber-500/60" />
-            <PosterCard to={NEGOCIO} label="Ticket médio" value={fin ? formatBRL(fin.ticket ?? 0) : "—"} sub="Por aluno no mês" image={imgChart} tone="from-cyan-500/60" />
-            <PosterCard to={NEGOCIO} label="Renovação esperada" value={money(fin?.renovacao30d)} sub={fin ? `${fin.renovacao30dQtd} ${fin.renovacao30dQtd === 1 ? "aluno" : "alunos"} · próximos 30 dias` : "Próximos 30 dias"} image={imgMoney} tone="from-fuchsia-500/60" />
+            <PosterCard to={`${RESUMO}/diario`} label="Resumo diário" value={money(fin?.hoje)} sub={fin ? textoComparacao(fin.hoje, fin.ontem, "Ontem", "Igual ao dia anterior") : "Carregando..."} image={imgMoney} tone="from-emerald-500/60" />
+            <PosterCard to={`${RESUMO}/periodo`} label="Vendas por período" value={money(fin?.semana)} sub={fin ? textoComparacao(fin.semana, fin.semanaAnterior, "Semana passada", "Igual à semana passada") : "Últimos 7 dias"} image={imgChart} tone="from-sky-500/60" />
+            <PosterCard to={`${RESUMO}/mensal`} label="Vendas mensais" value={money(fin?.mes)} sub="Mês atual" image={imgMoney} tone="from-amber-500/60" />
+            <PosterCard to={`${RESUMO}/ticket`} label="Ticket médio" value={fin ? formatBRL(fin.ticket ?? 0) : "—"} sub="Por aluno no mês" image={imgChart} tone="from-cyan-500/60" />
+            <PosterCard to={`${RESUMO}/renovacao`} label="Renovação esperada" value={money(fin?.renovacao30d)} sub={fin ? `${fin.renovacao30dQtd} ${fin.renovacao30dQtd === 1 ? "aluno" : "alunos"} · próximos 30 dias` : "Próximos 30 dias"} image={imgMoney} tone="from-fuchsia-500/60" />
             <PosterCard
-              onClick={abrirMeta}
+              to={`${RESUMO}/meta`}
               label="Meta mensal"
               value={money(fin?.mes)}
               sub={meta ? `${Math.round(((fin?.mes ?? 0) / meta) * 100)}% de ${formatBRL(meta)}` : "Toque para definir sua meta"}
@@ -475,31 +421,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <Dialog open={metaOpen} onOpenChange={setMetaOpen}>
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Meta mensal de vendas</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-2">
-            <label htmlFor="meta-mensal" className="text-xs text-muted-foreground">Quanto você quer vender por mês (R$)</label>
-            <Input
-              id="meta-mensal"
-              inputMode="decimal"
-              placeholder="Ex.: 10000"
-              value={metaInput}
-              onChange={(e) => setMetaInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") salvarMeta(); }}
-            />
-            {fin && <p className="text-xs text-muted-foreground">Vendido neste mês: {formatBRL(fin.mes)}</p>}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setMetaOpen(false)}>Cancelar</Button>
-            <Button onClick={salvarMeta} disabled={metaSaving}>
-              {metaSaving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar meta
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
