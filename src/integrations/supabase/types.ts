@@ -758,6 +758,156 @@ export type Database = {
           },
         ]
       }
+      assistente_alertas: {
+        Row: {
+          adiar_ate: string | null
+          aluno_id: string | null
+          aluno_nome: string | null
+          chave_dedupe: string
+          created_at: string
+          detalhe: Json
+          estado: string
+          id: string
+          prioridade: number
+          resumo_enviado_em: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          adiar_ate?: string | null
+          aluno_id?: string | null
+          aluno_nome?: string | null
+          chave_dedupe: string
+          created_at?: string
+          detalhe?: Json
+          estado?: string
+          id?: string
+          prioridade?: number
+          resumo_enviado_em?: string | null
+          tenant_id: string
+          tipo: string
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          adiar_ate?: string | null
+          aluno_id?: string | null
+          aluno_nome?: string | null
+          chave_dedupe?: string
+          created_at?: string
+          detalhe?: Json
+          estado?: string
+          id?: string
+          prioridade?: number
+          resumo_enviado_em?: string | null
+          tenant_id?: string
+          tipo?: string
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistente_alertas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistente_alertas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
+      assistente_config: {
+        Row: {
+          canal_email: boolean
+          canal_push: boolean
+          created_at: string
+          resumo_ativo: boolean
+          resumo_hora: number
+          tenant_id: string
+          tipos: Json
+          ultimo_resumo_data: string | null
+          updated_at: string
+        }
+        Insert: {
+          canal_email?: boolean
+          canal_push?: boolean
+          created_at?: string
+          resumo_ativo?: boolean
+          resumo_hora?: number
+          tenant_id: string
+          tipos?: Json
+          ultimo_resumo_data?: string | null
+          updated_at?: string
+        }
+        Update: {
+          canal_email?: boolean
+          canal_push?: boolean
+          created_at?: string
+          resumo_ativo?: boolean
+          resumo_hora?: number
+          tenant_id?: string
+          tipos?: Json
+          ultimo_resumo_data?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistente_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistente_config_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: true
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
+      assistente_uso: {
+        Row: {
+          mensagens: number
+          mes: string
+          tenant_id: string
+        }
+        Insert: {
+          mensagens?: number
+          mes: string
+          tenant_id: string
+        }
+        Update: {
+          mensagens?: number
+          mes?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assistente_uso_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assistente_uso_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "v_coach_dashboard_kpis"
+            referencedColumns: ["tenant_id"]
+          },
+        ]
+      }
       aulas_avulsas: {
         Row: {
           aluno_id: string | null
@@ -5321,6 +5471,7 @@ export type Database = {
       }
       current_user_tenant: { Args: never; Returns: string }
       email_is_registered: { Args: { _email: string }; Returns: boolean }
+      gerar_alertas_assistente: { Args: { p_tenant?: string }; Returns: number }
       get_community_members: {
         Args: { _tenant_id: string }
         Returns: {
