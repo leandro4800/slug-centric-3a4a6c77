@@ -149,3 +149,27 @@ describe("importar planilha de despesas", () => {
     expect(r.validas[0]).toMatchObject({ data: "2026-11-03", categoria: "equipamento", valor_centavos: 32050 });
   });
 });
+
+import { custoFixoMensal, despesasMensais } from "@/lib/meu-negocio-metrics";
+
+describe("tela de despesas: gráfico mensal e custos fixos", () => {
+  const agora = new Date(2026, 10, 15);
+  const base = { descricao: null, gasto_captacao: false };
+  const lista = [
+    { ...base, id: "f", categoria: "aluguel_academia", valor_centavos: 100000, data: "2026-09-01", fixa: true },
+    { ...base, id: "a", categoria: "equipamento", valor_centavos: 30000, data: "2026-10-10", fixa: false },
+  ];
+  it("custo fixo entra em todos os meses desde o início, até o mês atual", () => {
+    const m = despesasMensais(lista, 12, agora);
+    expect(m).toHaveLength(12);
+    expect(m[m.length - 1].key).toBe("2026-11");
+    const porMes = Object.fromEntries(m.map((x) => [x.key, x]));
+    expect(porMes["2026-08"].total).toBe(0);
+    expect(porMes["2026-09"].fixas).toBe(100000);
+    expect(porMes["2026-10"]).toMatchObject({ fixas: 100000, avulsas: 30000, total: 130000 });
+    expect(porMes["2026-11"].total).toBe(100000);
+  });
+  it("soma dos custos fixos por mês", () => {
+    expect(custoFixoMensal(lista)).toBe(100000);
+  });
+});
