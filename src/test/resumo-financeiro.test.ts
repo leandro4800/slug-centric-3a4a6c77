@@ -53,3 +53,38 @@ describe("textoComparacao", () => {
     expect(textoComparacao(100, 0, "Ontem", "x")).toMatch(/^Ontem: R\$\s0,00$/);
   });
 });
+
+import { progressoMeta, renovacoesProximas, receitaDiaria, pagoPorAluno, periodoDias } from "@/lib/meu-negocio-metrics";
+
+describe("telas de detalhe", () => {
+  it("receita diária termina hoje e soma só pagos", () => {
+    const d = receitaDiaria([pg(new Date(2026, 10, 15, 9)), pg(new Date(2026, 10, 14, 9), 60000, { status: "estornado" })], 7, now);
+    expect(d).toHaveLength(7);
+    expect(d[6].label).toBe("15/11");
+    expect(d[6].valor).toBe(60000);
+    expect(d[5].valor).toBe(0);
+  });
+
+  it("pago por aluno agrupa e ordena do maior para o menor", () => {
+    const { atual } = periodoDias(30, now);
+    const r = pagoPorAluno([pg(new Date(2026, 10, 10), 60000), pg(new Date(2026, 10, 12), 60000), pg(new Date(2026, 10, 11), 162000, { aluno_id: "a2" })], atual);
+    expect(r.map((x) => [x.aluno_id, x.total, x.qtd])).toEqual([["a2", 162000, 1], ["a1", 120000, 2]]);
+  });
+
+  it("renovações próximas ignoram gratuitos e mostram plano e valor", () => {
+    const r = renovacoesProximas([sub({}), sub({ aluno_id: "a2", origem: "gratuito" })], planos, 30, now);
+    expect(r).toHaveLength(1);
+    expect(r[0]).toMatchObject({ aluno_id: "a1", plano: "Mensal", valor: 60000 });
+  });
+
+  it("meta: falta e valor por dia até o fim do mês", () => {
+    // 15/nov → 16 dias restantes contando hoje
+    const m = progressoMeta(1000000, 200000, now);
+    expect(m.diasRestantes).toBe(16);
+    expect(m.falta).toBe(800000);
+    expect(m.porDia).toBe(50000);
+    expect(m.pct).toBeCloseTo(0.2);
+    expect(progressoMeta(null, 100, now).pct).toBeNull();
+    expect(progressoMeta(1000, 5000, now).falta).toBe(0);
+  });
+});
