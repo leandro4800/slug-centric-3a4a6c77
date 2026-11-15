@@ -33,10 +33,6 @@ export const ResumoGrafico = ({
           <BarChart
             data={dados.map((d) => ({ ...d, valor: d.valor ?? 0 }))}
             margin={{ top: 8, right: 0, bottom: 0, left: 0 }}
-            onClick={(e: { activePayload?: { payload: Ponto }[] } | null) => {
-              const k = e?.activePayload?.[0]?.payload?.key;
-              if (k && onSelecionar) onSelecionar(k);
-            }}
           >
             <XAxis
               dataKey="label"
@@ -60,7 +56,15 @@ export const ResumoGrafico = ({
                 label={{ value: referenciaLabel, position: "insideTopRight", fill: "hsl(var(--muted-foreground))", fontSize: 10 }}
               />
             ) : null}
-            <Bar dataKey="valor" minPointSize={2} cursor={onSelecionar ? "pointer" : undefined}>
+            <Bar
+              dataKey="valor"
+              minPointSize={2}
+              cursor={onSelecionar ? "pointer" : undefined}
+              onClick={(_: unknown, index: number) => {
+                const k = dados[index]?.key;
+                if (k && onSelecionar) onSelecionar(k);
+              }}
+            >
               {dados.map((d) => (
                 <Cell
                   key={d.key}
