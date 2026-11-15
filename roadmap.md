@@ -69,3 +69,7 @@
 - [ ] Mensagem personalizada por IA (mínimo de dados, cota mensal) e "Pergunte ao seu negócio" com funções seguras por tenant
 - [ ] Risco de cancelamento por regras simples
 - [ ] Testes das regras
+
+## Tela própria de despesas (pedido 15/nov)
+- [ ] Página de despesas no painel do coach com gráfico mensal
+- [ ] Seção de custos fixos para lançar direto (sem planilha)
