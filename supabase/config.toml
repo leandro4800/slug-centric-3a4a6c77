@@ -12,6 +12,12 @@ additional_redirect_urls = [
 ]
 
 [functions]
+  [functions.assistente-resumo]
+    # Chamado só pela rotina do banco com a chave de serviço (validada na borda e no código).
+    verify_jwt = true
+  [functions.assistente-ia]
+    # JWT validado no código com auth.getUser().
+    verify_jwt = false
   [functions.analise-evolucao]
     verify_jwt = true
   [functions.analise-performance]
