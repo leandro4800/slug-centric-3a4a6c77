@@ -3,6 +3,7 @@ import { Search, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { DIAS_SUMINDO } from "@/lib/meu-negocio-metrics";
+import type { NivelRisco } from "@/lib/assistente";
 
 export type AlunoLinha = {
   id: string;
@@ -11,6 +12,8 @@ export type AlunoLinha = {
   ativo: boolean;
   gratuito: boolean;
   sumindo: boolean;
+  nuncaTreinou: boolean;
+  risco: NivelRisco;
   saiu: boolean;
   voltou: boolean;
   diasSemTreino: number | null;
@@ -18,11 +21,13 @@ export type AlunoLinha = {
   desdeFallback: string | null;
 };
 
-export type FiltroAluno = "ativos" | "sumindo" | "sairam" | "voltaram" | "gratuitos";
+export type FiltroAluno = "ativos" | "sumindo" | "nunca" | "risco" | "sairam" | "voltaram" | "gratuitos";
 
 const FILTROS: { key: FiltroAluno; label: string; test: (a: AlunoLinha) => boolean }[] = [
   { key: "ativos", label: "Ativos", test: (a) => a.ativo },
   { key: "sumindo", label: "Sumindo", test: (a) => a.sumindo },
+  { key: "risco", label: "Risco de sair", test: (a) => a.ativo && !!a.risco },
+  { key: "nunca", label: "Nunca treinaram", test: (a) => a.ativo && a.nuncaTreinou },
   { key: "sairam", label: "Saíram", test: (a) => a.saiu },
   { key: "voltaram", label: "Voltaram", test: (a) => a.voltou },
   { key: "gratuitos", label: "Gratuitos", test: (a) => a.gratuito },
@@ -101,6 +106,7 @@ export const AlunosLista = ({ alunos, meses, filtro, onFiltro, onAbrir }: Props)
                       {a.gratuito ? "Gratuito" : a.ativo ? "Pagante" : "Saiu"}
                       {a.ativo && (a.diasSemTreino === null ? " · ainda não treinou" : ` · treinou há ${a.diasSemTreino} d`)}
                       {a.sumindo && a.diasSemTreino !== null && a.diasSemTreino >= DIAS_SUMINDO && <span className="text-primary"> · sumindo</span>}
+                      {a.ativo && a.risco && <span className="text-primary"> · risco {a.risco === "alto" ? "alto" : "médio"} de sair</span>}
                     </p>
                   </div>
                 </div>
