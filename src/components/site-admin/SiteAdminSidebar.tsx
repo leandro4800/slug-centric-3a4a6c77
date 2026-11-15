@@ -1,5 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 import {
+  Receipt,
   Home, Users, UserPlus, Dumbbell, Apple, Ruler, Palette, Wallet, Activity,
   LogOut, Calendar, Wrench, UserCog, LifeBuoy, Bot, Swords, Utensils, Tag, GraduationCap,
   ChevronLeft, ChevronRight, Video, ShieldCheck, Crown, HeartPulse, BookOpen,
@@ -34,6 +35,7 @@ const baseItems: Item[] = [
 
 
   { to: "/site/admin/meu-negocio", label: "Meu negócio", icon: BriefcaseBusiness, section: "Negócio" },
+  { to: "/site/admin/despesas", label: "Despesas", icon: Receipt, section: "Negócio" },
   { to: "/site/admin/ferramentas", label: "Ferramentas", icon: Wrench, section: "Negócio" },
   { to: "/site/admin/integracao-ia", label: "Integração com IA", icon: Bot, section: "Negócio" },
   { to: "/site/admin/faturamento", label: "Financeiro", icon: Wallet, section: "Negócio" },
