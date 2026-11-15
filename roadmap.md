@@ -78,6 +78,7 @@
 
 ## Alunos demo do coach Nelson Junior (pedido 15/nov)
 - [x] 10 alunos demo com acesso, perfil, anamnese, treinos copiados de fichas reais e histórico de treinos
-- [ ] Planos Mensal R$ 600, Trimestral, Semestral e Anual com desconto; alunos demo ativos nesses planos e pagamentos recalculados
-- [ ] Completar séries dos treinos que faltaram (Camila, Juliana, Fernanda)
-- [ ] Dieta publicada, peso/avaliações de evolução, despesas e alertas do assistente para o painel ficar completo
+- [x] Planos Mensal R$ 600, Trimestral R$ 1.620, Semestral R$ 3.060 e Anual R$ 5.760 (ativos); alunos demo ativos nesses planos e pagamentos recalculados
+- [x] Séries registradas em todos os 639 treinos (nenhum treino vazio)
+- [x] Dieta publicada, peso semanal, avaliações e check-ins mensais, despesas demo e 3 alertas do assistente; app do aluno Lucas conferido (treino e dieta)
+- [ ] Conferir o painel com a conta do Nelson: Supabase externo, sem acesso à senha do coach
