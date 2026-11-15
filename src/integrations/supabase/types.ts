@@ -5398,6 +5398,17 @@ export type Database = {
       }
     }
     Functions: {
+      assistente_financeiro_mes: {
+        Args: { p_mes: string; p_tenant: string }
+        Returns: {
+          captacao: number
+          despesas: number
+          pagos: number
+          receita: number
+          receita_bruta: number
+          ticket: number
+        }[]
+      }
       buscar_conhecimento_treino: {
         Args: {
           match_count?: number
@@ -5470,6 +5481,7 @@ export type Database = {
         Returns: Json
       }
       current_user_tenant: { Args: never; Returns: string }
+      disparar_resumo_assistente: { Args: never; Returns: undefined }
       email_is_registered: { Args: { _email: string }; Returns: boolean }
       gerar_alertas_assistente: { Args: { p_tenant?: string }; Returns: number }
       get_community_members: {
