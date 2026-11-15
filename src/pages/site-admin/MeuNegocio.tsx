@@ -14,6 +14,7 @@ import {
   despesasPorCategoria,
   diasSemTreino,
   estaSumindo,
+  nuncaTreinou,
   formatBRL,
   formatPct,
   getPeriodo,
@@ -46,11 +47,15 @@ import { ReceitaMiniGrafico } from "@/components/site-admin/meu-negocio/ReceitaM
 import { AlunosLista, type AlunoLinha, type FiltroAluno } from "@/components/site-admin/meu-negocio/AlunosLista";
 import { AlunoFicha } from "@/components/site-admin/meu-negocio/AlunoFicha";
 import { DespesasSecao } from "@/components/site-admin/meu-negocio/DespesasSecao";
+import { AssistenteSecao } from "@/components/site-admin/meu-negocio/AssistenteSecao";
+import { useAlertas } from "@/hooks/use-assistente";
+import { riscoCancelamento } from "@/lib/assistente";
 
 const MeuNegocio = () => {
   const { tenant, loading: tenantLoading } = useSiteTenant();
   const { data, isLoading, error, refetch } = useMeuNegocio(tenant?.id);
   const { data: despesas } = useDespesas(tenant?.id);
+  const { data: alertas } = useAlertas(tenant?.id);
   const [periodoKey, setPeriodoKey] = useState<PeriodoKey>("mes_atual");
   const [filtro, setFiltro] = useState<FiltroAluno>("ativos");
   const [aberto, setAberto] = useState<AlunoLinha | null>(null);
@@ -72,12 +77,17 @@ const MeuNegocio = () => {
       if (!eventosPorAluno.has(e.aluno_id)) eventosPorAluno.set(e.aluno_id, []);
       eventosPorAluno.get(e.aluno_id)!.push(e);
     }
+    const atrasadosIds = new Set(pagamentos.filter((p) => p.status === "vencido").map((p) => p.aluno_id));
+    const caindoIds = new Set(
+      (alertas ?? []).filter((a) => a.tipo === "queda_frequencia").map((a) => a.aluno_id),
+    );
     const criadoEm = new Map<string, string>();
     for (const a of assinaturas) if (!criadoEm.has(a.aluno_id)) criadoEm.set(a.aluno_id, a.created_at);
 
     const linhas: AlunoLinha[] = [...alunos.values()].map((info) => {
       const ativo = ativosIds.has(info.id);
       const evs = eventosPorAluno.get(info.id) ?? [];
+      const dias = diasSemTreino(info.ultimo_treino, now);
       return {
         id: info.id,
         nome: info.nome,
@@ -85,9 +95,11 @@ const MeuNegocio = () => {
         ativo,
         gratuito: ativo && !pagantes.has(info.id),
         sumindo: ativo && estaSumindo(info.ultimo_treino, now),
+        nuncaTreinou: ativo && nuncaTreinou(info.ultimo_treino),
+        risco: ativo ? riscoCancelamento({ diasSemTreino: dias, atrasado: atrasadosIds.has(info.id), quedaFrequencia: caindoIds.has(info.id) }) : null,
         saiu: !ativo,
         voltou: ativo && evs.some((e) => e.tipo === "voltou"),
-        diasSemTreino: diasSemTreino(info.ultimo_treino, now),
+        diasSemTreino: dias,
         mesesPagos: mesesPagos.get(info.id) ?? new Set(),
         desdeFallback: criadoEm.get(info.id) ?? null,
       };
@@ -232,11 +244,12 @@ const MeuNegocio = () => {
         recorrente: receitaRecorrente(assinaturas, planos),
         sumindo: linhas.filter((l) => l.sumindo).length,
       },
+      nuncaTreinaram: linhas.filter((l) => l.nuncaTreinou).length,
       produtos: receitaPorProduto(pagamentos, periodo),
       mensal: receitaMensal(pagamentos, 12, now),
       meses: ultimosMeses(12, now),
     };
-  }, [data, despesas, periodoKey]);
+  }, [data, despesas, alertas, periodoKey]);
 
   const verSumindo = () => {
     setFiltro("sumindo");
@@ -285,6 +298,7 @@ const MeuNegocio = () => {
         </div>
       ) : (
         <>
+          <AssistenteSecao tenantId={tenant!.id} alertas={alertas ?? []} nuncaTreinaram={calc.nuncaTreinaram} />
           <ResumoCards {...calc.resumo} onVerSumindo={verSumindo} />
           <ReceitaMiniGrafico dados={calc.mensal} />
           <Indicadores itens={calc.indicadores} />

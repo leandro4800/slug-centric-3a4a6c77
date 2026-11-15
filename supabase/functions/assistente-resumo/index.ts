@@ -45,16 +45,21 @@ Deno.serve(async (req) => {
   if (!isServiceRole(bearer, serviceKey)) return json({ error: "não autorizado" }, 401);
 
   const admin = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey, { auth: { persistSession: false } });
+  // Opcional (só com chave de serviço): limitar a um CT, para conferência manual.
+  const entrada = await req.json().catch(() => ({}));
+  const somenteTenant = typeof entrada?.somente_tenant === "string" ? entrada.somente_tenant : null;
   const { hora, data: hoje, diaSemana } = agoraBrasilia();
   if (!dentroDoHorario(hora)) return json({ ok: true, enviados: 0, motivo: "fora do horário" });
 
   const agoraIso = new Date().toISOString();
-  const { data: pendentes, error } = await admin
+  let consulta = admin
     .from("assistente_alertas")
     .select("id, tenant_id, tipo, prioridade, titulo, aluno_id, created_at")
     .eq("estado", "novo")
     .is("resumo_enviado_em", null)
     .limit(5000);
+  if (somenteTenant) consulta = consulta.eq("tenant_id", somenteTenant);
+  const { data: pendentes, error } = await consulta;
   if (error) return json({ error: error.message }, 500);
   if (!pendentes?.length) return json({ ok: true, enviados: 0 });
 

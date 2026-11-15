@@ -241,10 +241,14 @@ export function diasSemTreino(ultimoTreino: string | null | undefined, now: Date
   return Math.round((hoje.getTime() - dt.getTime()) / 86400000);
 }
 
+/** Sumindo = já treinou e está há 10+ dias sem treinar. Quem nunca treinou fica separado. */
 export function estaSumindo(ultimoTreino: string | null | undefined, now: Date = new Date()): boolean {
   const dias = diasSemTreino(ultimoTreino, now);
-  return dias === null || dias >= DIAS_SUMINDO;
+  return dias !== null && dias >= DIAS_SUMINDO;
 }
+
+/** Ainda não fez o primeiro treino (só informação, não conta como sumindo). */
+export const nuncaTreinou = (ultimoTreino: string | null | undefined): boolean => !ultimoTreino;
 
 export function semaforoRetencao(v: number | null): Semaforo {
   if (v === null) return "neutro";
