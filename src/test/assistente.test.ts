@@ -86,7 +86,7 @@ describe("resumo da manhã", () => {
     expect(r.titulo).toBe("Bom dia, Leandro!");
     expect(r.corpo).toContain("1 renovação");
     expect(r.corpo).toContain("6 alunos sumidos");
-    expect(r.corpo).toContain("R$ 1.500,00");
+    expect(r.corpo.replace(/\s/g, " ")).toContain("R$ 1.500,00");
   });
   it("tipo desligado na configuração fica fora do resumo", () => {
     const cfg = { ...base, tipos: { ...base.tipos, sumindo: false } };
