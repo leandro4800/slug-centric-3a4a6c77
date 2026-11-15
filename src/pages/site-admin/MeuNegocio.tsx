@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { BriefcaseBusiness, Loader2 } from "lucide-react";
 import { useSiteTenant } from "@/hooks/use-site-tenant";
 import { useMeuNegocio } from "@/hooks/use-meu-negocio";
+import { useDespesas } from "@/hooks/use-despesas";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -9,6 +10,8 @@ import {
   alunosPagantes,
   atrasado,
   contarEventos,
+  despesasNoPeriodo,
+  despesasPorCategoria,
   diasSemTreino,
   estaSumindo,
   formatBRL,
@@ -17,14 +20,19 @@ import {
   getPeriodoAnterior,
   inadimplencia,
   isAtiva,
+  ltv,
   mesesPagosPorAluno,
   permanenciaMedia,
   previsaoProximoMes,
   receita,
   receitaMensal,
   receitaPorProduto,
+  receitaRecorrente,
+  resultadoNegocio,
   retencao,
   semaforoInadimplencia,
+  semaforoLtvCac,
+  semaforoMargem,
   semaforoRetencao,
   ticketMedio,
   ultimosMeses,
@@ -37,10 +45,12 @@ import { ReceitaPorProduto } from "@/components/site-admin/meu-negocio/ReceitaPo
 import { ReceitaMiniGrafico } from "@/components/site-admin/meu-negocio/ReceitaMiniGrafico";
 import { AlunosLista, type AlunoLinha, type FiltroAluno } from "@/components/site-admin/meu-negocio/AlunosLista";
 import { AlunoFicha } from "@/components/site-admin/meu-negocio/AlunoFicha";
+import { DespesasSecao } from "@/components/site-admin/meu-negocio/DespesasSecao";
 
 const MeuNegocio = () => {
   const { tenant, loading: tenantLoading } = useSiteTenant();
   const { data, isLoading, error, refetch } = useMeuNegocio(tenant?.id);
+  const { data: despesas } = useDespesas(tenant?.id);
   const [periodoKey, setPeriodoKey] = useState<PeriodoKey>("mes_atual");
   const [filtro, setFiltro] = useState<FiltroAluno>("ativos");
   const [aberto, setAberto] = useState<AlunoLinha | null>(null);
@@ -90,6 +100,12 @@ const MeuNegocio = () => {
     const ret = retencao(eventos, pagantes, periodo, now);
     const inad = inadimplencia(pagamentos, periodo);
     const perm = permanenciaMedia(pagamentos);
+    const vida = ltv(pagamentos);
+    const listaDespesas = despesas ?? [];
+    const ocorrencias = despesasNoPeriodo(listaDespesas, periodo, now);
+    const res = resultadoNegocio({ pagamentos, eventos, pagantes, despesas: listaDespesas, periodo, now });
+    const semDespesas = listaDespesas.length === 0;
+    const pagantesAtivos = linhas.filter((l) => l.ativo && !l.gratuito).length;
 
     const indicadores: Indicador[] = [
       {
@@ -130,11 +146,78 @@ const MeuNegocio = () => {
         cor: "neutro",
         frase: perm === null ? "Aparece quando houver pagamentos." : "Quantos meses, em média, cada aluno pagante já pagou.",
       },
+      {
+        titulo: "LTV",
+        valor: formatBRL(vida),
+        cor: "neutro",
+        frase: vida === null ? "Aparece quando houver pagamentos." : "Quanto cada aluno pagante já deixou, em média, desde que entrou.",
+      },
+    ];
+
+    const fraseSemDespesa = "Lance despesas para calcular.";
+    const resultado: Indicador[] = [
+      {
+        titulo: "Lucro do negócio",
+        valor: semDespesas ? "—" : formatBRL(res.lucro),
+        cor: semDespesas ? "neutro" : res.lucro >= 0 ? "verde" : "vermelho",
+        frase: semDespesas ? fraseSemDespesa : "O que sobrou: recebido (já sem taxas) menos despesas do período.",
+      },
+      {
+        titulo: "Margem",
+        valor: semDespesas ? "—" : formatPct(res.margem),
+        cor: semDespesas ? "neutro" : semaforoMargem(res.margem),
+        frase: semDespesas ? fraseSemDespesa : res.margem === null ? "Aparece quando houver receita no período." : "Quanto de cada R$ 100 vendidos virou lucro.",
+      },
+      {
+        titulo: "CAC",
+        valor: formatBRL(res.cac),
+        cor: "neutro",
+        frase:
+          res.captacao === 0
+            ? "Marque gastos como captação (ex.: anúncio) para calcular."
+            : res.cac === null
+              ? "Nenhum aluno pagante novo no período."
+              : "Quanto custou, em média, trazer cada aluno pagante novo.",
+      },
+      {
+        titulo: "LTV versus CAC",
+        valor: res.ltvCac === null ? "—" : `${res.ltvCac.toFixed(1).replace(".", ",")}x`,
+        cor: semaforoLtvCac(res.ltvCac),
+        frase:
+          res.ltvCac === null
+            ? "Aparece quando houver CAC e pagamentos."
+            : res.ltvCac >= 3
+              ? "Ótimo: cada aluno vale bem mais do que custou."
+              : res.ltvCac >= 1
+                ? "Atenção: o aluno paga o que custou, mas sobra pouco."
+                : "Alerta: trazer aluno está custando mais do que ele paga.",
+      },
+      {
+        titulo: "Retorno da captação",
+        valor: res.retornoCaptacao === null ? "—" : `${res.retornoCaptacao.toFixed(1).replace(".", ",")}x`,
+        cor: "neutro",
+        frase:
+          res.retornoCaptacao === null
+            ? "Marque gastos como captação para calcular."
+            : `Cada R$ 1 investido em captação trouxe ${formatBRL(Math.round(res.retornoCaptacao * 100))} dos alunos novos no período.`,
+      },
+      {
+        titulo: "Ponto de equilíbrio",
+        valor: res.pontoEquilibrioAlunos === null ? "—" : `${res.pontoEquilibrioAlunos} ${res.pontoEquilibrioAlunos === 1 ? "aluno" : "alunos"}`,
+        cor: res.pontoEquilibrioAlunos === null ? "neutro" : pagantesAtivos >= res.pontoEquilibrioAlunos ? "verde" : "vermelho",
+        frase: semDespesas
+          ? fraseSemDespesa
+          : res.pontoEquilibrioAlunos === null
+            ? `Precisa faturar ${formatBRL(res.despesaMensal)} por mês para cobrir as despesas.`
+            : `Pagantes necessários para cobrir ${formatBRL(res.despesaMensal)}/mês. Você tem ${pagantesAtivos}.`,
+      },
     ];
 
     return {
       linhas,
       indicadores,
+      resultado,
+      despesas: { lista: listaDespesas, ocorrencias, porCategoria: despesasPorCategoria(ocorrencias), total: res.despesas },
       resumo: {
         receita: rec,
         variacao: variacao(rec, recAnt),
@@ -146,13 +229,14 @@ const MeuNegocio = () => {
         atrasadoValor: atr.valor,
         atrasadoAlunos: atr.alunos,
         previsao: previsaoProximoMes(assinaturas, planos, now),
+        recorrente: receitaRecorrente(assinaturas, planos),
         sumindo: linhas.filter((l) => l.sumindo).length,
       },
       produtos: receitaPorProduto(pagamentos, periodo),
       mensal: receitaMensal(pagamentos, 12, now),
       meses: ultimosMeses(12, now),
     };
-  }, [data, periodoKey]);
+  }, [data, despesas, periodoKey]);
 
   const verSumindo = () => {
     setFiltro("sumindo");
@@ -205,6 +289,14 @@ const MeuNegocio = () => {
           <ReceitaMiniGrafico dados={calc.mensal} />
           <Indicadores itens={calc.indicadores} />
           <ReceitaPorProduto linhas={calc.produtos} />
+          <DespesasSecao
+            tenantId={tenant!.id}
+            despesas={calc.despesas.lista}
+            ocorrencias={calc.despesas.ocorrencias}
+            porCategoria={calc.despesas.porCategoria}
+            total={calc.despesas.total}
+          />
+          <Indicadores titulo="Resultado do negócio" subtitulo="Calculado com as vendas e as despesas lançadas." itens={calc.resultado} />
           <AlunosLista alunos={calc.linhas} meses={calc.meses} filtro={filtro} onFiltro={setFiltro} onAbrir={setAberto} />
           <AlunoFicha aluno={aberto} eventos={data!.eventos} pagamentos={data!.pagamentos} onClose={() => setAberto(null)} />
         </>
