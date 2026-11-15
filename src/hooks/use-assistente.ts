@@ -95,12 +95,3 @@ export async function chamarIA<T = any>(body: Record<string, unknown>): Promise<
   }
   return data as T;
 }
-
-export function useUsoIA(tenantId: string | undefined) {
-  return useQuery({
-    queryKey: ["assistente-uso", tenantId],
-    enabled: !!tenantId,
-    staleTime: 30_000,
-    queryFn: () => chamarIA<{ usadas: number; limite: number }>({ acao: "uso", tenant_id: tenantId }),
-  });
-}
