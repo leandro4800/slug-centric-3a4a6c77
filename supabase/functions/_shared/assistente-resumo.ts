@@ -149,8 +149,8 @@ export function panoramaFrase(p: PanoramaSemanal): string {
     `${p.treinando} treinando`,
   ];
   if (p.sumidos.length) partes.push(plural(p.sumidos.length, "sumido (10+ dias)", "sumidos (10+ dias)"));
-  if (p.parados.length) partes.push(`${p.parados.length} parados há mais de ${DIAS_PARADO} dias`);
-  if (p.nuncaTreinaram.length) partes.push(`${p.nuncaTreinaram.length} nunca treinaram`);
+  if (p.parados.length) partes.push(`${plural(p.parados.length, "parado", "parados")} há mais de ${DIAS_PARADO} dias`);
+  if (p.nuncaTreinaram.length) partes.push(`${p.nuncaTreinaram.length} ${p.nuncaTreinaram.length === 1 ? "nunca treinou" : "nunca treinaram"}`);
   return `Panorama da semana: ${partes.join(", ")}.`;
 }
 

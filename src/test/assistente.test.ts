@@ -115,8 +115,8 @@ describe("resumo semanal completo", () => {
     const r = montarResumo({ alertas: [], cfg: { ...CONFIG_PADRAO }, nomeCoach: "Leandro", panorama })!;
     expect(r).not.toBeNull();
     expect(r.titulo).toBe("Bom dia, Leandro! Resumo da semana");
-    expect(r.corpo).toContain("1 parados há mais de 60 dias");
-    expect(r.corpo).toContain("1 nunca treinaram");
+    expect(r.corpo).toContain("1 parado há mais de 60 dias");
+    expect(r.corpo).toContain("1 nunca treinou");
   });
   it("nos outros dias, sem alerta novo continua sem notificação", () => {
     expect(montarResumo({ alertas: [], cfg: { ...CONFIG_PADRAO }, panorama: null })).toBeNull();
