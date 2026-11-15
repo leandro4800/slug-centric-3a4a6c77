@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { FileSpreadsheet, Plus, Repeat, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -89,7 +90,7 @@ export const DespesasSecao = ({ tenantId, despesas, ocorrencias, porCategoria, t
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="font-display text-lg uppercase italic tracking-tight">Despesas</h2>
-          <p className="text-xs text-muted-foreground">Total no período: <strong className="text-foreground">{formatBRL(total)}</strong></p>
+          <p className="text-xs text-muted-foreground">Total no período: <strong className="text-foreground">{formatBRL(total)}</strong> · <Link to="/site/admin/despesas" className="underline underline-offset-2 hover:text-foreground">Abrir tela de despesas</Link></p>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:flex">
           <Button onClick={() => setForm(true)}><Plus className="mr-2 h-4 w-4" /> Lançar despesa</Button>

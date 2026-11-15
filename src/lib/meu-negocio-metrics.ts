@@ -526,3 +526,28 @@ export function semaforoMargem(v: number | null): Semaforo {
   if (v >= 0) return "amarelo";
   return "vermelho";
 }
+
+/** Despesas dos últimos N meses (do mais antigo ao atual), separando fixas e avulsas. */
+export function despesasMensais(despesas: Despesa[], meses = 12, now: Date = new Date()) {
+  const atual = startOfMonth(now);
+  const inicio = addMonths(atual, -(meses - 1));
+  const oc = despesasNoPeriodo(despesas, { inicio, fim: addMonths(atual, 1) }, now);
+  return Array.from({ length: meses }, (_, i) => {
+    const m = addMonths(inicio, i);
+    const k = mesKey(m);
+    const doMes = oc.filter((d) => d.mes === k);
+    const fixas = doMes.filter((d) => d.fixa).reduce((s, d) => s + d.valor_centavos, 0);
+    const avulsas = doMes.filter((d) => !d.fixa).reduce((s, d) => s + d.valor_centavos, 0);
+    return {
+      key: k,
+      label: m.toLocaleDateString("pt-BR", { month: "short" }).replace(".", ""),
+      fixas,
+      avulsas,
+      total: fixas + avulsas,
+    };
+  });
+}
+
+/** Quanto as despesas fixas ativas somam por mês. */
+export const custoFixoMensal = (despesas: Despesa[]) =>
+  despesas.filter((d) => d.fixa).reduce((s, d) => s + d.valor_centavos, 0);

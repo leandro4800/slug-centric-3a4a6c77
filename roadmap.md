@@ -61,11 +61,17 @@
 - [ ] Conferir a página com conta real de coach: bloqueado (Supabase externo sem sessão de teste); conferida com dados de exemplo
 
 ## Assistente do Meu negócio (pedido 15/nov)
-- [ ] "Sumindo" só com 10+ dias sem treinar; "nunca treinaram" separado, só informativo
-- [ ] Alertas diários no banco: sumido 10/20 dias, queda de frequência, pagamento (vencimento e +3 dias), renovação 7 dias; segunda: lucro/saídas em queda e CAC acima do ticket
-- [ ] Seção Assistente no topo: Chamar (mensagem editável → WhatsApp), Já falei (7 dias fora), Dispensar
-- [ ] Tela de configuração: ligar/desligar resumo, horário, canais (e-mail/push), tipos
-- [ ] Resumo da manhã (1 por dia, máx. 5 itens + "+N no painel", sem notificação sem novidade, nada entre 21h e 7h) por e-mail e push
-- [ ] Mensagem personalizada por IA (mínimo de dados, cota mensal) e "Pergunte ao seu negócio" com funções seguras por tenant
-- [ ] Risco de cancelamento por regras simples
-- [ ] Testes das regras
+- [x] "Sumindo" só com 10+ dias sem treinar; "nunca treinaram" separado, só informativo (filtro próprio)
+- [x] Alertas diários no banco: sumido 10/20 dias, queda de frequência, pagamento (vencimento e +3 dias), renovação 7 dias; segunda: lucro/saídas em queda e CAC acima do ticket
+- [x] Seção Assistente no topo: Chamar (mensagem editável → WhatsApp), Já falei (7 dias fora), Dispensar
+- [x] Tela de configuração: ligar/desligar resumo, horário, canais (e-mail/push), tipos
+- [x] Resumo da manhã (1 por dia, máx. 5 itens + "+N no painel", sem notificação sem novidade, nada entre 21h e 7h) por e-mail e push — envio real ao CT Alphacoachpro: push entregue, e-mail sem erro
+- [x] Mensagem personalizada por IA (mínimo de dados, cota de 30/mês) e "Pergunte ao seu negócio" com funções seguras por tenant
+- [x] Risco de cancelamento por regras simples (filtro "Risco de sair")
+- [x] Testes das regras (15 novos)
+- [ ] Conferir IA e botões com conta real de coach: Supabase externo sem sessão de teste disponível
+
+## Tela própria de despesas (pedido 15/nov)
+- [x] Página /site/admin/despesas com gráfico mensal (fixas x avulsas), totais e lançamentos por mês; itens nos menus e link no Meu negócio
+- [x] Seção de custos fixos com formulário direto (sem planilha), parar de repetir e apagar
+- [ ] Salvar com conta real: mesmo bloqueio de sessão do Supabase externo
