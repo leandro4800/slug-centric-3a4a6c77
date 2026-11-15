@@ -100,12 +100,65 @@ export type Resumo = {
   itens: AlertaResumo[];
   restantes: number;
   incluidos: string[]; // todos os alertas cobertos (itens + restantes)
+  panorama: PanoramaSemanal | null;
 };
+
+/**
+ * Panorama completo dos alunos, enviado só no resumo de segunda-feira.
+ * Os resumos diários trazem apenas novidades, para não repetir os mesmos alunos.
+ */
+export type PanoramaSemanal = {
+  ativos: number;
+  treinando: number; // treinou nos últimos 9 dias
+  sumidos: Array<{ nome: string; dias: number }>; // 10 a 60 dias sem treinar
+  parados: Array<{ nome: string; dias: number }>; // mais de 60 dias sem treinar
+  nuncaTreinaram: string[];
+};
+
+export const DIAS_SUMIDO = 10;
+export const DIAS_PARADO = 60;
+
+const diasEntre = (de: string, ate: string) =>
+  Math.round((Date.parse(`${ate}T00:00:00Z`) - Date.parse(`${de.slice(0, 10)}T00:00:00Z`)) / 86400_000);
+
+export function calcularPanorama(
+  alunos: Array<{ nome: string | null; ultimoTreino: string | null }>,
+  hoje: string,
+): PanoramaSemanal {
+  const p: PanoramaSemanal = { ativos: alunos.length, treinando: 0, sumidos: [], parados: [], nuncaTreinaram: [] };
+  for (const a of alunos) {
+    const nome = (a.nome ?? "").trim() || "Aluno";
+    if (!a.ultimoTreino) {
+      p.nuncaTreinaram.push(nome);
+      continue;
+    }
+    const dias = diasEntre(a.ultimoTreino, hoje);
+    if (dias < DIAS_SUMIDO) p.treinando++;
+    else if (dias <= DIAS_PARADO) p.sumidos.push({ nome, dias });
+    else p.parados.push({ nome, dias });
+  }
+  p.sumidos.sort((a, b) => b.dias - a.dias);
+  p.parados.sort((a, b) => b.dias - a.dias);
+  p.nuncaTreinaram.sort((a, b) => a.localeCompare(b, "pt-BR"));
+  return p;
+}
+
+export function panoramaFrase(p: PanoramaSemanal): string {
+  const partes = [
+    plural(p.ativos, "aluno ativo", "alunos ativos"),
+    `${p.treinando} treinando`,
+  ];
+  if (p.sumidos.length) partes.push(plural(p.sumidos.length, "sumido (10+ dias)", "sumidos (10+ dias)"));
+  if (p.parados.length) partes.push(`${plural(p.parados.length, "parado", "parados")} há mais de ${DIAS_PARADO} dias`);
+  if (p.nuncaTreinaram.length) partes.push(`${p.nuncaTreinaram.length} ${p.nuncaTreinaram.length === 1 ? "nunca treinou" : "nunca treinaram"}`);
+  return `Panorama da semana: ${partes.join(", ")}.`;
+}
 
 /**
  * Monta o resumo do dia. Retorna null quando não há novidade (dia sem
  * novidade = sem notificação). Lista no máximo 5 itens em ordem de prioridade;
- * o resto vira "+ N no painel".
+ * o resto vira "+ N no painel". Às segundas, recebe o panorama completo e
+ * envia mesmo sem alertas novos (resumo semanal).
  */
 export function montarResumo(params: {
   alertas: AlertaResumo[];
@@ -113,20 +166,25 @@ export function montarResumo(params: {
   nomeCoach?: string | null;
   receitaMesCentavos?: number | null;
   semana?: { receitaCentavos: number; novos: number; sairam: number } | null;
+  panorama?: PanoramaSemanal | null;
 }): Resumo | null {
   const validos = ordenarPorPrioridade(params.alertas.filter((a) => tipoLigado(params.cfg, a.tipo)));
-  if (validos.length === 0) return null;
+  const panorama = params.panorama && params.panorama.ativos > 0 ? params.panorama : null;
+  if (validos.length === 0 && !panorama) return null;
   const itens = validos.slice(0, MAX_ITENS_RESUMO);
   const restantes = validos.length - itens.length;
   const primeiroNome = (params.nomeCoach ?? "").trim().split(/\s+/)[0];
-  const titulo = primeiroNome ? `Bom dia, ${primeiroNome}!` : "Bom dia!";
-  const partes = [`Hoje: ${contagemFrase(validos)}`];
+  const titulo = (primeiroNome ? `Bom dia, ${primeiroNome}!` : "Bom dia!") + (panorama ? " Resumo da semana" : "");
+  const partes: string[] = [];
+  if (validos.length) partes.push(`Hoje: ${contagemFrase(validos)}`);
   if (params.receitaMesCentavos !== null && params.receitaMesCentavos !== undefined) {
     partes.push(`receita do mês ${formatBRL(params.receitaMesCentavos)}`);
   }
-  let corpo = partes.join(", ") + ".";
+  let corpo = partes.length ? partes.join(", ") + "." : "";
+  corpo = corpo.charAt(0).toUpperCase() + corpo.slice(1);
+  if (panorama) corpo = `${corpo} ${panoramaFrase(panorama)}`.trim();
   if (params.semana) {
     corpo += ` Semana passada: ${formatBRL(params.semana.receitaCentavos)} recebidos, ${params.semana.novos} novos, ${params.semana.sairam} saíram.`;
   }
-  return { titulo, corpo, itens, restantes, incluidos: validos.map((a) => a.id) };
+  return { titulo, corpo, itens, restantes, incluidos: validos.map((a) => a.id), panorama };
 }

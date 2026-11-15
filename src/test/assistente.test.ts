@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { estaSumindo, nuncaTreinou } from "@/lib/meu-negocio-metrics";
+import { calcularPanorama } from "../../supabase/functions/_shared/assistente-resumo";
 import {
   adiarAte,
   alertasVisiveis,
@@ -91,6 +92,34 @@ describe("resumo da manhã", () => {
   it("tipo desligado na configuração fica fora do resumo", () => {
     const cfg = { ...base, tipos: { ...base.tipos, sumindo: false } };
     expect(montarResumo({ alertas: [alerta({})], cfg })).toBeNull();
+  });
+});
+
+describe("resumo semanal completo", () => {
+  const alunos = [
+    { nome: "Ana", ultimoTreino: "2026-11-12" }, // 4 dias: treinando
+    { nome: "Bia", ultimoTreino: "2026-10-28" }, // 19 dias: sumida
+    { nome: "Caio", ultimoTreino: "2026-08-25" }, // 83 dias: parado
+    { nome: "Davi", ultimoTreino: null }, // nunca treinou
+  ];
+  it("separa treinando, sumidos (10–60 dias), parados (+60) e nunca treinaram", () => {
+    const p = calcularPanorama(alunos, "2026-11-16");
+    expect(p.ativos).toBe(4);
+    expect(p.treinando).toBe(1);
+    expect(p.sumidos).toEqual([{ nome: "Bia", dias: 19 }]);
+    expect(p.parados).toEqual([{ nome: "Caio", dias: 83 }]);
+    expect(p.nuncaTreinaram).toEqual(["Davi"]);
+  });
+  it("na segunda vai mesmo sem alerta novo, com o panorama de todos", () => {
+    const panorama = calcularPanorama(alunos, "2026-11-16");
+    const r = montarResumo({ alertas: [], cfg: { ...CONFIG_PADRAO }, nomeCoach: "Leandro", panorama })!;
+    expect(r).not.toBeNull();
+    expect(r.titulo).toBe("Bom dia, Leandro! Resumo da semana");
+    expect(r.corpo).toContain("1 parado há mais de 60 dias");
+    expect(r.corpo).toContain("1 nunca treinou");
+  });
+  it("nos outros dias, sem alerta novo continua sem notificação", () => {
+    expect(montarResumo({ alertas: [], cfg: { ...CONFIG_PADRAO }, panorama: null })).toBeNull();
   });
 });
 

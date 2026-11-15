@@ -1,6 +1,8 @@
 // Resumo da manhã do Assistente do coach. Chamado de hora em hora (7h–20h de
 // Brasília) pela rotina do banco. Envia no máximo um resumo por dia por coach,
 // só quando há novidade, por e-mail e/ou push conforme a configuração.
+// Às segundas vai o resumo completo da semana (panorama de todos os alunos),
+// mesmo sem alertas novos; nos outros dias, só as novidades.
 // Nada é enviado aos alunos.
 import { createClient } from "npm:@supabase/supabase-js@2.57.2";
 import {
@@ -8,8 +10,10 @@ import {
   CONFIG_PADRAO,
   deveEnviarAgora,
   dentroDoHorario,
+  calcularPanorama,
   montarResumo,
   type AlertaResumo,
+  type PanoramaSemanal,
   type ConfigResumo,
 } from "../_shared/assistente-resumo.ts";
 
@@ -37,6 +41,22 @@ const isServiceRole = (token: string, serviceKey: string) => {
 
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));
 
+const LIMITE_NOMES = 10;
+const listaNomes = (titulo: string, nomes: string[]) => {
+  if (!nomes.length) return "";
+  const extra = nomes.length > LIMITE_NOMES ? `<li style="color:#555">+ ${nomes.length - LIMITE_NOMES} no painel</li>` : "";
+  return `<p style="margin:12px 0 4px;font-weight:bold">${esc(titulo)}</p>
+    <ul style="padding-left:18px;margin:0">${nomes.slice(0, LIMITE_NOMES).map((n) => `<li>${esc(n)}</li>`).join("")}${extra}</ul>`;
+};
+const panoramaHtml = (p: PanoramaSemanal) => `
+  <div style="border-top:1px solid #ddd;margin:8px 0 16px;padding-top:12px">
+    <h3 style="margin:0 0 6px">Panorama da semana</h3>
+    <p style="margin:0">${p.ativos} alunos ativos · ${p.treinando} treinando</p>
+    ${listaNomes(`Sumidos (10 a 60 dias): ${p.sumidos.length}`, p.sumidos.map((s) => `${s.nome} — ${s.dias} dias`))}
+    ${listaNomes(`Parados há mais de 60 dias: ${p.parados.length}`, p.parados.map((s) => `${s.nome} — ${s.dias} dias`))}
+    ${listaNomes(`Nunca treinaram: ${p.nuncaTreinaram.length}`, p.nuncaTreinaram)}
+  </div>`;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -61,14 +81,21 @@ Deno.serve(async (req) => {
   if (somenteTenant) consulta = consulta.eq("tenant_id", somenteTenant);
   const { data: pendentes, error } = await consulta;
   if (error) return json({ error: error.message }, 500);
-  if (!pendentes?.length) return json({ ok: true, enviados: 0 });
 
   const porTenant = new Map<string, AlertaResumo[]>();
-  for (const a of pendentes) {
+  for (const a of pendentes ?? []) {
     if (!porTenant.has(a.tenant_id)) porTenant.set(a.tenant_id, []);
     porTenant.get(a.tenant_id)!.push(a as AlertaResumo);
   }
+  // Segunda-feira: todo coach com CT entra, para receber o resumo semanal completo.
+  if (diaSemana === 1) {
+    let q = admin.from("tenants").select("id").not("owner_user_id", "is", null);
+    if (somenteTenant) q = q.eq("id", somenteTenant);
+    const { data: todos } = await q;
+    for (const t of todos ?? []) if (!porTenant.has(t.id)) porTenant.set(t.id, []);
+  }
   const tenantIds = [...porTenant.keys()];
+  if (!tenantIds.length) return json({ ok: true, enviados: 0 });
 
   const [{ data: configs }, { data: adiados }, { data: tenants }] = await Promise.all([
     admin.from("assistente_config").select("*").in("tenant_id", tenantIds),
@@ -107,8 +134,32 @@ Deno.serve(async (req) => {
       };
     }
 
+    let panorama: PanoramaSemanal | null = null;
+    if (diaSemana === 1) {
+      const { data: ass } = await admin
+        .from("assinaturas")
+        .select("aluno_id")
+        .eq("tenant_id", tenantId)
+        .in("status", ["active", "trialing"])
+        .neq("aluno_id", tenant.owner_user_id)
+        .limit(5000);
+      const ids = [...new Set((ass ?? []).map((a) => a.aluno_id).filter(Boolean))] as string[];
+      if (ids.length) {
+        const [{ data: perfis }, { data: stats }] = await Promise.all([
+          admin.from("perfis").select("id, nome_completo").in("id", ids),
+          admin.from("stats_treino_aluno").select("aluno_id, ultimo_treino").eq("tenant_id", tenantId).in("aluno_id", ids),
+        ]);
+        const nomes = new Map((perfis ?? []).map((p) => [p.id, p.nome_completo as string | null]));
+        const ultimos = new Map((stats ?? []).map((s) => [s.aluno_id, s.ultimo_treino as string | null]));
+        panorama = calcularPanorama(
+          ids.map((id) => ({ nome: nomes.get(id) ?? null, ultimoTreino: ultimos.get(id) ?? null })),
+          hoje,
+        );
+      }
+    }
+
     const { data: dono } = await admin.from("perfis").select("nome_completo, email, push_token").eq("id", tenant.owner_user_id).maybeSingle();
-    const resumo = montarResumo({ alertas, cfg, nomeCoach: dono?.nome_completo, receitaMesCentavos: receitaMes, semana });
+    const resumo = montarResumo({ alertas, cfg, nomeCoach: dono?.nome_completo, receitaMesCentavos: receitaMes, semana, panorama });
     if (!resumo) continue; // dia sem novidade, sem notificação
 
     // Reserva o envio do dia antes de enviar (evita duplicar se a rotina rodar duas vezes).
@@ -152,8 +203,9 @@ Deno.serve(async (req) => {
         <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color:#111">
           <h2 style="margin:0 0 8px">${esc(resumo.titulo)}</h2>
           <p style="margin:0 0 16px">${esc(resumo.corpo)}</p>
-          <ul style="padding-left:18px;margin:0 0 16px">${itensHtml}</ul>
+          ${itensHtml ? `<ul style="padding-left:18px;margin:0 0 16px">${itensHtml}</ul>` : ""}
           ${resumo.restantes > 0 ? `<p style="margin:0 0 16px;color:#555">+ ${resumo.restantes} no painel</p>` : ""}
+          ${resumo.panorama ? panoramaHtml(resumo.panorama) : ""}
           <a href="${PAINEL_URL}" style="display:inline-block;background:#E50914;color:#fff;text-decoration:none;padding:12px 20px;font-weight:bold">Abrir o painel</a>
           <p style="margin:24px 0 0;font-size:12px;color:#777">Nenhuma mensagem é enviada aos seus alunos sem você aprovar. Você pode mudar o horário ou desligar este resumo em Meu negócio → Assistente → Configurar.</p>
         </div>`;
