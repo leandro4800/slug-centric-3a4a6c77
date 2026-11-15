@@ -59,3 +59,13 @@
 - [x] Testes das regras de cálculo (10 aprovados)
 - [x] Fase 2 (pedido 15/nov): despesas por categoria, fixas, importar planilha (.xlsx/.csv), lucro, margem, CAC, LTV×CAC, retorno da captação, ponto de equilíbrio, receita recorrente, LTV e tempo como aluno/saída/volta na ficha. 20 testes novos.
 - [ ] Conferir a página com conta real de coach: bloqueado (Supabase externo sem sessão de teste); conferida com dados de exemplo
+
+## Assistente do Meu negócio (pedido 15/nov)
+- [ ] "Sumindo" só com 10+ dias sem treinar; "nunca treinaram" separado, só informativo
+- [ ] Alertas diários no banco: sumido 10/20 dias, queda de frequência, pagamento (vencimento e +3 dias), renovação 7 dias; segunda: lucro/saídas em queda e CAC acima do ticket
+- [ ] Seção Assistente no topo: Chamar (mensagem editável → WhatsApp), Já falei (7 dias fora), Dispensar
+- [ ] Tela de configuração: ligar/desligar resumo, horário, canais (e-mail/push), tipos
+- [ ] Resumo da manhã (1 por dia, máx. 5 itens + "+N no painel", sem notificação sem novidade, nada entre 21h e 7h) por e-mail e push
+- [ ] Mensagem personalizada por IA (mínimo de dados, cota mensal) e "Pergunte ao seu negócio" com funções seguras por tenant
+- [ ] Risco de cancelamento por regras simples
+- [ ] Testes das regras
