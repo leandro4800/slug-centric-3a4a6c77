@@ -57,4 +57,5 @@
 - [x] Webhook: registrar pagamentos pagos, falhos e estornados sem tocar nos eventos atuais (publicado; aguardando venda real para conferir)
 - [x] Página "Meu negócio" com resumo, indicadores, receita por produto e lista de alunos com ficha
 - [x] Testes das regras de cálculo (10 aprovados)
+- [x] Fase 2 (pedido 15/nov): despesas por categoria, fixas, importar planilha (.xlsx/.csv), lucro, margem, CAC, LTV×CAC, retorno da captação, ponto de equilíbrio, receita recorrente, LTV e tempo como aluno/saída/volta na ficha. 20 testes novos.
 - [ ] Conferir a página com conta real de coach: bloqueado (Supabase externo sem sessão de teste); conferida com dados de exemplo

@@ -44,7 +44,7 @@ async function loadMeuNegocio(tenantId: string): Promise<MeuNegocioData> {
     fetchAll<Pagamento>((f, t) =>
       supabase
         .from("pagamentos")
-        .select("id, aluno_id, aluno_nome, produto_tipo, produto_nome, valor_bruto_centavos, status, data_vencimento, data_pagamento, created_at")
+        .select("id, aluno_id, aluno_nome, produto_tipo, produto_nome, valor_bruto_centavos, valor_liquido_centavos, status, data_vencimento, data_pagamento, created_at")
         .eq("tenant_id", tenantId)
         .order("created_at")
         .range(f, t),
@@ -57,7 +57,7 @@ async function loadMeuNegocio(tenantId: string): Promise<MeuNegocioData> {
         .order("ocorreu_em")
         .range(f, t),
     ),
-    supabase.from("planos").select("id, nome, preco_centavos").eq("tenant_id", tenantId),
+    supabase.from("planos").select("id, nome, preco_centavos, intervalo").eq("tenant_id", tenantId),
   ]);
   if (planosRes.error) throw planosRes.error;
 
@@ -101,7 +101,11 @@ async function loadMeuNegocio(tenantId: string): Promise<MeuNegocioData> {
 
   return {
     assinaturas,
-    pagamentos: pagamentos.map((p) => ({ ...p, valor_bruto_centavos: Number(p.valor_bruto_centavos) || 0 })),
+    pagamentos: pagamentos.map((p) => ({
+      ...p,
+      valor_bruto_centavos: Number(p.valor_bruto_centavos) || 0,
+      valor_liquido_centavos: p.valor_liquido_centavos === null || p.valor_liquido_centavos === undefined ? null : Number(p.valor_liquido_centavos),
+    })),
     eventos,
     planos: (planosRes.data ?? []) as Plano[],
     alunos,

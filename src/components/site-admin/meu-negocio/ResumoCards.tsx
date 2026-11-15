@@ -1,4 +1,4 @@
-import { AlertTriangle, TrendingDown, TrendingUp, UserMinus, UserPlus, Users, Wallet, CalendarClock, ShoppingBag } from "lucide-react";
+import { AlertTriangle, TrendingDown, TrendingUp, UserMinus, UserPlus, Users, Wallet, CalendarClock, ShoppingBag, Repeat } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatBRL, formatPct, DIAS_SUMINDO } from "@/lib/meu-negocio-metrics";
 
@@ -13,6 +13,7 @@ type Props = {
   atrasadoValor: number;
   atrasadoAlunos: number;
   previsao: number;
+  recorrente: number;
   sumindo: number;
   onVerSumindo: () => void;
 };
@@ -89,6 +90,11 @@ export const ResumoCards = (p: Props) => (
       <Card titulo="Previsão próximo mês" icon={CalendarClock}>
         <p className="font-display text-3xl tracking-tight">{formatBRL(p.previsao)}</p>
         <p className="mt-1 text-xs text-muted-foreground">renovações de alunos pagantes</p>
+      </Card>
+
+      <Card titulo="Receita recorrente" icon={Repeat}>
+        <p className="font-display text-3xl tracking-tight">{formatBRL(p.recorrente)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">por mês, somando os planos ativos dos pagantes</p>
       </Card>
     </div>
   </div>

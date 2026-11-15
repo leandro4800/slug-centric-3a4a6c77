@@ -1,6 +1,6 @@
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { dataCobranca, dataPagamento, formatBRL, type Evento, type Pagamento } from "@/lib/meu-negocio-metrics";
+import { dataCobranca, dataPagamento, diasComoAluno, formatBRL, formatDuracao, type Evento, type Pagamento } from "@/lib/meu-negocio-metrics";
 import type { AlunoLinha } from "./AlunosLista";
 
 const STATUS_LABEL: Record<string, string> = { pago: "Pago", pendente: "Pendente", vencido: "Vencido", estornado: "Estornado" };
@@ -26,6 +26,9 @@ export const AlunoFicha = ({ aluno, eventos, pagamentos, onClose }: Props) => {
   const pagoAno = pagos.filter((p) => new Date(dataPagamento(p)).getFullYear() === anoAtual).reduce((s, p) => s + p.valor_bruto_centavos, 0);
   const pagoTotal = pagos.reduce((s, p) => s + p.valor_bruto_centavos, 0);
   const desde = evs.find((e) => e.tipo === "entrou")?.ocorreu_em ?? aluno?.desdeFallback ?? null;
+  const tempo = diasComoAluno(evs);
+  const ultimaSaida = [...evs].reverse().find((e) => e.tipo === "saiu")?.ocorreu_em ?? null;
+  const ultimaVolta = [...evs].reverse().find((e) => e.tipo === "voltou")?.ocorreu_em ?? null;
 
   return (
     <Sheet open={!!aluno} onOpenChange={(o) => !o && onClose()}>
@@ -43,6 +46,9 @@ export const AlunoFicha = ({ aluno, eventos, pagamentos, onClose }: Props) => {
 
             <div className="mt-5 grid grid-cols-2 gap-2">
               <Info titulo="Aluno desde" valor={desde ? fmtData(desde) : "—"} />
+              <Info titulo="Tempo como aluno" valor={formatDuracao(tempo)} />
+              <Info titulo="Saiu em" valor={ultimaSaida ? fmtMes(ultimaSaida) : "—"} />
+              <Info titulo="Voltou em" valor={ultimaVolta ? fmtMes(ultimaVolta) : "—"} />
               <Info titulo="Meses pagos" valor={aluno.gratuito ? "—" : String(aluno.mesesPagos.size)} />
               <Info titulo={`Pago em ${anoAtual}`} valor={aluno.gratuito ? "—" : formatBRL(pagoAno)} />
               <Info titulo="Pago no total" valor={aluno.gratuito ? "—" : formatBRL(pagoTotal)} />
