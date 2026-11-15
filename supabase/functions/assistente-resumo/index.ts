@@ -203,7 +203,7 @@ Deno.serve(async (req) => {
         <div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; padding: 24px; color:#111">
           <h2 style="margin:0 0 8px">${esc(resumo.titulo)}</h2>
           <p style="margin:0 0 16px">${esc(resumo.corpo)}</p>
-          <ul style="padding-left:18px;margin:0 0 16px">${itensHtml}</ul>
+          ${itensHtml ? `<ul style="padding-left:18px;margin:0 0 16px">${itensHtml}</ul>` : ""}
           ${resumo.restantes > 0 ? `<p style="margin:0 0 16px;color:#555">+ ${resumo.restantes} no painel</p>` : ""}
           ${resumo.panorama ? panoramaHtml(resumo.panorama) : ""}
           <a href="${PAINEL_URL}" style="display:inline-block;background:#E50914;color:#fff;text-decoration:none;padding:12px 20px;font-weight:bold">Abrir o painel</a>
