@@ -181,6 +181,7 @@ export function montarResumo(params: {
     partes.push(`receita do mês ${formatBRL(params.receitaMesCentavos)}`);
   }
   let corpo = partes.length ? partes.join(", ") + "." : "";
+  corpo = corpo.charAt(0).toUpperCase() + corpo.slice(1);
   if (panorama) corpo = `${corpo} ${panoramaFrase(panorama)}`.trim();
   if (params.semana) {
     corpo += ` Semana passada: ${formatBRL(params.semana.receitaCentavos)} recebidos, ${params.semana.novos} novos, ${params.semana.sairam} saíram.`;
