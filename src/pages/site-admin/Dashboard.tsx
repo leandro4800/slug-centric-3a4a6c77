@@ -17,6 +17,15 @@ import imgAvaliacao from "@/assets/dash-avaliacao.jpg";
 import imgMoney from "@/assets/dash-money.jpg";
 import imgChart from "@/assets/dash-chart.jpg";
 import imgTarget from "@/assets/dash-target.jpg";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMeuNegocio } from "@/hooks/use-meu-negocio";
+import { resumoFinanceiro, textoComparacao, formatBRL, formatPct } from "@/lib/meu-negocio-metrics";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
+const META_CHAVE = "meta_mensal_centavos";
+const NEGOCIO = "/site/admin/meu-negocio";
 
 const Dashboard = () => {
   const { tenant } = useSiteTenant();
@@ -33,6 +42,67 @@ const Dashboard = () => {
   const heroInputRef = useRef<HTMLInputElement>(null);
   const [stripeIncomplete, setStripeIncomplete] = useState(false);
   const [stripeBusy, setStripeBusy] = useState(false);
+  const [metaOpen, setMetaOpen] = useState(false);
+  const [metaInput, setMetaInput] = useState("");
+  const [metaSaving, setMetaSaving] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Métricas financeiras: mesma fonte e mesmas regras de "Meu negócio".
+  const negocio = useMeuNegocio(tenant?.id);
+  const fin = negocio.data
+    ? resumoFinanceiro({
+        pagamentos: negocio.data.pagamentos,
+        assinaturas: negocio.data.assinaturas,
+        planos: negocio.data.planos,
+        eventos: negocio.data.eventos,
+      })
+    : null;
+
+  const metaQuery = useQuery({
+    queryKey: ["meta-mensal", tenant?.id],
+    enabled: !!tenant?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("configuracoes_tenant")
+        .select("valor")
+        .eq("tenant_id", tenant!.id)
+        .eq("chave", META_CHAVE)
+        .maybeSingle();
+      if (error) throw error;
+      const n = Number(data?.valor);
+      return Number.isFinite(n) && n > 0 ? n : null;
+    },
+  });
+  const meta = metaQuery.data ?? null;
+
+  const abrirMeta = () => {
+    setMetaInput(meta ? String(Math.round(meta / 100)) : "");
+    setMetaOpen(true);
+  };
+
+  const salvarMeta = async () => {
+    if (!tenant?.id) return;
+    const reais = Number(metaInput.replace(/\./g, "").replace(",", "."));
+    if (!Number.isFinite(reais) || reais <= 0) {
+      toast.error("Digite um valor maior que zero.");
+      return;
+    }
+    setMetaSaving(true);
+    const { error } = await supabase
+      .from("configuracoes_tenant")
+      .upsert(
+        { tenant_id: tenant.id, chave: META_CHAVE, valor: String(Math.round(reais * 100)), updated_at: new Date().toISOString() },
+        { onConflict: "tenant_id,chave" },
+      );
+    setMetaSaving(false);
+    if (error) {
+      toast.error("Não foi possível salvar a meta.");
+      return;
+    }
+    await queryClient.invalidateQueries({ queryKey: ["meta-mensal", tenant.id] });
+    toast.success("Meta mensal salva!");
+    setMetaOpen(false);
+  };
 
 
   useEffect(() => {
@@ -308,7 +378,7 @@ const Dashboard = () => {
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-2.5 max-w-3xl max-lg:grid-cols-2 max-sm:mt-6">
             <HeroStat label="Alunos" value={String(alunos)} icon={<Users className="h-3.5 w-3.5" />} tone="from-sky-500/30 to-sky-500/5 border-sky-400/40 text-sky-200" />
             <HeroStat label="Ativos" value={String(ativos)} icon={<CheckCircle2 className="h-3.5 w-3.5" />} tone="from-emerald-500/30 to-emerald-500/5 border-emerald-400/40 text-emerald-200" />
-            <HeroStat label="Renovação" value="0%" icon={<TrendingUp className="h-3.5 w-3.5" />} tone="from-amber-500/30 to-amber-500/5 border-amber-400/40 text-amber-200" />
+            <HeroStat label="Renovação" value={fin ? formatPct(fin.retencaoMes) : "—"} icon={<TrendingUp className="h-3.5 w-3.5" />} tone="from-amber-500/30 to-amber-500/5 border-amber-400/40 text-amber-200" />
             <HeroStat label="Desistências 30d" value={String(cancelados)} icon={<AlertCircle className="h-3.5 w-3.5" />} tone="from-rose-500/30 to-rose-500/5 border-rose-400/40 text-rose-200" />
           </div>
         </div>
@@ -353,13 +423,19 @@ const Dashboard = () => {
         {/* MÉTRICAS FINANCEIRAS */}
         <Row title="Métricas financeiras" subtitle="Em destaque">
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            <PosterCard label="Resumo diário" value="R$ 0,00" sub="Igual ao dia anterior" image={imgMoney} tone="from-emerald-500/60" />
-            <PosterCard label="Vendas por período" value="R$ 0,00" sub="Igual à semana passada" image={imgChart} tone="from-sky-500/60" />
-            <PosterCard label="Vendas mensais" value="R$ 0,00" sub="Mês atual" image={imgMoney} tone="from-amber-500/60" />
-            <PosterCard label="Ticket médio" value="R$ 0,00" sub="Por transação" image={imgChart} tone="from-cyan-500/60" />
-            <PosterCard label="Renovação esperada" value="R$ 0,00" sub="Próximos 30 dias" image={imgMoney} tone="from-fuchsia-500/60" />
-            <PosterCard label="Meta mensal" value="R$ 0,00" sub="0% de R$ 10.000" image={imgTarget} tone="from-rose-500/60" />
-
+            <PosterCard to={NEGOCIO} label="Resumo diário" value={money(fin?.hoje)} sub={fin ? textoComparacao(fin.hoje, fin.ontem, "Ontem", "Igual ao dia anterior") : "Carregando..."} image={imgMoney} tone="from-emerald-500/60" />
+            <PosterCard to={NEGOCIO} label="Vendas por período" value={money(fin?.semana)} sub={fin ? textoComparacao(fin.semana, fin.semanaAnterior, "Semana passada", "Igual à semana passada") : "Últimos 7 dias"} image={imgChart} tone="from-sky-500/60" />
+            <PosterCard to={NEGOCIO} label="Vendas mensais" value={money(fin?.mes)} sub="Mês atual" image={imgMoney} tone="from-amber-500/60" />
+            <PosterCard to={NEGOCIO} label="Ticket médio" value={fin ? formatBRL(fin.ticket ?? 0) : "—"} sub="Por aluno no mês" image={imgChart} tone="from-cyan-500/60" />
+            <PosterCard to={NEGOCIO} label="Renovação esperada" value={money(fin?.renovacao30d)} sub={fin ? `${fin.renovacao30dQtd} ${fin.renovacao30dQtd === 1 ? "aluno" : "alunos"} · próximos 30 dias` : "Próximos 30 dias"} image={imgMoney} tone="from-fuchsia-500/60" />
+            <PosterCard
+              onClick={abrirMeta}
+              label="Meta mensal"
+              value={money(fin?.mes)}
+              sub={meta ? `${Math.round(((fin?.mes ?? 0) / meta) * 100)}% de ${formatBRL(meta)}` : "Toque para definir sua meta"}
+              image={imgTarget}
+              tone="from-rose-500/60"
+            />
           </div>
         </Row>
 
@@ -398,9 +474,37 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <Dialog open={metaOpen} onOpenChange={setMetaOpen}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Meta mensal de vendas</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <label htmlFor="meta-mensal" className="text-xs text-muted-foreground">Quanto você quer vender por mês (R$)</label>
+            <Input
+              id="meta-mensal"
+              inputMode="decimal"
+              placeholder="Ex.: 10000"
+              value={metaInput}
+              onChange={(e) => setMetaInput(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") salvarMeta(); }}
+            />
+            {fin && <p className="text-xs text-muted-foreground">Vendido neste mês: {formatBRL(fin.mes)}</p>}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMetaOpen(false)}>Cancelar</Button>
+            <Button onClick={salvarMeta} disabled={metaSaving}>
+              {metaSaving && <Loader2 className="h-4 w-4 animate-spin" />} Salvar meta
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
+
+const money = (v: number | undefined) => (v === undefined ? "—" : formatBRL(v));
 
 const HeroStat = ({ label, value, icon, tone }: { label: string; value: string; icon: React.ReactNode; tone?: string }) => (
   <div className={`rounded-xl border bg-gradient-to-br p-3 ${tone || "border-white/10 from-white/10 to-white/5 text-white/70"}`}>
@@ -443,20 +547,28 @@ const CineCard = ({ done, label, to, icon: Icon, image, tone = "from-sky-600/70 
   </Link>
 );
 
-const PosterCard = ({ label, value, sub, image, tone = "from-primary/60" }: { label: string; value: string; sub?: string; image: string; tone?: string }) => (
-  <div className="group relative aspect-[3/4] overflow-hidden rounded-xl border border-white/15 hover:border-primary transition-all hover:scale-[1.03]">
-    <img src={image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-85 group-hover:scale-105 transition-all duration-500" />
-    <div className={`absolute inset-0 bg-gradient-to-tr ${tone} to-transparent mix-blend-multiply`} />
-    <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-    <div className="relative h-full flex flex-col justify-between p-3">
-      <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{label}</p>
-      <div>
-        <p className="text-xl md:text-2xl font-black tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{value}</p>
-        {sub && <p className="text-[10px] text-white/75 mt-1">{sub}</p>}
+const PosterCard = ({ label, value, sub, image, tone = "from-primary/60", to, onClick }: { label: string; value: string; sub?: string; image: string; tone?: string; to?: string; onClick?: () => void }) => {
+  const cls = "group relative block aspect-[3/4] w-full overflow-hidden rounded-xl border border-white/15 text-left hover:border-primary transition-all hover:scale-[1.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary";
+  const inner = (
+    <>
+      <img src={image} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-85 group-hover:scale-105 transition-all duration-500" />
+      <div className={`absolute inset-0 bg-gradient-to-tr ${tone} to-transparent mix-blend-multiply`} />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+      <div className="relative h-full flex flex-col justify-between p-3">
+        <div className="flex items-start justify-between gap-2">
+          <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">{label}</p>
+          <ArrowRight className="h-3.5 w-3.5 shrink-0 text-white/60 group-hover:text-white group-hover:translate-x-0.5 transition" />
+        </div>
+        <div>
+          <p className="text-xl md:text-2xl font-black tracking-tight text-white drop-shadow-[0_2px_6px_rgba(0,0,0,0.9)]">{value}</p>
+          {sub && <p className="text-[10px] text-white/75 mt-1">{sub}</p>}
+        </div>
       </div>
-    </div>
-  </div>
-);
+    </>
+  );
+  if (to) return <Link to={to} className={cls}>{inner}</Link>;
+  return <button type="button" onClick={onClick} className={cls}>{inner}</button>;
+};
 
 
 const Quick = ({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) => (
