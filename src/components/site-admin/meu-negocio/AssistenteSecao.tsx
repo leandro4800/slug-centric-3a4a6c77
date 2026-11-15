@@ -58,15 +58,15 @@ export const AssistenteSecao = ({ tenantId, alertas, nuncaTreinaram }: { tenantI
                 {alertaDeAluno(a) && (
                   <>
                     <Button size="sm" className="px-2 tracking-normal sm:px-3" onClick={() => setChamando(a)}>
-                      <MessageCircle className="h-4 w-4" /> Chamar
+                      <MessageCircle className="hidden h-4 w-4 sm:block" /> Chamar
                     </Button>
                     <Button size="sm" variant="outline" className="px-2 tracking-normal sm:px-3" onClick={() => jaFalei(a)} disabled={adiar.isPending}>
-                      <Check className="h-4 w-4" /> Já falei
+                      <Check className="hidden h-4 w-4 sm:block" /> Já falei
                     </Button>
                   </>
                 )}
                 <Button size="sm" variant="ghost" className="col-start-3 px-2 tracking-normal sm:px-3" onClick={() => onDispensar(a)} disabled={dispensar.isPending}>
-                  <X className="h-4 w-4" /> Dispensar
+                  <X className="hidden h-4 w-4 sm:block" /> Dispensar
                 </Button>
               </div>
             </li>
