@@ -3,9 +3,10 @@ import type { Semaforo } from "@/lib/meu-negocio-metrics";
 
 export type Indicador = { titulo: string; valor: string; cor: Semaforo; frase: string };
 
-export const Indicadores = ({ itens }: { itens: Indicador[] }) => (
+export const Indicadores = ({ itens, titulo = "Indicadores", subtitulo }: { itens: Indicador[]; titulo?: string; subtitulo?: string }) => (
   <section>
-    <h2 className="mb-3 font-display text-lg uppercase italic tracking-tight">Indicadores</h2>
+    <h2 className={subtitulo ? "font-display text-lg uppercase italic tracking-tight" : "mb-3 font-display text-lg uppercase italic tracking-tight"}>{titulo}</h2>
+    {subtitulo && <p className="mb-3 text-xs text-muted-foreground">{subtitulo}</p>}
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
       {itens.map((i) => (
         <div key={i.titulo} className="border border-border bg-card p-4">
