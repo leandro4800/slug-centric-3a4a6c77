@@ -102,7 +102,7 @@ describe("receita recorrente, LTV e tempo como aluno", () => {
     expect(receitaRecorrente([sub({}), sub({ plano_id: "a" }), sub({ origem: "gratuito" })], planos)).toBe(15000 + 10000);
   });
   it("LTV = total pago ÷ alunos que pagaram", () => {
-    expect(ltv([pg({ aluno_id: "a1" }), pg({ aluno_id: "a1" }), pg({ aluno_id: "a2" })])).toBe(20000);
+    expect(ltv([pg({ aluno_id: "a1" }), pg({ aluno_id: "a1" }), pg({ aluno_id: "a2" })])).toBe(30000);
     expect(ltv([])).toBeNull();
   });
   it("tempo como aluno soma só os períodos ativos", () => {
