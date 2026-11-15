@@ -8,7 +8,6 @@ import {
   CONFIG_PADRAO,
   deveEnviarAgora,
   dentroDoHorario,
-  formatBRL,
   montarResumo,
   type AlertaResumo,
   type ConfigResumo,
@@ -176,5 +175,5 @@ Deno.serve(async (req) => {
     resultados.push(r);
   }
 
-  return json({ ok: true, enviados: resultados.length, resultados, hora, receitaExemplo: formatBRL(0) && undefined });
+  return json({ ok: true, enviados: resultados.length, resultados, hora });
 });
