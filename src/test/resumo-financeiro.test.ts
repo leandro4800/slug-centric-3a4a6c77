@@ -27,7 +27,7 @@ describe("resumoFinanceiro", () => {
     expect(r.hoje).toBe(60000);
     expect(r.ontem).toBe(60000);
     expect(r.semana).toBe(120000);
-    expect(r.semanaAnterior).toBe(0);
+    expect(r.semanaAnterior).toBe(60000); // dia 3 cai na semana anterior (2 a 8)
     expect(r.mes).toBe(180000);
   });
 
@@ -50,6 +50,6 @@ describe("textoComparacao", () => {
   it("mostra igual, variação ou valor anterior", () => {
     expect(textoComparacao(100, 100, "Ontem", "Igual ao dia anterior")).toBe("Igual ao dia anterior");
     expect(textoComparacao(120, 100, "Ontem", "x")).toBe("+20% vs ontem");
-    expect(textoComparacao(100, 0, "Ontem", "x")).toBe("Ontem: R$ 0,00");
+    expect(textoComparacao(100, 0, "Ontem", "x")).toMatch(/^Ontem: R\$\s0,00$/);
   });
 });
