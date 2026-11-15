@@ -75,3 +75,9 @@
 - [x] Página /site/admin/despesas com gráfico mensal (fixas x avulsas), totais e lançamentos por mês; itens nos menus e link no Meu negócio
 - [x] Seção de custos fixos com formulário direto (sem planilha), parar de repetir e apagar
 - [ ] Salvar com conta real: mesmo bloqueio de sessão do Supabase externo
+
+## Alunos demo do coach Nelson Junior (pedido 15/nov)
+- [x] 10 alunos demo com acesso, perfil, anamnese, treinos copiados de fichas reais e histórico de treinos
+- [ ] Planos Mensal R$ 600, Trimestral, Semestral e Anual com desconto; alunos demo ativos nesses planos e pagamentos recalculados
+- [ ] Completar séries dos treinos que faltaram (Camila, Juliana, Fernanda)
+- [ ] Dieta publicada, peso/avaliações de evolução, despesas e alertas do assistente para o painel ficar completo
