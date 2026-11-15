@@ -54,18 +54,18 @@ export const AssistenteSecao = ({ tenantId, alertas, nuncaTreinaram }: { tenantI
                 </span>
                 <span className="text-sm">{a.titulo}</span>
               </div>
-              <div className="flex shrink-0 gap-2">
+              <div className="grid w-full shrink-0 grid-cols-3 gap-2 sm:flex sm:w-auto">
                 {alertaDeAluno(a) && (
                   <>
-                    <Button size="sm" onClick={() => setChamando(a)}>
+                    <Button size="sm" className="px-2 tracking-normal sm:px-3" onClick={() => setChamando(a)}>
                       <MessageCircle className="h-4 w-4" /> Chamar
                     </Button>
-                    <Button size="sm" variant="outline" onClick={() => jaFalei(a)} disabled={adiar.isPending}>
+                    <Button size="sm" variant="outline" className="px-2 tracking-normal sm:px-3" onClick={() => jaFalei(a)} disabled={adiar.isPending}>
                       <Check className="h-4 w-4" /> Já falei
                     </Button>
                   </>
                 )}
-                <Button size="sm" variant="ghost" onClick={() => onDispensar(a)} disabled={dispensar.isPending}>
+                <Button size="sm" variant="ghost" className="col-start-3 px-2 tracking-normal sm:px-3" onClick={() => onDispensar(a)} disabled={dispensar.isPending}>
                   <X className="h-4 w-4" /> Dispensar
                 </Button>
               </div>
