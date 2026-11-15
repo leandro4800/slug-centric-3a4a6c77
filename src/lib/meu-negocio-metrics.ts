@@ -551,3 +551,59 @@ export function despesasMensais(despesas: Despesa[], meses = 12, now: Date = new
 /** Quanto as despesas fixas ativas somam por mês. */
 export const custoFixoMensal = (despesas: Despesa[]) =>
   despesas.filter((d) => d.fixa).reduce((s, d) => s + d.valor_centavos, 0);
+
+// ============================================================================
+// Resumo financeiro da tela inicial do painel (Resumo)
+// ============================================================================
+
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+
+export type ResumoFinanceiro = {
+  hoje: number;
+  ontem: number;
+  semana: number; // últimos 7 dias, incluindo hoje
+  semanaAnterior: number;
+  mes: number;
+  ticket: number | null;
+  renovacao30d: number;
+  renovacao30dQtd: number;
+  retencaoMes: number | null;
+};
+
+/** Valores dos cartões do Resumo. Só pagantes; gratuitos nunca entram. */
+export function resumoFinanceiro(
+  args: { pagamentos: Pagamento[]; assinaturas: Assinatura[]; planos: Plano[]; eventos: Evento[] },
+  now: Date = new Date(),
+): ResumoFinanceiro {
+  const { pagamentos, assinaturas, planos, eventos } = args;
+  const hoje0 = startOfDay(now);
+  const mesAtual = getPeriodo("mes_atual", now);
+  const preco = new Map(planos.map((pl) => [pl.id, pl.preco_centavos || 0]));
+  const limite = now.getTime() + 30 * 24 * 60 * 60 * 1000;
+  const renovando = assinaturas.filter((a) => {
+    if (!isAtiva(a) || a.origem === "gratuito" || !a.current_period_end) return false;
+    const t = new Date(a.current_period_end).getTime();
+    return t >= now.getTime() && t <= limite;
+  });
+  return {
+    hoje: receita(pagamentos, { inicio: hoje0, fim: addDays(hoje0, 1) }),
+    ontem: receita(pagamentos, { inicio: addDays(hoje0, -1), fim: hoje0 }),
+    semana: receita(pagamentos, { inicio: addDays(hoje0, -6), fim: addDays(hoje0, 1) }),
+    semanaAnterior: receita(pagamentos, { inicio: addDays(hoje0, -13), fim: addDays(hoje0, -6) }),
+    mes: receita(pagamentos, mesAtual),
+    ticket: ticketMedio(pagamentos, mesAtual),
+    renovacao30d: renovando.reduce((s, a) => s + (a.plano_id ? preco.get(a.plano_id) ?? 0 : 0), 0),
+    renovacao30dQtd: renovando.length,
+    retencaoMes: retencao(eventos, alunosPagantes(assinaturas, pagamentos), mesAtual, now),
+  };
+}
+
+/** Texto comparativo curto: "+20% vs ontem", "Igual ao dia anterior", "Ontem: R$ 0,00". */
+export function textoComparacao(atual: number, anterior: number, rotulo: string, igual: string): string {
+  if (atual === anterior) return igual;
+  const v = variacao(atual, anterior);
+  if (v === null) return `${rotulo}: ${formatBRL(anterior)}`;
+  const pct = Math.round(v * 100);
+  return `${pct > 0 ? "+" : ""}${pct}% vs ${rotulo.toLowerCase()}`;
+}
