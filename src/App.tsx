@@ -83,6 +83,7 @@ import SiteAdminAparencia from "./pages/site-admin/Aparencia";
 import SiteAdminLandingEditor from "./pages/site-admin/LandingEditor";
 import SiteAdminFinanceiro from "./pages/site-admin/Financeiro";
 import SiteAdminMeuNegocio from "./pages/site-admin/MeuNegocio";
+import TmpDespesasPreview from "./pages/TmpDespesasPreview";
 import SiteAdminMontarTreino from "./pages/site-admin/MontarTreino";
 import SiteAdminVideosTecnicos from "./pages/site-admin/VideosTecnicos";
 import SiteAdminBaseConhecimento from "./pages/site-admin/BaseConhecimento";
@@ -393,6 +394,7 @@ const App = () => (
             <Route path="/:slug/admin/dashboard" element={<RequireAuth requireRole="coach" checkTenant><CoachDashboard /></RequireAuth>} />
             <Route path="/:slug/app/ct/dojo-admin" element={<RequireAuth requireRole="coach" checkTenant><CtDojoAdmin /></RequireAuth>} />
 
+            <Route path="/tmp-despesas-preview" element={<TmpDespesasPreview />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrandingProvider>
