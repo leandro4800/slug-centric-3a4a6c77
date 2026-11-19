@@ -1,55 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Lock, Rocket, ChevronRight, Smartphone, Zap, ShieldAlert, ArrowLeft } from "lucide-react";
+import { Lock, Rocket, Smartphone, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
-import { useParams, useNavigate } from "react-router-dom";
-import { isIOSNativeApp } from "@/lib/native-platform";
+import { useNavigate } from "react-router-dom";
 
 export const SubscriptionLockScreen = () => {
-  const { slug } = useParams();
   const navigate = useNavigate();
-  const [checkoutUrl, setCheckoutUrl] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  // Detect if running on native iOS
-  useEffect(() => {
-    const fetchSalesLink = async () => {
-      try {
-        // Find the coach (tenant owner)
-        const { data: tenant } = await supabase
-          .from("tenants")
-          .select("owner_user_id")
-          .eq("slug", slug)
-          .maybeSingle();
-
-        if (tenant) {
-          const { data: salesLink } = await supabase
-            .from("coach_sales_links")
-            .select("checkout_url, landing_page_url")
-            .eq("user_id", tenant.owner_user_id)
-            .maybeSingle();
-          
-          setCheckoutUrl(salesLink?.checkout_url || salesLink?.landing_page_url || null);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (slug) fetchSalesLink();
-  }, [slug]);
-
-  const handleRedirect = () => {
-    if (checkoutUrl) {
-      window.location.href = checkoutUrl;
-    } else {
-      console.warn("Nenhum link de checkout configurado.");
-    }
-  };
 
   const handleGoBack = () => {
     navigate(-1);
@@ -81,13 +37,10 @@ export const SubscriptionLockScreen = () => {
           
           <div className="space-y-2 relative z-10">
             <h3 className="text-xl font-bold italic uppercase tracking-tight">
-              {isIOSNativeApp() ? "Acesso Pendente" : "Liberar Acesso Imediato"}
+              Acesso Pendente
             </h3>
             <p className="text-sm text-white/50 leading-relaxed">
-              {isIOSNativeApp()
-                ? "Este aplicativo contém conteúdo restrito para alunos ativos. Se você já faz parte do time, entre em contato diretamente com o seu Coach para que ele ative seu acesso pelo painel."
-                : "Você está tentando acessar uma área exclusiva do seu coach. Para continuar, você precisa de um plano ativo."
-              }
+              Este aplicativo contém conteúdo restrito para alunos ativos. Se você já faz parte do time, entre em contato diretamente com o seu Coach para que ele ative seu acesso pelo painel.
             </p>
           </div>
 
@@ -102,30 +55,14 @@ export const SubscriptionLockScreen = () => {
             </div>
           </div>
 
-          {isIOSNativeApp() ? (
-            <div className="pt-2">
-              <Button 
-                onClick={handleGoBack}
-                className="w-full h-14 rounded-2xl bg-white/10 text-white hover:bg-white/20 font-['Anton'] text-xl uppercase italic tracking-wider gap-3"
-              >
-                Voltar à Tela Anterior
-              </Button>
-            </div>
-          ) : (
+          <div className="pt-2">
             <Button 
-              onClick={handleRedirect}
-              className="w-full h-16 rounded-2xl bg-primary text-black hover:bg-primary/90 font-['Anton'] text-2xl uppercase italic tracking-wider gap-3 shadow-[0_0_30px_rgba(229,9,20,0.3)] group transition-all hover:scale-[1.02]"
+              onClick={handleGoBack}
+              className="w-full h-14 rounded-2xl bg-white/10 text-white hover:bg-white/20 font-['Anton'] text-xl uppercase italic tracking-wider gap-3"
             >
-              QUERO MEU ACESSO AGORA
-              <ChevronRight className="h-6 w-6 group-hover:translate-x-1 transition-transform" />
+              Voltar à Tela Anterior
             </Button>
-          )}
-
-          {!isIOSNativeApp() && (
-            <p className="text-[10px] text-white/30 uppercase tracking-widest font-bold">
-              Pagamento Seguro via {checkoutUrl?.includes('kiwify') ? 'Kiwify' : checkoutUrl?.includes('hotmart') ? 'Hotmart' : 'Plataforma Alpha'}
-            </p>
-          )}
+          </div>
         </div>
       </div>
     </div>

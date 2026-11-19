@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -51,6 +52,7 @@ export const DirectDrawer = ({
   const [texto, setTexto] = useState("");
   const [busca, setBusca] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const { toast } = useToast();
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const perfilDe = useCallback(
@@ -163,22 +165,39 @@ export const DirectDrawer = ({
   const enviar = async (conteudo: string, emoji?: string) => {
     if (!peerId || (!conteudo.trim() && !emoji)) return;
     setEnviando(true);
-    const { data, error } = await supabase
-      .from("comunidade_mensagens" as any)
-      .insert({
-        tenant_id: tenantId,
-        remetente_id: currentUserId,
-        destinatario_id: peerId,
-        texto: conteudo.trim() || null,
-        emoji: emoji || null,
-      } as any)
-      .select()
-      .maybeSingle();
-    setEnviando(false);
-    if (!error && data) {
-      const m = data as any as DirectMensagem;
-      setMensagens((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
-      setTexto("");
+    try {
+      const { data, error } = await supabase
+        .from("comunidade_mensagens" as any)
+        .insert({
+          tenant_id: tenantId,
+          remetente_id: currentUserId,
+          destinatario_id: peerId,
+          texto: conteudo.trim() || null,
+          emoji: emoji || null,
+        } as any)
+        .select()
+        .maybeSingle();
+      if (error) {
+        toast({
+          title: "Não foi possível enviar a mensagem",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+      if (data) {
+        const m = data as unknown as DirectMensagem;
+        setMensagens((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+        setTexto("");
+      }
+    } catch (e) {
+      toast({
+        title: "Não foi possível enviar a mensagem",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    } finally {
+      setEnviando(false);
     }
   };
 

@@ -4,7 +4,7 @@ import { Capacitor } from "@capacitor/core";
 export const isIOSNativeApp = () =>
   Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
 
-/** External checkout / Stripe / Kiwify / Hotmart must not run inside the iOS WebView. */
+/** Stripe checkout and payment setup must not run inside the iOS WebView. */
 export const blocksExternalPayments = () => isIOSNativeApp();
 
 /** True when running inside any native Capacitor shell (iOS or Android). */

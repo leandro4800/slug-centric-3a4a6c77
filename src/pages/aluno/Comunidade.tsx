@@ -381,7 +381,7 @@ const Comunidade = () => {
   const groupIndexOf = (uid: string) => storyGroups.findIndex((g) => g.user_id === uid);
 
   const markStoryViewed = async (story: StoryRow) => {
-    if (!user) return;
+    if (!user || story.origem !== "post") return;
     setStoryGroups((prev) =>
       prev.map((g) => ({
         ...g,
@@ -395,12 +395,26 @@ const Comunidade = () => {
 
   const reactStory = async (story: StoryRow, emoji: string | null, resposta: string | null) => {
     if (!user) return;
-    const { error } = await supabase.from("comunidade_story_reacoes" as any).insert({
-      story_id: story.id,
-      user_id: user.id,
-      emoji,
-      resposta,
-    } as any);
+    let error: { message: string } | null = null;
+    if (story.origem === "post") {
+      ({ error } = await supabase.from("comunidade_story_reacoes" as any).insert({
+        story_id: story.id,
+        user_id: user.id,
+        emoji,
+        resposta,
+      } as any));
+    } else {
+      // Stories automáticos (ex.: conquista) não existem em comunidade_stories:
+      // a reação vira uma mensagem direta, sem story_id.
+      if (story.user_id === user.id || !tenant?.id) return;
+      ({ error } = await supabase.from("comunidade_mensagens" as any).insert({
+        tenant_id: tenant.id,
+        remetente_id: user.id,
+        destinatario_id: story.user_id,
+        texto: resposta || null,
+        emoji,
+      } as any));
+    }
     if (error) {
       toast({ title: "Erro ao reagir", description: error.message, variant: "destructive" });
     } else {

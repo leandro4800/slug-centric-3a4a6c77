@@ -393,7 +393,7 @@ const Dashboard = () => {
               <Quick to="/site/admin/alunos/novo" icon={<UserPlus className="h-4 w-4" />} label="Cadastrar novo aluno" />
               <Quick to="/site/admin/treinos" icon={<Dumbbell className="h-4 w-4" />} label="Montar treino" />
               <Quick to="/site/admin/avaliacao-fisica" icon={<Ruler className="h-4 w-4" />} label="Avaliação física" />
-              <Quick to="/site/admin/ferramentas" icon={<ShoppingBag className="h-4 w-4" />} label="Ferramentas / Links" />
+              <Quick to="/site/admin/ferramentas" icon={<ShoppingBag className="h-4 w-4" />} label="Ferramentas" />
             </div>
           </div>
 
