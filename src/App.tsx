@@ -57,6 +57,7 @@ import AdminMontarTreino from "./pages/admin/AdminMontarTreino";
 import AdminMontarDieta from "./pages/admin/AdminMontarDieta";
 import MeusAtletas from "./pages/admin/MeusAtletas";
 import AtletaDetalhe from "./pages/admin/AtletaDetalhe";
+import AtletaEvolucao from "./pages/admin/AtletaEvolucao";
 import AtletaCarta from "./pages/admin/AtletaCarta";
 import Carta from "./pages/aluno/Carta";
 import Scheduling from "./pages/aluno/Scheduling";
@@ -387,6 +388,7 @@ const App = () => (
             <Route path="/:slug/admin/montar-treino" element={<RequireAuth requireRole="coach" checkTenant><AdminMontarTreino /></RequireAuth>} />
             <Route path="/:slug/admin/montar-dieta" element={<RequireAuth requireRole="coach" checkTenant><AdminMontarDieta /></RequireAuth>} />
             <Route path="/:slug/admin/atleta/:atletaId" element={<RequireAuth requireRole="coach" checkTenant><AtletaDetalhe /></RequireAuth>} />
+            <Route path="/:slug/admin/atleta/:atletaId/evolucao" element={<RequireAuth requireRole="coach" checkTenant><AtletaEvolucao /></RequireAuth>} />
             <Route path="/:slug/admin/atleta/:atletaId/carta" element={<RequireAuth requireRole="coach" checkTenant><AtletaCarta /></RequireAuth>} />
             <Route path="/:slug/admin/base-conhecimento" element={<RequireAuth requireRole="coach" checkTenant><AdminBaseConhecimento /></RequireAuth>} />
             <Route path="/:slug/admin/vlogs" element={<RequireAuth requireRole="coach" checkTenant><AdminVlogs /></RequireAuth>} />

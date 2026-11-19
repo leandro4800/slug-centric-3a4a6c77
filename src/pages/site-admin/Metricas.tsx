@@ -102,7 +102,19 @@ interface CheckinFoto {
   fotos: { angulo: string; url: string }[];
 }
 
-const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => void }) => {
+/**
+ * Métricas de um atleta. `embedded` é usado pelo app do coach (celular), que
+ * desenha o próprio topo com voltar, nome e foto; o painel web não passa a prop.
+ */
+export const DetalheMetricas = ({
+  alunoId,
+  onBack,
+  embedded = false,
+}: {
+  alunoId: string;
+  onBack: () => void;
+  embedded?: boolean;
+}) => {
   const [loading, setLoading] = useState(true);
   const [perfil, setPerfil] = useState<Aluno | null>(null);
   const [cargas, setCargas] = useState<any[]>([]);
@@ -381,19 +393,23 @@ const DetalheMetricas = ({ alunoId, onBack }: { alunoId: string; onBack: () => v
 
   return (
     <div className="p-4 md:p-8">
-      <button
-        onClick={onBack}
-        className="mb-3 text-xs uppercase tracking-widest text-muted-foreground hover:text-primary"
-      >
-        ← Trocar atleta
-      </button>
+      {!embedded && (
+        <>
+          <button
+            onClick={onBack}
+            className="mb-3 text-xs uppercase tracking-widest text-muted-foreground hover:text-primary"
+          >
+            ← Trocar atleta
+          </button>
 
-      <div className="mb-6">
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Métricas</p>
-        <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter">
-          {perfil?.nome_completo || "Atleta"}
-        </h1>
-      </div>
+          <div className="mb-6">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Métricas</p>
+            <h1 className="font-display text-3xl md:text-4xl uppercase italic tracking-tighter">
+              {perfil?.nome_completo || "Atleta"}
+            </h1>
+          </div>
+        </>
+      )}
 
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">

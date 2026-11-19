@@ -6,7 +6,7 @@ import { useLutasAlunos, formatLutas } from "@/hooks/use-lutas-alunos";
 import { DEMO_ATHLETES, DEMO_ATHLETE_EMAILS } from "@/lib/demoAthletes";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Home, Loader2, Search, Users, Mail, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign, User, Copy, Share2, Dumbbell, Apple, Ruler } from "lucide-react";
+import { Home, Loader2, Search, Users, Mail, MessageSquare, Send, ChevronRight, Settings, Sparkles, Wallet, DollarSign, User, Copy, Share2, Dumbbell, Apple, Ruler, TrendingUp } from "lucide-react";
 import { AdminBackButton } from "@/components/admin/AdminBackButton";
 import { toast } from "sonner";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -381,7 +381,8 @@ const MeusAtletas = () => {
                   />
 
                   {/* Botões de ação acima do Link */}
-                  <div className="absolute top-2 left-2 z-30 flex gap-1">
+                  <div className="absolute top-2 left-2 z-30 flex flex-col items-start gap-1">
+                  <div className="flex gap-1">
                     <Button
                       size="icon"
                       variant="secondary"
@@ -407,6 +408,17 @@ const MeusAtletas = () => {
                       >
                         <Ruler className="w-4 h-4 text-primary group-hover:text-black" />
                       </Button>
+                    </Link>
+                  </div>
+                    <Link
+                      to={`/${slug}/admin/atleta/${a.id}/evolucao`}
+                      onClick={(e) => e.stopPropagation()}
+                      aria-label={`Ver evolução de ${a.nome_completo || "atleta"}`}
+                      title="Evolução"
+                      className="flex h-7 items-center gap-1 rounded-full border border-white/20 bg-black/60 px-2.5 text-[9px] font-bold uppercase tracking-wider text-primary transition-all hover:bg-primary hover:text-primary-foreground"
+                    >
+                      <TrendingUp className="h-3.5 w-3.5" />
+                      Evolução
                     </Link>
                   </div>
                 </div>
