@@ -2370,33 +2370,6 @@ export type Database = {
         }
         Relationships: []
       }
-      coach_sales_links: {
-        Row: {
-          checkout_url: string | null
-          created_at: string
-          id: string
-          landing_page_url: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          checkout_url?: string | null
-          created_at?: string
-          id?: string
-          landing_page_url?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          checkout_url?: string | null
-          created_at?: string
-          id?: string
-          landing_page_url?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       comunidade_comentarios: {
         Row: {
           comentario: string
