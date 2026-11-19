@@ -71,11 +71,14 @@ const selectDay = (day: "QUI" | "SEX") => fireEvent.click(screen.getByRole("butt
 
 describe("Conclusão por sessão e dia", () => {
   beforeEach(() => {
+    // Relógio travado numa sexta-feira: os casos abaixo comparam quinta x sexta
+    // e precisam funcionar em qualquer dia real da semana.
+    vi.useFakeTimers({ shouldAdvanceTime: true, now: new Date("2026-11-20T12:00:00Z") });
     localStorage.clear(); sessionStorage.clear(); sessionStorage.setItem("treino:diaAtual", "sexta");
     db.sessions = []; db.series = []; db.writes = []; db.failUpdate = false; db.countOverride = null;
     vi.clearAllMocks();
   });
-  afterEach(cleanup);
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
 
   it("reabre no dia em que o treino foi iniciado", async () => {
     db.sessions = [session("tuesday-started", "quinta")];

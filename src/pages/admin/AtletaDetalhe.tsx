@@ -874,6 +874,21 @@ const AtletaDetalhe = () => {
               </span>
             </span>
           </button>
+
+          <button
+            onClick={() => navigate(`/${slug}/admin/atleta/${atletaId}/evolucao`)}
+            className="w-full flex items-center gap-3 px-4 py-4 rounded-xl border border-primary/40 bg-primary/10 hover:bg-primary/15 transition-colors text-left"
+          >
+            <TrendingUp className="h-4 w-4 text-primary" />
+            <span className="flex-1">
+              <span className="block text-xs font-bold uppercase tracking-wider text-primary">
+                Evolução do aluno
+              </span>
+              <span className="block text-[10px] text-muted-foreground tracking-wider uppercase mt-0.5">
+                Volume, cargas e histórico de treinos
+              </span>
+            </span>
+          </button>
         </div>
 
         <div className="rounded-2xl border border-border bg-secondary/40 p-5 space-y-4">

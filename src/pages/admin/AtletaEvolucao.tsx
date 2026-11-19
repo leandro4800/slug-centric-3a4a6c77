@@ -24,7 +24,7 @@ export const AtletaEvolucaoHeader = ({ aluno, onBack }: { aluno: AlunoTopo | nul
     <button
       type="button"
       onClick={onBack}
-      aria-label="Voltar para Gerenciar Elenco"
+      aria-label="Voltar"
       className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-secondary text-foreground transition-colors hover:bg-primary hover:text-primary-foreground"
     >
       <ArrowLeft className="h-5 w-5" />
@@ -61,7 +61,13 @@ const AtletaEvolucao = () => {
 
   useOwnBackButton();
 
-  const voltar = () => navigate(`/${slug}/admin/atletas`, { replace: true });
+  // Volta para a tela de onde o coach abriu a evolução (Elenco ou ficha do aluno);
+  // sem histórico anterior, cai no Gerenciar Elenco.
+  const voltar = () => {
+    const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+    if (idx > 0) navigate(-1);
+    else navigate(`/${slug}/admin/atletas`, { replace: true });
+  };
 
   useEffect(() => {
     if (tenantLoading) return;
