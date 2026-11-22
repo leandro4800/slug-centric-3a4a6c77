@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { Dumbbell, Music, Loader2, Trophy, Clock, Flame, Sparkles, RefreshCw } from "lucide-react";
+import { Dumbbell, Music, Loader2, Trophy, Clock, Flame, Sparkles, RefreshCw, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
@@ -11,6 +11,11 @@ import { ExerciseCard, ExerciseCardData } from "@/components/aluno/ExerciseCard"
 import { useAvatarVariant } from "@/hooks/use-avatar-variant";
 import { TreinoConclusaoCard } from "@/components/aluno/TreinoConclusaoCard";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { sessaoPresaSemSeries } from "@/lib/treino-sessao";
 
 import { filtrarPresetsParaAluno, type DivisaoPreset, type Nivel } from "@/data/divisoesPresets";
 import { toNivelCanonico } from "@/lib/nivel-experiencia";
@@ -59,8 +64,9 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
   const [sessaoAndamento, setSessaoAndamento] = useState<SessaoAberta | null>(null);
   const sessaoAtualId = useRef<string | null>(null);
   sessaoAtualId.current = sessaoAndamento?.id ?? null;
-  const [sessoesAntigas, setSessoesAntigas] = useState<SessaoAberta[]>([]);
-  const sessaoRetomadaId = useRef<string | null>(null);
+  const [cancelando, setCancelando] = useState(false);
+  const [confirmarCancelamento, setConfirmarCancelamento] = useState(false);
+  const sessaoAutoCanceladaId = useRef<string | null>(null);
   const [sessaoStats, setSessaoStats] = useState<{ sessaoId: string | null; volume: number; series: number }>({ sessaoId: null, volume: 0, series: 0 });
   const statsDaSessao = sessaoStats.sessaoId === sessaoAndamento?.id;
   const podeConcluir = !!sessaoAndamento && sessaoAndamento.dia_semana === diaAtual && statsDaSessao && sessaoStats.series > 0;
@@ -505,29 +511,31 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
     if (!user || !tenant) return;
     let cancelled = false;
     (async () => {
+      // Encerra no banco sessões presas (treino já concluído na semana ou abertas há mais de 12h)
+      // sem contar como concluídas. Sessões válidas em andamento nunca são tocadas.
+      await supabase.rpc("limpar_sessoes_treino_invalidas" as any).then(() => null, () => null);
+      if (cancelled) return;
       const { data, error } = await supabase
         .from("sessoes_treino")
         .select("id, created_at, dia_semana")
         .eq("aluno_id", user.id)
         .eq("tenant_id", tenant.id)
         .eq("duracao_min", 0)
+        .is("cancelada_em" as any, null)
         .order("created_at", { ascending: false })
-        .limit(50);
+        .limit(5);
       if (cancelled || error) return;
       const abertas: SessaoAberta[] = (data || []).filter((row) => row.dia_semana).map((row) => ({
         id: row.id, startedAt: new Date(row.created_at).getTime(), dia_semana: row.dia_semana || "",
       }));
       const limite = Date.now() - 12 * 60 * 60 * 1000;
-      const atual = abertas.find((row) => row.startedAt >= limite)
-        ?? abertas.find((row) => row.id === sessaoRetomadaId.current)
-        ?? null;
+      const atual = abertas.find((row) => row.startedAt >= limite) ?? null;
       setSessaoAndamento(atual);
       // Ao reabrir a tela, volta para o dia em que o treino em andamento foi iniciado (uma vez por sessão).
       if (atual && sessaoFocadaId.current !== atual.id) {
         sessaoFocadaId.current = atual.id;
         setDiaAtual(atual.dia_semana);
       }
-      setSessoesAntigas(abertas.filter((row) => row.startedAt < limite && row.id !== atual?.id));
     })();
     return () => { cancelled = true; };
   }, [user?.id, tenant?.id, reloadKey]);
@@ -594,30 +602,82 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
 
   // Inicia a sessão de treino (cria registro em sessoes_treino)
   const iniciarTreinoAoVivo = async () => {
-    if (!user || !tenant || !treinosDoDia.length || sessaoAndamento || startingSession || concluindo) return;
+    if (!user || !tenant || !treinosDoDia.length || sessaoAndamento || startingSession || concluindo || cancelando) return;
+    // Treino já concluído nesta semana não pode ser iniciado de novo (o banco também bloqueia)
+    if (completedDaysWeek.has(diaAtual)) {
+      toast.error("Este treino já foi concluído nesta semana.");
+      return;
+    }
     setStartingSession(true);
     try {
-      const { data, error } = await supabase
-        .from("sessoes_treino")
-        .insert({
-          aluno_id: user.id,
-          tenant_id: tenant.id,
-          dia_semana: diaAtual,
-          duracao_min: 0,
-          exercicios_total: treinosDoDia.length,
-        } as any)
-        .select("id, created_at")
-        .maybeSingle();
+      const { data, error } = await supabase.rpc("iniciar_sessao_treino" as any, {
+        _tenant_id: tenant.id,
+        _dia_semana: diaAtual,
+        _exercicios_total: treinosDoDia.length,
+      } as any);
       if (error) throw error;
-      const id = (data as any)?.id || null;
-      const startedAt = (data as any)?.created_at ? new Date((data as any).created_at).getTime() : Date.now();
-      if (id) setSessaoAndamento({ id, startedAt, dia_semana: diaAtual });
+      const row = Array.isArray(data) ? (data as any[])[0] : (data as any);
+      const id = row?.id || null;
+      const startedAt = row?.created_at ? new Date(row.created_at).getTime() : Date.now();
+      if (id) {
+        // Treino novo começa sem exercícios riscados (marcações antigas deste dia não valem)
+        try { localStorage.removeItem(completedKey); } catch {}
+        setCompletedIds(new Set());
+        sessaoFocadaId.current = id;
+        setSessaoAndamento({ id, startedAt, dia_semana: diaAtual });
+      }
     } catch (e: any) {
       toast.error(e?.message || "Não foi possível iniciar o treino.");
+      setReloadKey((k) => k + 1);
     } finally {
       setStartingSession(false);
     }
   };
+
+  // Cancela a sessão em andamento sem registrar conclusão (apaga se vazia; com séries, só encerra)
+  const cancelarTreino = async (opts: { silencioso?: boolean; sessao?: SessaoAberta | null } = {}) => {
+    const sessao = opts.sessao ?? sessaoAndamento;
+    if (!user || !sessao || cancelando || concluindo) return;
+    setCancelando(true);
+    try {
+      const { error } = await supabase.rpc("cancelar_sessao_treino" as any, { _sessao_id: sessao.id } as any);
+      if (error) throw error;
+      // Marcações locais só somem se o treino não está concluído nesta semana
+      if (!completedDaysWeek.has(sessao.dia_semana)) {
+        try { localStorage.removeItem(`treino:completed:${user.id}:${isoWeekKey}:${sessao.dia_semana}`); } catch {}
+        if (sessao.dia_semana === diaAtual) setCompletedIds(new Set());
+      }
+      try { localStorage.removeItem(sessionStartKey); } catch {}
+      sessaoFocadaId.current = null;
+      setSessaoAndamento(null);
+      setSessaoStats({ sessaoId: null, volume: 0, series: 0 });
+      setActiveIndex(null);
+      setReloadKey((k) => k + 1);
+      if (!opts.silencioso) toast.success("Treino cancelado. Você pode iniciar outro treino.");
+    } catch (e: any) {
+      if (!opts.silencioso) toast.error(e?.message || "Não foi possível cancelar o treino.");
+    } finally {
+      setCancelando(false);
+      setConfirmarCancelamento(false);
+    }
+  };
+
+  // Sessão presa: treino do dia já concluído na semana, ou nenhuma série com todos os exercícios marcados.
+  // Encerra sozinha, sem contar como treino concluído. Sessões válidas não entram aqui.
+  useEffect(() => {
+    const sessao = sessaoAndamento;
+    if (!sessao || cancelando || concluindo || sessaoAutoCanceladaId.current === sessao.id) return;
+    const diaJaConcluido = completedDaysWeek.has(sessao.dia_semana);
+    const presaSemSeries = sessao.dia_semana === diaAtual && statsDaSessao && sessaoPresaSemSeries({
+      series: sessaoStats.series,
+      exerciciosDoDia: treinosDoDia.map((t) => t.id),
+      marcados: completedIds,
+    });
+    if (!diaJaConcluido && !presaSemSeries) return;
+    sessaoAutoCanceladaId.current = sessao.id;
+    void cancelarTreino({ silencioso: true, sessao });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessaoAndamento?.id, completedDaysWeek, statsDaSessao, sessaoStats.series, completedIds, diaAtual, treinos]);
 
   // Conclui a sessão: fecha sessoes_treino, calcula gasto calórico (MET) e abre o card de compartilhar
   const concluirTreino = async () => {
@@ -691,13 +751,17 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
       try { localStorage.setItem(completedKey, JSON.stringify([...next])); } catch {}
       try { localStorage.removeItem(sessionStartKey); } catch {}
       setCompletedDaysWeek((prev) => new Set(prev).add(diaAtual));
-      sessaoRetomadaId.current = null;
       setSessaoAndamento(null);
       setReloadKey((k) => k + 1);
       setShowConclusao(true);
-    } catch (e) {
+    } catch (e: any) {
       console.warn("Não foi possível registrar conclusão", e);
-      toast.error("Não foi possível concluir o treino. Tente novamente.");
+      if (String(e?.message || "").includes("já foi concluído")) {
+        toast.error("Este treino já foi concluído nesta semana.");
+        setReloadKey((k) => k + 1);
+      } else {
+        toast.error("Não foi possível concluir o treino. Tente novamente.");
+      }
     } finally {
       setConcluindo(false);
     }
@@ -978,6 +1042,14 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
                   <p className="font-mono text-base">{sessaoStats.series}</p>
                 </div>
               </div>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <Button type="button" size="sm" className="tracking-normal" disabled={concluindo || cancelando || !podeConcluir} onClick={concluirTreino}>
+                  {concluindo ? <Loader2 className="animate-spin" /> : <Trophy />} Finalizar treino
+                </Button>
+                <Button type="button" variant="secondary" size="sm" className="tracking-normal" disabled={concluindo || cancelando} onClick={() => setConfirmarCancelamento(true)}>
+                  {cancelando ? <Loader2 className="animate-spin" /> : <XCircle />} Cancelar treino
+                </Button>
+              </div>
             </div>
           ) : sessaoAndamento && sessaoAndamento.dia_semana !== diaAtual ? (
             <div className="mt-4 rounded-2xl border border-amber-500/40 bg-amber-500/10 px-4 py-3 text-center">
@@ -990,11 +1062,24 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
               }}>
                 <Clock /> Ir para {sessaoAndamento.dia_semana}
               </Button>
+              <Button type="button" variant="ghost" size="sm" className="mt-2 max-w-full h-auto min-h-10 whitespace-normal tracking-normal" disabled={concluindo || cancelando} onClick={() => setConfirmarCancelamento(true)}>
+                <XCircle /> Cancelar treino
+              </Button>
             </div>
+          ) : completedDaysWeek.has(diaAtual) ? (
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className="mt-4 w-full py-3.5 rounded-2xl bg-emerald-600/15 border border-emerald-500/40 text-emerald-300 font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 cursor-not-allowed"
+            >
+              <Trophy className="h-5 w-5" />
+              Concluído ✓
+            </button>
           ) : (
             <button
               type="button"
-              disabled={startingSession}
+              disabled={startingSession || cancelando}
               onClick={iniciarTreinoAoVivo}
               className="mt-4 w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-display tracking-[0.15em] uppercase flex items-center justify-center gap-2 shadow-[0_10px_40px_-12px_hsl(var(--primary)/0.6)] active:scale-[0.98] transition disabled:opacity-70"
             >
@@ -1002,27 +1087,6 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
               Iniciar Treino
             </button>
           )
-        )}
-
-        {sessoesAntigas.length > 0 && (
-          <div className="mt-4 space-y-2 border-t border-border pt-3">
-            <p className="text-sm text-muted-foreground">Treinos anteriores em aberto</p>
-            {sessoesAntigas.map((sessao) => (
-              <div key={sessao.id} className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs text-muted-foreground">{sessao.dia_semana} · {new Date(sessao.startedAt).toLocaleDateString("pt-BR")}</span>
-                <Button type="button" variant="secondary" size="sm" className="tracking-normal" disabled={!!sessaoAndamento || concluindo || startingSession || !dias.includes(sessao.dia_semana)} onClick={() => {
-                  sessaoRetomadaId.current = sessao.id;
-                  setSessaoStats({ sessaoId: null, volume: 0, series: 0 });
-                  setSessaoAndamento(sessao);
-                  setSessoesAntigas((prev) => prev.filter((row) => row.id !== sessao.id));
-                  setDiaAtual(sessao.dia_semana);
-                  setActiveIndex(null);
-                }}>
-                  <Clock /> Retomar
-                </Button>
-              </div>
-            ))}
-          </div>
         )}
 
         {recordeBanner && (() => {
@@ -1103,6 +1167,25 @@ export const PersonalTreino = ({ modalidade }: { modalidade?: string } = {}) => 
 
 
 
+
+        <AlertDialog open={confirmarCancelamento} onOpenChange={(v) => { if (!cancelando) setConfirmarCancelamento(v); }}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancelar treino?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {statsDaSessao && sessaoStats.series > 0
+                  ? `Este treino não será contado como concluído. As ${sessaoStats.series} séries já registradas ficam salvas no seu histórico.`
+                  : "Este treino será descartado e não será contado como concluído."}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={cancelando}>Voltar</AlertDialogCancel>
+              <AlertDialogAction disabled={cancelando} onClick={(e) => { e.preventDefault(); void cancelarTreino(); }}>
+                {cancelando ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Cancelar treino
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         <TreinoConclusaoCard
           open={showConclusao}
