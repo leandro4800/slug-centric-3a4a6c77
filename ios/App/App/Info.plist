@@ -29,7 +29,7 @@
 	<key>NSPhotoLibraryAddUsageDescription</key>
 	<string>Precisamos salvar imagens na sua galeria.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Precisamos do microfone para gravar áudio nos vídeos e no preenchimento por voz.</string>
+	<string>Precisamos do microfone para gravar áudio nos vídeos, nas mensagens de áudio da comunidade e no preenchimento por voz.</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 

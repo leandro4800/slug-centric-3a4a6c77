@@ -29,7 +29,7 @@ import { DirectVideoPlayer } from "@/components/DirectVideoPlayer";
 import { captureAndUploadPoster, uploadPoster } from "@/lib/video-poster";
 import StoriesViewer from "@/components/aluno/comunidade/StoriesViewer";
 import StoryComposer from "@/components/aluno/comunidade/StoryComposer";
-import DirectDrawer from "@/components/aluno/comunidade/DirectDrawer";
+import DirectDrawer, { type DirectMensagem } from "@/components/aluno/comunidade/DirectDrawer";
 import { groupStories, type StoryGroup, type StoryRow } from "@/components/aluno/comunidade/story-types";
 
 interface Perfil {
@@ -92,6 +92,8 @@ const Comunidade = () => {
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [meta, setMeta] = useState<Record<string, MemberMeta>>({});
   const [viewerStart, setViewerStart] = useState<number | null>(null);
+  const [viewerItem, setViewerItem] = useState(0);
+  const [voltarAoDirect, setVoltarAoDirect] = useState(false);
   const [composerOpen, setComposerOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -381,7 +383,8 @@ const Comunidade = () => {
   const groupIndexOf = (uid: string) => storyGroups.findIndex((g) => g.user_id === uid);
 
   const markStoryViewed = async (story: StoryRow) => {
-    if (!user || story.origem !== "post") return;
+    // uma visualização por usuário; o dono do story nunca conta
+    if (!user || story.origem !== "post" || story.user_id === user.id) return;
     setStoryGroups((prev) =>
       prev.map((g) => ({
         ...g,
@@ -390,13 +393,23 @@ const Comunidade = () => {
     );
     await supabase
       .from("comunidade_story_views" as any)
-      .insert({ story_id: story.id, user_id: user.id } as any);
+      .upsert({ story_id: story.id, user_id: user.id } as any, {
+        onConflict: "story_id,user_id",
+        ignoreDuplicates: true,
+      });
   };
 
+  /** Campos que citam o story na mensagem do Direct (o banco completa a mídia de stories postados). */
+  const storyRefCampos = (story: StoryRow) =>
+    story.origem === "post"
+      ? { story_id: story.id }
+      : { story_origem: "conquista", story_autor_id: story.user_id, story_texto: story.texto };
+
   const reactStory = async (story: StoryRow, emoji: string | null, resposta: string | null) => {
-    if (!user) return;
+    if (!user || story.user_id === user.id || !tenant?.id) return;
     let error: { message: string } | null = null;
     if (story.origem === "post") {
+      // o banco transforma a reação/resposta em mensagem no Direct com a miniatura do story
       ({ error } = await supabase.from("comunidade_story_reacoes" as any).insert({
         story_id: story.id,
         user_id: user.id,
@@ -404,15 +417,15 @@ const Comunidade = () => {
         resposta,
       } as any));
     } else {
-      // Stories automáticos (ex.: conquista) não existem em comunidade_stories:
-      // a reação vira uma mensagem direta, sem story_id.
-      if (story.user_id === user.id || !tenant?.id) return;
+      // Stories automáticos (conquista) não existem em comunidade_stories:
+      // a reação vira mensagem direta com a referência da conquista.
       ({ error } = await supabase.from("comunidade_mensagens" as any).insert({
         tenant_id: tenant.id,
         remetente_id: user.id,
         destinatario_id: story.user_id,
         texto: resposta || null,
         emoji,
+        ...storyRefCampos(story),
       } as any));
     }
     if (error) {
@@ -425,13 +438,63 @@ const Comunidade = () => {
     }
   };
 
+  const shareStory = async (story: StoryRow, destinatarioId: string) => {
+    if (!user || !tenant?.id) return false;
+    const { error } = await supabase.from("comunidade_mensagens" as any).insert({
+      tenant_id: tenant.id,
+      remetente_id: user.id,
+      destinatario_id: destinatarioId,
+      ...storyRefCampos(story),
+    } as any);
+    if (error) {
+      toast({ title: "Não foi possível enviar", description: error.message, variant: "destructive" });
+      return false;
+    }
+    return true;
+  };
+
+  const openDirectWith = (userId: string) => {
+    setViewerStart(null);
+    setVoltarAoDirect(false);
+    setDirectPeer(userId);
+    setDirectOpen(true);
+  };
+
+  /** Abre, a partir do Direct, o story citado na mensagem (se ainda estiver ativo). */
+  const openStoryFromDirect = (m: DirectMensagem) => {
+    for (let g = 0; g < storyGroups.length; g++) {
+      const items = storyGroups[g].items;
+      const i = m.story_id
+        ? items.findIndex((it) => it.id === m.story_id)
+        : storyGroups[g].user_id === m.story_autor_id
+          ? items.findIndex((it) => it.origem === "conquista" && it.texto === m.story_texto)
+          : -1;
+      if (i >= 0) {
+        setDirectOpen(false);
+        setVoltarAoDirect(true);
+        setViewerItem(i);
+        setViewerStart(g);
+        return true;
+      }
+    }
+    return false;
+  };
+
+  const closeViewer = () => {
+    setViewerStart(null);
+    if (voltarAoDirect) {
+      setVoltarAoDirect(false);
+      setDirectOpen(true);
+    }
+  };
+
   const deleteStory = async (story: StoryRow) => {
     const { error } = await supabase.from("comunidade_stories" as any).delete().eq("id", story.id);
     if (error) {
       toast({ title: "Erro ao excluir", description: error.message, variant: "destructive" });
       return;
     }
-    setViewerStart(null);
+    closeViewer();
     toast({ title: "Story excluído" });
     fetchData();
   };
@@ -480,7 +543,10 @@ const Comunidade = () => {
           <button
             onClick={() => {
               const idx = groupIndexOf(user?.id || "");
-              if (idx >= 0) setViewerStart(idx);
+              if (idx >= 0) {
+                setViewerItem(0);
+                setViewerStart(idx);
+              }
               else setComposerOpen(true);
             }}
             className="relative"
@@ -525,7 +591,11 @@ const Comunidade = () => {
             return (
               <button
                 key={profile.id}
-                onClick={() => hasStory && setViewerStart(gIdx)}
+                onClick={() => {
+                  if (!hasStory) return;
+                  setViewerItem(0);
+                  setViewerStart(gIdx);
+                }}
                 className="flex-shrink-0 flex flex-col items-center gap-1 relative"
               >
                 <div
@@ -790,11 +860,15 @@ const Comunidade = () => {
         <StoriesViewer
           groups={storyGroups}
           startGroup={viewerStart}
+          startItem={viewerItem}
           currentUserId={user.id}
-          onClose={() => setViewerStart(null)}
+          membros={stories}
+          onClose={closeViewer}
           onViewed={markStoryViewed}
           onReact={reactStory}
           onDelete={deleteStory}
+          onShare={shareStory}
+          onOpenDirect={openDirectWith}
         />
       )}
 
@@ -819,6 +893,7 @@ const Comunidade = () => {
           membros={stories}
           initialPeerId={directPeer}
           onUnreadChange={setUnread}
+          onOpenStory={openStoryFromDirect}
         />
       )}
 

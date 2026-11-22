@@ -2439,6 +2439,8 @@ export type Database = {
       }
       comunidade_mensagens: {
         Row: {
+          audio_duracao_seg: number | null
+          audio_path: string | null
           created_at: string
           criado_em: string
           destinatario_id: string
@@ -2446,12 +2448,22 @@ export type Database = {
           id: string
           lida_em: string | null
           remetente_id: string
+          story_autor_id: string | null
+          story_expira_em: string | null
           story_id: string | null
+          story_media_url: string | null
+          story_origem: string | null
+          story_texto: string | null
+          story_thumb_url: string | null
+          story_tipo: string | null
           tenant_id: string
           texto: string | null
+          tipo: string
           updated_at: string
         }
         Insert: {
+          audio_duracao_seg?: number | null
+          audio_path?: string | null
           created_at?: string
           criado_em?: string
           destinatario_id: string
@@ -2459,12 +2471,22 @@ export type Database = {
           id?: string
           lida_em?: string | null
           remetente_id: string
+          story_autor_id?: string | null
+          story_expira_em?: string | null
           story_id?: string | null
+          story_media_url?: string | null
+          story_origem?: string | null
+          story_texto?: string | null
+          story_thumb_url?: string | null
+          story_tipo?: string | null
           tenant_id: string
           texto?: string | null
+          tipo?: string
           updated_at?: string
         }
         Update: {
+          audio_duracao_seg?: number | null
+          audio_path?: string | null
           created_at?: string
           criado_em?: string
           destinatario_id?: string
@@ -2472,9 +2494,17 @@ export type Database = {
           id?: string
           lida_em?: string | null
           remetente_id?: string
+          story_autor_id?: string | null
+          story_expira_em?: string | null
           story_id?: string | null
+          story_media_url?: string | null
+          story_origem?: string | null
+          story_texto?: string | null
+          story_thumb_url?: string | null
+          story_tipo?: string | null
           tenant_id?: string
           texto?: string | null
+          tipo?: string
           updated_at?: string
         }
         Relationships: [

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowLeft, Send, X, Search, Smile } from "lucide-react";
+import { ArrowLeft, Send, X, Search, Smile, Mic, Trash2, Loader2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,16 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import AudioMessagePlayer from "./AudioMessagePlayer";
+import { useAudioRecorder, type GravacaoAudio } from "./useAudioRecorder";
+import { isStoryMessage, isStoryRefActive, storyMessageLabel } from "./story-types";
+import {
+  AUDIO_BUCKET,
+  AUDIO_MIN_SEG,
+  baseMime,
+  buildAudioPath,
+  formatAudioTime,
+} from "@/lib/comunidade-audio";
 
 export interface DirectPerfil {
   id: string;
@@ -24,7 +34,73 @@ export interface DirectMensagem {
   story_id: string | null;
   lida_em: string | null;
   criado_em: string;
+  tipo?: "texto" | "audio" | null;
+  audio_path?: string | null;
+  audio_duracao_seg?: number | null;
+  story_autor_id: string | null;
+  story_origem: "post" | "conquista" | null;
+  story_tipo: string | null;
+  story_media_url: string | null;
+  story_thumb_url: string | null;
+  story_texto: string | null;
+  story_expira_em: string | null;
 }
+
+const novoId = () =>
+  typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+const previewMensagem = (m: DirectMensagem, currentUserId: string) => {
+  if (m.tipo === "audio") return "🎤 Áudio";
+  const label = storyMessageLabel(m, currentUserId);
+  const corpo = m.texto || m.emoji || "";
+  return label ? `${label}${corpo ? " · " + corpo : ""}` : corpo;
+};
+
+/** Miniatura do story citado na mensagem (foto, vídeo ou conquista). */
+const StoryThumb = ({ m, onOpen }: { m: DirectMensagem; onOpen: () => void }) => {
+  const ativo = isStoryRefActive(m);
+  if (!ativo) {
+    return (
+      <button
+        type="button"
+        onClick={onOpen}
+        className="flex aspect-[9/16] w-24 items-center justify-center rounded-xl border border-border bg-muted p-2 text-center text-[11px] text-muted-foreground"
+      >
+        Story indisponível
+      </button>
+    );
+  }
+  const isVideo = m.story_tipo === "video";
+  return (
+    <button
+      type="button"
+      onClick={onOpen}
+      aria-label="Abrir story"
+      className="relative aspect-[9/16] w-24 overflow-hidden rounded-xl border border-border bg-muted"
+    >
+      {m.story_media_url ? (
+        isVideo ? (
+          m.story_thumb_url ? (
+            <img src={m.story_thumb_url} alt="" className="h-full w-full object-cover" />
+          ) : (
+            <video src={`${m.story_media_url}#t=0.1`} muted playsInline preload="metadata" className="h-full w-full object-cover" />
+          )
+        ) : (
+          <img src={m.story_media_url} alt="" className="h-full w-full object-cover" />
+        )
+      ) : (
+        <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/50 via-background to-background p-2">
+          <p className="line-clamp-5 text-center text-[10px] font-bold leading-tight">{m.story_texto || "Story"}</p>
+        </div>
+      )}
+      {isVideo && (
+        <span className="absolute right-1 top-1 rounded bg-background/70 px-1 text-[9px] font-bold">▶</span>
+      )}
+    </button>
+  );
+};
 
 const EMOJIS = ["❤️", "💪", "🔥", "👏", "😮", "😂", "🙏", "👊"];
 
@@ -36,6 +112,8 @@ interface Props {
   membros: DirectPerfil[];
   initialPeerId?: string | null;
   onUnreadChange?: (n: number) => void;
+  /** Abre o story citado; devolve false se ele não estiver mais disponível. */
+  onOpenStory?: (m: DirectMensagem) => boolean;
 }
 
 export const DirectDrawer = ({
@@ -46,6 +124,7 @@ export const DirectDrawer = ({
   membros,
   initialPeerId,
   onUnreadChange,
+  onOpenStory,
 }: Props) => {
   const [mensagens, setMensagens] = useState<DirectMensagem[]>([]);
   const [peerId, setPeerId] = useState<string | null>(initialPeerId ?? null);
@@ -54,6 +133,9 @@ export const DirectDrawer = ({
   const [enviando, setEnviando] = useState(false);
   const { toast } = useToast();
   const bottomRef = useRef<HTMLDivElement | null>(null);
+  const [enviandoAudio, setEnviandoAudio] = useState(false);
+  const enviarAudioRef = useRef<() => void>(() => {});
+  const recorder = useAudioRecorder(() => enviarAudioRef.current());
 
   const perfilDe = useCallback(
     (id: string) => membros.find((m) => m.id === id),
@@ -201,6 +283,81 @@ export const DirectDrawer = ({
     }
   };
 
+  const enviarAudio = async (grav: GravacaoAudio) => {
+    if (!peerId) return;
+    if (grav.duracaoSeg < AUDIO_MIN_SEG) {
+      toast({ title: "Áudio muito curto", description: "Grave pelo menos 1 segundo." });
+      return;
+    }
+    setEnviandoAudio(true);
+    const mime = baseMime(grav.mime);
+    const path = buildAudioPath(tenantId, currentUserId, novoId(), mime);
+    try {
+      const up = await supabase.storage
+        .from(AUDIO_BUCKET)
+        .upload(path, grav.blob, { contentType: mime, upsert: false });
+      if (up.error) throw up.error;
+      const { data, error } = await supabase
+        .from("comunidade_mensagens" as any)
+        .insert({
+          tenant_id: tenantId,
+          remetente_id: currentUserId,
+          destinatario_id: peerId,
+          tipo: "audio",
+          audio_path: path,
+          audio_duracao_seg: grav.duracaoSeg,
+        } as any)
+        .select()
+        .maybeSingle();
+      if (error) {
+        void supabase.storage.from(AUDIO_BUCKET).remove([path]);
+        throw error;
+      }
+      if (data) {
+        const m = data as unknown as DirectMensagem;
+        setMensagens((prev) => (prev.some((x) => x.id === m.id) ? prev : [...prev, m]));
+      }
+    } catch (e) {
+      toast({
+        title: "Não foi possível enviar o áudio",
+        description: e instanceof Error ? e.message : String((e as any)?.message || e),
+        variant: "destructive",
+      });
+    } finally {
+      setEnviandoAudio(false);
+    }
+  };
+
+  const pararEEnviar = async () => {
+    const grav = await recorder.parar();
+    if (grav) await enviarAudio(grav);
+  };
+  enviarAudioRef.current = () => void pararEEnviar();
+
+  const iniciarGravacao = async () => {
+    try {
+      await recorder.iniciar();
+    } catch (e) {
+      toast({
+        title: "Microfone indisponível",
+        description: e instanceof Error ? e.message : String(e),
+        variant: "destructive",
+      });
+    }
+  };
+
+  const abrirStory = (m: DirectMensagem) => {
+    if (!isStoryRefActive(m) || !onOpenStory?.(m)) {
+      toast({ title: "Story indisponível", description: "Esse story expirou ou foi apagado." });
+    }
+  };
+
+  // ao sair da conversa/fechar, descarta gravação em andamento
+  useEffect(() => {
+    if (!open || !peerId) recorder.cancelar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, peerId]);
+
   if (!open) return null;
 
   const peer = peerId ? perfilDe(peerId) : null;
@@ -273,8 +430,7 @@ export const DirectDrawer = ({
                         {p?.nome_completo || "Usuário"}
                       </p>
                       <p className="truncate text-xs text-muted-foreground">
-                        {ultima.story_id ? "Respondeu seu story · " : ""}
-                        {ultima.texto || ultima.emoji || ""}
+                        {previewMensagem(ultima, currentUserId)}
                       </p>
                     </div>
                     {n > 0 && (
@@ -319,23 +475,36 @@ export const DirectDrawer = ({
             )}
             {thread.map((m) => {
               const mine = m.remetente_id === currentUserId;
+              const storyLabel = isStoryMessage(m) ? storyMessageLabel(m, currentUserId) : null;
+              const hora = formatDistanceToNow(new Date(m.criado_em), { addSuffix: true, locale: ptBR });
+              const bolha = mine ? "bg-primary text-primary-foreground" : "bg-muted";
+              if (storyLabel) {
+                return (
+                  <div key={m.id} className={`flex flex-col gap-1 ${mine ? "items-end" : "items-start"}`}>
+                    <p className="text-[11px] text-muted-foreground">{storyLabel}</p>
+                    <StoryThumb m={m} onOpen={() => abrirStory(m)} />
+                    {m.texto && (
+                      <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 ${bolha}`}>
+                        <p className="text-sm leading-snug">{m.texto}</p>
+                      </div>
+                    )}
+                    {m.emoji && <p className="text-3xl leading-tight">{m.emoji}</p>}
+                    <p className="text-[10px] text-muted-foreground">{hora}</p>
+                  </div>
+                );
+              }
               return (
                 <div key={m.id} className={`flex ${mine ? "justify-end" : "justify-start"}`}>
-                  <div
-                    className={`max-w-[78%] rounded-2xl px-3.5 py-2 ${
-                      mine ? "bg-primary text-primary-foreground" : "bg-muted"
-                    }`}
-                  >
-                    {m.story_id && (
-                      <p className="mb-1 text-[10px] uppercase tracking-wider opacity-70">
-                        Resposta ao story
-                      </p>
+                  <div className={`max-w-[78%] rounded-2xl px-3.5 py-2 ${bolha}`}>
+                    {m.tipo === "audio" && m.audio_path ? (
+                      <AudioMessagePlayer path={m.audio_path} duracaoSeg={m.audio_duracao_seg ?? null} mine={mine} />
+                    ) : (
+                      <>
+                        {m.texto && <p className="text-sm leading-snug">{m.texto}</p>}
+                        {m.emoji && <p className="text-2xl leading-tight">{m.emoji}</p>}
+                      </>
                     )}
-                    {m.texto && <p className="text-sm leading-snug">{m.texto}</p>}
-                    {m.emoji && <p className="text-2xl leading-tight">{m.emoji}</p>}
-                    <p className="mt-1 text-[10px] opacity-60">
-                      {formatDistanceToNow(new Date(m.criado_em), { addSuffix: true, locale: ptBR })}
-                    </p>
+                    <p className="mt-1 text-[10px] opacity-60">{hora}</p>
                   </div>
                 </div>
               );
@@ -355,29 +524,70 @@ export const DirectDrawer = ({
                 </button>
               ))}
             </div>
-            <div className="flex items-center gap-2">
-              <Smile className="h-5 w-5 shrink-0 text-muted-foreground" />
-              <Input
-                value={texto}
-                onChange={(e) => setTexto(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    void enviar(texto);
-                  }
-                }}
-                placeholder="Mensagem…"
-                className="h-11 rounded-full"
-              />
-              <Button
-                size="icon"
-                className="h-11 w-11 shrink-0 rounded-full"
-                disabled={!texto.trim() || enviando}
-                onClick={() => void enviar(texto)}
-              >
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
+            {recorder.gravando ? (
+              <div className="flex items-center gap-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-11 w-11 shrink-0 rounded-full text-destructive"
+                  onClick={() => recorder.cancelar()}
+                  aria-label="Cancelar gravação"
+                >
+                  <Trash2 className="h-5 w-5" />
+                </Button>
+                <div className="flex h-11 flex-1 items-center gap-2 rounded-full bg-muted px-4">
+                  <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-destructive" />
+                  <span className="text-sm font-semibold tabular-nums">{formatAudioTime(recorder.segundos)}</span>
+                  <span className="truncate text-xs text-muted-foreground">Gravando…</span>
+                </div>
+                <Button
+                  size="icon"
+                  className="h-11 w-11 shrink-0 rounded-full"
+                  onClick={() => void pararEEnviar()}
+                  aria-label="Enviar áudio"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <Smile className="h-5 w-5 shrink-0 text-muted-foreground" />
+                <Input
+                  value={texto}
+                  onChange={(e) => setTexto(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      void enviar(texto);
+                    }
+                  }}
+                  placeholder="Mensagem…"
+                  className="h-11 rounded-full"
+                />
+                {texto.trim() ? (
+                  <Button
+                    size="icon"
+                    className="h-11 w-11 shrink-0 rounded-full"
+                    disabled={enviando}
+                    onClick={() => void enviar(texto)}
+                    aria-label="Enviar mensagem"
+                  >
+                    <Send className="h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button
+                    size="icon"
+                    variant="secondary"
+                    className="h-11 w-11 shrink-0 rounded-full"
+                    disabled={enviandoAudio}
+                    onClick={() => void iniciarGravacao()}
+                    aria-label="Gravar áudio"
+                  >
+                    {enviandoAudio ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mic className="h-5 w-5" />}
+                  </Button>
+                )}
+              </div>
+            )}
           </div>
         </>
       )}
