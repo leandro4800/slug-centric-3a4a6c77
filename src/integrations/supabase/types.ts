@@ -4473,6 +4473,7 @@ export type Database = {
       sessoes_treino: {
         Row: {
           aluno_id: string
+          cancelada_em: string | null
           created_at: string
           data_treino: string
           dia_semana: string | null
@@ -4486,6 +4487,7 @@ export type Database = {
         }
         Insert: {
           aluno_id: string
+          cancelada_em?: string | null
           created_at?: string
           data_treino?: string
           dia_semana?: string | null
@@ -4499,6 +4501,7 @@ export type Database = {
         }
         Update: {
           aluno_id?: string
+          cancelada_em?: string | null
           created_at?: string
           data_treino?: string
           dia_semana?: string | null
@@ -5470,6 +5473,7 @@ export type Database = {
         Args: { _athlete_id: string; _caller: string }
         Returns: boolean
       }
+      cancelar_sessao_treino: { Args: { _sessao_id: string }; Returns: Json }
       check_and_send_reminders: { Args: never; Returns: undefined }
       complete_student_onboarding: {
         Args: {
@@ -5486,6 +5490,10 @@ export type Database = {
       current_user_tenant: { Args: never; Returns: string }
       disparar_resumo_assistente: { Args: never; Returns: undefined }
       email_is_registered: { Args: { _email: string }; Returns: boolean }
+      encerrar_sessoes_treino_invalidas_aluno: {
+        Args: { _aluno: string }
+        Returns: number
+      }
       gerar_alertas_assistente: { Args: { p_tenant?: string }; Returns: number }
       get_community_members: {
         Args: { _tenant_id: string }
@@ -5556,8 +5564,20 @@ export type Database = {
         }
         Returns: boolean
       }
+      iniciar_sessao_treino: {
+        Args: {
+          _dia_semana: string
+          _exercicios_total?: number
+          _tenant_id: string
+        }
+        Returns: {
+          created_at: string
+          id: string
+        }[]
+      }
       is_box_staff: { Args: { _tenant: string }; Returns: boolean }
       is_box_turma_member: { Args: { _turma: string }; Returns: boolean }
+      limpar_sessoes_treino_invalidas: { Args: never; Returns: number }
       listar_referencia_exercicios: {
         Args: never
         Returns: {
@@ -5637,6 +5657,16 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      sessao_treino_dia_concluido_semana: {
+        Args: {
+          _aluno: string
+          _data: string
+          _dia: string
+          _ignorar: string
+          _tenant: string
+        }
+        Returns: boolean
       }
       user_belongs_to_tenant: {
         Args: { _tenant_id: string; _user_id: string }
